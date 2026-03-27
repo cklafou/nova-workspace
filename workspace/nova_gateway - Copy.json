@@ -1,0 +1,51 @@
+{
+  "ollama": {
+    "base_url": "http://127.0.0.1:11434",
+    "model": "nova",
+    "context_window": 32768,
+    "max_tokens": 16384,
+    "timeout_s": 120
+  },
+  "gateway": {
+    "port": 18790,
+    "host": "127.0.0.1",
+    "token": "nova-gateway-local"
+  },
+  "discord": {
+    "enabled": false,
+    "token": "[place token here]",
+    "allowlist": [],
+    "dm_enabled": true,
+    "allow_bots": true
+  },
+  "cron": {
+    "health_check": {
+      "enabled": true,
+      "interval_min": 30,
+      "message": "Perform system health check \u2014 verify all components are functioning properly."
+    }
+  },
+  "context": {
+    "inject_files": [
+      "AGENTS.md",
+      "SOUL.md",
+      "IDENTITY.md",
+      "TOOLS.md",
+      "memory/STATUS.md",
+      "memory/COLE.md"
+    ],
+    "heartbeat_extra_files": [
+      "HEARTBEAT.md"
+    ]
+  },
+  "sessions": {
+    "dir": "sessions",
+    "compact_at_frac": 0.85,
+    "compact_keep_pairs": 10
+  },
+  "tools": {
+    "exec_timeout_s": 60,
+    "exec_cwd": null,
+    "read_max_bytes": 524288
+  }
+}

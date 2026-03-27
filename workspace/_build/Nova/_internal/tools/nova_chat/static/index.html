@@ -1,0 +1,3080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Nova</title>
+<style>
+
+  :root {
+    --bg:       #080b12;
+    --bg2:      #0d1120;
+    --bg3:      #131929;
+    --border:   #1e2a42;
+    --text:     #c8d4e8;
+    --text-dim: #4a5a78;
+    --cole:     #e8eaf0;
+    --claude:   #60a5fa;
+    --gemini:   #34d399;
+    --nova:     #c084fc;
+    --error:    #f87171;
+    --mono:     'JetBrains Mono', monospace;
+    --sans:     'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(96,165,250,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(96,165,250,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .header-title {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-title::before {
+    content: '◈';
+    color: var(--nova);
+    font-size: 16px;
+  }
+
+  .participants {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .participant-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+    cursor: default;
+  }
+
+  .participant-badge.offline {
+    opacity: 0.35;
+    filter: grayscale(0.5);
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .badge-cole  { color: var(--cole);   border-color: rgba(232,234,240,0.2); background: rgba(232,234,240,0.05); }
+  .badge-claude{ color: var(--claude); border-color: rgba(96,165,250,0.2);  background: rgba(96,165,250,0.05);  }
+  .badge-gemini{ color: var(--gemini); border-color: rgba(52,211,153,0.2);  background: rgba(52,211,153,0.05);  }
+  .badge-nova  { color: var(--nova);   border-color: rgba(192,132,252,0.2); background: rgba(192,132,252,0.05); }
+
+  .dot-cole   { background: var(--cole); }
+  .dot-claude { background: var(--claude); box-shadow: 0 0 6px var(--claude); }
+  .dot-gemini { background: var(--gemini); box-shadow: 0 0 6px var(--gemini); }
+  .dot-nova   { background: var(--nova); box-shadow: 0 0 6px var(--nova); }
+
+  /* ── Nova Status Bar (1.5) ── */
+  #nova-status-bar {
+    position: relative;
+    z-index: 9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 20px;
+    background: rgba(192,132,252,0.04);
+    border-bottom: 1px solid rgba(192,132,252,0.12);
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    min-height: 28px;
+    transition: background 0.3s;
+  }
+
+  #nova-status-bar.has-error {
+    background: rgba(248,113,113,0.06);
+    border-bottom-color: rgba(248,113,113,0.2);
+  }
+
+  #nova-status-bar.has-task {
+    background: rgba(192,132,252,0.07);
+    border-bottom-color: rgba(192,132,252,0.2);
+  }
+
+  .ns-label {
+    color: var(--nova);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  .ns-pulse {
+    color: var(--text);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ns-task {
+    color: var(--nova);
+    opacity: 0.8;
+    font-style: italic;
+    flex-shrink: 0;
+  }
+
+  .ns-error {
+    color: var(--error);
+    flex-shrink: 0;
+    max-width: 40%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ns-age {
+    color: var(--text-dim);
+    font-size: 10px;
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+
+  .ns-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--nova);
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+
+  .ns-dot.active { opacity: 1; box-shadow: 0 0 5px var(--nova); animation: nsPulse 2s infinite; }
+  .ns-dot.error  { background: var(--error); opacity: 1; box-shadow: 0 0 5px var(--error); }
+  .ns-dot.stale  { background: var(--text-dim); opacity: 0.4; animation: none; }
+
+  @keyframes nsPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+
+  /* ── Messages ── */
+  #chat {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    scroll-behavior: smooth;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  #chat::-webkit-scrollbar { width: 4px; }
+  #chat::-webkit-scrollbar-track { background: transparent; }
+  #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border-left: 2px solid transparent;
+    animation: slideIn 0.15s ease-out;
+    transition: background 0.1s;
+    align-items: flex-start;
+  }
+
+  .msg:hover { background: rgba(255,255,255,0.02); }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-cole   { border-left-color: rgba(232,234,240,0.3); }
+  .msg-claude { border-left-color: var(--claude); }
+  .msg-gemini { border-left-color: var(--gemini); }
+  .msg-nova   { border-left-color: var(--nova); }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 10px;
+    flex-shrink: 0;
+    letter-spacing: 0.03em;
+    margin-top: 1px;
+  }
+
+  .av-cole   { background: rgba(232,234,240,0.1); color: var(--cole); border: 1px solid rgba(232,234,240,0.15); }
+  .av-claude { background: rgba(96,165,250,0.1);  color: var(--claude); border: 1px solid rgba(96,165,250,0.2); box-shadow: 0 0 10px rgba(96,165,250,0.1); }
+  .av-gemini { background: rgba(52,211,153,0.1);  color: var(--gemini); border: 1px solid rgba(52,211,153,0.2); box-shadow: 0 0 10px rgba(52,211,153,0.1); }
+  .av-nova   { background: rgba(192,132,252,0.1); color: var(--nova);   border: 1px solid rgba(192,132,252,0.2); box-shadow: 0 0 10px rgba(192,132,252,0.1); }
+
+  .msg-body { flex: 1; min-width: 0; }
+
+  .msg-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .msg-author {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  .author-cole   { color: var(--cole); }
+  .author-claude { color: var(--claude); }
+  .author-gemini { color: var(--gemini); }
+  .author-nova   { color: var(--nova); }
+
+  .msg-time {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-weight: 300;
+  }
+
+  .msg-directed {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .msg-content {
+    color: var(--text);
+    line-height: 1.6;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  /* Inline code */
+  .msg-content code {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 12px;
+    color: #e2e8f0;
+  }
+
+  /* Streaming cursor */
+  .cursor {
+    display: inline-block;
+    width: 7px;
+    height: 13px;
+    background: currentColor;
+    opacity: 0.7;
+    animation: blink 0.8s steps(1) infinite;
+    vertical-align: middle;
+    border-radius: 1px;
+    margin-left: 1px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 0; }
+  }
+
+  /* Thinking bubble */
+  .thinking {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border-left: 2px solid;
+    opacity: 0.6;
+  }
+
+  .thinking-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .thinking-dots span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes pulse {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* System messages */
+  .system-msg {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 11px;
+    padding: 6px 0;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Input area ── */
+  footer {
+    position: relative;
+    z-index: 10;
+    padding: 12px 20px 16px;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .input-wrapper {
+    flex: 1;
+    position: relative;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-wrapper:focus-within {
+    border-color: rgba(96,165,250,0.4);
+    box-shadow: 0 0 0 2px rgba(96,165,250,0.06);
+  }
+
+  #input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 14px;
+    resize: none;
+    min-height: 42px;
+    max-height: 120px;
+    line-height: 1.5;
+  }
+
+  #input::placeholder { color: var(--text-dim); }
+
+  .input-hint {
+    padding: 4px 14px 8px;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.03em;
+  }
+
+  .input-hint span { color: rgba(192,132,252,0.6); }
+
+  .send-btn {
+    width: 42px;
+    height: 42px;
+    background: rgba(96,165,250,0.1);
+    border: 1px solid rgba(96,165,250,0.2);
+    border-radius: 8px;
+    color: var(--claude);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover {
+    background: rgba(96,165,250,0.2);
+    border-color: rgba(96,165,250,0.4);
+    box-shadow: 0 0 12px rgba(96,165,250,0.15);
+  }
+
+  .send-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* @mention highlight in input */
+  .mention-claude { color: var(--claude); }
+  .mention-gemini { color: var(--gemini); }
+  .mention-nova   { color: var(--nova); }
+
+  /* Control buttons */
+  .ctrl-btn {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+    border: 1px solid;
+  }
+
+  .stop-btn {
+    background: rgba(248,113,113,0.08);
+    border-color: rgba(248,113,113,0.2);
+    color: var(--error);
+    display: none;
+  }
+  .stop-btn.show { display: inline-flex; align-items: center; gap: 5px; }
+  .stop-btn:hover { background: rgba(248,113,113,0.18); border-color: rgba(248,113,113,0.4); }
+
+  .new-session-btn {
+    background: rgba(74,90,120,0.1);
+    border-color: rgba(74,90,120,0.3);
+    color: var(--text-dim);
+  }
+  .new-session-btn:hover { background: rgba(74,90,120,0.2); color: var(--text); border-color: rgba(74,90,120,0.5); }
+
+  /* Blocked message */
+  .blocked-banner {
+    display: none;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: var(--error);
+    text-align: center;
+    margin: 4px 0 0;
+  }
+  .blocked-banner.show { display: block; }
+
+  /* Processing pulse on send btn */
+  .send-btn.processing {
+    animation: sendPulse 1s ease-in-out infinite;
+    border-color: rgba(248,113,113,0.4);
+    color: var(--error);
+  }
+  @keyframes sendPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Export button */
+  .export-btn {
+    padding: 4px 12px;
+    background: rgba(52,211,153,0.08);
+    border: 1px solid rgba(52,211,153,0.2);
+    border-radius: 16px;
+    color: var(--gemini);
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+  }
+  .export-btn:hover {
+    background: rgba(52,211,153,0.15);
+    border-color: rgba(52,211,153,0.4);
+  }
+
+  /* Export modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 600px;
+    max-width: 95vw;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 4px;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-tab {
+    padding: 8px 18px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .modal-tab.active { color: var(--claude); border-bottom-color: var(--claude); }
+  .modal-tab:nth-child(2).active { color: var(--gemini); border-bottom-color: var(--gemini); }
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 18px;
+  }
+  .export-text {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 11px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+    max-height: 340px;
+    overflow-y: auto;
+  }
+  .modal-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .copy-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.15s;
+  }
+  .copy-claude { background: rgba(96,165,250,0.1); color: var(--claude); border-color: rgba(96,165,250,0.3); }
+  .copy-gemini { background: rgba(52,211,153,0.1); color: var(--gemini); border-color: rgba(52,211,153,0.3); }
+  .copy-claude:hover { background: rgba(96,165,250,0.2); }
+  .copy-gemini:hover { background: rgba(52,211,153,0.2); }
+
+  /* Connection status */
+  #conn-status {
+    position: fixed;
+    top: 60px;
+    right: 16px;
+    font-size: 11px;
+    padding: 5px 10px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  #conn-status.show { opacity: 1; }
+  #conn-status.error { border-color: var(--error); color: var(--error); }
+
+  /* ═══════════════════════════════════════════════════
+     TOOLS PANEL
+  ═══════════════════════════════════════════════════ */
+  :root { --panel-width: 320px; }
+
+  #tools-panel {
+    position: fixed;
+    right: 0; top: 0; bottom: 0;
+    width: var(--panel-width);
+    background: rgba(12,16,24,0.98);
+    border-left: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    transform: translateX(100%);
+    transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: -8px 0 32px rgba(0,0,0,0.5);
+  }
+  #tools-panel.open { transform: translateX(0); }
+
+  /* Resize handle */
+  #panel-resize {
+    position: absolute;
+    left: -4px; top: 0; bottom: 0;
+    width: 8px;
+    cursor: col-resize;
+    z-index: 101;
+  }
+  #panel-resize:hover { background: rgba(99,179,237,0.15); }
+
+  /* Panel header */
+  .panel-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px 0;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-right: auto;
+  }
+  .panel-close-btn {
+    background: none; border: none;
+    color: var(--text-dim); font-size: 16px;
+    cursor: pointer; padding: 2px 6px;
+    border-radius: 4px; line-height: 1;
+    transition: color 0.15s;
+  }
+  .panel-close-btn:hover { color: var(--text); }
+
+  /* Tool tabs */
+  .tool-tabs {
+    display: flex;
+    padding: 8px 12px 0;
+    gap: 2px;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .tool-tab {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 4px 10px;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .tool-tab:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .tool-tab.active {
+    color: var(--cole);
+    background: rgba(16,20,30,1);
+    border-color: rgba(255,255,255,0.07);
+    border-bottom-color: rgba(16,20,30,1);
+    margin-bottom: -1px;
+  }
+
+  /* Tool panes */
+  .tool-pane {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .tool-pane.active { display: flex; }
+
+  /* ── FILE EXPLORER ── */
+  .file-search {
+    margin: 10px 12px 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    outline: none;
+    width: calc(100% - 24px);
+  }
+  .file-search::placeholder { color: var(--text-dim); }
+  .file-search:focus { border-color: rgba(99,179,237,0.3); }
+
+  .file-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 8px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.08) transparent;
+  }
+  .tree-dir, .tree-file {
+    display: flex; align-items: center;
+    gap: 5px; padding: 2px 4px;
+    border-radius: 4px; cursor: pointer;
+    white-space: nowrap; overflow: hidden;
+    color: var(--text-dim);
+    transition: background 0.1s, color 0.1s;
+    user-select: none;
+  }
+  .tree-dir:hover  { background: rgba(255,255,255,0.04); color: var(--text); }
+  .tree-file:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+  .tree-dir  { color: var(--cole); opacity: 0.75; }
+  .tree-dir:hover { opacity: 1; }
+  .tree-children { padding-left: 14px; }
+  .tree-children.collapsed { display: none; }
+  .tree-icon { flex-shrink: 0; width: 14px; text-align: center; }
+  .tree-name { overflow: hidden; text-overflow: ellipsis; flex: 1; }
+
+  /* File preview popup */
+  #file-preview {
+    position: absolute;
+    bottom: 60px; left: 12px; right: 12px;
+    background: rgba(16,20,30,0.98);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    max-height: 220px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--text);
+    display: none;
+    z-index: 200;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    scrollbar-width: thin;
+  }
+  #file-preview.show { display: block; }
+  .preview-actions {
+    display: flex; gap: 6px; margin-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding-top: 8px;
+  }
+  .preview-btn {
+    flex: 1; padding: 4px 0;
+    border-radius: 5px; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-dim); font-family: var(--mono); font-size: 10px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .preview-btn:hover { color: var(--cole); border-color: rgba(99,179,237,0.3); }
+  .preview-btn.inject { color: var(--claude); border-color: rgba(99,179,237,0.2); }
+  .preview-btn.inject:hover { background: rgba(99,179,237,0.1); }
+
+  /* ── TERMINAL ── */
+  .terminal-output {
+    flex: 1;
+    background: rgba(0,0,0,0.4);
+    margin: 10px 12px 0;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 8px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #a8c7a8;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.08) transparent;
+    min-height: 80px;
+  }
+  .term-stdout { color: #c8e6c8; }
+  .term-stderr { color: #f97171; }
+  .term-cmd-echo { color: rgba(255,255,255,0.3); margin-bottom: 4px; }
+  .term-separator { border-top: 1px solid rgba(255,255,255,0.06); margin: 6px 0; }
+
+  .terminal-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    flex-shrink: 0;
+  }
+  .term-prompt { color: var(--cole); font-family: var(--mono); font-size: 12px; flex-shrink: 0; }
+  .terminal-input {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text); outline: none;
+  }
+  .terminal-input:focus { border-color: rgba(99,179,237,0.3); }
+  .term-run-btn {
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid rgba(99,179,237,0.2);
+    background: rgba(99,179,237,0.07);
+    color: var(--claude); font-family: var(--mono); font-size: 11px;
+    cursor: pointer; flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .term-run-btn:hover { background: rgba(99,179,237,0.15); }
+  .term-actions {
+    display: flex; gap: 6px;
+    padding: 0 12px 8px;
+    flex-shrink: 0;
+  }
+  .term-action-btn {
+    flex: 1; padding: 4px 0; border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-dim); font-family: var(--mono); font-size: 10px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .term-action-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+  /* ── NOVA STATUS ── */
+  .status-pane-inner {
+    flex: 1; overflow-y: auto;
+    padding: 10px 12px;
+    scrollbar-width: thin;
+  }
+  .status-section {
+    margin-bottom: 16px;
+  }
+  .status-section-title {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gemini); flex-shrink: 0;
+    animation: statusPulse 2s ease-in-out infinite;
+  }
+  .status-dot.stale { background: var(--error); animation: none; }
+  @keyframes statusPulse {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+  }
+  .status-content {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text);
+    white-space: pre-wrap; word-break: break-all;
+    max-height: 180px; overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .status-refresh-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    flex-shrink: 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .status-last-updated {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text-dim); flex: 1;
+  }
+  .status-refresh-btn {
+    padding: 4px 10px; border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-dim); font-family: var(--mono); font-size: 10px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .status-refresh-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+  /* ── QUICK ACTIONS ── */
+  .quick-pane-inner {
+    flex: 1; overflow-y: auto;
+    padding: 10px 12px;
+    scrollbar-width: thin;
+  }
+  .quick-section-title {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 8px;
+    margin-top: 12px;
+  }
+  .quick-section-title:first-child { margin-top: 0; }
+  .quick-btn {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; padding: 7px 10px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.02);
+    color: var(--text-dim); font-family: var(--mono); font-size: 11px;
+    cursor: pointer; text-align: left;
+    transition: all 0.15s;
+  }
+  .quick-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); }
+  .quick-btn-icon { flex-shrink: 0; width: 16px; text-align: center; font-style: normal; }
+
+  /* Toggle button in header */
+  .tools-toggle-btn {
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-family: var(--mono); font-size: 11px;
+    cursor: pointer; transition: all 0.2s;
+    letter-spacing: 0.04em;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-dim);
+  }
+  .tools-toggle-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .tools-toggle-btn.active { color: var(--cole); border-color: rgba(99,179,237,0.3); background: rgba(99,179,237,0.07); }
+
+  /* Shift main layout when panel is open */
+  #main-layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;           /* lets children shrink below their natural height */
+    transition: margin-right 0.22s cubic-bezier(0.4,0,0.2,1);
+  }
+  #main-layout.panel-open { margin-right: var(--panel-width); }
+
+
+  .gateway-btn {
+    padding: 4px 12px; border-radius: 16px;
+    font-family: var(--mono); font-size: 11px;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+    border: 1px solid rgba(52,211,153,0.25);
+    background: rgba(52,211,153,0.07); color: #34d399;
+  }
+  .gateway-btn:hover { background: rgba(52,211,153,0.15); border-color: rgba(52,211,153,0.4); }
+  .gateway-btn.stopped {
+    border-color: rgba(248,113,113,0.25);
+    background: rgba(248,113,113,0.07); color: var(--error);
+  }
+  .openclaw-btn {
+    padding: 4px 12px; border-radius: 16px;
+    font-family: var(--mono); font-size: 11px;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+    border: 1px solid rgba(251,191,36,0.25);
+    background: rgba(251,191,36,0.07); color: #fbbf24;
+    text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .openclaw-btn:hover {
+    background: rgba(251,191,36,0.15);
+    border-color: rgba(251,191,36,0.4);
+  }
+  .end-chat-btn {
+    padding: 4px 12px; border-radius: 16px;
+    font-family: var(--mono); font-size: 11px;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+    border: 1px solid rgba(248,113,113,0.25);
+    background: rgba(248,113,113,0.07); color: var(--error);
+  }
+  .end-chat-btn:hover { background: rgba(248,113,113,0.18); border-color: rgba(248,113,113,0.5); }
+
+
+  /* ════════════════════════════════════════════════════
+     SESSION TAB BAR
+  ════════════════════════════════════════════════════ */
+  :root { --tab-h: 40px; }
+
+  .session-bar {
+    display: flex;
+    align-items: stretch;
+    gap: 3px;
+    padding: 6px 10px 0;
+    background: #0a0e16;
+    border-bottom: 2px solid rgba(255,255,255,0.08);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+    min-height: calc(var(--tab-h) + 7px);
+    flex-shrink: 0;
+  }
+  .session-tab {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: var(--tab-h);
+    padding: 0 6px 0 11px;
+    border-radius: 7px 7px 0 0;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-bottom: none;
+    background: rgba(255,255,255,0.025);
+    color: rgba(255,255,255,0.38);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    max-width: 210px;
+    min-width: 90px;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    margin-bottom: -2px;
+  }
+  .session-tab:hover {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.72);
+    border-color: rgba(255,255,255,0.13);
+  }
+  .session-tab.active {
+    background: #10141e;
+    color: #63b3ed;
+    border-color: rgba(99,179,237,0.4);
+    border-bottom-color: #10141e;
+    box-shadow: 0 -2px 10px rgba(99,179,237,0.07);
+  }
+  .tab-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    flex-shrink: 0;
+    margin-right: 8px;
+    transition: background 0.15s;
+  }
+  .session-tab.active .tab-dot { background: #63b3ed; }
+  .tab-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    overflow: hidden;
+    min-width: 0;
+  }
+  .tab-name {
+    font-size: 11.5px;
+    font-family: var(--mono);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+  .tab-meta {
+    font-size: 9px;
+    color: rgba(255,255,255,0.2);
+    font-family: var(--mono);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .session-tab.active .tab-meta { color: rgba(99,179,237,0.45); }
+  .tab-actions {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    margin-left: 5px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .session-tab:hover .tab-actions,
+  .session-tab.active .tab-actions { opacity: 1; }
+  .tab-btn {
+    width: 20px; height: 20px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.28);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    padding: 0;
+    line-height: 1;
+  }
+  .tab-btn:hover         { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); }
+  .tab-btn.close:hover   { background: rgba(248,113,113,0.2); color: #f87171; }
+  .tab-btn.rename:hover  { background: rgba(99,179,237,0.15); color: #63b3ed; }
+  .tab-name[contenteditable="true"] {
+    outline: none;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    padding: 1px 4px;
+    color: #fff;
+    min-width: 60px;
+  }
+  .session-new-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: var(--tab-h);
+    padding: 0 13px;
+    border-radius: 7px 7px 0 0;
+    border: 1px dashed rgba(255,255,255,0.14);
+    border-bottom: none;
+    background: transparent;
+    color: rgba(255,255,255,0.28);
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    margin-bottom: -2px;
+  }
+  .session-new-tab-btn:hover {
+    background: rgba(99,179,237,0.06);
+    border-color: rgba(99,179,237,0.35);
+    color: #63b3ed;
+  }
+  .new-tab-icon { font-size: 18px; font-weight: 300; line-height: 1; }
+  .session-overflow {
+    display: flex;
+    align-items: center;
+    height: var(--tab-h);
+    padding: 0 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(255,255,255,0.22);
+    flex-shrink: 0;
+  }
+
+
+  /* ── Injection notice ───────────────────────────────────────────────────── */
+  .injection-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    margin: 2px 0;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: rgba(99,179,237,0.55);
+    background: rgba(99,179,237,0.04);
+    border-left: 2px solid rgba(99,179,237,0.2);
+    border-radius: 0 4px 4px 0;
+  }
+  .injection-notice .inj-icon { font-size: 11px; flex-shrink: 0; }
+  .injection-notice .inj-path { color: rgba(99,179,237,0.8); }
+  .injection-notice .inj-sep  { opacity: 0.4; }
+
+
+  /* ── Live logs pane ─────────────────────────────────────────────────── */
+  .log-controls {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px 4px; flex-shrink: 0;
+  }
+  .log-file-select {
+    flex: 1; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07); border-radius: 5px;
+    padding: 4px 8px; font-family: var(--mono); font-size: 10px;
+    color: var(--text); outline: none; cursor: pointer;
+  }
+  .log-file-select:focus { border-color: rgba(99,179,237,0.3); }
+  .log-ctrl-btn {
+    width: 24px; height: 24px; border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-dim); font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; flex-shrink: 0;
+  }
+  .log-ctrl-btn:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+  .log-ctrl-btn.active { color: var(--cole); border-color: rgba(99,179,237,0.3); }
+  #log-file-select {
+    background: var(--bg3);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    width: 100%;
+    margin-bottom: 4px;
+    cursor: pointer;
+  }
+  #log-file-select option,
+  #log-file-select optgroup {
+    background: var(--bg3);
+    color: var(--text);
+  }
+  .log-output {
+    flex: 1; overflow-y: auto;
+    background: rgba(0,0,0,0.45);
+    margin: 0 12px 12px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 8px 10px;
+    font-family: var(--mono); font-size: 10px;
+    color: #a8c8a8; white-space: pre-wrap; word-break: break-all;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.08) transparent;
+    line-height: 1.5;
+  }
+  .log-line-info    { color: #a8c8a8; }
+  .log-line-error   { color: #f87171; }
+  .log-line-warn    { color: #fbbf24; }
+  .log-line-system  { color: rgba(99,179,237,0.6); font-style: italic; }
+  .log-line-nova    { color: var(--nova); }
+  .log-line-mentor  { color: var(--claude); }
+
+
+  .bridge-notice {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 12px; margin: 2px 0;
+    font-family: var(--mono); font-size: 10.5px;
+    color: rgba(167,139,250,0.7);
+    background: rgba(167,139,250,0.04);
+    border-left: 2px solid rgba(167,139,250,0.25);
+    border-radius: 0 4px 4px 0;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ── App Navigation Bar ───────────────────────────────────────────────── -->
+<div id="app-nav">
+  <div id="app-nav-brand">◈ PROJECT NOVA</div>
+  <div id="app-nav-tabs">
+    <button class="nav-tab active" data-view="chat">⬡ Chat</button>
+    <button class="nav-tab" data-view="dashboard">◉ Dashboard</button>
+  </div>
+  <div id="app-nav-gw" title="Gateway status">● GW</div>
+</div>
+
+<!-- ── Dashboard View (hidden by default) ────────────────────────────────── -->
+<div id="dashboard-view" style="display:none">
+
+  <div class="dash-grid">
+
+    <!-- Nova Status Card -->
+    <div class="dash-card" id="dash-nova-card">
+      <div class="dash-card-title">
+        <span class="dash-dot" id="dash-nova-dot"></span>
+        NOVA STATUS
+      </div>
+      <div class="dash-stat" id="dash-nova-pulse">—</div>
+      <div class="dash-sub" id="dash-nova-summary">waiting...</div>
+      <div class="dash-row">
+        <span class="dash-label">Last run</span>
+        <span class="dash-value" id="dash-nova-age">—</span>
+      </div>
+      <div class="dash-row" id="dash-task-row" style="display:none">
+        <span class="dash-label">Active task</span>
+        <span class="dash-value" id="dash-nova-task">—</span>
+      </div>
+      <div class="dash-row" id="dash-error-row" style="display:none">
+        <span class="dash-label dash-label-error">Error</span>
+        <span class="dash-value dash-value-error" id="dash-nova-error">—</span>
+      </div>
+    </div>
+
+    <!-- Gateway Card -->
+    <div class="dash-card" id="dash-gw-card">
+      <div class="dash-card-title">
+        <span class="dash-dot" id="dash-gw-dot"></span>
+        GATEWAY
+      </div>
+      <div class="dash-stat" id="dash-gw-status">checking...</div>
+      <div class="dash-sub" id="dash-gw-stack">—</div>
+      <div class="dash-row">
+        <span class="dash-label">Model</span>
+        <span class="dash-value" id="dash-gw-model">—</span>
+      </div>
+      <div class="dash-row">
+        <span class="dash-label">Context</span>
+        <span class="dash-value" id="dash-gw-ctx">—</span>
+      </div>
+      <div class="dash-row">
+        <span class="dash-label">Uptime</span>
+        <span class="dash-value" id="dash-gw-uptime">—</span>
+      </div>
+      <div class="dash-actions">
+        <button class="dash-btn dash-btn-start" id="dash-gw-start">▶ Start</button>
+        <button class="dash-btn dash-btn-stop"  id="dash-gw-stop">■ Stop</button>
+      </div>
+    </div>
+
+    <!-- Ollama Card -->
+    <div class="dash-card" id="dash-ollama-card">
+      <div class="dash-card-title">
+        <span class="dash-dot" id="dash-ollama-dot"></span>
+        OLLAMA
+      </div>
+      <div class="dash-stat" id="dash-ollama-status">checking...</div>
+      <div class="dash-sub">Local inference engine</div>
+      <div class="dash-row">
+        <span class="dash-label">Port</span>
+        <span class="dash-value">11434</span>
+      </div>
+      <div class="dash-row">
+        <span class="dash-label">Model</span>
+        <span class="dash-value">nova</span>
+      </div>
+    </div>
+
+    <!-- Quick Actions Card -->
+    <div class="dash-card">
+      <div class="dash-card-title">⚡ QUICK ACTIONS</div>
+      <div class="dash-actions-col">
+        <button class="dash-action-btn" onclick="switchView('chat')">→ Open Chat</button>
+        <button class="dash-action-btn" id="dash-health-btn">⊕ Run Health Check</button>
+        <button class="dash-action-btn" id="dash-trigger-btn">▷ Manual Nova Trigger</button>
+      </div>
+    </div>
+
+    <!-- Recent Sessions Card -->
+    <div class="dash-card dash-card-wide">
+      <div class="dash-card-title">📋 RECENT SESSIONS</div>
+      <div id="dash-sessions-list">
+        <div class="dash-sub">Loading sessions...</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ── Trigger Modal ──────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="trigger-modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Manual Nova Trigger</span>
+      <button class="modal-close" id="trigger-modal-close">✕</button>
+    </div>
+    <textarea id="trigger-input" placeholder="Enter message to send Nova..." rows="4"></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="copy-btn" id="trigger-send-btn" style="flex:1">▷ Send to Nova</button>
+      <button class="copy-btn" id="trigger-cancel-btn">Cancel</button>
+    </div>
+    <div id="trigger-result" style="margin-top:10px;font-size:12px;color:var(--text-dim)"></div>
+  </div>
+</div>
+
+<div id="main-layout">
+
+<header>
+  <div class="header-title">NOVA GROUP CHAT</div>
+  <div class="participants" id="participants">
+    <div class="participant-badge badge-cole">
+      <div class="dot dot-cole"></div>Cole
+    </div>
+    <div class="participant-badge badge-claude offline" id="badge-Claude">
+      <div class="dot dot-claude"></div>Claude
+    </div>
+    <div class="participant-badge badge-gemini offline" id="badge-Gemini">
+      <div class="dot dot-gemini"></div>Gemini
+    </div>
+    <div class="participant-badge badge-nova offline" id="badge-Nova">
+      <div class="dot dot-nova"></div>Nova
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="tools-toggle-btn" id="tools-toggle-btn" title="Toggle tools panel (Ctrl+\\)">⊞ Tools</button>
+      <button class="ctrl-btn stop-btn" id="stop-btn" title="Stop all AI responses">■ STOP</button>
+      <button class="export-btn" id="export-btn" title="Export chat context for browser sessions">⬡ Export Context</button>
+      <button class="end-chat-btn" id="end-chat-btn" title="Shut down the server and close">⏻ End Chat</button>
+    </div>
+  </div>
+</header>
+
+<!-- Session tab bar (static, always present) -->
+<div class="session-bar" id="session-bar">
+  <!-- Tabs rendered by JS. + button always last. -->
+</div>
+
+<!-- Nova Live Status Bar (1.5) -->
+<div id="nova-status-bar">
+  <div class="ns-dot" id="ns-dot"></div>
+  <span class="ns-label">NOVA</span>
+  <span class="ns-pulse" id="ns-pulse">waiting for first status...</span>
+  <span class="ns-task" id="ns-task" style="display:none"></span>
+  <span class="ns-error" id="ns-error" style="display:none"></span>
+  <span class="ns-age" id="ns-age"></span>
+</div>
+
+<!-- Blocked banner -->
+<div class="blocked-banner" id="blocked-banner">
+  AIs are still responding — press ■ STOP to interrupt before sending a new message.
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="export-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span>Export Chat Context</span>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-tab="claude">Claude</button>
+      <button class="modal-tab" data-tab="gemini">Gemini</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:11px;color:var(--text-dim);margin-bottom:10px">
+        Paste this into your browser chat to give it full session memory.
+      </p>
+      <div class="export-text" id="export-content">Loading...</div>
+    </div>
+    <div class="modal-footer">
+      <button class="copy-btn copy-claude" id="copy-claude-btn">Copy for Claude</button>
+      <button class="copy-btn copy-gemini" id="copy-gemini-btn">Copy for Gemini</button>
+    </div>
+  </div>
+</div>
+
+<div id="chat"></div>
+<div id="conn-status">connecting...</div>
+
+<footer>
+  <div class="input-row">
+    <div class="input-wrapper">
+      <textarea id="input" placeholder="Message everyone, or @Claude @Gemini @Nova to direct..." rows="1"></textarea>
+      <div class="input-hint">
+        <span>@Claude</span> &nbsp;<span>@Gemini</span> &nbsp;<span>@Nova</span>
+        &nbsp;to direct · Enter to send · Shift+Enter for newline
+      </div>
+    </div>
+    <button class="send-btn" id="send-btn" title="Send">&#9658;</button>
+  </div>
+</footer>
+
+</div><!-- #main-layout -->
+
+<!-- ═══════════ TOOLS PANEL ═══════════ -->
+<div id="tools-panel">
+  <div id="panel-resize"></div>
+  <div class="panel-header">
+    <span class="panel-title">Nova Tools</span>
+    <button class="panel-close-btn" id="panel-close-btn" title="Close panel">×</button>
+  </div>
+  <div class="tool-tabs">
+    <div class="tool-tab active" data-pane="files">📁 Files</div>
+    <div class="tool-tab" data-pane="terminal">⬛ Terminal</div>
+    <div class="tool-tab" data-pane="status">◈ Status</div>
+    <div class="tool-tab" data-pane="quick">⚡ Quick</div>
+    <div class="tool-tab" data-pane="logs">📟 Logs</div>
+  </div>
+
+  <!-- FILE EXPLORER -->
+  <div class="tool-pane active" id="pane-files">
+    <input class="file-search" id="file-search" placeholder="filter files..." type="text">
+    <div class="file-tree" id="file-tree">
+      <div style="color:var(--text-dim);font:11px var(--mono);padding:8px">Loading...</div>
+    </div>
+    <div id="file-preview">
+      <div id="file-preview-content"></div>
+      <div class="preview-actions">
+        <button class="preview-btn" id="preview-close-btn">✕ Close</button>
+        <button class="preview-btn inject" id="preview-inject-btn">→ Inject to Chat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TERMINAL -->
+  <div class="tool-pane" id="pane-terminal">
+    <div class="terminal-output" id="terminal-output">
+      <span style="color:var(--text-dim)">PowerShell · workspace root</span>
+    </div>
+    <div class="terminal-input-row">
+      <span class="term-prompt">❯</span>
+      <input class="terminal-input" id="terminal-input" placeholder="command..." autocomplete="off">
+      <button class="term-run-btn" id="term-run-btn">Run</button>
+    </div>
+    <div class="term-actions">
+      <button class="term-action-btn" id="term-clear-btn">Clear</button>
+      <button class="term-action-btn" id="term-inject-btn">→ Inject last output</button>
+    </div>
+  </div>
+
+  <!-- NOVA STATUS -->
+  <div class="tool-pane" id="pane-status">
+    <div class="status-pane-inner">
+      <div class="status-section">
+        <div class="status-section-title">
+          <span class="status-dot" id="heartbeat-dot"></span>Heartbeat
+        </div>
+        <div class="status-content" id="heartbeat-content">Loading...</div>
+      </div>
+      <div class="status-section">
+        <div class="status-section-title">Status.md</div>
+        <div class="status-content" id="status-content">Loading...</div>
+      </div>
+    </div>
+    <div class="status-refresh-row">
+      <span class="status-last-updated" id="status-last-updated">never</span>
+      <button class="status-refresh-btn" id="status-refresh-btn">↺ Refresh</button>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="tool-pane" id="pane-quick">
+    <div class="quick-pane-inner">
+      <div class="quick-section-title">Inject Files</div>
+      <button class="quick-btn" data-inject="memory/STATUS.md"><i class="quick-btn-icon">📄</i>STATUS.md</button>
+      <button class="quick-btn" data-inject="memory/JOURNAL.md"><i class="quick-btn-icon">📔</i>JOURNAL.md</button>
+      <button class="quick-btn" data-inject="memory/COLE.md"><i class="quick-btn-icon">👤</i>COLE.md</button>
+      <button class="quick-btn" data-inject="TOOLS.md"><i class="quick-btn-icon">🔧</i>TOOLS.md</button>
+      <button class="quick-btn" data-inject="tools/nova_sync/FILE_INDEX.md"><i class="quick-btn-icon">🗂</i>FILE_INDEX.md</button>
+      <div class="quick-section-title">Send Message</div>
+      <button class="quick-btn" data-msg="Summarize what we've worked on this session."><i class="quick-btn-icon">📝</i>Summarize session</button>
+      <button class="quick-btn" data-msg="Write a passover document for today capturing all changes, decisions, and next steps."><i class="quick-btn-icon">📋</i>Write passover</button>
+      <button class="quick-btn" data-msg="What should I work on next based on the current project state?"><i class="quick-btn-icon">🎯</i>What's next?</button>
+      <button class="quick-btn" data-msg="Are there any bugs, issues, or technical debt I should know about?"><i class="quick-btn-icon">🐛</i>Find issues</button>
+      <button class="quick-btn" data-msg="@Nova Run a quick self-check and report your status."><i class="quick-btn-icon">💜</i>Nova self-check</button>
+      <div class="quick-section-title">Nova Agent Bridge</div>
+      <button class="quick-btn" data-msg="@Nova To write a file to your workspace, use this syntax in your next message:
+
+[WRITE:logs/proposed/nova_advisor_refactor.py]
+# your code here
+[/WRITE]
+
+Your message will be forwarded to your real OpenClaw agent which has actual write access. Try it now — write build_context_snapshot() to logs/proposed/"><i class="quick-btn-icon">🌉</i>Teach Nova to write</button>
+      <button class="quick-btn" id="nova-bridge-exec-btn" data-bridge-cmd="python -c &quot;import sys; sys.path.insert(0,\'tools\'); from nova_memory.logger import log; log(\'bridge_test\', \'bridge working\')&quot;"><i class="quick-btn-icon">⚡</i>Test bridge (exec)</button>
+    </div>
+  </div>
+
+  <!-- LIVE LOGS -->
+  <div class="tool-pane" id="pane-logs">
+    <div class="log-controls" id="log-controls">
+      <select class="log-file-select" id="log-file-select" title="Select log file">
+        <option value="latest">⟳ Latest session log</option>
+      </select>
+      <button class="log-ctrl-btn" id="log-clear-btn" title="Clear display">✕</button>
+      <button class="log-ctrl-btn" id="log-scroll-btn" title="Toggle auto-scroll" data-active="true">⬇</button>
+    </div>
+    <div class="log-output" id="log-output">
+      <span style="color:var(--text-dim);font:11px var(--mono)">Select a log file or wait for activity...</span>
+    </div>
+  </div>
+
+</div><!-- #tools-panel -->
+
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// NOVA GROUP CHAT — Main Script
+// Clean rewrite — no duplicate declarations, all features wired
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── DOM refs ───────────────────────────────────────────────────────────────────
+const chat       = document.getElementById('chat');
+const input      = document.getElementById('input');
+const sendBtn    = document.getElementById('send-btn');
+const connStatus = document.getElementById('conn-status');
+const sessionBar = document.getElementById('session-bar');
+
+let sessions        = [];
+
+// ── Session state above; UI constants below ──
+const COLORS = { Cole:'--cole', Claude:'--claude', Gemini:'--gemini', Nova:'--nova' };
+const AVATARS = { Cole:'YOU', Claude:'CL', Gemini:'G', Nova:'N' };
+
+// Streaming messages keyed by id
+const streamingMsgs = {};
+
+// ── WebSocket ──────────────────────────────────────────────────────────────────
+let ws;
+let reconnectTimer;
+
+function connect() {
+  ws = new WebSocket(`ws://${location.host}/ws`);
+
+  pollGatewayStatus();
+
+  ws.onopen = () => {
+    connStatus.className = 'show';
+    connStatus.textContent = 'connected';
+    setTimeout(() => connStatus.className = '', 1500);
+    clearInterval(reconnectTimer);
+    // Ping for status every 30s
+    clearInterval(window._pingTimer);
+    window._pingTimer = setInterval(() => {
+      if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'ping' }));
+    }, 30000);
+  };
+
+  ws.onclose = () => {
+    connStatus.className = 'show error';
+    connStatus.textContent = 'disconnected — reconnecting...';
+    reconnectTimer = setTimeout(connect, 2000);
+  };
+
+  ws.onerror = () => {
+    connStatus.className = 'show error';
+    connStatus.textContent = 'connection error';
+  };
+
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    handleMessage(data);
+  };
+}
+
+// ── Message handler ────────────────────────────────────────────────────────────
+function handleMessage(data) {
+  switch (data.type) {
+
+    case 'sessions_init':
+    case 'session_switched':
+    case 'sessions_updated':
+      handleSessionEvent(data);
+      break;
+
+    case 'processing_start':
+      setProcessing(true);
+      break;
+
+    case 'processing_end':
+      setProcessing(false);
+      break;
+
+    case 'stopped':
+      setProcessing(false);
+      addSystemMsg(`stopped (${data.cancelled || 0} response(s) cancelled)`);
+      break;
+
+    case 'injection_notice': {
+      const isBridge = (data.path || '').startsWith('[bridge]');
+      const n = document.createElement('div');
+      if (isBridge) {
+        n.className = 'bridge-notice';
+        n.innerHTML = `<span>🌉</span><span>${data.path}</span>`;
+      } else {
+        n.className = 'injection-notice';
+        n.innerHTML = `<span class="inj-icon">📎</span><span class="inj-path">${data.path}</span><span class="inj-sep">→</span><span>${data.recipients}</span>`;
+      }
+      chat.appendChild(n);
+      scrollBottom();
+      break;
+    }
+
+    case 'blocked':
+      blockedBanner.classList.add('show');
+      setTimeout(() => blockedBanner.classList.remove('show'), 3000);
+      break;
+
+    // 1.4 -- Gateway error surfaced by server.py background watcher
+    case 'gateway_error': {
+      const errEl  = document.getElementById('ns-error');
+      const dot    = document.getElementById('ns-dot');
+      const bar    = document.getElementById('nova-status-bar');
+      if (errEl) {
+        errEl.textContent = `⚠ gateway: ${(data.message || '').slice(0, 100)}`;
+        errEl.style.display = '';
+      }
+      if (dot)  dot.className = 'ns-dot error';
+      if (bar)  bar.classList.add('has-error');
+      break;
+    }
+
+    case 'status':
+      updateStatus(data.participants || {});
+      break;
+
+    case 'history':
+      appendMessage(data.author, data.content, data.id);
+      break;
+
+    case 'user_message':
+      appendMessage(data.author, data.content, data.id);
+      break;
+
+    case 'message_start':
+      startStreamMsg(data.author, data.id);
+      break;
+
+    case 'token':
+      appendToken(data.author, data.id, data.token);
+      break;
+
+    case 'message_end':
+      finalizeMsg(data.id);
+      break;
+
+    case 'message':
+      appendMessage(data.author, data.content, data.id);
+      break;
+
+    case 'error':
+      addSystemMsg(`${data.author} error: ${data.message}`);
+      break;
+
+    case 'export_ready':
+      handleExportReady(data);
+      break;
+  }
+}
+
+// ── Status badges ──────────────────────────────────────────────────────────────
+function updateStatus(participants) {
+  ['Claude', 'Gemini', 'Nova'].forEach(name => {
+    const badge = document.getElementById(`badge-${name}`);
+    if (badge) badge.classList.toggle('offline', !participants[name]);
+  });
+}
+
+// ── Chat rendering ─────────────────────────────────────────────────────────────
+function appendMessage(author, content, id) {
+  if (id && document.getElementById(`msg-${id}`)) return; // dedup
+  const colorVar  = COLORS[author]  || '--text-dim';
+  const avatar    = AVATARS[author] || author[0].toUpperCase();
+  const colorClass = author.toLowerCase();
+
+  const highlighted = content.replace(/@(Claude|Gemini|Nova)/gi, (m, name) =>
+    `<span class="mention mention-${name.toLowerCase()}">@${name}</span>`
+  );
+
+  const div = document.createElement('div');
+  div.className = `message ${colorClass}`;
+  if (id) div.id = `msg-${id}`;
+  div.innerHTML = `
+    <div class="msg-avatar" style="color:var(${colorVar})">${avatar}</div>
+    <div class="msg-body">
+      <div class="msg-author" style="color:var(${colorVar})">${author}</div>
+      <div class="msg-content" id="content-${id || Math.random()}">${highlighted}</div>
+    </div>`;
+  chat.appendChild(div);
+  scrollBottom();
+}
+
+function startStreamMsg(author, id) {
+  if (document.getElementById(`msg-${id}`)) return;
+  const colorVar  = COLORS[author]  || '--text-dim';
+  const avatar    = AVATARS[author] || author[0].toUpperCase();
+  const colorClass = author.toLowerCase();
+  streamingMsgs[id] = { author, text: '' };
+
+  const div = document.createElement('div');
+  div.className = `message ${colorClass} streaming`;
+  div.id = `msg-${id}`;
+  div.innerHTML = `
+    <div class="msg-avatar" style="color:var(${colorVar})">${avatar}</div>
+    <div class="msg-body">
+      <div class="msg-author" style="color:var(${colorVar})">${author}</div>
+      <div class="msg-content" id="content-${id}"></div>
+    </div>`;
+  chat.appendChild(div);
+  scrollBottom();
+}
+
+function appendToken(author, id, token) {
+  if (!streamingMsgs[id]) return;
+  streamingMsgs[id].text += token;
+  const el = document.getElementById(`content-${id}`);
+  if (el) el.textContent = streamingMsgs[id].text;
+  scrollBottom();
+}
+
+function finalizeMsg(id) {
+  const msgEl = document.getElementById(`msg-${id}`);
+  if (msgEl) msgEl.classList.remove('streaming');
+  if (streamingMsgs[id]) {
+    const el = document.getElementById(`content-${id}`);
+    if (el) {
+      const highlighted = streamingMsgs[id].text.replace(/@(Claude|Gemini|Nova)/gi, (m, name) =>
+        `<span class="mention mention-${name.toLowerCase()}">@${name}</span>`
+      );
+      el.innerHTML = highlighted;
+    }
+    delete streamingMsgs[id];
+  }
+}
+
+function addSystemMsg(text) {
+  const div = document.createElement('div');
+  div.className = 'system-msg';
+  div.textContent = `— ${text} —`;
+  chat.appendChild(div);
+  scrollBottom();
+}
+
+function scrollBottom() {
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// ── Send message ───────────────────────────────────────────────────────────────
+function sendMessage() {
+  const content = input.value.trim();
+  if (!content || ws.readyState !== 1) return;
+  ws.send(JSON.stringify({ type: 'message', content }));
+  input.value = '';
+  input.style.height = '';
+}
+
+sendBtn.addEventListener('click', sendMessage);
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+input.addEventListener('input', () => {
+  input.style.height = '';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+});
+
+// ── STOP ───────────────────────────────────────────────────────────────────────
+const stopBtn      = document.getElementById('stop-btn');
+const blockedBanner = document.getElementById('blocked-banner');
+
+function setProcessing(active) {
+  if (stopBtn) stopBtn.classList.toggle('show', active);
+  if (sendBtn) sendBtn.classList.toggle('processing', active);
+  if (!active && blockedBanner) blockedBanner.classList.remove('show');
+}
+
+if (stopBtn) {
+  stopBtn.addEventListener('click', () => {
+    if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'stop' }));
+    setProcessing(false);
+  });
+}
+
+// ── End Chat ───────────────────────────────────────────────────────────────────
+const endChatBtn = document.getElementById('end-chat-btn');
+if (endChatBtn) {
+  endChatBtn.addEventListener('click', async () => {
+    if (!confirm('Shut down Nova Group Chat server?')) return;
+    try {
+      await fetch('/shutdown', { method: 'POST' });
+    } catch (_) { /* server closes connection — expected */ }
+    addSystemMsg('Server shutting down...');
+    setTimeout(() => window.close(), 800);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SESSION TABS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const MAX_TABS = 8;
+let activeSessionId = '';
+
+function renderTabs() {
+  sessionBar.innerHTML = '';
+  const visible  = sessions.slice(0, MAX_TABS);
+  const overflow = sessions.length - MAX_TABS;
+
+  visible.forEach(s => {
+    const isActive = s.session_id === activeSessionId;
+    const tab = document.createElement('div');
+    tab.className = 'session-tab' + (isActive ? ' active' : '');
+
+    // Color dot
+    const dot = document.createElement('span');
+    dot.className = 'tab-dot';
+
+    // Text block
+    const textBlock  = document.createElement('div');
+    textBlock.className = 'tab-text';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'tab-name';
+    nameSpan.textContent = s.name;
+
+    const metaSpan = document.createElement('span');
+    metaSpan.className = 'tab-meta';
+    const mc = s.message_count || 0;
+    const la = s.last_active ? new Date(s.last_active).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+    metaSpan.textContent = mc ? `${mc} msgs · ${la}` : (la || 'empty');
+
+    textBlock.appendChild(nameSpan);
+    textBlock.appendChild(metaSpan);
+
+    // Action buttons
+    const actions = document.createElement('div');
+    actions.className = 'tab-actions';
+
+    const renameBtn = document.createElement('button');
+    renameBtn.className = 'tab-btn rename';
+    renameBtn.title = 'Rename (or double-click)';
+    renameBtn.textContent = '✎';
+    renameBtn.addEventListener('click', e => { e.stopPropagation(); startRename(nameSpan, s); });
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'tab-btn close';
+    closeBtn.title = isActive ? 'Cannot close active session' : 'Delete session';
+    closeBtn.textContent = '✕';
+    closeBtn.style.opacity = isActive ? '0.2' : '1';
+    closeBtn.style.cursor  = isActive ? 'not-allowed' : 'pointer';
+    closeBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (isActive) return;
+      if (!confirm(`Delete "${s.name}"?\nThis cannot be undone.`)) return;
+      fetch(`/sessions/${s.session_id}`, { method: 'DELETE' });
+    });
+
+    actions.appendChild(renameBtn);
+    actions.appendChild(closeBtn);
+
+    nameSpan.addEventListener('dblclick', e => { e.stopPropagation(); startRename(nameSpan, s); });
+
+    tab.appendChild(dot);
+    tab.appendChild(textBlock);
+    tab.appendChild(actions);
+    tab.addEventListener('click', () => {
+      if (s.session_id !== activeSessionId)
+        ws.send(JSON.stringify({ type: 'switch_session', session_id: s.session_id }));
+    });
+    sessionBar.appendChild(tab);
+  });
+
+  if (overflow > 0) {
+    const ov = document.createElement('span');
+    ov.className = 'session-overflow';
+    ov.textContent = `+${overflow} more`;
+    ov.title = `${overflow} older session(s)`;
+    sessionBar.appendChild(ov);
+  }
+
+  // + New Session
+  const newBtn = document.createElement('button');
+  newBtn.className = 'session-new-tab-btn';
+  newBtn.title = 'Start new session';
+  newBtn.innerHTML = '<span class="new-tab-icon">+</span><span>New</span>';
+  newBtn.addEventListener('click', () => ws.send(JSON.stringify({ type: 'new_session' })));
+  sessionBar.appendChild(newBtn);
+}
+
+function startRename(nameSpan, session) {
+  const orig = session.name;
+  nameSpan.contentEditable = 'true';
+  nameSpan.focus();
+  const r = document.createRange();
+  r.selectNodeContents(nameSpan);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(r);
+  function commit() {
+    nameSpan.contentEditable = 'false';
+    const v = nameSpan.textContent.trim();
+    if (v && v !== orig) {
+      fetch(`/sessions/rename/${session.session_id}`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ name: v })
+      });
+      session.name = v;
+    } else { nameSpan.textContent = orig; }
+  }
+  nameSpan.addEventListener('blur', commit, { once: true });
+  nameSpan.addEventListener('keydown', e => {
+    if (e.key === 'Enter')  { e.preventDefault(); nameSpan.blur(); }
+    if (e.key === 'Escape') { nameSpan.textContent = orig; nameSpan.blur(); }
+  }, { once: true });
+}
+
+function handleSessionEvent(data) {
+  if (data.sessions) sessions = data.sessions;
+  if (data.active_id !== undefined) activeSessionId = data.active_id;
+
+  switch (data.type) {
+    case 'sessions_init':
+      if (data.active_id) activeSessionId = data.active_id;
+      renderTabs();
+      break;
+
+    case 'session_switched':
+      activeSessionId = data.session_id;
+      renderTabs();
+      chat.innerHTML = '';
+      (data.history || []).forEach(m => appendMessage(m.author, m.content, m.id));
+      addSystemMsg((data.history || []).length
+        ? `Resumed — ${data.history.length} messages`
+        : 'New session');
+      setProcessing(false);
+      break;
+
+    case 'sessions_updated':
+      renderTabs();
+      break;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TOOLS PANEL
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const toolsPanel     = document.getElementById('tools-panel');
+const toolsToggleBtn = document.getElementById('tools-toggle-btn');
+const panelCloseBtn  = document.getElementById('panel-close-btn');
+const mainLayout     = document.getElementById('main-layout');
+
+let panelOpen      = localStorage.getItem('nova_panel_open') === 'true';
+let activeToolTab  = localStorage.getItem('nova_panel_tab') || 'files';
+
+// ── File explorer state (hoisted to avoid TDZ errors) ──
+let fileTreeLoaded   = false;
+let selectedFilePath = '';
+
+function setPanelOpen(open) {
+  panelOpen = open;
+  if (toolsPanel) toolsPanel.classList.toggle('open', open);
+  if (mainLayout) mainLayout.classList.toggle('panel-open', open);
+  if (toolsToggleBtn) toolsToggleBtn.classList.toggle('active', open);
+  localStorage.setItem('nova_panel_open', String(open));
+  if (open) loadActivePanelTab();
+}
+
+if (toolsToggleBtn) toolsToggleBtn.addEventListener('click', () => setPanelOpen(!panelOpen));
+if (panelCloseBtn)  panelCloseBtn.addEventListener('click',  () => setPanelOpen(false));
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === '\\') { e.preventDefault(); setPanelOpen(!panelOpen); }
+});
+
+// Tool tab switching
+document.querySelectorAll('.tool-tab').forEach(tab => {
+  if (tab.dataset.pane === activeToolTab) {
+    tab.classList.add('active');
+    const pane = document.getElementById('pane-' + activeToolTab);
+    if (pane) { document.querySelectorAll('.tool-pane').forEach(p => p.classList.remove('active')); pane.classList.add('active'); }
+  }
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tool-pane').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const pane = document.getElementById('pane-' + tab.dataset.pane);
+    if (pane) pane.classList.add('active');
+    activeToolTab = tab.dataset.pane;
+    localStorage.setItem('nova_panel_tab', activeToolTab);
+    loadActivePanelTab();
+  });
+});
+
+function loadActivePanelTab() {
+  if (activeToolTab === 'files' && !fileTreeLoaded) loadFileTree();
+  if (activeToolTab === 'status') loadNovaStatus();
+}
+
+// Panel resize
+const resizeHandle = document.getElementById('panel-resize');
+if (resizeHandle) {
+  let resizing = false, rsX = 0, rsW = 0;
+  resizeHandle.addEventListener('mousedown', e => {
+    resizing = true; rsX = e.clientX; rsW = toolsPanel.offsetWidth;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!resizing) return;
+    const newW = Math.max(240, Math.min(560, rsW + (rsX - e.clientX)));
+    document.documentElement.style.setProperty('--panel-width', newW + 'px');
+  });
+  document.addEventListener('mouseup', () => {
+    if (!resizing) return;
+    resizing = false;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    localStorage.setItem('nova_panel_width', document.documentElement.style.getPropertyValue('--panel-width'));
+  });
+  const savedW = localStorage.getItem('nova_panel_width');
+  if (savedW) document.documentElement.style.setProperty('--panel-width', savedW);
+}
+
+// Restore panel state on load
+if (panelOpen) setPanelOpen(true);
+
+// ── File explorer ──────────────────────────────────────────────────────────────
+
+async function loadFileTree() {
+  if (fileTreeLoaded) return;
+  const treeEl = document.getElementById('file-tree');
+  treeEl.innerHTML = '<div style="color:var(--text-dim);font:11px var(--mono);padding:8px">Loading...</div>';
+  try {
+    const res  = await fetch('/api/files/tree');
+    const data = await res.json();
+    fileTreeLoaded = true;
+    renderFileTree(data, treeEl, '');
+  } catch (ex) {
+    treeEl.innerHTML = `<div style="color:var(--error);font:11px var(--mono);padding:8px">Error: ${ex.message}</div>`;
+  }
+}
+
+function renderFileTree(data, container, filter) {
+  container.innerHTML = '';
+  if (!data) return;
+  const filt = (filter || '').toLowerCase();
+  buildTreeNode(data, container, filt, true);
+}
+
+function buildTreeNode(node, parent, filt, isRoot) {
+  if (node.type === 'dir') {
+    const wrap     = document.createElement('div');
+    const row      = document.createElement('div');
+    const children = document.createElement('div');
+    row.className = 'tree-dir';
+    children.className = 'tree-children' + (isRoot || filt ? '' : ' collapsed');
+
+    let hasVisible = false;
+    (node.children || []).forEach(child => {
+      const added = buildTreeNode(child, children, filt, false);
+      if (added) hasVisible = true;
+    });
+    if (!hasVisible && filt && !isRoot) return false;
+
+    const arrow = filt || isRoot ? '▼' : '▶';
+    row.innerHTML = `<span class="tree-icon">${arrow}</span><span class="tree-name">${node.name}</span>`;
+    row.addEventListener('click', () => {
+      const collapsed = children.classList.toggle('collapsed');
+      row.querySelector('.tree-icon').textContent = collapsed ? '▶' : '▼';
+    });
+
+    wrap.appendChild(row);
+    wrap.appendChild(children);
+    parent.appendChild(wrap);
+    return true;
+  } else {
+    if (filt && !node.name.toLowerCase().includes(filt) && !(node.path || '').toLowerCase().includes(filt)) return false;
+    const icons = { '.py':'🐍', '.md':'📄', '.json':'{}', '.jsonl':'📊', '.txt':'📝', '.ps1':'⚡', '.yaml':'⚙', '.yml':'⚙' };
+    const icon = icons[node.ext] || '·';
+    const row = document.createElement('div');
+    row.className = 'tree-file';
+    row.innerHTML = `<span class="tree-icon">${icon}</span><span class="tree-name" title="${node.path || node.name}">${node.name}</span>`;
+    row.addEventListener('click', () => previewFile(node.path, node.name));
+    parent.appendChild(row);
+    return true;
+  }
+}
+
+const fileSearch = document.getElementById('file-search');
+if (fileSearch) {
+  fileSearch.addEventListener('input', async e => {
+    if (!fileTreeLoaded) await loadFileTree();
+    const treeEl = document.getElementById('file-tree');
+    // Re-fetch cached tree
+    try {
+      const res  = await fetch('/api/files/tree');
+      const data = await res.json();
+      renderFileTree(data, treeEl, e.target.value);
+    } catch (_) {}
+  });
+}
+
+async function previewFile(path, name) {
+  selectedFilePath = path;
+  const preview    = document.getElementById('file-preview');
+  const contentEl  = document.getElementById('file-preview-content');
+  if (preview) preview.classList.add('show');
+  if (contentEl) contentEl.textContent = 'Loading ' + name + '...';
+  try {
+    const res  = await fetch('/api/files/read?path=' + encodeURIComponent(path));
+    const data = await res.json();
+    if (data.error) { if (contentEl) contentEl.textContent = 'Error: ' + data.error; return; }
+    if (contentEl) contentEl.textContent = data.content.slice(0, 3000) + (data.content.length > 3000 ? '\n\n[... preview truncated ...]' : '');
+  } catch (ex) {
+    if (contentEl) contentEl.textContent = 'Error: ' + ex.message;
+  }
+}
+
+const previewCloseBtn  = document.getElementById('preview-close-btn');
+const previewInjectBtn = document.getElementById('preview-inject-btn');
+if (previewCloseBtn) previewCloseBtn.addEventListener('click', () => {
+  document.getElementById('file-preview').classList.remove('show');
+  selectedFilePath = '';
+});
+if (previewInjectBtn) previewInjectBtn.addEventListener('click', async () => {
+  if (!selectedFilePath) return;
+  await fetch('/api/files/inject', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: selectedFilePath, label: selectedFilePath })
+  });
+  document.getElementById('file-preview').classList.remove('show');
+});
+
+// ── Terminal ───────────────────────────────────────────────────────────────────
+const termOutput  = document.getElementById('terminal-output');
+const termInput   = document.getElementById('terminal-input');
+const termRunBtn  = document.getElementById('term-run-btn');
+let lastTermOut   = '';
+const termHist    = [];
+let termHistIdx   = -1;
+
+function termPrint(text, cls) {
+  const span = document.createElement('span');
+  if (cls) span.className = cls;
+  span.textContent = text;
+  if (termOutput) { termOutput.appendChild(span); termOutput.scrollTop = termOutput.scrollHeight; }
+}
+function termSep() {
+  const hr = document.createElement('div');
+  hr.className = 'term-separator';
+  if (termOutput) termOutput.appendChild(hr);
+}
+
+async function runTermCmd() {
+  const cmd = termInput ? termInput.value.trim() : '';
+  if (!cmd) return;
+  termHist.unshift(cmd);
+  termHistIdx = -1;
+  if (termInput) termInput.value = '';
+  termSep();
+  termPrint('❯ ' + cmd + '\n', 'term-cmd-echo');
+  try {
+    const res  = await fetch('/api/terminal/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cmd })
+    });
+    const data = await res.json();
+    if (data.error)  termPrint(data.error + '\n', 'term-stderr');
+    if (data.stdout) termPrint(data.stdout, 'term-stdout');
+    if (data.stderr) termPrint(data.stderr, 'term-stderr');
+    if (data.returncode !== 0 && !data.error) termPrint(`\n[exit ${data.returncode}]\n`, 'term-stderr');
+    lastTermOut = (data.stdout || '') + (data.stderr || '');
+  } catch (ex) {
+    termPrint('Fetch error: ' + ex.message + '\n', 'term-stderr');
+  }
+  if (termOutput) termOutput.scrollTop = termOutput.scrollHeight;
+}
+
+if (termRunBtn) termRunBtn.addEventListener('click', runTermCmd);
+if (termInput) {
+  termInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { runTermCmd(); return; }
+    if (e.key === 'ArrowUp')   { termHistIdx = Math.min(termHistIdx+1, termHist.length-1); termInput.value = termHist[termHistIdx]||''; e.preventDefault(); }
+    if (e.key === 'ArrowDown') { termHistIdx = Math.max(termHistIdx-1, -1); termInput.value = termHistIdx>=0 ? termHist[termHistIdx] : ''; e.preventDefault(); }
+  });
+}
+
+const termClearBtn  = document.getElementById('term-clear-btn');
+const termInjectBtn = document.getElementById('term-inject-btn');
+if (termClearBtn) termClearBtn.addEventListener('click', () => {
+  if (termOutput) termOutput.innerHTML = '<span style="color:var(--text-dim)">PowerShell · workspace root</span>';
+  lastTermOut = '';
+});
+if (termInjectBtn) termInjectBtn.addEventListener('click', () => {
+  if (!lastTermOut.trim()) return;
+  ws.send(JSON.stringify({ type: 'message', content: `[Terminal output]\n\`\`\`\n${lastTermOut.slice(0,4000)}\n\`\`\`` }));
+});
+
+// ── Nova Status ────────────────────────────────────────────────────────────────
+let statusIntervalId = null;
+
+async function loadNovaStatus() {
+  const hbEl    = document.getElementById('heartbeat-content');
+  const stEl    = document.getElementById('status-content');
+  const updEl   = document.getElementById('status-last-updated');
+  const dot     = document.getElementById('heartbeat-dot');
+  try {
+    const res  = await fetch('/api/nova/status');
+    const data = await res.json();
+    if (hbEl) hbEl.textContent = data.heartbeat || '(no heartbeat file)';
+    if (stEl) stEl.textContent = data.status    || '(no status file)';
+    if (updEl) updEl.textContent = 'updated ' + new Date().toLocaleTimeString();
+    if (dot) {
+      const m = (data.heartbeat || '').match(/\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/);
+      dot.classList.toggle('stale', m ? (Date.now() - new Date(m[0])) > 300000 : true);
+    }
+  } catch (ex) {
+    if (hbEl) hbEl.textContent = 'Error: ' + ex.message;
+  }
+}
+
+document.querySelectorAll('.tool-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    clearInterval(statusIntervalId);
+    if (tab.dataset.pane === 'status') {
+      loadNovaStatus();
+      statusIntervalId = setInterval(loadNovaStatus, 10000);
+    }
+  });
+});
+
+const statusRefreshBtn = document.getElementById('status-refresh-btn');
+if (statusRefreshBtn) statusRefreshBtn.addEventListener('click', loadNovaStatus);
+
+// ── Nova Persistent Status Bar (1.5) ───────────────────────────────────────────
+function updateNovaStatusBar(liveData) {
+  const bar    = document.getElementById('nova-status-bar');
+  const dot    = document.getElementById('ns-dot');
+  const pulse  = document.getElementById('ns-pulse');
+  const task   = document.getElementById('ns-task');
+  const errEl  = document.getElementById('ns-error');
+  const ageEl  = document.getElementById('ns-age');
+  if (!bar || !pulse) return;
+
+  const p          = liveData.pulse       || 'Idle';
+  const activeTask = liveData.active_task || null;
+  const errors     = liveData.errors      || [];
+  const updatedAt  = liveData.updated_at  || null;
+  const lastRun    = liveData.last_run    || {};
+
+  pulse.textContent = p;
+
+  if (activeTask) {
+    task.textContent = `[${activeTask}]`;
+    task.style.display = '';
+    bar.classList.add('has-task');
+  } else {
+    task.style.display = 'none';
+    bar.classList.remove('has-task');
+  }
+
+  const recentError = errors.length > 0 ? errors[0] : null;
+  if (recentError) {
+    errEl.textContent = `⚠ ${recentError.category}: ${recentError.message.slice(0,80)}`;
+    errEl.style.display = '';
+    bar.classList.add('has-error');
+    dot.className = 'ns-dot error';
+  } else {
+    errEl.style.display = 'none';
+    bar.classList.remove('has-error');
+  }
+
+  // Staleness check -- stale if no update in 10 minutes
+  if (updatedAt) {
+    const ageMs  = Date.now() - new Date(updatedAt).getTime();
+    const ageMins = Math.round(ageMs / 60000);
+    ageEl.textContent = ageMins < 1 ? 'just now' : `${ageMins}m ago`;
+    const stale = ageMs > 600000;  // 10 minutes
+    if (!recentError) {
+      dot.className = stale ? 'ns-dot stale' : 'ns-dot active';
+    }
+  }
+}
+
+async function pollNovaStatusBar() {
+  try {
+    const res  = await fetch('/api/nova/status');
+    const data = await res.json();
+    if (data.nova_live && Object.keys(data.nova_live).length > 0) {
+      updateNovaStatusBar(data.nova_live);
+    }
+  } catch (ex) {
+    const pulse = document.getElementById('ns-pulse');
+    if (pulse) pulse.textContent = 'status unavailable';
+  }
+}
+
+// Poll every 15s
+pollNovaStatusBar();
+setInterval(pollNovaStatusBar, 15000);
+
+// ── Quick Actions ──────────────────────────────────────────────────────────────
+document.querySelectorAll('.quick-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    if (btn.dataset.inject) {
+      await fetch('/api/files/inject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: btn.dataset.inject, label: btn.dataset.inject })
+      });
+    } else if (btn.dataset.bridgeCmd) {
+      const res = await fetch('/api/nova/bridge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action_type: 'exec', cmd: btn.dataset.bridgeCmd })
+      });
+      const d = await res.json();
+      addSystemMsg(d.result || 'bridge sent');
+    } else if (btn.dataset.msg) {
+      ws.send(JSON.stringify({ type: 'message', content: btn.dataset.msg }));
+    }
+  });
+});
+
+// ── Export Modal ───────────────────────────────────────────────────────────────
+let exportData  = { claude: '', gemini: '' };
+let activeExTab = 'claude';
+
+const exportBtn    = document.getElementById('export-btn');
+const exportModal  = document.getElementById('export-modal');
+const modalClose   = document.getElementById('modal-close');
+const copyClaude   = document.getElementById('copy-claude-btn');
+const copyGemini   = document.getElementById('copy-gemini-btn');
+const exportContent = document.getElementById('export-content');
+
+if (exportBtn) exportBtn.addEventListener('click', () => {
+  if (exportModal) exportModal.classList.add('show');
+  if (exportContent) exportContent.textContent = 'Generating export...';
+  ws.send(JSON.stringify({ type: 'export_request' }));
+});
+if (modalClose) modalClose.addEventListener('click', () => exportModal && exportModal.classList.remove('show'));
+
+document.querySelectorAll('.modal-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeExTab = tab.dataset.tab;
+    if (exportContent) exportContent.textContent = exportData[activeExTab] || '(empty)';
+  });
+});
+
+function handleExportReady(data) {
+  exportData.claude = data.claude_export || '';
+  exportData.gemini = data.gemini_export || '';
+  if (exportContent) exportContent.textContent = exportData[activeExTab] || '(empty)';
+}
+
+if (copyClaude) copyClaude.addEventListener('click', () => {
+  navigator.clipboard.writeText(exportData.claude || '').then(() => {
+    copyClaude.textContent = 'Copied!';
+    setTimeout(() => copyClaude.textContent = 'Copy for Claude', 2000);
+  });
+});
+if (copyGemini) copyGemini.addEventListener('click', () => {
+  navigator.clipboard.writeText(exportData.gemini || '').then(() => {
+    copyGemini.textContent = 'Copied!';
+    setTimeout(() => copyGemini.textContent = 'Copy for Gemini', 2000);
+  });
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+connect();
+renderTabs(); // render empty state (shows + button immediately)
+addSystemMsg('Nova Group Chat initialized');
+
+
+// ── Live Logs ──────────────────────────────────────────────────────────────
+const logOutput    = document.getElementById('log-output');
+const logSelect    = document.getElementById('log-file-select');
+const logClearBtn  = document.getElementById('log-clear-btn');
+const logScrollBtn = document.getElementById('log-scroll-btn');
+let logAutoScroll  = true;
+let logEventSource = null;
+let logLineCount   = 0;
+const LOG_MAX_LINES = 500;
+
+function logClassify(line) {
+  const l = line.toLowerCase();
+  if (l.includes('error') || l.includes('traceback') || l.includes('exception'))
+    return 'log-line-error';
+  if (l.includes('warn') || l.includes('caution'))
+    return 'log-line-warn';
+  if (l.includes('tool_call') || l.includes('tool_result') || l.includes('function_call'))
+    return 'log-line-mentor';
+  if (l.includes('"role":"assistant"') || l.includes('role: assistant') || l.includes('[nova]'))
+    return 'log-line-nova';
+  if (l.includes('"role":"tool"') || l.includes('"role":"user"'))
+    return 'log-line-system';
+  if (line.startsWith('[') || line.startsWith('data: ['))
+    return 'log-line-system';
+  return 'log-line-info';
+}
+
+function logAppend(raw) {
+  let text = raw.startsWith('data: ') ? raw.slice(6) : raw;
+  if (!text.trim()) return;
+
+  try {
+    const obj = JSON.parse(text);
+    if (obj.timestamp && obj.author && obj.content) {
+      const ts = obj.timestamp.slice(11, 19);
+      text = `[${ts}] ${obj.author}: ${obj.content.slice(0, 300)}`;
+    } else if (obj.role && (obj.content || obj.tool_calls)) {
+      const role = obj.role.toUpperCase();
+      if (obj.tool_calls) {
+        const calls = obj.tool_calls.map(t => (t.function && t.function.name) || t.name || '?').join(', ');
+        text = `[${role}] TOOL CALLS: ${calls}`;
+      } else if (typeof obj.content === 'string') {
+        text = `[${role}] ${obj.content.slice(0, 300)}`;
+      } else if (Array.isArray(obj.content)) {
+        const parts = obj.content.map(c => c.text || c.type || '').join(' ').slice(0, 300);
+        text = `[${role}] ${parts}`;
+      }
+    } else if (obj['0'] && obj['1'] && obj._meta) {
+      const subsystem = typeof obj['0'] === 'string' ? obj['0'].replace(/[{}"]/g, '') : '?';
+      const msg = typeof obj['1'] === 'string' ? obj['1'] : JSON.stringify(obj['1']);
+      const ts = (obj.time || '').slice(11, 19);
+      text = `[${ts}] ${subsystem} — ${msg}`;
+    }
+  } catch (_) {}
+
+  const span = document.createElement('span');
+  span.className = logClassify(text);
+  span.textContent = text + '\n';
+  logOutput.appendChild(span);
+  logLineCount++;
+
+  while (logLineCount > LOG_MAX_LINES) {
+    if (logOutput.firstChild) { logOutput.removeChild(logOutput.firstChild); logLineCount--; }
+    else break;
+  }
+
+  if (logAutoScroll) logOutput.scrollTop = logOutput.scrollHeight;
+}
+
+function startLogStream(file) {
+  if (logEventSource) { logEventSource.close(); logEventSource = null; }
+  logOutput.innerHTML = '';
+  logLineCount = 0;
+
+  const url = '/api/logs/stream?file=' + encodeURIComponent(file || 'latest');
+  logEventSource = new EventSource(url);
+
+  logEventSource.onmessage = (e) => { logAppend(e.data); };
+  logEventSource.onerror   = ()  => {
+    logAppend('data: [connection lost — will reconnect]');
+    setTimeout(() => { if (logSelect) startLogStream(logSelect.value); }, 3000);
+  };
+}
+
+
+function shouldShowLog(name, type) {
+  if (name.endsWith('.gz'))           return false;
+  if (name === 'sessions_index.json') return false;
+  if (name.includes('export'))        return false;
+  if (type === 'openclaw_cron')       return false;
+  return true;
+}
+
+function friendlyLogLabel(name, type) {
+  // Nova chat sessions: "2026-03-21_19-26-26_chat.jsonl"
+  const chatM = name.match(/^(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})_chat\.jsonl/);
+  if (chatM) {
+    const d = chatM[1].replace(/-/g,'/');
+    const t = chatM[2].replace(/-/g,':');
+    return `Chat Session — ${d} ${t}`;
+  }
+  // Nova agent session logs (UUID): "097d915a-e7c6...jsonl"
+  const uuidM = name.match(/^([0-9a-f]{8})-[0-9a-f]{4}-[0-9a-f]{4}/i);
+  if (uuidM && type === 'openclaw_session') return `Nova Agent Session (${uuidM[1]}…)`;
+  if (uuidM && type === 'openclaw_cron')   return `Cron Run (${uuidM[1]}…)`;
+  if (uuidM) return `Agent Session (${uuidM[1]}…)`;
+  // Dated session logs: "logs/sessions/2026-03-25/actions.jsonl"
+  const sessionMap = {
+    'actions.jsonl':     'Nova Actions Log',
+    'mentor.jsonl':      'Mentor Conversations',
+    'errors.jsonl':      'Error Log',
+    'system.jsonl':      'System Events',
+    'stress_test.jsonl': 'Stress Test Results',
+    'nova_thoughts.jsonl': 'Nova Thoughts (Chat)',
+    'interrupts.jsonl':  'Cole Messages & Interrupts',
+  };
+  if (sessionMap[name]) return sessionMap[name];
+  // Fallback: strip .jsonl and humanise underscores
+  return name.replace(/\.jsonl$/, '').replace(/_/g, ' ');
+}
+
+async function loadLogFileList() {
+  try {
+    // Clear existing options except "latest"
+    while (logSelect.options.length > 1) logSelect.remove(1);
+
+    // Nova chat logs
+    const r1   = await fetch('/api/logs/list');
+    const d1   = await r1.json();
+    if ((d1.files||[]).length) {
+      const grp1 = document.createElement('optgroup');
+      grp1.label = 'Nova Chat Sessions';
+      (d1.files||[]).filter(f => shouldShowLog(f.name, f.type)).forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f.path;
+        opt.textContent = `${friendlyLogLabel(f.name, f.type)}  (${f.modified})`;
+        grp1.appendChild(opt);
+      });
+      logSelect.appendChild(grp1);
+    }
+
+    // OpenClaw agent session logs (Nova's raw thoughts)
+    try {
+      const r2   = await fetch('/api/logs/openclaw');
+      const d2   = await r2.json();
+      if ((d2.files||[]).length) {
+        const grp2 = document.createElement('optgroup');
+        grp2.label = '🧠 Nova Agent Logs (OpenClaw)';
+        (d2.files||[]).filter(f => shouldShowLog(f.name, f.type)).forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = f.path;
+          opt.textContent = `${friendlyLogLabel(f.name, f.type)}  (${f.modified})`;
+          grp2.appendChild(opt);
+        });
+        logSelect.appendChild(grp2);
+      }
+    } catch (_) {}
+
+  } catch (_) {}
+}
+
+logSelect.addEventListener('change', () => startLogStream(logSelect.value));
+
+logClearBtn.addEventListener('click', () => {
+  logOutput.innerHTML = '';
+  logLineCount = 0;
+});
+
+logScrollBtn.addEventListener('click', () => {
+  logAutoScroll = !logAutoScroll;
+  logScrollBtn.classList.toggle('active', logAutoScroll);
+  if (logAutoScroll) logOutput.scrollTop = logOutput.scrollHeight;
+});
+
+// Activate when tab is clicked
+document.querySelectorAll('.tool-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    if (tab.dataset.pane === 'logs') {
+      loadLogFileList();
+      if (!logEventSource) startLogStream('latest');
+    }
+  });
+});
+
+// If logs tab was the saved tab, auto-start
+if (activeToolTab === 'logs') {
+  loadLogFileList();
+  startLogStream('latest');
+}
+
+
+
+// ── Gateway start/stop ────────────────────────────────────────────────────────
+let _gatewayRunning = null;
+
+async function pollGatewayStatus() {
+  try {
+    const res = await fetch('/api/gateway/status');
+    const d   = await res.json();
+    _setGatewayState(d.running);
+  } catch (_) {}
+}
+
+function _setGatewayState(running) {
+  _gatewayRunning = running;
+  const btn = document.getElementById('gateway-btn');
+  if (!btn) return;
+  if (running) {
+    btn.textContent = '🟢 Gateway On';
+    btn.classList.remove('stopped');
+    btn.title = 'Gateway running — click to stop';
+  } else {
+    btn.textContent = '🔴 Gateway Off';
+    btn.classList.add('stopped');
+    btn.title = 'Gateway stopped — click to start';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const gwBtn = document.getElementById('gateway-btn');
+  if (gwBtn) {
+    pollGatewayStatus();
+    setInterval(pollGatewayStatus, 15000);
+    gwBtn.addEventListener('click', async () => {
+      if (_gatewayRunning) {
+        gwBtn.textContent = '⏳ Stopping…';
+        await fetch('/api/gateway/stop', { method: 'POST' });
+        setTimeout(pollGatewayStatus, 2000);
+      } else {
+        gwBtn.textContent = '⏳ Starting…';
+        await fetch('/api/gateway/start', { method: 'POST' });
+        setTimeout(pollGatewayStatus, 3000);
+      }
+    });
+  }
+});
+
+</script>
+
+<!-- ── Dashboard CSS ─────────────────────────────────────────────────────── -->
+<style>
+
+/* ── App Nav ── */
+#app-nav {
+  position: relative; z-index: 20; display: flex; align-items: center;
+  gap: 16px; padding: 6px 16px;
+  background: #060810; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#app-nav-brand {
+  font-family: var(--sans); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.15em; color: var(--nova);
+  min-width: 140px;
+}
+#app-nav-tabs { display: flex; gap: 4px; }
+.nav-tab {
+  background: transparent; border: 1px solid transparent;
+  color: var(--text-dim); font-family: var(--mono); font-size: 11px;
+  padding: 4px 14px; border-radius: 4px; cursor: pointer;
+  letter-spacing: 0.06em; transition: all 0.15s;
+}
+.nav-tab:hover { color: var(--text); border-color: var(--border); }
+.nav-tab.active { color: var(--nova); border-color: rgba(192,132,252,0.4); background: rgba(192,132,252,0.07); }
+#app-nav-gw {
+  margin-left: auto; font-size: 11px; letter-spacing: 0.08em;
+  color: var(--text-dim); transition: color 0.3s;
+}
+#app-nav-gw.gw-on  { color: #4ade80; }
+#app-nav-gw.gw-off { color: var(--error); }
+
+/* ── Dashboard View ── */
+#dashboard-view {
+  flex: 1; overflow-y: auto; padding: 24px;
+  background: var(--bg);
+}
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px; max-width: 1200px;
+}
+.dash-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 18px;
+}
+.dash-card-wide { grid-column: 1 / -1; }
+.dash-card-title {
+  font-family: var(--sans); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.12em; color: var(--text-dim);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+}
+.dash-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  background: var(--text-dim); transition: background 0.3s, box-shadow 0.3s;
+}
+.dash-dot.online   { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+.dash-dot.degraded { background: #facc15; box-shadow: 0 0 8px #facc15; }
+.dash-dot.offline  { background: var(--error); }
+.dash-stat {
+  font-family: var(--sans); font-size: 22px; font-weight: 700;
+  color: #fff; margin-bottom: 4px;
+}
+.dash-sub { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; }
+.dash-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; border-bottom: 1px solid rgba(30,42,66,0.6);
+  font-size: 11px;
+}
+.dash-label { color: var(--text-dim); }
+.dash-label-error { color: var(--error); }
+.dash-value { color: var(--text); font-family: var(--mono); }
+.dash-value-error { color: var(--error); }
+.dash-actions { display: flex; gap: 8px; margin-top: 14px; }
+.dash-actions-col { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.dash-btn {
+  flex: 1; padding: 6px 10px; border: 1px solid var(--border);
+  border-radius: 4px; font-size: 11px; font-family: var(--mono);
+  cursor: pointer; transition: all 0.15s; background: var(--bg3); color: var(--text);
+}
+.dash-btn:hover { border-color: var(--nova); color: var(--nova); }
+.dash-btn-start:hover { border-color: #4ade80; color: #4ade80; }
+.dash-btn-stop:hover  { border-color: var(--error); color: var(--error); }
+.dash-action-btn {
+  padding: 8px 14px; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text); font-family: var(--mono); font-size: 12px;
+  cursor: pointer; transition: all 0.15s; text-align: left;
+}
+.dash-action-btn:hover { border-color: var(--nova); color: var(--nova); }
+
+/* Sessions list */
+.session-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 10px; border-radius: 4px; margin-bottom: 4px;
+  background: var(--bg3); font-size: 11px; gap: 12px;
+}
+.session-trigger {
+  font-family: var(--sans); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; padding: 2px 7px; border-radius: 10px;
+  background: rgba(192,132,252,0.1); color: var(--nova); border: 1px solid rgba(192,132,252,0.2);
+  text-transform: uppercase; flex-shrink: 0;
+}
+.session-trigger.discord { background: rgba(96,165,250,0.1); color: var(--claude); border-color: rgba(96,165,250,0.2); }
+.session-trigger.cron    { background: rgba(52,211,153,0.1); color: var(--gemini); border-color: rgba(52,211,153,0.2); }
+.session-meta { color: var(--text-dim); font-size: 10px; }
+.session-id { font-family: var(--mono); color: var(--text); }
+
+/* Trigger modal textarea */
+#trigger-input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text); font-family: var(--mono);
+  font-size: 12px; padding: 10px; resize: vertical; margin-top: 10px;
+}
+
+</style>
+
+<!-- ── Dashboard JS ───────────────────────────────────────────────────────── -->
+<script>
+
+// ── View switching ────────────────────────────────────────────────────────────
+function switchView(view) {
+  const mainLayout   = document.getElementById('main-layout');
+  const dashView     = document.getElementById('dashboard-view');
+  const tabs         = document.querySelectorAll('.nav-tab');
+  if (view === 'dashboard') {
+    mainLayout.style.display  = 'none';
+    dashView.style.display    = 'flex';
+    dashView.style.flexDirection = 'column';
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.view === 'dashboard'));
+    refreshDashboard();
+  } else {
+    mainLayout.style.display  = 'flex';
+    dashView.style.display    = 'none';
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.view === 'chat'));
+  }
+}
+
+document.querySelectorAll('.nav-tab').forEach(btn => {
+  btn.addEventListener('click', () => switchView(btn.dataset.view));
+});
+
+// ── Nav bar gateway indicator ─────────────────────────────────────────────────
+function updateNavGw(running, stack) {
+  const el = document.getElementById('app-nav-gw');
+  if (!el) return;
+  if (running) {
+    el.textContent  = `● GW ON (${stack || 'nova_gateway'})`;
+    el.className    = 'gw-on';
+  } else {
+    el.textContent  = '● GW OFF';
+    el.className    = 'gw-off';
+  }
+}
+
+// Hook into existing gateway poll to also update nav bar
+const _origUpdateGwBtn = typeof updateGatewayBtn !== 'undefined' ? updateGatewayBtn : null;
+
+// ── Dashboard refresh ─────────────────────────────────────────────────────────
+async function refreshDashboard() {
+  await Promise.all([
+    refreshNovaStatus(),
+    refreshGatewayCard(),
+    refreshOllamaCard(),
+    refreshSessions(),
+  ]);
+}
+
+// Nova Status card
+async function refreshNovaStatus() {
+  try {
+    const r = await fetch('/api/nova/status');
+    const d = await r.json();
+    const live = d.nova_live || {};
+    const pulse = live.pulse || '—';
+    const summary = live.summary || '';
+    const task = live.active_task || {};
+    const errors = live.errors || [];
+    const lastRun = live.last_run_at ? new Date(live.last_run_at) : null;
+
+    document.getElementById('dash-nova-pulse').textContent   = pulse;
+    document.getElementById('dash-nova-summary').textContent = summary || 'No summary yet';
+
+    const dot = document.getElementById('dash-nova-dot');
+    dot.className = 'dash-dot ' + (pulse === 'Idle' ? 'online' : pulse === 'Error' ? 'offline' : 'degraded');
+
+    if (lastRun) {
+      const ageMin = Math.round((Date.now() - lastRun.getTime()) / 60000);
+      document.getElementById('dash-nova-age').textContent = ageMin < 2 ? 'just now' : `${ageMin}m ago`;
+    } else {
+      document.getElementById('dash-nova-age').textContent = d.age_s ? `${d.age_s}s ago` : '—';
+    }
+
+    const taskRow = document.getElementById('dash-task-row');
+    if (task && task.id) {
+      taskRow.style.display = 'flex';
+      document.getElementById('dash-nova-task').textContent = task.description || task.id;
+    } else {
+      taskRow.style.display = 'none';
+    }
+
+    const errRow = document.getElementById('dash-error-row');
+    if (errors.length > 0) {
+      errRow.style.display = 'flex';
+      document.getElementById('dash-nova-error').textContent = errors[errors.length-1].message || errors[errors.length-1];
+    } else {
+      errRow.style.display = 'none';
+    }
+  } catch(e) {
+    document.getElementById('dash-nova-pulse').textContent = 'unreachable';
+    document.getElementById('dash-nova-dot').className = 'dash-dot offline';
+  }
+}
+
+// Gateway card
+async function refreshGatewayCard() {
+  try {
+    const r  = await fetch('/api/gateway/status');
+    const d  = await r.json();
+    const up = d.running;
+    const stack = d.stack || 'nova_gateway';
+
+    document.getElementById('dash-gw-dot').className = `dash-dot ${up ? 'online' : 'offline'}`;
+    document.getElementById('dash-gw-status').textContent = up ? 'ONLINE' : 'OFFLINE';
+    document.getElementById('dash-gw-stack').textContent  = up ? `${stack} port ${d.port || 18790}` : 'Not running';
+    updateNavGw(up, stack);
+
+    // Try to get detailed status from nova_gateway API
+    if (up && (d.port === 18790 || !d.port)) {
+      try {
+        const sr = await fetch('http://127.0.0.1:18790/api/status');
+        const sd = await sr.json();
+        const h = Math.floor(sd.uptime_s / 3600);
+        const m = Math.floor((sd.uptime_s % 3600) / 60);
+        document.getElementById('dash-gw-uptime').textContent = h > 0 ? `${h}h ${m}m` : `${m}m`;
+        document.getElementById('dash-gw-model').textContent  = sd.ollama_model || 'nova';
+        const ctx = sd.context_window;
+        document.getElementById('dash-gw-ctx').textContent    = ctx ? `${(ctx/1024).toFixed(0)}k tokens` : '—';
+      } catch(e2) {
+        document.getElementById('dash-gw-uptime').textContent = 'running';
+        document.getElementById('dash-gw-model').textContent  = 'nova';
+        document.getElementById('dash-gw-ctx').textContent    = '32k tokens';
+      }
+    } else if (!up) {
+      document.getElementById('dash-gw-uptime').textContent = '—';
+      document.getElementById('dash-gw-model').textContent  = '—';
+      document.getElementById('dash-gw-ctx').textContent    = '—';
+    }
+  } catch(e) {
+    document.getElementById('dash-gw-dot').className = 'dash-dot offline';
+    document.getElementById('dash-gw-status').textContent = 'OFFLINE';
+  }
+}
+
+// Ollama card
+async function refreshOllamaCard() {
+  try {
+    const r = await fetch('http://127.0.0.1:11434/api/tags');
+    if (r.ok) {
+      document.getElementById('dash-ollama-dot').className    = 'dash-dot online';
+      document.getElementById('dash-ollama-status').textContent = 'ONLINE';
+    } else { throw new Error(); }
+  } catch(e) {
+    document.getElementById('dash-ollama-dot').className    = 'dash-dot offline';
+    document.getElementById('dash-ollama-status').textContent = 'OFFLINE';
+  }
+}
+
+// Sessions list
+async function refreshSessions() {
+  const container = document.getElementById('dash-sessions-list');
+  try {
+    const r = await fetch('/api/logs/nova_gateway?limit=8');
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    const sessions = d.sessions || [];
+    if (sessions.length === 0) {
+      container.innerHTML = '<div class="dash-sub">No sessions yet — send Nova a message to start one.</div>';
+      return;
+    }
+    container.innerHTML = sessions.map(s => {
+      const trigger = s.trigger || 'unknown';
+      const ts = s.timestamp ? new Date(s.timestamp).toLocaleString() : '—';
+      const msgs = s.messages || '?';
+      const kb = s.size_kb || 0;
+      return `<div class="session-row">
+        <span class="session-trigger ${trigger}">${trigger}</span>
+        <span class="session-id">${s.id ? s.id.slice(0,8) : '—'}</span>
+        <span class="session-meta">${msgs} msgs · ${kb}KB</span>
+        <span class="session-meta">${ts}</span>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = '<div class="dash-sub">Sessions unavailable (gateway not running?)</div>';
+  }
+}
+
+// ── Gateway card buttons ──────────────────────────────────────────────────────
+document.getElementById('dash-gw-start').addEventListener('click', async () => {
+  document.getElementById('dash-gw-status').textContent = 'STARTING...';
+  await fetch('/api/gateway/start', { method: 'POST' });
+  setTimeout(refreshDashboard, 3000);
+});
+document.getElementById('dash-gw-stop').addEventListener('click', async () => {
+  document.getElementById('dash-gw-status').textContent = 'STOPPING...';
+  await fetch('/api/gateway/stop', { method: 'POST' });
+  setTimeout(refreshDashboard, 2000);
+});
+
+// ── Health check button ───────────────────────────────────────────────────────
+document.getElementById('dash-health-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('dash-health-btn');
+  btn.textContent = '⊕ Running...';
+  btn.disabled = true;
+  try {
+    await fetch('/api/gateway/health-check', { method: 'POST' });
+    btn.textContent = '✓ Health check triggered';
+  } catch(e) {
+    btn.textContent = '✗ Gateway not running';
+  }
+  setTimeout(() => { btn.textContent = '⊕ Run Health Check'; btn.disabled = false; }, 3000);
+});
+
+// ── Manual trigger modal ──────────────────────────────────────────────────────
+document.getElementById('dash-trigger-btn').addEventListener('click', () => {
+  document.getElementById('trigger-modal').style.display = 'flex';
+  document.getElementById('trigger-input').focus();
+});
+document.getElementById('trigger-modal-close').addEventListener('click', () => {
+  document.getElementById('trigger-modal').style.display = 'none';
+});
+document.getElementById('trigger-cancel-btn').addEventListener('click', () => {
+  document.getElementById('trigger-modal').style.display = 'none';
+});
+document.getElementById('trigger-send-btn').addEventListener('click', async () => {
+  const text = document.getElementById('trigger-input').value.trim();
+  if (!text) return;
+  const result = document.getElementById('trigger-result');
+  result.textContent = 'Sending...';
+  try {
+    const r = await fetch('/api/gateway/trigger', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ text, source: 'manual' })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      result.textContent = `✓ Nova replied (${d.tool_calls} tool calls, ${d.duration_s?.toFixed(1)}s): ${d.text?.slice(0,200) || '(no text)'}`;
+    } else {
+      result.textContent = `✗ Error: ${d.error}`;
+    }
+  } catch(e) {
+    result.textContent = `✗ Gateway not reachable: ${e.message}`;
+  }
+});
+
+// Auto-refresh dashboard every 30s when visible
+setInterval(() => {
+  if (document.getElementById('dashboard-view').style.display !== 'none') {
+    refreshDashboard();
+  }
+}, 30000);
+
+// Update nav bar on initial gateway poll
+const _origPollGw = typeof pollGatewayStatus !== 'undefined' ? pollGatewayStatus : null;
+if (_origPollGw) {
+  const _wrapped = async () => {
+    await _origPollGw();
+    const running = typeof _gatewayRunning !== 'undefined' ? _gatewayRunning : false;
+    updateNavGw(running);
+  };
+}
+
+// Add sessions API endpoint — served by nova_gateway sessions route or fallback to openclaw
+// (The /api/logs/nova_gateway endpoint needs to be added to server.py)
+
+</script>
+</body>
+</html>

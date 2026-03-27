@@ -1,0 +1,133 @@
+"""
+nova_chat/nova_bridge.py -- Bridge: Nova's chat words → real disk actions
+=========================================================================
+OpenClaw's WebSocket rejects external connections (policy 1008).
+We don't need it. The nova_chat server already runs inside the workspace
+and has full disk access. We write directly.
+
+Nova's syntax in chat:
+    [WRITE:logs/proposed/my_file.py]
+    def my_function(): ...
+    [/WRITE]
+
+    [EXEC:python tools/nova_sync/watcher.py --push]
+
+    [READ:tools/nova_action/autonomy.py]
+"""
+import json
+import asyncio
+import re
+import subprocess
+from pathlib import Path
+
+WORKSPACE_DIR = Path(__file__).parent.parent.parent
+
+WRITE_PATTERN  = re.compile(r'\[WRITE:([^\]]+)\]\s*(.*?)\s*\[/WRITE\]', re.DOTALL | re.IGNORECASE)
+EXEC_PATTERN   = re.compile(r'\[EXEC:([^\]]+)\]', re.IGNORECASE)
+READ_PATTERN   = re.compile(r'\[READ:([^\]]+)\]', re.IGNORECASE)
+PAUSE_PATTERN  = re.compile(r'\[PAUSE:\s*([^\]]*)\]', re.IGNORECASE)   # 1.6
+RESUME_PATTERN = re.compile(r'\[RESUME:\s*([^\]]*)\]', re.IGNORECASE)  # 1.6
+
+
+def parse_actions(message: str) -> list[dict]:
+    actions = []
+    for m in WRITE_PATTERN.finditer(message):
+        actions.append({"type": "write", "path": m.group(1).strip(), "content": m.group(2).strip()})
+    for m in EXEC_PATTERN.finditer(message):
+        actions.append({"type": "exec", "cmd": m.group(1).strip()})
+    for m in READ_PATTERN.finditer(message):
+        actions.append({"type": "read", "path": m.group(1).strip()})
+    # 1.6 -- PAUSE / RESUME task control directives
+    for m in PAUSE_PATTERN.finditer(message):
+        actions.append({"type": "pause", "task": m.group(1).strip()})
+    for m in RESUME_PATTERN.finditer(message):
+        actions.append({"type": "resume", "task": m.group(1).strip()})
+    return actions
+
+
+async def execute_action(action: dict) -> str:
+    a_type = action.get("type")
+
+    if a_type == "write":
+        path_str = action["path"].replace("\\", "/")
+        # Safety: must stay inside workspace
+        target = (WORKSPACE_DIR / path_str).resolve()
+        try:
+            target.relative_to(WORKSPACE_DIR.resolve())
+        except ValueError:
+            return f"[bridge] ✗ Path escapes workspace: {path_str}"
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(action["content"], encoding="utf-8")
+            rel = str(target.relative_to(WORKSPACE_DIR)).replace("\\", "/")
+            return f"[bridge] ✓ Written: {rel}"
+        except Exception as e:
+            return f"[bridge] ✗ Write failed: {e}"
+
+    elif a_type == "exec":
+        cmd = action["cmd"]
+        try:
+            import sys
+            proc = subprocess.run(
+                cmd, shell=True, capture_output=True,
+                text=True, timeout=30, cwd=str(WORKSPACE_DIR),
+                encoding="utf-8", errors="replace"
+            )
+            out = (proc.stdout or "")[-300:].strip()
+            err = (proc.stderr or "")[-200:].strip()
+            if proc.returncode == 0:
+                return f"[bridge] ✓ Exec: {cmd[:60]}" + (f" → {out}" if out else "")
+            else:
+                return f"[bridge] ✗ Exec exit {proc.returncode}: {err or out}"
+        except subprocess.TimeoutExpired:
+            return f"[bridge] ✗ Exec timed out: {cmd[:60]}"
+        except Exception as e:
+            return f"[bridge] ✗ Exec error: {e}"
+
+    elif a_type == "read":
+        path_str = action["path"].replace("\\", "/")
+        target = (WORKSPACE_DIR / path_str).resolve()
+        try:
+            target.relative_to(WORKSPACE_DIR.resolve())
+            content = target.read_text(encoding="utf-8", errors="replace")[:3000]
+            return f"[bridge] ✓ Read {path_str} ({len(content)} chars) — content injected to context"
+        except Exception as e:
+            return f"[bridge] ✗ Read failed: {e}"
+
+    # 1.6 -- PAUSE directive: pause the active task in nova_status.json
+    elif a_type == "pause":
+        task_id = action.get("task", "")
+        note    = task_id  # the text after PAUSE: is treated as a note
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(WORKSPACE_DIR / "tools"))
+            from nova_core.nova_status import pause_task
+            pause_task(note=note)
+            return f"[bridge] ⏸ Paused" + (f": {note}" if note else "")
+        except Exception as e:
+            return f"[bridge] ✗ Pause failed: {e}"
+
+    # 1.6 -- RESUME directive: resume a paused task
+    elif a_type == "resume":
+        task_id = action.get("task", "")
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(WORKSPACE_DIR / "tools"))
+            from nova_core.nova_status import resume_task
+            resume_task(task_id=task_id or None)
+            return f"[bridge] ▶ Resumed" + (f": {task_id}" if task_id else "")
+        except Exception as e:
+            return f"[bridge] ✗ Resume failed: {e}"
+
+    return f"[bridge] ✗ Unknown action: {a_type}"
+
+
+async def handle_nova_message(message: str) -> list[str]:
+    actions = parse_actions(message)
+    if not actions:
+        return []
+    results = []
+    for action in actions:
+        result = await execute_action(action)
+        results.append(result)
+    return results

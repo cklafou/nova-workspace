@@ -1,0 +1,27 @@
+# ── PyInstaller build output ──────────────────────────────────────────────────
+workspace/_build/
+workspace/**/__pycache__/
+workspace/**/*.pyc
+workspace/**/*.pyo
+
+# ── Secrets — never commit real tokens/credentials ────────────────────────────
+# The real config (contains Discord token). The safe copy is nova_gateway - Copy.json
+workspace/nova_gateway.json
+workspace/openclaw.json
+**/nova_drive_token.json
+**/client_secrets.json
+**/.env
+
+# ── Runtime / ephemeral files ──────────────────────────────────────────────────
+workspace/logs/
+workspace/sessions/
+workspace/tools/nova_sync/.drive_sync_cache.json
+workspace/tools/backups/
+workspace/agents/main/sessions/
+
+# ── OS / editor noise ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
