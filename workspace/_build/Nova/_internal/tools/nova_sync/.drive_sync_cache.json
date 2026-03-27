@@ -35,9 +35,9 @@
   "tools/nova_sync/backup.py": "f44df3480375c097da0205faabd2027a",
   "tools/nova_sync/dir_patch.py": "eeb0d27c67bc5c3854992fd560bd034e",
   "tools/nova_sync/drive.py": "fb416f0462c71ab89d901433d180f061",
-  "tools/nova_sync/FILE_INDEX.md": "d4c798096ce4123bc1711135d5b0835a",
-  "tools/nova_sync/FILE_INDEX_LINK.md": "06b1847e70dd7c826a4faa124069007e",
-  "tools/nova_sync/GEMINI_INDEX.md": "4f39844233bb42e524bc0a57db86b714",
+  "tools/nova_sync/FILE_INDEX.md": "562f56686f278535c12557201e3a30dc",
+  "tools/nova_sync/FILE_INDEX_LINK.md": "ad35784c280f4008d3ecf6a46a3cb489",
+  "tools/nova_sync/GEMINI_INDEX.md": "4b5e61ae7057b919b9270f6552cd8ee7",
   "tools/nova_sync/watcher.py": "b65f0eb1d38e635ffc9a6ddda7a87ea1",
   "TOOLS.md": "e47b1a61d82be52f262233df73335610",
   "USER.md": "6e825d44d40b3ca7d6251e828918b287",
@@ -48,7 +48,7 @@
   "tools/nova_chat/context_export.py": "1aba76c7d23cea936c99fae513e90e50",
   "tools/nova_chat/launch.py": "1e947398574284fde012f22d3a477033",
   "tools/nova_chat/orchestrator.py": "1797386d11970fde7365a0e2c13bdb54",
-  "tools/nova_chat/server.py": "340551c0a5345dc108a68456b457c84f",
+  "tools/nova_chat/server.py": "422d83ecc2d7950e7dff7d09cd13f2e4",
   "tools/nova_chat/transcript.py": "8d0d99d5a92356748e39be95672039fb",
   "logs/chat_sessions/2026-03-21_16-46-47_chat.jsonl": "a49d6821b7558385b79efd8fbbd0e0cb",
   "tools/nova_chat/session_manager.py": "cfdbf881f8973356367634ed99791bbf",
@@ -105,5 +105,5 @@
   "tools/nova_gateway/session_store.py": "9dd4ee398fdd5a55f00616cf8da2bd96",
   "tools/nova_gateway/tool_executor.py": "b88b6c30965066bc46a64c9e3ead115c",
   "tools/NovaLauncher.py": "6ba04dd390aad7f147682a54c765fb48",
-  "nova_gateway - Copy.json": "d4bb504d1eccbd56857dfb2c3a632cbb"
+  "nova_gateway - Copy.json": "233d7a127878c8b952ef7d96808298d9"
 }

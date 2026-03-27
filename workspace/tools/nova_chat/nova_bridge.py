@@ -16,17 +16,24 @@ Nova's syntax in chat:
 """
 import json
 import asyncio
+import os
 import re
 import subprocess
 from pathlib import Path
 
-WORKSPACE_DIR = Path(__file__).parent.parent.parent
+WORKSPACE_DIR = (
+    Path(os.environ["NOVA_WORKSPACE"])
+    if "NOVA_WORKSPACE" in os.environ
+    else Path(__file__).parent.parent.parent
+)
 
-WRITE_PATTERN  = re.compile(r'\[WRITE:([^\]]+)\]\s*(.*?)\s*\[/WRITE\]', re.DOTALL | re.IGNORECASE)
-EXEC_PATTERN   = re.compile(r'\[EXEC:([^\]]+)\]', re.IGNORECASE)
-READ_PATTERN   = re.compile(r'\[READ:([^\]]+)\]', re.IGNORECASE)
-PAUSE_PATTERN  = re.compile(r'\[PAUSE:\s*([^\]]*)\]', re.IGNORECASE)   # 1.6
-RESUME_PATTERN = re.compile(r'\[RESUME:\s*([^\]]*)\]', re.IGNORECASE)  # 1.6
+WRITE_PATTERN   = re.compile(r'\[WRITE:([^\]]+)\]\s*(.*?)\s*\[/WRITE\]', re.DOTALL | re.IGNORECASE)
+EXEC_PATTERN    = re.compile(r'\[EXEC:([^\]]+)\]', re.IGNORECASE)
+READ_PATTERN    = re.compile(r'\[READ:([^\]]+)\]', re.IGNORECASE)
+PAUSE_PATTERN   = re.compile(r'\[PAUSE:\s*([^\]]*)\]', re.IGNORECASE)
+RESUME_PATTERN  = re.compile(r'\[RESUME:\s*([^\]]*)\]', re.IGNORECASE)
+# [DISCORD: message text] — send a message to Discord via nova_gateway
+DISCORD_PATTERN = re.compile(r'\[DISCORD:\s*(.*?)\]', re.DOTALL | re.IGNORECASE)
 
 
 def parse_actions(message: str) -> list[dict]:
@@ -37,11 +44,12 @@ def parse_actions(message: str) -> list[dict]:
         actions.append({"type": "exec", "cmd": m.group(1).strip()})
     for m in READ_PATTERN.finditer(message):
         actions.append({"type": "read", "path": m.group(1).strip()})
-    # 1.6 -- PAUSE / RESUME task control directives
     for m in PAUSE_PATTERN.finditer(message):
         actions.append({"type": "pause", "task": m.group(1).strip()})
     for m in RESUME_PATTERN.finditer(message):
         actions.append({"type": "resume", "task": m.group(1).strip()})
+    for m in DISCORD_PATTERN.finditer(message):
+        actions.append({"type": "discord", "text": m.group(1).strip()})
     return actions
 
 
@@ -118,6 +126,36 @@ async def execute_action(action: dict) -> str:
             return f"[bridge] ▶ Resumed" + (f": {task_id}" if task_id else "")
         except Exception as e:
             return f"[bridge] ✗ Resume failed: {e}"
+
+    # DISCORD directive: send a message to Discord via nova_gateway
+    elif a_type == "discord":
+        text = action.get("text", "").strip()
+        if not text:
+            return "[bridge] ✗ Discord: no message text"
+        try:
+            import urllib.request, urllib.error, json as _json
+            payload = _json.dumps({"text": text}).encode("utf-8")
+            req = urllib.request.Request(
+                "http://127.0.0.1:18790/api/discord/send",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                result = _json.loads(resp.read())
+            return f"[bridge] ✓ Discord message sent ({result.get('chars', '?')} chars)"
+        except urllib.error.HTTPError as e:
+            # Read gateway's error detail for better diagnostics
+            try:
+                error_body = e.read().decode("utf-8", errors="replace")
+                detail = _json.loads(error_body).get("detail", "")
+            except Exception:
+                detail = ""
+            return f"[bridge] ✗ Discord send failed: HTTP {e.code} — {detail or e.reason}"
+        except urllib.error.URLError as e:
+            return f"[bridge] ✗ Discord gateway unreachable: {e.reason}"
+        except Exception as e:
+            return f"[bridge] ✗ Discord send failed: {e}"
 
     return f"[bridge] ✗ Unknown action: {a_type}"
 

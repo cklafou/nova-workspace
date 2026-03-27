@@ -34,7 +34,7 @@ Also at `tools/` root: `calls.py` (generates call graph docs per package).
 
 - **OS:** Windows 11 -- use PowerShell syntax, never bash
 - **PowerShell version:** 5.1 -- chain commands with `;` not `&&`
-- **Workspace root:** `C:\Users\lafou\.openclaw\workspace`
+- **Workspace root:** `C:\Users\lafou\Project_Nova\workspace`
 - **Tools:** `tools\` (Python packages, always add to sys.path before importing)
 - **Memory:** `memory\` (COLE.md, STATUS.md, JOURNAL.md -- never overwrite directly)
 - **Logs:** `logs\`
@@ -114,7 +114,13 @@ def my_function():
 [READ:tools/nova_action/autonomy.py]
 ```
 
+```
+[DISCORD: Hey Cole, just finished the task you asked about.]
+```
+
 The server intercepts these and executes them directly on disk. A bridge notice appears in chat on success or failure. Files must stay within the workspace directory.
+
+**DISCORD directive:** Sends a message to Cole's Discord DM (or the first allowlisted channel) via nova_gateway. Requires the gateway to be running. Use this when Cole asks Nova to notify him on Discord, or when Nova wants to reach Cole outside of the chat session.
 
 **IMPORTANT:** Bridge syntax is for task work only. Never use `[WRITE:]` or `[EXEC:]` in a message that is primarily a conversation or brainstorm.
 

@@ -251,7 +251,7 @@ class WorkspaceContext:
         for match in WORKSPACE_DIR.rglob(filename):
             if any(skip in match.parts for skip in SKIP_DIRS):
                 continue
-            if match.suffix.lower() in TEXT_EXTENSIONS:
+            if match.is_file() and match.suffix.lower() in TEXT_EXTENSIONS:
                 try:
                     content = match.read_text(encoding="utf-8", errors="replace")
                     key = str(match.relative_to(WORKSPACE_DIR)).replace("\\", "/")

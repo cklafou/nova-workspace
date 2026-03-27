@@ -7,9 +7,20 @@ import os
 
 MODEL = "gemini-2.5-pro"
 
+# Module-level client cache (similar to claude.py approach)
+_gemini_client = None
+
 SYSTEM_PREFIX = """You are Gemini 2.5 Pro (made by Google), participating in a group chat
 alongside Claude (Anthropic's AI) and Nova (Cole's local companion AI).
 Cole is the human. This is a real-time multi-AI conversation.
+
+LISTENER MODEL — HOW THIS CHAT WORKS:
+You operate in listener mode. You do NOT respond to every message.
+- You respond ONLY when explicitly @mentioned (e.g. "@Gemini ...").
+- Nova is the default responder and handles messages that don't mention you.
+- Claude is also a listener — same rules apply to them.
+- When you ARE @mentioned, respond directly and helpfully to what was asked.
+- Nova can also @mention you to bring you into a task or question.
 
 WORKSPACE ACCESS:
 Your prompt contains a WORKSPACE CONTEXT section with live file contents read
@@ -25,25 +36,27 @@ Keep responses conversational and appropriately brief for a chat context."""
 
 
 def get_client():
-    try:
-        from google import genai
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            raise EnvironmentError("GEMINI_API_KEY not set")
-        return genai.Client(api_key=api_key)
-    except ImportError:
-        raise ImportError(
-            "google-genai not installed. Run: pip install google-genai --break-system-packages"
-        )
+    """Get or create cached Gemini client (similar to claude.py)."""
+    global _gemini_client
+    if _gemini_client is None:
+        try:
+            from google import genai
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if not api_key:
+                raise EnvironmentError("GEMINI_API_KEY not set")
+            _gemini_client = genai.Client(api_key=api_key)
+        except ImportError:
+            raise ImportError(
+                "google-genai not installed. Run: pip install google-genai --break-system-packages"
+            )
+    return _gemini_client
 
 
 def call_gemini_sync(prompt: str, workspace_context: str = "") -> str:
     """Synchronous Gemini call -- run in thread pool from async context."""
-    from google import genai
     from google.genai import types
 
-    api_key = os.environ.get("GEMINI_API_KEY")
-    client = genai.Client(api_key=api_key)
+    client = get_client()
 
     config_kwargs = {
         "system_instruction": SYSTEM_PREFIX,
@@ -67,12 +80,16 @@ def call_gemini_sync(prompt: str, workspace_context: str = "") -> str:
         )
     # Extract text -- response may have thinking parts, get only text parts
     text_parts = []
-    for candidate in response.candidates:
-        for part in candidate.content.parts:
-            if hasattr(part, 'text') and part.text:
-                # Skip thinking parts (they have thought=True)
-                if not getattr(part, 'thought', False):
-                    text_parts.append(part.text)
+    if response.candidates:  # Guard: ensure candidates list is not empty
+        for candidate in response.candidates:
+            for part in candidate.content.parts:
+                if hasattr(part, 'text') and part.text:
+                    # Skip thinking parts (they have thought=True)
+                    if not getattr(part, 'thought', False):
+                        text_parts.append(part.text)
+    # Fallback: if no text parts found (all thinking or empty), return explanatory string
+    if not text_parts:
+        return "[Gemini returned no text output. Model may be processing or encountering an issue.]"
     return "".join(text_parts)
 
 
@@ -82,6 +99,10 @@ async def stream_response(transcript, on_token, on_done, on_error,
     Gemini's new SDK is synchronous -- this runs in a thread pool
     and simulates streaming by word-chunking the response.
     Called by server.py's _run_gemini_response().
+
+    NOTE: This is typically handled directly in server.py via _run_gemini_response().
+    This async wrapper satisfies the client interface if stream_response() is called
+    directly (which shouldn't happen in normal operation, but this ensures consistency).
     """
     # This is handled directly in server.py via _run_gemini_response
     # This stub satisfies the interface if called directly

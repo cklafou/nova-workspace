@@ -110,6 +110,10 @@ class NovaScheduler:
         """
         Fire the health check agent run.
         This is exactly what OpenClaw's "System Health Check" cron job does.
+
+        APScheduler runs this job in a background task. If this coroutine raises,
+        APScheduler logs the exception but continues running the scheduler.
+        Errors are logged and not re-raised to prevent scheduler disruption.
         """
         health_cfg = cfg.cron.get("health_check", {})
         message    = health_cfg.get(
@@ -135,6 +139,7 @@ class NovaScheduler:
             else:
                 log.error("Health check agent error: %s", result.error)
         except Exception as e:
+            # APScheduler will log this exception. Do not re-raise to keep scheduler alive.
             log.error("Health check crashed: %s", e, exc_info=True)
 
     async def trigger_health_check_now(self) -> None:

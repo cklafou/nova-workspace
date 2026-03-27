@@ -12,6 +12,7 @@ Switching: flush active -> compress -> decompress new -> load into memory.
 """
 import gzip
 import json
+import os
 import shutil
 import uuid
 from datetime import datetime
@@ -19,7 +20,11 @@ from pathlib import Path
 
 from nova_chat.transcript import Transcript
 
-WORKSPACE_DIR   = Path(__file__).parent.parent.parent
+WORKSPACE_DIR   = (
+    Path(os.environ["NOVA_WORKSPACE"])
+    if "NOVA_WORKSPACE" in os.environ
+    else Path(__file__).parent.parent.parent
+)
 SESSIONS_DIR    = WORKSPACE_DIR / "logs" / "chat_sessions"
 INDEX_PATH      = SESSIONS_DIR / "sessions_index.json"
 MAX_NAME_CHARS  = 40
@@ -236,6 +241,8 @@ class SessionManager:
         """Update session metadata after a new message is added."""
         if self._active_id not in self._index:
             return
+        if not msg or "author" not in msg:
+            return
         meta = self._index[self._active_id]
         meta.message_count = len(self._active_transcript.messages)
         meta.last_active   = datetime.now().isoformat()
@@ -243,7 +250,7 @@ class SessionManager:
 
         # Auto-name from first Cole message
         if (meta.name in ("New Session", f"Session {self._active_id[:6]}")
-                and msg.get("author") == "Cole"):
+                and msg.get("author") == "Cole" and "content" in msg):
             meta.name = msg["content"][:MAX_NAME_CHARS]
 
         self._save_index()

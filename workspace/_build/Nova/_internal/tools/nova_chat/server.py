@@ -8,6 +8,7 @@ import os
 import json
 import asyncio
 import uuid
+import time
 from pathlib import Path
 import sys
 from datetime import datetime
@@ -18,7 +19,7 @@ from pydantic import BaseModel
 
 from nova_chat.transcript import Transcript
 from nova_chat.session_manager import SessionManager
-from nova_chat.orchestrator import parse_directed, should_respond
+from nova_chat.orchestrator import parse_directed, should_respond, build_response_queue
 from nova_chat.context_export import export_session
 from nova_chat.workspace_context import WorkspaceContext
 import nova_chat.clients.claude as claude_client
@@ -51,6 +52,16 @@ is_processing: bool = False
 
 # 1.3 -- Nova status cache: polled every 30s, injected silently into AI context
 nova_status_cache: dict = {"summary": "", "updated_at": 0.0}
+
+# ── Nova rate-limit failsafe ────────────────────────────────────────────────
+# TEMPORARY — see orchestrator.py for the full explanation.
+# Short version: prevents runaway Nova loops from burning Claude/Gemini API
+# credits. Remove _NOVA_RATE_LIMIT check in /api/inject_message once Nova's
+# autonomy loop is proven stable. — Cole & Claude, 2026-03-28
+_NOVA_RATE_WINDOW = 60    # seconds
+_NOVA_RATE_LIMIT  = 4     # max Nova-initiated messages allowed per window
+_nova_msg_times: list[float] = []   # rolling timestamps of Nova inject calls
+nova_throttled:  bool = False       # True = Nova is currently muted by failsafe
 
 
 # ── HTTP endpoints ─────────────────────────────────────────────────────────────
@@ -122,7 +133,7 @@ async def startup_event():
                             new_lines = f.read()
                         last_pos = size
                         for line in new_lines.splitlines():
-                            if "ERROR" in line or "error" in line.lower() and "ImportError" not in line:
+                            if ("ERROR" in line or "error" in line.lower()) and "ImportError" not in line:
                                 if line != last_error_seen and len(line.strip()) > 10:
                                     last_error_seen = line
                                     # Update nova_status gateway error field
@@ -380,12 +391,19 @@ async def new_session_endpoint():
 # ── Internal helpers ───────────────────────────────────────────────────────────
 
 async def broadcast(data: dict):
+    """Broadcast a message to all connected WebSocket clients.
+
+    Silently removes any clients that disconnect during send (swallows exceptions).
+    This is intentional: network disconnects are ephemeral and don't block message flow
+    to other clients; dead connections are cleaned up immediately.
+    """
     msg = json.dumps(data)
     dead = []
     for ws in connected_clients:
         try:
             await ws.send_text(msg)
         except Exception:
+            # Connection lost; mark for cleanup and continue broadcasting to others
             dead.append(ws)
     for ws in dead:
         connected_clients.remove(ws)
@@ -414,7 +432,7 @@ async def _run_gemini_response(on_token, on_done, on_error, workspace_context: s
                 "Gemini", gemini_client.SYSTEM_PREFIX, workspace_context=workspace_context
             )
             prompt = f"{system_prompt}\n\nPlease respond to the conversation above."
-            full_response = call_gemini_sync(prompt, workspace_context)
+            full_response = call_gemini_sync(prompt)
         except Exception as e:
             error_msg = str(e)
 
@@ -433,8 +451,12 @@ async def _run_gemini_response(on_token, on_done, on_error, workspace_context: s
 
 
 async def run_ai_response(ai_name: str, client_mod, msg_id: str,
-                          latest_message: str = ""):
-    """Stream one AI response and broadcast tokens, with workspace context."""
+                          latest_message: str = "") -> str:
+    """
+    Stream one AI response, broadcast tokens, and return the full response text.
+    The return value lets callers (e.g. _run_response_queue) inspect Nova's
+    response for @mentions without re-reading the transcript.
+    """
     # Update workspace context based on what was mentioned in the message
     if latest_message:
         workspace.update_for_message(latest_message)
@@ -451,10 +473,13 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
     await broadcast({"type": "message_start", "author": ai_name, "id": msg_id})
 
+    _result: list[str] = []  # capture full text so we can return it
+
     async def on_token(token):
         await broadcast({"type": "token", "author": ai_name, "token": token, "id": msg_id})
 
     async def on_done(full):
+        _result.append(full)
         msg = session_mgr.active.add(ai_name, full)
         session_mgr.update_meta_from_message(msg)
         await broadcast({"type": "message_end", "author": ai_name, "id": msg_id})
@@ -477,6 +502,56 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         await client_mod.stream_response(
             session_mgr.active, on_token, on_done, on_error, workspace_context=ws_context
         )
+
+    return _result[0] if _result else ""
+
+
+# ── Client dispatch map ───────────────────────────────────────────────────────
+# Used by _run_response_queue to look up the right client module by name.
+CLIENT_MAP = {
+    "Claude": claude_client,
+    "Gemini": gemini_client,
+    "Nova":   nova_client,
+}
+
+
+async def _run_response_queue(queue: list, content: str) -> None:
+    """
+    Execute AI responses SEQUENTIALLY in queue order.
+
+    Each AI sees all previous responses already saved in the transcript
+    before it generates its own reply.  Nova is always last so she reads
+    the full picture — including any mentor responses — before deciding
+    what to say.
+
+    After Nova's response is saved, her text is scanned for @mentions.
+    If she tagged Claude or Gemini, those AIs run a one-level follow-up
+    round so they can see Nova's message and respond to it.
+    This is the mechanism for Nova's smart escalation to mentors.
+
+    NOTE: Exceptions are NOT caught here — they bubble up to the caller
+    (_queued_run) which has a try/finally to reset is_processing.
+    """
+    for ai_name in queue:
+        if ai_name not in CLIENT_MAP:
+            continue
+        client_mod = CLIENT_MAP[ai_name]
+        msg_id = str(uuid.uuid4())[:8]
+        response_text = await run_ai_response(ai_name, client_mod, msg_id, content)
+
+        # After Nova responds: check if she @mentioned any listeners.
+        # If so, run a follow-up round (one level — no further recursion).
+        if ai_name == "Nova" and response_text:
+            nova_mentions = parse_directed(response_text)
+            follow_ups = [n for n in nova_mentions if n in ("Claude", "Gemini")]
+            if follow_ups:
+                fu_status = await get_status()
+                for fu_name in follow_ups:
+                    if fu_status.get(fu_name):
+                        await run_ai_response(
+                            fu_name, CLIENT_MAP[fu_name],
+                            str(uuid.uuid4())[:8], response_text
+                        )
 
 
 # ── WebSocket ──────────────────────────────────────────────────────────────────
@@ -985,6 +1060,161 @@ async def proxy_trigger(body: dict = Body(...)):
         raise HTTPException(status_code=503, detail=f"Gateway unreachable: {e}")
 
 
+@app.post("/api/inject_message")
+async def inject_message(body: dict):
+    """
+    Inject a message into the active Nova Chat session from an external source.
+    Used by the gateway so Nova can post to the group chat from Discord.
+
+    Body: { "author": "Nova", "content": "message text" }
+
+    Rate-limited for Nova: see _NOVA_RATE_LIMIT / _NOVA_RATE_WINDOW globals.
+    Returns 429 if Nova exceeds the rate limit (failsafe tripped).
+    """
+    global nova_throttled, _nova_msg_times, is_processing
+
+    author  = body.get("author", "Nova").strip() or "Nova"
+    content = body.get("content", "").strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="content required")
+
+    # ── Nova rate-limit failsafe ──────────────────────────────────────────────
+    if author == "Nova":
+        now = time.time()
+        # Evict timestamps outside the rolling window
+        _nova_msg_times = [t for t in _nova_msg_times if now - t < _NOVA_RATE_WINDOW]
+
+        if len(_nova_msg_times) >= _NOVA_RATE_LIMIT:
+            # Failsafe tripped: mute Nova, cancel in-flight tasks, warn UI
+            nova_throttled = True
+            for task in active_tasks:
+                if not task.done():
+                    task.cancel()
+            active_tasks.clear()
+            is_processing = False
+            await broadcast({
+                "type": "nova_throttled",
+                "limit": _NOVA_RATE_LIMIT,
+                "window": _NOVA_RATE_WINDOW,
+                "message": (
+                    f"⚠ Nova rate-limit tripped: {_NOVA_RATE_LIMIT}+ messages in "
+                    f"{_NOVA_RATE_WINDOW}s. Nova auto-stopped to protect API budget. "
+                    f"Send any message to Nova Chat to reset."
+                ),
+            })
+            raise HTTPException(
+                status_code=429,
+                detail=f"Nova throttled — exceeded {_NOVA_RATE_LIMIT} messages/{_NOVA_RATE_WINDOW}s",
+            )
+
+        _nova_msg_times.append(now)
+        nova_throttled = False   # within limits — clear any previous throttle flag
+
+    # ── Deliver message ───────────────────────────────────────────────────────
+    msg = session_mgr.active.add(author, content)
+    session_mgr.update_meta_from_message(msg)
+
+    await broadcast({
+        "type":      "user_message",
+        "author":    author,
+        "content":   content,
+        "id":        msg["id"],
+        "timestamp": msg["timestamp"],
+    })
+
+    # Execute any nova_bridge directives Nova wrote (e.g. [EXEC:], [DISCORD:])
+    if author == "Nova":
+        bridge_results = await handle_nova_message(content)
+        for br in bridge_results:
+            await broadcast({
+                "type":   "bridge_result",
+                "result": br,
+                "msg_id": msg["id"],
+            })
+
+    # ── Trigger Claude / Gemini if @mentioned in the injected message ─────────
+    # Nova writes "@Claude ..." in her message → Claude gets triggered.
+    # Uses the same sequential queue as Cole's messages.
+    # Nova is excluded from auto-triggering here (no recursion on inject).
+    if not nova_throttled:
+        _directed = parse_directed(content)
+        # Only trigger listener AIs (not Nova again — she just spoke)
+        _listener_directed = [n for n in _directed if n in ("Claude", "Gemini")]
+        if _listener_directed:
+            _ai_status = await get_status()
+            # Build a listeners-only queue (no Nova at end — she already sent)
+            _listener_queue = [n for n in ("Claude", "Gemini")
+                               if n in _listener_directed and _ai_status.get(n)]
+            if _listener_queue:
+                is_processing = True
+
+                async def _inject_listener_run():
+                    """Run listener queue with proper exception handling."""
+                    global is_processing
+                    try:
+                        await _run_response_queue(_listener_queue, content)
+                    except asyncio.CancelledError:
+                        raise  # don't catch cancellation
+                    except Exception as e:
+                        print(f"[chat] Error in injected listener queue: {e}")
+                    finally:
+                        is_processing = False
+
+                _t = asyncio.create_task(_inject_listener_run())
+                active_tasks.append(_t)
+
+                # Clean up task reference when done (robust callback)
+                def _task_cleanup(fut):
+                    """Remove task from active_tasks even if callback raises."""
+                    try:
+                        if _t in active_tasks:
+                            active_tasks.remove(_t)
+                    except Exception:
+                        # Prevent callback exceptions from bubbling up
+                        pass
+
+                _t.add_done_callback(_task_cleanup)
+
+    return {"ok": True, "id": msg["id"], "author": author, "chars": len(content)}
+
+
+@app.get("/api/chat/recent")
+async def chat_recent(n: int = 40):
+    """
+    Return the last N messages from the active Nova Chat session as formatted text.
+
+    Used by nova_gateway so Nova has full awareness of the Nova Chat session
+    when responding via Discord or any other external source.  Lightweight
+    plain-text format so it slots cleanly into a system prompt.
+
+    Query param:  ?n=40  (default 40 messages)
+    Returns: { session_id, message_count, formatted }
+    """
+    if session_mgr.active is None or not session_mgr.active_id:
+        return JSONResponse({
+            "session_id":    session_mgr.active_id or "",
+            "message_count": 0,
+            "formatted":     "(no active session)",
+        })
+    messages = session_mgr.active.get_recent(n)
+    lines = []
+    for msg in messages:
+        ts = msg["timestamp"][11:16]   # HH:MM
+        directed = ""
+        if msg.get("directed_at"):
+            directed = f" [@{', @'.join(msg['directed_at'])}]"
+        # Omit raw image data — note presence only
+        content = msg["content"]
+        if msg.get("images"):
+            content += f" [+ {len(msg['images'])} image(s)]"
+        lines.append(f"[{ts}] {msg['author']}{directed}: {content}")
+    return JSONResponse({
+        "session_id":    session_mgr.active_id,
+        "message_count": len(messages),
+        "formatted":     "\n".join(lines) if lines else "(no messages yet)",
+    })
+
+
 @app.post("/shutdown")
 async def shutdown_endpoint():
     """Gracefully shut down the server."""
@@ -1013,13 +1243,16 @@ async def websocket_endpoint(ws: WebSocket):
     }))
 
     for msg in session_mgr.active.get_recent(100):
-        await ws.send_text(json.dumps({
+        hist_payload = {
             "type": "history",
             "author": msg["author"],
             "content": msg["content"],
             "id": msg["id"],
             "timestamp": msg["timestamp"],
-        }))
+        }
+        if msg.get("images"):
+            hist_payload["images"] = msg["images"]
+        await ws.send_text(json.dumps(hist_payload))
 
     try:
         while True:
@@ -1042,11 +1275,13 @@ async def websocket_endpoint(ws: WebSocket):
                     ok = session_mgr.switch_session(session_id)
                     if ok:
                         workspace.reload()
-                        history = [
-                            {"author": m["author"], "content": m["content"],
-                             "id": m["id"], "timestamp": m["timestamp"]}
-                            for m in session_mgr.active.get_recent(100)
-                        ]
+                        history = []
+                        for m in session_mgr.active.get_recent(100):
+                            h = {"author": m["author"], "content": m["content"],
+                                 "id": m["id"], "timestamp": m["timestamp"]}
+                            if m.get("images"):
+                                h["images"] = m["images"]
+                            history.append(h)
                         await broadcast({
                             "type": "session_switched",
                             "session_id": session_id,
@@ -1097,8 +1332,17 @@ async def websocket_endpoint(ws: WebSocket):
 
             if data.get("type") == "message":
                 content = data.get("content", "").strip()
-                if not content:
+                images  = data.get("images", [])  # [{dataUrl, name}]
+                if not content and not images:
                     continue
+
+                # Cole sending a message resets the Nova throttle and rate window
+                global nova_throttled, _nova_msg_times
+                if nova_throttled:
+                    nova_throttled = False
+                    _nova_msg_times = []
+                    await broadcast({"type": "nova_unthrottled"})
+
                 # Reject new messages while AIs are still responding
                 if is_processing:
                     await ws.send_text(json.dumps({
@@ -1108,7 +1352,8 @@ async def websocket_endpoint(ws: WebSocket):
                     continue
 
                 directed_at = parse_directed(content)
-                msg = session_mgr.active.add("Cole", content, directed_at or None)
+                msg = session_mgr.active.add("Cole", content, directed_at or None,
+                                             images=images)
                 session_mgr.update_meta_from_message(msg)
 
                 await broadcast({
@@ -1118,22 +1363,33 @@ async def websocket_endpoint(ws: WebSocket):
                     "id": msg["id"],
                     "timestamp": msg["timestamp"],
                     "directed_at": directed_at,
+                    "images": images,
                 })
 
                 status = await get_status()
-                tasks = []
-                if should_respond("Claude", directed_at) and status.get("Claude"):
-                    tasks.append(run_ai_response("Claude", claude_client, str(uuid.uuid4())[:8], content))
-                if should_respond("Gemini", directed_at) and status.get("Gemini"):
-                    tasks.append(run_ai_response("Gemini", gemini_client, str(uuid.uuid4())[:8], content))
-                if should_respond("Nova", directed_at) and status.get("Nova"):
-                    tasks.append(run_ai_response("Nova", nova_client, str(uuid.uuid4())[:8], content))
+                queue = build_response_queue(directed_at, status)
 
-                if tasks:
+                if queue:
                     is_processing = True
                     await broadcast({"type": "processing_start"})
-                    gathered = asyncio.gather(*tasks)
-                    task = asyncio.ensure_future(gathered)
+
+                    # Capture queue and content at definition time to avoid closure issues
+                    _q = list(queue)  # make a copy
+                    _c = content
+
+                    async def _queued_run():
+                        global is_processing
+                        try:
+                            await _run_response_queue(_q, _c)
+                        except asyncio.CancelledError:
+                            pass
+                        except Exception as e:
+                            print(f"[chat] Error in response queue: {e}")
+                        finally:
+                            is_processing = False
+                            await broadcast({"type": "processing_end"})
+
+                    task = asyncio.ensure_future(_queued_run())
                     active_tasks.append(task)
                     try:
                         await task
@@ -1142,8 +1398,7 @@ async def websocket_endpoint(ws: WebSocket):
                     finally:
                         if task in active_tasks:
                             active_tasks.remove(task)
-                        is_processing = False
-                        await broadcast({"type": "processing_end"})
+                        is_processing = False  # safety net: ensure reset if cancelled before starting
 
     except WebSocketDisconnect:
         if ws in connected_clients:

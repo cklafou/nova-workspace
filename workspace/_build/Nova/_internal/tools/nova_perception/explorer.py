@@ -34,9 +34,9 @@ try:
     from nova_logs.logger import log
 except ImportError:
     try:
-    from nova_logs.logger import log
-except ImportError:
-    from nova_memory.logger import log
+        from nova_logs.logger import log
+    except ImportError:
+        from nova_memory.logger import log
 
 
 class NovaExplorer:

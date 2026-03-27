@@ -302,6 +302,9 @@
     line-height: 1.6;
     word-break: break-word;
     white-space: pre-wrap;
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
   }
 
   /* Inline code */
@@ -312,6 +315,8 @@
     padding: 1px 5px;
     font-size: 12px;
     color: #e2e8f0;
+    user-select: text;
+    -webkit-user-select: text;
   }
 
   /* Streaming cursor */
@@ -370,6 +375,93 @@
     font-size: 11px;
     padding: 6px 0;
     letter-spacing: 0.05em;
+  }
+
+  /* ── Image preview strip (above input, before sending) ── */
+  #img-preview-strip {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 14px 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .img-preview-item {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+  }
+  .img-preview-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .img-remove-btn {
+    position: absolute; top: 2px; right: 2px;
+    width: 16px; height: 16px;
+    background: rgba(0,0,0,0.7); border: none;
+    border-radius: 50%; color: #fff; font-size: 9px;
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    line-height: 1; padding: 0;
+  }
+  .img-remove-btn:hover { background: rgba(248,113,113,0.85); }
+
+  /* ── Image attach button ── */
+  .img-attach-btn {
+    width: 42px; height: 42px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-size: 17px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .img-attach-btn:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+    color: var(--text);
+  }
+
+  /* ── Inline chat images ── */
+  .msg-images {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 6px;
+  }
+  .chat-img {
+    max-width: 320px; max-height: 240px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: block;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .chat-img:hover { opacity: 0.9; }
+
+  /* ── Drag-over highlight ── */
+  #chat.drag-over {
+    outline: 2px dashed rgba(99,179,237,0.4);
+    outline-offset: -4px;
+    background: rgba(99,179,237,0.03);
+  }
+
+  /* ── Image lightbox ── */
+  #img-lightbox {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.88); z-index: 300;
+    align-items: center; justify-content: center;
+    cursor: zoom-out;
+  }
+  #img-lightbox.show { display: flex; }
+  #img-lightbox img {
+    max-width: 94vw; max-height: 94vh;
+    border-radius: 8px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
   }
 
   /* ── Input area ── */
@@ -1466,15 +1558,20 @@
 <div id="chat"></div>
 <div id="conn-status">connecting...</div>
 
+<input type="file" id="img-picker" accept="image/*" multiple style="display:none">
+<div id="img-lightbox"><img id="img-lightbox-img" src="" alt=""></div>
+
 <footer>
   <div class="input-row">
     <div class="input-wrapper">
+      <div id="img-preview-strip"></div>
       <textarea id="input" placeholder="Message everyone, or @Claude @Gemini @Nova to direct..." rows="1"></textarea>
       <div class="input-hint">
         <span>@Claude</span> &nbsp;<span>@Gemini</span> &nbsp;<span>@Nova</span>
-        &nbsp;to direct · Enter to send · Shift+Enter for newline
+        &nbsp;to direct · Enter to send · Shift+Enter for newline · Paste or drag images
       </div>
     </div>
+    <button class="img-attach-btn" id="img-attach-btn" title="Attach image (or paste / drag)">📎</button>
     <button class="send-btn" id="send-btn" title="Send">&#9658;</button>
   </div>
 </footer>
@@ -1713,11 +1810,11 @@ function handleMessage(data) {
       break;
 
     case 'history':
-      appendMessage(data.author, data.content, data.id);
+      appendMessage(data.author, data.content, data.id, data.images);
       break;
 
     case 'user_message':
-      appendMessage(data.author, data.content, data.id);
+      appendMessage(data.author, data.content, data.id, data.images);
       break;
 
     case 'message_start':
@@ -1743,6 +1840,34 @@ function handleMessage(data) {
     case 'export_ready':
       handleExportReady(data);
       break;
+
+    case 'nova_throttled': {
+      // Failsafe tripped — show a persistent warning banner in chat
+      const prev = document.getElementById('nova-throttle-banner');
+      if (prev) prev.remove();
+      const warn = document.createElement('div');
+      warn.id = 'nova-throttle-banner';
+      warn.className = 'system-msg';
+      warn.style.cssText = (
+        'color:var(--error);border-left:3px solid var(--error);' +
+        'padding:6px 12px;margin:6px 0;font-size:11px;background:rgba(248,113,113,0.06);'
+      );
+      warn.textContent = data.message || '⚠ Nova auto-stopped (rate limit).';
+      chat.appendChild(warn);
+      scrollBottom();
+      const novaBadge = document.getElementById('badge-Nova');
+      if (novaBadge) { novaBadge.style.opacity = '0.3'; novaBadge.title = 'Nova throttled'; }
+      break;
+    }
+
+    case 'nova_unthrottled': {
+      const banner = document.getElementById('nova-throttle-banner');
+      if (banner) banner.remove();
+      const novaBadge = document.getElementById('badge-Nova');
+      if (novaBadge) { novaBadge.style.opacity = ''; novaBadge.title = ''; }
+      addSystemMsg('Nova rate-limit reset — she can send again.');
+      break;
+    }
   }
 }
 
@@ -1755,15 +1880,24 @@ function updateStatus(participants) {
 }
 
 // ── Chat rendering ─────────────────────────────────────────────────────────────
-function appendMessage(author, content, id) {
+function appendMessage(author, content, id, images) {
   if (id && document.getElementById(`msg-${id}`)) return; // dedup
   const colorVar  = COLORS[author]  || '--text-dim';
   const avatar    = AVATARS[author] || author[0].toUpperCase();
   const colorClass = author.toLowerCase();
 
-  const highlighted = content.replace(/@(Claude|Gemini|Nova)/gi, (m, name) =>
+  const highlighted = (content || '').replace(/@(Claude|Gemini|Nova)/gi, (m, name) =>
     `<span class="mention mention-${name.toLowerCase()}">@${name}</span>`
   );
+
+  // Build image HTML
+  let imagesHtml = '';
+  if (images && images.length > 0) {
+    const imgTags = images.map(img =>
+      `<img class="chat-img" src="${img.dataUrl}" alt="${img.name || 'image'}" data-src="${img.dataUrl}">`
+    ).join('');
+    imagesHtml = `<div class="msg-images">${imgTags}</div>`;
+  }
 
   const div = document.createElement('div');
   div.className = `message ${colorClass}`;
@@ -1773,8 +1907,13 @@ function appendMessage(author, content, id) {
     <div class="msg-body">
       <div class="msg-author" style="color:var(${colorVar})">${author}</div>
       <div class="msg-content" id="content-${id || Math.random()}">${highlighted}</div>
+      ${imagesHtml}
     </div>`;
   chat.appendChild(div);
+  // Wire up lightbox for any chat images just added
+  div.querySelectorAll('.chat-img').forEach(img => {
+    img.addEventListener('click', () => openLightbox(img.dataset.src));
+  });
   scrollBottom();
 }
 
@@ -1833,13 +1972,103 @@ function scrollBottom() {
   chat.scrollTop = chat.scrollHeight;
 }
 
+// ── Image handling ─────────────────────────────────────────────────────────────
+let pendingImages = []; // [{dataUrl, name}]
+
+const imgPicker      = document.getElementById('img-picker');
+const imgAttachBtn   = document.getElementById('img-attach-btn');
+const imgPreviewStrip = document.getElementById('img-preview-strip');
+const imgLightbox    = document.getElementById('img-lightbox');
+const imgLightboxImg = document.getElementById('img-lightbox-img');
+
+// Attach button → open file picker
+imgAttachBtn.addEventListener('click', () => imgPicker.click());
+imgPicker.addEventListener('change', e => {
+  [...e.target.files].forEach(addImageFromBlob);
+  imgPicker.value = '';
+});
+
+// Clipboard paste anywhere on the page
+document.addEventListener('paste', e => {
+  const imageItems = [...e.clipboardData.items].filter(i => i.type.startsWith('image/'));
+  imageItems.forEach(item => addImageFromBlob(item.getAsFile()));
+});
+
+// Drag-and-drop onto chat area
+chat.addEventListener('dragover', e => { e.preventDefault(); chat.classList.add('drag-over'); });
+chat.addEventListener('dragleave', () => chat.classList.remove('drag-over'));
+chat.addEventListener('drop', e => {
+  e.preventDefault();
+  chat.classList.remove('drag-over');
+  [...e.dataTransfer.files].filter(f => f.type.startsWith('image/')).forEach(addImageFromBlob);
+});
+
+function addImageFromBlob(blob) {
+  if (!blob || pendingImages.length >= 8) return;
+  const name = blob.name || ('paste_' + Date.now() + '.png');
+  const reader = new FileReader();
+  reader.onload = ev => compressImage(ev.target.result, 1920, compressed => {
+    pendingImages.push({ dataUrl: compressed, name });
+    renderPreviewStrip();
+  });
+  reader.readAsDataURL(blob);
+}
+
+function compressImage(dataUrl, maxW, callback) {
+  const img = new Image();
+  img.onload = () => {
+    let w = img.width, h = img.height;
+    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', 0.85));
+  };
+  img.src = dataUrl;
+}
+
+function renderPreviewStrip() {
+  if (pendingImages.length === 0) {
+    imgPreviewStrip.style.display = 'none';
+    imgPreviewStrip.innerHTML = '';
+    return;
+  }
+  imgPreviewStrip.style.display = 'flex';
+  imgPreviewStrip.innerHTML = '';
+  pendingImages.forEach((img, idx) => {
+    const item = document.createElement('div');
+    item.className = 'img-preview-item';
+    item.innerHTML = `<img src="${img.dataUrl}" alt="${img.name}">
+      <button class="img-remove-btn" title="Remove">✕</button>`;
+    item.querySelector('.img-remove-btn').addEventListener('click', () => {
+      pendingImages.splice(idx, 1);
+      renderPreviewStrip();
+    });
+    imgPreviewStrip.appendChild(item);
+  });
+}
+
+// Lightbox
+function openLightbox(src) {
+  imgLightboxImg.src = src;
+  imgLightbox.classList.add('show');
+}
+imgLightbox.addEventListener('click', () => imgLightbox.classList.remove('show'));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') imgLightbox.classList.remove('show');
+});
+
 // ── Send message ───────────────────────────────────────────────────────────────
 function sendMessage() {
   const content = input.value.trim();
-  if (!content || ws.readyState !== 1) return;
-  ws.send(JSON.stringify({ type: 'message', content }));
+  if ((!content && pendingImages.length === 0) || ws.readyState !== 1) return;
+  const payload = { type: 'message', content };
+  if (pendingImages.length > 0) payload.images = pendingImages.slice();
+  ws.send(JSON.stringify(payload));
   input.value = '';
   input.style.height = '';
+  pendingImages = [];
+  renderPreviewStrip();
 }
 
 sendBtn.addEventListener('click', sendMessage);

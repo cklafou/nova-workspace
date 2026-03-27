@@ -3,10 +3,15 @@ nova_chat/context_export.py -- Chat Context Exporter
 Generates shareable context summaries for browser Claude/Gemini sessions.
 """
 import json
+import os
 from pathlib import Path
 from datetime import datetime
 
-WORKSPACE_DIR = Path(__file__).parent.parent.parent
+WORKSPACE_DIR = (
+    Path(os.environ["NOVA_WORKSPACE"])
+    if "NOVA_WORKSPACE" in os.environ
+    else Path(__file__).parent.parent.parent
+)
 LOG_DIR = WORKSPACE_DIR / "logs" / "chat_sessions"
 
 

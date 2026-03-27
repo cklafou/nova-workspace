@@ -31,9 +31,9 @@ try:
     from nova_logs.logger import log, get_screenshot_dir
 except ImportError:
     try:
-    from nova_logs.logger import log
-except ImportError:
-    from nova_memory.logger import log, get_screenshot_dir
+        from nova_logs.logger import log
+    except ImportError:
+        from nova_memory.logger import log, get_screenshot_dir
 
 # ── FORCE PIXEL PERFECTION ─────────────────────────────────────────────────────
 # Windows DPI scaling fix — must run before any coordinate work

@@ -126,10 +126,20 @@ async def run_agent(
 
     is_heartbeat = (source == "cron")
 
+    # ── Nova Chat cross-session context (Discord runs only) ──────────────────
+    # Fetch recent Nova Chat messages so Nova knows what's been discussed there
+    # before she replies on Discord.  Non-blocking: if nova_chat isn't running
+    # the fetch silently returns None and we continue without it.
+    nova_chat_ctx: Optional[str] = None
+    if source == "discord":
+        nova_chat_ctx = await _fetch_nova_chat_context()
+
     # ── System prompt ────────────────────────────────────────────────────────
     system_prompt = build_system_prompt(
         heartbeat=is_heartbeat,
         extra_context=nova_status_summary,
+        discord=(source == "discord"),   # suppress Yield Protocol / directives
+        nova_chat_context=nova_chat_ctx,
     )
 
     # ── User message ─────────────────────────────────────────────────────────
@@ -154,8 +164,8 @@ async def run_agent(
     for iteration in range(MAX_TOOL_ITERATIONS + 1):
         if iteration == MAX_TOOL_ITERATIONS:
             log.warning(
-                "Session %s hit MAX_TOOL_ITERATIONS (%d) — forcing stop",
-                session.id[:8], MAX_TOOL_ITERATIONS,
+                "Session %s hit MAX_TOOL_ITERATIONS (%d) — forcing stop with final_text='%s'",
+                session.id[:8], MAX_TOOL_ITERATIONS, final_text[:80] if final_text else "(empty)",
             )
             break
 
@@ -206,7 +216,12 @@ async def run_agent(
                 str(tool_args)[:80],
             )
 
-            result_text, is_error = await executor.run(tool_name, tool_args)
+            try:
+                result_text, is_error = await executor.run(tool_name, tool_args)
+            except Exception as e:
+                log.error("Tool %s raised exception: %s", tool_name, e, exc_info=True)
+                result_text = f"Tool error: {type(e).__name__}: {e}"
+                is_error = True
 
             # Record in session
             t_elapsed_ms = 0   # we don't have per-call timing here
@@ -237,6 +252,40 @@ async def run_agent(
         total_tokens=total_tokens,
         duration_s=duration,
     )
+
+
+# ── Nova Chat context fetch ───────────────────────────────────────────────────
+
+async def _fetch_nova_chat_context(n: int = 40) -> Optional[str]:
+    """
+    Fetch the last N messages from the running nova_chat server.
+
+    Returns formatted text ready to drop into a system prompt, or None if
+    nova_chat isn't running or the fetch fails.  Always non-blocking: a 2s
+    timeout prevents a dead nova_chat from delaying the Discord response.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            resp = await client.get(
+                "http://127.0.0.1:8765/api/chat/recent",
+                params={"n": n},
+            )
+            if resp.status_code == 200:
+                try:
+                    data = resp.json()
+                except json.JSONDecodeError as e:
+                    log.debug("Nova Chat context: malformed JSON response: %s", e)
+                    return None
+                formatted = data.get("formatted", "").strip()
+                if formatted and formatted != "(no messages yet)":
+                    log.debug(
+                        "Nova Chat context: %d messages fetched",
+                        data.get("message_count", 0),
+                    )
+                    return formatted
+    except Exception as exc:
+        log.debug("Nova Chat context fetch skipped: %s", exc)
+    return None
 
 
 # ── Ollama HTTP call ──────────────────────────────────────────────────────────
@@ -354,6 +403,9 @@ async def _compact_session(session: Session, system_prompt: str) -> Optional[str
 
     try:
         summary = response["choices"][0]["message"]["content"].strip()
+        if not summary:
+            log.warning("Compaction returned empty summary — using generic summary")
+            return _generic_summary(session)
         log.info("Compaction summary: %d chars", len(summary))
         return summary
     except Exception:

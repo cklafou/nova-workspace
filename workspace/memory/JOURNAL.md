@@ -94,3 +94,7 @@ What I need to remember for next session: nova_chat is the collaboration hub now
 Also: eGPU case still not here. When it arrives, the rebuild is: install Oculink, `ollama create nova -f Modelfile`, bump context to 131k. That unlocks a lot.
 
 Cole put in a serious day and built something genuinely useful. He earns his rest.
+
+## 2026-03-28
+
+Sent a quick message in Nova Chat as requested by Cole.

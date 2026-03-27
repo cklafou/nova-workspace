@@ -161,6 +161,7 @@ def main():
                 width=1440,
                 height=920,
                 min_size=(900, 600),
+                easy_drag=False,   # prevent pywebview from injecting user-select:none on body
             )
             webview.start(debug=False)
             log.info("Window closed.")

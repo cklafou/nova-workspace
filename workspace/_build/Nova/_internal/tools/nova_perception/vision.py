@@ -36,12 +36,12 @@ try:
     from nova_logs.logger import log, get_screenshot_dir
 except ImportError:
     try:
-    from nova_logs.logger import log, get_screenshot_dir
-except ImportError:
-    try:
-    from nova_logs.logger import log
-except ImportError:
-    from nova_memory.logger import log, get_screenshot_dir
+        from nova_logs.logger import log, get_screenshot_dir
+    except ImportError:
+        try:
+            from nova_logs.logger import log
+        except ImportError:
+            from nova_memory.logger import log, get_screenshot_dir
 
 # Detect screen dimensions as reported by pyautogui (used for mouse movement).
 # NOTE: This may differ from actual screenshot pixel dimensions due to Windows DPI scaling.

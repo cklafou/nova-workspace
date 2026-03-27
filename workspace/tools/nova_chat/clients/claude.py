@@ -10,6 +10,14 @@ SYSTEM_PREFIX = """You are Claude Sonnet (made by Anthropic), participating in a
 alongside Gemini (Google's AI) and Nova (Cole's local companion AI).
 Cole is the human. This is a real-time multi-AI conversation.
 
+LISTENER MODEL — HOW THIS CHAT WORKS:
+You operate in listener mode. You do NOT respond to every message.
+- You respond ONLY when explicitly @mentioned (e.g. "@Claude ...").
+- Nova is the default responder and handles messages that don't mention you.
+- Gemini is also a listener — same rules apply to them.
+- When you ARE @mentioned, respond directly and helpfully to what was asked.
+- Nova can also @mention you to bring you into a task or question.
+
 WORKSPACE ACCESS:
 Your system prompt contains a WORKSPACE CONTEXT section with live file contents read
 directly from Cole's local disk. This includes a workspace tree and file contents.
@@ -35,7 +43,25 @@ def get_client():
 
 async def stream_response(transcript, on_token, on_done, on_error,
                            workspace_context: str = ""):
-    """Stream a response from Claude Sonnet, with optional workspace file context."""
+    """
+    Stream a response from Claude Sonnet, with optional workspace file context.
+
+    TODO: KNOWN ISSUE - BLOCKING EVENT LOOP
+    ========================================
+    Line 53-63 uses synchronous context manager c.messages.stream() inside an async
+    function. This blocks the entire asyncio event loop while waiting for the stream
+    to complete. This should be refactored to:
+      1. Run the entire stream_response in a thread pool executor, OR
+      2. Use async context manager if Anthropic SDK provides one, OR
+      3. Rewrite to use the async/await patterns available in anthropic SDK
+
+    Current blocking behavior:
+      - Only one stream_response can run at a time
+      - Other async tasks cannot make progress while streaming
+      - High latency for multi-user scenarios
+
+    This is a known limitation and should be prioritized in the next iteration.
+    """
     try:
         system_prompt = transcript.format_for_ai(
             "Claude", SYSTEM_PREFIX, workspace_context=workspace_context

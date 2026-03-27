@@ -74,9 +74,10 @@ class ToolExecutor:
 
         # Dispatch table: tool name → async handler
         self._handlers: dict[str, Callable] = {
-            "exec":    self._exec,
-            "read":    self._read,
-            "message": self._message,
+            "exec":      self._exec,
+            "read":      self._read,
+            "message":   self._message,
+            "nova_chat": self._nova_chat,   # post a message into nova_chat group chat
         }
 
     def set_discord(self, send_fn: DiscordSendFn, default_channel: int) -> None:
@@ -220,6 +221,40 @@ class ToolExecutor:
         except Exception as e:
             return f"{_ERROR_PREFIX}Discord send failed: {e}"
 
+    async def _nova_chat(self, args: dict) -> str:
+        """
+        Post a message into the Nova Chat group chat session.
+
+        Arguments:
+          content (str, required) — message text to post
+          author  (str, optional) — sender name shown in chat (default: "Nova")
+
+        This calls nova_chat's /api/inject_message endpoint on port 8765.
+        Only works when nova_chat server is running.
+        """
+        content = args.get("content", args.get("text", args.get("message", ""))).strip()
+        if not content:
+            return f"{_ERROR_PREFIX}nova_chat requires a 'content' argument."
+
+        author = args.get("author", "Nova").strip() or "Nova"
+
+        try:
+            import urllib.request as _req
+            import json as _json
+            payload = _json.dumps({"author": author, "content": content}).encode("utf-8")
+            request = _req.Request(
+                "http://127.0.0.1:8765/api/inject_message",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with _req.urlopen(request, timeout=5) as resp:
+                result = _json.loads(resp.read())
+            log.info("nova_chat: injected %d chars as %s", len(content), author)
+            return f"Message posted to Nova Chat ({len(content)} chars, id={result.get('id', '?')})."
+        except Exception as e:
+            return f"{_ERROR_PREFIX}nova_chat inject failed: {e}"
+
 
 # ── Subprocess helper (runs in thread pool) ───────────────────────────────────
 
@@ -293,16 +328,21 @@ def parse_tool_calls(response: dict) -> list[dict]:
 def parse_text_directives(text: str) -> list[dict]:
     """
     Parse nova_bridge-style directives from Nova's text output:
-      [EXEC: command]
+      [EXEC: command]          — bracketed form (preferred)
+      exec: command            — bare form used by TOOLS.md Yield Protocol
       [READ: path]
-      [WRITE: path]  -- forwarded to nova_bridge, not handled here
 
     Returns list of {"name": str, "arguments": dict}.
     These are in addition to any formal tool_calls.
+
+    Note: Regex patterns use non-greedy matching to prevent catastrophic backtracking
+    on very long input. Each pattern matches up to the first closing bracket.
     """
     import re
     calls = []
 
+    # Bracketed form: [EXEC: ...], [READ: ...]
+    # Using non-greedy matching (.*?) to prevent ReDoS with very long inputs
     exec_re  = re.compile(r'\[EXEC:\s*(.*?)\]', re.IGNORECASE | re.DOTALL)
     read_re  = re.compile(r'\[READ:\s*(.*?)\]', re.IGNORECASE | re.DOTALL)
 
@@ -310,6 +350,13 @@ def parse_text_directives(text: str) -> list[dict]:
         calls.append({"name": "exec", "arguments": {"command": m.group(1).strip()}})
     for m in read_re.finditer(text):
         calls.append({"name": "read", "arguments": {"path": m.group(1).strip()}})
+
+    # Bare form: lines starting with "exec: " (TOOLS.md Yield Protocol)
+    # Only match if no bracketed execs were found to avoid double-execution
+    if not calls:
+        bare_exec_re = re.compile(r'(?m)^exec:\s*(.+)$', re.IGNORECASE)
+        for m in bare_exec_re.finditer(text):
+            calls.append({"name": "exec", "arguments": {"command": m.group(1).strip()}})
 
     return calls
 

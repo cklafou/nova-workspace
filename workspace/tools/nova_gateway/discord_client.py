@@ -65,6 +65,7 @@ class NovaDiscordBot:
     def __init__(self, executor: "ToolExecutor"):
         self.executor     = executor
         self._bot         = None
+        self._ready       = False   # set True inside on_ready, not after bot.start() returns
         self._nova_status_summary: str = ""
 
     def update_nova_status(self, summary: str) -> None:
@@ -115,6 +116,7 @@ class NovaDiscordBot:
 
         @bot.event
         async def on_ready():
+            self._ready = True   # bot is connected — safe to send messages now
             log.info(
                 "Discord bot ready: %s (ID: %s)",
                 bot.user.name, bot.user.id,
@@ -124,6 +126,11 @@ class NovaDiscordBot:
                 len(cfg.discord.get("allowlist", [])),
                 cfg.discord.get("allowlist", []),
             )
+
+        @bot.event
+        async def on_disconnect():
+            self._ready = False
+            log.info("Discord bot disconnected")
 
         @bot.event
         async def on_message(message: discord.Message):
@@ -146,6 +153,11 @@ class NovaDiscordBot:
         if is_dm:
             if not cfg.discord.get("dm_enabled", True):
                 return
+            # Remember this DM channel so we can send to it later (e.g. [DISCORD:] bridge)
+            # DM channel IDs aren't static config — we learn them from incoming messages
+            if self.executor._default_channel is None:
+                self.executor._default_channel = channel_id
+                log.info("Learned DM channel ID from incoming message: %d", channel_id)
         else:
             allowlist = cfg.discord.get("allowlist", [])
             if allowlist and channel_id not in allowlist:
@@ -187,9 +199,13 @@ class NovaDiscordBot:
                 )
                 return
 
-        # Send response
+        # Send response (strip nova_chat-only directives before posting to Discord)
         if result.ok and result.text:
-            await self._send_long_message(message.channel, result.text)
+            clean = self._clean_for_discord(result.text)
+            if not clean:
+                log.info("Response was entirely directives — nothing to send to Discord")
+                return   # response was entirely directives — nothing to say
+            await self._send_long_message(message.channel, clean)
             log.info(
                 "Replied to %s: %d chars, %d tool calls, %.1fs",
                 author, len(result.text), result.tool_calls_made, result.duration_s,
@@ -198,7 +214,43 @@ class NovaDiscordBot:
             await message.channel.send(
                 f"⚠️ Nova error: `{result.error}`"
             )
-        # If result.text is empty (Nova only called tools, no final text), stay silent
+        else:
+            # result.text is empty (Nova only called tools, no final text)
+            log.info("Agent returned empty response (tools only, no final text)")
+
+    # ── Text cleanup ─────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _clean_for_discord(text: str) -> str:
+        """
+        Strip internal directives that Nova writes for nova_bridge/nova_chat
+        but that should never appear in a Discord message.
+
+        Removes:
+          - [EXEC: ...]  bracketed exec directives
+          - bare `exec: ...` lines (TOOLS.md Yield Protocol format)
+          - [READ: ...] / [WRITE: ...] / [DISCORD: ...] directives
+          - lone backticks left behind after stripping code-fence lines
+        """
+        import re
+
+        if not text:
+            return ""
+
+        # Remove bracketed directives: [EXEC: ...], [READ: ...], etc.
+        text = re.sub(r'\[(EXEC|READ|WRITE|DISCORD):[^\]]*\]', '', text, flags=re.IGNORECASE | re.DOTALL)
+
+        # Remove bare "exec: ..." lines (Yield Protocol format from TOOLS.md)
+        # Matches lines like:  exec: python -c "..."
+        text = re.sub(r'(?m)^exec:\s*.+$', '', text)
+
+        # Remove lines that are only a backtick (artifact of stripped code blocks)
+        text = re.sub(r'(?m)^`\s*$', '', text)
+
+        # Collapse more than two consecutive blank lines
+        text = re.sub(r'\n{3,}', '\n\n', text)
+
+        return text.strip()
 
     # ── Sending helpers ──────────────────────────────────────────────────────
 

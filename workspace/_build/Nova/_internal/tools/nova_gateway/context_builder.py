@@ -33,23 +33,69 @@ Read them carefully — they govern how you operate this session.
 """
 
 
+_DISCORD_OVERRIDE = """\
+## [DISCORD CONTEXT — READ THIS FIRST]
+You are responding to a Discord message from Cole.
+
+NOVA CHAT AWARENESS:
+Your context includes a [NOVA CHAT — RECENT MESSAGES] section.
+That is the shared group workspace chat where Cole, Claude, Gemini, and you collaborate.
+Read it to understand what has already been discussed there before you reply here.
+When you need Cole to see something in Nova Chat (not just Discord), use the nova_chat tool.
+
+CRITICAL RULES FOR DISCORD:
+- Respond with plain conversational text ONLY (no [EXEC:], [READ:], [WRITE:],
+  [DISCORD:] directives — those are nova_chat-only and get stripped to nothing).
+- Do NOT use the Yield Protocol. Do NOT write any `exec:` lines.
+- HONESTY: Never claim you performed an action unless a tool call confirmed it.
+  If you cannot do something in this context, say so plainly instead of pretending.
+- Do NOT repeat yourself: if Nova Chat already shows you sent a message, don't send it again.
+
+ONE AVAILABLE TOOL — use it with a formal JSON tool call, not a text directive:
+  tool: nova_chat
+  arguments: { "content": "<message text>", "author": "Nova" }
+  purpose: post a message into the Nova Chat group chat session
+  → Only say "I sent a message to Nova Chat" AFTER the tool returns success.
+  → If the tool fails, tell Cole it failed and why.
+
+For everything else: plain conversational text. One clean reply.
+"""
+
+_NOVA_CHAT_CONTEXT_HEADER = """\
+## [NOVA CHAT — RECENT MESSAGES]
+These are the most recent messages from your shared Nova Chat session.
+This is the group workspace chat where Cole, Claude, Gemini, and you collaborate.
+Use this to understand the current state of conversations there before replying via Discord.
+"""
+
+
 def build_system_prompt(
     heartbeat: bool = False,
     extra_context: Optional[str] = None,
+    discord: bool = False,
+    nova_chat_context: Optional[str] = None,
 ) -> str:
     """
     Build and return Nova's full system prompt string.
 
     Args:
-        heartbeat:     If True, include HEARTBEAT.md (only for cron triggers).
-        extra_context: Optional additional text appended at the end (e.g.
-                       nova_status.json summary from server.py polling).
+        heartbeat:         If True, include HEARTBEAT.md (only for cron triggers).
+        extra_context:     Optional additional text appended at the end (e.g.
+                           nova_status.json summary from server.py polling).
+        discord:           If True, append a Discord-context override that tells
+                           Nova not to use exec/tool directives in her reply.
+        nova_chat_context: Formatted recent Nova Chat messages to inject so Nova
+                           has cross-session awareness (fetched from nova_chat
+                           /api/chat/recent before each Discord agent run).
 
     Returns:
         A single string ready to be sent as the "system" role message to Ollama.
     """
     sections: list[str] = [_SYSTEM_HEADER]
     inject_paths = cfg.inject_files(heartbeat=heartbeat)
+
+    if not inject_paths:
+        log.warning("No workspace files to inject — Nova will have minimal context")
 
     for path in inject_paths:
         content = _read_file_safe(path)
@@ -65,10 +111,20 @@ def build_system_prompt(
     if extra_context:
         prompt += _SEP + "## [LIVE STATUS]\n" + extra_context.strip()
 
+    # Nova Chat cross-session context — injected before Discord override so
+    # Nova reads the chat history before she reads her Discord instructions.
+    if nova_chat_context:
+        prompt += _SEP + _NOVA_CHAT_CONTEXT_HEADER + "\n" + nova_chat_context.strip()
+
+    # Discord override appended last so it takes highest priority
+    if discord:
+        prompt += _SEP + _DISCORD_OVERRIDE
+
     token_estimate = len(prompt) // 4   # rough: 1 token ≈ 4 chars
     log.debug(
-        "System prompt built: %d chars (~%d tokens) from %d files",
+        "System prompt built: %d chars (~%d tokens) from %d files%s",
         len(prompt), token_estimate, len(inject_paths),
+        " [+nova_chat]" if nova_chat_context else "",
     )
     return prompt
 

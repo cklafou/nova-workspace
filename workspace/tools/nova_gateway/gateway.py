@@ -51,6 +51,7 @@ from typing import Optional
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import cfg, load as load_config, CONFIG_PATH
@@ -193,10 +194,12 @@ async def health():
 async def status():
     """Full gateway status."""
     uptime_s = int(time.time() - _state["started_at"])
+    discord_bot = _state.get("discord_bot")
+    discord_ready = getattr(discord_bot, "_ready", False) if discord_bot else False
     return {
         "ok":              True,
         "uptime_s":        uptime_s,
-        "discord_ready":   _state["discord_ready"],
+        "discord_ready":   discord_ready,
         "scheduler_ready": _state["scheduler_ready"],
         "discord_enabled": cfg.discord.get("enabled", False),
         "ollama_model":    cfg.ollama["model"],
@@ -286,6 +289,54 @@ async def cron_health():
         raise HTTPException(status_code=503, detail="Scheduler not running")
     asyncio.ensure_future(scheduler.trigger_health_check_now())
     return {"ok": True, "message": "Health check triggered (running in background)"}
+
+
+class _DiscordSendBody(BaseModel):
+    text: str
+    channel_id: Optional[int] = None
+
+
+@app.post("/api/discord/send")
+async def discord_send(body: _DiscordSendBody):
+    """Send a message to Discord from nova_chat or any internal caller.
+
+    Body: { "text": "message text", "channel_id": 12345 }
+    channel_id is optional — falls back to the first allowlisted channel.
+    """
+    bot = _state.get("discord_bot")
+    # Use bot._ready (set in on_ready event); _state["discord_ready"] was broken
+    # because it was set after bot.start() returns, which never happens while running
+    if bot is None or not getattr(bot, "_ready", False):
+        raise HTTPException(status_code=503, detail="Discord bot not connected")
+
+    text = body.text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="text is required")
+
+    channel_id = body.channel_id
+    if channel_id is None:
+        # Try allowlist first (static config), then fall back to the channel learned
+        # from the most recent incoming DM (no allowlist needed for DM-only setups)
+        allowlist = cfg.discord.get("allowlist", [])
+        if allowlist:
+            channel_id = int(allowlist[0])
+        elif getattr(bot.executor, "_default_channel", None):
+            channel_id = bot.executor._default_channel
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "No send channel known — add a channel ID to allowlist in "
+                    "nova_gateway.json, or send the bot a DM first so it can learn your channel ID"
+                )
+            )
+
+    try:
+        await bot._send_message(channel_id, text)
+        return {"ok": True, "channel_id": channel_id, "chars": len(text)}
+    except Exception as e:
+        log.error("discord_send failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
