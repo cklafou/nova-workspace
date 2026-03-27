@@ -486,7 +486,11 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 # TOOLS PANEL ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-WORKSPACE_ROOT = Path(__file__).parent.parent.parent
+WORKSPACE_ROOT = (
+    Path(os.environ["NOVA_WORKSPACE"])
+    if "NOVA_WORKSPACE" in os.environ
+    else Path(__file__).parent.parent.parent
+)
 TEXT_EXTS      = {".py", ".md", ".json", ".jsonl", ".txt", ".ps1", ".cmd",
                   ".yaml", ".yml", ".toml", ".ini", ".cfg", ".env"}
 EXCLUDE_DIRS   = {"__pycache__", ".git", "node_modules", ".clawhub",

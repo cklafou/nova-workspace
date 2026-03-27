@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-03-27 19:40:49_
+_Last updated: 2026-03-27 19:56:54_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -31,6 +31,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | HEARTBEAT.md | `workspace/HEARTBEAT.md` | Current heartbeat state |
 | IDENTITY.md | `workspace/IDENTITY.md` | Nova's self-definition document |
 | nova_gateway - Copy.json | `workspace/nova_gateway - Copy.json` | JSON file |
+| nova_gateway.json | `workspace/nova_gateway.json` | JSON file |
 | nova_gateway_runner.py | `workspace/nova_gateway_runner.py` | PY file |
 | README.md | `workspace/README.md` | Project overview |
 | SOUL.md | `workspace/SOUL.md` | Nova's identity, values, and growth framework |

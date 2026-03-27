@@ -12,7 +12,7 @@
     "token": "nova-gateway-local"
   },
   "discord": {
-    "enabled": false,
+    "enabled": true,
     "token": "[place token here]",
     "allowlist": [],
     "dm_enabled": true,
