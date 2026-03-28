@@ -3,12 +3,14 @@ Nova (Qwen3/Ollama) client for Nova Group Chat.
 ================================================
 OpenClaw manages Nova's agent loop, but for raw chat completions
 we call Ollama directly at http://127.0.0.1:11434 using the
-OpenAI-compatible API. OpenClaw stays running for its own purposes
-(gateway, tool-calling, discord, etc.) and doesn't interfere.
+native Ollama API (/api/chat). Using the native endpoint (not the
+OpenAI-compatible shim) because it supports "think": true, which
+activates Qwen3's chain-of-thought mode and returns thinking content
+in a separate message.thinking field — no <think> tag parsing needed.
 
 Endpoints:
-  POST http://127.0.0.1:11434/v1/chat/completions  -- inference (streaming)
-  GET  http://127.0.0.1:11434/api/tags             -- availability check
+  POST http://127.0.0.1:11434/api/chat   -- inference (NDJSON streaming, think: true)
+  GET  http://127.0.0.1:11434/api/tags   -- availability check
 """
 import json
 import re as _re
@@ -17,11 +19,11 @@ import urllib.request
 import urllib.error
 from typing import Callable, Awaitable, Optional
 
-# Matches <think>...</think> blocks (including multiline)
+# Safety-net: strip any stray <think>...</think> blocks that leak into content
 _THINK_RE = _re.compile(r'<think>(.*?)</think>', _re.DOTALL)
 
 OLLAMA_BASE = "http://127.0.0.1:11434"
-OLLAMA_CHAT = f"{OLLAMA_BASE}/v1/chat/completions"
+OLLAMA_CHAT = f"{OLLAMA_BASE}/api/chat"    # native NDJSON endpoint (supports think: true)
 OLLAMA_TAGS = f"{OLLAMA_BASE}/api/tags"
 MODEL       = "nova"   # ollama model name -- same as [gateway] agent model: ollama/nova
 
@@ -81,11 +83,11 @@ async def stream_response(
     images: list = None,
 ):
     """
-    Call Ollama's OpenAI-compatible endpoint with SSE streaming.
+    Call Ollama's native /api/chat endpoint with NDJSON streaming and think: true.
 
     images: list of {dataUrl, name} dicts from the browser upload, or None.
-            When provided and the nova model supports vision, images are sent
-            in Ollama's OpenAI-compatible vision format (content array).
+            When provided and the nova model supports vision, base64 image data
+            is extracted and passed in Ollama's native images[] format.
             If the model doesn't support vision, images are silently ignored.
     """
     try:
@@ -94,36 +96,35 @@ async def stream_response(
         )
         prompt = f"{system_prompt}\n\nPlease respond to the conversation above."
 
-        # Build user message content — include image_url blocks when images provided
+        # Build user message — native Ollama format uses images[] array (not content blocks)
+        user_message: dict = {"role": "user", "content": prompt}
         if images:
-            content_blocks = []
+            b64_images = []
             for img in images:
                 try:
                     data_url = img.get("dataUrl", "")
                     if not data_url or "," not in data_url:
                         continue
-                    content_blocks.append({
-                        "type": "image_url",
-                        "image_url": {"url": data_url},
-                    })
+                    # Strip the "data:image/...;base64," prefix — Ollama wants raw base64
+                    b64_images.append(data_url.split(",", 1)[1])
                 except Exception:
                     pass
-            content_blocks.append({"type": "text", "text": prompt})
-            user_message = {"role": "user", "content": content_blocks}
-        else:
-            user_message = {"role": "user", "content": prompt}
+            if b64_images:
+                user_message["images"] = b64_images
 
         payload = json.dumps({
             "model":    MODEL,
             "messages": [user_message],
             "stream":   True,
+            "think":    True,   # Qwen3 chain-of-thought — content arrives in message.thinking
         }).encode("utf-8")
 
-        full_response = ""
+        full_response = ""   # accumulated chat text (message.content tokens)
+        think_content = ""   # accumulated thinking text (message.thinking tokens)
         error_holder  = [None]
 
         def _call_sync():
-            nonlocal full_response
+            nonlocal full_response, think_content
             req = urllib.request.Request(
                 OLLAMA_CHAT,
                 data=payload,
@@ -132,23 +133,26 @@ async def stream_response(
             )
             try:
                 with urllib.request.urlopen(req, timeout=120) as resp:
+                    # Native /api/chat streams NDJSON — one JSON object per line, no "data:" prefix
                     for raw_line in resp:
                         line = raw_line.decode("utf-8").strip()
-                        if not line or not line.startswith("data:"):
+                        if not line:
                             continue
-                        data_str = line[5:].strip()
-                        if data_str == "[DONE]":
-                            break
                         try:
-                            chunk = json.loads(data_str)
-                            delta = (
-                                chunk.get("choices", [{}])[0]
-                                     .get("delta", {})
-                                     .get("content", "")
-                            )
-                            if delta:
-                                full_response += delta
-                        except (json.JSONDecodeError, KeyError, IndexError):
+                            chunk = json.loads(line)
+                            msg   = chunk.get("message", {})
+
+                            thinking_delta = msg.get("thinking", "")
+                            content_delta  = msg.get("content", "")
+
+                            if thinking_delta:
+                                think_content += thinking_delta
+                            if content_delta:
+                                full_response += content_delta
+
+                            if chunk.get("done"):
+                                break
+                        except (json.JSONDecodeError, KeyError):
                             pass
             except urllib.error.URLError as e:
                 error_holder[0] = f"Ollama not reachable: {e.reason}"
@@ -165,21 +169,23 @@ async def stream_response(
             await on_error(error_holder[0])
             return
 
-        if not full_response.strip():
+        # Safety-net: strip any stray <think> tags that leaked into chat content
+        stray_think = _THINK_RE.findall(full_response)
+        if stray_think:
+            think_content += "\n\n".join(stray_think)
+        chat_text = _THINK_RE.sub("", full_response).strip()
+
+        if not chat_text:
             await on_error("Nova returned an empty response (model may still be loading)")
             return
 
-        # Split <think>...</think> blocks from the actual chat response
-        think_blocks = _THINK_RE.findall(full_response)
-        chat_text    = _THINK_RE.sub("", full_response).strip()
-
-        # Log the full raw response (with think blocks) for debugging
-        _log_nova_thought(full_response, source="nova_chat_client")
+        # Log full output (think + chat) for debugging
+        raw_log = (f"<think>\n{think_content}\n</think>\n\n" if think_content else "") + chat_text
+        _log_nova_thought(raw_log, source="nova_chat_client")
 
         # ── Emit think tokens first (visible in Thoughts pane, NOT in chat) ──
-        if think_blocks and on_think_token:
-            think_text  = "\n\n".join(t.strip() for t in think_blocks)
-            think_words = think_text.split(" ")
+        if think_content.strip() and on_think_token:
+            think_words = think_content.strip().split(" ")
             for i, word in enumerate(think_words):
                 tok = word + (" " if i < len(think_words) - 1 else "")
                 await on_think_token(tok)

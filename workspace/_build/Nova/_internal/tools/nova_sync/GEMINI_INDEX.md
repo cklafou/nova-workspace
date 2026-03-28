@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-03-28 21:30:30_
+_Last updated: 2026-03-28 22:33:15_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -143,15 +143,15 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
+| master.md | `workspace/Thoughts/Finished/cancelled/TEST_ADVANCE/master.md` | MD file |
+| master.md | `workspace/Thoughts/Finished/cancelled/TEST_BLOCKED/master.md` | MD file |
+| master.md | `workspace/Thoughts/Finished/cancelled/TEST_BRIEF/master.md` | MD file |
+| master.md | `workspace/Thoughts/Finished/cancelled/TEST_STATUS/master.md` | MD file |
+| master.md | `workspace/Thoughts/Finished/cancelled/TEST_STATUS2/master.md` | MD file |
+| master.md | `workspace/Thoughts/Finished/cancelled/TEST_STATUS3/master.md` | MD file |
+| master.md | `workspace/Thoughts/Finished/cancelled/TEST_STATUS4/master.md` | MD file |
 | master.md | `workspace/Thoughts/Finished/completed_success/TEST_BRAIN_PROBE/master.md` | MD file |
 | priority.md | `workspace/Thoughts/priority.md` | MD file |
-| master.md | `workspace/Thoughts/TEST_ADVANCE/master.md` | MD file |
-| master.md | `workspace/Thoughts/TEST_BLOCKED/master.md` | MD file |
-| master.md | `workspace/Thoughts/TEST_BRIEF/master.md` | MD file |
-| master.md | `workspace/Thoughts/TEST_STATUS/master.md` | MD file |
-| master.md | `workspace/Thoughts/TEST_STATUS2/master.md` | MD file |
-| master.md | `workspace/Thoughts/TEST_STATUS3/master.md` | MD file |
-| master.md | `workspace/Thoughts/TEST_STATUS4/master.md` | MD file |
 | THOUGHT_TEMPLATE.md | `workspace/Thoughts/THOUGHT_TEMPLATE.md` | MD file |
 
 ## _admin/
@@ -216,19 +216,17 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | f7db2331-9d95-4166-a91a-9ca37af49e4e.jsonl | `workspace/gateway_sessions/2026-03-27/f7db2331-9d95-4166-a91a-9ca37af49e4e.jsonl` | JSONL file |
 | fa901728-8225-427e-9067-690def091ff5.jsonl | `workspace/gateway_sessions/2026-03-27/fa901728-8225-427e-9067-690def091ff5.jsonl` | JSONL file |
 | fc9bbb20-f6cd-4ee0-b7e5-61c4ff188ad7.jsonl | `workspace/gateway_sessions/2026-03-27/fc9bbb20-f6cd-4ee0-b7e5-61c4ff188ad7.jsonl` | JSONL file |
+| 0ec73767-7922-47dd-abbd-9a868352d778.jsonl | `workspace/gateway_sessions/2026-03-28/0ec73767-7922-47dd-abbd-9a868352d778.jsonl` | JSONL file |
 | 11f97245-a7a7-432d-884b-0b5b85463e6d.jsonl | `workspace/gateway_sessions/2026-03-28/11f97245-a7a7-432d-884b-0b5b85463e6d.jsonl` | JSONL file |
 | 29fa2fc5-a92a-4ed9-b1e8-324e9c85049a.jsonl | `workspace/gateway_sessions/2026-03-28/29fa2fc5-a92a-4ed9-b1e8-324e9c85049a.jsonl` | JSONL file |
 | 3e78ac77-c6ef-43aa-abc9-bb76a192752e.jsonl | `workspace/gateway_sessions/2026-03-28/3e78ac77-c6ef-43aa-abc9-bb76a192752e.jsonl` | JSONL file |
 | 3f53a9c1-4f27-49da-8780-885cdee728c4.jsonl | `workspace/gateway_sessions/2026-03-28/3f53a9c1-4f27-49da-8780-885cdee728c4.jsonl` | JSONL file |
+| 47773c6e-fe03-4577-9de3-d64851500b76.jsonl | `workspace/gateway_sessions/2026-03-28/47773c6e-fe03-4577-9de3-d64851500b76.jsonl` | JSONL file |
 | 7073c404-bacf-4c1d-8036-e75c3f91685f.jsonl | `workspace/gateway_sessions/2026-03-28/7073c404-bacf-4c1d-8036-e75c3f91685f.jsonl` | JSONL file |
+| 9aeb0083-ae0c-4bb0-8b0d-1dc1916703c5.jsonl | `workspace/gateway_sessions/2026-03-28/9aeb0083-ae0c-4bb0-8b0d-1dc1916703c5.jsonl` | JSONL file |
 | a10d5c0c-07fe-4eb0-8281-122ade8e45fa.jsonl | `workspace/gateway_sessions/2026-03-28/a10d5c0c-07fe-4eb0-8281-122ade8e45fa.jsonl` | JSONL file |
+| da235c53-51dd-4e37-a8a2-9406030ec3c6.jsonl | `workspace/gateway_sessions/2026-03-28/da235c53-51dd-4e37-a8a2-9406030ec3c6.jsonl` | JSONL file |
 | ea3a1e77-c19d-44c6-ba13-f82bd66c3e28.jsonl | `workspace/gateway_sessions/2026-03-28/ea3a1e77-c19d-44c6-ba13-f82bd66c3e28.jsonl` | JSONL file |
-
-## sessions/
-
-| Filename | Search Key | Description |
-|----------|-----------|-------------|
-| 7bb1e244-8dd8-44a2-ad55-6aaeb8f094d3.jsonl | `workspace/sessions/2026-03-28/7bb1e244-8dd8-44a2-ad55-6aaeb8f094d3.jsonl` | JSONL file |
 
 ---
 _This manifest is auto-generated on every Drive sync by nova_sync/drive.py._
