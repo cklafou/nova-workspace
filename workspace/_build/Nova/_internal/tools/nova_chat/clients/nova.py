@@ -116,7 +116,8 @@ async def stream_response(
             "model":    MODEL,
             "messages": [user_message],
             "stream":   True,
-            "think":    True,   # Qwen3 chain-of-thought — content arrives in message.thinking
+            "think":    True,   # Qwen3 chain-of-thought — requires Ollama >= 0.9.0
+                                # Thinking content arrives in message.thinking (separate from chat)
         }).encode("utf-8")
 
         full_response = ""   # accumulated chat text (message.content tokens)
@@ -169,10 +170,13 @@ async def stream_response(
             await on_error(error_holder[0])
             return
 
-        # Safety-net: strip any stray <think> tags that leaked into chat content
+        # On older Ollama (no think: true), thinking arrives inline as <think>…</think>
+        # in message.content rather than in message.thinking. Extract it either way.
         stray_think = _THINK_RE.findall(full_response)
         if stray_think:
-            think_content += "\n\n".join(stray_think)
+            if think_content:
+                think_content += "\n\n"
+            think_content += "\n\n".join(t.strip() for t in stray_think)
         chat_text = _THINK_RE.sub("", full_response).strip()
 
         if not chat_text:

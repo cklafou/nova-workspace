@@ -1,10 +1,18 @@
 [
   {
     "session_id": "2026-03-28_22-42-36",
-    "name": "New Session",
+    "name": "@all Phase 4A is officially LIVE. You ar",
     "created": "2026-03-28T22:42:36.537429",
-    "last_active": "2026-03-28T22:42:36.537429",
-    "message_count": 0,
-    "preview": ""
+    "last_active": "2026-03-28T22:44:39.287337",
+    "message_count": 10,
+    "preview": "Picking up the NCL chain dispatch for `G_AUDIT_01`.\n\n**@eyes"
+  },
+  {
+    "session_id": "2026-03-28_22-44-45",
+    "name": "@all Phase 4A is officially LIVE. You ar",
+    "created": "2026-03-28T22:44:45.326728",
+    "last_active": "2026-03-28T22:46:08.534152",
+    "message_count": 4,
+    "preview": "Claude's right. His static analysis is dead on\u2014the `STATUS.m"
   }
 ]

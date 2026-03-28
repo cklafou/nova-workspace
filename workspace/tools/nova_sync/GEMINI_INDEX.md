@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-03-28 22:33:15_
+_Last updated: 2026-03-28 22:43:19_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -124,12 +124,13 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
-| 2026-03-21_16-46-47_chat.jsonl | `workspace/logs/chat_sessions/2026-03-21_16-46-47_chat.jsonl` | JSONL file |
-| 2026-03-21_19-26-26_chat.jsonl | `workspace/logs/chat_sessions/2026-03-21_19-26-26_chat.jsonl` | JSONL file |
+| nova_advisor_refactor.py | `workspace/logs/archive/proposed_2026-03-25/nova_advisor_refactor.py` | PY file |
+| 2026-03-28_22-42-36_chat.jsonl | `workspace/logs/chat_sessions/2026-03-28_22-42-36_chat.jsonl` | JSONL file |
+| 2026-03-21_16-46-47_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-21_16-46-47_chat.jsonl` | JSONL file |
+| 2026-03-28_22-37-11_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-28_22-37-11_chat.jsonl` | JSONL file |
 | 2026-03-21_19-26-26_context_claude.md | `workspace/logs/chat_sessions/exports/2026-03-21_19-26-26_context_claude.md` | MD file |
 | 2026-03-21_19-26-26_context_gemini.md | `workspace/logs/chat_sessions/exports/2026-03-21_19-26-26_context_gemini.md` | MD file |
 | sessions_index.json | `workspace/logs/chat_sessions/sessions_index.json` | JSON file |
-| nova_advisor_refactor.py | `workspace/logs/proposed/nova_advisor_refactor.py` | PY file |
 | mentor.jsonl | `workspace/logs/sessions/2026-03-19/mentor.jsonl` | JSONL file |
 | mentor.jsonl | `workspace/logs/sessions/2026-03-20/mentor.jsonl` | JSONL file |
 | stress_test.jsonl | `workspace/logs/sessions/2026-03-20/stress_test.jsonl` | JSONL file |
@@ -225,6 +226,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | 7073c404-bacf-4c1d-8036-e75c3f91685f.jsonl | `workspace/gateway_sessions/2026-03-28/7073c404-bacf-4c1d-8036-e75c3f91685f.jsonl` | JSONL file |
 | 9aeb0083-ae0c-4bb0-8b0d-1dc1916703c5.jsonl | `workspace/gateway_sessions/2026-03-28/9aeb0083-ae0c-4bb0-8b0d-1dc1916703c5.jsonl` | JSONL file |
 | a10d5c0c-07fe-4eb0-8281-122ade8e45fa.jsonl | `workspace/gateway_sessions/2026-03-28/a10d5c0c-07fe-4eb0-8281-122ade8e45fa.jsonl` | JSONL file |
+| d28aba25-ed10-411b-90bb-15a6f15c4a6a.jsonl | `workspace/gateway_sessions/2026-03-28/d28aba25-ed10-411b-90bb-15a6f15c4a6a.jsonl` | JSONL file |
 | da235c53-51dd-4e37-a8a2-9406030ec3c6.jsonl | `workspace/gateway_sessions/2026-03-28/da235c53-51dd-4e37-a8a2-9406030ec3c6.jsonl` | JSONL file |
 | ea3a1e77-c19d-44c6-ba13-f82bd66c3e28.jsonl | `workspace/gateway_sessions/2026-03-28/ea3a1e77-c19d-44c6-ba13-f82bd66c3e28.jsonl` | JSONL file |
 
