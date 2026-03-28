@@ -140,9 +140,7 @@ Removed: `automation-workflows`, `discord-voice-deepgram`, `playwright-scraper-s
 | `vision_backup.py` | DELETED ✅ | Dead code from pre-pywinauto era |
 
 #### `tools/nova_advisor/`
-| File | Status | Notes |
-|------|--------|-------|
-| `mentor.py` | DEPRECATE | Replaced by nova_chat. Refactor approved. `build_context_snapshot()` written in `logs/proposed/nova_advisor_refactor.py`. Pending: `evaluate_action()` migration to autonomy.py, stub creation |
+**DELETED 2026-03-28 by Cole.** mentor.py has been replaced by nova_chat. No longer needed.
 
 #### `tools/nova_chat/`
 | File | Status | Notes |
@@ -172,7 +170,7 @@ Removed: `automation-workflows`, `discord-voice-deepgram`, `playwright-scraper-s
 | `agent_loop.py` | KEEP | Ollama inference loop. Cross-session context fetch (HTTP + JSONL fallback). |
 | `discord_client.py` | KEEP | discord.py bot, on_disconnect handler |
 | `scheduler.py` | KEEP | APScheduler cron, health check |
-| `gateway.py` | KEEP | FastAPI entry point, port 18790 |
+| `gateway.py` | KEEP | FastAPI entry point, port 18790. File logging added 2026-03-28 — writes to `logs/gateway/gateway-YYYY-MM-DD.log` (daily rotating, 7-day retention). |
 
 #### `tools/` root additions (Nova.exe)
 | File | Status | Notes |
@@ -202,6 +200,7 @@ Removed: `automation-workflows`, `discord-voice-deepgram`, `playwright-scraper-s
 | B6 | Nova's vision/screenshot failures (`eyes.py`) | Indentation fixed but screenshot path may still be broken | Investigate in future session |
 | B7 | Google Drive token expired | `nova_drive_token.json` needs re-authorization | Cole to re-auth manually |
 | B8 | asyncio blocking in `claude.py` `stream_response` | `c.messages.stream()` is synchronous, blocks event loop | Documented TODO — low priority |
+| ~~B9~~ | ~~`logs/gateway/` always empty — `_bg_gateway_error_watch` watching dead folder~~ | FIXED ✅ 2026-03-28 — `TimedRotatingFileHandler` added to `gateway.py`; logs now write to `logs/gateway/gateway-YYYY-MM-DD.log` | — |
 
 ---
 
@@ -326,14 +325,32 @@ _eGPU not required for this phase. Only required before model rebuild (post Phas
 
 **Committed:** `e45a6e8` + `61b2ba6` + ongoing work in session — local only, not yet pushed to GitHub.
 
-### PHASE 4 — Nova's Native Intelligence
+### PHASE 4A — Thoughts System, Nova Command Language & Module Architecture
+_Full design: `_admin/PHASE4A_THOUGHTS_SYSTEM.md`_
+_Prerequisite for Phase 4 — gives Nova persistent memory and autonomous task management before fine-tuning._
 
-- [ ] **4.1** Implement `nova_core/brain.py`
+**PRIORITY 0 RULE (permanent, applies to all phases):**
+Cole's word is absolute law. Nova stops everything and responds to Cole first, always.
+Hardcoded in `Thoughts/priority.md`. To be added to `AGENTS.md` in 4A.2.
+
+- [x] **4A.1** Surface scaffolding — `Thoughts/` directory structure, `priority.md` (with Priority 0), `THOUGHT_TEMPLATE.md`, design doc ✅ 2026-03-28
+- [ ] **4A.2** Nova reads Thoughts — add `priority.md` + `THOUGHT_TEMPLATE.md` to inject_files; update `AGENTS.md` with Thoughts protocol and Priority 0 rule; update `TOOLS.md`
+- [ ] **4A.3** Nova Command Language (NCL) parser — `nova_chat/nova_lang.py`; extend orchestrator.py with config-driven module registry; write `NCL_MASTER.md`
+- [ ] **4A.4** Injector — `nova_gateway/injector.py`; reads `<<context_file.md>>`, boots module with injected context, routes output back to Nova Chat with Task ID echo
+- [ ] **4A.5** Inbox routing — background task routes Nova Chat replies (with `[TASK_ID]` header) to `Thoughts/Master_Inbox/`; heartbeat cycle processes inbox, updates master.md
+- [ ] **4A.6** Heartbeat upgrade — full autonomous cycle: read priority.md → process inbox → update thoughts → fire new module calls
+- [ ] **4A.7** Vision module local-first — add moondream2 (Tier 2) and LLaVA 13B (Tier 3) to `nova_perception/eyes.py`; register `@eyes` as proper NCL module
+- [ ] **4A.8** `brain.py` realization — replace stub with Thoughts cycle orchestrator (read priority → process inbox → determine next action)
+
+### PHASE 4 — Nova's Native Intelligence
+_Requires Phase 4A (persistent memory) before fine-tuning is meaningful._
+
+- [ ] **4.1** `nova_core/brain.py` — realized via Phase 4A.8 (Thoughts orchestrator)
 - [ ] **4.2** Full bidirectional `nova_status.json`
 - [ ] **4.3** Fine-tuning pipeline on RTX 3090
 - [ ] **4.4** Custom Modelfile rebuild post-eGPU
 - [ ] **4.5** `/nova-trigger` endpoint
-- [ ] **4.6** ThinkOrSwim automation
+- [ ] **4.6** ThinkOrSwim automation (feeds into `@thinkorswim` module)
 
 ---
 
@@ -343,7 +360,7 @@ _eGPU not required for this phase. Only required before model rebuild (post Phas
 |------|-----------|
 | Workspace root (Windows) | `[Project_Nova folder]\workspace` — wherever Cole placed the Project_Nova folder |
 | Workspace root (Cowork mount) | `/sessions/sleepy-relaxed-gates/mnt/Project_Nova/workspace` |
-| Nova's session logs | `workspace/sessions/*.jsonl` (nova_gateway sessions) |
+| Nova's gateway session logs | `workspace/gateway_sessions/YYYY-MM-DD/<uuid>.jsonl` (nova_gateway agent runs) |
 | Gateway log | `workspace/logs/gateway/gateway-YYYY-MM-DD.log` |
 | Chat session logs | `workspace/logs/chat_sessions/*_chat.jsonl` |
 | nova_chat URL | `http://127.0.0.1:8765` |
@@ -410,7 +427,19 @@ _eGPU not required for this phase. Only required before model rebuild (post Phas
 | 2026-03-28 | Cross-session context: file fallback | `_fetch_nova_chat_context()` now has JSONL file fallback — always works regardless of nova_chat server state. |
 | 2026-03-28 | Vision pipeline added | All 3 AIs now receive images from Cole's messages. Claude: content blocks. Gemini: Part.from_bytes. Nova: image_url. |
 | 2026-03-28 | No Gemini-powered Cowork equivalent | Google's closest offering is Project Mariner (browser-only). No drop-in Cowork equivalent exists for Gemini. |
+| 2026-03-28 | `tools/nova_advisor/` deleted | mentor.py fully replaced by nova_chat listener model. Folder removed by Cole. |
+| 2026-03-28 | `tools/backups/` deleted | Redundant. logs/backups/ + GitHub + Google Drive provide sufficient redundancy. Removed by Cole. |
+| 2026-03-28 | Three session stores, all intentional | `workspace/gateway_sessions/` = nova_gateway agent thought log (one JSONL per Discord/cron run). `workspace/logs/sessions/` = nova_logs structured event log (actions, errors, thoughts logged by Nova's tools). `workspace/logs/chat_sessions/` = nova_chat group chat transcript. Three different systems, three different purposes. |
+| 2026-03-28 | workspace/sessions/ renamed to gateway_sessions/ | Avoids naming collision with logs/sessions/. config.py, nova_gateway.json, server.py fallback all updated. Bundle synced. |
+| 2026-03-28 | Discord→Nova Chat consolidation fixed | `_build_discord_context_block()` added to server.py. Reads last 3 gateway_sessions JSONL files, injects "RECENT DISCORD ACTIVITY" block into ws_context for all AI responses in Nova Chat. Both directions now active. |
+| 2026-03-28 | Filter bug fixed in _fetch_nova_chat_context | "(no active session)" was passing the filter and being returned as context, preventing file fallback. Now filtered alongside "(no messages yet)". |
+| 2026-03-28 | Gateway file logging added | nova_gateway only logged to stdout; `logs/gateway/` was always empty. Fixed: `TimedRotatingFileHandler` added to `gateway.py`. Rolls daily, keeps 7 days. Both source and bundle synced. |
+| 2026-03-28 | Priority 0 rule established | Cole's word is absolute law. Nova stops everything and responds to Cole first, always, on any surface. Hardcoded in Thoughts/priority.md. To be added to AGENTS.md in Phase 4A.2. |
+| 2026-03-28 | Thoughts system designed | Persistent filesystem-based memory and task management for Nova. Replaces stateless per-run operation. See _admin/PHASE4A_THOUGHTS_SYSTEM.md for full design. |
+| 2026-03-28 | Nova Command Language (NCL) designed | @ = module call, <<file>> = context injection, [[...]] = Nova instructions, ((...)) = completion criteria, ;; = parallel separator, :: = sequential pipe, **...** = emphasis, >>target = output routing, $$prev = previous output reference. Full spec in PHASE4A doc. |
+| 2026-03-28 | Local-first module principle adopted | Every module must have a local solution (Ollama model) that is as good or better than API. APIs are fallbacks only. @eyes: moondream2 → LLaVA 13B → Claude Haiku. Applies to all future modules. |
+| 2026-03-28 | brain.py purpose clarified | brain.py is not general intelligence code — it is the Thoughts cycle orchestrator: reads priority.md, processes Master_Inbox, determines next actions. Phase 4A.8. |
 
 ---
-_Last updated: 2026-03-28_
-_Next: Cole to formally retire OpenClaw (3.13) when ready. eGPU install pending vertical mount bracket._
+_Last updated: 2026-03-28 (session 3)_
+_Next: Fix remaining bugs (nova_chat tool calls from Discord), then Phase 4A.2 (Nova reads Thoughts, Priority 0 in AGENTS.md). eGPU install pending vertical mount bracket._

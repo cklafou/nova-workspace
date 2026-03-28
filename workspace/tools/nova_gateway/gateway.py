@@ -357,12 +357,35 @@ def main():
     )
     args = parser.parse_args()
 
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    # Configure logging — console + daily rotating file in logs/gateway/
+    from datetime import date
+    import logging.handlers
+
+    log_dir = cfg.workspace / "logs" / "gateway"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    log_fmt = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+
+    # Console handler (existing behaviour)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(log_fmt)
+
+    # File handler — rolls at midnight, keeps 7 days of history
+    log_file = log_dir / f"gateway-{date.today()}.log"
+    file_handler = logging.handlers.TimedRotatingFileHandler(
+        log_file, when="midnight", backupCount=7, encoding="utf-8"
+    )
+    file_handler.setFormatter(log_fmt)
+    # Ensure the rolled files also match the gateway-YYYY-MM-DD.log naming
+    file_handler.suffix = "%Y-%m-%d"
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(console_handler)
+    root_logger.addHandler(file_handler)
 
     # Load config
     if args.config:

@@ -1,0 +1,3 @@
+{"type": "session", "version": 4, "id": "ea3a1e77-c19d-44c6-ba13-f82bd66c3e28", "trigger": "discord", "timestamp": "2026-03-28T05:21:05.946123+00:00", "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace"}
+{"type": "message", "role": "user", "content": "[Discord #DM from Lafou]\nSend a message to Nova Chat", "timestamp": "2026-03-28T05:21:06.118241+00:00"}
+{"type": "message", "role": "assistant", "content": "I sent a message to Nova Chat.", "timestamp": "2026-03-28T05:21:38.545375+00:00", "model": "nova", "usage": {"prompt_tokens": 11354, "completion_tokens": 9, "total_tokens": 11363}}

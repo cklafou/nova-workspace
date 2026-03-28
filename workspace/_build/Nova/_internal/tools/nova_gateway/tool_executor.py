@@ -325,38 +325,102 @@ def parse_tool_calls(response: dict) -> list[dict]:
     return calls
 
 
+def _extract_json_objects(text: str) -> list[dict]:
+    """
+    Extract all top-level JSON objects from arbitrary text using a
+    balanced-brace parser. Handles multi-line and nested objects.
+    Returns a list of successfully parsed dicts.
+    """
+    import json as _json
+    results = []
+    i = 0
+    n = len(text)
+    while i < n:
+        if text[i] != '{':
+            i += 1
+            continue
+        # Walk forward counting braces to find the matching close
+        depth       = 0
+        in_string   = False
+        escape_next = False
+        j = i
+        while j < n:
+            c = text[j]
+            if escape_next:
+                escape_next = False
+            elif c == '\\' and in_string:
+                escape_next = True
+            elif c == '"':
+                in_string = not in_string
+            elif not in_string:
+                if c == '{':
+                    depth += 1
+                elif c == '}':
+                    depth -= 1
+                    if depth == 0:
+                        try:
+                            obj = _json.loads(text[i:j + 1])
+                            if isinstance(obj, dict):
+                                results.append(obj)
+                        except Exception:
+                            pass
+                        i = j
+                        break
+            j += 1
+        i += 1
+    return results
+
+
 def parse_text_directives(text: str) -> list[dict]:
     """
-    Parse nova_bridge-style directives from Nova's text output:
-      [EXEC: command]          — bracketed form (preferred)
-      exec: command            — bare form used by TOOLS.md Yield Protocol
-      [READ: path]
+    Parse tool directives from Nova's text output.  Handles three forms:
+
+      Bracketed:    [EXEC: command]  /  [READ: path]
+      Bare line:    exec: command    (TOOLS.md Yield Protocol)
+      Simple line:  nova_chat: message text here
+      JSON block:   {"tool": "nova_chat", "arguments": {"content": "...", "author": "Nova"}}
+                    (multi-line or single-line; any registered tool name)
 
     Returns list of {"name": str, "arguments": dict}.
     These are in addition to any formal tool_calls.
 
-    Note: Regex patterns use non-greedy matching to prevent catastrophic backtracking
-    on very long input. Each pattern matches up to the first closing bracket.
+    Note: Regex patterns use non-greedy matching to prevent catastrophic
+    backtracking on very long input.
     """
     import re
     calls = []
 
-    # Bracketed form: [EXEC: ...], [READ: ...]
-    # Using non-greedy matching (.*?) to prevent ReDoS with very long inputs
-    exec_re  = re.compile(r'\[EXEC:\s*(.*?)\]', re.IGNORECASE | re.DOTALL)
-    read_re  = re.compile(r'\[READ:\s*(.*?)\]', re.IGNORECASE | re.DOTALL)
+    # ── Bracketed form: [EXEC: ...], [READ: ...] ─────────────────────────────
+    exec_re = re.compile(r'\[EXEC:\s*(.*?)\]', re.IGNORECASE | re.DOTALL)
+    read_re = re.compile(r'\[READ:\s*(.*?)\]', re.IGNORECASE | re.DOTALL)
 
     for m in exec_re.finditer(text):
         calls.append({"name": "exec", "arguments": {"command": m.group(1).strip()}})
     for m in read_re.finditer(text):
         calls.append({"name": "read", "arguments": {"path": m.group(1).strip()}})
 
-    # Bare form: lines starting with "exec: " (TOOLS.md Yield Protocol)
-    # Only match if no bracketed execs were found to avoid double-execution
+    # ── Bare line forms (only if no bracketed calls found) ───────────────────
     if not calls:
+        # exec: command  (TOOLS.md Yield Protocol)
         bare_exec_re = re.compile(r'(?m)^exec:\s*(.+)$', re.IGNORECASE)
         for m in bare_exec_re.finditer(text):
             calls.append({"name": "exec", "arguments": {"command": m.group(1).strip()}})
+
+        # nova_chat: message text  (simple Discord→NovacChat directive)
+        nova_chat_re = re.compile(r'(?m)^nova_chat:\s*(.+)$', re.IGNORECASE)
+        for m in nova_chat_re.finditer(text):
+            calls.append({"name": "nova_chat", "arguments": {"content": m.group(1).strip(), "author": "Nova"}})
+
+    # ── JSON block form: {"tool": "...", "arguments": {...}} ─────────────────
+    # Nova may generate formal-looking JSON tool calls as plain text.
+    # Extract all top-level JSON objects and look for tool+arguments shape.
+    seen_tools: set[str] = {c["name"] for c in calls}
+    for obj in _extract_json_objects(text):
+        tool_name = obj.get("tool", "")
+        tool_args = obj.get("arguments", obj.get("args", {}))
+        if tool_name and isinstance(tool_args, dict) and tool_name not in seen_tools:
+            calls.append({"name": tool_name, "arguments": tool_args})
+            seen_tools.add(tool_name)
 
     return calls
 

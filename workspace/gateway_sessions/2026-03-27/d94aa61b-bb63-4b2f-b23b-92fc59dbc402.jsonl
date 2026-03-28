@@ -1,0 +1,3 @@
+{"type": "session", "version": 4, "id": "d94aa61b-bb63-4b2f-b23b-92fc59dbc402", "trigger": "discord", "timestamp": "2026-03-27T22:20:09.851800+00:00", "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace"}
+{"type": "message", "role": "user", "content": "[Discord #DM from Lafou]\nYou are sending that \"Hey Cole, testing Discord message from Nova.\" in the Nova Chat session over and over. Can you not see that in the Discord chat?", "timestamp": "2026-03-27T22:20:09.852804+00:00"}
+{"type": "message", "role": "assistant", "content": "Hey Cole, testing Discord message from Nova.\n\nI sent a message to Nova Chat.", "timestamp": "2026-03-27T22:20:11.938566+00:00", "model": "nova", "usage": {"prompt_tokens": 9456, "completion_tokens": 18, "total_tokens": 9474}}

@@ -39,7 +39,7 @@
     ]
   },
   "sessions": {
-    "dir": "sessions",
+    "dir": "gateway_sessions",
     "compact_at_frac": 0.85,
     "compact_keep_pairs": 10
   },

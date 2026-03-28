@@ -452,6 +452,72 @@ async def _run_gemini_response(on_token, on_done, on_error,
         await on_done(full_response)
 
 
+def _build_discord_context_block(n: int = 15) -> str:
+    """
+    Read recent nova_gateway session JSONL files and return a formatted block
+    showing recent Discord activity. Injected into all AIs' workspace context
+    so Nova Chat participants have cross-session awareness of Discord conversations.
+
+    Reads the 3 most recent gateway_sessions, extracts up to n user/assistant
+    message pairs (skipping tool results), and formats them for system prompt
+    injection. Silent on any error — cross-session context is best-effort.
+    """
+    try:
+        gateway_dir = WORKSPACE_ROOT / "gateway_sessions"
+        if not gateway_dir.exists():
+            return ""
+        all_files = sorted(
+            gateway_dir.rglob("*.jsonl"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )[:3]
+        if not all_files:
+            return ""
+        collected: list[str] = []
+        for path in all_files:
+            session_lines: list[str] = []
+            trigger = "discord"
+            try:
+                with open(path, encoding="utf-8", errors="replace") as fh:
+                    for raw in fh:
+                        raw = raw.strip()
+                        if not raw:
+                            continue
+                        try:
+                            entry = json.loads(raw)
+                        except json.JSONDecodeError:
+                            continue
+                        etype = entry.get("type", "")
+                        if etype == "session":
+                            trigger = entry.get("trigger", "discord")
+                            continue
+                        if etype != "message":
+                            continue
+                        role    = entry.get("role", "")
+                        content = (entry.get("content") or "").strip()[:400]
+                        ts      = (entry.get("timestamp") or "")[:16]
+                        if not content:
+                            continue
+                        if role == "user":
+                            session_lines.append(f"  [{ts}] Discord: {content}")
+                        elif role == "assistant":
+                            session_lines.append(f"  [{ts}] Nova: {content}")
+            except Exception:
+                continue
+            if session_lines:
+                collected.extend(session_lines[-6:])   # last 6 lines per session
+        if not collected:
+            return ""
+        lines_to_show = collected[-n:]
+        return (
+            "\n--- RECENT DISCORD ACTIVITY (cross-session awareness, do not repeat unless asked) ---\n"
+            + "\n".join(lines_to_show)
+            + "\n--- END DISCORD ACTIVITY ---\n"
+        )
+    except Exception:
+        return ""
+
+
 async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                           latest_message: str = "",
                           images: list = None) -> str:
@@ -467,6 +533,12 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     if latest_message:
         workspace.update_for_message(latest_message)
     ws_context = workspace.build_context_block()
+
+    # Cross-session awareness: inject recent Discord activity so Nova Chat AIs
+    # know what was discussed on Discord (the missing consolidation direction).
+    discord_ctx = _build_discord_context_block()
+    if discord_ctx:
+        ws_context = discord_ctx + ws_context
 
     # 1.3 -- Silently prepend Nova's live status to workspace context (no chat message)
     if nova_status_cache.get("summary"):
@@ -583,7 +655,7 @@ WORKSPACE_ROOT = (
 TEXT_EXTS      = {".py", ".md", ".json", ".jsonl", ".txt", ".ps1", ".cmd",
                   ".yaml", ".yml", ".toml", ".ini", ".cfg", ".env"}
 EXCLUDE_DIRS   = {"__pycache__", ".git", "node_modules", ".clawhub",
-                  "backups", "sessions"}
+                  "backups", "gateway_sessions"}
 
 
 @app.get("/api/files/tree")
@@ -893,9 +965,9 @@ async def nova_gateway_sessions(limit: int = 20):
         return JSONResponse({"sessions": data.get("sessions", [])[:limit]})
     except Exception:
         pass
-    # Fallback: read from workspace/sessions/ directly
+    # Fallback: read from workspace/gateway_sessions/ directly
     ws = Path(__file__).resolve().parent.parent.parent
-    sessions_dir = ws / "sessions"
+    sessions_dir = ws / "gateway_sessions"
     sessions = []
     if sessions_dir.exists():
         for p in sorted(sessions_dir.rglob("*.jsonl"),

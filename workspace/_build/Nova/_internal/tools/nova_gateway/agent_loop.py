@@ -282,7 +282,8 @@ async def _fetch_nova_chat_context(n: int = 40) -> Optional[str]:
                     log.debug("Nova Chat context: malformed JSON: %s", e)
                 else:
                     formatted = data.get("formatted", "").strip()
-                    if formatted and formatted != "(no messages yet)":
+                    _empty = {"", "(no messages yet)", "(no active session)"}
+                    if formatted and formatted not in _empty:
                         log.debug(
                             "Nova Chat context (live): %d messages",
                             data.get("message_count", 0),

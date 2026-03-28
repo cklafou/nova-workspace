@@ -9,7 +9,7 @@ What this does (plain English):
   This module handles writing those files, reading them back, and
   "compacting" them when they get too long for Nova's memory window.
 
-File location: workspace/sessions/YYYY-MM-DD/<uuid>.jsonl
+File location: workspace/gateway_sessions/YYYY-MM-DD/<uuid>.jsonl
 Format: JSONL v4 (one JSON object per line, version field = 4)
 
 Compaction: when the conversation history is > 85% of context_window,

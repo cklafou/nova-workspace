@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-03-28 08:18:06_
+_Last updated: 2026-03-28 09:07:04_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -155,6 +155,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | passover_2026-03-21_gemini.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-21_gemini.md` | MD file |
 | passover_2026-03-21_gemini_session2.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-21_gemini_session2.md` | MD file |
 | passover_2026-03-26_claude.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-26_claude.md` | MD file |
+| passover_2026-03-28_claude.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-28_claude.md` | MD file |
 | session_notes_2026-03-22.md | `workspace/_admin/passover/3 MAR 2026/session_notes_2026-03-22.md` | MD file |
 | PHASE2_ARCHITECTURE.md | `workspace/_admin/PHASE2_ARCHITECTURE.md` | MD file |
 
@@ -183,6 +184,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | 8e0728e5-114a-4395-8748-18ecbf3dae60.jsonl | `workspace/sessions/2026-03-27/8e0728e5-114a-4395-8748-18ecbf3dae60.jsonl` | JSONL file |
 | 964c18f7-f4f8-480e-8e88-2ae20db4c3c7.jsonl | `workspace/sessions/2026-03-27/964c18f7-f4f8-480e-8e88-2ae20db4c3c7.jsonl` | JSONL file |
 | 969797f0-6bb5-40a6-b65a-a99149ed845b.jsonl | `workspace/sessions/2026-03-27/969797f0-6bb5-40a6-b65a-a99149ed845b.jsonl` | JSONL file |
+| 973a412f-2ca8-47fd-ae5a-de989aca1597.jsonl | `workspace/sessions/2026-03-27/973a412f-2ca8-47fd-ae5a-de989aca1597.jsonl` | JSONL file |
 | a2011c76-33cd-4d06-ad7c-1fdb9ca31ce1.jsonl | `workspace/sessions/2026-03-27/a2011c76-33cd-4d06-ad7c-1fdb9ca31ce1.jsonl` | JSONL file |
 | a31b9f75-c7b6-4a63-90e9-dae332d4d8e0.jsonl | `workspace/sessions/2026-03-27/a31b9f75-c7b6-4a63-90e9-dae332d4d8e0.jsonl` | JSONL file |
 | a40697cd-9b45-4de1-a76f-51a40ea93350.jsonl | `workspace/sessions/2026-03-27/a40697cd-9b45-4de1-a76f-51a40ea93350.jsonl` | JSONL file |

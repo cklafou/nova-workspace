@@ -1,0 +1,3 @@
+{"type": "session", "version": 4, "id": "964c18f7-f4f8-480e-8e88-2ae20db4c3c7", "trigger": "discord", "timestamp": "2026-03-27T22:20:34.108302+00:00", "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace"}
+{"type": "message", "role": "user", "content": "[Discord #DM from Lafou]\nNova. Answer me please.", "timestamp": "2026-03-27T22:20:34.108302+00:00"}
+{"type": "message", "role": "assistant", "content": "Hey Cole, I'm here. What's up?", "timestamp": "2026-03-27T22:20:36.451880+00:00", "model": "nova", "usage": {"prompt_tokens": 9429, "completion_tokens": 12, "total_tokens": 9441}}

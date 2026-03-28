@@ -92,7 +92,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     # Session storage
     "sessions": {
         # Where to store session JSONL files (relative to workspace root)
-        "dir":              "sessions",
+        "dir":              "gateway_sessions",
         # Compact when context hits this fraction of context_window
         "compact_at_frac":  0.85,
         # Keep this many recent message-pairs after compaction
