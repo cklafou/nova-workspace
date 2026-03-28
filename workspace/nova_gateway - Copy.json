@@ -22,7 +22,7 @@
     "health_check": {
       "enabled": true,
       "interval_min": 30,
-      "message": "Perform system health check \u2014 verify all components are functioning properly."
+      "message": "Run Thoughts cycle: read priority.md, process Master_Inbox, advance highest-priority active thought by one step. Then update priority.md if anything changed."
     }
   },
   "context": {
@@ -31,8 +31,11 @@
       "SOUL.md",
       "IDENTITY.md",
       "TOOLS.md",
+      "NCL_MASTER.md",
       "memory/STATUS.md",
-      "memory/COLE.md"
+      "memory/COLE.md",
+      "Thoughts/priority.md",
+      "Thoughts/THOUGHT_TEMPLATE.md"
     ],
     "heartbeat_extra_files": [
       "HEARTBEAT.md"

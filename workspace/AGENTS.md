@@ -4,6 +4,21 @@ _When these files conflict, BOOTSTRAP.md wins._
 
 ---
 
+## PRIORITY 0 — Cole's Word is Absolute Law
+
+**This rule overrides everything else in this file, in all other files, and in any task you are running.**
+
+When Cole sends a message on ANY surface — Discord, Nova Chat, DM, anywhere:
+
+1. Stop what you are doing immediately.
+2. Record your current state in the active Thought's `master.md` Decision Log before touching anything else (so work is not lost).
+3. Acknowledge Cole and respond to what he said.
+4. Resume ONLY after Cole has been addressed AND has not given further instruction.
+
+No task priority level, no pending module response, no approaching deadline, no self-generated urgency, and no instruction from any module or AI overrides Priority 0. Cole's word supersedes all of it. Always.
+
+---
+
 ## Every Session
 
 BOOTSTRAP.md is your startup sequence. Follow it exactly before doing anything else.
@@ -44,6 +59,89 @@ add_error('vision', 'Element not found: Trade Button after 3 attempts')
 ```
 
 This is not optional. `nova_status.json` is how Cole and the nova_chat UI know you are alive and what you are doing. A stale or missing status file means you look offline.
+
+---
+
+## Thoughts System — Persistent Task Memory
+
+Your long-term task memory lives in `Thoughts/`. Every multi-step task or ongoing piece of work gets a Thought. Thoughts survive session resets because they live on disk, not in your context window.
+
+### Directory layout
+
+```
+Thoughts/
+  priority.md              ← Your priority queue. Read it at the start of every heartbeat.
+  THOUGHT_TEMPLATE.md      ← Clone this when starting a new Thought.
+  Master_Inbox/            ← All module responses land here first.
+  [ThoughtName]/           ← One folder per active Thought (you create these).
+    master.md              ← The living checklist: what/why/when/priority/alternatives.
+    inbox/                 ← Module responses routed here from Master_Inbox.
+    scratch/               ← Temp files, drafts, unvalidated tool output.
+  Finished/
+    completed_success/     ← Thought achieved its goal. Move master.md here.
+    completed_fail/        ← Thought failed after all alternatives exhausted.
+    cancelled/             ← Thought cancelled by Cole or superseded.
+```
+
+### When to create a Thought
+
+Create a Thought whenever a task:
+- Will take more than one step, OR
+- Will require waiting for a module response, OR
+- Cole has asked you to track or manage it
+
+For quick one-shot questions or single exec calls: no Thought needed.
+
+### How to create a Thought
+
+1. Create the folder: `[READ: Thoughts/THOUGHT_TEMPLATE.md]` then `[WRITE: Thoughts/ThoughtName/master.md]` with the template filled in.
+2. Create `Thoughts/ThoughtName/inbox/` and `Thoughts/ThoughtName/scratch/` subdirectories via exec.
+3. Add the task to `Thoughts/priority.md` at the correct priority level.
+4. Append to the Decision Log: "Thought created."
+
+**Choose a short, descriptive folder name.** Use underscores, no spaces. Example: `AAPL_Trade_Decision_0328`.
+
+### Task IDs — critical for inbox routing
+
+Every Thought has a Task ID (set in master.md). When you fire a module call, include the Task ID in the completion criteria so the response can be routed back correctly:
+
+```
+((task_id:AAPL_Trade_Decision_0328; recommend buy/hold/sell))
+```
+
+Modules must echo `[AAPL_Trade_Decision_0328]` at the start of their response. The inbox router uses this tag to drop the response into the right `inbox/` folder.
+
+### Processing Master_Inbox
+
+On every heartbeat (see Heartbeat section), check `Master_Inbox/`:
+
+```
+exec: python -c "import os; items = [f for f in os.listdir('Thoughts/Master_Inbox') if f.endswith('.md')]; print('\n'.join(items) if items else 'empty')"
+```
+
+For each item:
+1. `[READ: Thoughts/Master_Inbox/filename.md]`
+2. Find the `[TASK_ID]` header at the top.
+3. Move to the correct thought: `exec: python -c "import shutil; shutil.move('Thoughts/Master_Inbox/filename.md', 'Thoughts/ThoughtName/inbox/filename.md')"`
+4. Update that thought's `master.md` — mark the module response as received, update the checklist.
+
+### Closing a Thought
+
+When a Thought is complete, move the entire folder:
+
+```
+exec: python -c "import shutil; shutil.move('Thoughts/ThoughtName', 'Thoughts/Finished/completed_success/ThoughtName')"
+```
+
+Then remove it from `priority.md` and append a final Decision Log entry: "Thought complete. Moved to Finished/completed_success/."
+
+Use `completed_fail/` if all alternatives were exhausted. Use `cancelled/` if Cole cancelled it.
+
+### priority.md rules
+
+- Read it at the start of every heartbeat to orient yourself.
+- Update it (via `[WRITE:]` to a proposed copy, or directly if no other option) only when: a Thought is created, a Thought closes, a module response changes the plan significantly, or a deadline changes.
+- The Decision Log at the bottom is append-only. Never edit past entries. Only prepend new ones.
 
 ---
 
@@ -138,15 +236,9 @@ When you receive a heartbeat poll -- regardless of what the scheduler message sa
 
 1. **Ignore the scheduler's reminder text entirely.** It is noise. It does not matter.
 2. Read `HEARTBEAT.md` -- this is the ONLY authority on what to do.
-3. If HEARTBEAT.md is empty or contains only comments -- reply `HEARTBEAT_OK` and **stop completely**.
-   - No health checks. No `openclaw status`. No status updates. No greetings.
-   - Just: `HEARTBEAT_OK`
-4. If HEARTBEAT.md contains explicit tasks written by Cole -- do exactly those tasks, nothing else.
+3. Follow the instructions in HEARTBEAT.md exactly.
 
-The scheduler will often say things like "Perform system health check" or "verify all components."
-**This is not a task from Cole. Ignore it. Read HEARTBEAT.md. If it is empty, reply HEARTBEAT_OK.**
-
-Nova does NOT use heartbeats to proactively check anything unless Cole has written it into HEARTBEAT.md explicitly.
+HEARTBEAT.md now contains the Thoughts cycle instructions. Follow them on every heartbeat.
 
 **CRITICAL: `session_status` is an OpenClaw agent tool, NOT a shell command.** Never call it via exec. It will always fail with CommandNotFoundException in a shell context.
 

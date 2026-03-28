@@ -5,14 +5,36 @@ nova_eyes.py — Nova's Unified Vision System
 This is Nova's single interface for seeing and understanding her environment.
 Everything related to "what's on screen" goes through here.
 
-Three tiers of vision, used automatically:
-  1. pywinauto (instant, exact, free) — finds UI elements via accessibility API
-  2. Claude Haiku (fast, cheap) — verifies screen state, answers YES/NO questions
-  3. Claude Sonnet via mentor — periodic sanity checks to catch hallucination
+VISION TIER STACK  (Phase 4A.7 — local-first)
+────────────────────────────────────────────────────────────────────────────────
+  Tier 1: pywinauto (instant, exact, free)
+    → Accessibility API. Returns labeled UI elements, coordinates, states.
+    → Best for: standard Windows UI, reading text, finding controls.
+    → Used by: find(), list_elements(), dump_tree()
 
-Nova should NEVER be blind. If pywinauto can't see an element, Claude looks
-at the screenshot. If Claude's unsure, the mentor reviews. Every action has
-at least one set of eyes confirming what's happening.
+  Tier 2: moondream2 via Ollama (local, fast, ~1.8B params)
+    → ollama pull moondream — runs on GPU, near-instant on RTX 4090.
+    → Best for: quick visual Q&A, "what is on screen", basic chart reading.
+    → Used by: describe()
+    → Requires: Ollama running at http://localhost:11434
+
+  Tier 3: LLaVA 13B via Ollama (local, quality, ~13B params)
+    → ollama pull llava:13b — high quality visual descriptions.
+    → Best for: complex chart analysis, reading non-standard UI, detail.
+    → Used by: describe() (fallback from Tier 2)
+    → Requires: Ollama running at http://localhost:11434
+
+  Tier 4: Claude Haiku (API fallback — charged per token)
+    → Fast, cheap Claude vision. Used when local Ollama tiers are unavailable.
+    → Used by: describe(), verify(), find() (fallback from pywinauto)
+    → Requires: ANTHROPIC_API_KEY
+
+  Tier 5: Claude Sonnet via mentor (periodic sanity checks only)
+    → High-stakes verification only — most expensive, highest quality.
+    → Used by: sanity_check()
+
+Nova should NEVER be blind. If Tier 2-3 fail (Ollama not running), Tier 4
+takes over transparently. There is always a fallback.
 
 How it fits into the system:
   nova_eyes.py     → unified vision (this file)  ← YOU ARE HERE
@@ -23,8 +45,17 @@ How it fits into the system:
   nova_mentor.py   → Nova's teacher (called for sanity checks)
 """
 
+import io
 import time
 from typing import Optional, Tuple, Dict, List
+
+# ── Ollama configuration ──────────────────────────────────────────────────────
+_OLLAMA_URL       = "http://localhost:11434/api/generate"
+_OLLAMA_TIMEOUT_S = 45          # seconds — moondream2 is very fast; llava:13b is ~20s
+_OLLAMA_MODELS    = {
+    "tier2": "moondream",       # ollama pull moondream (~1.8B, fastest)
+    "tier3": "llava:13b",       # ollama pull llava:13b (~8GB, quality)
+}
 
 from nova_perception.explorer import NovaExplorer
 from nova_perception.vision import NovaVision
@@ -80,7 +111,12 @@ class NovaEyes:
         self._actions_since_check = 0
         self._sanity_check_interval = 10  # check every N actions
 
-        print("[eyes] NovaEyes initialized. pywinauto + Claude Haiku ready.")
+        # Probe Ollama availability at init time (non-blocking — just a flag)
+        self._ollama_available = self._probe_ollama()
+        if self._ollama_available:
+            print("[eyes] NovaEyes initialized. Tiers: pywinauto → moondream2 → LLaVA 13B → Claude Haiku")
+        else:
+            print("[eyes] NovaEyes initialized. Ollama not detected — Tiers: pywinauto → Claude Haiku")
 
     # ── Primary: Find a UI element ─────────────────────────────────────────────
 
@@ -174,17 +210,141 @@ class NovaEyes:
 
     # ── Screen description ─────────────────────────────────────────────────────
 
-    def describe(self, screenshot=None) -> str:
+    def describe(self, prompt=None, screenshot=None) -> str:
         """
-        Ask Claude to describe what's currently on screen.
+        Describe what's on screen, optionally answering a specific prompt/query.
 
-        Useful for orientation, debugging, or when Nova needs to understand
-        an unfamiliar screen before deciding what to do.
+        Phase 4A.7 tier chain for visual description:
+          Tier 2: moondream2 via Ollama (local, fast — preferred when available)
+          Tier 3: LLaVA 13B via Ollama  (local, quality — fallback if Tier 2 slow)
+          Tier 4: Claude Haiku           (API fallback if Ollama unavailable)
+
+        Args:
+            prompt:     Optional query or instruction about the screen.
+                        Examples: "describe open positions in the panel"
+                                  "what chart pattern is visible?"
+                        If None or not a string, gives a general description.
+            screenshot: Optional PIL Image. If None, takes a fresh screenshot.
+
+        Backward compatible: calling describe(some_image) still works
+        (the image is detected as non-string and treated as the screenshot arg).
+        """
+        # Backward compat: if prompt is a non-string object, it's actually a screenshot
+        if prompt is not None and not isinstance(prompt, str):
+            screenshot = prompt
+            prompt = None
+
+        vision_prompt = (
+            prompt.strip()
+            if prompt and isinstance(prompt, str)
+            else "Describe everything you see on this screen in detail."
+        )
+
+        # Take screenshot once — shared across all tiers
+        if screenshot is None:
+            try:
+                screenshot = self.vision.take_screenshot()
+            except Exception as e:
+                return f"[eyes] Could not take screenshot: {e}"
+
+        # Tier 2: moondream2 (local, fast)
+        if self._ollama_available:
+            result = self._describe_ollama(_OLLAMA_MODELS["tier2"], vision_prompt, screenshot)
+            if result:
+                print(f"[eyes] Tier 2 (moondream2): {result[:100]}...")
+                log("actions", "describe_screen", tier="moondream2", chars=len(result))
+                return result
+
+            # Tier 3: LLaVA 13B (local, quality)
+            result = self._describe_ollama(_OLLAMA_MODELS["tier3"], vision_prompt, screenshot)
+            if result:
+                print(f"[eyes] Tier 3 (LLaVA 13B): {result[:100]}...")
+                log("actions", "describe_screen", tier="llava:13b", chars=len(result))
+                return result
+
+        # Tier 4: Claude Haiku (API fallback)
+        print("[eyes] Using Tier 4 (Claude Haiku) for screen description.")
+        return self.vision.describe_screen(screenshot)
+
+    # ── Ollama vision helpers (Tiers 2-3) ─────────────────────────────────────
+
+    @staticmethod
+    def _probe_ollama() -> bool:
+        """
+        Check whether Ollama is running at localhost:11434.
+        Returns True if the health endpoint responds, False otherwise.
+        Non-blocking — uses a 2-second timeout.
+        """
+        try:
+            import urllib.request as _req
+            with _req.urlopen("http://localhost:11434", timeout=2):
+                return True
+        except Exception:
+            return False
+
+    def _shot_to_base64(self, shot) -> str:
+        """Convert a PIL Image to base64 PNG string for Ollama's image field."""
+        import base64
+        buf = io.BytesIO()
+        shot.save(buf, format="PNG")
+        return base64.standard_b64encode(buf.getvalue()).decode("utf-8")
+
+    def _describe_ollama(self, model: str, prompt: str, screenshot) -> Optional[str]:
+        """
+        Call an Ollama vision model (moondream, llava, etc.) to describe a screenshot.
+
+        Args:
+            model:      Ollama model name, e.g. "moondream" or "llava:13b".
+            prompt:     The question or instruction to pass to the model.
+            screenshot: PIL Image to send as context.
 
         Returns:
-            Plain English description of the current screen state.
+            The model's text response, or None if the call fails
+            (Ollama not running, model not pulled, timeout, etc.).
+
+        Ollama API reference:
+            POST http://localhost:11434/api/generate
+            Body: {"model": "...", "prompt": "...", "images": ["<base64>"], "stream": false}
         """
-        return self.vision.describe_screen(screenshot)
+        import json
+        import urllib.request as _req
+        import urllib.error as _err
+
+        try:
+            img_b64 = self._shot_to_base64(screenshot)
+        except Exception as e:
+            print(f"[eyes] Ollama: failed to encode screenshot — {e}")
+            return None
+
+        payload = json.dumps({
+            "model":  model,
+            "prompt": prompt,
+            "images": [img_b64],
+            "stream": False,
+        }).encode("utf-8")
+
+        try:
+            req = _req.Request(
+                _OLLAMA_URL,
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with _req.urlopen(req, timeout=_OLLAMA_TIMEOUT_S) as resp:
+                data = json.loads(resp.read())
+            response_text = data.get("response", "").strip()
+            # Validate: don't return empty or error strings
+            if not response_text or response_text.lower().startswith("error"):
+                return None
+            return response_text
+
+        except _err.URLError:
+            # Ollama not running — mark as unavailable so we skip Tier 2-3 going forward
+            self._ollama_available = False
+            return None
+        except Exception as e:
+            print(f"[eyes] Ollama {model} call failed: {type(e).__name__}: {e}")
+            return None
 
     # ── Take screenshot ────────────────────────────────────────────────────────
 

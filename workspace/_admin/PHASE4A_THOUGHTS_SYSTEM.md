@@ -320,28 +320,41 @@ injection for AI.
 - [x] Create `Thoughts/THOUGHT_TEMPLATE.md`
 - [x] Create this design document
 
-### 4A.2 — Nova reads Thoughts (next session)
-- [ ] Add `Thoughts/priority.md` to nova_gateway.json `inject_files` so Nova reads
-      it on every boot
-- [ ] Add `Thoughts/THOUGHT_TEMPLATE.md` to inject_files
-- [ ] Update `AGENTS.md` with Thoughts protocol: when to create a thought, how to
-      use the template, how to update priority.md, inbox processing rules
-- [ ] Update `TOOLS.md` with Thoughts filesystem paths and read/write conventions
+### 4A.2 — Nova reads Thoughts (COMPLETE 2026-03-28)
+- [x] Add `Thoughts/priority.md` to nova_gateway.json `inject_files`
+- [x] Add `Thoughts/THOUGHT_TEMPLATE.md` to inject_files
+- [x] Update `AGENTS.md` with Thoughts protocol + Priority 0 rule (first section)
+- [x] Update `TOOLS.md` with Thoughts filesystem paths and read/write conventions
+- [x] Rewrite `HEARTBEAT.md` as full 5-step Thoughts cycle
+      (orient via priority.md → process Master_Inbox → advance highest thought →
+      update priority.md → HEARTBEAT_OK)
 
-### 4A.3 — Nova Command Language parser
-- [ ] Create `nova_chat/nova_lang.py` — NCL parser
+### 4A.3 — Nova Command Language parser (COMPLETE 2026-03-28)
+- [x] Create `nova_chat/nova_lang.py` — NCL parser (10/10 unit tests pass)
       Input: raw Nova Chat message
-      Output: structured task graph (parallel groups, sequential chains, context files, criteria)
-- [ ] Extend `orchestrator.py` to call nova_lang.py for NCL messages
-- [ ] Extend participant registry — config-driven module list, not hardcoded
-- [ ] Add `>>output_target`, `$$prev`, `%%timeout` token support
-- [ ] Write `NCL_MASTER.md` in workspace root (Nova's grammar reference)
+      Output: NCLCall (parallel_groups → chains → ModuleCalls with all tokens parsed)
+      Tokens: @role, <<file>>, [[instr]], ((criteria)), ;;, ::, **emph**, >>out, $$prev, %%N
+- [x] Extend `orchestrator.py` with config-driven MODULE_REGISTRY (7 modules)
+      get_module(), list_modules(), is_ncl_message() with structural token guard
+      Loaded from workspace/modules.json if present; falls back to defaults
+- [x] Write `NCL_MASTER.md` in workspace root — Nova's grammar reference
+      Added to nova_gateway.json inject_files so Nova reads it on every boot
+- Note: @mentor is NCL-parseable (not in nova_lang._ORCHESTRATOR_NAMES) but
+  bare "@mentor, what do you think?" still routes via orchestrator (no structural token)
 
-### 4A.4 — Injector
-- [ ] Create `nova_gateway/injector.py`
-      Reads `<<context_file.md>>`, prepends to module system prompt, boots module,
-      returns output to Nova Chat as a message with Task ID echo
-- [ ] Wire into NCL execution layer
+### 4A.4 — Injector (COMPLETE 2026-03-28)
+- [x] Create `nova_gateway/injector.py` — NCLInjector class + dispatch_ncl() convenience fn
+      - Parallel groups dispatched concurrently via asyncio.gather
+      - Sequential chains (::) run in order; $$prev injected into each subsequent step
+      - Context files read from workspace, workspace-escape blocked
+      - @eyes: NovaEyes direct import (graceful ImportError fallback for Linux dev)
+      - @mentor: fire-and-forget @Claude @Gemini post with task_id echo instruction
+      - Unimplemented modules: stub notice to Nova Chat + Master_Inbox record
+      - >>output_target: writes result to path (creates timestamped file if dir)
+      - %%timeout: asyncio.wait_for enforced per-step
+- [x] Wire into `nova_chat/server.py` inject_message endpoint
+      Detected via is_ncl_message(); dispatched as fire-and-forget asyncio task
+      alongside existing nova_bridge directive handling
 
 ### 4A.5 — Inbox routing
 - [ ] Background task (nova_bridge or heartbeat) watches Nova Chat for messages
@@ -354,15 +367,27 @@ injection for AI.
       read priority.md → process Master_Inbox → update active thoughts → fire new calls
 - [ ] Update `HEARTBEAT.md` with new cycle instructions for Nova
 
-### 4A.7 — Vision module (local-first @eyes)
-- [ ] Add moondream2 as Tier 2 in `nova_perception/eyes.py`
-- [ ] Add LLaVA 13B as Tier 3
-- [ ] Register `@eyes` as a proper NCL module in orchestrator
+### 4A.7 — Vision module (local-first @eyes) ✅ COMPLETE 2026-03-28
+- [x] Add moondream2 as Tier 2 in `nova_perception/eyes.py` — `_describe_ollama(model="moondream", ...)`
+- [x] Add LLaVA 13B as Tier 3 — `_describe_ollama(model="llava:13b", ...)`
+- [x] `_probe_ollama()` at init, URLError marks unavailable, degradation to Haiku
+- [x] `describe(prompt, screenshot)` signature updated for NCL `[[instructions]]` pass-through
+- [x] Register `@eyes` as "active" in MODULE_REGISTRY with `ollama_models` field
+- Requires on Cole's machine: `ollama pull moondream && ollama pull llava:13b`
 
-### 4A.8 — brain.py realization
-- [ ] `nova_core/brain.py` becomes the Thoughts cycle orchestrator:
-      read priority.md, process inbox, determine next action, return task graph
-- [ ] Replaces current stub that returns "standby"
+### 4A.8 — brain.py realization ✅ COMPLETE 2026-03-28
+- [x] `nova_core/brain.py` rewritten as `NovaBrain` class (replaces stub)
+- [x] `orient()` — reads priority.md, scans Thought folders, counts Master_Inbox items → returns state dict
+- [x] `next_action()` — decision tree: process_inbox > advance_thought > check_blocked > idle
+- [x] `get_active_thoughts()` — scans Thoughts/ for folders matching `^[A-Za-z][A-Za-z0-9_]+$`, reads status from master.md
+- [x] `get_thoughts_by_status(status)` — filter by status string
+- [x] `_read_thought_status(path)` — regex for `**Status:**` line; strips bold markers from captured value
+- [x] `_highest_priority_thought(names)` — uses priority.md order, alphabetical fallback
+- [x] `create_thought(name, context, priority, when, task_id)` — scaffolds from THOUGHT_TEMPLATE.md, creates inbox/ + scratch/ subdirs, fills in metadata
+- [x] `close_thought(name, outcome)` — stamps master.md with close timestamp, moves to Thoughts/Finished/{outcome}/
+- [x] `build_briefing(routed_items, routed_summaries)` — full HEARTBEAT_BRIEFING string with orient() state + next_action() guidance + routing summary
+- [x] `get_brain(workspace)` — convenience factory function
+- [x] All tests pass (fresh thought, blocked thought, advance decision, briefing content)
 
 ---
 

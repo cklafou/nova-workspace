@@ -19,7 +19,7 @@ from pydantic import BaseModel
 
 from nova_chat.transcript import Transcript
 from nova_chat.session_manager import SessionManager
-from nova_chat.orchestrator import parse_directed, should_respond, build_response_queue
+from nova_chat.orchestrator import parse_directed, should_respond, build_response_queue, is_ncl_message
 from nova_chat.context_export import export_session
 from nova_chat.workspace_context import WorkspaceContext
 import nova_chat.clients.claude as claude_client
@@ -62,6 +62,54 @@ _NOVA_RATE_WINDOW = 60    # seconds
 _NOVA_RATE_LIMIT  = 4     # max Nova-initiated messages allowed per window
 _nova_msg_times: list[float] = []   # rolling timestamps of Nova inject calls
 nova_throttled:  bool = False       # True = Nova is currently muted by failsafe
+
+# ── Phase 4A.5 — Inbox routing ────────────────────────────────────────────────
+# Regex: matches messages that start with [TaskId] where TaskId is a word starting
+# with a letter followed by alphanumeric chars / underscores.
+# These are module response messages that should be routed to Thoughts/Master_Inbox/.
+# Examples: "[Research_0328] Here is my analysis..."
+#           "[TradeCheck_0328] @eyes result: ..."
+import re as _re
+_TASK_ID_RE = _re.compile(r'^\[([A-Za-z][A-Za-z0-9_]{2,})\]', _re.MULTILINE)
+
+# Workspace root for inbox writes (3 levels up: nova_chat/ → tools/ → workspace/)
+_INBOX_WORKSPACE = Path(__file__).resolve().parent.parent.parent
+
+
+def _maybe_route_inbox(author: str, content: str) -> None:
+    """
+    Phase 4A.5 — Inbox routing.
+
+    If `content` starts with a [TaskId] pattern, write it to
+    Thoughts/Master_Inbox/ so the heartbeat cycle can route it to the
+    correct Thought folder on the next tick.
+
+    File name: {timestamp}_{author}_{task_id}.md
+    Called synchronously from message-saving code paths (non-blocking I/O only).
+    """
+    m = _TASK_ID_RE.match(content.strip())
+    if not m:
+        return                     # Not a task response — ignore
+
+    task_id = m.group(1)
+    inbox   = _INBOX_WORKSPACE / "Thoughts" / "Master_Inbox"
+
+    try:
+        inbox.mkdir(parents=True, exist_ok=True)
+        from datetime import datetime as _dt
+        ts    = _dt.utcnow().strftime("%Y%m%d_%H%M%S")
+        safe_author = _re.sub(r'[^\w]', '', author)[:20] or "unknown"
+        fname = f"{ts}_{safe_author}_{task_id}.md"
+        text  = (
+            f"# Inbox Item: [{task_id}]\n\n"
+            f"- **Author:** {author}\n"
+            f"- **Timestamp:** {_dt.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+            f"- **Task ID:** {task_id}\n\n"
+            f"## Message\n\n{content}\n"
+        )
+        (inbox / fname).write_text(text, encoding="utf-8")
+    except Exception as _e:
+        print(f"[inbox] Failed to write Master_Inbox item: {_e}")
 
 
 # ── HTTP endpoints ─────────────────────────────────────────────────────────────
@@ -561,6 +609,8 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         msg = session_mgr.active.add(ai_name, full)
         session_mgr.update_meta_from_message(msg)
         await broadcast({"type": "message_end", "author": ai_name, "id": msg_id})
+        # Phase 4A.5 — Route module responses with [TASK_ID] to Master_Inbox
+        _maybe_route_inbox(ai_name, full)
         # If Nova wrote action directives, forward them to her real OpenClaw agent
         if ai_name == "Nova":
             bridge_results = await handle_nova_message(full)
@@ -1208,6 +1258,11 @@ async def inject_message(body: dict):
         "timestamp": msg["timestamp"],
     })
 
+    # Phase 4A.5 — Route module responses with [TASK_ID] header to Master_Inbox.
+    # Injected messages can also be module responses (e.g. @eyes posts its result
+    # back to Nova Chat via inject_message with a [task_id] prefix).
+    _maybe_route_inbox(author, content)
+
     # Execute any nova_bridge directives Nova wrote (e.g. [EXEC:], [DISCORD:])
     if author == "Nova":
         bridge_results = await handle_nova_message(content)
@@ -1217,6 +1272,41 @@ async def inject_message(body: dict):
                 "result": br,
                 "msg_id": msg["id"],
             })
+
+    # ── NCL dispatch: detect and execute Nova Command Language module calls ────
+    # If Nova's message contains NCL module calls (@eyes, @coder, etc. with
+    # structural tokens like [[]], (()), <<>>), dispatch them asynchronously.
+    # This runs as a fire-and-forget task — the endpoint returns immediately
+    # and module results are posted back to Nova Chat when ready.
+    if author == "Nova" and is_ncl_message(content):
+        try:
+            from nova_chat.nova_lang import parse_ncl
+            _ncl = parse_ncl(content)
+            if _ncl:
+                from nova_gateway.injector import NCLInjector
+                _injector = NCLInjector()
+
+                async def _ncl_dispatch():
+                    try:
+                        results = await _injector.execute(_ncl)
+                        print(f"[NCL] dispatch complete: {len(results)} chain(s)")
+                    except Exception as _e:
+                        print(f"[NCL] dispatch task error: {_e}")
+
+                _ncl_task = asyncio.create_task(_ncl_dispatch())
+                active_tasks.append(_ncl_task)
+
+                def _ncl_cleanup(fut):
+                    try:
+                        if _ncl_task in active_tasks:
+                            active_tasks.remove(_ncl_task)
+                    except Exception:
+                        pass
+
+                _ncl_task.add_done_callback(_ncl_cleanup)
+                print(f"[NCL] dispatched task for: {content[:80]}")
+        except Exception as _ncl_err:
+            print(f"[NCL] Failed to dispatch NCL call: {_ncl_err}")
 
     # ── Trigger Claude / Gemini if @mentioned in the injected message ─────────
     # Nova writes "@Claude ..." in her message → Claude gets triggered.

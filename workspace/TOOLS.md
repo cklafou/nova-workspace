@@ -22,9 +22,8 @@ from nova_logs.logger import log, log_thought
 | `nova_logs/` | All logging -- agent tools, chat thoughts, index | `logger.py`, `Logger_Index.md` |
 | `nova_action/` | Mouse/keyboard control, autonomy loop, verification | `hands.py`, `autonomy.py`, `verify.py` |
 | `nova_perception/` | UI element detection, vision, screen exploration | `eyes.py`, `explorer.py`, `vision.py` |
-| `nova_core/` | Rules engine, yield check-in, cognitive router (stub) | `rules.py`, `checkin.py`, `brain.py` |
+| `nova_core/` | Rules engine, yield check-in, cognitive router | `rules.py`, `checkin.py`, `brain.py` |
 | `nova_chat/` | Group chat server -- Cole + Claude + Gemini + Nova | `server.py`, `nova_bridge.py`, `workspace_context.py` |
-| `nova_advisor/` | Legacy Claude mentor bridge -- DEPRECATED, pending removal | `mentor.py` |
 
 Also at `tools/` root: `calls.py` (generates call graph docs per package).
 
@@ -40,6 +39,7 @@ Also at `tools/` root: `calls.py` (generates call graph docs per package).
 - **Logs:** `logs\`
 - **Proposed changes:** `logs\proposed\` (stage all changes here for Cole to review)
 - **Admin/planning (not for Nova):** `_admin\` (excluded from context injection)
+- **Thoughts (task memory):** `Thoughts\` (priority.md, Master_Inbox, active thought folders, Finished archive)
 
 ## How to Run Tools
 
@@ -237,9 +237,68 @@ exec: python tools/nova_core/rules.py
 
 ---
 
-## nova_core/brain.py -- Cognitive Router (STUB -- NOT FUNCTIONAL)
+## nova_core/brain.py -- Cognitive Router (Phase 4A.8)
 
-Returns "standby" for everything. Do not rely on it. Phase 4 work.
+Currently a stub. Will become the Thoughts cycle orchestrator in Phase 4A.8:
+reads priority.md, processes Master_Inbox, determines next actions.
+Do not rely on it yet. Use HEARTBEAT.md Thoughts cycle directly for now.
+
+---
+
+## Thoughts System -- Task Memory and Autonomous Management
+
+Your persistent task memory. Thoughts survive context resets because they live on disk.
+
+### Key paths
+
+| Path | Purpose |
+|------|---------|
+| `Thoughts/priority.md` | Priority queue. Read every heartbeat. Append-only Decision Log at bottom. |
+| `Thoughts/THOUGHT_TEMPLATE.md` | Clone this to start a new Thought. |
+| `Thoughts/Master_Inbox/` | All module responses land here. Process on heartbeat. |
+| `Thoughts/[Name]/master.md` | The living checklist for one task. |
+| `Thoughts/[Name]/inbox/` | Routed module responses for this thought. |
+| `Thoughts/[Name]/scratch/` | Temp files, drafts, unvalidated output. |
+| `Thoughts/Finished/completed_success/` | Archive for completed thoughts. |
+| `Thoughts/Finished/completed_fail/` | Archive for failed thoughts (useful failure signal). |
+| `Thoughts/Finished/cancelled/` | Archive for cancelled thoughts. |
+
+### Creating a Thought
+
+```
+# 1. Read the template
+[READ: Thoughts/THOUGHT_TEMPLATE.md]
+
+# 2. Write a filled copy as the new thought's master.md
+[WRITE: Thoughts/ThoughtName/master.md]
+... (filled template) ...
+[/WRITE]
+
+# 3. Create subdirectories
+exec: python -c "from pathlib import Path; [Path(p).mkdir(parents=True, exist_ok=True) for p in ['Thoughts/ThoughtName/inbox', 'Thoughts/ThoughtName/scratch']]"
+
+# 4. Add to priority.md
+[WRITE: logs/proposed/priority.md] or direct write if Cole permits
+```
+
+### Task ID format (required for inbox routing)
+
+Every Thought has a Task ID matching its folder name.
+Include it in ALL module calls:
+
+```
+((task_id:ThoughtName; what you need the module to return))
+```
+
+Module responses must begin with: `[ThoughtName]`
+
+### Moving to Finished
+
+```
+exec: python -c "import shutil; shutil.move('Thoughts/ThoughtName', 'Thoughts/Finished/completed_success/ThoughtName')"
+```
+
+Remove from priority.md. Append final Decision Log entry.
 
 ---
 
@@ -284,9 +343,7 @@ hands.double_click(x, y)
 from nova_action.autonomy import NovaAutonomy
 from nova_perception.eyes import NovaEyes
 from nova_action.hands import NovaHands
-from nova_advisor.mentor import NovaMentor
-
-autonomy = NovaAutonomy(NovaEyes(), NovaHands(), NovaMentor())
+autonomy = NovaAutonomy(NovaEyes(), NovaHands())
 
 autonomy.click(target, window, success_question)
 autonomy.type_into(target, text, window)
@@ -297,9 +354,10 @@ autonomy.wait_for(condition, timeout)
 
 ---
 
-## nova_advisor/mentor.py -- DEPRECATED
+## nova_advisor/ -- DELETED
 
-Being replaced by nova_chat. The `evaluate_action()` gatekeeper and `get_project_briefing()` logic are pending migration. See `logs/proposed/nova_advisor_refactor.py`.
+This package has been removed. mentor.py has been fully replaced by nova_chat.
+Do not attempt to import from nova_advisor. It does not exist.
 
 ---
 
