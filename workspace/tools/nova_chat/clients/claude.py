@@ -42,25 +42,21 @@ def get_client():
     return client
 
 async def stream_response(transcript, on_token, on_done, on_error,
-                           workspace_context: str = ""):
+                           workspace_context: str = "",
+                           images: list = None):
     """
-    Stream a response from Claude Sonnet, with optional workspace file context.
+    Stream a response from Claude Sonnet, with optional workspace file context
+    and optional vision support (images from the most recent message).
+
+    images: list of {dataUrl, name} dicts from the browser upload, or None.
+            When provided, images are included as vision content blocks in the
+            user message so Claude can actually see them.
 
     TODO: KNOWN ISSUE - BLOCKING EVENT LOOP
     ========================================
-    Line 53-63 uses synchronous context manager c.messages.stream() inside an async
-    function. This blocks the entire asyncio event loop while waiting for the stream
-    to complete. This should be refactored to:
-      1. Run the entire stream_response in a thread pool executor, OR
-      2. Use async context manager if Anthropic SDK provides one, OR
-      3. Rewrite to use the async/await patterns available in anthropic SDK
-
-    Current blocking behavior:
-      - Only one stream_response can run at a time
-      - Other async tasks cannot make progress while streaming
-      - High latency for multi-user scenarios
-
-    This is a known limitation and should be prioritized in the next iteration.
+    c.messages.stream() is a synchronous context manager inside an async
+    function, blocking the event loop while streaming.  Refactor to run in
+    a thread pool executor or switch to the async anthropic SDK when stable.
     """
     try:
         system_prompt = transcript.format_for_ai(
@@ -68,11 +64,41 @@ async def stream_response(transcript, on_token, on_done, on_error,
         )
         c = get_client()
 
+        # Build user message content — include image blocks when images are provided
+        if images:
+            import base64 as _b64
+            content_blocks = []
+            for img in images:
+                try:
+                    data_url = img.get("dataUrl", "")
+                    if not data_url or "," not in data_url:
+                        continue
+                    header, b64data = data_url.split(",", 1)
+                    # Extract media type: "data:image/jpeg;base64" → "image/jpeg"
+                    media_type = header.split(":")[1].split(";")[0] if ":" in header else "image/jpeg"
+                    content_blocks.append({
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": media_type,
+                            "data": b64data,
+                        },
+                    })
+                except Exception:
+                    pass   # skip malformed image entries
+            content_blocks.append({
+                "type": "text",
+                "text": "Please respond to the conversation above.",
+            })
+            user_content = content_blocks
+        else:
+            user_content = "Please respond to the conversation above."
+
         with c.messages.stream(
             model=MODEL,
             max_tokens=2048,
             system=system_prompt,
-            messages=[{"role": "user", "content": "Please respond to the conversation above."}],
+            messages=[{"role": "user", "content": user_content}],
         ) as stream:
             full_response = ""
             for text in stream.text_stream:

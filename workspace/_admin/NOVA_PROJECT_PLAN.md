@@ -1,6 +1,6 @@
 # NOVA PROJECT PLAN
 _Master planning document. Not for Nova to read. Lives in `_admin/`._
-_Updated: 2026-03-27 | Maintained by: Cole + Cowork Claude_
+_Updated: 2026-03-28 | Maintained by: Cole + Cowork Claude_
 
 ---
 
@@ -145,22 +145,48 @@ Removed: `automation-workflows`, `discord-voice-deepgram`, `playwright-scraper-s
 | `mentor.py` | DEPRECATE | Replaced by nova_chat. Refactor approved. `build_context_snapshot()` written in `logs/proposed/nova_advisor_refactor.py`. Pending: `evaluate_action()` migration to autonomy.py, stub creation |
 
 #### `tools/nova_chat/`
-| File | Status |
-|------|--------|
-| `server.py` | KEEP — core |
-| `launch.py` | KEEP |
-| `session_manager.py` | KEEP |
-| `transcript.py` | KEEP |
-| `workspace_context.py` | KEEP — now excludes `_admin/` ✅ |
-| `orchestrator.py` | KEEP |
-| `nova_bridge.py` | KEEP — working (`[WRITE:]`, `[EXEC:]`, `[READ:]`) |
-| `clients/claude.py` | KEEP |
-| `clients/gemini.py` | KEEP |
-| `clients/nova.py` | KEEP |
-| `context_export.py` | KEEP |
-| `check_keys.py` | KEEP |
-| `static/index.html` | KEEP |
-| `server_runner.py` | KEEP |
+| File | Status | Notes |
+|------|--------|-------|
+| `server.py` | KEEP — core | Overhauled 2026-03-27/28: response queue, vision pipeline, rate limiter, /api/chat/recent |
+| `launch.py` | KEEP | — |
+| `session_manager.py` | KEEP | — |
+| `transcript.py` | KEEP | Overhauled: catch-up context, directive redaction for Nova, image notation |
+| `workspace_context.py` | KEEP | Excludes `_admin/` ✅ |
+| `orchestrator.py` | KEEP | Role aliases (@mentor/@all), build_response_queue |
+| `nova_bridge.py` | KEEP | Working: `[WRITE:]`, `[EXEC:]`, `[READ:]`, `[DISCORD:]`, `[PAUSE:]`, `[RESUME:]`. Discord dedup guard added 2026-03-28. |
+| `clients/claude.py` | KEEP | Listener mode, vision support (Anthropic content blocks) |
+| `clients/gemini.py` | KEEP | Listener mode, vision support (types.Part), client cache |
+| `clients/nova.py` | KEEP | DIRECTIVE RULES in SYSTEM_PREFIX, vision support (Ollama image_url format) |
+| `context_export.py` | KEEP | — |
+| `check_keys.py` | KEEP | — |
+| `static/index.html` | KEEP | @mentor/@all highlighting, role CSS classes |
+| `server_runner.py` | KEEP | — |
+
+#### `tools/nova_gateway/` (NEW — Phase 3 complete 2026-03-27)
+| File | Status | Notes |
+|------|--------|-------|
+| `config.py` | KEEP | Reads `nova_gateway.json` |
+| `context_builder.py` | KEEP | Injects workspace .md + Nova Chat context into system prompt |
+| `session_store.py` | KEEP | JSONL v4 session storage, compaction |
+| `tool_executor.py` | KEEP | exec/read/message/nova_chat tool dispatch |
+| `agent_loop.py` | KEEP | Ollama inference loop. Cross-session context fetch (HTTP + JSONL fallback). |
+| `discord_client.py` | KEEP | discord.py bot, on_disconnect handler |
+| `scheduler.py` | KEEP | APScheduler cron, health check |
+| `gateway.py` | KEEP | FastAPI entry point, port 18790 |
+
+#### `tools/` root additions (Nova.exe)
+| File | Status | Notes |
+|------|--------|-------|
+| `NovaLauncher.py` | KEEP | pywebview desktop app launcher |
+| `build_nova.py` | KEEP | PyInstaller build script → `_build/Nova/Nova.exe` |
+| `nova_gateway_runner.py` | KEEP | CLI entry point: `python nova_gateway_runner.py` |
+| `nova_gateway.json` | KEEP | Discord token, Ollama config, allowlist |
+
+#### `_build/Nova/` (PyInstaller bundle)
+| Path | Notes |
+|------|-------|
+| `_build/Nova/Nova.exe` | The runnable app |
+| `_build/Nova/_internal/tools/` | **Duplicate of `tools/` — must be kept in sync manually** |
 
 ---
 
@@ -168,16 +194,14 @@ Removed: `automation-workflows`, `discord-voice-deepgram`, `playwright-scraper-s
 
 | # | Bug | Root cause | Fix |
 |---|-----|-----------|-----|
-| B1 | `ImportError: update_pulse` in gateway log | Stale function name in Nova's compacted session history | Reset OpenClaw session file |
-| B2 | `ImportError: NovaWatcher` in gateway log | Same compacted session history | Same session reset |
-| B3 | Chat log not rolling daily | `session_manager.py` doesn't create new file per day | Step 0.8 |
+| ~~B1~~ | ~~`ImportError: update_pulse`~~ | FIXED ✅ — session reset cleared stale compacted history | — |
+| ~~B2~~ | ~~`ImportError: NovaWatcher`~~ | FIXED ✅ — same session reset | — |
+| B3 | Chat log not rolling daily | BY DESIGN — per-thread intentional, see decision 2026-03-26 | N/A |
 | B4 | `brain.py` is a stub | Not yet implemented | Phase 4 |
-| B5 | ~~`logger.py` may not write during agent runs~~ | RESOLVED — nova_logs/logger.py verified writing correctly ✅ | — |
-
-**Session reset command (stop OpenClaw first):**
-```powershell
-Remove-Item "C:\Users\lafou\.openclaw\agents\main\sessions\097d915a-e7c6-44df-af0e-ead44542bcec.jsonl"
-```
+| ~~B5~~ | ~~`logger.py` may not write during agent runs~~ | RESOLVED ✅ — nova_logs/logger.py verified writing | — |
+| B6 | Nova's vision/screenshot failures (`eyes.py`) | Indentation fixed but screenshot path may still be broken | Investigate in future session |
+| B7 | Google Drive token expired | `nova_drive_token.json` needs re-authorization | Cole to re-auth manually |
+| B8 | asyncio blocking in `claude.py` `stream_response` | `c.messages.stream()` is synchronous, blocks event loop | Documented TODO — low priority |
 
 ---
 
@@ -262,8 +286,8 @@ _eGPU not required for audit/design — only for Phase 3 build._
 - [x] **2.5** Design unified session layer — JSONL v4 format, date-organized, compaction via Nova-self or Gemini fallback
 - [ ] **2.6** Architecture doc — **AWAITING COLE SIGN-OFF** → `_admin/PHASE2_ARCHITECTURE.md`
 
-### PHASE 3 — Infrastructure Rebuild ⚙️ IN PROGRESS
-_eGPU not required to build. Only required before 3.13 (cutover). Build and test first, cut over after eGPU._
+### PHASE 3 — Infrastructure Rebuild ✅ FUNCTIONALLY COMPLETE (2026-03-27/28)
+_eGPU not required for this phase. Only required before model rebuild (post Phase 3)._
 
 - [x] **3.1** `nova_gateway/config.py` — settings loader (reads nova_gateway.json)
 - [x] **3.2** `nova_gateway/context_builder.py` — workspace .md injector (replaces OpenClaw bootstrap)
@@ -279,14 +303,28 @@ _eGPU not required to build. Only required before 3.13 (cutover). Build and test
 - [x] **3.10c** `NovaLauncher.py` + `build_nova.py` — unified pywebview desktop app → Nova.exe
 - [x] **3.10d** All hardcoded `.openclaw` paths → dynamic `Path(__file__)` (Project_Nova ready)
 - [x] **3.10e** `_admin/migrate_to_project_nova.py` — one-shot migration script
-- [ ] **3.11** Live test: `python nova_gateway_runner.py` → send Discord message → verify session written
-- [ ] **3.12** Test: cron fires (30 min), health check completes, Discord message sent
-- [ ] **3.13** Retire OpenClaw: `openclaw gateway stop`, remove from startup _(no eGPU required)_
-- [ ] **3.14** Run `python _admin/migrate_to_project_nova.py` → verify → remove old workspace
-- [ ] **3.15** `pip install pywebview` → `python tools/NovaLauncher.py` → verify app window opens
-- [ ] **3.16** `python tools/build_nova.py` → Nova.exe built and working
+- [x] **3.11** Live test: nova_gateway running, Discord bot connected, messages handled ✅
+- [x] **3.12** Cron scheduler running, health checks firing ✅
+- [ ] **3.13** Retire OpenClaw: `openclaw gateway stop`, remove from startup _(OpenClaw still installed — formal cutover pending)_
+- [ ] **3.14** Run `python _admin/migrate_to_project_nova.py` → verify → remove old workspace _(in practice working from Project_Nova already)_
+- [x] **3.15** `python tools/NovaLauncher.py` / `Nova.exe` — pywebview app window opens and works ✅
+- [x] **3.16** `python tools/build_nova.py` → Nova.exe built and working ✅
 
-**Committed:** `e45a6e8` (Phase 3 build) + `61b2ba6` (app + dashboard + migration) — local only.
+### PHASE 3 ADDENDUM — nova_chat Overhaul ✅ (2026-03-27/28)
+
+- [x] **3.A1** Mention system redesign: listener model, role aliases @mentor/@all, sequential queue
+- [x] **3.A2** Response order: Claude → Gemini → Nova; each sees previous responses before generating
+- [x] **3.A3** Nova smart escalation: scans own response for @mentions, triggers follow-up round
+- [x] **3.A4** Catch-up context for Claude/Gemini: `--- MESSAGES SINCE YOUR LAST RESPONSE ---` block
+- [x] **3.A5** Nova cross-session awareness: Discord agent fetches Nova Chat context (HTTP + JSONL fallback)
+- [x] **3.A6** Nova rate-limit failsafe: 4 messages/60s max, resets on Cole sending any message
+- [x] **3.A7** Nova.exe SyntaxError fixed: redundant `global is_processing` removed from `inject_message`
+- [x] **3.A8** Vision/image support: full pipeline Claude (content blocks) + Gemini (Parts) + Nova (image_url)
+- [x] **3.A9** Nova Discord loop fixed: directive redaction in transcript + SYSTEM_PREFIX guidance + dedup guard
+- [x] **3.A10** @mentor/@all text highlighting in nova_chat UI
+- [x] **3.A11** Two full code review passes across all subsystems (indentation, error handling, edge cases)
+
+**Committed:** `e45a6e8` + `61b2ba6` + ongoing work in session — local only, not yet pushed to GitHub.
 
 ### PHASE 4 — Nova's Native Intelligence
 
@@ -303,15 +341,19 @@ _eGPU not required to build. Only required before 3.13 (cutover). Build and test
 
 | What | Path / URL |
 |------|-----------|
-| Workspace root | `C:\Users\lafou\.openclaw\workspace` |
-| Nova's thought log | `C:\Users\lafou\.openclaw\agents\main\sessions\*.jsonl` |
-| Session to reset | `C:\Users\lafou\.openclaw\agents\main\sessions\097d915a-e7c6-44df-af0e-ead44542bcec.jsonl` |
-| Gateway log | `C:\tmp\openclaw\openclaw-YYYY-MM-DD.log` |
+| Workspace root (Windows) | `[Project_Nova folder]\workspace` — wherever Cole placed the Project_Nova folder |
+| Workspace root (Cowork mount) | `/sessions/sleepy-relaxed-gates/mnt/Project_Nova/workspace` |
+| Nova's session logs | `workspace/sessions/*.jsonl` (nova_gateway sessions) |
+| Gateway log | `workspace/logs/gateway/gateway-YYYY-MM-DD.log` |
+| Chat session logs | `workspace/logs/chat_sessions/*_chat.jsonl` |
 | nova_chat URL | `http://127.0.0.1:8765` |
+| nova_gateway URL | `http://127.0.0.1:18790` |
+| Nova.exe | `_build/Nova/Nova.exe` |
 | GitHub repo | `https://github.com/cklafou/nova-workspace` |
 | Gemini Drive | `https://drive.google.com/drive/folders/1GLW6qVm5PHp_xnSlEXlnZIBhhmixzFya` |
 | Claude bootstrap | `https://api.github.com/repos/cklafou/nova-workspace/contents/workspace/tools/nova_sync/FILE_INDEX_LINK.md` |
-| Claude Desktop Code tab | Point at `C:\Users\lafou\.openclaw\workspace` — can edit files directly, no --pup needed |
+| Cowork | Point Cowork at the Project_Nova folder for direct file access |
+| **Bundle sync rule** | Any `tools/` change must also be applied to `_build/Nova/_internal/tools/` |
 
 ---
 
@@ -358,7 +400,17 @@ _eGPU not required to build. Only required before 3.13 (cutover). Build and test
 | 2026-03-27 | Phase 3 build complete (3.1–3.9) | nova_gateway package built, syntax-checked, smoke-tested. 2859 lines. Committed e45a6e8. |
 | 2026-03-27 | eGPU gate removed from Phase 3 | Build doesn't require hardware. Only cutover (3.13) needs eGPU + model rebuild. |
 | 2026-03-27 | nova_gateway.json written | Discord token pre-filled from openclaw.json. allowlist [] = responds to all channels. |
+| 2026-03-27 | Listener model adopted for nova_chat | Claude + Gemini only respond when @mentioned; Nova is default. Cleaner, avoids all-AIs-at-once noise. |
+| 2026-03-27 | Role aliases @mentor, @all | @mentor = Claude+Gemini; @all = everyone. Resolved to canonical order in orchestrator. |
+| 2026-03-27 | Sequential response queue | Claude → Gemini → Nova order, not concurrent. Each AI sees prior responses. This is architecturally correct for coherence. |
+| 2026-03-27 | Nova smart escalation | Nova reads her own response for @mentions, triggers follow-up round herself. One level only (no recursion). |
+| 2026-03-27 | Nova.exe + PyInstaller | Unified app: pywebview + nova_chat + nova_gateway in one process. Bundle at `_build/Nova/`. |
+| 2026-03-28 | Directive redaction in transcript | Nova's `[DISCORD:]` etc. replaced with human-readable notes when formatted for Nova's own context. Prevents pattern-match repeat. |
+| 2026-03-28 | Discord dedup guard in nova_bridge | Same `[DISCORD:]` message blocked for 5 min. Belt-and-suspenders against loop even if model ignores instructions. |
+| 2026-03-28 | Cross-session context: file fallback | `_fetch_nova_chat_context()` now has JSONL file fallback — always works regardless of nova_chat server state. |
+| 2026-03-28 | Vision pipeline added | All 3 AIs now receive images from Cole's messages. Claude: content blocks. Gemini: Part.from_bytes. Nova: image_url. |
+| 2026-03-28 | No Gemini-powered Cowork equivalent | Google's closest offering is Project Mariner (browser-only). No drop-in Cowork equivalent exists for Gemini. |
 
 ---
-_Last updated: 2026-03-27_
-_Next: Cole runs `pip install discord.py apscheduler` → test `--dry` run → live Discord test (3.11) → update nova_chat server.py (3.10)_
+_Last updated: 2026-03-28_
+_Next: Cole to formally retire OpenClaw (3.13) when ready. eGPU install pending vertical mount bracket._

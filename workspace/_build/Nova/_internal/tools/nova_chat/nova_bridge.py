@@ -19,7 +19,14 @@ import asyncio
 import os
 import re
 import subprocess
+import time
 from pathlib import Path
+
+# ── Discord dedup cache ────────────────────────────────────────────────────────
+# Prevents Nova from spamming Discord when her transcript makes her repeat the
+# same [DISCORD:] directive on consecutive turns.
+_DISCORD_SENT: dict[str, float] = {}   # message text → last sent timestamp
+_DISCORD_DEDUP_WINDOW = 300            # 5 minutes — same text = duplicate within this window
 
 WORKSPACE_DIR = (
     Path(os.environ["NOVA_WORKSPACE"])
@@ -132,6 +139,16 @@ async def execute_action(action: dict) -> str:
         text = action.get("text", "").strip()
         if not text:
             return "[bridge] ✗ Discord: no message text"
+        # Deduplication guard: reject if the same text was sent recently
+        now = time.time()
+        # Evict old entries
+        expired = [k for k, v in _DISCORD_SENT.items() if now - v > _DISCORD_DEDUP_WINDOW]
+        for k in expired:
+            del _DISCORD_SENT[k]
+        if text in _DISCORD_SENT:
+            age = int(now - _DISCORD_SENT[text])
+            return f"[bridge] ⚠ Discord duplicate blocked — same message sent {age}s ago (cooldown {_DISCORD_DEDUP_WINDOW}s)"
+        _DISCORD_SENT[text] = now
         try:
             import urllib.request, urllib.error, json as _json
             payload = _json.dumps({"text": text}).encode("utf-8")

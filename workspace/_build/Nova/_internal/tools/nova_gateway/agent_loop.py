@@ -260,10 +260,15 @@ async def _fetch_nova_chat_context(n: int = 40) -> Optional[str]:
     """
     Fetch the last N messages from the running nova_chat server.
 
-    Returns formatted text ready to drop into a system prompt, or None if
-    nova_chat isn't running or the fetch fails.  Always non-blocking: a 2s
-    timeout prevents a dead nova_chat from delaying the Discord response.
+    Primary:  HTTP GET http://127.0.0.1:8765/api/chat/recent  (live server)
+    Fallback: Read most recent *_chat.jsonl from logs/chat_sessions/ directly.
+              This ensures Nova has Nova Chat context even when nova_chat isn't
+              running at the time the Discord agent fires.
+
+    Returns formatted text ready for injection into a system prompt, or None
+    if no context is available from either source.
     """
+    # ── Primary: live nova_chat HTTP API ──────────────────────────────────────
     try:
         async with httpx.AsyncClient(timeout=2.0) as client:
             resp = await client.get(
@@ -274,17 +279,69 @@ async def _fetch_nova_chat_context(n: int = 40) -> Optional[str]:
                 try:
                     data = resp.json()
                 except json.JSONDecodeError as e:
-                    log.debug("Nova Chat context: malformed JSON response: %s", e)
-                    return None
-                formatted = data.get("formatted", "").strip()
-                if formatted and formatted != "(no messages yet)":
-                    log.debug(
-                        "Nova Chat context: %d messages fetched",
-                        data.get("message_count", 0),
-                    )
-                    return formatted
+                    log.debug("Nova Chat context: malformed JSON: %s", e)
+                else:
+                    formatted = data.get("formatted", "").strip()
+                    if formatted and formatted != "(no messages yet)":
+                        log.debug(
+                            "Nova Chat context (live): %d messages",
+                            data.get("message_count", 0),
+                        )
+                        return formatted
     except Exception as exc:
-        log.debug("Nova Chat context fetch skipped: %s", exc)
+        log.debug("Nova Chat context HTTP fetch skipped: %s", exc)
+
+    # ── Fallback: read directly from JSONL session logs ───────────────────────
+    return _read_nova_chat_from_files(n)
+
+
+def _read_nova_chat_from_files(n: int = 40) -> Optional[str]:
+    """
+    Read the most recent Nova Chat session directly from JSONL log files.
+    Used when nova_chat server isn't running.
+    """
+    try:
+        sessions_dir = cfg.workspace / "logs" / "chat_sessions"
+        if not sessions_dir.exists():
+            return None
+        # Find the most recently modified *_chat.jsonl file
+        candidates = sorted(
+            sessions_dir.glob("*_chat.jsonl"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        if not candidates:
+            return None
+        messages: list[dict] = []
+        with open(candidates[0], encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    messages.append(json.loads(line))
+                except json.JSONDecodeError:
+                    pass
+        if not messages:
+            return None
+        # Format last N messages
+        recent = messages[-n:]
+        lines = []
+        for msg in recent:
+            ts = (msg.get("timestamp") or "")[:16]
+            author = msg.get("author", "?")
+            content = msg.get("content", "")
+            if msg.get("images"):
+                content += f" [+ {len(msg['images'])} image(s)]"
+            lines.append(f"[{ts}] {author}: {content}")
+        if lines:
+            log.debug(
+                "Nova Chat context (file fallback): %d messages from %s",
+                len(lines), candidates[0].name,
+            )
+            return "\n".join(lines)
+    except Exception as exc:
+        log.debug("Nova Chat context file fallback failed: %s", exc)
     return None
 
 

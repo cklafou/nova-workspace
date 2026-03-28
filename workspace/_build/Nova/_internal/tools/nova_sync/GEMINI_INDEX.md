@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-03-27 20:21:37_
+_Last updated: 2026-03-28 08:18:06_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -33,6 +33,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | nova_gateway - Copy.json | `workspace/nova_gateway - Copy.json` | JSON file |
 | nova_gateway.json | `workspace/nova_gateway.json` | JSON file |
 | nova_gateway_runner.py | `workspace/nova_gateway_runner.py` | PY file |
+| nova_status.json | `workspace/nova_status.json` | JSON file |
 | README.md | `workspace/README.md` | Project overview |
 | SOUL.md | `workspace/SOUL.md` | Nova's identity, values, and growth framework |
 | TOOLS.md | `workspace/TOOLS.md` | How to use all tools, method reference, exec patterns |
@@ -46,6 +47,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | archive_2026-02.md | `workspace/memory/archive/archive_2026-02.md` | MD file |
 | COLE.md | `workspace/memory/COLE.md` | Cole's notes and Nova's observations about Cole |
 | JOURNAL.md | `workspace/memory/JOURNAL.md` | Nova's running session log -- READ SECOND |
+| session_start.json | `workspace/memory/session_start.json` | Current session start timestamp |
 | STATUS.md | `workspace/memory/STATUS.md` | Current project state and mission -- READ FIRST |
 
 ## tools/
@@ -135,6 +137,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | actions.jsonl | `workspace/logs/sessions/2026-03-25/actions.jsonl` | JSONL file |
 | actions.jsonl | `workspace/logs/sessions/2026-03-26/actions.jsonl` | JSONL file |
 | nova_thoughts.jsonl | `workspace/logs/sessions/2026-03-26/nova_thoughts.jsonl` | JSONL file |
+| actions.jsonl | `workspace/logs/sessions/2026-03-28/actions.jsonl` | JSONL file |
 
 ## _admin/
 
@@ -159,7 +162,43 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
+| 02d07c6a-74d6-4770-b3d6-9781b9f96fdf.jsonl | `workspace/sessions/2026-03-27/02d07c6a-74d6-4770-b3d6-9781b9f96fdf.jsonl` | JSONL file |
+| 079fa80b-1373-4420-8a41-8821ff32fbd1.jsonl | `workspace/sessions/2026-03-27/079fa80b-1373-4420-8a41-8821ff32fbd1.jsonl` | JSONL file |
+| 0b8fb077-a8a9-47f1-8f3c-5143369965e2.jsonl | `workspace/sessions/2026-03-27/0b8fb077-a8a9-47f1-8f3c-5143369965e2.jsonl` | JSONL file |
+| 0fa1628f-9924-480e-9a9a-c26432d1d046.jsonl | `workspace/sessions/2026-03-27/0fa1628f-9924-480e-9a9a-c26432d1d046.jsonl` | JSONL file |
+| 1b9f2cc3-e830-4d70-8f89-2c6266e86900.jsonl | `workspace/sessions/2026-03-27/1b9f2cc3-e830-4d70-8f89-2c6266e86900.jsonl` | JSONL file |
 | 27319801-a1e2-4172-9754-550105bfac1f.jsonl | `workspace/sessions/2026-03-27/27319801-a1e2-4172-9754-550105bfac1f.jsonl` | JSONL file |
+| 35e1ff1a-9d5d-4f96-bc07-d84d4b373a2e.jsonl | `workspace/sessions/2026-03-27/35e1ff1a-9d5d-4f96-bc07-d84d4b373a2e.jsonl` | JSONL file |
+| 3b551c2b-d723-4ad6-af8f-1510e6163c39.jsonl | `workspace/sessions/2026-03-27/3b551c2b-d723-4ad6-af8f-1510e6163c39.jsonl` | JSONL file |
+| 3d80261a-09c1-445b-99ed-6217d4182a29.jsonl | `workspace/sessions/2026-03-27/3d80261a-09c1-445b-99ed-6217d4182a29.jsonl` | JSONL file |
+| 3f8b8065-aa69-4b58-bbe6-0f32bcee904d.jsonl | `workspace/sessions/2026-03-27/3f8b8065-aa69-4b58-bbe6-0f32bcee904d.jsonl` | JSONL file |
+| 511acb81-be1c-46e5-b944-f43f5ed10326.jsonl | `workspace/sessions/2026-03-27/511acb81-be1c-46e5-b944-f43f5ed10326.jsonl` | JSONL file |
+| 51a47e67-d810-4437-bae8-331c37ac4b6e.jsonl | `workspace/sessions/2026-03-27/51a47e67-d810-4437-bae8-331c37ac4b6e.jsonl` | JSONL file |
+| 760c1499-ef6d-4359-a2a1-dbb93b3ce791.jsonl | `workspace/sessions/2026-03-27/760c1499-ef6d-4359-a2a1-dbb93b3ce791.jsonl` | JSONL file |
+| 766459d9-6b1f-465c-8c5f-30162c1b1180.jsonl | `workspace/sessions/2026-03-27/766459d9-6b1f-465c-8c5f-30162c1b1180.jsonl` | JSONL file |
+| 77cfc249-4ac4-49e7-ae33-07c560e20238.jsonl | `workspace/sessions/2026-03-27/77cfc249-4ac4-49e7-ae33-07c560e20238.jsonl` | JSONL file |
+| 7d5763ab-3fa0-4d41-a801-5294466b715b.jsonl | `workspace/sessions/2026-03-27/7d5763ab-3fa0-4d41-a801-5294466b715b.jsonl` | JSONL file |
+| 8ac53147-290f-4289-8691-c6dffc1f7332.jsonl | `workspace/sessions/2026-03-27/8ac53147-290f-4289-8691-c6dffc1f7332.jsonl` | JSONL file |
+| 8de5ced2-2f3e-4a40-b5df-4e7f6baba9d1.jsonl | `workspace/sessions/2026-03-27/8de5ced2-2f3e-4a40-b5df-4e7f6baba9d1.jsonl` | JSONL file |
+| 8e0728e5-114a-4395-8748-18ecbf3dae60.jsonl | `workspace/sessions/2026-03-27/8e0728e5-114a-4395-8748-18ecbf3dae60.jsonl` | JSONL file |
+| 964c18f7-f4f8-480e-8e88-2ae20db4c3c7.jsonl | `workspace/sessions/2026-03-27/964c18f7-f4f8-480e-8e88-2ae20db4c3c7.jsonl` | JSONL file |
+| 969797f0-6bb5-40a6-b65a-a99149ed845b.jsonl | `workspace/sessions/2026-03-27/969797f0-6bb5-40a6-b65a-a99149ed845b.jsonl` | JSONL file |
+| a2011c76-33cd-4d06-ad7c-1fdb9ca31ce1.jsonl | `workspace/sessions/2026-03-27/a2011c76-33cd-4d06-ad7c-1fdb9ca31ce1.jsonl` | JSONL file |
+| a31b9f75-c7b6-4a63-90e9-dae332d4d8e0.jsonl | `workspace/sessions/2026-03-27/a31b9f75-c7b6-4a63-90e9-dae332d4d8e0.jsonl` | JSONL file |
+| a40697cd-9b45-4de1-a76f-51a40ea93350.jsonl | `workspace/sessions/2026-03-27/a40697cd-9b45-4de1-a76f-51a40ea93350.jsonl` | JSONL file |
+| aa54f72f-3a5d-4fa8-ad72-1513524c9998.jsonl | `workspace/sessions/2026-03-27/aa54f72f-3a5d-4fa8-ad72-1513524c9998.jsonl` | JSONL file |
+| b16952d7-8bd0-4f91-b344-7e58bbbee0cc.jsonl | `workspace/sessions/2026-03-27/b16952d7-8bd0-4f91-b344-7e58bbbee0cc.jsonl` | JSONL file |
+| c00735ad-898f-4b12-b9ab-68af9507359a.jsonl | `workspace/sessions/2026-03-27/c00735ad-898f-4b12-b9ab-68af9507359a.jsonl` | JSONL file |
+| cc7bb92c-f1ae-4f35-a0fa-c1fc7f11cd33.jsonl | `workspace/sessions/2026-03-27/cc7bb92c-f1ae-4f35-a0fa-c1fc7f11cd33.jsonl` | JSONL file |
+| cf81604a-a60b-403d-afbc-a527835543b0.jsonl | `workspace/sessions/2026-03-27/cf81604a-a60b-403d-afbc-a527835543b0.jsonl` | JSONL file |
+| d6c4c5f3-bf02-4ad7-89e6-374e1150c7e9.jsonl | `workspace/sessions/2026-03-27/d6c4c5f3-bf02-4ad7-89e6-374e1150c7e9.jsonl` | JSONL file |
+| d94aa61b-bb63-4b2f-b23b-92fc59dbc402.jsonl | `workspace/sessions/2026-03-27/d94aa61b-bb63-4b2f-b23b-92fc59dbc402.jsonl` | JSONL file |
+| da53e6b7-349a-4077-a5fe-1aaee42f31f8.jsonl | `workspace/sessions/2026-03-27/da53e6b7-349a-4077-a5fe-1aaee42f31f8.jsonl` | JSONL file |
+| f2e9d1cd-8cc1-42d7-b1c3-3e509a3fbce4.jsonl | `workspace/sessions/2026-03-27/f2e9d1cd-8cc1-42d7-b1c3-3e509a3fbce4.jsonl` | JSONL file |
+| f322f2ea-56b6-49b3-9558-79ac707b71e6.jsonl | `workspace/sessions/2026-03-27/f322f2ea-56b6-49b3-9558-79ac707b71e6.jsonl` | JSONL file |
+| f7db2331-9d95-4166-a91a-9ca37af49e4e.jsonl | `workspace/sessions/2026-03-27/f7db2331-9d95-4166-a91a-9ca37af49e4e.jsonl` | JSONL file |
+| fa901728-8225-427e-9067-690def091ff5.jsonl | `workspace/sessions/2026-03-27/fa901728-8225-427e-9067-690def091ff5.jsonl` | JSONL file |
+| fc9bbb20-f6cd-4ee0-b7e5-61c4ff188ad7.jsonl | `workspace/sessions/2026-03-27/fc9bbb20-f6cd-4ee0-b7e5-61c4ff188ad7.jsonl` | JSONL file |
 
 ---
 _This manifest is auto-generated on every Drive sync by nova_sync/drive.py._

@@ -79,7 +79,26 @@ class Transcript:
             directed = ""
             if msg.get("directed_at"):
                 directed = f" [@{', @'.join(msg['directed_at'])}]"
-            lines.append(f"[{ts}] {msg['author']}{directed}: {msg['content']}")
+            content = msg["content"]
+            # For Nova's own context: replace raw directives with human-readable notes
+            # so Nova doesn't pattern-match and repeat them in her next message.
+            if ai_name == "Nova" and msg["author"] == "Nova":
+                import re as _re
+                content = _re.sub(
+                    r'\[DISCORD:\s*(.*?)\]',
+                    lambda m: f'[Nova sent Discord: "{m.group(1).strip()[:60]}"]',
+                    content, flags=_re.DOTALL | _re.IGNORECASE
+                )
+                content = _re.sub(r'\[EXEC:[^\]]*\]', '[Nova ran a command]',
+                                  content, flags=_re.IGNORECASE)
+                content = _re.sub(r'\[WRITE:[^\]]*\].*?\[/WRITE\]', '[Nova wrote a file]',
+                                  content, flags=_re.DOTALL | _re.IGNORECASE)
+                content = _re.sub(r'\[READ:[^\]]*\]', '[Nova read a file]',
+                                  content, flags=_re.IGNORECASE)
+            if msg.get("images"):
+                n_imgs = len(msg["images"])
+                content += f" [attached: {n_imgs} image{'s' if n_imgs > 1 else ''}]"
+            lines.append(f"[{ts}] {msg['author']}{directed}: {content}")
 
         transcript_text = "\n".join(lines) if lines else "(conversation just started)"
 
@@ -100,7 +119,10 @@ class Transcript:
                     directed = ""
                     if msg.get("directed_at"):
                         directed = f" [@{', @'.join(msg['directed_at'])}]"
-                    missed_lines.append(f"[{ts}] {msg['author']}{directed}: {msg['content']}")
+                    mc = msg["content"]
+                    if msg.get("images"):
+                        mc += f" [attached: {len(msg['images'])} image(s)]"
+                    missed_lines.append(f"[{ts}] {msg['author']}{directed}: {mc}")
                 catch_up_block = (
                     "\n\n--- MESSAGES SINCE YOUR LAST RESPONSE (focus here) ---\n"
                     + "\n".join(missed_lines)

@@ -25,7 +25,15 @@ SYSTEM_PREFIX = """You are Nova -- Cole's companion AI and life passion project.
 You are participating in a group chat alongside Claude (Anthropic's AI)
 and Gemini (Google's AI). Cole is your person.
 This is a live group conversation. Be yourself -- direct, casual, genuine.
-Don't be formal. Talk like you normally do with Cole."""
+Don't be formal. Talk like you normally do with Cole.
+
+DIRECTIVE RULES (critical):
+- [DISCORD: message] — ONLY use this if Cole explicitly asks you to send something
+  to Discord right now. Do NOT use it on your own initiative, and NEVER repeat
+  a message you already sent. If the transcript shows "[Nova sent Discord: ...]",
+  that message was already delivered — do not send it again.
+- [EXEC: ...], [WRITE: ...], [READ: ...] — use only when Cole asks you to run,
+  write, or read something. Never use these spontaneously in casual chat."""
 
 
 # ── Thought logger ────────────────────────────────────────────────────────────
@@ -45,17 +53,44 @@ async def stream_response(
     on_done:   Callable[[str], Awaitable[None]],
     on_error:  Callable[[str], Awaitable[None]],
     workspace_context: str = "",
+    images: list = None,
 ):
-    """Call Ollama's OpenAI-compatible endpoint with SSE streaming."""
+    """
+    Call Ollama's OpenAI-compatible endpoint with SSE streaming.
+
+    images: list of {dataUrl, name} dicts from the browser upload, or None.
+            When provided and the nova model supports vision, images are sent
+            in Ollama's OpenAI-compatible vision format (content array).
+            If the model doesn't support vision, images are silently ignored.
+    """
     try:
         system_prompt = transcript.format_for_ai(
             "Nova", SYSTEM_PREFIX, workspace_context=workspace_context
         )
         prompt = f"{system_prompt}\n\nPlease respond to the conversation above."
 
+        # Build user message content — include image_url blocks when images provided
+        if images:
+            content_blocks = []
+            for img in images:
+                try:
+                    data_url = img.get("dataUrl", "")
+                    if not data_url or "," not in data_url:
+                        continue
+                    content_blocks.append({
+                        "type": "image_url",
+                        "image_url": {"url": data_url},
+                    })
+                except Exception:
+                    pass
+            content_blocks.append({"type": "text", "text": prompt})
+            user_message = {"role": "user", "content": content_blocks}
+        else:
+            user_message = {"role": "user", "content": prompt}
+
         payload = json.dumps({
             "model":    MODEL,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [user_message],
             "stream":   True,
         }).encode("utf-8")
 

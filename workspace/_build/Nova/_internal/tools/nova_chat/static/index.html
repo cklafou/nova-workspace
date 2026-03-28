@@ -548,9 +548,12 @@
   }
 
   /* @mention highlight in input */
-  .mention-claude { color: var(--claude); }
-  .mention-gemini { color: var(--gemini); }
-  .mention-nova   { color: var(--nova); }
+  .mention-claude  { color: var(--claude); }
+  .mention-gemini  { color: var(--gemini); }
+  .mention-nova    { color: var(--nova); }
+  /* Role aliases — distinct gradient/color so @mentor and @all read differently */
+  .mention-mentor  { color: #f6ad55; font-style: italic; }  /* warm amber — both mentors */
+  .mention-all     { color: #fc8181; font-weight: 600; }    /* bright red — everyone */
 
   /* Control buttons */
   .ctrl-btn {
@@ -1886,7 +1889,7 @@ function appendMessage(author, content, id, images) {
   const avatar    = AVATARS[author] || author[0].toUpperCase();
   const colorClass = author.toLowerCase();
 
-  const highlighted = (content || '').replace(/@(Claude|Gemini|Nova)/gi, (m, name) =>
+  const highlighted = (content || '').replace(/@(Claude|Gemini|Nova|mentor|all)/gi, (m, name) =>
     `<span class="mention mention-${name.toLowerCase()}">@${name}</span>`
   );
 
@@ -1951,7 +1954,7 @@ function finalizeMsg(id) {
   if (streamingMsgs[id]) {
     const el = document.getElementById(`content-${id}`);
     if (el) {
-      const highlighted = streamingMsgs[id].text.replace(/@(Claude|Gemini|Nova)/gi, (m, name) =>
+      const highlighted = streamingMsgs[id].text.replace(/@(Claude|Gemini|Nova|mentor|all)/gi, (m, name) =>
         `<span class="mention mention-${name.toLowerCase()}">@${name}</span>`
       );
       el.innerHTML = highlighted;

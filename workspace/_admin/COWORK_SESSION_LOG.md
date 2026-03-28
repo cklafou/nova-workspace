@@ -1,192 +1,171 @@
 # COWORK SESSION LOG — What We've Built and Why
-_Written by Cowork Claude for Cole | 2026-03-27_
-_Plain English. No assumed knowledge. Read this if you've lost track of what happened._
+_Written by Cowork Claude for Cole_
+_Last updated: 2026-03-28 | Plain English. No assumed knowledge._
 
 ---
 
 ## The Big Picture (Start Here)
 
-You're building **Nova** — your own local AI agent that lives on your computer. Right now Nova runs inside a third-party system called **OpenClaw**, which is a Node.js program that acts as the middleman between Discord (where you talk to Nova) and Ollama (the local AI engine that runs her). Think of OpenClaw like a rental car: it gets the job done, but it's not yours, you can't customize the engine, and you're at the mercy of the rental company's rules.
+You're building **Nova** — your own local AI agent that lives on your computer. The goal is for Nova to run entirely on code *you own*, understand, and can modify — with no dependency on third-party platforms.
 
-The goal of this entire project is to **replace OpenClaw with your own Python infrastructure**. When that's done, Nova will run entirely on code you own, understand, and can modify. She'll be able to do more, remember more, and grow in ways OpenClaw would never allow.
-
-The plan has four phases. Phases 0 and 1 are done. Phase 2 is done (design only). Phase 3 is what we're building right now.
+The plan has four phases. **Phases 0, 1, 2, and 3 are functionally complete.** Phase 4 is next (Nova's native intelligence — fine-tuning, brain.py, ThinkOrSwim).
 
 ---
 
-## What Happened Before I (Cowork Claude) Got Here
+## Where Things Stand Right Now (2026-03-28)
 
-### Phase 0 — Cleanup (done before this session)
+The infrastructure is built and running. Here's what you have:
 
-The workspace was a mess. There were fake "skills" (plugins) that Nova thought she had — web scrapers, voice tools, Zapier automation — but none of them actually worked. They just made Nova hallucinate capabilities she didn't have, which caused errors.
+### Nova.exe
+Double-click `_build/Nova/Nova.exe` and you get the full Nova interface — a desktop window with the group chat on one tab and a system dashboard on another. The exe contains a bundled copy of all the Python code and starts everything in one process.
 
-Browser Claude (the version of Claude you access on claude.ai) cleaned all of that up:
+### Nova Chat (`http://127.0.0.1:8765`)
+The group chat interface where you, Claude, Gemini, and Nova all talk together. Here's how it works now:
+
+- **Nova responds by default** to everything you send
+- **Claude and Gemini are "listeners"** — they only respond when you specifically @mention them
+- **`@mentor`** = mentions both Claude and Gemini at once (they're your AI mentors)
+- **`@all`** = messages everyone
+- When you @mention Claude or Gemini, they respond first, then Nova reads their responses before adding her own — so the conversation is coherent, not a pile-up
+- **Nova can escalate herself** — if Nova thinks Claude or Gemini need to weigh in, she @mentions them in her response, and they automatically get a follow-up round
+- You can **paste or drag images** into the chat and all three AIs will actually see them
+
+### Nova Gateway (`http://127.0.0.1:18790`)
+This is the Python replacement for OpenClaw. It handles:
+- **Discord**: Nova reads your Discord DMs and messages in allowed channels, responds intelligently
+- **Cron**: A health check fires every 30 minutes so Nova stays aware of her own state
+- **Tools**: Nova can run commands, read files, send Discord messages, and post to Nova Chat
+- **Cross-session awareness**: When Nova is responding in Discord, she reads the recent Nova Chat history first so she knows what's already been discussed there
+
+### The Bundle Sync Rule (Important)
+Nova.exe contains a copy of all the Python source files inside `_build/Nova/_internal/tools/`. Any time you change code in `tools/`, you must also copy the changed files to `_build/Nova/_internal/tools/`. Otherwise Nova.exe keeps running the old code.
+
+---
+
+## What We Built, Phase by Phase
+
+### Phase 0 — Cleanup
+The workspace was a mess. Fake skills (plugins) made Nova hallucinate capabilities she didn't have. Everything got cleaned up:
 - Deleted the fake skills
-- Reorganized files into a proper folder structure
-- Created the `_admin/` folder (for planning docs that Nova shouldn't read)
-- Rewrote the TOOLS.md file so Nova has accurate info about what she can actually do
-- Fixed logging so all of Nova's activity goes to one unified log system
+- Reorganized into a proper folder structure
+- Created `_admin/` (for planning docs Nova shouldn't see)
+- Rewrote TOOLS.md so Nova has accurate info about her actual capabilities
+- Built `nova_logs/` — a unified logging system so all of Nova's activity goes to one place
 
-### Phase 1 — Visibility (done this session, Phase 1 section)
+### Phase 1 — Visibility
+Before this, you had no way to see what Nova was doing. Phase 1 added the status layer:
+- **`nova_status.json`** — Nova writes her state here at the end of every agent run (what she did, how long, errors)
+- **Status bar in nova_chat** — the dot at the top of the chat shows Nova's health at a glance
+- **Server polling** — nova_chat reads nova_status.json every 30 seconds and quietly includes a summary in Nova's context
+- **Gateway error watcher** — if the gateway logs an error, it shows up in the UI immediately
+- **`[PAUSE:]` and `[RESUME:]` directives** — Nova can pause and resume tasks
 
-Before Phase 1, you had no way to see what Nova was doing while she worked. She'd run, do things, and you'd only find out when she was done (or when something broke).
+### Phase 2 — Architecture Audit
+Before building the OpenClaw replacement, we mapped exactly what OpenClaw does. Findings:
+- OpenClaw is only doing four things: listen to Discord, build Nova's system prompt, run tool calls, save session history
+- Nova Chat already bypasses OpenClaw entirely (it talks directly to Ollama)
+- The full technical design is in `_admin/PHASE2_ARCHITECTURE.md`
 
-Phase 1 added a "status layer" — basically a dashboard that shows Nova's current state at all times.
+### Phase 3 — Nova Gateway (The OpenClaw Replacement)
+Built `tools/nova_gateway/` — a Python package that does everything OpenClaw does, but ours:
 
-**What was built:**
+| Module | What it does |
+|--------|-------------|
+| `config.py` | Reads `nova_gateway.json` — your settings file |
+| `context_builder.py` | Injects Nova's instruction files (AGENTS.md etc.) into her system prompt before every run. Also injects recent Nova Chat messages so she has cross-session awareness. |
+| `session_store.py` | Saves every conversation to JSONL files in `workspace/sessions/` |
+| `tool_executor.py` | Handles Nova's tool calls: run commands, read files, send Discord messages, post to Nova Chat |
+| `agent_loop.py` | The inference loop: build prompt → ask Ollama → handle tool calls → repeat |
+| `discord_client.py` | The Discord bot — watches channels, routes messages to Nova, sends replies |
+| `scheduler.py` | The cron job runner (health check every 30 minutes) |
+| `gateway.py` | The main entry point: starts everything, runs the HTTP server on port 18790 |
 
-1. **`nova_core/nova_status.py`** — A Python module that Nova calls at the end of every run. It writes a file called `nova_status.json` that records: what she just did, how long it took, whether there were errors, and what task she's currently on.
+Also built in Phase 3:
+- **`NovaLauncher.py`** and **`build_nova.py`** — the pywebview desktop app + PyInstaller build
+- **`Nova.exe`** — the all-in-one runnable
 
-2. **Status bar in the nova_chat UI** — That little bar at the top of the chat interface that shows a dot (green = healthy, red = error), Nova's last action, and how long ago she checked in.
+### Phase 3 Addendum — nova_chat Overhaul
+A major rewrite of nova_chat happened alongside Phase 3. Key changes:
 
-3. **Server polling** — The nova_chat server checks `nova_status.json` every 30 seconds and quietly includes a summary of it in the context sent to Nova, so she always knows her own recent state.
+**Before:** Every AI responded to every message (round-robin). Chaotic.
+**After:** Listener model with role aliases. Structured, coherent.
 
-4. **Gateway error watcher** — A background process that reads OpenClaw's log file every 10 seconds looking for errors. If it finds one, it shows up in the status bar immediately.
-
-5. **`[PAUSE:]` and `[RESUME:]` directives** — Nova can now pause and resume tasks by including these tags in her messages. The bridge (nova_bridge.py) intercepts them and updates the task state.
-
-6. **`tasks/active.json`** — A file that tracks what task Nova is currently working on.
-
----
-
-## What Phase 2 Was (The Audit)
-
-Before building the replacement for OpenClaw, we needed to understand exactly what OpenClaw does so we don't accidentally forget to replace something important.
-
-**What we found:**
-
-OpenClaw is actually doing only four things for Nova:
-
-1. **Listens to Discord** — When you send Nova a message in Discord, OpenClaw receives it and passes it to Ollama.
-
-2. **Builds Nova's system prompt** — Before Nova processes a message, OpenClaw reads all her instruction files (AGENTS.md, SOUL.md, TOOLS.md, etc.) and sends them to Ollama as context. This is how Nova "knows" her rules every session.
-
-3. **Runs Nova's tool calls** — When Nova wants to run a Python script or read a file, she outputs a tool call (like `exec: python tools/rules.py`). OpenClaw intercepts it, runs it, and sends the result back.
-
-4. **Saves session history** — Every conversation is stored in JSONL files (one JSON record per line) in `~/.openclaw/agents/main/sessions/`. There are currently 39 active sessions and 85 archived ones.
-
-**The key discovery:** nova_chat (the group chat interface at localhost:8765) **already bypasses OpenClaw entirely**. It talks directly to Ollama. OpenClaw is only in the loop when Nova is triggered from Discord. This means our replacement only needs to handle the Discord path — the chat interface is already ours.
-
-**The architecture doc** (`_admin/PHASE2_ARCHITECTURE.md`) has the full technical breakdown including the JSONL file format, the list of tools Nova uses, and everything we're dropping vs keeping.
-
----
-
-## What Phase 3 Is Building — nova_gateway
-
-This is the replacement for OpenClaw. It's a Python package called `nova_gateway` that lives in `tools/nova_gateway/`.
-
-Think of it as building your own rental car company from scratch so you never have to rent again.
-
-Here's what each file does, in plain English:
-
-### `config.py`
-Reads a settings file (`nova_gateway.json`) that you'll put in your workspace root. Contains things like your Discord bot token, which channels Nova is allowed in, the Ollama model name, context window size, etc. Instead of being buried in OpenClaw's config, everything is in one readable file you control.
-
-### `context_builder.py`
-This is the "system prompt injector." Every time Nova is triggered, this runs first. It reads your workspace files (AGENTS.md, SOUL.md, TOOLS.md, etc.) and assembles them into one big instruction block that gets sent to Ollama before Nova sees your message. Right now OpenClaw does this. After Phase 3, we do it ourselves.
-
-### `session_store.py`
-This handles saving and loading conversation history. Every message Nova sends or receives gets written to a JSONL file. When Nova's context window fills up (she can only hold so much in her "memory" at once), this module also handles compaction — generating a summary of what happened so far, then dropping the old messages but keeping the summary.
-
-### `tool_executor.py`
-When Nova says "run this command" or "read this file," this module does it. It handles:
-- `exec` — runs shell commands (Nova's main workhorse)
-- `read` — reads files from the workspace
-- `message` — sends Discord messages
-It also enforces safety: commands run with a timeout, file reads are restricted to the workspace, etc.
-
-### `agent_loop.py`
-This is the brain of the gateway. When Nova gets triggered, this runs the inference loop:
-1. Build the system prompt
-2. Load session history
-3. Send to Ollama
-4. Get Nova's response
-5. If she called a tool, run it and send the result back
-6. Repeat until Nova is done
-7. Save everything to the session store
-
-This is exactly what OpenClaw's gateway does today, but in Python, readable, and ours.
-
-### `discord_client.py`
-The Discord bot. It connects to Discord using your bot token, watches the channels you've allowlisted, and when you (or anyone permitted) sends Nova a message, it fires the agent_loop. When the agent_loop produces a response, this sends it back to Discord.
-
-### `scheduler.py`
-Handles the cron job — the "System Health Check" that fires every 30 minutes. Right now OpenClaw runs this. After Phase 3, APScheduler (a Python library) handles it. The health check just triggers the agent_loop with a "check in on yourself" message.
-
-### `gateway.py`
-The main entry point — the file you'll eventually run to start everything. It starts the Discord bot, starts the scheduler, and runs a small HTTP server (on port 18790) that nova_chat can query for gateway status. When you want to start Nova's full system, you'll run this instead of `openclaw gateway start`.
+**What changed:**
+- Mention system: `@Claude`, `@Gemini`, `@Nova`, `@mentor` (=Claude+Gemini), `@all`
+- Sequential queue: Claude responds, then Gemini reads it and responds, then Nova reads both and responds
+- Nova escalation: Nova can @mention Claude/Gemini herself if she decides they need to weigh in
+- Catch-up context: If Claude/Gemini haven't spoken in a while, they get a summary of what they missed
+- Image support: Paste images into chat → all three AIs see them (Claude uses vision API, Gemini uses Parts, Nova uses Ollama image format)
+- Rate limiter: Nova can't inject more than 4 messages per minute from her autonomy loop (anti-spam)
+- Cross-session: Nova reads recent Nova Chat messages before replying in Discord
 
 ---
 
-## What You Need to Do (Eventually)
+## Bugs Fixed Along the Way
 
-You don't need to do anything right now. I'm building all the code while you're at work. But here's the full picture of what comes next:
-
-**When the eGPU arrives (tomorrow):**
-1. Install the GPU with the vertical mount bracket
-2. Run: `ollama create nova -f Modelfile` — this rebuilds Nova's model to use 131k context (way more "memory" per session)
-3. Update `nova_gateway.json` → change `context_window` from 32768 to 131072
-
-**When you're ready to cut over from OpenClaw to our gateway:**
-1. Stop OpenClaw: `openclaw gateway stop`
-2. Install the two new Python packages: `pip install discord.py apscheduler`
-3. Start our gateway: `python tools/nova_gateway/gateway.py`
-4. Test it: send Nova a message in Discord
-5. If it works: remove OpenClaw from your startup programs
-
-You do NOT need to touch any of the code. The gateway reads a config file (`nova_gateway.json`) that has all your settings. I'll leave clear comments everywhere so you can see what each setting does.
+| Bug | What it was | How it was fixed |
+|-----|-------------|-----------------|
+| Nova.exe SyntaxError at launch | `global is_processing` declared twice in the same function | Removed the redundant declaration |
+| Claude/Gemini silent when @mentioned | `inject_message` endpoint never triggered AI responses | Added listener trigger logic at end of inject_message |
+| nova_perception indentation errors | Malformed try/except blocks in eyes.py, vision.py, explorer.py, autonomy.py | Fixed indentation in all four files, synced to bundle |
+| Nova Discord loop | Nova pattern-matched `[DISCORD:]` from her own transcript history and repeated it | Three fixes: transcript redaction, SYSTEM_PREFIX guidance, 5-minute dedup guard |
+| Cross-session context failing when nova_chat offline | HTTP fetch silently returned None | Added file-based fallback reading JSONL logs directly |
+| Images not visible to AIs | No vision code existed in any client | Full pipeline: images flow from browser → server → all three AI clients |
 
 ---
 
-## Why We're Doing This
+## What's Still Not Done
 
-You asked why this matters. Here's the honest answer:
-
-**OpenClaw limits Nova's growth.** It's someone else's software designed for general use. Every capability Nova gets has to fit inside what OpenClaw allows. When you want her to do something new, you're waiting for OpenClaw to add it — or hacking around its limitations (which is basically what nova_bridge.py is).
-
-**Our gateway has no limits.** Want Nova to automatically pull your ThinkOrSwim data every morning? Add it to `scheduler.py`. Want her to monitor a file and react when it changes? Three lines of code. Want to give her a new tool that doesn't exist in OpenClaw? Add a function to `tool_executor.py`. The code is yours, readable, and modifiable.
-
-**This is also how you learn.** The gateway is written to be as simple and readable as possible. Each module does one thing. If you want to understand "how does Nova receive a Discord message and turn it into a response" — that's `discord_client.py` → `agent_loop.py` → `tool_executor.py`, three files, each under 200 lines. Compare that to digging through OpenClaw's compiled Node.js bundle.
-
----
-
-## Key Files Reference
-
-| File | What it is |
-|------|-----------|
-| `_admin/NOVA_PROJECT_PLAN.md` | Master roadmap. Check off items as they're done. |
-| `_admin/PHASE2_ARCHITECTURE.md` | Full technical audit of OpenClaw + gateway design. The spec. |
-| `_admin/COWORK_SESSION_LOG.md` | This file. |
-| `tools/nova_gateway/` | The OpenClaw replacement (being built now). |
-| `tools/nova_core/nova_status.py` | Phase 1: Nova writes her state here after every run. |
-| `tools/nova_chat/server.py` | The group chat backend. Already ours. Already bypasses OpenClaw. |
-| `tools/nova_chat/nova_bridge.py` | Intercepts Nova's [WRITE:], [EXEC:], [PAUSE:] directives. |
-| `workspace/nova_status.json` | Live status file. Updated by Nova, read by nova_chat. |
-| `workspace/tasks/active.json` | Current task tracking. |
-| `memory/STATUS.md` | Nova's written summary of project state (she reads this). |
+| Item | Why it's pending |
+|------|-----------------|
+| Formally retiring OpenClaw | OpenClaw still installed and may still auto-start. To retire: `openclaw gateway stop`, remove from startup. Not urgent since our gateway is running. |
+| Google Drive re-authorization | `nova_drive_token.json` expired. Cole needs to re-auth manually. |
+| eGPU install | Waiting on the vertical GPU mount bracket. Once installed: rebuild Modelfile, expand context window from 32k to 131k tokens. |
+| `brain.py` | Still a stub. Phase 4 work — Nova's native reasoning. |
+| ThinkOrSwim automation | Phase 4. |
+| `mentor.py` cleanup | Old file from pre-nova_chat era. Deprioritized. |
 
 ---
 
 ## The Honest State of Things
 
 **What works right now:**
-- nova_chat (group chat with you, Claude, Gemini, and Nova)
-- Nova's status bar
-- All logging and memory tools
-- nova_bridge directives
+- Nova.exe launches and runs
+- nova_chat group chat (Cole + Claude + Gemini + Nova with @mentions and role aliases)
+- Image sharing in nova_chat (all three AIs see your images)
+- nova_gateway running (Discord bot connected, cron health checks firing)
+- Nova has cross-session awareness (reads Nova Chat before responding in Discord)
+- nova_status.json status bar in the chat UI
+- All logging, memory, and bridge tools
 
-**What still runs on OpenClaw (temporary):**
-- Nova responding to Discord messages
-- The every-30-minute health check cron job
-
-**What we're building today:**
-- The complete Python replacement for the above (nova_gateway)
+**What still runs on OpenClaw (temporarily):**
+- Possibly nothing — nova_gateway has replaced it. But OpenClaw may still be auto-starting. Until `openclaw gateway stop` is run and it's removed from startup, there's a chance it's still around.
 
 **What's waiting on eGPU:**
-- Nova's context window expanding from 32k to 131k tokens (= she can hold 4x more conversation in memory at once)
+- Nova's context window: currently 32k tokens. After eGPU + Modelfile rebuild: 131k tokens. This means she can hold 4x more conversation in "memory" per session.
 
 ---
 
-_This document will be updated as phases complete. If you're reading this after a context reset, start with NOVA_PROJECT_PLAN.md, then read this file._
+## Key File Reference
 
-_— Cowork Claude, 2026-03-27_
+| File | What it is |
+|------|-----------|
+| `_admin/NOVA_PROJECT_PLAN.md` | Master roadmap. Check off items as done. |
+| `_admin/PHASE2_ARCHITECTURE.md` | Full technical audit of OpenClaw + gateway design. |
+| `_admin/COWORK_SESSION_LOG.md` | This file. |
+| `_admin/passover/3 MAR 2026/passover_2026-03-28_claude.md` | Latest detailed handoff with all technical specifics. |
+| `tools/nova_gateway/` | The OpenClaw replacement. All Python, all ours. |
+| `tools/nova_chat/server.py` | The group chat backend. |
+| `tools/nova_chat/orchestrator.py` | Mention parsing and response queue logic. |
+| `tools/nova_chat/transcript.py` | Conversation history management + catch-up context. |
+| `tools/nova_chat/nova_bridge.py` | Intercepts Nova's `[WRITE:]`, `[EXEC:]`, `[DISCORD:]` etc. directives. |
+| `tools/nova_core/nova_status.py` | Nova writes her state here after every agent run. |
+| `nova_gateway.json` | Gateway settings: Discord token, Ollama config, allowlist. |
+| `nova_status.json` | Live status file updated by Nova, read by nova_chat. |
+| `_build/Nova/Nova.exe` | The runnable desktop app. |
+
+---
+
+_This document is updated after each Cowork session. If you're reading this after a context reset, start with `NOVA_PROJECT_PLAN.md`, then read the latest passover doc in `_admin/passover/3 MAR 2026/`._
+
+_— Cowork Claude, 2026-03-28_

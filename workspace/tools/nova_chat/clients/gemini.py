@@ -52,11 +52,38 @@ def get_client():
     return _gemini_client
 
 
-def call_gemini_sync(prompt: str, workspace_context: str = "") -> str:
-    """Synchronous Gemini call -- run in thread pool from async context."""
+def call_gemini_sync(prompt: str, workspace_context: str = "",
+                     images: list = None) -> str:
+    """
+    Synchronous Gemini call -- run in thread pool from async context.
+
+    images: list of {dataUrl, name} dicts from the browser upload, or None.
+            When provided, image Parts are prepended to the contents list so
+            Gemini can analyse the images in context.
+    """
+    import base64 as _b64
     from google.genai import types
 
     client = get_client()
+
+    # Build contents — text prompt, optionally preceded by image Parts
+    if images:
+        parts = []
+        for img in images:
+            try:
+                data_url = img.get("dataUrl", "")
+                if not data_url or "," not in data_url:
+                    continue
+                header, b64data = data_url.split(",", 1)
+                media_type = header.split(":")[1].split(";")[0] if ":" in header else "image/jpeg"
+                img_bytes = _b64.b64decode(b64data)
+                parts.append(types.Part.from_bytes(data=img_bytes, mime_type=media_type))
+            except Exception:
+                pass   # skip malformed entries
+        parts.append(types.Part.from_text(text=prompt))
+        contents = parts
+    else:
+        contents = prompt
 
     config_kwargs = {
         "system_instruction": SYSTEM_PREFIX,
@@ -67,7 +94,7 @@ def call_gemini_sync(prompt: str, workspace_context: str = "") -> str:
         config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=8192)
         response = client.models.generate_content(
             model=MODEL,
-            contents=prompt,
+            contents=contents,
             config=types.GenerateContentConfig(**config_kwargs),
         )
     except Exception:
@@ -75,7 +102,7 @@ def call_gemini_sync(prompt: str, workspace_context: str = "") -> str:
         config_kwargs.pop("thinking_config", None)
         response = client.models.generate_content(
             model=MODEL,
-            contents=prompt,
+            contents=contents,
             config=types.GenerateContentConfig(**config_kwargs),
         )
     # Extract text -- response may have thinking parts, get only text parts
@@ -94,11 +121,12 @@ def call_gemini_sync(prompt: str, workspace_context: str = "") -> str:
 
 
 async def stream_response(transcript, on_token, on_done, on_error,
-                           workspace_context: str = ""):
+                           workspace_context: str = "",
+                           images: list = None):
     """
     Gemini's new SDK is synchronous -- this runs in a thread pool
     and simulates streaming by word-chunking the response.
-    Called by server.py's _run_gemini_response().
+    Called by server.py's _run_gemini_response() (which passes images through).
 
     NOTE: This is typically handled directly in server.py via _run_gemini_response().
     This async wrapper satisfies the client interface if stream_response() is called
@@ -116,7 +144,7 @@ async def stream_response(transcript, on_token, on_done, on_error,
         try:
             system_prompt = transcript.format_for_ai("Gemini", SYSTEM_PREFIX)
             prompt = f"{system_prompt}\n\nPlease respond to the conversation above."
-            full_response = call_gemini_sync(prompt)
+            full_response = call_gemini_sync(prompt, images=images)
         except Exception as e:
             error_msg = str(e)
 

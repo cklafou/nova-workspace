@@ -418,8 +418,10 @@ async def get_status() -> dict:
     }
 
 
-async def _run_gemini_response(on_token, on_done, on_error, workspace_context: str = ""):
-    """Run Gemini sync SDK in thread pool."""
+async def _run_gemini_response(on_token, on_done, on_error,
+                               workspace_context: str = "",
+                               images: list = None):
+    """Run Gemini sync SDK in thread pool. Passes images for vision support."""
     loop = asyncio.get_event_loop()
     full_response = ""
     error_msg = None
@@ -432,7 +434,7 @@ async def _run_gemini_response(on_token, on_done, on_error, workspace_context: s
                 "Gemini", gemini_client.SYSTEM_PREFIX, workspace_context=workspace_context
             )
             prompt = f"{system_prompt}\n\nPlease respond to the conversation above."
-            full_response = call_gemini_sync(prompt)
+            full_response = call_gemini_sync(prompt, images=images)
         except Exception as e:
             error_msg = str(e)
 
@@ -451,11 +453,15 @@ async def _run_gemini_response(on_token, on_done, on_error, workspace_context: s
 
 
 async def run_ai_response(ai_name: str, client_mod, msg_id: str,
-                          latest_message: str = "") -> str:
+                          latest_message: str = "",
+                          images: list = None) -> str:
     """
     Stream one AI response, broadcast tokens, and return the full response text.
     The return value lets callers (e.g. _run_response_queue) inspect Nova's
     response for @mentions without re-reading the transcript.
+
+    images: list of {dataUrl, name} dicts from the triggering Cole message.
+            Passed through to AI clients that support vision (Claude, Gemini, Nova).
     """
     # Update workspace context based on what was mentioned in the message
     if latest_message:
@@ -497,10 +503,11 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         await broadcast({"type": "error", "author": ai_name, "message": err, "id": msg_id})
 
     if ai_name == "Gemini":
-        await _run_gemini_response(on_token, on_done, on_error, ws_context)
+        await _run_gemini_response(on_token, on_done, on_error, ws_context, images=images)
     else:
         await client_mod.stream_response(
-            session_mgr.active, on_token, on_done, on_error, workspace_context=ws_context
+            session_mgr.active, on_token, on_done, on_error,
+            workspace_context=ws_context, images=images
         )
 
     return _result[0] if _result else ""
@@ -515,7 +522,8 @@ CLIENT_MAP = {
 }
 
 
-async def _run_response_queue(queue: list, content: str) -> None:
+async def _run_response_queue(queue: list, content: str,
+                              images: list = None) -> None:
     """
     Execute AI responses SEQUENTIALLY in queue order.
 
@@ -529,6 +537,10 @@ async def _run_response_queue(queue: list, content: str) -> None:
     round so they can see Nova's message and respond to it.
     This is the mechanism for Nova's smart escalation to mentors.
 
+    images: passed through to run_ai_response for vision support.
+            Only the originating Cole message carries images; follow-up rounds
+            (Nova→listeners) don't repeat the same images.
+
     NOTE: Exceptions are NOT caught here — they bubble up to the caller
     (_queued_run) which has a try/finally to reset is_processing.
     """
@@ -537,10 +549,12 @@ async def _run_response_queue(queue: list, content: str) -> None:
             continue
         client_mod = CLIENT_MAP[ai_name]
         msg_id = str(uuid.uuid4())[:8]
-        response_text = await run_ai_response(ai_name, client_mod, msg_id, content)
+        response_text = await run_ai_response(ai_name, client_mod, msg_id, content,
+                                              images=images)
 
         # After Nova responds: check if she @mentioned any listeners.
         # If so, run a follow-up round (one level — no further recursion).
+        # Follow-up rounds don't carry the original images (they're Nova→listener).
         if ai_name == "Nova" and response_text:
             nova_mentions = parse_directed(response_text)
             follow_ups = [n for n in nova_mentions if n in ("Claude", "Gemini")]
@@ -1373,14 +1387,15 @@ async def websocket_endpoint(ws: WebSocket):
                     is_processing = True
                     await broadcast({"type": "processing_start"})
 
-                    # Capture queue and content at definition time to avoid closure issues
-                    _q = list(queue)  # make a copy
+                    # Capture queue, content, and images at definition time
+                    _q = list(queue)    # make a copy
                     _c = content
+                    _imgs = images or []   # images from this Cole message
 
                     async def _queued_run():
                         global is_processing
                         try:
-                            await _run_response_queue(_q, _c)
+                            await _run_response_queue(_q, _c, images=_imgs or None)
                         except asyncio.CancelledError:
                             pass
                         except Exception as e:
