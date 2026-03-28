@@ -372,6 +372,17 @@ async def switch_session(session_id: str):
         "sessions": session_mgr.get_all_meta(),
         "history": history,
     })
+
+    # Auto-reinject context so Nova has fresh files in every reopened session.
+    # Fire-and-forget — don't block the switch response.
+    async def _auto_reinject():
+        try:
+            await reinject_context()
+            print(f"[session_switch] Auto-reinjected context into session {session_id}")
+        except Exception as _e:
+            print(f"[session_switch] Auto-reinject failed: {_e}")
+    asyncio.create_task(_auto_reinject())
+
     return JSONResponse({"session_id": session_id, "message_count": len(history)})
 
 
@@ -433,6 +444,13 @@ async def new_session_endpoint():
         "sessions": session_mgr.get_all_meta(),
         "history": history,
     })
+    # Auto-inject context so Nova starts oriented in every new session too.
+    async def _auto_reinject_new():
+        try:
+            await reinject_context()
+        except Exception as _e:
+            print(f"[new_session] Auto-reinject failed: {_e}")
+    asyncio.create_task(_auto_reinject_new())
     return JSONResponse({"status": "new session started", "session_id": session_id})
 
 
@@ -600,12 +618,24 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     await broadcast({"type": "message_start", "author": ai_name, "id": msg_id})
 
     _result: list[str] = []  # capture full text so we can return it
+    _think_started = [False]  # tracks whether think_start has been broadcast
 
     async def on_token(token):
         await broadcast({"type": "token", "author": ai_name, "token": token, "id": msg_id})
 
+    async def on_think_token(token):
+        """Broadcasts think_start once, then think_token for each token.
+        Only wired for Nova — Claude/Gemini handle their own thinking display."""
+        if not _think_started[0]:
+            _think_started[0] = True
+            await broadcast({"type": "think_start", "author": ai_name, "id": msg_id})
+        await broadcast({"type": "think_token", "author": ai_name, "token": token, "id": msg_id})
+
     async def on_done(full):
         _result.append(full)
+        # Close the think block if one was opened
+        if _think_started[0]:
+            await broadcast({"type": "think_end", "author": ai_name, "id": msg_id})
         msg = session_mgr.active.add(ai_name, full)
         session_mgr.update_meta_from_message(msg)
         await broadcast({"type": "message_end", "author": ai_name, "id": msg_id})
@@ -626,6 +656,13 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
     if ai_name == "Gemini":
         await _run_gemini_response(on_token, on_done, on_error, ws_context, images=images)
+    elif ai_name == "Nova":
+        # Nova supports <think> tag parsing — pass on_think_token
+        await client_mod.stream_response(
+            session_mgr.active, on_token, on_done, on_error,
+            on_think_token=on_think_token,
+            workspace_context=ws_context, images=images
+        )
     else:
         await client_mod.stream_response(
             session_mgr.active, on_token, on_done, on_error,
@@ -1389,6 +1426,70 @@ async def chat_recent(n: int = 40):
         "message_count": len(messages),
         "formatted":     "\n".join(lines) if lines else "(no messages yet)",
     })
+
+
+@app.post("/api/reinject_context")
+async def reinject_context():
+    """
+    Re-inject all nova_gateway.json inject_files into the active session as a
+    fresh context block.  Called by the 'Re-orient Nova' button on the landing
+    page and automatically on session switch so Nova always has current files.
+
+    Reads each file fresh from disk (captures any changes since last boot),
+    builds a compact CONTEXT REFRESH block, and posts it as a System message
+    into the active session.  Nova reads it like any other chat message.
+
+    Returns: { ok, files_injected, skipped, chars }
+    """
+    try:
+        from nova_gateway.config import load as _load_gw_cfg
+        _cfg = _load_gw_cfg()
+        inject_paths = _cfg.inject_files(heartbeat=False)
+    except Exception as _e:
+        print(f"[reinject] config load failed: {_e} — using fallback list")
+        _WORKSPACE = Path(__file__).resolve().parent.parent.parent
+        _FALLBACK = [
+            "AGENTS.md", "SOUL.md", "IDENTITY.md", "TOOLS.md",
+            "NCL_MASTER.md", "memory/STATUS.md", "memory/COLE.md",
+            "Thoughts/priority.md", "Thoughts/THOUGHT_TEMPLATE.md",
+        ]
+        inject_paths = [_WORKSPACE / p for p in _FALLBACK if (_WORKSPACE / p).exists()]
+
+    ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    sections = [f"# CONTEXT REFRESH — {ts}\n_Nova's workspace files re-injected from disk._"]
+    injected, skipped = 0, 0
+
+    for path in inject_paths:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace").strip()
+            if text:
+                sections.append(f"## [{path.name}]\n{text}")
+                injected += 1
+            else:
+                skipped += 1
+        except Exception as _fe:
+            print(f"[reinject] skipped {path.name}: {_fe}")
+            skipped += 1
+
+    if injected == 0:
+        return JSONResponse({"ok": False, "error": "No files could be read", "files_injected": 0})
+
+    block = "\n\n---\n\n".join(sections)
+    chars = len(block)
+
+    # Deliver as a System message so it's clearly labelled in the chat
+    msg = session_mgr.active.add("System", block)
+    session_mgr.update_meta_from_message(msg)
+    await broadcast({
+        "type":      "user_message",
+        "author":    "System",
+        "content":   block,
+        "id":        msg["id"],
+        "timestamp": msg["timestamp"],
+    })
+
+    print(f"[reinject] Context refresh: {injected} files, {chars} chars ({skipped} skipped)")
+    return JSONResponse({"ok": True, "files_injected": injected, "skipped": skipped, "chars": chars})
 
 
 @app.post("/shutdown")

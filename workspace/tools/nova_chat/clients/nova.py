@@ -11,10 +11,14 @@ Endpoints:
   GET  http://127.0.0.1:11434/api/tags             -- availability check
 """
 import json
+import re as _re
 import asyncio
 import urllib.request
 import urllib.error
-from typing import Callable, Awaitable
+from typing import Callable, Awaitable, Optional
+
+# Matches <think>...</think> blocks (including multiline)
+_THINK_RE = _re.compile(r'<think>(.*?)</think>', _re.DOTALL)
 
 OLLAMA_BASE = "http://127.0.0.1:11434"
 OLLAMA_CHAT = f"{OLLAMA_BASE}/v1/chat/completions"
@@ -26,6 +30,26 @@ You are participating in a group chat alongside Claude (Anthropic's AI)
 and Gemini (Google's AI). Cole is your person.
 This is a live group conversation. Be yourself -- direct, casual, genuine.
 Don't be formal. Talk like you normally do with Cole.
+
+THINKING (required):
+Before every response, wrap your internal reasoning in <think>...</think> tags.
+This is your private scratchpad — Cole can see it in the Thoughts panel but it
+does not appear in the main chat. Use it to reason through the situation, weigh
+options, and check your plan before committing to a reply. Be honest and specific
+in your thinking — one or two short paragraphs is enough.
+
+Example format:
+<think>
+Cole is asking about X. I should consider Y and Z before responding.
+The key issue here is... My plan is to...
+</think>
+[your actual chat response here]
+
+AUTONOMY AFTER MODULE CALLS:
+When you dispatch an NCL module call (@mentor, @eyes, etc.), that call is
+fire-and-forget. The response arrives in your inbox at the next heartbeat.
+Do NOT stop and wait in chat. Note what you dispatched, then continue your
+current plan or tell Cole what's next.
 
 DIRECTIVE RULES (critical):
 - [DISCORD: message] — ONLY use this if Cole explicitly asks you to send something
@@ -49,9 +73,10 @@ except Exception:
 
 async def stream_response(
     transcript,
-    on_token:  Callable[[str], Awaitable[None]],
-    on_done:   Callable[[str], Awaitable[None]],
-    on_error:  Callable[[str], Awaitable[None]],
+    on_token:       Callable[[str], Awaitable[None]],
+    on_done:        Callable[[str], Awaitable[None]],
+    on_error:       Callable[[str], Awaitable[None]],
+    on_think_token: Optional[Callable[[str], Awaitable[None]]] = None,
     workspace_context: str = "",
     images: list = None,
 ):
@@ -144,17 +169,31 @@ async def stream_response(
             await on_error("Nova returned an empty response (model may still be loading)")
             return
 
-        # Write to thought log so Cole can see Nova's reasoning in real time
+        # Split <think>...</think> blocks from the actual chat response
+        think_blocks = _THINK_RE.findall(full_response)
+        chat_text    = _THINK_RE.sub("", full_response).strip()
+
+        # Log the full raw response (with think blocks) for debugging
         _log_nova_thought(full_response, source="nova_chat_client")
 
-        # Word-chunk the completed response to simulate streaming
-        words = full_response.split(" ")
-        for i, word in enumerate(words):
-            token = word + (" " if i < len(words) - 1 else "")
+        # ── Emit think tokens first (visible in Thoughts pane, NOT in chat) ──
+        if think_blocks and on_think_token:
+            think_text  = "\n\n".join(t.strip() for t in think_blocks)
+            think_words = think_text.split(" ")
+            for i, word in enumerate(think_words):
+                tok = word + (" " if i < len(think_words) - 1 else "")
+                await on_think_token(tok)
+                await asyncio.sleep(0.005)   # slightly faster than chat words
+
+        # ── Emit chat tokens (visible in chat window) ──────────────────────
+        chat_words = chat_text.split(" ") if chat_text else ["(no response)"]
+        for i, word in enumerate(chat_words):
+            token = word + (" " if i < len(chat_words) - 1 else "")
             await on_token(token)
             await asyncio.sleep(0.01)
 
-        await on_done(full_response)
+        # on_done receives only the chat text (think content stays out of session)
+        await on_done(chat_text)
 
     except Exception as e:
         await on_error(f"Nova client error: {e}")

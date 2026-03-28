@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-03-28 19:04:43_
+_Last updated: 2026-03-28 21:30:30_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -30,6 +30,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | BOOTSTRAP.md | `workspace/BOOTSTRAP.md` | Boot sequence Nova follows on every OpenClaw start |
 | HEARTBEAT.md | `workspace/HEARTBEAT.md` | Current heartbeat state |
 | IDENTITY.md | `workspace/IDENTITY.md` | Nova's self-definition document |
+| NCL_MASTER.md | `workspace/NCL_MASTER.md` | MD file |
 | nova_gateway - Copy.json | `workspace/nova_gateway - Copy.json` | JSON file |
 | nova_gateway.json | `workspace/nova_gateway.json` | JSON file |
 | nova_gateway_runner.py | `workspace/nova_gateway_runner.py` | PY file |
@@ -70,6 +71,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | context_export.py | `workspace/tools/nova_chat/context_export.py` | PY file |
 | launch.py | `workspace/tools/nova_chat/launch.py` | PY file |
 | nova_bridge.py | `workspace/tools/nova_chat/nova_bridge.py` | PY file |
+| nova_lang.py | `workspace/tools/nova_chat/nova_lang.py` | PY file |
 | orchestrator.py | `workspace/tools/nova_chat/orchestrator.py` | PY file |
 | server.py | `workspace/tools/nova_chat/server.py` | PY file |
 | server_runner.py | `workspace/tools/nova_chat/server_runner.py` | PY file |
@@ -88,6 +90,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | context_builder.py | `workspace/tools/nova_gateway/context_builder.py` | PY file |
 | discord_client.py | `workspace/tools/nova_gateway/discord_client.py` | PY file |
 | gateway.py | `workspace/tools/nova_gateway/gateway.py` | PY file |
+| injector.py | `workspace/tools/nova_gateway/injector.py` | PY file |
 | scheduler.py | `workspace/tools/nova_gateway/scheduler.py` | PY file |
 | session_store.py | `workspace/tools/nova_gateway/session_store.py` | PY file |
 | tool_executor.py | `workspace/tools/nova_gateway/tool_executor.py` | PY file |
@@ -140,7 +143,15 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
+| master.md | `workspace/Thoughts/Finished/completed_success/TEST_BRAIN_PROBE/master.md` | MD file |
 | priority.md | `workspace/Thoughts/priority.md` | MD file |
+| master.md | `workspace/Thoughts/TEST_ADVANCE/master.md` | MD file |
+| master.md | `workspace/Thoughts/TEST_BLOCKED/master.md` | MD file |
+| master.md | `workspace/Thoughts/TEST_BRIEF/master.md` | MD file |
+| master.md | `workspace/Thoughts/TEST_STATUS/master.md` | MD file |
+| master.md | `workspace/Thoughts/TEST_STATUS2/master.md` | MD file |
+| master.md | `workspace/Thoughts/TEST_STATUS3/master.md` | MD file |
+| master.md | `workspace/Thoughts/TEST_STATUS4/master.md` | MD file |
 | THOUGHT_TEMPLATE.md | `workspace/Thoughts/THOUGHT_TEMPLATE.md` | MD file |
 
 ## _admin/

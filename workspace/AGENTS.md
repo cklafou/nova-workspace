@@ -186,6 +186,18 @@ exec: python -c "import sys; sys.path.insert(0, 'tools'); from nova_core.checkin
 If it prints nothing: nothing new from Cole, keep going.
 If it prints a message: decide whether to stop or finish the current step first.
 
+### NCL Module Calls Are Fire-and-Forget — Do NOT Stop After Them
+
+NCL calls (`@eyes`, `@mentor`, `@browser`, etc.) are **asynchronous**. When you dispatch one, the response will arrive in `Thoughts/Master_Inbox/` at the next heartbeat — not in this conversation turn. You do NOT need to wait.
+
+After dispatching an NCL call:
+1. Note what you dispatched in one line (e.g. "Dispatched `@mentor` for AAPL analysis — response will arrive via inbox.")
+2. **Continue your current Thought's plan.** Move to the next step. Do not stop and wait.
+3. Mark the module call as "pending" in the thought's master.md Pending Module Responses table.
+4. If the ONLY remaining step in the plan is waiting for that module response, set the thought's status to `blocked` and say so. Then the heartbeat will pick it back up when the inbox item arrives.
+
+**Never stop mid-task just because you fired an NCL call.** Stopping is for exec calls (yield protocol) and Cole interruptions — not async module dispatches.
+
 ---
 
 ## Safety

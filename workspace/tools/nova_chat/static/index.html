@@ -12,7 +12,7 @@
     --bg3:      #131929;
     --border:   #1e2a42;
     --text:     #c8d4e8;
-    --text-dim: #4a5a78;
+    --text-dim: #7a90b8;   /* was #4a5a78 — lifted for readability */
     --cole:     #e8eaf0;
     --claude:   #60a5fa;
     --gemini:   #34d399;
@@ -368,7 +368,7 @@
     40% { transform: scale(1); opacity: 1; }
   }
 
-  /* System messages */
+  /* System messages (inline status notices) */
   .system-msg {
     text-align: center;
     color: var(--text-dim);
@@ -376,6 +376,32 @@
     padding: 6px 0;
     letter-spacing: 0.05em;
   }
+
+  /* Collapsible System author blocks (context refresh, large injections) */
+  .msg-system-block {
+    border-left: 2px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.02);
+    border-radius: 0 6px 6px 0;
+    margin: 4px 0;
+    overflow: hidden;
+  }
+  .msg-system-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 12px; cursor: pointer;
+    font-size: 11px; color: var(--text-dim);
+    user-select: none;
+  }
+  .msg-system-header:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+  .msg-system-toggle { font-size: 9px; transition: transform 0.15s; }
+  .msg-system-block.open .msg-system-toggle { transform: rotate(90deg); }
+  .msg-system-body {
+    display: none; padding: 8px 12px 10px;
+    font-size: 10px; font-family: var(--mono);
+    color: rgba(255,255,255,0.55); white-space: pre-wrap;
+    word-break: break-word; max-height: 300px;
+    overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .msg-system-block.open .msg-system-body { display: block; }
 
   /* ── Image preview strip (above input, before sending) ── */
   #img-preview-strip {
@@ -1365,6 +1391,77 @@
     border-radius: 0 4px 4px 0;
   }
 
+  /* ── Thoughts / Logs sub-tabs ──────────────────────────── */
+  .log-sub-tabs {
+    display: flex; gap: 0; flex-shrink: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    background: rgba(0,0,0,0.18);
+  }
+  .log-sub-tab {
+    padding: 6px 14px; font-size: 11px; cursor: pointer;
+    color: var(--text-dim); border-bottom: 2px solid transparent;
+    transition: all 0.15s; user-select: none;
+  }
+  .log-sub-tab:hover { color: var(--text); }
+  .log-sub-tab.active { color: var(--nova); border-bottom-color: var(--nova); }
+
+  .log-sub-pane {
+    display: none; flex: 1; overflow: hidden;
+    flex-direction: column; min-height: 0;
+  }
+  .log-sub-pane.active { display: flex; }
+
+  /* ── Live Thinking stream ─────────────────────────────── */
+  .thoughts-output {
+    flex: 1; overflow-y: auto; padding: 10px 12px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text); line-height: 1.65;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.08) transparent;
+  }
+  .thoughts-placeholder {
+    color: var(--text-dim); font-style: italic; padding: 8px 0;
+  }
+  .thought-block {
+    margin-bottom: 14px; border-left: 2px solid rgba(167,139,250,0.3);
+    padding-left: 10px; position: relative;
+  }
+  .thought-block.live { border-left-color: var(--nova); }
+  .thought-block.live::before {
+    content: ''; position: absolute; left: -5px; top: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--nova);
+    box-shadow: 0 0 6px var(--nova);
+    animation: pulse-dot 1s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
+  }
+  .thought-header {
+    font-size: 9.5px; color: var(--text-dim); margin-bottom: 4px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .thought-header .th-name { color: var(--nova); font-weight: 600; }
+  .thought-header .th-time { opacity: 0.6; }
+  .thought-header .th-tokens {
+    margin-left: auto; opacity: 0.5; font-size: 9px;
+  }
+  .thought-text {
+    color: var(--text); white-space: pre-wrap; word-break: break-word;
+    font-size: 11px;
+  }
+  .thought-block:not(.live) .thought-text { color: rgba(200,212,232,0.72); }
+  .thought-block:not(.live) { border-left-color: rgba(255,255,255,0.15); }
+
+  .thoughts-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 12px 8px; flex-shrink: 0;
+  }
+  .thoughts-status {
+    font-size: 10px; color: var(--text-dim); font-family: var(--mono);
+  }
+
 </style>
 </head>
 <body>
@@ -1455,6 +1552,7 @@
       <div class="dash-card-title">⚡ QUICK ACTIONS</div>
       <div class="dash-actions-col">
         <button class="dash-action-btn" onclick="switchView('chat')">→ Open Chat</button>
+        <button class="dash-action-btn" id="dash-reinject-btn">↺ Re-orient Nova</button>
         <button class="dash-action-btn" id="dash-health-btn">⊕ Run Health Check</button>
         <button class="dash-action-btn" id="dash-trigger-btn">▷ Manual Nova Trigger</button>
       </div>
@@ -1593,7 +1691,7 @@
     <div class="tool-tab" data-pane="terminal">⬛ Terminal</div>
     <div class="tool-tab" data-pane="status">◈ Status</div>
     <div class="tool-tab" data-pane="quick">⚡ Quick</div>
-    <div class="tool-tab" data-pane="logs">📟 Logs</div>
+    <div class="tool-tab" data-pane="logs">🧠 Thoughts</div>
   </div>
 
   <!-- FILE EXPLORER -->
@@ -1674,18 +1772,40 @@ Your message will be forwarded to your real OpenClaw agent which has actual writ
     </div>
   </div>
 
-  <!-- LIVE LOGS -->
+  <!-- THOUGHTS / LIVE LOGS -->
   <div class="tool-pane" id="pane-logs">
-    <div class="log-controls" id="log-controls">
-      <select class="log-file-select" id="log-file-select" title="Select log file">
-        <option value="latest">⟳ Latest session log</option>
-      </select>
-      <button class="log-ctrl-btn" id="log-clear-btn" title="Clear display">✕</button>
-      <button class="log-ctrl-btn" id="log-scroll-btn" title="Toggle auto-scroll" data-active="true">⬇</button>
+
+    <!-- Sub-tabs -->
+    <div class="log-sub-tabs">
+      <div class="log-sub-tab active" data-sub="thinking">🧠 Thinking</div>
+      <div class="log-sub-tab" data-sub="debug">📟 Debug</div>
     </div>
-    <div class="log-output" id="log-output">
-      <span style="color:var(--text-dim);font:11px var(--mono)">Select a log file or wait for activity...</span>
+
+    <!-- ── Thinking sub-pane ─────────────────────────────── -->
+    <div class="log-sub-pane active" id="sub-thinking">
+      <div class="thoughts-output" id="thoughts-output">
+        <div class="thoughts-placeholder">Nova's thoughts will stream here live…</div>
+      </div>
+      <div class="thoughts-footer">
+        <span id="thoughts-status" class="thoughts-status"></span>
+        <button class="log-ctrl-btn" id="thoughts-clear-btn" title="Clear">✕</button>
+      </div>
     </div>
+
+    <!-- ── Debug logs sub-pane ───────────────────────────── -->
+    <div class="log-sub-pane" id="sub-debug">
+      <div class="log-controls" id="log-controls">
+        <select class="log-file-select" id="log-file-select" title="Select log file">
+          <option value="latest">⟳ Latest session log</option>
+        </select>
+        <button class="log-ctrl-btn" id="log-clear-btn" title="Clear display">✕</button>
+        <button class="log-ctrl-btn" id="log-scroll-btn" title="Toggle auto-scroll" data-active="true">⬇</button>
+      </div>
+      <div class="log-output" id="log-output">
+        <span style="color:var(--text-dim);font:11px var(--mono)">Select a log file or wait for activity…</span>
+      </div>
+    </div>
+
   </div>
 
 </div><!-- #tools-panel -->
@@ -1832,6 +1952,19 @@ function handleMessage(data) {
       finalizeMsg(data.id);
       break;
 
+    // ── Nova's think blocks (separate from chat tokens) ──────────────────
+    case 'think_start':
+      thoughtsStartBlock(data.author);
+      break;
+
+    case 'think_token':
+      thoughtsAppendToken(data.author, data.token);
+      break;
+
+    case 'think_end':
+      thoughtsEndBlock();
+      break;
+
     case 'message':
       appendMessage(data.author, data.content, data.id);
       break;
@@ -1885,6 +2018,26 @@ function updateStatus(participants) {
 // ── Chat rendering ─────────────────────────────────────────────────────────────
 function appendMessage(author, content, id, images) {
   if (id && document.getElementById(`msg-${id}`)) return; // dedup
+
+  // System author (context refresh, large injections) → collapsible block
+  if (author === 'System') {
+    const firstLine = (content || '').split('\n')[0].replace(/^#+\s*/, '');
+    const block = document.createElement('div');
+    block.className = 'msg-system-block';
+    if (id) block.id = `msg-${id}`;
+    block.innerHTML =
+      `<div class="msg-system-header">` +
+        `<span class="msg-system-toggle">▶</span>` +
+        `<span style="color:var(--text-dim);font-size:10px;letter-spacing:.04em">SYSTEM</span>` +
+        `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)">${firstLine}</span>` +
+      `</div>` +
+      `<div class="msg-system-body">${(content || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+    block.querySelector('.msg-system-header').addEventListener('click', () => block.classList.toggle('open'));
+    chat.appendChild(block);
+    scrollBottom();
+    return;
+  }
+
   const colorVar  = COLORS[author]  || '--text-dim';
   const avatar    = AVATARS[author] || author[0].toUpperCase();
   const colorClass = author.toLowerCase();
@@ -2695,7 +2848,100 @@ renderTabs(); // render empty state (shows + button immediately)
 addSystemMsg('Nova Group Chat initialized');
 
 
-// ── Live Logs ──────────────────────────────────────────────────────────────
+// ── Thoughts (live Nova token stream) ─────────────────────────────────────────
+const thoughtsOutput   = document.getElementById('thoughts-output');
+const thoughtsStatus   = document.getElementById('thoughts-status');
+const thoughtsClearBtn = document.getElementById('thoughts-clear-btn');
+let   _liveBlock       = null;   // current streaming .thought-block element
+let   _liveTextEl      = null;   // .thought-text inside the live block
+let   _liveTokens      = 0;
+let   _totalBlocks     = 0;
+
+function _thoughtsNow() {
+  const d = new Date();
+  return d.getHours().toString().padStart(2,'0') + ':' +
+         d.getMinutes().toString().padStart(2,'0') + ':' +
+         d.getSeconds().toString().padStart(2,'0');
+}
+
+function thoughtsStartBlock(author) {
+  if (author !== 'Nova') return;   // only Nova's thoughts shown here
+
+  // Dim any previous live block
+  if (_liveBlock) {
+    _liveBlock.classList.remove('live');
+    _liveBlock = null; _liveTextEl = null;
+  }
+
+  // Remove placeholder if present
+  const ph = thoughtsOutput.querySelector('.thoughts-placeholder');
+  if (ph) ph.remove();
+
+  _liveTokens = 0;
+  _totalBlocks++;
+
+  const block = document.createElement('div');
+  block.className = 'thought-block live';
+
+  const header = document.createElement('div');
+  header.className = 'thought-header';
+  header.innerHTML = `<span class="th-name">Nova</span>` +
+                     `<span class="th-time">${_thoughtsNow()}</span>` +
+                     `<span class="th-tokens" id="th-tok-${_totalBlocks}">0 tokens</span>`;
+
+  const textEl = document.createElement('div');
+  textEl.className = 'thought-text';
+
+  block.appendChild(header);
+  block.appendChild(textEl);
+  thoughtsOutput.appendChild(block);
+
+  _liveBlock  = block;
+  _liveTextEl = textEl;
+  thoughtsOutput.scrollTop = thoughtsOutput.scrollHeight;
+  if (thoughtsStatus) thoughtsStatus.textContent = '● live';
+}
+
+function thoughtsAppendToken(author, token) {
+  if (author !== 'Nova' || !_liveTextEl) return;
+  _liveTextEl.textContent += token;
+  _liveTokens++;
+  const tokEl = document.getElementById(`th-tok-${_totalBlocks}`);
+  if (tokEl) tokEl.textContent = `${_liveTokens} tok`;
+  thoughtsOutput.scrollTop = thoughtsOutput.scrollHeight;
+}
+
+function thoughtsEndBlock() {
+  if (!_liveBlock) return;
+  _liveBlock.classList.remove('live');
+  _liveBlock  = null;
+  _liveTextEl = null;
+  if (thoughtsStatus) thoughtsStatus.textContent = `${_totalBlocks} response${_totalBlocks !== 1 ? 's' : ''}`;
+}
+
+if (thoughtsClearBtn) thoughtsClearBtn.addEventListener('click', () => {
+  thoughtsOutput.innerHTML = '<div class="thoughts-placeholder">Nova\'s thoughts will stream here live…</div>';
+  _liveBlock = null; _liveTextEl = null; _liveTokens = 0; _totalBlocks = 0;
+  if (thoughtsStatus) thoughtsStatus.textContent = '';
+});
+
+// ── Sub-tab switching (Thinking / Debug) ──────────────────────────────────────
+document.querySelectorAll('.log-sub-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.log-sub-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.log-sub-pane').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const pane = document.getElementById('sub-' + tab.dataset.sub);
+    if (pane) pane.classList.add('active');
+    // Auto-load debug log file list when switching to debug
+    if (tab.dataset.sub === 'debug' && logSelect && logSelect.options.length <= 1) {
+      loadLogFileList();
+      if (!logEventSource) startLogStream('latest');
+    }
+  });
+});
+
+// ── Live Logs (Debug sub-pane) ─────────────────────────────────────────────────
 const logOutput    = document.getElementById('log-output');
 const logSelect    = document.getElementById('log-file-select');
 const logClearBtn  = document.getElementById('log-clear-btn');
@@ -2722,9 +2968,24 @@ function logClassify(line) {
   return 'log-line-info';
 }
 
+// Lines to drop from the debug log — pure noise with no signal value
+const _LOG_NOISE = [
+  /^\s*$/, // blank
+  /"type"\s*:\s*"ping"/, // heartbeat pings
+  /"type"\s*:\s*"pong"/,
+  /"type"\s*:\s*"status"/,
+  /\bGET \/(api\/nova\/status|api\/logs\/stream|static\/)\b/, // polling requests
+  /^data: \s*$/, // SSE keepalive
+  /127\.0\.0\.1.*"GET.*200"/, // routine HTTP 200 from uvicorn access log
+  /uvicorn\.access.*200/, // uvicorn access log noise
+  /"content"\s*:\s*"\s*"/, // empty content fields
+];
+
 function logAppend(raw) {
   let text = raw.startsWith('data: ') ? raw.slice(6) : raw;
   if (!text.trim()) return;
+  // Drop pure noise lines before rendering
+  if (_LOG_NOISE.some(rx => rx.test(text))) return;
 
   try {
     const obj = JSON.parse(text);
@@ -2780,11 +3041,16 @@ function startLogStream(file) {
 }
 
 
-function shouldShowLog(name, type) {
+// Today's date string for log filtering: "2026-03-28"
+const _TODAY_STR = new Date().toISOString().slice(0, 10);
+
+function shouldShowLog(name, type, modified) {
   if (name.endsWith('.gz'))           return false;
   if (name === 'sessions_index.json') return false;
   if (name.includes('export'))        return false;
   if (type === 'openclaw_cron')       return false;
+  // Only show logs from today — older ones are historical artifacts
+  if (modified && !modified.startsWith(_TODAY_STR)) return false;
   return true;
 }
 
@@ -2824,29 +3090,31 @@ async function loadLogFileList() {
     // Nova chat logs
     const r1   = await fetch('/api/logs/list');
     const d1   = await r1.json();
-    if ((d1.files||[]).length) {
+    const todayFiles1 = (d1.files||[]).filter(f => shouldShowLog(f.name, f.type, f.modified));
+    if (todayFiles1.length) {
       const grp1 = document.createElement('optgroup');
-      grp1.label = 'Nova Chat Sessions';
-      (d1.files||[]).filter(f => shouldShowLog(f.name, f.type)).forEach(f => {
+      grp1.label = "Today's Chat Sessions";
+      todayFiles1.forEach(f => {
         const opt = document.createElement('option');
         opt.value = f.path;
-        opt.textContent = `${friendlyLogLabel(f.name, f.type)}  (${f.modified})`;
+        opt.textContent = `${friendlyLogLabel(f.name, f.type)}  (${f.modified.slice(11,16)})`;
         grp1.appendChild(opt);
       });
       logSelect.appendChild(grp1);
     }
 
-    // OpenClaw agent session logs (Nova's raw thoughts)
+    // Nova agent session logs — today only
     try {
       const r2   = await fetch('/api/logs/openclaw');
       const d2   = await r2.json();
-      if ((d2.files||[]).length) {
+      const todayFiles2 = (d2.files||[]).filter(f => shouldShowLog(f.name, f.type, f.modified));
+      if (todayFiles2.length) {
         const grp2 = document.createElement('optgroup');
-        grp2.label = '🧠 Nova Agent Logs (OpenClaw)';
-        (d2.files||[]).filter(f => shouldShowLog(f.name, f.type)).forEach(f => {
+        grp2.label = 'Nova Agent Logs';
+        todayFiles2.forEach(f => {
           const opt = document.createElement('option');
           opt.value = f.path;
-          opt.textContent = `${friendlyLogLabel(f.name, f.type)}  (${f.modified})`;
+          opt.textContent = `${friendlyLogLabel(f.name, f.type)}  (${f.modified.slice(11,16)})`;
           grp2.appendChild(opt);
         });
         logSelect.appendChild(grp2);
@@ -2869,21 +3137,23 @@ logScrollBtn.addEventListener('click', () => {
   if (logAutoScroll) logOutput.scrollTop = logOutput.scrollHeight;
 });
 
-// Activate when tab is clicked
+// Activate when tab is clicked — Thoughts tab defaults to Thinking sub-pane.
+// Debug log stream only starts if user switches to Debug sub-tab.
 document.querySelectorAll('.tool-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     if (tab.dataset.pane === 'logs') {
-      loadLogFileList();
-      if (!logEventSource) startLogStream('latest');
+      // If already on debug sub-tab, refresh the list
+      const debugActive = document.querySelector('.log-sub-tab[data-sub="debug"].active');
+      if (debugActive) {
+        loadLogFileList();
+        if (!logEventSource) startLogStream('latest');
+      }
     }
   });
 });
 
-// If logs tab was the saved tab, auto-start
-if (activeToolTab === 'logs') {
-  loadLogFileList();
-  startLogStream('latest');
-}
+// If logs tab was the saved tab, stay on Thinking sub-pane (no auto log stream)
+// User can click Debug to open the file selector.
 
 
 
@@ -3242,6 +3512,27 @@ document.getElementById('dash-gw-stop').addEventListener('click', async () => {
 });
 
 // ── Health check button ───────────────────────────────────────────────────────
+// ── Re-orient Nova ────────────────────────────────────────────────────────────
+document.getElementById('dash-reinject-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('dash-reinject-btn');
+  btn.textContent = '↺ Injecting...';
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/reinject_context', { method: 'POST' });
+    const d = await r.json();
+    if (d.ok) {
+      btn.textContent = `✓ ${d.files_injected} files → Nova`;
+      // Switch to chat so Cole can see the context block land
+      switchView('chat');
+    } else {
+      btn.textContent = `✗ ${d.error || 'failed'}`;
+    }
+  } catch(e) {
+    btn.textContent = '✗ Server not running';
+  }
+  setTimeout(() => { btn.textContent = '↺ Re-orient Nova'; btn.disabled = false; }, 4000);
+});
+
 document.getElementById('dash-health-btn').addEventListener('click', async () => {
   const btn = document.getElementById('dash-health-btn');
   btn.textContent = '⊕ Running...';
