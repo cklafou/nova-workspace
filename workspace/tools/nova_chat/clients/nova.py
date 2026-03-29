@@ -116,8 +116,7 @@ async def stream_response(
             "model":    MODEL,
             "messages": [user_message],
             "stream":   True,
-            "think":    True,   # Qwen3 chain-of-thought — requires Ollama >= 0.9.0
-                                # Thinking content arrives in message.thinking (separate from chat)
+            "think":    True,   # Requires Ollama >= 0.9.0 + PARAMETER thinking true in Modelfile
         }).encode("utf-8")
 
         full_response = ""   # accumulated chat text (message.content tokens)
@@ -155,11 +154,12 @@ async def stream_response(
                                 break
                         except (json.JSONDecodeError, KeyError):
                             pass
+            except urllib.error.HTTPError as e:
+                # HTTPError is a subclass of URLError — must be caught first
+                body = e.read().decode("utf-8", errors="replace")[:300]
+                error_holder[0] = f"Ollama {e.code} {e.reason}: {body}"
             except urllib.error.URLError as e:
                 error_holder[0] = f"Ollama not reachable: {e.reason}"
-            except urllib.error.HTTPError as e:
-                body = e.read().decode("utf-8", errors="replace")[:200]
-                error_holder[0] = f"Ollama error {e.code}: {body}"
             except Exception as e:
                 error_holder[0] = f"Nova error: {e}"
 
