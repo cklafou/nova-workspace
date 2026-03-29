@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-03-29 09:25:49_
+_Last updated: 2026-03-29 15:20:15_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -125,12 +125,13 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
 | nova_advisor_refactor.py | `workspace/logs/archive/proposed_2026-03-25/nova_advisor_refactor.py` | PY file |
-| 2026-03-28_23-21-01_chat.jsonl | `workspace/logs/chat_sessions/2026-03-28_23-21-01_chat.jsonl` | JSONL file |
+| 2026-03-29_09-58-57_chat.jsonl | `workspace/logs/chat_sessions/2026-03-29_09-58-57_chat.jsonl` | JSONL file |
 | 2026-03-21_16-46-47_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-21_16-46-47_chat.jsonl` | JSONL file |
 | 2026-03-28_22-37-11_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-28_22-37-11_chat.jsonl` | JSONL file |
 | 2026-03-21_19-26-26_context_claude.md | `workspace/logs/chat_sessions/exports/2026-03-21_19-26-26_context_claude.md` | MD file |
 | 2026-03-21_19-26-26_context_gemini.md | `workspace/logs/chat_sessions/exports/2026-03-21_19-26-26_context_gemini.md` | MD file |
 | sessions_index.json | `workspace/logs/chat_sessions/sessions_index.json` | JSON file |
+| priority.md | `workspace/logs/proposed/priority.md` | MD file |
 | mentor.jsonl | `workspace/logs/sessions/2026-03-19/mentor.jsonl` | JSONL file |
 | mentor.jsonl | `workspace/logs/sessions/2026-03-20/mentor.jsonl` | JSONL file |
 | stress_test.jsonl | `workspace/logs/sessions/2026-03-20/stress_test.jsonl` | JSONL file |
@@ -154,6 +155,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | master.md | `workspace/Thoughts/Finished/completed_success/TEST_BRAIN_PROBE/master.md` | MD file |
 | priority.md | `workspace/Thoughts/priority.md` | MD file |
 | THOUGHT_TEMPLATE.md | `workspace/Thoughts/THOUGHT_TEMPLATE.md` | MD file |
+| master.md | `workspace/Thoughts/ThoughtName/master.md` | MD file |
 
 ## _admin/
 
