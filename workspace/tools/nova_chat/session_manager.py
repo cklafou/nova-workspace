@@ -216,6 +216,23 @@ class SessionManager:
         self._save_index()
         return True
 
+    def archive_session(self, session_id: str) -> bool:
+        """Move a session to logs/chat_sessions/archives/. Cannot archive active session."""
+        if session_id == self._active_id:
+            return False
+        if session_id not in self._index:
+            return False
+        archive_dir = SESSIONS_DIR / "archives"
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        # Move .jsonl or .jsonl.gz — whichever exists
+        for src in [self._jsonl_path(session_id), self._gz_path(session_id)]:
+            if src.exists():
+                dst = archive_dir / src.name
+                src.rename(dst)
+        del self._index[session_id]
+        self._save_index()
+        return True
+
     # ── Accessors ──────────────────────────────────────────────────────────────
 
     @property

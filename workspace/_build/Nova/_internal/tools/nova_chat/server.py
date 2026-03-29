@@ -401,10 +401,20 @@ async def rename_session(session_id: str, body: dict = Body(...)):
 
 @app.delete("/sessions/{session_id}")
 async def delete_session(session_id: str):
-    """Delete a session (cannot delete active)."""
+    """Delete a session permanently (cannot delete active)."""
     ok = session_mgr.delete_session(session_id)
     if not ok:
         return JSONResponse({"error": "cannot delete active session or not found"}, status_code=400)
+    await broadcast({"type": "sessions_updated", "sessions": session_mgr.get_all_meta()})
+    return JSONResponse({"ok": True})
+
+
+@app.post("/sessions/{session_id}/archive")
+async def archive_session(session_id: str):
+    """Move a session to logs/chat_sessions/archives/ (cannot archive active)."""
+    ok = session_mgr.archive_session(session_id)
+    if not ok:
+        return JSONResponse({"error": "cannot archive active session or not found"}, status_code=400)
     await broadcast({"type": "sessions_updated", "sessions": session_mgr.get_all_meta()})
     return JSONResponse({"ok": True})
 
@@ -598,24 +608,36 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     # Update workspace context based on what was mentioned in the message
     if latest_message:
         workspace.update_for_message(latest_message)
-    ws_context = workspace.build_context_block()
 
-    # Cross-session awareness: inject recent Discord activity so Nova Chat AIs
-    # know what was discussed on Discord (the missing consolidation direction).
-    discord_ctx = _build_discord_context_block()
-    if discord_ctx:
-        ws_context = discord_ctx + ws_context
+    # Nova uses a slim context block — her local model has a 32K token window.
+    # Memory files + manifest already arrive via CONTEXT REFRESH in chat history.
+    # Claude/Gemini get the full block (200K/1M token windows).
+    if ai_name == "Nova":
+        ws_context = workspace.build_nova_context_block()
+    else:
+        ws_context = workspace.build_context_block()
 
-    # 1.3 -- Silently prepend Nova's live status to workspace context (no chat message)
-    if nova_status_cache.get("summary"):
-        status_block = (
-            "\n--- NOVA LIVE STATUS (auto-injected, do not mention unless relevant) ---\n"
-            + nova_status_cache["summary"]
-            + "\n--- END NOVA STATUS ---\n"
-        )
-        ws_context = status_block + ws_context
+        # Cross-session awareness: inject recent Discord activity (Claude/Gemini only)
+        discord_ctx = _build_discord_context_block()
+        if discord_ctx:
+            ws_context = discord_ctx + ws_context
 
+        # Prepend Nova's live status for Claude/Gemini only
+        if nova_status_cache.get("summary"):
+            status_block = (
+                "\n--- NOVA LIVE STATUS (auto-injected, do not mention unless relevant) ---\n"
+                + nova_status_cache["summary"]
+                + "\n--- END NOVA STATUS ---\n"
+            )
+            ws_context = status_block + ws_context
+
+    import time as _time
+    _gen_start = _time.time()
     await broadcast({"type": "message_start", "author": ai_name, "id": msg_id})
+    # Emit generation_start so Thoughts pane can show "Nova is generating..." indicator
+    if ai_name == "Nova":
+        await broadcast({"type": "generation_start", "author": ai_name, "id": msg_id,
+                         "ts": _gen_start})
 
     _result: list[str] = []  # capture full text so we can return it
     _think_started = [False]  # tracks whether think_start has been broadcast
@@ -633,9 +655,11 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
     async def on_done(full):
         _result.append(full)
+        elapsed = round(_time.time() - _gen_start, 1)
         # Close the think block if one was opened
         if _think_started[0]:
-            await broadcast({"type": "think_end", "author": ai_name, "id": msg_id})
+            await broadcast({"type": "think_end", "author": ai_name, "id": msg_id,
+                             "elapsed": elapsed})
         msg = session_mgr.active.add(ai_name, full)
         session_mgr.update_meta_from_message(msg)
         await broadcast({"type": "message_end", "author": ai_name, "id": msg_id})
@@ -643,6 +667,27 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         _maybe_route_inbox(ai_name, full)
         # If Nova wrote action directives, forward them to her real OpenClaw agent
         if ai_name == "Nova":
+            # Scan for directives/NCL calls before processing — emit as activity events
+            import re as _re
+            _activity = []
+            for m in _re.finditer(r'\[EXEC:\s*([^\]]{1,80})\]', full, _re.IGNORECASE):
+                _activity.append(("exec",    m.group(1).strip()))
+            for m in _re.finditer(r'\[WRITE:\s*([^\]]{1,80})\]', full, _re.IGNORECASE):
+                _activity.append(("write",   m.group(1).strip()))
+            for m in _re.finditer(r'\[READ:\s*([^\]]{1,80})\]', full, _re.IGNORECASE):
+                _activity.append(("read",    m.group(1).strip()))
+            for m in _re.finditer(r'\[DISCORD:\s*([^\]]{1,80})\]', full, _re.IGNORECASE):
+                _activity.append(("discord", m.group(1).strip()))
+            for m in _re.finditer(r'@(mentor|eyes|browser|coder|memory|voice|thinkorswim)\b',
+                                   full, _re.IGNORECASE):
+                _activity.append(("ncl", f"@{m.group(1)} dispatched"))
+            for directive_type, detail in _activity:
+                await broadcast({"type": "nova_activity", "id": msg_id,
+                                 "directive": directive_type, "detail": detail})
+            # Emit generation_end with timing
+            await broadcast({"type": "generation_end", "author": ai_name, "id": msg_id,
+                             "elapsed": elapsed, "had_activity": len(_activity) > 0})
+
             bridge_results = await handle_nova_message(full)
             for result in bridge_results:
                 await broadcast({

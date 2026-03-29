@@ -116,7 +116,10 @@ async def stream_response(
             "model":    MODEL,
             "messages": [user_message],
             "stream":   True,
-            "think":    True,   # Requires Ollama >= 0.9.0 + PARAMETER thinking true in Modelfile
+            # NOTE: "think": True cannot be used with a custom Modelfile-wrapped model —
+            # Ollama only exposes thinking on the base model object, not derived "ollama create" models.
+            # Nova's SYSTEM_PREFIX instructs her to output <think>...</think> tags inline instead.
+            # The stray-tag extractor below strips them from chat and routes to the Thoughts pane.
         }).encode("utf-8")
 
         full_response = ""   # accumulated chat text (message.content tokens)
@@ -132,7 +135,7 @@ async def stream_response(
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=120) as resp:
+                with urllib.request.urlopen(req, timeout=300) as resp:  # 5 min — 30B MoE needs headroom
                     # Native /api/chat streams NDJSON — one JSON object per line, no "data:" prefix
                     for raw_line in resp:
                         line = raw_line.decode("utf-8").strip()

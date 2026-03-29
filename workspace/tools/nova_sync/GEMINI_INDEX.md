@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-03-28 23:17:48_
+_Last updated: 2026-03-29 09:25:49_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -125,6 +125,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
 | nova_advisor_refactor.py | `workspace/logs/archive/proposed_2026-03-25/nova_advisor_refactor.py` | PY file |
+| 2026-03-28_23-21-01_chat.jsonl | `workspace/logs/chat_sessions/2026-03-28_23-21-01_chat.jsonl` | JSONL file |
 | 2026-03-21_16-46-47_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-21_16-46-47_chat.jsonl` | JSONL file |
 | 2026-03-28_22-37-11_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-28_22-37-11_chat.jsonl` | JSONL file |
 | 2026-03-21_19-26-26_context_claude.md | `workspace/logs/chat_sessions/exports/2026-03-21_19-26-26_context_claude.md` | MD file |

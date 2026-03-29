@@ -45,6 +45,12 @@ ONDEMAND_FILE_MAX  = 50000  # per on-demand file -- server.py is ~23k, no file s
 DIR_INJECT_MAX     = 200000 # total chars for directory injection -- nova_chat is ~100k
 TOTAL_MAX          = 300000 # Sonnet 4.6=200k tokens, Gemini 2.5Pro=1M tokens -- use the room
 
+# Nova-specific limits — qwen3-coder:30b has num_ctx=32768 tokens.
+# We leave room for system prompt + conversation + response headroom.
+# Memory files and manifest already arrive via CONTEXT REFRESH in chat history.
+NOVA_ONDEMAND_FILE_MAX = 15000  # per on-demand file for Nova
+NOVA_TOTAL_MAX         = 30000  # total on-demand context for Nova's prompt
+
 
 # ── Workspace manifest ────────────────────────────────────────────────────────
 
@@ -396,6 +402,44 @@ class WorkspaceContext:
         parts.append("=" * 70)
         parts.append("END WORKSPACE CONTEXT")
         parts.append("=" * 70)
+
+        return "\n".join(parts)
+
+    def build_nova_context_block(self) -> str:
+        """
+        Slim context block for Nova's local qwen3-coder:30b model (32K token window).
+        Skips the manifest and memory files — those already arrive via CONTEXT REFRESH
+        in the chat history. Only injects files/dirs explicitly mentioned in the message,
+        capped at NOVA_TOTAL_MAX to avoid overflowing Nova's context window.
+        """
+        if not self._on_demand:
+            return ""
+
+        parts = []
+        total = 0
+        listings  = {k: v for k, v in self._on_demand.items() if k.startswith("__listing__/")}
+        filedata  = {k: v for k, v in self._on_demand.items() if not k.startswith("__")}
+
+        parts.append("--- FILES MENTIONED IN THIS MESSAGE ---")
+
+        for key, listing in listings.items():
+            dir_name = key.replace("__listing__/", "")
+            header = f"--- DIRECTORY: {dir_name}/ ---"
+            chunk = f"{header}\n{listing}\n"
+            if total + len(chunk) <= NOVA_TOTAL_MAX:
+                parts.append(chunk)
+                total += len(chunk)
+
+        for key, content in filedata.items():
+            header = f"--- FILE: {key} ---"
+            # Trim individual files to NOVA_ONDEMAND_FILE_MAX
+            trimmed = content[:NOVA_ONDEMAND_FILE_MAX]
+            chunk = f"{header}\n{trimmed}\n"
+            if total + len(chunk) > NOVA_TOTAL_MAX:
+                parts.append(f"{header}\n[omitted — Nova's context budget reached]\n")
+                break
+            parts.append(chunk)
+            total += len(chunk)
 
         return "\n".join(parts)
 

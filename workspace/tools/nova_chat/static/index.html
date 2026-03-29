@@ -1256,9 +1256,46 @@
     padding: 0;
     line-height: 1;
   }
-  .tab-btn:hover         { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); }
-  .tab-btn.close:hover   { background: rgba(248,113,113,0.2); color: #f87171; }
-  .tab-btn.rename:hover  { background: rgba(99,179,237,0.15); color: #63b3ed; }
+  .tab-btn:hover          { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); }
+  .tab-btn.close:hover    { background: rgba(248,113,113,0.2); color: #f87171; }
+  .tab-btn.archive:hover  { background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .tab-btn.rename:hover   { background: rgba(99,179,237,0.15); color: #63b3ed; }
+
+  /* ── Session confirm modal ─────────────────────────────────────────────── */
+  .session-confirm-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: 9000; display: flex; align-items: center; justify-content: center;
+  }
+  .session-confirm-box {
+    background: #1a2035; border: 1px solid rgba(99,179,237,0.2);
+    border-radius: 10px; padding: 24px 28px; min-width: 300px; max-width: 420px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .session-confirm-box h4 {
+    margin: 0 0 6px; font-size: 15px; font-weight: 600; color: var(--text);
+  }
+  .session-confirm-box p {
+    margin: 0 0 20px; font-size: 12px; color: var(--text-dim); line-height: 1.5;
+  }
+  .session-confirm-btns { display: flex; gap: 8px; justify-content: flex-end; }
+  .session-confirm-btns button {
+    padding: 6px 16px; border-radius: 6px; border: none;
+    font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  .session-confirm-btns .btn-cancel {
+    background: rgba(255,255,255,0.07); color: var(--text-dim);
+  }
+  .session-confirm-btns .btn-cancel:hover  { background: rgba(255,255,255,0.12); }
+  .session-confirm-btns .btn-delete {
+    background: rgba(248,113,113,0.2); color: #f87171;
+    border: 1px solid rgba(248,113,113,0.3);
+  }
+  .session-confirm-btns .btn-delete:hover  { background: rgba(248,113,113,0.35); }
+  .session-confirm-btns .btn-archive {
+    background: rgba(251,191,36,0.15); color: #fbbf24;
+    border: 1px solid rgba(251,191,36,0.25);
+  }
+  .session-confirm-btns .btn-archive:hover { background: rgba(251,191,36,0.28); }
   .tab-name[contenteditable="true"] {
     outline: none;
     background: rgba(255,255,255,0.08);
@@ -1451,8 +1488,24 @@
     color: var(--text); white-space: pre-wrap; word-break: break-word;
     font-size: 11px;
   }
+  .thought-generating { color: rgba(167,139,250,0.8) !important; font-style: italic; }
+  .thought-reasoning  { color: var(--text); }
   .thought-block:not(.live) .thought-text { color: rgba(200,212,232,0.72); }
   .thought-block:not(.live) { border-left-color: rgba(255,255,255,0.15); }
+
+  /* Activity stream — files/execs/NCL calls detected in Nova's response */
+  .thought-activity {
+    list-style: none; margin: 6px 0 0; padding: 0;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .thought-activity-item {
+    display: flex; align-items: baseline; gap: 5px;
+    font-size: 10.5px; color: rgba(200,212,232,0.65);
+  }
+  .ta-icon   { font-size: 10px; width: 12px; flex-shrink: 0; }
+  .ta-type   { color: var(--nova); opacity: 0.75; font-weight: 600;
+               font-size: 9.5px; text-transform: uppercase; flex-shrink: 0; }
+  .ta-detail { word-break: break-all; }
 
   .thoughts-footer {
     display: flex; align-items: center; justify-content: space-between;
@@ -1611,6 +1664,20 @@
     </div>
   </div>
 </header>
+
+<!-- Session confirm modal (shared for delete + archive) -->
+<div id="session-confirm-modal" style="display:none">
+  <div class="session-confirm-backdrop">
+    <div class="session-confirm-box">
+      <h4 id="session-confirm-title"></h4>
+      <p  id="session-confirm-body"></p>
+      <div class="session-confirm-btns">
+        <button class="btn-cancel" id="session-confirm-cancel">Cancel</button>
+        <button id="session-confirm-ok"></button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Session tab bar (static, always present) -->
 <div class="session-bar" id="session-bar">
@@ -1952,7 +2019,20 @@ function handleMessage(data) {
       finalizeMsg(data.id);
       break;
 
-    // ── Nova's think blocks (separate from chat tokens) ──────────────────
+    // ── Nova generation lifecycle + activity stream ───────────────────────
+    case 'generation_start':
+      thoughtsGenerationStart(data.author, data.ts);
+      break;
+
+    case 'generation_end':
+      thoughtsGenerationEnd(data.elapsed, data.had_activity);
+      break;
+
+    case 'nova_activity':
+      thoughtsActivity(data.directive, data.detail);
+      break;
+
+    // ── Nova's think blocks (model-level <think> tags, if present) ────────
     case 'think_start':
       thoughtsStartBlock(data.author);
       break;
@@ -2273,6 +2353,39 @@ if (endChatBtn) {
 const MAX_TABS = 8;
 let activeSessionId = '';
 
+// ── Session confirm modal ──────────────────────────────────────────────────────
+// sessionConfirm({ title, body, okLabel, okClass, onConfirm })
+// Shows the styled in-app modal instead of browser confirm().
+function sessionConfirm({ title, body, okLabel, okClass, onConfirm }) {
+  const modal    = document.getElementById('session-confirm-modal');
+  const titleEl  = document.getElementById('session-confirm-title');
+  const bodyEl   = document.getElementById('session-confirm-body');
+  const okBtn    = document.getElementById('session-confirm-ok');
+  const cancelBtn= document.getElementById('session-confirm-cancel');
+
+  titleEl.textContent = title;
+  bodyEl.textContent  = body;
+  okBtn.textContent   = okLabel;
+  okBtn.className     = okClass;
+  modal.style.display = 'block';
+
+  function close() {
+    modal.style.display = 'none';
+    okBtn.removeEventListener('click', handleOk);
+    cancelBtn.removeEventListener('click', close);
+  }
+  function handleOk() {
+    close();
+    onConfirm();
+  }
+
+  okBtn.addEventListener('click', handleOk);
+  cancelBtn.addEventListener('click', close);
+  // Also close on backdrop click
+  modal.querySelector('.session-confirm-backdrop')
+       .addEventListener('click', e => { if (e.target === e.currentTarget) close(); }, { once: true });
+}
+
 function renderTabs() {
   sessionBar.innerHTML = '';
   const visible  = sessions.slice(0, MAX_TABS);
@@ -2314,20 +2427,44 @@ function renderTabs() {
     renameBtn.textContent = '✎';
     renameBtn.addEventListener('click', e => { e.stopPropagation(); startRename(nameSpan, s); });
 
+    const archiveBtn = document.createElement('button');
+    archiveBtn.className = 'tab-btn archive';
+    archiveBtn.title = isActive ? 'Cannot archive active session' : 'Archive session';
+    archiveBtn.textContent = '⌛';
+    archiveBtn.style.opacity = isActive ? '0.2' : '1';
+    archiveBtn.style.cursor  = isActive ? 'not-allowed' : 'pointer';
+    archiveBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (isActive) return;
+      sessionConfirm({
+        title:       '⌛ Archive session?',
+        body:        `"${s.name}" will be moved to the archives folder. You can retrieve it from logs/chat_sessions/archives/ if needed.`,
+        okLabel:     'Archive',
+        okClass:     'btn-archive',
+        onConfirm:   () => fetch(`/sessions/${s.session_id}/archive`, { method: 'POST' })
+      });
+    });
+
     const closeBtn = document.createElement('button');
     closeBtn.className = 'tab-btn close';
-    closeBtn.title = isActive ? 'Cannot close active session' : 'Delete session';
+    closeBtn.title = isActive ? 'Cannot delete active session' : 'Delete session';
     closeBtn.textContent = '✕';
     closeBtn.style.opacity = isActive ? '0.2' : '1';
     closeBtn.style.cursor  = isActive ? 'not-allowed' : 'pointer';
     closeBtn.addEventListener('click', e => {
       e.stopPropagation();
       if (isActive) return;
-      if (!confirm(`Delete "${s.name}"?\nThis cannot be undone.`)) return;
-      fetch(`/sessions/${s.session_id}`, { method: 'DELETE' });
+      sessionConfirm({
+        title:     '🗑 Delete session?',
+        body:      `"${s.name}" will be permanently deleted. This cannot be undone.`,
+        okLabel:   'Delete',
+        okClass:   'btn-delete',
+        onConfirm: () => fetch(`/sessions/${s.session_id}`, { method: 'DELETE' })
+      });
     });
 
     actions.appendChild(renameBtn);
+    actions.appendChild(archiveBtn);
     actions.appendChild(closeBtn);
 
     nameSpan.addEventListener('dblclick', e => { e.stopPropagation(); startRename(nameSpan, s); });
@@ -2854,8 +2991,12 @@ const thoughtsStatus   = document.getElementById('thoughts-status');
 const thoughtsClearBtn = document.getElementById('thoughts-clear-btn');
 let   _liveBlock       = null;   // current streaming .thought-block element
 let   _liveTextEl      = null;   // .thought-text inside the live block
+let   _liveActivityEl  = null;   // .thought-activity list inside the live block
+let   _liveTimerEl     = null;   // elapsed timer span
 let   _liveTokens      = 0;
 let   _totalBlocks     = 0;
+let   _genTimer        = null;   // setInterval handle for elapsed timer
+let   _genStartTs      = 0;
 
 function _thoughtsNow() {
   const d = new Date();
@@ -2864,64 +3005,126 @@ function _thoughtsNow() {
          d.getSeconds().toString().padStart(2,'0');
 }
 
-function thoughtsStartBlock(author) {
-  if (author !== 'Nova') return;   // only Nova's thoughts shown here
+// ── Called immediately when Nova starts generating ────────────────────────────
+function thoughtsGenerationStart(author, ts) {
+  if (author !== 'Nova') return;
 
-  // Dim any previous live block
-  if (_liveBlock) {
-    _liveBlock.classList.remove('live');
-    _liveBlock = null; _liveTextEl = null;
-  }
+  // Seal any previous live block
+  if (_liveBlock) { _liveBlock.classList.remove('live'); }
+  if (_genTimer)  { clearInterval(_genTimer); _genTimer = null; }
 
-  // Remove placeholder if present
   const ph = thoughtsOutput.querySelector('.thoughts-placeholder');
   if (ph) ph.remove();
 
   _liveTokens = 0;
   _totalBlocks++;
+  _genStartTs = ts ? ts * 1000 : Date.now();
 
   const block = document.createElement('div');
   block.className = 'thought-block live';
 
+  // Header row
   const header = document.createElement('div');
   header.className = 'thought-header';
-  header.innerHTML = `<span class="th-name">Nova</span>` +
-                     `<span class="th-time">${_thoughtsNow()}</span>` +
-                     `<span class="th-tokens" id="th-tok-${_totalBlocks}">0 tokens</span>`;
-
-  const textEl = document.createElement('div');
-  textEl.className = 'thought-text';
-
+  const timerId = `th-timer-${_totalBlocks}`;
+  header.innerHTML =
+    `<span class="th-name">Nova</span>` +
+    `<span class="th-time">${_thoughtsNow()}</span>` +
+    `<span class="th-tokens" id="${timerId}">⏱ 0s</span>`;
   block.appendChild(header);
-  block.appendChild(textEl);
-  thoughtsOutput.appendChild(block);
 
-  _liveBlock  = block;
-  _liveTextEl = textEl;
+  // "Generating…" status line
+  const statusEl = document.createElement('div');
+  statusEl.className = 'thought-text thought-generating';
+  statusEl.textContent = '⚡ Generating…';
+  block.appendChild(statusEl);
+
+  // Activity list (fills in after response)
+  const activityEl = document.createElement('ul');
+  activityEl.className = 'thought-activity';
+  block.appendChild(activityEl);
+
+  thoughtsOutput.appendChild(block);
   thoughtsOutput.scrollTop = thoughtsOutput.scrollHeight;
-  if (thoughtsStatus) thoughtsStatus.textContent = '● live';
+
+  _liveBlock      = block;
+  _liveTextEl     = statusEl;
+  _liveActivityEl = activityEl;
+
+  // Live elapsed timer
+  _genTimer = setInterval(() => {
+    const el = document.getElementById(timerId);
+    if (!el) { clearInterval(_genTimer); return; }
+    el.textContent = `⏱ ${((Date.now() - _genStartTs) / 1000).toFixed(1)}s`;
+  }, 200);
+
+  if (thoughtsStatus) thoughtsStatus.textContent = '● generating';
+}
+
+// ── Called when a directive/NCL call is found in Nova's response ──────────────
+const _ACTIVITY_ICONS = { exec:'⚙', write:'✍', read:'📄', discord:'📡', ncl:'🔗' };
+function thoughtsActivity(directive, detail) {
+  if (!_liveActivityEl) return;
+  const li = document.createElement('li');
+  li.className = 'thought-activity-item';
+  const icon = _ACTIVITY_ICONS[directive] || '▸';
+  li.innerHTML = `<span class="ta-icon">${icon}</span>` +
+                 `<span class="ta-type">${directive}</span>` +
+                 `<span class="ta-detail">${detail}</span>`;
+  _liveActivityEl.appendChild(li);
+  thoughtsOutput.scrollTop = thoughtsOutput.scrollHeight;
+}
+
+// ── Called when Nova finishes generating ─────────────────────────────────────
+function thoughtsGenerationEnd(elapsed, hadActivity) {
+  if (_genTimer) { clearInterval(_genTimer); _genTimer = null; }
+  if (!_liveBlock) return;
+
+  // Update status line
+  if (_liveTextEl && _liveTextEl.classList.contains('thought-generating')) {
+    _liveTextEl.textContent = hadActivity
+      ? `✓ Done in ${elapsed}s — see activity below`
+      : `✓ Done in ${elapsed}s`;
+  }
+  _liveBlock.classList.remove('live');
+  _liveBlock = null; _liveTextEl = null; _liveActivityEl = null;
+
+  if (thoughtsStatus) thoughtsStatus.textContent =
+    `${_totalBlocks} response${_totalBlocks !== 1 ? 's' : ''}`;
+}
+
+// ── Model-level <think> tag support (if model outputs them) ──────────────────
+function thoughtsStartBlock(author) {
+  if (author !== 'Nova') return;
+  // If generation_start already opened a block, add a reasoning section to it
+  if (_liveBlock && _liveTextEl) {
+    _liveTextEl.textContent = '';
+    _liveTextEl.classList.remove('thought-generating');
+    _liveTextEl.classList.add('thought-reasoning');
+    return;
+  }
+  // Fallback: open a new block (shouldn't normally happen)
+  thoughtsGenerationStart(author, null);
+  if (_liveTextEl) { _liveTextEl.textContent = ''; _liveTextEl.classList.add('thought-reasoning'); }
 }
 
 function thoughtsAppendToken(author, token) {
   if (author !== 'Nova' || !_liveTextEl) return;
   _liveTextEl.textContent += token;
   _liveTokens++;
-  const tokEl = document.getElementById(`th-tok-${_totalBlocks}`);
-  if (tokEl) tokEl.textContent = `${_liveTokens} tok`;
   thoughtsOutput.scrollTop = thoughtsOutput.scrollHeight;
 }
 
 function thoughtsEndBlock() {
-  if (!_liveBlock) return;
-  _liveBlock.classList.remove('live');
-  _liveBlock  = null;
-  _liveTextEl = null;
-  if (thoughtsStatus) thoughtsStatus.textContent = `${_totalBlocks} response${_totalBlocks !== 1 ? 's' : ''}`;
+  // think_end just marks reasoning done; generation_end will close the block
+  // with timing info. Nothing to do here unless generation_end never fires.
 }
 
 if (thoughtsClearBtn) thoughtsClearBtn.addEventListener('click', () => {
+  if (_genTimer) { clearInterval(_genTimer); _genTimer = null; }
   thoughtsOutput.innerHTML = '<div class="thoughts-placeholder">Nova\'s thoughts will stream here live…</div>';
-  _liveBlock = null; _liveTextEl = null; _liveTokens = 0; _totalBlocks = 0;
+  _liveBlock = null; _liveTextEl = null; _liveActivityEl = null;
+  _liveTokens = 0; _totalBlocks = 0;
   if (thoughtsStatus) thoughtsStatus.textContent = '';
 });
 
@@ -3595,8 +3798,118 @@ if (_origPollGw) {
   };
 }
 
-// Add sessions API endpoint — served by nova_gateway sessions route or fallback to openclaw
-// (The /api/logs/nova_gateway endpoint needs to be added to server.py)
+// ═══════════════════════════════════════════════════════════════════════════════
+// CUSTOM CONTEXT MENU
+// PyWebView (WebView2) suppresses the native browser context menu.
+// This custom menu restores copy/paste/select-all via document.execCommand
+// and the Clipboard API, covering all the common right-click use cases.
+// ═══════════════════════════════════════════════════════════════════════════════
+(function initContextMenu() {
+  // ── Inject styles ──────────────────────────────────────────────────────────
+  const style = document.createElement('style');
+  style.textContent = `
+    #nova-ctx-menu {
+      position: fixed; z-index: 99999;
+      background: #1a2035; border: 1px solid rgba(99,179,237,0.25);
+      border-radius: 8px; padding: 4px 0; min-width: 160px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+      font-family: inherit; font-size: 13px;
+      user-select: none; -webkit-user-select: none;
+    }
+    #nova-ctx-menu .ctx-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 14px; color: rgba(210,225,245,0.85); cursor: pointer;
+      transition: background 0.1s;
+    }
+    #nova-ctx-menu .ctx-item:hover { background: rgba(99,179,237,0.12); color: #e2eaf8; }
+    #nova-ctx-menu .ctx-item.disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+    #nova-ctx-menu .ctx-icon { width: 14px; text-align: center; font-size: 12px; opacity: 0.7; }
+    #nova-ctx-menu .ctx-sep { height: 1px; background: rgba(99,179,237,0.12); margin: 4px 0; }
+  `;
+  document.head.appendChild(style);
+
+  // ── Build menu element ─────────────────────────────────────────────────────
+  const menu = document.createElement('div');
+  menu.id = 'nova-ctx-menu';
+  menu.style.display = 'none';
+  menu.innerHTML = `
+    <div class="ctx-item" data-action="cut">   <span class="ctx-icon">✂</span> Cut</div>
+    <div class="ctx-item" data-action="copy">  <span class="ctx-icon">⧉</span> Copy</div>
+    <div class="ctx-item" data-action="paste"> <span class="ctx-icon">📋</span> Paste</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" data-action="selall"><span class="ctx-icon">▣</span> Select All</div>
+  `;
+  document.body.appendChild(menu);
+
+  // ── Show / hide helpers ────────────────────────────────────────────────────
+  function show(x, y, target) {
+    const sel      = window.getSelection();
+    const hasSel   = sel && sel.toString().length > 0;
+    const inInput  = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+                                || target.isContentEditable);
+    const inText   = target && target.closest('.msg-content, .thought-text');
+
+    menu.querySelector('[data-action="cut"]')   .classList.toggle('disabled', !inInput || !hasSel);
+    menu.querySelector('[data-action="copy"]')  .classList.toggle('disabled', !hasSel && !inInput);
+    menu.querySelector('[data-action="paste"]') .classList.toggle('disabled', !inInput);
+    menu.querySelector('[data-action="selall"]').classList.toggle('disabled', !inInput && !inText);
+
+    menu.style.display = 'block';
+    // Keep menu inside viewport
+    const mw = menu.offsetWidth  || 160;
+    const mh = menu.offsetHeight || 160;
+    menu.style.left = (x + mw > window.innerWidth  ? x - mw : x) + 'px';
+    menu.style.top  = (y + mh > window.innerHeight ? y - mh : y) + 'px';
+  }
+
+  function hide() { menu.style.display = 'none'; }
+
+  // ── Context menu trigger ───────────────────────────────────────────────────
+  let _ctxTarget = null;
+  document.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    _ctxTarget = e.target;
+    show(e.clientX, e.clientY, e.target);
+  });
+
+  // ── Action dispatcher ──────────────────────────────────────────────────────
+  menu.addEventListener('mousedown', e => {
+    e.preventDefault(); // don't blur the active element
+    const action = e.target.closest('[data-action]')?.dataset.action;
+    if (!action) return;
+    hide();
+
+    if (action === 'cut')    { document.execCommand('cut'); }
+    if (action === 'selall') {
+      const inp = _ctxTarget?.closest('input, textarea, [contenteditable]');
+      if (inp) { inp.focus(); document.execCommand('selectAll'); }
+      else     { window.getSelection()?.selectAllChildren(
+                   _ctxTarget?.closest('.msg-content, .thought-text') || document.body); }
+    }
+    if (action === 'copy') {
+      const sel = window.getSelection()?.toString();
+      if (sel) navigator.clipboard?.writeText(sel).catch(() => document.execCommand('copy'));
+      else document.execCommand('copy');
+    }
+    if (action === 'paste') {
+      const inp = document.activeElement;
+      if (inp && (inp.tagName === 'INPUT' || inp.tagName === 'TEXTAREA' || inp.isContentEditable)) {
+        navigator.clipboard?.readText().then(txt => {
+          document.execCommand('insertText', false, txt);
+        }).catch(() => document.execCommand('paste'));
+      }
+    }
+  });
+
+  // ── Dismiss on click outside ───────────────────────────────────────────────
+  document.addEventListener('mousedown', e => {
+    if (!menu.contains(e.target)) hide();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') hide();
+  });
+  window.addEventListener('scroll', hide, true);
+})();
 
 </script>
 </body>
