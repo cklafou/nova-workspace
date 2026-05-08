@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-09 05:42:50_
+_Last updated: 2026-05-09 07:59:41_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -239,6 +239,49 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | NovaLauncher.py | `workspace/general_tools/NovaLauncher.py` | PY file |
 | restructure.py | `workspace/general_tools/restructure.py` | PY file |
 
+## nova_body/
+
+| Filename | Search Key | Description |
+|----------|-----------|-------------|
+| __init__.py | `workspace/nova_body/nova_cortex/__init__.py` | PY file |
+| agent_loop.py | `workspace/nova_body/nova_cortex/agent_loop.py` | PY file |
+| calls.md | `workspace/nova_body/nova_cortex/calls.md` | MD file |
+| checkin.py | `workspace/nova_body/nova_cortex/checkin.py` | Inter-turn message listener and session init |
+| circadian.py | `workspace/nova_body/nova_cortex/circadian.py` | PY file |
+| context_builder.py | `workspace/nova_body/nova_cortex/context_builder.py` | PY file |
+| nova_status.py | `workspace/nova_body/nova_cortex/nova_status.py` | PY file |
+| prefrontal_cortex.py | `workspace/nova_body/nova_cortex/prefrontal_cortex.py` | PY file |
+| rules.py | `workspace/nova_body/nova_cortex/rules.py` | Immutable operating directives and yield protocol |
+| vigilance.py | `workspace/nova_body/nova_cortex/vigilance.py` | PY file |
+| __init__.py | `workspace/nova_body/nova_logs/__init__.py` | PY file |
+| calls.md | `workspace/nova_body/nova_logs/calls.md` | MD file |
+| logger.py | `workspace/nova_body/nova_logs/logger.py` | Dated log folder manager |
+| Logger_Index.md | `workspace/nova_body/nova_logs/Logger_Index.md` | MD file |
+| __init__.py | `workspace/nova_body/nova_memory/__init__.py` | PY file |
+| calls.md | `workspace/nova_body/nova_memory/calls.md` | MD file |
+| goals.py | `workspace/nova_body/nova_memory/goals.py` | PY file |
+| journal.py | `workspace/nova_body/nova_memory/journal.py` | Append-only JOURNAL.md writer with sanitize() |
+| log_reader.py | `workspace/nova_body/nova_memory/log_reader.py` | Reads session logs -- summarize_today(), get_failures() |
+| session_store.py | `workspace/nova_body/nova_memory/session_store.py` | PY file |
+| state.py | `workspace/nova_body/nova_memory/state.py` | Pre-condition state checking before any action |
+| status.py | `workspace/nova_body/nova_memory/status.py` | STATUS.md proposed-changes updater |
+| __init__.py | `workspace/nova_body/nova_motor/__init__.py` | PY file |
+| calls.md | `workspace/nova_body/nova_motor/calls.md` | MD file |
+| hands.py | `workspace/nova_body/nova_motor/hands.py` | Mouse/keyboard control via pyautogui + pynput |
+| motor_cortex.py | `workspace/nova_body/nova_motor/motor_cortex.py` | PY file |
+| tool_executor.py | `workspace/nova_body/nova_motor/tool_executor.py` | PY file |
+| verify.py | `workspace/nova_body/nova_motor/verify.py` | Action verification helpers |
+| __init__.py | `workspace/nova_body/nova_perception_bak/__init__.py` | PY file |
+| calls.md | `workspace/nova_body/nova_perception_bak/calls.md` | MD file |
+| eyes.py | `workspace/nova_body/nova_perception_bak/eyes.py` | Unified vision -- pywinauto first, Claude Haiku fallback |
+| proprioception.py | `workspace/nova_body/nova_perception_bak/proprioception.py` | PY file |
+| vision.py | `workspace/nova_body/nova_perception_bak/vision.py` | Claude Haiku screen verification and description |
+| __init__.py | `workspace/nova_body/nova_senses/__init__.py` | PY file |
+| calls.md | `workspace/nova_body/nova_senses/calls.md` | MD file |
+| eyes.py | `workspace/nova_body/nova_senses/eyes.py` | Unified vision -- pywinauto first, Claude Haiku fallback |
+| proprioception.py | `workspace/nova_body/nova_senses/proprioception.py` | PY file |
+| vision.py | `workspace/nova_body/nova_senses/vision.py` | Claude Haiku screen verification and description |
+
 ## nova_memory/
 
 | Filename | Search Key | Description |
@@ -247,60 +290,6 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | embedder.py | `workspace/nova_memory/embedder.py` | PY file |
 | hippocampus.py | `workspace/nova_memory/hippocampus.py` | PY file |
 | indexer.py | `workspace/nova_memory/indexer.py` | PY file |
-
-## nova_tools/
-
-| Filename | Search Key | Description |
-|----------|-----------|-------------|
-| __init__.py | `workspace/nova_tools/nova_action_bak/__init__.py` | PY file |
-| calls.md | `workspace/nova_tools/nova_action_bak/calls.md` | MD file |
-| hands.py | `workspace/nova_tools/nova_action_bak/hands.py` | Mouse/keyboard control via pyautogui + pynput |
-| motor_cortex.py | `workspace/nova_tools/nova_action_bak/motor_cortex.py` | PY file |
-| verify.py | `workspace/nova_tools/nova_action_bak/verify.py` | Action verification helpers |
-| __init__.py | `workspace/nova_tools/nova_core_bak/__init__.py` | PY file |
-| calls.md | `workspace/nova_tools/nova_core_bak/calls.md` | MD file |
-| checkin.py | `workspace/nova_tools/nova_core_bak/checkin.py` | Inter-turn message listener and session init |
-| nova_status.py | `workspace/nova_tools/nova_core_bak/nova_status.py` | PY file |
-| prefrontal_cortex.py | `workspace/nova_tools/nova_core_bak/prefrontal_cortex.py` | PY file |
-| rules.py | `workspace/nova_tools/nova_core_bak/rules.py` | Immutable operating directives and yield protocol |
-| __init__.py | `workspace/nova_tools/nova_cortex/__init__.py` | PY file |
-| agent_loop.py | `workspace/nova_tools/nova_cortex/agent_loop.py` | PY file |
-| calls.md | `workspace/nova_tools/nova_cortex/calls.md` | MD file |
-| checkin.py | `workspace/nova_tools/nova_cortex/checkin.py` | Inter-turn message listener and session init |
-| circadian.py | `workspace/nova_tools/nova_cortex/circadian.py` | PY file |
-| context_builder.py | `workspace/nova_tools/nova_cortex/context_builder.py` | PY file |
-| nova_status.py | `workspace/nova_tools/nova_cortex/nova_status.py` | PY file |
-| prefrontal_cortex.py | `workspace/nova_tools/nova_cortex/prefrontal_cortex.py` | PY file |
-| rules.py | `workspace/nova_tools/nova_cortex/rules.py` | Immutable operating directives and yield protocol |
-| vigilance.py | `workspace/nova_tools/nova_cortex/vigilance.py` | PY file |
-| __init__.py | `workspace/nova_tools/nova_logs/__init__.py` | PY file |
-| calls.md | `workspace/nova_tools/nova_logs/calls.md` | MD file |
-| logger.py | `workspace/nova_tools/nova_logs/logger.py` | Dated log folder manager |
-| Logger_Index.md | `workspace/nova_tools/nova_logs/Logger_Index.md` | MD file |
-| __init__.py | `workspace/nova_tools/nova_memory/__init__.py` | PY file |
-| calls.md | `workspace/nova_tools/nova_memory/calls.md` | MD file |
-| goals.py | `workspace/nova_tools/nova_memory/goals.py` | PY file |
-| journal.py | `workspace/nova_tools/nova_memory/journal.py` | Append-only JOURNAL.md writer with sanitize() |
-| log_reader.py | `workspace/nova_tools/nova_memory/log_reader.py` | Reads session logs -- summarize_today(), get_failures() |
-| session_store.py | `workspace/nova_tools/nova_memory/session_store.py` | PY file |
-| state.py | `workspace/nova_tools/nova_memory/state.py` | Pre-condition state checking before any action |
-| status.py | `workspace/nova_tools/nova_memory/status.py` | STATUS.md proposed-changes updater |
-| __init__.py | `workspace/nova_tools/nova_motor/__init__.py` | PY file |
-| calls.md | `workspace/nova_tools/nova_motor/calls.md` | MD file |
-| hands.py | `workspace/nova_tools/nova_motor/hands.py` | Mouse/keyboard control via pyautogui + pynput |
-| motor_cortex.py | `workspace/nova_tools/nova_motor/motor_cortex.py` | PY file |
-| tool_executor.py | `workspace/nova_tools/nova_motor/tool_executor.py` | PY file |
-| verify.py | `workspace/nova_tools/nova_motor/verify.py` | Action verification helpers |
-| __init__.py | `workspace/nova_tools/nova_perception_bak/__init__.py` | PY file |
-| calls.md | `workspace/nova_tools/nova_perception_bak/calls.md` | MD file |
-| eyes.py | `workspace/nova_tools/nova_perception_bak/eyes.py` | Unified vision -- pywinauto first, Claude Haiku fallback |
-| proprioception.py | `workspace/nova_tools/nova_perception_bak/proprioception.py` | PY file |
-| vision.py | `workspace/nova_tools/nova_perception_bak/vision.py` | Claude Haiku screen verification and description |
-| __init__.py | `workspace/nova_tools/nova_senses/__init__.py` | PY file |
-| calls.md | `workspace/nova_tools/nova_senses/calls.md` | MD file |
-| eyes.py | `workspace/nova_tools/nova_senses/eyes.py` | Unified vision -- pywinauto first, Claude Haiku fallback |
-| proprioception.py | `workspace/nova_tools/nova_senses/proprioception.py` | PY file |
-| vision.py | `workspace/nova_tools/nova_senses/vision.py` | Claude Haiku screen verification and description |
 
 ---
 _This manifest is auto-generated on every Drive sync by nova_sync/drive.py._
