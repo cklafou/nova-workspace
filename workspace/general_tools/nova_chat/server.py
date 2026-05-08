@@ -2070,6 +2070,9 @@ async def websocket_endpoint(ws: WebSocket):
                     _c = content
                     _imgs = images or []   # images from this Cole message
 
+                    # Snapshot message count before this run so we know what's new
+                    _run_start_idx = len(session_mgr.active.messages)
+
                     async def _queued_run():
                         global is_processing
                         try:
@@ -2149,6 +2152,27 @@ async def websocket_endpoint(ws: WebSocket):
                                     "id":        _ceil_msg["id"],
                                     "timestamp": _ceil_msg["timestamp"],
                                 })
+
+                            # ── Post-run log export ───────────────────────────────────────
+                            # Write everything that happened in this run to a standalone
+                            # file so it's easy to find and read after any test.
+                            # Both autonomous and regular runs get exported — small files,
+                            # no hunting through the main session transcript.
+                            try:
+                                import json as _json
+                                from pathlib import Path as _Path
+                                _runs_dir = _Path(WORKSPACE_ROOT) / "logs" / "autonomy_runs"
+                                _runs_dir.mkdir(parents=True, exist_ok=True)
+                                _ts = __import__('datetime').datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                                _mode = "auto" if _auto_ticks > 0 else "manual"
+                                _run_path = _runs_dir / f"{_ts}_{_mode}_{_auto_ticks}ticks.jsonl"
+                                _new_msgs = session_mgr.active.messages[_run_start_idx:]
+                                with open(_run_path, "w", encoding="utf-8") as _rf:
+                                    for _m in _new_msgs:
+                                        _rf.write(_json.dumps(_m, ensure_ascii=False) + "\n")
+                                print(f"[autonomous] Run log → {_run_path.name} ({len(_new_msgs)} messages)")
+                            except Exception as _log_e:
+                                print(f"[autonomous] Run log export failed: {_log_e}")
 
                         except asyncio.CancelledError:
                             pass

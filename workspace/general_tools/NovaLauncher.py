@@ -113,11 +113,12 @@ def run_nova_chat():
 
 def run_nova_gateway():
     """
-    Start nova_gateway FastAPI server in this thread.
+    Start nova gateway FastAPI server in this thread.
     Runs in-process — no subprocess, no sys.executable recursion.
+    Imports from general_tools/gateway.py (dissolved from nova_gateway, 2026-05-08).
     """
     try:
-        from nova_gateway.gateway import app as gw_app
+        from gateway import app as gw_app
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         import uvicorn
