@@ -1,0 +1,52 @@
+{
+  "inference": {
+    "context_window": 32768,
+    "max_tokens": 16384,
+    "timeout_s": 120
+  },
+  "gateway": {
+    "port": 18790,
+    "host": "127.0.0.1",
+    "token": "nova-gateway-local"
+  },
+  "discord": {
+    "enabled": true,
+    "token": "[place token here]",
+    "allowlist": [],
+    "dm_enabled": true,
+    "allow_bots": true
+  },
+  "cron": {
+    "health_check": {
+      "enabled": true,
+      "interval_min": 30,
+      "message": "Run Thoughts cycle: read priority.md, process Master_Inbox, advance highest-priority active thought by one step. Then update priority.md if anything changed."
+    }
+  },
+  "context": {
+    "inject_files": [
+      "BOOTUP/AGENTS.md",
+      "BOOTUP/NOVA.md",
+      "BOOTUP/TOOLS.md",
+      "BOOTUP/NCL_MASTER.md",
+      "BOOTUP/UPGRADE_PROTOCOL.md",
+      "memory/STATUS.md",
+      "memory/COLE.md",
+      "Thoughts/priority.md",
+      "Thoughts/THOUGHT_TEMPLATE.md"
+    ],
+    "heartbeat_extra_files": [
+      "BOOTUP/HEARTBEAT.md"
+    ]
+  },
+  "sessions": {
+    "dir": "logs/gateway_sessions",
+    "compact_at_frac": 0.85,
+    "compact_keep_pairs": 10
+  },
+  "tools": {
+    "exec_timeout_s": 60,
+    "exec_cwd": null,
+    "read_max_bytes": 524288
+  }
+}

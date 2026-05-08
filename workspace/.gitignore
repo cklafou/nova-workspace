@@ -1,0 +1,14 @@
+﻿# Large binaries — never commit
+*.gguf
+*.dll
+*.exe
+dist/
+build/
+llama/
+models/
+git_log_output.txt
+*.log
+__pycache__/
+*.pyc
+.env
+nova_drive_token.json

@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-08T22:52:34+09:00",
+  "items": [
+    {
+      "id": "30bc6c11",
+      "status": "dismissed",
+      "event_type": "rename",
+      "detected_at": "2026-05-08T22:52:01+09:00",
+      "commit": "test1234",
+      "old_path": "nova_tools/nova_cortex/brain.py",
+      "new_path": "nova_tools/nova_cortex/prefrontal_cortex.py",
+      "confidence": 0.97,
+      "resolved_by": null,
+      "resolved_at": "2026-05-08T22:52:01+09:00",
+      "notes": "test item dismissed after verification"
+    },
+    {
+      "id": "94baca48",
+      "status": "dismissed",
+      "event_type": "rename",
+      "detected_at": "2026-05-08T22:52:14+09:00",
+      "commit": "aabb1122",
+      "old_path": "nova_tools/nova_cortex/brain.py",
+      "new_path": "nova_tools/nova_cortex/prefrontal_cortex.py",
+      "confidence": 0.97,
+      "resolved_by": null,
+      "resolved_at": "2026-05-08T22:52:15+09:00",
+      "notes": "test cleanup"
+    },
+    {
+      "id": "59729867",
+      "status": "dismissed",
+      "event_type": "delete",
+      "detected_at": "2026-05-08T22:52:14+09:00",
+      "commit": "ccdd3344",
+      "old_path": "nova_tools/nova_cortex/old_util.py",
+      "new_path": null,
+      "confidence": 0.0,
+      "resolved_by": null,
+      "resolved_at": "2026-05-08T22:52:15+09:00",
+      "notes": "test cleanup"
+    },
+    {
+      "id": "ff15720b",
+      "status": "resolved",
+      "event_type": "rename",
+      "detected_at": "2026-05-08T22:52:33+09:00",
+      "commit": "deadbeef",
+      "old_path": "nova_tools/nova_cortex/brain.py",
+      "new_path": "nova_tools/nova_cortex/prefrontal_cortex.py",
+      "confidence": 0.97,
+      "resolved_by": "restructure.py --rename nova_cortex.brain=nova_cortex.prefrontal_cortex --all",
+      "resolved_at": "2026-05-08T22:52:34+09:00",
+      "notes": "detected by git diff -M80"
+    }
+  ]
+}

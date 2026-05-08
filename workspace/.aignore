@@ -1,0 +1,17 @@
+# .aignore — Paths excluded from AI file indexes, backups, and Drive sync.
+# Parsed by watcher.py, backup.py, and drive.py on startup.
+# Format: one path per line. Lines starting with # are comments.
+# Prefix with workspace/ to target a specific subpath, or just a folder name
+# to exclude it anywhere it appears in the tree.
+
+# ── MODEL WEIGHTS ─────────────────────────────────────────────────────────────
+# CRITICAL: Never index, read, or sync model weight files.
+# The GGUF alone is 18GB — reading it will exhaust any AI's context window
+# and blow out Google Drive storage. These files are loaded directly by
+# ExLlamaV2 and HuggingFace at runtime; no AI tool needs to see them.
+models
+
+# ── LARGE BINARY / GENERATED DIRS ─────────────────────────────────────────────
+screenshots
+backups
+__pycache__
