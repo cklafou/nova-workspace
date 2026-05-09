@@ -139,7 +139,7 @@ _nova_temperature:  float = 0.7    # adjustable via set_params WS message
 _nova_top_p:        float = 0.9
 
 # ── Mute state per agent ──────────────────────────────────────────────────────
-_mute_states: dict = {"Nova": False, "Claude": False, "Gemini": False}
+_mute_states: dict = {"Nova": False, "Claude": True, "Gemini": True}
 
 # ── Active model per agent (runtime-switchable) ───────────────────────────────
 _active_models: dict = {"Claude": claude_client.MODEL, "Gemini": gemini_client.MODEL}
@@ -1885,7 +1885,7 @@ async def shutdown_endpoint():
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
-    global is_processing, autonomous_mode  # declared once at top
+    global is_processing, autonomous_mode, _mute_states  # declared once at top
     await ws.accept()
     connected_clients.append(ws)
 
@@ -2027,7 +2027,6 @@ async def websocket_endpoint(ws: WebSocket):
                 continue
 
             if data.get("type") == "mute_agent":
-                global _mute_states
                 agent  = data.get("agent", "")
                 muted  = bool(data.get("muted", True))
                 if agent in _mute_states:
