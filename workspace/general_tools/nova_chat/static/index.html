@@ -498,7 +498,7 @@ a:hover { text-decoration: underline; }
 /* ═══════════════════════════════════════════════
    INPUT AREA
 ═══════════════════════════════════════════════ */
-#input-area { padding: 7px 16px 11px; background: linear-gradient(to top, var(--bg) 52%, transparent); flex-shrink: 0; }
+#input-area { padding: 7px 16px 11px; background: linear-gradient(to top, var(--bg) 52%, transparent); flex-shrink: 0; position: relative; }
 .input-box { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: border-color var(--t), box-shadow var(--t); overflow: hidden; }
 .input-box:focus-within { border-color: var(--border-hi); box-shadow: 0 0 0 3px rgba(143,144,255,0.07); }
 .input-row { display: flex; align-items: flex-end; padding: 8px 10px; gap: 7px; }
@@ -755,7 +755,6 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 /* ═══════════════════════════════════════════════
    @FILE PICKER (Phase 8)
 ═══════════════════════════════════════════════ */
-#input-area { position: relative; }
 #at-picker {
   position: absolute; bottom: 100%; left: 14px; right: 14px; margin-bottom: 4px;
   background: var(--bg-raised); border: 1px solid var(--border-med);
@@ -895,7 +894,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <button class="dd-mute-btn" id="da-mute-gemini" onclick="toggleMute('Gemini')">Mute</button>
   </div>
   <div class="dd-sep"></div>
-  <div class="dd-item" onclick="ws&&ws.send(JSON.stringify({type:'autonomous_toggle',enabled:!autonomousMode}))"><span class="dd-icon" id="auto-dd-icon">○</span><span class="dd-label" id="auto-dd-label">Enable Autonomous Mode</span></div>
+  <div class="dd-item" onclick="clickAutoToggle();closeDD()"><span class="dd-icon" id="auto-dd-icon">○</span><span class="dd-label" id="auto-dd-label">Autonomous: OFF</span></div>
 </div>
 
 <!-- Services -->
@@ -1297,8 +1296,9 @@ function connect() {
   ws.onclose = () => { setSbStatus('Reconnecting…','var(--red)'); setConnDot(false); setProcessing(false); setTimeout(connect,3000); };
   ws.onerror = () => setSbStatus('Error','var(--red)');
   ws.onmessage = e => { try { handle(JSON.parse(e.data)); } catch(_){} };
-  setInterval(() => ws?.readyState===1 && ws.send(JSON.stringify({type:'ping'})), 10000);
 }
+// Single ping interval — lives outside connect() so reconnects don't stack intervals
+setInterval(() => ws?.readyState===1 && ws.send(JSON.stringify({type:'ping'})), 10000);
 
 function setConnDot(on) {
   const d = document.getElementById('conn-dot');
@@ -1316,7 +1316,7 @@ function handle(d) {
     case 'sessions_init':   onSessionsInit(d); break;
     case 'session_switched':onSessionSwitch(d); break;
     case 'sessions_updated':sessions=d.sessions||sessions; renderTabs(); renderSidebar(); break;
-    case 'history':         appendMsg(d.author, d.content, d.id, d.images); break;
+    case 'history':         appendMsg(d.author, d.content, d.id, d.images, d.timestamp); break;
     case 'user_message':    appendMsg(d.author, d.content, d.id, d.images); break;
     case 'message_start':   showTyping(d.author); break;
     case 'token':           appendToken(d.author, d.id, d.token); break;
@@ -1368,8 +1368,13 @@ function onSessionSwitch(d) {
   renderTabs(); renderSidebar();
   resetCtxChars();
   document.getElementById('chat').innerHTML = '';
+  // Clear streaming state so stale DOM refs from previous session don't linger
+  Object.keys(streamBufs).forEach(k => delete streamBufs[k]);
+  // Clear @file chips — they shouldn't carry over to a different session
+  _mentionedFiles = []; renderFileChips();
+  pendingImages = []; document.getElementById('pending-images').innerHTML = '';
   const hist = d.history||[];
-  hist.forEach(m=>appendMsg(m.author,m.content,m.id));
+  hist.forEach(m=>appendMsg(m.author,m.content,m.id,m.images,m.timestamp));
   // Count only non-heartbeat visible messages for the status line
   const visible = hist.filter(m=>!/^\[HEARTBEAT\s+\d+\]/i.test((m.content||'').trim())).length;
   if(visible > 0) sysMsg(`Resumed · ${visible} message${visible===1?'':'s'}`);
@@ -1386,7 +1391,9 @@ function renderTabs() {
   sessions.slice().reverse().forEach(s=>{
     const t = document.createElement('div');
     t.className = 'stab'+(s.session_id===activeId?' active':'');
-    t.innerHTML = `<span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name||'Session')}</span><span class="stab-x" onclick="event.stopPropagation();confirmDelete(${JSON.stringify(s)})">✕</span>`;
+    t.innerHTML = `<span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name||'Session')}</span><span class="stab-x">✕</span>`;
+    // Use event listeners to avoid JSON.stringify-in-HTML-attribute fragility
+    t.querySelector('.stab-x').addEventListener('click', e=>{ e.stopPropagation(); confirmDelete(s); });
     t.addEventListener('click', ()=>{ if(s.session_id!==activeId) switchSession(s.session_id); });
     t.addEventListener('dblclick', e=>{ e.stopPropagation(); openRenameModal(s); });
     bar.insertBefore(t, add);
@@ -1408,11 +1415,15 @@ function renderSidebar() {
   filtered.forEach(s=>{
     const el = document.createElement('div');
     el.className='session-item'+(s.session_id===activeId?' active':'');
-    const sj = JSON.stringify(s);
     el.innerHTML=
       `<span class="s-dot"></span>`+
-      `<span class="s-name" ondblclick="event.stopPropagation();inlineRename(this,${sj})" title="${esc(s.name||'Session')}">${esc(s.name||'Session')}</span>`+
-      `<button class="s-ellipsis" title="Options" onclick="event.stopPropagation();openCtxMenuAt(this,${sj})">···</button>`;
+      `<span class="s-name" title="${esc(s.name||'Session')}">${esc(s.name||'Session')}</span>`+
+      `<button class="s-ellipsis" title="Options">···</button>`;
+    // Use event listeners — avoids JSON.stringify-in-HTML-attribute issues with special chars
+    const nameEl = el.querySelector('.s-name');
+    const ellipsisBtn = el.querySelector('.s-ellipsis');
+    nameEl.addEventListener('dblclick', e=>{ e.stopPropagation(); inlineRename(nameEl, s); });
+    ellipsisBtn.addEventListener('click', e=>{ e.stopPropagation(); openCtxMenuAt(ellipsisBtn, s); });
     el.addEventListener('click',()=>{ if(s.session_id!==activeId) switchSession(s.session_id); });
     el.addEventListener('contextmenu',e=>{ e.preventDefault(); openCtxMenu(e,s); });
     list.appendChild(el);
@@ -1442,7 +1453,7 @@ function openRenameModal(s) {
 function doRename(sessionId, name) {
   fetch(`/sessions/rename/${sessionId}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})})
     .then(()=>{const s=sessions.find(x=>x.session_id===sessionId);if(s)s.name=name;renderTabs();renderSidebar();toast('Renamed');})
-    .catch(()=>{const s=sessions.find(x=>x.session_id===sessionId);if(s){s.name=name;renderTabs();renderSidebar();}toast('Renamed');});
+    .catch(()=>toast('Rename failed'));
 }
 function confirmDelete(s) {
   _ctxSess=s; _modalMode='delete';
@@ -1553,13 +1564,15 @@ function modalOk() {
 /* ══════════════════════════════════════════════════
    CHAT RENDERING
 ══════════════════════════════════════════════════ */
-function appendMsg(author, content, id, images) {
+function appendMsg(author, content, id, images, serverTs) {
   // Suppress heartbeat noise — Nova's autonomous loop emits [HEARTBEAT N] system messages
   if (/^\[HEARTBEAT\s+\d+\]/i.test((content||'').trim())) return;
   const m=AUTHOR[author]||{cls:'',av:(author||'?')[0]};
   const w=document.createElement('div');
   w.className=`msg-wrap ${m.cls}`; if(id) w.id=`msg-${id}`;
-  const ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  // Use server-provided timestamp for history messages; fall back to now for live messages
+  const tsDate = serverTs ? new Date(serverTs) : new Date();
+  const ts = tsDate.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   w.innerHTML=`<div class="msg-avatar">${m.av}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span><button class="msg-copy" onclick="copyMsgText(this)" title="Copy message">📋</button></div><div class="msg-text">${renderMD(content)}</div></div>`;
   if(images?.length){const strip=document.createElement('div');strip.className='image-strip';images.forEach(img=>{const el=document.createElement('img');el.className='image-thumb';el.src=img.dataUrl||img;el.onclick=()=>openLB(el.src);strip.appendChild(el);});w.querySelector('.msg-body').appendChild(strip);}
   document.getElementById('chat').appendChild(w); scrollBot();
@@ -1569,7 +1582,7 @@ function startStream(author, id) {
   const w=document.createElement('div');
   w.className=`msg-wrap ${m.cls}`; w.id=`msg-${id}`;
   const ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  w.innerHTML=`<div class="msg-avatar">${m.av}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span><button class="msg-copy" onclick="copyMsgText(this)" title="Copy message">📋</button></div><div class="msg-text"><span class="st"></span><span class="cursor"></span></div><div class="think-block" style="display:none"><div class="think-header" onclick="this.parentElement.classList.toggle('open')"><span class="think-chevron">▶</span><span class="think-label" style="color:var(--text-mute);font-size:10px">Thinking…</span></div><div class="think-body"></div></div></div>`;
+  w.innerHTML=`<div class="msg-avatar">${m.av}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span><button class="msg-copy" onclick="copyMsgText(this)" title="Copy message">📋</button></div><div class="msg-text"><span class="st"></span><span class="cursor"></span></div><div class="think-block" style="display:none"><div class="think-header" onclick="this.parentElement.classList.toggle('open')"><span class="think-chevron">▶</span><span class="think-label" style="color:var(--text-dim);font-size:10px">Thinking…</span></div><div class="think-body"></div></div></div>`;
   document.getElementById('chat').appendChild(w);
   streamBufs[id]={w,st:w.querySelector('.st'),tb:w.querySelector('.think-body'),tk:w.querySelector('.think-block'),tl:w.querySelector('.think-label'),text:'',think:''};
   scrollBot();
@@ -1768,7 +1781,7 @@ async function pollServices() {
   const chatOn = ws?.readyState===1;
   document.getElementById('srv-dot-chat').classList.toggle('online', chatOn);
   document.getElementById('srv-status-chat').textContent = chatOn ? 'Running' : 'Stopped';
-  // Gateway — hidden normally; only surface if nova is up but gateway is down
+  // Gateway — one fetch updates both the service panel row and the status bar dot
   try {
     const r=await fetch('/api/gateway/status');
     if(r.ok){
@@ -1777,16 +1790,13 @@ async function pollServices() {
       document.getElementById('srv-status-gateway').textContent=gwOn?'Running':'Stopped';
       // Show gateway row only when it's offline (to alert the user), otherwise hide
       document.getElementById('srv-row-gateway').style.display = (!gwOn && chatOn) ? '' : 'none';
+      document.getElementById('sb-dot-gateway')?.classList.toggle('online',gwOn);
     }
   } catch(_) {
     document.getElementById('srv-status-gateway').textContent='Stopped';
     document.getElementById('srv-row-gateway').style.display = chatOn ? '' : 'none';
+    document.getElementById('sb-dot-gateway')?.classList.remove('online');
   }
-  // Gateway status bar dot
-  try {
-    const r=await fetch('/api/gateway/status');
-    if(r.ok){ const d=await r.json(); const gwOn=d.running; document.getElementById('sb-dot-gateway')?.classList.toggle('online',gwOn); }
-  } catch(_) { document.getElementById('sb-dot-gateway')?.classList.remove('online'); }
   // llama.cpp — check via nova_chat server endpoint (port 8765)
   try {
     const r=await fetch('/api/llama/status');
@@ -1980,7 +1990,6 @@ function setProcessing(on){
     btn.onclick=sendMsg; btn.disabled=false;
     // Phase 9: clear all thought cards when processing ends
     _activeCards={};
-    Object.values(_cardTimers).forEach(clearInterval); _cardTimers={};
     clearInterval(_cardRefreshTimer); _cardRefreshTimer=null;
     const bar=document.getElementById('thought-cards-bar');
     if(bar){bar.style.display='none'; bar.innerHTML='';}
@@ -2006,9 +2015,12 @@ function setAutonomous(on){
 }
 function onDepth(val){
   const v=parseInt(val)||0;
-  document.getElementById('depth-val').textContent=v===0?'auto':v.toLocaleString();
-  document.getElementById('sv-depth').textContent=v===0?'auto':v.toLocaleString();
+  const label=v===0?'auto':v.toLocaleString();
+  document.getElementById('depth-val').textContent=label;
+  document.getElementById('sv-depth').textContent=label;
+  // Keep both sliders (input bar + Advanced dropdown) in sync
   document.getElementById('depth-slider').value=v;
+  document.getElementById('s-depth').value=v;
   ws?.readyState===1&&ws.send(JSON.stringify({type:'set_depth',max_tokens:v}));
 }
 function sendParams(){
@@ -2154,6 +2166,7 @@ document.addEventListener('keydown', e=>{
 function renderMD(text) {
   if(!text) return '';
   const blocks=[];
+  // Store fenced code blocks — content already escaped before injection
   text=text.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,lang,code)=>{
     const i=blocks.length;
     const label=lang||'text';
@@ -2165,9 +2178,12 @@ function renderMD(text) {
     );
     return `\x00B${i}\x00`;
   });
-  text=text.replace(/`([^`\n]+)`/g,(_,c)=>`\x00I${escRaw(c)}\x00`);
+  // Store inline code by index — escape only once when restoring, NOT before escRaw(text)
+  const inlines=[];
+  text=text.replace(/`([^`\n]+)`/g,(_,c)=>{ inlines.push(c); return `\x00I${inlines.length-1}\x00`; });
   text=escRaw(text);
-  text=text.replace(/\x00I([\s\S]*?)\x00/g,(_,c)=>`<code>${c}</code>`);
+  // Restore inline code with a single escRaw pass
+  text=text.replace(/\x00I(\d+)\x00/g,(_,i)=>`<code>${escRaw(inlines[+i]||'')}</code>`);
   text=text.replace(/^### (.*)/gm,'<h3>$1</h3>').replace(/^## (.*)/gm,'<h2>$1</h2>').replace(/^# (.*)/gm,'<h1>$1</h1>');
   text=text.replace(/\*\*\*([^*]+)\*\*\*/g,'<strong><em>$1</em></strong>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
   text=text.replace(/^&gt; (.+)/gm,'<blockquote>$1</blockquote>');
@@ -2399,14 +2415,12 @@ document.addEventListener('click', e=>{ if(!e.target.closest('#at-picker')&&!e.t
    PHASE 9 — LIVE THOUGHT CARDS ABOVE INPUT
 ══════════════════════════════════════════════════ */
 let _activeCards = {};    // id → {name, start}
-let _cardTimers  = {};    // setInterval timers for elapsed time
 
 function updateInlineThoughtCard(d) {
   const bar = document.getElementById('thought-cards-bar');
   if(!bar) return;
   if(d.action==='remove'||d.status==='done'||d.status==='completed'||d.action==='done') {
     delete _activeCards[d.id];
-    clearInterval(_cardTimers[d.id]); delete _cardTimers[d.id];
   } else if(d.action==='in_progress'||d.action==='start'||d.status==='active') {
     if(!_activeCards[d.id]) _activeCards[d.id]={name:d.name||d.id||'Working…',start:Date.now()};
     else _activeCards[d.id].name = d.name||_activeCards[d.id].name;
@@ -2435,9 +2449,6 @@ function renderThoughtCards() {
 }
 let _cardRefreshTimer = null;
 
-// Also hook into processing_end to clear all cards when Nova finishes
-const _orig_setProcessing = setProcessing;
-
 /* ══════════════════════════════════════════════════
    PHASE 10 — TERMINAL OUTPUT
 ══════════════════════════════════════════════════ */
@@ -2451,6 +2462,8 @@ function appendTerminalLine(line) {
   if(line.includes('✓')){ d.style.color='var(--green)'; }
   else if(line.includes('✗')){ d.style.color='var(--red)'; }
   t.appendChild(d);
+  // Trim to 500 lines to prevent unbounded DOM growth in long sessions
+  while(t.children.length > 500) t.removeChild(t.firstChild);
   if(document.getElementById('term-follow')?.checked) t.scrollTop = t.scrollHeight;
   // Auto-switch to terminal tab if hidden and this is an exec result
   if(line.startsWith('[bridge]') && document.querySelector('.ptab[data-tab="terminal"]:not(.active)')) {
@@ -2497,6 +2510,7 @@ function appendTerminalLine(line) {
 ══════════════════════════════════════════════════ */
 connect();
 setAutonomous(true);
+updateModelPill();  // initialize pill dot color and dropdown checkmarks
 
 // Init resize handles — use getBoundingClientRect() for accurate rendered width
 // Only set style.width directly; no CSS variable updates to avoid style-calc conflicts
