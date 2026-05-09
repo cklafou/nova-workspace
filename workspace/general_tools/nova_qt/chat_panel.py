@@ -60,14 +60,15 @@ class ThinkingBlock(QWidget):
         self._toggle_btn.setStyleSheet(f"""
             QPushButton {{
                 text-align: left;
-                color: #7070bb;
+                color: #6868aa;
                 font-size: 11px;
                 font-style: italic;
-                padding: 1px 0;
+                padding: 2px 0;
                 border: none;
                 background: transparent;
+                letter-spacing: 0.01em;
             }}
-            QPushButton:hover {{ color: #9090dd; text-decoration: underline; }}
+            QPushButton:hover {{ color: #9090cc; }}
         """)
         self._toggle_btn.clicked.connect(self._on_toggle)
         lay.addWidget(self._toggle_btn)
@@ -170,32 +171,50 @@ class MessageWidget(QWidget):
         color = md.role_color(role)
         initial = role[0].upper() if role else "?"
 
+        # Subtle card background per role
+        if role == "Cole":
+            card_bg  = "rgba(226,234,248,0.04)"
+            card_border = "rgba(226,234,248,0.08)"
+        elif role == "Nova":
+            card_bg  = f"rgba(143,144,255,0.05)"
+            card_border = f"rgba(143,144,255,0.12)"
+        else:
+            card_bg  = "transparent"
+            card_border = "transparent"
+
+        self.setStyleSheet(f"""
+            MessageWidget {{
+                background: {card_bg};
+                border-bottom: 1px solid {card_border};
+            }}
+        """)
+
         outer = QHBoxLayout(self)
-        outer.setContentsMargins(12, 6, 12, 6)
-        outer.setSpacing(12)
+        outer.setContentsMargins(16, 10, 16, 10)
+        outer.setSpacing(14)
         outer.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # Avatar circle
         avatar = QLabel(initial)
-        avatar.setFixedSize(32, 32)
+        avatar.setFixedSize(34, 34)
         avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         avatar.setStyleSheet(f"""
             QLabel {{
-                background: {color}22;
+                background: {color}1e;
                 color: {color};
-                border: 1px solid {color}55;
-                border-radius: 16px;
-                font-size: 12px;
+                border: 1px solid {color}44;
+                border-radius: 17px;
+                font-size: 13px;
                 font-weight: 700;
             }}
         """)
 
         # Content column
         col = QVBoxLayout()
-        col.setSpacing(2)
+        col.setSpacing(3)
         col.setContentsMargins(0, 0, 0, 0)
 
-        header = QLabel(f'<span style="color:{color};font-weight:600">{role}</span>')
+        header = QLabel(f'<span style="color:{color};font-weight:600;font-size:12px">{role}</span>')
         header.setTextFormat(Qt.TextFormat.RichText)
 
         self.body = QTextBrowser()
@@ -205,7 +224,7 @@ class MessageWidget(QWidget):
         self.body.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.body.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.body.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        self.body.setStyleSheet("background: transparent; color: #f0f0f0;")
+        self.body.setStyleSheet("background: transparent; color: #e8e8f0; font-size: 13px; line-height: 1.5;")
 
         # Forward resize events from the body so parent can recalculate
         self.body.resizeEvent = self._body_resized

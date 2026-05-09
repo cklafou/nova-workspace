@@ -64,7 +64,14 @@ class NovaWindow(QMainWindow):
 
     # ── Dockable panels ────────────────────────────────────────────────────────
     def _build_docks(self):
-        """Create one QDockWidget per tool panel; default-stack them on the left."""
+        """
+        Layout:
+          RIGHT (visible by default): Thoughts, Monitor
+          LEFT  (hidden by default):  Files, Terminal, Status, Eyes
+
+        Thoughts is the primary panel — always shown on the right.
+        Use View menu to toggle any panel.
+        """
         self.files_pane    = FileTreePane()
         self.terminal_pane = TerminalPane()
         self.status_pane   = StatusPane()
@@ -74,38 +81,58 @@ class NovaWindow(QMainWindow):
 
         self._docks: dict[str, QDockWidget] = {}
 
-        specs = [
-            ("files",    "📁 Files",     self.files_pane),
-            ("terminal", "⬛ Terminal",  self.terminal_pane),
-            ("status",   "◈ Status",     self.status_pane),
-            ("thoughts", "🧠 Thoughts",  self.thoughts_pane),
-            ("eyes",     "👁 Eyes",      self.eyes_pane),
-            ("monitor",  "📊 Monitor",   self.monitor_pane),
-        ]
+        FEATURES = (
+            QDockWidget.DockWidgetFeature.DockWidgetMovable   |
+            QDockWidget.DockWidgetFeature.DockWidgetFloatable |
+            QDockWidget.DockWidgetFeature.DockWidgetClosable
+        )
 
-        first_dock = None
-        for key, title, pane in specs:
+        # Right-side panels (default visible)
+        right_specs = [
+            ("thoughts", "🧠  Thoughts",  self.thoughts_pane),
+            ("monitor",  "📊  Monitor",   self.monitor_pane),
+        ]
+        first_right = None
+        for key, title, pane in right_specs:
+            dock = QDockWidget(title, self)
+            dock.setObjectName(f"dock_{key}")
+            dock.setWidget(pane)
+            dock.setMinimumWidth(260)
+            dock.setMinimumHeight(120)
+            dock.setFeatures(FEATURES)
+            self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
+            if first_right:
+                self.tabifyDockWidget(first_right, dock)
+            else:
+                first_right = dock
+            self._docks[key] = dock
+
+        # Left-side panels (hidden by default — open from View menu)
+        left_specs = [
+            ("files",    "📁  Files",     self.files_pane),
+            ("terminal", "⬛  Terminal",  self.terminal_pane),
+            ("status",   "◈  Status",     self.status_pane),
+            ("eyes",     "👁  Eyes",      self.eyes_pane),
+        ]
+        first_left = None
+        for key, title, pane in left_specs:
             dock = QDockWidget(title, self)
             dock.setObjectName(f"dock_{key}")
             dock.setWidget(pane)
             dock.setMinimumWidth(220)
             dock.setMinimumHeight(120)
-            # Allow all dock features: float, move, close, resize
-            dock.setFeatures(
-                QDockWidget.DockWidgetFeature.DockWidgetMovable   |
-                QDockWidget.DockWidgetFeature.DockWidgetFloatable |
-                QDockWidget.DockWidgetFeature.DockWidgetClosable
-            )
+            dock.setFeatures(FEATURES)
             self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
-            if first_dock:
-                self.tabifyDockWidget(first_dock, dock)
+            if first_left:
+                self.tabifyDockWidget(first_left, dock)
             else:
-                first_dock = dock
+                first_left = dock
             self._docks[key] = dock
+            dock.hide()   # hidden by default
 
-        # Show Files tab by default
-        self._docks["files"].raise_()
-        self._docks["files"].show()
+        # Thoughts front and center on the right
+        self._docks["thoughts"].raise_()
+        self._docks["thoughts"].show()
 
         # Wire file selection to chat input
         self.files_pane.file_selected.connect(self._on_file_selected)
@@ -145,11 +172,12 @@ class NovaWindow(QMainWindow):
             view_menu.addAction(dock.toggleViewAction())
         view_menu.addSeparator()
         # Quick-raise shortcuts
+        view_menu.addAction(self._action("Show Thoughts", lambda: self._raise_dock("thoughts")))
+        view_menu.addAction(self._action("Show Monitor",  lambda: self._raise_dock("monitor")))
+        view_menu.addSeparator()
         view_menu.addAction(self._action("Show Files",    lambda: self._raise_dock("files")))
         view_menu.addAction(self._action("Show Terminal", lambda: self._raise_dock("terminal")))
-        view_menu.addAction(self._action("Show Thoughts", lambda: self._raise_dock("thoughts")))
         view_menu.addAction(self._action("Show Eyes",     lambda: self._raise_dock("eyes")))
-        view_menu.addAction(self._action("Show Monitor",  lambda: self._raise_dock("monitor")))
 
         # Tools menu
         tools_menu = mb.addMenu("Tools")
@@ -299,10 +327,13 @@ class NovaWindow(QMainWindow):
         QShortcut(QKeySequence("Ctrl+,"),  self, self._open_settings)
 
     # ── Layout save / restore ──────────────────────────────────────────────────
+    # Settings key version — bump this to discard old saved layouts
+    _SETTINGS_VERSION = "v2"
+
     def _restore_layout(self):
         settings = QSettings("ProjectNova", "NovaQt")
-        geometry = settings.value("geometry")
-        state    = settings.value("windowState")
+        geometry = settings.value(f"geometry_{self._SETTINGS_VERSION}")
+        state    = settings.value(f"windowState_{self._SETTINGS_VERSION}")
         if geometry:
             self.restoreGeometry(geometry)
         if state:
@@ -310,26 +341,40 @@ class NovaWindow(QMainWindow):
 
     def _save_layout(self):
         settings = QSettings("ProjectNova", "NovaQt")
-        settings.setValue("geometry",    self.saveGeometry())
-        settings.setValue("windowState", self.saveState())
+        settings.setValue(f"geometry_{self._SETTINGS_VERSION}",    self.saveGeometry())
+        settings.setValue(f"windowState_{self._SETTINGS_VERSION}", self.saveState())
 
     def _reset_layout(self):
-        """Re-dock all panels to the left and re-tabify them."""
-        # Remove all docks from their current areas first
-        specs = ["files", "terminal", "status", "thoughts", "eyes", "monitor"]
-        docks = [self._docks[k] for k in specs]
-        for dock in docks:
-            self.removeDockWidget(dock)
-        first = None
-        for dock in docks:
+        """Reset to default: Thoughts+Monitor on right, everything else hidden."""
+        for key in self._docks:
+            self.removeDockWidget(self._docks[key])
+
+        right_keys = ["thoughts", "monitor"]
+        left_keys  = ["files", "terminal", "status", "eyes"]
+
+        first_right = None
+        for key in right_keys:
+            dock = self._docks[key]
             dock.setFloating(False)
             dock.setVisible(True)
-            self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
-            if first:
-                self.tabifyDockWidget(first, dock)
+            self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
+            if first_right:
+                self.tabifyDockWidget(first_right, dock)
             else:
-                first = dock
-        self._docks["files"].raise_()
+                first_right = dock
+
+        first_left = None
+        for key in left_keys:
+            dock = self._docks[key]
+            dock.setFloating(False)
+            self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
+            if first_left:
+                self.tabifyDockWidget(first_left, dock)
+            else:
+                first_left = dock
+            dock.hide()
+
+        self._docks["thoughts"].raise_()
 
     # ── WebSocket connection state ─────────────────────────────────────────────
     def _on_ws_connected(self):

@@ -7,7 +7,14 @@ Usage (dev, no rebuild):
     python -m nova_qt.main   (from workspace/)
 
 The server (FastAPI + WS on port 8765) is started by NovaLauncher.py
-before this function is called. main() just opens the Qt window.
+before this function is called. main() just opens the window.
+
+Window rendering priority:
+  1. pywebview  — uses Windows Edge WebView2 (built into Win10/11, no install).
+                  Renders index.html at full CSS/JS quality. Best option.
+  2. QWebEngineView — Chromium inside Qt. Requires PyQt6-WebEngine.
+  3. Qt widgets — native fallback, no external deps but limited visual quality.
+  4. System browser — last resort if PyQt6 is missing entirely.
 """
 import sys
 import os
@@ -18,47 +25,105 @@ _general = os.path.dirname(_here)
 if _general not in sys.path:
     sys.path.insert(0, _general)
 
+CHAT_URL = "http://127.0.0.1:8765"
+
 
 def run_qt_window():
     """
-    Launch the Nova Qt main window. Blocks until the window is closed.
+    Launch the Nova window. Blocks until closed.
     Called by NovaLauncher.py after servers are ready.
     """
+
+    # ── 1. pywebview — Edge WebView2, built into Win10/11 ────────────────────
+    try:
+        import webview
+
+        print("[nova_qt] Using pywebview (Edge WebView2) — full HTML UI active.")
+
+        window = webview.create_window(
+            title            = "Project Nova",
+            url              = CHAT_URL,
+            width            = 1440,
+            height           = 920,
+            min_size         = (960, 640),
+            background_color = "#080810",
+            text_select      = True,
+        )
+
+        # On window close, shut down the nova_chat server
+        def _on_closed():
+            try:
+                import requests as _req
+                _req.post("http://127.0.0.1:8765/shutdown", timeout=2)
+            except Exception:
+                pass
+
+        window.events.closed += _on_closed
+
+        webview.start(debug=False)
+        return
+
+    except ImportError:
+        print("[nova_qt] pywebview not installed.")
+        print("[nova_qt] Run:  python -m pip install pywebview")
+
+    except Exception as e:
+        print(f"[nova_qt] pywebview failed: {e}")
+
+    # ── 2. QWebEngineView inside Qt ───────────────────────────────────────────
     try:
         from PyQt6.QtWidgets import QApplication
         from PyQt6.QtCore import Qt
-        from PyQt6.QtGui import QFont
     except ImportError:
-        print("PyQt6 not installed. Run: pip install PyQt6")
-        print("Falling back to browser...")
+        # No PyQt6 at all — open browser and block
+        print("[nova_qt] PyQt6 not installed. Run Install_Nova_Qt.cmd")
         import webbrowser
-        webbrowser.open("http://127.0.0.1:8765")
+        webbrowser.open(CHAT_URL)
         try:
-            input("Nova is running at http://127.0.0.1:8765 — Press Enter to stop.")
+            input(f"Nova is running at {CHAT_URL} — Press Enter to stop.")
         except (RuntimeError, EOFError):
             import time
             while True:
                 time.sleep(60)
         return
 
-    from .theme  import apply_palette, STYLESHEET
-    from .window import NovaWindow
-
     app = QApplication.instance() or QApplication(sys.argv)
     app.setApplicationName("Project Nova")
     app.setOrganizationName("Nova")
-    app.setStyle("Fusion")   # base style — our stylesheet overrides colors
 
+    try:
+        from PyQt6.QtWebEngineWidgets import QWebEngineView  # noqa: availability check
+        from .webview_window import NovaWebWindow
+
+        app.setHighDpiScaleFactorRoundingPolicy(
+            Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+        )
+        print("[nova_qt] Using QWebEngineView — full HTML UI active.")
+        window = NovaWebWindow(CHAT_URL)
+        window.show()
+        app.exec()
+        return
+
+    except ImportError:
+        print("[nova_qt] PyQt6-WebEngine not installed — using Qt widget fallback.")
+        print("[nova_qt] For modern UI: python -m pip install pywebview")
+
+    except Exception as e:
+        print(f"[nova_qt] QWebEngineView failed: {e}")
+
+    # ── 3. Native Qt widget window ────────────────────────────────────────────
+    from PyQt6.QtGui import QFont
+    from .theme  import apply_palette, STYLESHEET
+    from .window import NovaWindow
+
+    print("[nova_qt] Using Qt widget window (fallback).")
+    app.setStyle("Fusion")
     apply_palette(app)
     app.setStyleSheet(STYLESHEET)
-
-    # Default font
-    font = QFont("Segoe UI", 10)
-    app.setFont(font)
+    app.setFont(QFont("Segoe UI", 10))
 
     window = NovaWindow()
     window.show()
-
     app.exec()
 
 
@@ -79,7 +144,6 @@ if __name__ == "__main__":
     srv = threading.Thread(target=_start_server, daemon=True)
     srv.start()
 
-    # Wait for server
     import socket
     deadline = time.time() + 20
     while time.time() < deadline:

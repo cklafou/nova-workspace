@@ -51,10 +51,46 @@ STYLESHEET = f"""
 QWidget {{
     background-color: {BG};
     color: {TEXT};
-    font-family: "Segoe UI", Arial, sans-serif;
+    font-family: "Segoe UI", "Inter", Arial, sans-serif;
     font-size: 13px;
     border: none;
     outline: none;
+}}
+
+/* ── Dock widgets — modern minimal title bars ── */
+QDockWidget {{
+    titlebar-close-icon: url(none);
+    titlebar-normal-icon: url(none);
+    font-size: 11px;
+    font-weight: 600;
+    color: {TEXT_DIM};
+    letter-spacing: 0.04em;
+}}
+QDockWidget::title {{
+    background: {BG_ALT};
+    border-bottom: 1px solid {BORDER};
+    padding: 5px 10px;
+    text-align: left;
+}}
+QDockWidget::close-button, QDockWidget::float-button {{
+    background: transparent;
+    border: none;
+    padding: 2px;
+    icon-size: 10px;
+}}
+QDockWidget::close-button:hover, QDockWidget::float-button:hover {{
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+}}
+
+/* ── Main window ── */
+QMainWindow {{
+    background: {BG};
+}}
+QMainWindow::separator {{
+    background: {BORDER};
+    width: 1px;
+    height: 1px;
 }}
 
 /* ── Scrollbars ── */
@@ -128,19 +164,21 @@ QTabBar {{
 QTabBar::tab {{
     background: {BG_ALT};
     color: {TEXT_DIM};
-    padding: 6px 16px;
+    padding: 7px 18px;
     border-top: 2px solid transparent;
     border-right: 1px solid {BORDER};
     font-size: 12px;
+    min-width: 60px;
 }}
 QTabBar::tab:selected {{
     background: {BG};
     color: {TEXT};
     border-top: 2px solid {NOVA};
+    font-weight: 500;
 }}
 QTabBar::tab:hover:!selected {{
     color: {TEXT};
-    background: rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.05);
 }}
 QTabWidget::pane {{
     border: none;

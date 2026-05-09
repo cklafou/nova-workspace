@@ -7,28 +7,40 @@ echo   NOVA QT — Installing Python dependencies
 echo ==================================================
 echo.
 
-echo [1/3] Installing PyQt6...
-pip install PyQt6 --quiet
+echo [1/5] Installing PyQt6...
+python -m pip install PyQt6 --quiet
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: PyQt6 install failed.
     pause & exit /b 1
 )
 echo        PyQt6 OK.
 
-echo [2/3] Installing websocket-client...
-pip install websocket-client --quiet
+echo [2/5] Installing pywebview (Edge WebView2 - modern HTML UI)...
+python -m pip install pywebview --quiet
 if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: websocket-client install failed.
+    echo WARNING: pywebview install failed. Nova will use Qt widget fallback.
+) else (
+    echo        pywebview OK.
+)
+
+echo [3/5] Installing PyQt6-WebEngine (optional, alternative renderer)...
+python -m pip install PyQt6-WebEngine --quiet
+if %ERRORLEVEL% NEQ 0 (
+    echo        PyQt6-WebEngine skipped (optional).
+) else (
+    echo        PyQt6-WebEngine OK.
+)
+
+echo [4/5] Installing websocket-client, markdown2, requests...
+python -m pip install websocket-client markdown2 requests --quiet
+if %ERRORLEVEL% NEQ 0 (
+    echo ERROR: Core deps install failed.
     pause & exit /b 1
 )
-echo        websocket-client OK.
+echo        Core deps OK.
 
-echo [3/3] Installing markdown2...
-pip install markdown2 requests --quiet
-echo        markdown2 + requests OK.
-
-echo [4/4] Installing Nova memory dependencies (lancedb, sentence-transformers)...
-pip install lancedb sentence-transformers --quiet
+echo [5/5] Installing Nova memory dependencies (lancedb, sentence-transformers)...
+python -m pip install lancedb sentence-transformers --quiet
 if %ERRORLEVEL% NEQ 0 (
     echo WARNING: memory deps install failed - Nova memory will be disabled.
 ) else (
