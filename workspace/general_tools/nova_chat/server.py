@@ -139,7 +139,7 @@ _nova_temperature:  float = 0.7    # adjustable via set_params WS message
 _nova_top_p:        float = 0.9
 
 # ── Mute state per agent ──────────────────────────────────────────────────────
-_mute_states: dict = {"Nova": False, "Claude": True, "Gemini": True}
+_mute_states: dict = {"Nova": False, "Claude": False, "Gemini": False}
 
 # ── Active model per agent (runtime-switchable) ───────────────────────────────
 _active_models: dict = {"Claude": claude_client.MODEL, "Gemini": gemini_client.MODEL}
@@ -358,11 +358,34 @@ async def startup_event():
                 print(f"[server] periodic flush error: {_e}")
             await _aio.sleep(60)
 
+    async def _bg_llama_autostart():
+        """Auto-launch start_llama.cmd on startup if llama-server isn't already running."""
+        import asyncio as _aio, urllib.request as _ur, os as _os
+        await _aio.sleep(3)  # let server fully initialize first
+        try:
+            with _ur.urlopen("http://127.0.0.1:8080/health", timeout=1) as _r:
+                if _r.status == 200:
+                    print("[llama] already running on port 8080 — skipping auto-start")
+                    return
+        except Exception:
+            pass  # not running — fall through to launch
+        _ws = _os.environ.get("NOVA_WORKSPACE") or str(Path(__file__).resolve().parent.parent.parent)
+        _cmd = Path(_ws) / "start_llama.cmd"
+        if _cmd.exists():
+            try:
+                _os.startfile(str(_cmd))
+                print(f"[llama] auto-started: {_cmd}")
+            except Exception as _e:
+                print(f"[llama] auto-start failed: {_e}")
+        else:
+            print(f"[llama] start_llama.cmd not found at {_cmd} — skipping auto-start")
+
     asyncio.ensure_future(_bg_index())
     asyncio.ensure_future(_bg_eyes_stream())
     asyncio.ensure_future(_bg_nova_status_poll())
     asyncio.ensure_future(_bg_gateway_error_watch())
     asyncio.ensure_future(_bg_transcript_flush())
+    asyncio.ensure_future(_bg_llama_autostart())
 
 
 @app.get("/")
@@ -1500,12 +1523,10 @@ async def llama_start():
     if not cmd_path.exists():
         return JSONResponse({"ok": False, "error": f"start_llama.cmd not found at {cmd_path}"}, status_code=500)
     try:
-        subprocess.Popen(
-            ["cmd", "/c", "start", "", str(cmd_path)],
-            cwd=_workspace,
-            creationflags=subprocess.CREATE_NEW_CONSOLE,
-            close_fds=True,
-        )
+        # os.startfile is equivalent to double-clicking the .cmd file —
+        # opens a new console window reliably without pywebview/subprocess flag issues
+        import os as _os
+        _os.startfile(str(cmd_path))
         return JSONResponse({"ok": True, "message": "llama-server starting on port 8080..."})
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
@@ -1877,6 +1898,10 @@ async def websocket_endpoint(ws: WebSocket):
         "type": "autonomous_state",
         "enabled": autonomous_mode,
     }))
+
+    # Sync mute states so participant bar shows correct muted/unmuted for each agent
+    for _agent, _muted in _mute_states.items():
+        await ws.send_text(json.dumps({"type": "mute_state", "agent": _agent, "muted": _muted}))
 
     # Send full sessions list for tab rendering
     await ws.send_text(json.dumps({
