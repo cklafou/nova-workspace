@@ -141,6 +141,9 @@ _nova_top_p:        float = 0.9
 # ── Mute state per agent ──────────────────────────────────────────────────────
 _mute_states: dict = {"Nova": False, "Claude": True, "Gemini": True}
 
+# ── Active model per agent (runtime-switchable) ───────────────────────────────
+_active_models: dict = {"Claude": claude_client.MODEL, "Gemini": gemini_client.MODEL}
+
 # ── Phase 4A.5 — Inbox routing ────────────────────────────────────────────────
 # Regex: matches messages that start with [TaskId] where TaskId is a word starting
 # with a letter followed by alphanumeric chars / underscores.
@@ -910,6 +913,8 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                     "path": result,
                     "recipients": "nova_bridge",
                 })
+                # Mirror bridge output to the Terminal panel so exec results are visible
+                await broadcast({"type": "terminal_output", "line": result})
 
     async def on_error(err):
         await broadcast({"type": "error", "author": ai_name, "message": err, "id": msg_id})
@@ -2003,6 +2008,20 @@ async def websocket_endpoint(ws: WebSocket):
                 if agent in _mute_states:
                     _mute_states[agent] = muted
                     await broadcast({"type": "mute_state", "agent": agent, "muted": muted})
+                continue
+
+            if data.get("type") == "set_model":
+                global _active_models
+                agent = data.get("agent", "")
+                model = data.get("model", "").strip()
+                if agent and model:
+                    _active_models[agent] = model
+                    if agent == "Claude":
+                        claude_client.set_model(model)
+                    elif agent == "Gemini":
+                        gemini_client.set_model(model)
+                    await broadcast({"type": "model_changed", "agent": agent, "model": model})
+                    print(f"[model] {agent} → {model}")
                 continue
 
             if data.get("type") == "message":

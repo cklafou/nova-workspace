@@ -6,6 +6,12 @@ Install: pip install google-genai --break-system-packages
 import os
 
 MODEL = "gemini-2.5-pro"
+_current_model: str = MODEL  # overridable at runtime via set_model()
+
+def set_model(m: str) -> None:
+    """Change the Gemini model used for the next and all subsequent responses."""
+    global _current_model
+    _current_model = m
 
 # Module-level client cache (similar to claude.py approach)
 _gemini_client = None
@@ -93,7 +99,7 @@ def call_gemini_sync(prompt: str, workspace_context: str = "",
     try:
         config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=8192)
         response = client.models.generate_content(
-            model=MODEL,
+            model=_current_model,
             contents=contents,
             config=types.GenerateContentConfig(**config_kwargs),
         )
@@ -101,7 +107,7 @@ def call_gemini_sync(prompt: str, workspace_context: str = "",
         # Fallback: no thinking config
         config_kwargs.pop("thinking_config", None)
         response = client.models.generate_content(
-            model=MODEL,
+            model=_current_model,
             contents=contents,
             config=types.GenerateContentConfig(**config_kwargs),
         )

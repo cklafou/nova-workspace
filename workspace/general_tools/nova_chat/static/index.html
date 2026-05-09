@@ -467,7 +467,7 @@ a:hover { text-decoration: underline; }
 .msg-wrap.cole   .msg-avatar { background: rgba(221,224,244,0.07); color: var(--cole); border: 1px solid rgba(221,224,244,0.17); }
 .msg-wrap.cole   .msg-author { color: var(--cole); }
 .msg-wrap.system { padding: 4px 20px; }
-.msg-wrap.system .msg-text { color: var(--text-mute); font-size: 11px; font-style: italic; }
+.msg-wrap.system .msg-text { color: var(--text-dim); font-size: 11px; font-style: italic; }
 
 /* Cursor */
 .cursor { display: inline-block; width: 2px; height: 13px; background: var(--nova); border-radius: 1px; margin-left: 2px; vertical-align: middle; animation: blink 1s step-end infinite; }
@@ -509,8 +509,9 @@ a:hover { text-decoration: underline; }
 #send-btn { background: var(--nova); color: #fff; border: none; cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all var(--t); flex-shrink: 0; }
 #send-btn:hover { background: #a0a1ff; box-shadow: var(--nova-glow); }
 #send-btn:disabled { background: var(--text-mute); cursor: not-allowed; box-shadow: none; }
-#send-btn.stop-mode { background: var(--red); font-size: 10px; }
+#send-btn.stop-mode { background: var(--red); font-size: 10px; animation: stop-pulse 0.25s ease; }
 #send-btn.stop-mode:hover { background: #ff8a8a; box-shadow: 0 0 14px rgba(248,113,113,0.4); }
+@keyframes stop-pulse { 0%{transform:scale(1)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
 
 .input-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 10px 7px; }
 .input-bar-left  { display: flex; gap: 4px; align-items: center; }
@@ -716,6 +717,90 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 .kbd { background: var(--bg-raised); border: 1px solid var(--border-med); border-radius: 3px; padding: 1px 5px; font-size: 10px; font-family: var(--mono); color: var(--text-dim); }
 
 /* ═══════════════════════════════════════════════
+   MODEL SELECTOR PILL (Phase 6)
+═══════════════════════════════════════════════ */
+.model-pill {
+  display: flex; align-items: center; gap: 5px; margin-left: auto;
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: 20px; padding: 3px 10px 3px 8px;
+  font-size: 10.5px; color: var(--text-dim); cursor: pointer;
+  transition: all var(--t); user-select: none; flex-shrink: 0; white-space: nowrap;
+}
+.model-pill:hover { border-color: var(--border-med); color: var(--text); background: var(--bg-hover); }
+.mp-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; transition: background var(--t); }
+.mp-chevron { font-size: 7px; opacity: 0.4; margin-left: 1px; }
+#model-dd {
+  position: fixed; z-index: 500; min-width: 210px;
+  background: var(--bg-raised); border: 1px solid var(--border-med);
+  border-radius: var(--radius); box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  padding: 5px 0; display: none;
+}
+#model-dd.open { display: block; }
+.mdd-header { padding: 4px 12px; font-size: 9px; color: var(--text-mute); letter-spacing: 0.08em; text-transform: uppercase; }
+.mdd-item {
+  padding: 5px 12px; font-size: 11.5px; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; transition: background var(--t);
+}
+.mdd-item:hover { background: var(--bg-hover); }
+.mdd-item.active { color: var(--text); font-weight: 500; }
+.mdd-item.active .mdd-label::after { content: ' ✓'; font-size: 9px; }
+.mdd-item[data-agent="Claude"].active .mdd-label::after { color: var(--claude); }
+.mdd-item[data-agent="Gemini"].active .mdd-label::after { color: var(--gemini); }
+.mdd-item[data-agent="Nova"].active   .mdd-label::after { color: var(--nova); }
+.mdd-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.mdd-label { flex: 1; }
+.mdd-sub { font-size: 9.5px; color: var(--text-mute); flex-shrink: 0; }
+.mdd-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* ═══════════════════════════════════════════════
+   @FILE PICKER (Phase 8)
+═══════════════════════════════════════════════ */
+#input-area { position: relative; }
+#at-picker {
+  position: absolute; bottom: 100%; left: 14px; right: 14px; margin-bottom: 4px;
+  background: var(--bg-raised); border: 1px solid var(--border-med);
+  border-radius: var(--radius); box-shadow: 0 -6px 24px rgba(0,0,0,0.4);
+  max-height: 200px; overflow-y: auto; display: none; z-index: 600;
+}
+#at-picker.open { display: block; }
+.at-item { padding: 5px 10px; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background var(--t); }
+.at-item:hover,.at-item.at-selected { background: var(--bg-hover); }
+.at-icon { font-size: 10px; color: var(--text-mute); width: 14px; text-align: center; flex-shrink: 0; }
+.at-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.at-path { font-size: 9.5px; color: var(--text-mute); flex-shrink: 0; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.at-empty { padding: 8px 10px; font-size: 11px; color: var(--text-mute); }
+#file-chip-bar { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 10px 5px; min-height: 0; }
+.at-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--nova-dim); border: 1px solid rgba(143,144,255,0.25);
+  border-radius: 12px; padding: 2px 7px 2px 6px;
+  font-size: 10.5px; color: var(--nova); font-family: var(--mono);
+}
+.chip-x { cursor: pointer; opacity: 0.5; font-size: 9px; padding: 0 2px; transition: opacity var(--t); }
+.chip-x:hover { opacity: 1; }
+
+/* ═══════════════════════════════════════════════
+   THOUGHT CARDS BAR (Phase 9)
+═══════════════════════════════════════════════ */
+#thought-cards-bar {
+  display: none; flex-direction: column; gap: 3px;
+  padding: 0 14px 5px; flex-shrink: 0;
+}
+.tcard {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-left: 2px solid var(--nova); border-radius: var(--radius-sm);
+  padding: 4px 10px; cursor: pointer; transition: border-color var(--t);
+  animation: msgIn 0.16s var(--ease);
+}
+.tcard:hover { border-color: var(--border-med); }
+.tcard .tc2-icon { font-size: 11px; flex-shrink: 0; }
+.tcard .tc2-name { font-size: 11px; color: var(--text-dim); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tcard .tc2-time { font-size: 9px; color: var(--text-mute); font-family: var(--mono); flex-shrink: 0; }
+/* Unread dot on Terminal tab when new exec output arrives */
+.ptab.has-new::after { content:''; display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--nova); margin-left:5px; vertical-align:middle; }
+
+/* ═══════════════════════════════════════════════
    TOOLTIP SYSTEM
 ═══════════════════════════════════════════════ */
 #nova-tip {
@@ -840,6 +925,35 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-item" onclick="pollServices()"><span class="dd-icon">↻</span><span class="dd-label">Refresh Status</span></div>
 </div>
 
+<!-- Model selector dropdown (opens from model pill in tab bar) -->
+<div id="model-dd">
+  <div class="mdd-header">Claude (Anthropic)</div>
+  <div class="mdd-item active" data-agent="Claude" data-model="claude-sonnet-4-6" onclick="selectModel(this)">
+    <div class="mdd-dot" style="background:var(--claude)"></div>
+    <span class="mdd-label">Claude Sonnet 4.6</span><span class="mdd-sub">Fast · balanced</span>
+  </div>
+  <div class="mdd-item" data-agent="Claude" data-model="claude-opus-4-6" onclick="selectModel(this)">
+    <div class="mdd-dot" style="background:var(--claude)"></div>
+    <span class="mdd-label">Claude Opus 4.6</span><span class="mdd-sub">Most capable</span>
+  </div>
+  <div class="mdd-sep"></div>
+  <div class="mdd-header">Gemini (Google)</div>
+  <div class="mdd-item" data-agent="Gemini" data-model="gemini-2.5-flash-preview-05-20" onclick="selectModel(this)">
+    <div class="mdd-dot" style="background:var(--gemini)"></div>
+    <span class="mdd-label">Gemini 2.5 Flash</span><span class="mdd-sub">Fast · efficient</span>
+  </div>
+  <div class="mdd-item active" data-agent="Gemini" data-model="gemini-2.5-pro" onclick="selectModel(this)">
+    <div class="mdd-dot" style="background:var(--gemini)"></div>
+    <span class="mdd-label">Gemini 2.5 Pro</span><span class="mdd-sub">Most capable</span>
+  </div>
+  <div class="mdd-sep"></div>
+  <div class="mdd-header">Nova (Local)</div>
+  <div class="mdd-item" data-agent="Nova" data-model="nova-local" onclick="selectModel(this)">
+    <div class="mdd-dot" id="mdd-nova-dot" style="background:var(--text-mute)"></div>
+    <span class="mdd-label">Nova (llama.cpp)</span><span class="mdd-sub" id="mdd-nova-status">port 8080</span>
+  </div>
+</div>
+
 <!-- Advanced -->
 <div id="dd-advanced" class="dropdown">
   <div class="dd-header">Generation (Nova only)</div>
@@ -899,6 +1013,11 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <!-- Tab bar -->
     <div id="session-tabs">
       <button class="stab-add" title="New session (Ctrl+T)" onclick="newSession()">＋</button>
+      <button class="model-pill" id="model-pill" onclick="toggleModelDD(event)" data-tooltip="Active AI model — click to switch Claude (Sonnet/Opus) or Gemini (2.5 Flash/Pro)">
+        <div class="mp-dot" id="mp-dot" style="background:var(--claude)"></div>
+        <span id="mp-label">Claude Sonnet</span>
+        <span class="mp-chevron">▾</span>
+      </button>
     </div>
     <!-- Participant bar — always visible, one-click mute -->
     <div id="participant-bar">
@@ -926,16 +1045,20 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     </div>
     <!-- Messages -->
     <div id="chat"></div>
+    <!-- Thought cards — shown inline above input while Nova is working -->
+    <div id="thought-cards-bar"></div>
     <!-- Input -->
     <div id="input-area">
+      <div id="at-picker"></div>
       <div id="pending-images"></div>
       <div class="input-box">
+        <div id="file-chip-bar"></div>
         <div class="input-row">
           <label class="input-action" title="Attach image">
             📎<input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
           </label>
           <textarea id="input" placeholder="Message Nova… (Enter to send, Shift+Enter for newline)" rows="1"
-            onkeydown="onKey(event)" oninput="autoResize(this)"></textarea>
+            onkeydown="onKey(event)" oninput="autoResize(this);onInputAt(this)"></textarea>
           <button id="send-btn" onclick="sendMsg()" title="Send">↑</button>
         </div>
         <div class="input-bar">
@@ -1061,9 +1184,11 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       <span>LLM</span>
     </div>
     <div class="sb-sep"></div>
+    <span id="sb-tokens" data-tooltip="Approximate context tokens used this session (chars ÷ 4)">—</span>
+    <div class="sb-sep"></div>
     <button class="sb-btn active" id="panel-toggle-sb" onclick="togglePanel()">◫ Panel</button>
     <div class="sb-sep"></div>
-    <span style="font-size:9.5px;opacity:0.5">Ctrl+T · new &nbsp;·&nbsp; Ctrl+B · sidebar &nbsp;·&nbsp; Esc · stop</span>
+    <span style="font-size:9.5px;opacity:0.5">Ctrl+T · new &nbsp;·&nbsp; Ctrl+B · sidebar &nbsp;·&nbsp; F5 · reload</span>
   </div>
 </div>
 
@@ -1215,6 +1340,8 @@ function handle(d) {
     case 'nova_throttled':  sysMsg(`⚠ ${d.message}`); setProcessing(false); break;
     case 'nova_unthrottled':sysMsg('Nova rate-limit cleared.'); break;
     case 'injection_notice':addBridgeTool(d); break;
+    case 'terminal_output': appendTerminalLine(d.line||''); break;
+    case 'model_changed':   onModelChanged(d); break;
     case 'pong': break;
   }
 }
@@ -1225,6 +1352,12 @@ function handle(d) {
 function onSessionsInit(d) {
   sessions = d.sessions||[]; activeId = d.active_id;
   renderTabs(); renderSidebar();
+  // After history events arrive (give server 900ms), show a welcome if chat is still empty
+  setTimeout(() => {
+    const chat = document.getElementById('chat');
+    if(chat && chat.children.length === 0)
+      sysMsg('Connected — send a message to begin.');
+  }, 900);
 }
 function onSessionSwitch(d) {
   activeId = d.session_id;
@@ -1233,9 +1366,14 @@ function onSessionSwitch(d) {
   document.getElementById('sb-session').textContent = name;
   document.getElementById('menu-session-name').textContent = name;
   renderTabs(); renderSidebar();
+  resetCtxChars();
   document.getElementById('chat').innerHTML = '';
-  (d.history||[]).forEach(m=>appendMsg(m.author,m.content,m.id));
-  sysMsg(`Resumed · ${(d.history||[]).length} messages`);
+  const hist = d.history||[];
+  hist.forEach(m=>appendMsg(m.author,m.content,m.id));
+  // Count only non-heartbeat visible messages for the status line
+  const visible = hist.filter(m=>!/^\[HEARTBEAT\s+\d+\]/i.test((m.content||'').trim())).length;
+  if(visible > 0) sysMsg(`Resumed · ${visible} message${visible===1?'':'s'}`);
+  else sysMsg('Connected — send a message to begin.');
   setProcessing(false);
 }
 function newSession() { ws?.readyState===1 && ws.send(JSON.stringify({type:'new_session'})); closeDD(); }
@@ -1416,6 +1554,8 @@ function modalOk() {
    CHAT RENDERING
 ══════════════════════════════════════════════════ */
 function appendMsg(author, content, id, images) {
+  // Suppress heartbeat noise — Nova's autonomous loop emits [HEARTBEAT N] system messages
+  if (/^\[HEARTBEAT\s+\d+\]/i.test((content||'').trim())) return;
   const m=AUTHOR[author]||{cls:'',av:(author||'?')[0]};
   const w=document.createElement('div');
   w.className=`msg-wrap ${m.cls}`; if(id) w.id=`msg-${id}`;
@@ -1437,6 +1577,7 @@ function startStream(author, id) {
 function appendToken(author, id, token) {
   if(!streamBufs[id]) startStream(author,id);
   const b=streamBufs[id]; b.text+=token; b.st.textContent=b.text; scrollBot();
+  addCtxChars(token.length);
 }
 function appendThink(id, token) {
   if(!streamBufs[id]) return;
@@ -1526,6 +1667,7 @@ function addInlineActivity(d) {
    THOUGHTS
 ══════════════════════════════════════════════════ */
 function updateThought(d) {
+  updateInlineThoughtCard(d);  // Phase 9: also mirror to inline cards bar
   const c=document.getElementById('panel-thoughts');
   const em=document.getElementById('thoughts-empty');
   if(d.action==='remove'){document.getElementById(`tc-${d.id}`)?.remove();if(!c.querySelector('.thought-card')&&em)em.style.display='';return;}
@@ -1807,11 +1949,14 @@ function setVerbosity(v) {
   ['concise','normal','verbose'].forEach(n=>document.getElementById(`vb-${n}`)?.classList.toggle('active',n===v));
 }
 
-function sendMsg() {
+async function sendMsg() {
   const inp=document.getElementById('input');
-  const text=inp.value.trim();
-  if(!text&&!pendingImages.length) return;
+  const rawText=inp.value.trim();
+  if(!rawText&&!pendingImages.length) return;
   if(!ws||ws.readyState!==1){toast('Not connected');return;}
+  hideAtPicker();
+  // Phase 8: resolve any @file mentions before sending
+  const text = await resolveFileMentions(rawText);
   const payload={type:'message',content:text,autonomous:autonomousMode};
   // Inject verbosity hint silently via telemetry (invisible to UI)
   if(_verbosity==='concise') payload.telemetry='Response style: concise — be brief and direct, avoid padding.';
@@ -1833,8 +1978,15 @@ function setProcessing(on){
     btn.innerHTML='↑'; btn.classList.remove('stop-mode');
     btn.title='Send (Enter)';
     btn.onclick=sendMsg; btn.disabled=false;
+    // Phase 9: clear all thought cards when processing ends
+    _activeCards={};
+    Object.values(_cardTimers).forEach(clearInterval); _cardTimers={};
+    clearInterval(_cardRefreshTimer); _cardRefreshTimer=null;
+    const bar=document.getElementById('thought-cards-bar');
+    if(bar){bar.style.display='none'; bar.innerHTML='';}
   }
-  document.getElementById('stop-btn').classList.toggle('vis',false);
+  // stop-btn (in input bar) mirrors processing state as a redundant cancel target
+  document.getElementById('stop-btn').classList.toggle('vis', on);
 }
 function stopGen(){ws?.readyState===1&&ws.send(JSON.stringify({type:'stop'}));setProcessing(false);}
 function clickAutoToggle(){setAutonomous(!autonomousMode);ws?.readyState===1&&ws.send(JSON.stringify({type:'autonomous_toggle',enabled:autonomousMode}));}
@@ -1899,7 +2051,7 @@ function switchPanel(tab) {
   document.querySelectorAll('.panel-section').forEach(s=>s.classList.toggle('active',s.id===`panel-${tab}`));
   ['thoughts','tools','monitor','files','eyes','terminal'].forEach(t=>{const el=document.getElementById(`vchk-${t}`);if(el)el.textContent=t===tab?'✓':'';});
   if(tab==='files'&&!document.getElementById('file-tree').children.length) refreshFiles();
-  if(tab==='terminal') termRefresh();
+  if(tab==='terminal'){ termRefresh(); document.querySelector('.ptab[data-tab="terminal"]')?.classList.remove('has-new'); }
   if(!panelOpen) togglePanel();
   closeDD();
 }
@@ -2020,8 +2172,8 @@ function renderMD(text) {
   text=text.replace(/\*\*\*([^*]+)\*\*\*/g,'<strong><em>$1</em></strong>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
   text=text.replace(/^&gt; (.+)/gm,'<blockquote>$1</blockquote>');
   text=text.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-  text=text.replace(/^[-*] (.+)/gm,'<li>$1</li>').replace(/((?:<li>.*<\/li>\n?)+)/g,'<ul>$1</ul>');
-  text=text.replace(/^\d+\. (.+)/gm,'<li>$1</li>');
+  text=text.replace(/^[-*] (.+)/gm,'<li class="ul-li">$1</li>').replace(/((?:<li class="ul-li">.*<\/li>\n?)+)/g,'<ul>$1</ul>');
+  text=text.replace(/^\d+\. (.+)/gm,'<li class="ol-li">$1</li>').replace(/((?:<li class="ol-li">.*<\/li>\n?)+)/g,'<ol>$1</ol>');
   text=text.replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>');
   text=`<p>${text}</p>`;
   blocks.forEach((b,i)=>{text=text.replace(`\x00B${i}\x00`,b);});
@@ -2038,6 +2190,272 @@ function copyCode(btn) {
     btn.classList.add('copied');
     setTimeout(()=>{ btn.textContent='Copy'; btn.classList.remove('copied'); }, 2000);
   }).catch(()=>{ btn.textContent='Failed'; setTimeout(()=>btn.textContent='Copy', 1500); });
+}
+
+/* ══════════════════════════════════════════════════
+   PHASE 6 — MODEL SELECTOR
+══════════════════════════════════════════════════ */
+const MODEL_LABELS = {
+  'claude-sonnet-4-6':              'Claude Sonnet',
+  'claude-opus-4-6':                'Claude Opus',
+  'gemini-2.5-flash-preview-05-20': 'Gemini Flash',
+  'gemini-2.5-pro':                 'Gemini Pro',
+  'nova-local':                     'Nova (local)',
+};
+const MODEL_COLORS = {
+  'claude-sonnet-4-6':              'var(--claude)',
+  'claude-opus-4-6':                'var(--claude)',
+  'gemini-2.5-flash-preview-05-20': 'var(--gemini)',
+  'gemini-2.5-pro':                 'var(--gemini)',
+  'nova-local':                     'var(--nova)',
+};
+let _activeModels = { Claude: 'claude-sonnet-4-6', Gemini: 'gemini-2.5-pro' };
+
+function toggleModelDD(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('model-dd');
+  if(dd.classList.contains('open')){ dd.classList.remove('open'); return; }
+  const r = document.getElementById('model-pill').getBoundingClientRect();
+  dd.style.right = (window.innerWidth - r.right) + 'px';
+  dd.style.top   = (r.bottom + 4) + 'px';
+  dd.classList.add('open');
+}
+function selectModel(el) {
+  const agent = el.dataset.agent;
+  const model = el.dataset.model;
+  if(agent && model) {
+    _activeModels[agent] = model;
+    updateModelPill();
+    ws?.readyState===1 && ws.send(JSON.stringify({type:'set_model', agent, model}));
+    toast(`${agent}: ${MODEL_LABELS[model]||model}`);
+  }
+  document.getElementById('model-dd').classList.remove('open');
+}
+function updateModelPill() {
+  const m = _activeModels['Claude'];
+  const lbl = document.getElementById('mp-label');
+  const dot = document.getElementById('mp-dot');
+  if(lbl) lbl.textContent = MODEL_LABELS[m] || m;
+  if(dot) dot.style.background = MODEL_COLORS[m] || 'var(--nova)';
+  // Update active checkmarks in dropdown
+  document.querySelectorAll('#model-dd .mdd-item').forEach(el=>{
+    const match = el.dataset.model === _activeModels[el.dataset.agent];
+    el.classList.toggle('active', match);
+  });
+}
+function onModelChanged(d) {
+  if(d.agent && d.model){ _activeModels[d.agent]=d.model; updateModelPill(); }
+}
+document.addEventListener('click', e => {
+  if(!e.target.closest('#model-pill') && !e.target.closest('#model-dd'))
+    document.getElementById('model-dd')?.classList.remove('open');
+});
+
+/* ══════════════════════════════════════════════════
+   PHASE 7 — TOKEN COUNTER
+══════════════════════════════════════════════════ */
+let _ctxChars = 0;
+function addCtxChars(n) {
+  _ctxChars += n;
+  const t = Math.round(_ctxChars / 4);
+  const el = document.getElementById('sb-tokens');
+  if(el) el.textContent = t >= 1000 ? `~${(t/1000).toFixed(1)}k ctx` : `~${t} ctx`;
+}
+function resetCtxChars() {
+  _ctxChars = 0;
+  const el = document.getElementById('sb-tokens');
+  if(el) el.textContent = '—';
+}
+
+/* ══════════════════════════════════════════════════
+   PHASE 8 — @FILE CONTEXT MENTIONS
+══════════════════════════════════════════════════ */
+let _mentionedFiles = [];
+let _ftFlat = [];     // flat list: [{name, path}]
+let _atSelIdx = 0;
+
+async function ensureFileTree() {
+  if(_ftFlat.length) return;
+  try {
+    const r = await fetch('/api/files/tree');
+    const d = await r.json();
+    _ftFlat = [];
+    function flatten(node, parentPath) {
+      if(!node) return;
+      const p = parentPath ? parentPath+'/'+node.name : node.name;
+      if(node.type==='file'||!node.type){ _ftFlat.push({name:node.name, path:p}); }
+      (node.children||[]).forEach(c=>flatten(c,p));
+    }
+    (d.children||[]).forEach(c=>flatten(c,c.name));
+  } catch(_) {}
+}
+
+function getAtWord(inp) {
+  const val=inp.value; const pos=inp.selectionStart;
+  const m=val.slice(0,pos).match(/@(\w*)$/);
+  return m ? {word:m[1], start:pos-m[0].length} : null;
+}
+
+async function onInputAt(inp) {
+  const hit = getAtWord(inp);
+  if(!hit){ hideAtPicker(); return; }
+  await ensureFileTree();
+  const q = hit.word.toLowerCase();
+  const matches = _ftFlat.filter(f=>
+    f.name.toLowerCase().includes(q)||f.path.toLowerCase().includes(q)
+  ).slice(0,10);
+  showAtPicker(matches);
+}
+
+function showAtPicker(files) {
+  _atSelIdx = 0;
+  const pk = document.getElementById('at-picker');
+  if(!files.length){ pk.innerHTML='<div class="at-empty">No matching files</div>'; pk.classList.add('open'); return; }
+  pk.innerHTML = files.map((f,i)=>{
+    const dir = f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : '';
+    return `<div class="at-item${i===0?' at-selected':''}" onclick="selectAtFile(this)" data-name="${esc(f.name)}" data-path="${esc(f.path)}">
+      <span class="at-icon">${fileIcon(f.name)}</span>
+      <span class="at-name">${esc(f.name)}</span>
+      <span class="at-path">${esc(dir)}</span>
+    </div>`;
+  }).join('');
+  pk.classList.add('open');
+}
+
+function hideAtPicker(){ document.getElementById('at-picker')?.classList.remove('open'); }
+
+function selectAtFile(el) {
+  const name = el.dataset.name;
+  const path = el.dataset.path;
+  if(_mentionedFiles.length>=3){ toast('Max 3 files per message'); hideAtPicker(); return; }
+  if(_mentionedFiles.find(f=>f.path===path)){ hideAtPicker(); return; }
+  const inp = document.getElementById('input');
+  const hit = getAtWord(inp);
+  if(hit) {
+    const before = inp.value.slice(0, hit.start) + '@'+name;
+    const after  = inp.value.slice(inp.selectionStart);
+    inp.value = before + after;
+    inp.setSelectionRange(before.length, before.length);
+    inp.focus();
+  }
+  _mentionedFiles.push({name, path});
+  renderFileChips();
+  hideAtPicker();
+}
+
+function renderFileChips() {
+  const bar = document.getElementById('file-chip-bar');
+  if(!bar) return;
+  if(!_mentionedFiles.length){ bar.innerHTML=''; return; }
+  bar.innerHTML = _mentionedFiles.map((f,i)=>
+    `<div class="at-chip">${fileIcon(f.name)} ${esc(f.name)}<span class="chip-x" onclick="removeFileChip(${i})" title="Remove">✕</span></div>`
+  ).join('');
+}
+
+function removeFileChip(idx) { _mentionedFiles.splice(idx,1); renderFileChips(); }
+
+async function resolveFileMentions(content) {
+  if(!_mentionedFiles.length) return content;
+  let prefix = '';
+  for(const f of _mentionedFiles) {
+    try {
+      const r = await fetch(`/api/files/read?path=${encodeURIComponent(f.path)}`);
+      const d = await r.json();
+      if(d.content) prefix += `\`\`\`${f.path}\n${d.content}\n\`\`\`\n\n`;
+    } catch(_) {}
+  }
+  _mentionedFiles=[]; renderFileChips();
+  return prefix ? `[Attached context:\n${prefix}]\n\n${content}` : content;
+}
+
+// @picker keyboard navigation
+document.getElementById('input')?.addEventListener('keydown', e=>{
+  const pk = document.getElementById('at-picker');
+  if(!pk?.classList.contains('open')) return;
+  const items = pk.querySelectorAll('.at-item');
+  if(!items.length) return;
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    items[_atSelIdx]?.classList.remove('at-selected');
+    _atSelIdx = (_atSelIdx+1)%items.length;
+    items[_atSelIdx]?.classList.add('at-selected');
+    items[_atSelIdx]?.scrollIntoView({block:'nearest'});
+  } else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    items[_atSelIdx]?.classList.remove('at-selected');
+    _atSelIdx = (_atSelIdx-1+items.length)%items.length;
+    items[_atSelIdx]?.classList.add('at-selected');
+    items[_atSelIdx]?.scrollIntoView({block:'nearest'});
+  } else if(e.key==='Enter' && pk.classList.contains('open')){
+    e.preventDefault();
+    items[_atSelIdx] && selectAtFile(items[_atSelIdx]);
+  } else if(e.key==='Escape'){
+    hideAtPicker();
+  }
+});
+document.addEventListener('click', e=>{ if(!e.target.closest('#at-picker')&&!e.target.closest('#input')) hideAtPicker(); });
+
+/* ══════════════════════════════════════════════════
+   PHASE 9 — LIVE THOUGHT CARDS ABOVE INPUT
+══════════════════════════════════════════════════ */
+let _activeCards = {};    // id → {name, start}
+let _cardTimers  = {};    // setInterval timers for elapsed time
+
+function updateInlineThoughtCard(d) {
+  const bar = document.getElementById('thought-cards-bar');
+  if(!bar) return;
+  if(d.action==='remove'||d.status==='done'||d.status==='completed'||d.action==='done') {
+    delete _activeCards[d.id];
+    clearInterval(_cardTimers[d.id]); delete _cardTimers[d.id];
+  } else if(d.action==='in_progress'||d.action==='start'||d.status==='active') {
+    if(!_activeCards[d.id]) _activeCards[d.id]={name:d.name||d.id||'Working…',start:Date.now()};
+    else _activeCards[d.id].name = d.name||_activeCards[d.id].name;
+  }
+  renderThoughtCards();
+}
+
+function renderThoughtCards() {
+  const bar = document.getElementById('thought-cards-bar');
+  if(!bar) return;
+  const ids = Object.keys(_activeCards).slice(-3);
+  if(!ids.length){ bar.style.display='none'; return; }
+  bar.style.display='flex';
+  bar.innerHTML = ids.map(id=>{
+    const c=_activeCards[id];
+    const sec=Math.round((Date.now()-c.start)/1000);
+    const ts=sec>=60?`${Math.floor(sec/60)}m${sec%60}s`:`${sec}s`;
+    return `<div class="tcard" onclick="switchPanel('thoughts')">
+      <span class="tc2-icon">◉</span>
+      <span class="tc2-name">${esc(c.name)}</span>
+      <span class="tc2-time">${ts}</span>
+    </div>`;
+  }).join('');
+  // Refresh elapsed time every 3s while cards are visible
+  if(!_cardRefreshTimer) _cardRefreshTimer=setInterval(renderThoughtCards,3000);
+}
+let _cardRefreshTimer = null;
+
+// Also hook into processing_end to clear all cards when Nova finishes
+const _orig_setProcessing = setProcessing;
+
+/* ══════════════════════════════════════════════════
+   PHASE 10 — TERMINAL OUTPUT
+══════════════════════════════════════════════════ */
+function appendTerminalLine(line) {
+  const t = document.getElementById('terminal-body');
+  if(!t) return;
+  const d = document.createElement('div');
+  d.style.cssText='font-family:var(--mono);font-size:10.5px;padding:1px 0;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text-dim)';
+  d.textContent = line;
+  // Color-code bridge results
+  if(line.includes('✓')){ d.style.color='var(--green)'; }
+  else if(line.includes('✗')){ d.style.color='var(--red)'; }
+  t.appendChild(d);
+  if(document.getElementById('term-follow')?.checked) t.scrollTop = t.scrollHeight;
+  // Auto-switch to terminal tab if hidden and this is an exec result
+  if(line.startsWith('[bridge]') && document.querySelector('.ptab[data-tab="terminal"]:not(.active)')) {
+    document.querySelector('.ptab[data-tab="terminal"]')?.classList.add('has-new');
+  }
 }
 
 /* ══════════════════════════════════════════════════

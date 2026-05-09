@@ -9,6 +9,12 @@ import os
 import anthropic
 
 MODEL = "claude-sonnet-4-6"
+_current_model: str = MODEL  # overridable at runtime via set_model()
+
+def set_model(m: str) -> None:
+    """Change the model used for the next and all subsequent responses."""
+    global _current_model
+    _current_model = m
 
 SYSTEM_PREFIX = """You are Claude (Anthropic claude-sonnet-4-6), one participant in a real-time group chat.
 
@@ -140,7 +146,7 @@ async def stream_response(
 
         full_response = ""
         async with client.messages.stream(
-            model=MODEL,
+            model=_current_model,
             max_tokens=2048,
             system=system,
             messages=messages,

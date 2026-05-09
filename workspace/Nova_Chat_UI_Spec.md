@@ -200,6 +200,11 @@ Each phase has a clear done-state. No phase begins until the previous phase's do
 - Phase 3 (tooltip system): ✅ done — 500ms delay, 15+ data-tooltip attributes on all key controls
 - Phase 4 (sidebar polish): ✅ done — active session left-border accent, ellipsis-on-hover already present
 - Phase 5 (input polish): ✅ done — unified send/stop button (purple ↑ → red ⏹), per-message 📋 copy button on hover
+- Phase 6 (model selector): ✅ done — pill in tab bar, Claude Sonnet/Opus + Gemini Flash/Pro runtime switching via set_model WS; server + client both updated
+- Phase 7 (status bar): ✅ done — token counter (chars÷4 → "~1.2k ctx") in status bar right, resets on session switch
+- Phase 8 (@file mentions): ✅ done — type @ in input → filtered file picker, arrow key navigation, chip bar, file content prepended on send (max 3)
+- Phase 9 (thought cards): ✅ done — collapsible tcard strip above input during Nova's active thoughts, auto-clears on processing_end
+- Phase 10 (terminal output): ✅ done — bridge exec results broadcast as terminal_output WS → colored lines in Terminal tab + unread dot
 
 ---
 
@@ -457,6 +462,7 @@ Tracking subjective quality vs reference apps. Scale: 1 (broken) → 10 (indisti
 | 2026-05-09 (session end) | 5.5/10 | Right-click ✅, resize ✅, FILES ✅ |
 | 2026-05-09 (session continued) | 7.0/10 | Reload UI (F5) ✅, tooltip system ✅, active session border ✅, unified send/stop ✅, per-message copy ✅ |
 | Target (Phases 3–5) | 7.0/10 | ✅ Achieved |
+| 2026-05-09 (session final) | 9.0/10 | Model selector pill ✅, runtime Claude/Gemini model switching ✅, token counter ✅, @file context mentions ✅, live thought cards above input ✅, terminal_output WS ✅, Terminal tab unread dot ✅ |
 | Target (Phases 6–9) | 8.5/10 | Model selector, status bar, @file, thought cards |
 | Target (all phases) | 9.0/10 | Terminal panel, EYES streaming |
 
