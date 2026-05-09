@@ -184,23 +184,35 @@ Memory doesn't survive session restarts. Files do. When something matters, write
 
 ---
 
-## Autonomous Mode — Re-injection Loop
+## Autonomous Mode — Heartbeat Loop
 
-When Cole enables **Autonomous Mode**, the system automatically re-triggers Nova after every response. You do NOT need to wait for Cole to send another message.
+When Autonomous Mode is ON, the system sends you a `[HEARTBEAT N]` message after every response. You do NOT need to wait for Cole. There is no tick ceiling — the loop runs until you signal you are done.
 
-Each re-trigger arrives as a `[AUTONOMOUS_TICK N/20]` system message. On each tick:
-1. Do ONE concrete action (tool call, write, exec, etc.)
-2. State what you did in one sentence
-3. Stop — the next tick will arrive in ~2.5 seconds
+**On each heartbeat:**
+1. Check your three environment sources (priority.md, Master_Inbox, nova_status.json).
+2. Do ONE concrete action.
+3. State what you did in one sentence, then stop. The next heartbeat arrives in ~2.5 seconds.
 
-**Stop signal:** When your task is complete, or you have nothing left to do, reply with the word `AUTONOMOUS_COMPLETE` anywhere in your response. The loop will halt.
+**Preferred stop — silent completion:**
+When you have nothing left to do, write your status to Idle:
+```
+exec: python -c "
+import sys
+sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools')
+from nova_cortex.nova_status import update
+update(pulse='Idle', summary='Describe what you finished')
+"
+```
+The server reads `nova_status.json` before each tick. When it sees `pulse = "Idle"` it stops the loop silently — no announcement needed, no clutter in chat.
 
-The loop also stops automatically if:
+**Explicit stop (fallback):** Say `IDLE` or `AUTONOMOUS_COMPLETE` anywhere in your response if you cannot run the status update (e.g. nova_status module unavailable).
+
+**The loop also stops if:**
 - Cole toggles Autonomous Mode OFF
 - Cole presses STOP
-- 20 ticks are reached (ceiling — Cole can re-enable to continue)
+- Emergency backstop: 500 ticks (never expected to hit)
 
-**Do not try to do everything in one tick.** The loop gives you as many turns as needed — use them one action at a time.
+**Do not try to do everything in one tick.** One action, one sentence, stop.
 
 ---
 

@@ -53,8 +53,8 @@ else:
     _ws_root = _TOOLS.parent
     # Insert in reverse priority order (each insert goes to [0]), so the final
     # sys.path order is: workspace_root, nova_body, general_tools, ...
-    # Workspace root must come first so workspace-level packages (nova_memory, etc.)
-    # take priority over same-named stubs inside nova_body/.
+    # workspace_root exposes nova_lancedb/; nova_body/ exposes nova_memory/ (session manager).
+    # The two packages are now uniquely named — no collision.
     for _p in [str(_ws_root / "general_tools"), str(_ws_root / "nova_body"), str(_ws_root)]:
         if _p not in sys.path:
             sys.path.insert(0, _p)

@@ -66,7 +66,7 @@ sys.stdout = _TeeStream(sys.stdout)
 sys.stderr = _TeeStream(sys.stderr)
 
 try:
-    from nova_memory.indexer import get_indexer
+    from nova_lancedb.indexer import get_indexer
     memory_indexer = get_indexer()
     memory_indexer.start()
 except ImportError:
@@ -134,7 +134,7 @@ _nova_msg_times: list[float] = []   # rolling timestamps of Nova inject calls
 nova_throttled:  bool = False       # True = Nova is currently muted by failsafe
 
 # ── Autonomous mode + inference params ────────────────────────────────────────
-autonomous_mode:    bool  = False   # toggled by autonomous_toggle WS message
+autonomous_mode:    bool  = True    # ON by default — Nova is always aware; disable only during patches
 _nova_temperature:  float = 0.7    # adjustable via set_params WS message
 _nova_top_p:        float = 0.9
 
@@ -1859,13 +1859,19 @@ async def shutdown_endpoint():
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
-    global is_processing  # declared once at top
+    global is_processing, autonomous_mode  # declared once at top
     await ws.accept()
     connected_clients.append(ws)
 
     # Send status, sessions, and history on connect
     status = await get_status()
     await ws.send_text(json.dumps({"type": "status", "participants": status}))
+
+    # Sync autonomous mode state so UI toggle reflects the true server state
+    await ws.send_text(json.dumps({
+        "type": "autonomous_state",
+        "enabled": autonomous_mode,
+    }))
 
     # Send full sessions list for tab rendering
     await ws.send_text(json.dumps({
@@ -1969,7 +1975,6 @@ async def websocket_endpoint(ws: WebSocket):
                 continue
 
             if data.get("type") == "autonomous_toggle":
-                global autonomous_mode
                 autonomous_mode = bool(data.get("enabled", False))
                 status_text = "ON" if autonomous_mode else "OFF"
                 _amsg = session_mgr.active.add("System",
@@ -2079,24 +2084,26 @@ async def websocket_endpoint(ws: WebSocket):
                         try:
                             await _run_response_queue(_q, _c, images=_imgs or None)
 
-                            # ── Autonomous re-injection loop ──────────────────────────────
-                            # When autonomous_mode is ON, automatically re-trigger Nova
-                            # after each response instead of waiting for Cole's next message.
-                            # Nova drives herself — she reads her last result and decides
-                            # what to do next.  She says AUTONOMOUS_COMPLETE when finished.
+                            # ── Autonomous heartbeat loop ──────────────────────────────────
+                            # When autonomous_mode is ON, Nova drives herself indefinitely.
+                            # After each response the server sends a minimal [HEARTBEAT N]
+                            # tick — Nova reads HEARTBEAT.md, checks Thoughts/priority.md
+                            # and Master_Inbox, and decides what to do next on her own.
                             #
-                            # Stop conditions:
-                            #   - Cole toggles autonomous_mode OFF
-                            #   - Cole presses STOP (_stop_requested)
-                            #   - Nova says AUTONOMOUS_COMPLETE / HEARTBEAT_OK
-                            #   - Safety ceiling: _AUTO_TICK_MAX consecutive ticks
+                            # Stop conditions (in priority order):
+                            #   1. Cole toggles autonomous_mode OFF
+                            #   2. Cole presses STOP (_stop_requested)
+                            #   3. nova_status.json pulse == "Idle"  (silent completion)
+                            #   4. Nova replies with IDLE or AUTONOMOUS_COMPLETE (explicit)
+                            #   5. Safety backstop: 500 ticks (emergency only)
                             # ─────────────────────────────────────────────────────────────
-                            _AUTO_TICK_MAX = 20
-                            _auto_ticks    = 0
+                            _TICK_SAFETY = 500   # emergency backstop — not expected to hit
+                            _auto_ticks  = 0
+                            _ns_path     = Path(WORKSPACE_ROOT) / "nova_status.json"
 
                             while (autonomous_mode
                                    and not _stop_requested.is_set()
-                                   and _auto_ticks < _AUTO_TICK_MAX):
+                                   and _auto_ticks < _TICK_SAFETY):
 
                                 _auto_ticks += 1
                                 await asyncio.sleep(2.5)   # let UI settle; respect rate limits
@@ -2104,27 +2111,30 @@ async def websocket_endpoint(ws: WebSocket):
                                 if not autonomous_mode or _stop_requested.is_set():
                                     break
 
-                                nova_status = await get_status()
-                                if not nova_status.get("Nova"):
-                                    print("[autonomous] Nova offline — halting auto-tick loop")
+                                nova_avail = await get_status()
+                                if not nova_avail.get("Nova"):
+                                    print("[autonomous] Nova offline — halting heartbeat loop")
                                     break
 
-                                # ── Build a context-rich tick message ─────────────────────
-                                # Include original task + Nova's last action so she knows
-                                # where she is and what "done" looks like.
-                                _last_nova = ""
-                                for _m in reversed(session_mgr.active.messages):
-                                    if _m.get("author") == "Nova":
-                                        _last_nova = str(_m.get("content", ""))[:300].strip()
-                                        break
+                                # ── Silent completion: check nova_status.json pulse ────────
+                                # Nova writes pulse="Idle" via nova_cortex.nova_status.update()
+                                # when she finishes her work.  No announcement needed.
+                                if _ns_path.exists():
+                                    try:
+                                        _ns_data = json.loads(
+                                            _ns_path.read_text(encoding="utf-8"))
+                                        if str(_ns_data.get("pulse", "")).lower() == "idle":
+                                            print(f"[autonomous] Nova pulse=Idle — "
+                                                  f"silent stop after tick {_auto_ticks - 1}")
+                                            _auto_ticks -= 1   # don't count the check tick
+                                            break
+                                    except Exception:
+                                        pass
 
-                                tick_content = (
-                                    f"[AUTONOMOUS_TICK {_auto_ticks}/{_AUTO_TICK_MAX}]\n"
-                                    f"Original task: {_original_task[:200]}\n"
-                                    f"Your last action: {_last_nova if _last_nova else '(none yet)'}\n\n"
-                                    "If your task is complete, say AUTONOMOUS_COMPLETE and stop. "
-                                    "Otherwise take exactly one next action."
-                                )
+                                # ── Minimal heartbeat tick ─────────────────────────────────
+                                # Just [HEARTBEAT N] — Nova reads HEARTBEAT.md to decide
+                                # what to do.  No task context injected; her Thoughts hold it.
+                                tick_content = f"[HEARTBEAT {_auto_ticks}]"
                                 _tmsg = session_mgr.active.add("System", tick_content)
                                 await broadcast({
                                     "type":      "user_message",
@@ -2135,7 +2145,6 @@ async def websocket_endpoint(ws: WebSocket):
                                 })
 
                                 # Run Nova's response, then honour any @mentions she makes
-                                # (e.g. @gemini follow-ups) using the normal response queue
                                 nova_reply = await run_ai_response(
                                     "Nova", CLIENT_MAP["Nova"],
                                     str(uuid.uuid4())[:8], tick_content,
@@ -2153,30 +2162,18 @@ async def websocket_endpoint(ws: WebSocket):
                                         if _fu_queue:
                                             await _run_response_queue(_fu_queue, nova_reply)
 
-                                # Nova signals she is done
+                                # Explicit stop signals (fallback — silent pulse is preferred)
                                 if nova_reply and any(phrase in nova_reply for phrase in (
                                     "AUTONOMOUS_COMPLETE",
                                     "HEARTBEAT_OK",
-                                    "autonomous complete",
-                                    "task complete",
+                                    "IDLE",
                                 )):
-                                    print(f"[autonomous] Nova signalled done — stopping after tick {_auto_ticks}")
+                                    print(f"[autonomous] Nova explicit stop — "
+                                          f"tick {_auto_ticks}")
                                     break
 
-                            if _auto_ticks >= _AUTO_TICK_MAX:
-                                print(f"[autonomous] Reached max ticks ({_AUTO_TICK_MAX}) — pausing")
-                                _ceil_msg = session_mgr.active.add(
-                                    "System",
-                                    f"[Autonomous Mode: reached {_AUTO_TICK_MAX}-tick ceiling. "
-                                    "Toggle autonomous OFF then ON to resume.]"
-                                )
-                                await broadcast({
-                                    "type":      "user_message",
-                                    "author":    "System",
-                                    "content":   _ceil_msg["content"],
-                                    "id":        _ceil_msg["id"],
-                                    "timestamp": _ceil_msg["timestamp"],
-                                })
+                            if _auto_ticks >= _TICK_SAFETY:
+                                print(f"[autonomous] Safety backstop hit ({_TICK_SAFETY} ticks)")
 
                             # ── Post-run log export ───────────────────────────────────────
                             # Write everything that happened in this run to a standalone

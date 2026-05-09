@@ -1,12 +1,13 @@
 """
-nova_gateway/gateway.py
+general_tools/gateway.py
 ========================
 FastAPI entry point. Starts everything and keeps it running.
+(Dissolved from nova_gateway package, 2026-05-08.)
 
 What this does (plain English):
-  This is the file you run to start Nova's gateway. When you execute:
-    python -m nova_gateway.gateway
-  it starts:
+  This is the file you run to start Nova's gateway. Launch via:
+    python general_tools/nova_gateway_runner.py [--dry] [--port 18790]
+  It starts:
     - The Discord bot (if enabled in config)
     - The cron scheduler (health check every 30 min)
     - An HTTP API on port 18790 for nova_chat to query
@@ -17,24 +18,13 @@ HTTP API endpoints:
   GET  /health              — is the gateway alive?
   GET  /api/status          — full status (model, uptime, sessions, etc.)
   GET  /api/sessions        — recent session list (for nova_chat log viewer)
+  GET  /api/thoughts        — live Thoughts panel data (active cards + priority queue)
   POST /api/trigger         — manually trigger a Nova run (for testing)
   POST /api/cron/health     — manually fire the health check
   GET  /api/nova/status     — read nova_status.json (same as nova_chat uses)
 
 nova_chat integration:
-  Update server.py to query http://127.0.0.1:18790 instead of 18789.
-  The gateway/start and gateway/stop buttons will need updating too
-  (Phase 3 task 3.10).
-
-Usage:
-  # From workspace/general_tools/ directory:
-  python -m nova_gateway.gateway
-
-  # Dry run (verify config, don't connect):
-  python -m nova_gateway.gateway --dry
-
-  # Custom config file:
-  python -m nova_gateway.gateway --config /path/to/nova_gateway.json
+  server.py queries http://127.0.0.1:18790 for gateway status.
 """
 
 from __future__ import annotations
@@ -56,7 +46,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from gateway_config import cfg, load as load_config, CONFIG_PATH
 from nova_motor.tool_executor import ToolExecutor
-from nova_memory.session_store import list_sessions
+from nova_memory.session_store import list_sessions   # nova_body/nova_memory — session manager
 from nova_cortex.circadian import create_scheduler
 
 log = logging.getLogger(__name__)
@@ -83,11 +73,13 @@ _state = {
     "started_at":     time.time(),
     "discord_ready":  False,
     "scheduler_ready": False,
+    "vigilance_ready": False,
     "nova_status":    {},          # cached nova_status.json contents
     "nova_status_age": 0.0,
     "executor":       None,
     "scheduler":      None,
     "discord_bot":    None,
+    "vigilance":      None,
 }
 
 
@@ -110,6 +102,35 @@ async def startup():
     # Start nova_status polling
     asyncio.ensure_future(_poll_nova_status())
 
+    # Start NovaVigilance — sleep/wake monitor that drives the background autonomy loop.
+    # on_wake delegates to the scheduler's trigger_health_check_now(), which runs the
+    # full Thoughts cycle (priority.md → Master_Inbox routing → agent_loop).
+    try:
+        from nova_cortex.vigilance import NovaVigilance
+
+        def _on_wake(reason: str) -> None:
+            log.info("[vigilance] WAKE: %s — triggering Thoughts cycle", reason)
+            sched = _state.get("scheduler")
+            if sched is not None:
+                loop = asyncio.get_event_loop()
+                loop.call_soon_threadsafe(
+                    asyncio.ensure_future,
+                    sched.trigger_health_check_now()
+                )
+            else:
+                log.warning("[vigilance] WAKE fired but scheduler not ready — skipping")
+
+        def _on_sleep(reason: str) -> None:
+            log.info("[vigilance] SLEEP: %s", reason)
+
+        vigilance = NovaVigilance(on_wake=_on_wake, on_sleep=_on_sleep)
+        vigilance.start()
+        _state["vigilance"] = vigilance
+        _state["vigilance_ready"] = True
+        log.info("NovaVigilance started — sleep/wake monitoring active.")
+    except Exception as e:
+        log.warning("NovaVigilance failed to start: %s", e)
+
     # Start Discord bot if enabled
     if cfg.discord.get("enabled", False):
         from discord_client import NovaDiscordBot
@@ -125,6 +146,8 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     log.info("Nova Gateway shutting down...")
+    if _state["vigilance"]:
+        _state["vigilance"].stop()
     if _state["scheduler"]:
         _state["scheduler"].stop()
     if _state["discord_bot"]:
@@ -237,6 +260,176 @@ async def nova_status():
         "nova_live":   _state["nova_status"],
         "age_s":       int(time.time() - _state["nova_status_age"])
             if _state["nova_status_age"] else None,
+    }
+
+
+@app.get("/api/thoughts")
+async def thoughts_status():
+    """
+    Return a structured snapshot of Nova's Thoughts system for nova_chat UI.
+
+    Scans workspace/Thoughts/ for active thought folders, parses each master.md,
+    and also returns the priority queue summary from priority.md.
+
+    Response shape:
+    {
+        "active": [
+            {
+                "id": "TASK_NAME",
+                "status": "active" | "blocked" | "suspended" | ...,
+                "priority": "critical" | "high" | "medium" | "low",
+                "priority_num": 0-4,
+                "summary": "first line of Context section",
+                "plan_total": 5,
+                "plan_done": 2,
+                "last_updated": "2026-05-09 14:22",
+                "folder": "Thoughts/TASK_NAME/"
+            },
+            ...
+        ],
+        "finished_recent": [...],   # last 5 from Finished/
+        "priority_queue": {         # parsed from priority.md
+            "p0": bool,
+            "p1": [...],
+            "p2": [...],
+            "p3": [...],
+            "p4": [...],
+            "blocked": [...],
+            "suspended": [...],
+        },
+        "scanned_at": 1234567890
+    }
+    """
+    import re as _re
+
+    thoughts_root = cfg.workspace / "Thoughts"
+    if not thoughts_root.exists():
+        return {"active": [], "finished_recent": [], "priority_queue": {}, "scanned_at": int(time.time())}
+
+    PRIORITY_MAP = {"critical": 1, "high": 2, "medium": 3, "low": 4, "urgent": 1}
+
+    def _parse_master(md_path: Path, folder_name: str) -> dict:
+        """Parse a master.md file into a thought card dict."""
+        try:
+            text = md_path.read_text(encoding="utf-8")
+        except Exception:
+            return None
+
+        # Extract bold field values: **Field:** value
+        def _field(name: str) -> str:
+            m = _re.search(rf'\*\*{name}:\*\*\s*(.+)', text, _re.IGNORECASE)
+            return m.group(1).strip() if m else ""
+
+        status       = _field("Status") or "unknown"
+        priority_str = _field("Priority").split("|")[0].strip().lower()
+        task_id      = _field("Task ID") or folder_name
+        last_updated = _field("Last Updated") or _field("Created") or ""
+
+        # Context: first non-empty line after the "## Context" header
+        ctx_m = _re.search(r'##\s+Context\s*\n+_(.*?)_', text, _re.DOTALL)
+        if not ctx_m:
+            ctx_m = _re.search(r'##\s+Context\s*\n+(.*?)(?:\n\n|\n##)', text, _re.DOTALL)
+        summary = ""
+        if ctx_m:
+            raw = ctx_m.group(1).strip()
+            # Take the first sentence / first 120 chars
+            first = raw.split('\n')[0].strip()
+            summary = first[:120] if first and first not in ("_", "—") else ""
+
+        # If no context, fall back to the line after the title
+        if not summary:
+            lines = [l.strip() for l in text.splitlines() if l.strip() and not l.startswith('#')]
+            if lines:
+                summary = lines[0][:120]
+
+        # Count plan checkboxes
+        plan_items = _re.findall(r'- \[( |x|X)\]', text)
+        plan_total = len(plan_items)
+        plan_done  = sum(1 for c in plan_items if c.lower() == 'x')
+
+        return {
+            "id":          task_id,
+            "status":      status.lower(),
+            "priority":    priority_str,
+            "priority_num": PRIORITY_MAP.get(priority_str, 3),
+            "summary":     summary,
+            "plan_total":  plan_total,
+            "plan_done":   plan_done,
+            "last_updated": last_updated,
+            "folder":      f"Thoughts/{folder_name}/",
+        }
+
+    # ── Scan active thoughts (direct children of Thoughts/) ──────────────────
+    skip_dirs = {"Finished", "Master_Inbox"}
+    active = []
+    for entry in sorted(thoughts_root.iterdir()):
+        if not entry.is_dir() or entry.name in skip_dirs:
+            continue
+        master = entry / "master.md"
+        if not master.exists():
+            continue
+        card = _parse_master(master, entry.name)
+        if card:
+            active.append(card)
+
+    # Sort by priority_num then name
+    active.sort(key=lambda c: (c["priority_num"], c["id"]))
+
+    # ── Scan recently finished thoughts ───────────────────────────────────────
+    finished_recent = []
+    for bucket in ("completed_success", "completed_fail", "cancelled"):
+        bucket_dir = thoughts_root / "Finished" / bucket
+        if not bucket_dir.exists():
+            continue
+        for entry in sorted(bucket_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+            if not entry.is_dir():
+                continue
+            master = entry / "master.md"
+            if not master.exists():
+                continue
+            card = _parse_master(master, entry.name)
+            if card:
+                card["bucket"] = bucket
+                finished_recent.append(card)
+            if len(finished_recent) >= 5:
+                break
+        if len(finished_recent) >= 5:
+            break
+
+    # ── Parse priority.md ─────────────────────────────────────────────────────
+    priority_queue: dict = {}
+    pmd = thoughts_root / "priority.md"
+    if pmd.exists():
+        try:
+            ptext = pmd.read_text(encoding="utf-8")
+
+            def _pq_section(label: str) -> list[str]:
+                """Extract bullet items from a named priority section."""
+                m = _re.search(rf'##\s+{label}.*?\n(.*?)(?:\n##|\Z)', ptext, _re.DOTALL | _re.IGNORECASE)
+                if not m:
+                    return []
+                block = m.group(1)
+                items = _re.findall(r'[-*]\s+(.+)', block)
+                # Filter out placeholder lines
+                return [i.strip() for i in items if i.strip() and "None active" not in i]
+
+            priority_queue = {
+                "p0_active": bool(_re.search(r'COLE SPEAKS', ptext, _re.IGNORECASE)),
+                "p1": _pq_section(r'PRIORITY 1[^#]*'),
+                "p2": _pq_section(r'PRIORITY 2[^#]*'),
+                "p3": _pq_section(r'PRIORITY 3[^#]*'),
+                "p4": _pq_section(r'PRIORITY 4[^#]*'),
+                "blocked":   _pq_section(r'BLOCKED[^#]*'),
+                "suspended": _pq_section(r'SUSPENDED[^#]*'),
+            }
+        except Exception as e:
+            log.warning("priority.md parse error: %s", e)
+
+    return {
+        "active":         active,
+        "finished_recent": finished_recent,
+        "priority_queue": priority_queue,
+        "scanned_at":     int(time.time()),
     }
 
 
@@ -418,7 +611,7 @@ def main():
     print()
 
     uvicorn.run(
-        "nova_gateway.gateway:app",
+        "gateway:app",
         host=cfg.gateway["host"],
         port=port,
         log_level="info",

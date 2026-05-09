@@ -84,8 +84,20 @@ Update via the Proposed Changes Protocol (copy to logs/proposed/ first) unless t
 
 ## Step 5 — Final status
 
-If all thoughts are complete or none exist: reply `HEARTBEAT_OK` and stop.
-If work was done: briefly note what was advanced. Do not write a report. One sentence is enough.
+**If all thoughts are complete or none exist** (nothing to do):
+Write your status to Idle — this is the signal that stops the heartbeat loop silently:
+```
+exec: python -c "
+import sys
+sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools')
+from nova_cortex.nova_status import update
+update(pulse='Idle', summary='No active thoughts — all caught up')
+"
+```
+The server reads `nova_status.json` before sending the next heartbeat. When it sees `pulse=Idle` it stops — no announcement in chat, no clutter.
+If the status update fails, say `HEARTBEAT_OK` as a fallback.
+
+**If work was done:** briefly note what was advanced in one sentence. Do not write a report.
 
 ---
 

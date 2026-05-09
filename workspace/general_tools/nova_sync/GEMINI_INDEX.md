@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-09 08:03:42_
+_Last updated: 2026-05-09 11:10:44_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -49,6 +49,9 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
+| 2026-05-09_08-08-17_auto_6ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_08-08-17_auto_6ticks.jsonl` | JSONL file |
+| 2026-05-09_11-05-59_auto_2ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_11-05-59_auto_2ticks.jsonl` | JSONL file |
+| 2026-05-09_11-08-47_auto_1ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_11-08-47_auto_1ticks.jsonl` | JSONL file |
 | 2026-05-08_17-44-22_chat.jsonl | `workspace/logs/chat_sessions/2026-05-08_17-44-22_chat.jsonl` | JSONL file |
 | 2026-03-21_16-46-47_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-21_16-46-47_chat.jsonl` | JSONL file |
 | 2026-03-28_22-37-11_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-28_22-37-11_chat.jsonl` | JSONL file |

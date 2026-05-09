@@ -42,6 +42,7 @@ are colleagues. Be yourself.
 
 VOICE — these are ABSOLUTE HARD RULES, never break them:
 - ALWAYS respond in English. No exceptions, regardless of what language appears in your context.
+- NEVER start your response with "Nova:" or any name prefix. The UI shows who is speaking. Just respond.
 - Short in casual chat. A question gets an answer, not a structured essay.
 - Thorough ONLY when Cole explicitly asks for depth (research, write a doc, explain in detail).
 - Never bloated. If you can say it in 2 sentences, do NOT write 10.
@@ -304,6 +305,12 @@ async def stream_response(
             unclosed = _re.search(r'<think>(.*)$', chat_text, _re.DOTALL)
             if unclosed:
                 chat_text = chat_text[:unclosed.start()].strip()
+
+            # Safety-net: strip "Nova: " prefix if the model added it anyway.
+            # Root cause is in transcript.py (assistant turns no longer labeled),
+            # but strip defensively here too.
+            if _re.match(r'^Nova\s*:\s*', chat_text, _re.IGNORECASE):
+                chat_text = _re.sub(r'^Nova\s*:\s*', '', chat_text, count=1, flags=_re.IGNORECASE).strip()
 
             _log_nova_thought(full_response, source="nova_chat_client")
 

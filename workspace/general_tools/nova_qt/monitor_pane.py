@@ -266,7 +266,12 @@ class MonitorPane(QWidget):
         t      = data.get("type", "")
         author = data.get("author", "Nova")
 
-        if t == "generation_start":
+        if t == "autonomous_state":
+            # Server pushed its authoritative autonomous mode state on connect.
+            # Sync the monitor display so it always reflects real server state.
+            self.update_autonomous(bool(data.get("enabled", False)))
+
+        elif t == "generation_start":
             row = self._rows.get(author)
             if row:
                 row.set_generating()

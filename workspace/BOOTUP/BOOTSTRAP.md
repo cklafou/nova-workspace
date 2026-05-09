@@ -23,10 +23,13 @@ This returns JSON -- decode the base64 `content` field to get the latest session
 Read these files silently to remember who you are and what we are doing. Do not summarize them to Cole.
 
 ```
+read: ORIENT.md
 read: NOVA.md
 read: COLE.md
 read: memory/STATUS.md
 ```
+
+`ORIENT.md` is the master infrastructure reference — one file gives you the full workspace map, what's built vs. planned, how the servers work, and the safety rules. Read it first before any session where infrastructure tasks may come up.
 
 Read the last 2 journal entries:
 ```

@@ -453,7 +453,7 @@ class ChatPanel(QWidget):
         self._processing = False
         self._rebuilding_tabs = False   # guard against switch loop
         self._at_bottom = True         # auto-scroll state
-        self._autonomous = False       # autonomous mode off by default
+        self._autonomous = True        # autonomous mode on by default
         self._depth_tokens = 2048      # Balanced by default
 
         self._build_ui()
@@ -606,13 +606,13 @@ class ChatPanel(QWidget):
         controls_row.addStretch(1)
 
         # Autonomous mode toggle pill
-        self.auto_btn = QPushButton("⚡  Autonomous  OFF")
+        self.auto_btn = QPushButton("⚡  Autonomous  ON ")
         self.auto_btn.setCheckable(True)
-        self.auto_btn.setChecked(False)
+        self.auto_btn.setChecked(True)
         self.auto_btn.setFixedHeight(24)
         self.auto_btn.setFixedWidth(172)
         self.auto_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._apply_auto_style(False)
+        self._apply_auto_style(True)
         self.auto_btn.clicked.connect(self._on_autonomous_toggle)
         controls_row.addWidget(self.auto_btn)
 
@@ -795,11 +795,22 @@ class ChatPanel(QWidget):
     def on_raw_think(self, data: dict):
         """
         Handles think_start / think_token / think_end from the ws raw signal.
+        Also handles autonomous_state so the button syncs on reconnect.
         Routes events to the ThinkingBlock that was pre-created in on_msg_start.
         All other raw message types are intentionally ignored here.
         """
         t      = data.get("type", "")
         msg_id = data.get("id", "")
+
+        # Sync autonomous button state from server on connect
+        if t == "autonomous_state":
+            enabled = bool(data.get("enabled", True))
+            self._autonomous = enabled
+            self.auto_btn.setChecked(enabled)
+            self.auto_btn.setText("⚡  Autonomous  ON " if enabled else "⚡  Autonomous  OFF")
+            self._apply_auto_style(enabled)
+            return
+
         block  = self._think_blocks.get(msg_id)
         if not block:
             return

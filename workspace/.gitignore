@@ -4,6 +4,7 @@
 *.exe
 dist/
 build/
+_build/
 llama/
 models/
 git_log_output.txt

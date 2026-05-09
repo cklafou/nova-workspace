@@ -1,7 +1,7 @@
 """
 nova_gateway_runner.py
-Run from workspace root: python nova_gateway_runner.py [--dry] [--port 18790]
-Equivalent to: cd tools && python -m nova_gateway.gateway
+Run from workspace root: python general_tools/nova_gateway_runner.py [--dry] [--port 18790]
+Imports from general_tools/gateway.py (dissolved from nova_gateway package, 2026-05-08).
 """
 import sys
 from pathlib import Path
@@ -11,5 +11,5 @@ for _p in [str(Path(__file__).parent / "nova_body"),
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from nova_gateway.gateway import main
+from gateway import main
 main()

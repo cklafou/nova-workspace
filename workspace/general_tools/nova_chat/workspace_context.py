@@ -25,9 +25,9 @@ from pathlib import Path
 from typing import Optional
 
 try:
-    from nova_memory.hippocampus import get_store
+    from nova_lancedb.hippocampus import get_store
 except ImportError:
-    # Graceful fallback if nova_memory is not yet fully initialized/installed in all environments
+    # Graceful fallback if nova_lancedb is not yet fully initialized/installed in all environments
     def get_store():
         return None
 

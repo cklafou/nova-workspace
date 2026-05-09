@@ -157,7 +157,14 @@ class Transcript:
                     user_content.append({"type": "image_url", "image_url": {"url": img["dataUrl"]}})
                 messages.append({"role": role, "content": user_content})
             else:
-                messages.append({"role": role, "content": f"{msg['author']}: {content}"})
+                # User messages get author labels (Cole/Claude/Gemini need disambiguation).
+                # Assistant messages (Nova's own turns) must NOT be prefixed — the chat
+                # template already marks them as assistant, and prefixing trains the model
+                # to start its own replies with "Nova:".
+                if role == "assistant":
+                    messages.append({"role": role, "content": content})
+                else:
+                    messages.append({"role": role, "content": f"{msg['author']}: {content}"})
 
         return messages
 
