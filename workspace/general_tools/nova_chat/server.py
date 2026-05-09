@@ -2070,8 +2070,9 @@ async def websocket_endpoint(ws: WebSocket):
                     _c = content
                     _imgs = images or []   # images from this Cole message
 
-                    # Snapshot message count before this run so we know what's new
-                    _run_start_idx = len(session_mgr.active.messages)
+                    # Snapshot message count + original task before this run
+                    _run_start_idx    = len(session_mgr.active.messages)
+                    _original_task    = _c   # Cole's triggering message
 
                     async def _queued_run():
                         global is_processing
@@ -2108,11 +2109,21 @@ async def websocket_endpoint(ws: WebSocket):
                                     print("[autonomous] Nova offline — halting auto-tick loop")
                                     break
 
+                                # ── Build a context-rich tick message ─────────────────────
+                                # Include original task + Nova's last action so she knows
+                                # where she is and what "done" looks like.
+                                _last_nova = ""
+                                for _m in reversed(session_mgr.active.messages):
+                                    if _m.get("author") == "Nova":
+                                        _last_nova = str(_m.get("content", ""))[:300].strip()
+                                        break
+
                                 tick_content = (
-                                    f"[AUTONOMOUS_TICK {_auto_ticks}/{_AUTO_TICK_MAX}] "
-                                    "Continue your current task. Take the next concrete action "
-                                    "using your tools. When you have nothing left to do, "
-                                    "say AUTONOMOUS_COMPLETE."
+                                    f"[AUTONOMOUS_TICK {_auto_ticks}/{_AUTO_TICK_MAX}]\n"
+                                    f"Original task: {_original_task[:200]}\n"
+                                    f"Your last action: {_last_nova if _last_nova else '(none yet)'}\n\n"
+                                    "If your task is complete, say AUTONOMOUS_COMPLETE and stop. "
+                                    "Otherwise take exactly one next action."
                                 )
                                 _tmsg = session_mgr.active.add("System", tick_content)
                                 await broadcast({
@@ -2123,10 +2134,24 @@ async def websocket_endpoint(ws: WebSocket):
                                     "timestamp": _tmsg["timestamp"],
                                 })
 
+                                # Run Nova's response, then honour any @mentions she makes
+                                # (e.g. @gemini follow-ups) using the normal response queue
                                 nova_reply = await run_ai_response(
                                     "Nova", CLIENT_MAP["Nova"],
                                     str(uuid.uuid4())[:8], tick_content,
                                 )
+
+                                # Fire @mention follow-ups so Gemini/Claude can respond
+                                if nova_reply and not _stop_requested.is_set():
+                                    _nova_mentions = parse_directed(nova_reply)
+                                    _follow_ups = [n for n in _nova_mentions
+                                                   if n in ("Claude", "Gemini")]
+                                    if _follow_ups:
+                                        _fu_status = await get_status()
+                                        _fu_queue  = [n for n in _follow_ups
+                                                      if _fu_status.get(n)]
+                                        if _fu_queue:
+                                            await _run_response_queue(_fu_queue, nova_reply)
 
                                 # Nova signals she is done
                                 if nova_reply and any(phrase in nova_reply for phrase in (
