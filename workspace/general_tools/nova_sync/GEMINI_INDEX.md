@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-09 11:10:44_
+_Last updated: 2026-05-09 18:45:53_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -27,8 +27,10 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
 | Install_Nova_Qt.cmd | `workspace/Install_Nova_Qt.cmd` | CMD file |
+| Install_Webview.cmd | `workspace/Install_Webview.cmd` | CMD file |
 | nova_gateway - tokenless.json | `workspace/nova_gateway - tokenless.json` | JSON file |
 | nova_gateway.json | `workspace/nova_gateway.json` | JSON file |
+| ORIENT.md | `workspace/ORIENT.md` | MD file |
 | Patch_Nova.cmd | `workspace/Patch_Nova.cmd` | CMD file |
 | README.md | `workspace/README.md` | Project overview |
 | start_llama.cmd | `workspace/start_llama.cmd` | CMD file |
@@ -52,6 +54,10 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | 2026-05-09_08-08-17_auto_6ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_08-08-17_auto_6ticks.jsonl` | JSONL file |
 | 2026-05-09_11-05-59_auto_2ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_11-05-59_auto_2ticks.jsonl` | JSONL file |
 | 2026-05-09_11-08-47_auto_1ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_11-08-47_auto_1ticks.jsonl` | JSONL file |
+| 2026-05-09_16-51-46_auto_2ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_16-51-46_auto_2ticks.jsonl` | JSONL file |
+| 2026-05-09_16-55-03_auto_3ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_16-55-03_auto_3ticks.jsonl` | JSONL file |
+| 2026-05-09_16-57-03_auto_2ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_16-57-03_auto_2ticks.jsonl` | JSONL file |
+| 2026-05-09_17-21-51_auto_6ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_17-21-51_auto_6ticks.jsonl` | JSONL file |
 | 2026-05-08_17-44-22_chat.jsonl | `workspace/logs/chat_sessions/2026-05-08_17-44-22_chat.jsonl` | JSONL file |
 | 2026-03-21_16-46-47_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-21_16-46-47_chat.jsonl` | JSONL file |
 | 2026-03-28_22-37-11_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-28_22-37-11_chat.jsonl` | JSONL file |
@@ -98,6 +104,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | 97c758a0-239d-40c6-b6b4-ff1af4f1a2cb.jsonl | `workspace/logs/gateway_sessions/2026-05-08/97c758a0-239d-40c6-b6b4-ff1af4f1a2cb.jsonl` | JSONL file |
 | dc0348fb-8be5-482d-895e-75b02a41c999.jsonl | `workspace/logs/gateway_sessions/2026-05-08/dc0348fb-8be5-482d-895e-75b02a41c999.jsonl` | JSONL file |
 | f3ce5473-1c7b-43af-b126-58118fee8faf.jsonl | `workspace/logs/gateway_sessions/2026-05-08/f3ce5473-1c7b-43af-b126-58118fee8faf.jsonl` | JSONL file |
+| 4b934922-419d-4b97-acdf-2cdf50f72406.jsonl | `workspace/logs/gateway_sessions/2026-05-09/4b934922-419d-4b97-acdf-2cdf50f72406.jsonl` | JSONL file |
 | mentor.jsonl | `workspace/logs/sessions/2026-03-19/mentor.jsonl` | JSONL file |
 | mentor.jsonl | `workspace/logs/sessions/2026-03-20/mentor.jsonl` | JSONL file |
 | stress_test.jsonl | `workspace/logs/sessions/2026-03-20/stress_test.jsonl` | JSONL file |
@@ -141,13 +148,6 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
-| master.md | `workspace/Thoughts/Finished/cancelled/TEST_ADVANCE/master.md` | MD file |
-| master.md | `workspace/Thoughts/Finished/cancelled/TEST_BLOCKED/master.md` | MD file |
-| master.md | `workspace/Thoughts/Finished/cancelled/TEST_BRIEF/master.md` | MD file |
-| master.md | `workspace/Thoughts/Finished/cancelled/TEST_STATUS/master.md` | MD file |
-| master.md | `workspace/Thoughts/Finished/cancelled/TEST_STATUS2/master.md` | MD file |
-| master.md | `workspace/Thoughts/Finished/cancelled/TEST_STATUS3/master.md` | MD file |
-| master.md | `workspace/Thoughts/Finished/cancelled/TEST_STATUS4/master.md` | MD file |
 | master.md | `workspace/Thoughts/Finished/completed_success/TEST_BRAIN_PROBE/master.md` | MD file |
 | priority.md | `workspace/Thoughts/priority.md` | MD file |
 | THOUGHT_TEMPLATE.md | `workspace/Thoughts/THOUGHT_TEMPLATE.md` | MD file |
@@ -206,17 +206,6 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | tool_router.py | `workspace/general_tools/nova_chat/tool_router.py` | PY file |
 | transcript.py | `workspace/general_tools/nova_chat/transcript.py` | PY file |
 | workspace_context.py | `workspace/general_tools/nova_chat/workspace_context.py` | PY file |
-| __init__.py | `workspace/general_tools/nova_gateway/__init__.py` | PY file |
-| agent_loop.py | `workspace/general_tools/nova_gateway/agent_loop.py` | PY file |
-| calls.md | `workspace/general_tools/nova_gateway/calls.md` | MD file |
-| config.py | `workspace/general_tools/nova_gateway/config.py` | PY file |
-| context_builder.py | `workspace/general_tools/nova_gateway/context_builder.py` | PY file |
-| discord_client.py | `workspace/general_tools/nova_gateway/discord_client.py` | PY file |
-| gateway.py | `workspace/general_tools/nova_gateway/gateway.py` | PY file |
-| injector.py | `workspace/general_tools/nova_gateway/injector.py` | PY file |
-| scheduler.py | `workspace/general_tools/nova_gateway/scheduler.py` | PY file |
-| session_store.py | `workspace/general_tools/nova_gateway/session_store.py` | PY file |
-| tool_executor.py | `workspace/general_tools/nova_gateway/tool_executor.py` | PY file |
 | nova_gateway_runner.py | `workspace/general_tools/nova_gateway_runner.py` | PY file |
 | __init__.py | `workspace/general_tools/nova_qt/__init__.py` | PY file |
 | calls.md | `workspace/general_tools/nova_qt/calls.md` | MD file |
@@ -228,6 +217,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | settings_dialog.py | `workspace/general_tools/nova_qt/settings_dialog.py` | PY file |
 | sidebar.py | `workspace/general_tools/nova_qt/sidebar.py` | PY file |
 | theme.py | `workspace/general_tools/nova_qt/theme.py` | PY file |
+| webview_window.py | `workspace/general_tools/nova_qt/webview_window.py` | PY file |
 | window.py | `workspace/general_tools/nova_qt/window.py` | PY file |
 | ws_client.py | `workspace/general_tools/nova_qt/ws_client.py` | PY file |
 | .drive_sync_cache.json | `workspace/general_tools/nova_sync/.drive_sync_cache.json` | JSON file |
@@ -240,6 +230,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | FILE_INDEX_LINK.md | `workspace/general_tools/nova_sync/FILE_INDEX_LINK.md` | Claude's bootstrap URL pointer |
 | watcher.py | `workspace/general_tools/nova_sync/watcher.py` | GitHub sync + Drive sync + backup. Modes: --push, --pup, --full |
 | NovaLauncher.py | `workspace/general_tools/NovaLauncher.py` | PY file |
+| orient.py | `workspace/general_tools/orient.py` | PY file |
 | restructure.py | `workspace/general_tools/restructure.py` | PY file |
 
 ## nova_body/
@@ -267,32 +258,26 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | log_reader.py | `workspace/nova_body/nova_memory/log_reader.py` | Reads session logs -- summarize_today(), get_failures() |
 | session_store.py | `workspace/nova_body/nova_memory/session_store.py` | PY file |
 | state.py | `workspace/nova_body/nova_memory/state.py` | Pre-condition state checking before any action |
-| status.py | `workspace/nova_body/nova_memory/status.py` | STATUS.md proposed-changes updater |
 | __init__.py | `workspace/nova_body/nova_motor/__init__.py` | PY file |
 | calls.md | `workspace/nova_body/nova_motor/calls.md` | MD file |
 | hands.py | `workspace/nova_body/nova_motor/hands.py` | Mouse/keyboard control via pyautogui + pynput |
 | motor_cortex.py | `workspace/nova_body/nova_motor/motor_cortex.py` | PY file |
 | tool_executor.py | `workspace/nova_body/nova_motor/tool_executor.py` | PY file |
 | verify.py | `workspace/nova_body/nova_motor/verify.py` | Action verification helpers |
-| __init__.py | `workspace/nova_body/nova_perception_bak/__init__.py` | PY file |
-| calls.md | `workspace/nova_body/nova_perception_bak/calls.md` | MD file |
-| eyes.py | `workspace/nova_body/nova_perception_bak/eyes.py` | Unified vision -- pywinauto first, Claude Haiku fallback |
-| proprioception.py | `workspace/nova_body/nova_perception_bak/proprioception.py` | PY file |
-| vision.py | `workspace/nova_body/nova_perception_bak/vision.py` | Claude Haiku screen verification and description |
 | __init__.py | `workspace/nova_body/nova_senses/__init__.py` | PY file |
 | calls.md | `workspace/nova_body/nova_senses/calls.md` | MD file |
 | eyes.py | `workspace/nova_body/nova_senses/eyes.py` | Unified vision -- pywinauto first, Claude Haiku fallback |
 | proprioception.py | `workspace/nova_body/nova_senses/proprioception.py` | PY file |
 | vision.py | `workspace/nova_body/nova_senses/vision.py` | Claude Haiku screen verification and description |
 
-## nova_memory/
+## nova_lancedb/
 
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
-| __init__.py | `workspace/nova_memory/__init__.py` | PY file |
-| embedder.py | `workspace/nova_memory/embedder.py` | PY file |
-| hippocampus.py | `workspace/nova_memory/hippocampus.py` | PY file |
-| indexer.py | `workspace/nova_memory/indexer.py` | PY file |
+| __init__.py | `workspace/nova_lancedb/__init__.py` | PY file |
+| embedder.py | `workspace/nova_lancedb/embedder.py` | PY file |
+| hippocampus.py | `workspace/nova_lancedb/hippocampus.py` | PY file |
+| indexer.py | `workspace/nova_lancedb/indexer.py` | PY file |
 
 ---
 _This manifest is auto-generated on every Drive sync by nova_sync/drive.py._

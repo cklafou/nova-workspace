@@ -433,6 +433,116 @@ async def thoughts_status():
     }
 
 
+@app.get("/api/files")
+async def list_files():
+    """
+    Return a shallow-depth file tree of the workspace for nova_chat's Files panel.
+    Returns: { "tree": [ { "name": str, "type": "dir"|"file", "children": [...] } ] }
+    """
+    import os as _os
+
+    def _scan(path, depth=0, max_depth=3):
+        items = []
+        try:
+            entries = sorted(_os.scandir(path), key=lambda e: (not e.is_dir(), e.name.lower()))
+        except PermissionError:
+            return items
+        for e in entries:
+            # Skip hidden files/dirs and __pycache__
+            if e.name.startswith('.') or e.name == '__pycache__':
+                continue
+            if e.is_dir():
+                children = _scan(e.path, depth + 1, max_depth) if depth < max_depth else []
+                items.append({"name": e.name, "type": "dir", "children": children})
+            else:
+                items.append({"name": e.name, "type": "file"})
+        return items
+
+    tree = _scan(cfg.workspace)
+    return {"tree": tree, "root": str(cfg.workspace)}
+
+
+@app.get("/api/logs")
+async def get_logs(lines: int = 200):
+    """
+    Return the last N lines from Nova's log file for the Logs viewer in nova_chat.
+    """
+    import os as _os
+
+    # Try common log locations
+    candidates = [
+        cfg.workspace / "logs" / "nova.log",
+        cfg.workspace / "nova.log",
+        cfg.workspace.parent / "nova.log",
+    ]
+    log_path = None
+    for c in candidates:
+        if c.exists():
+            log_path = c
+            break
+
+    if not log_path:
+        return {"lines": ["(no log file found — expected workspace/logs/nova.log)"], "path": None}
+
+    try:
+        with open(log_path, encoding="utf-8", errors="replace") as f:
+            all_lines = f.readlines()
+        return {"lines": [l.rstrip() for l in all_lines[-lines:]], "path": str(log_path)}
+    except Exception as e:
+        return {"lines": [f"Error reading log: {e}"], "path": str(log_path)}
+
+
+@app.get("/api/llama/status")
+async def llama_status():
+    """Return llama.cpp server status."""
+    import urllib.request as _ur
+    try:
+        with _ur.urlopen("http://127.0.0.1:8080/health", timeout=1) as r:
+            running = r.status < 400
+    except Exception:
+        running = False
+    return {"running": running, "status": "running" if running else "offline"}
+
+
+@app.post("/api/llama/toggle")
+async def llama_toggle():
+    """Attempt to toggle the llama.cpp server (start if offline, no-op if running)."""
+    import urllib.request as _ur
+    try:
+        with _ur.urlopen("http://127.0.0.1:8080/health", timeout=1) as r:
+            running = r.status < 400
+    except Exception:
+        running = False
+    if running:
+        return {"message": "llama.cpp is already running on port 8080"}
+    return {"message": "llama.cpp not running — start it manually via llama_server.exe or llama.bat"}
+
+
+@app.patch("/sessions/{session_id}")
+async def rename_session(session_id: str, body: dict):
+    """Rename a chat session (nova_chat UI calls this from session rename UI)."""
+    new_name = (body.get("name") or "").strip()
+    if not new_name:
+        raise HTTPException(status_code=400, detail="name required")
+    # Forward to nova_chat server if accessible
+    import urllib.request as _ur, json as _json, urllib.error as _ue
+    try:
+        req = _ur.Request(
+            f"http://127.0.0.1:8765/sessions/{session_id}",
+            data=_json.dumps({"name": new_name}).encode(),
+            headers={"Content-Type": "application/json"},
+            method="PATCH",
+        )
+        with _ur.urlopen(req, timeout=2) as r:
+            return _json.loads(r.read())
+    except _ue.HTTPError as e:
+        if e.code == 404:
+            raise HTTPException(status_code=404, detail="session not found")
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="nova_chat not reachable")
+
+
 @app.post("/api/trigger")
 async def manual_trigger(body: dict):
     """
