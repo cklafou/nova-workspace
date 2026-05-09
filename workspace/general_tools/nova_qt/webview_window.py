@@ -57,6 +57,8 @@ class NovaWebWindow(QMainWindow):
 
         # ── WebView ───────────────────────────────────────────────────────────────
         self._view = QWebEngineView()
+        # Enable right-click context menu (Copy / Paste / Inspect)
+        self._view.setContextMenuPolicy(Qt.ContextMenuPolicy.DefaultContextMenu)
         self._view.setUrl(QUrl(url))
         self._view.titleChanged.connect(self._on_title_changed)
         self._view.loadFinished.connect(self._on_load_finished)

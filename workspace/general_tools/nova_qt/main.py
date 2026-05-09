@@ -40,7 +40,8 @@ def run_qt_window():
 
         print("[nova_qt] Using pywebview (Edge WebView2) — full HTML UI active.")
 
-        window = webview.create_window(
+        # Build kwargs — context_menu was added in pywebview 5.x; ignore on older versions
+        _wv_kwargs = dict(
             title            = "Project Nova",
             url              = CHAT_URL,
             width            = 1440,
@@ -49,6 +50,13 @@ def run_qt_window():
             background_color = "#080810",
             text_select      = True,
         )
+        try:
+            import inspect as _ins
+            if "context_menu" in _ins.signature(webview.create_window).parameters:
+                _wv_kwargs["context_menu"] = True
+        except Exception:
+            pass
+        window = webview.create_window(**_wv_kwargs)
 
         # On window close, shut down the nova_chat server
         def _on_closed():

@@ -15,6 +15,7 @@
   --bg-mid:       #0c0c18;
   --bg-surface:   #111120;
   --bg-raised:    #18182a;
+  --bg-alt:       #13132a;
   --bg-hover:     rgba(255,255,255,0.038);
   --border:       rgba(255,255,255,0.07);
   --border-med:   rgba(255,255,255,0.11);
@@ -305,19 +306,23 @@ a:hover { text-decoration: underline; }
 
 /* Resize handles */
 .resize-handle {
-  width: 4px;
+  width: 5px;
   background: transparent;
   cursor: col-resize;
   flex-shrink: 0;
   position: relative;
-  z-index: 10;
+  z-index: 20;
   transition: background var(--t);
+  touch-action: none;
 }
-.resize-handle:hover, .resize-handle.dragging { background: rgba(143,144,255,0.25); }
-.resize-handle::after {
+.resize-handle:hover { background: rgba(143,144,255,0.18); }
+.resize-handle.dragging { background: rgba(143,144,255,0.40) !important; }
+.resize-handle::before {
   content: '';
   position: absolute;
-  inset: 0 -3px;  /* widen hit area */
+  inset: 0 -6px;  /* 17px total hit zone */
+  z-index: 20;
+  cursor: col-resize;
 }
 
 /* ═══════════════════════════════════════════════
@@ -369,7 +374,7 @@ a:hover { text-decoration: underline; }
   gap: 7px; min-width: 0; position: relative;
 }
 .session-item:hover { background: var(--bg-hover); }
-.session-item.active { background: var(--nova-dim); }
+.session-item.active { background: var(--nova-dim); border-left: 2px solid var(--nova); padding-left: 5px; }
 .session-item.active .s-name { color: var(--nova); }
 .s-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-mute); flex-shrink: 0; transition: all var(--t); }
 .session-item.active .s-dot { background: var(--nova); box-shadow: 0 0 5px rgba(143,144,255,0.7); }
@@ -430,11 +435,21 @@ a:hover { text-decoration: underline; }
 .msg-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
 .msg-author { font-size: 11.5px; font-weight: 600; }
 .msg-time   { font-size: 9.5px; color: var(--text-mute); }
+.msg-copy { display: none; background: none; border: none; color: var(--text-mute); cursor: pointer; padding: 1px 5px; border-radius: var(--radius-sm); font-size: 11px; transition: all var(--t); margin-left: auto; line-height: 1; }
+.msg-wrap:hover .msg-copy { display: flex; align-items: center; }
+.msg-copy:hover { color: var(--text); background: var(--bg-hover); }
+.msg-copy.copied { color: var(--green); }
 .msg-text   { font-size: 14px; line-height: 1.65; color: var(--text); word-break: break-word; }
 .msg-text p + p { margin-top: 0.5em; }
-.msg-text pre { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px; overflow-x: auto; margin: 7px 0; }
+.msg-text pre { background: var(--bg-raised); border: 1px solid var(--border); border-radius: 0 0 var(--radius-sm) var(--radius-sm); border-top: none; padding: 11px; overflow-x: auto; margin: 0; }
 .msg-text code { font-family: var(--mono); font-size: 12px; }
 .msg-text :not(pre) > code { background: var(--bg-raised); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+.code-block { margin: 7px 0; }
+.code-header { display: flex; align-items: center; justify-content: space-between; background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius-sm) var(--radius-sm) 0 0; padding: 3px 10px; }
+.code-lang { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-transform: lowercase; }
+.code-copy { background: none; border: 1px solid transparent; border-radius: 4px; color: var(--text-dim); font-size: 10px; padding: 1px 8px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+.code-copy:hover { color: var(--nova); border-color: var(--nova); }
+.code-copy.copied { color: #4caf50; border-color: #4caf50; }
 .msg-text ul,.msg-text ol { padding-left: 1.4em; margin: 0.35em 0; }
 .msg-text li { margin: 0.18em 0; }
 .msg-text h1,.msg-text h2,.msg-text h3 { margin: 0.7em 0 0.25em; font-weight: 600; }
@@ -494,6 +509,8 @@ a:hover { text-decoration: underline; }
 #send-btn { background: var(--nova); color: #fff; border: none; cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all var(--t); flex-shrink: 0; }
 #send-btn:hover { background: #a0a1ff; box-shadow: var(--nova-glow); }
 #send-btn:disabled { background: var(--text-mute); cursor: not-allowed; box-shadow: none; }
+#send-btn.stop-mode { background: var(--red); font-size: 10px; }
+#send-btn.stop-mode:hover { background: #ff8a8a; box-shadow: 0 0 14px rgba(248,113,113,0.4); }
 
 .input-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 10px 7px; }
 .input-bar-left  { display: flex; gap: 4px; align-items: center; }
@@ -631,12 +648,16 @@ a:hover { text-decoration: underline; }
 .sb-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
 .sb-btn.active { color: var(--nova); }
 .sb-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.sb-srv { display: flex; align-items: center; gap: 4px; font-size: 9.5px; color: var(--text-mute); padding: 1px 5px; border-radius: 3px; transition: background var(--t); }
+.sb-srv:hover { background: rgba(255,255,255,0.04); color: var(--text-dim); }
+.sb-srv-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-mute); flex-shrink: 0; transition: background var(--t); }
+.sb-srv-dot.online { background: var(--green); box-shadow: 0 0 4px rgba(74,222,128,0.5); }
 
 /* ═══════════════════════════════════════════════
    CONTEXT MENU
 ═══════════════════════════════════════════════ */
-#ctx-menu { display: none; position: fixed; z-index: 9100; background: var(--bg-surface); border: 1px solid var(--border-med); border-radius: var(--radius-sm); padding: 4px; min-width: 144px; box-shadow: 0 10px 36px rgba(0,0,0,0.6); animation: ctxIn 0.11s var(--ease); }
-#ctx-menu.open { display: block; }
+#ctx-menu, #text-ctx-menu { display: none; position: fixed; z-index: 9100; background: var(--bg-surface); border: 1px solid var(--border-med); border-radius: var(--radius-sm); padding: 4px; min-width: 144px; box-shadow: 0 10px 36px rgba(0,0,0,0.6); animation: ctxIn 0.11s var(--ease); }
+#ctx-menu.open, #text-ctx-menu.open { display: block; }
 @keyframes ctxIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
 .ctx-item { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; color: var(--text-dim); transition: all var(--t); }
 .ctx-item:hover { background: var(--bg-hover); color: var(--text); }
@@ -693,6 +714,22 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 
 /* Misc */
 .kbd { background: var(--bg-raised); border: 1px solid var(--border-med); border-radius: 3px; padding: 1px 5px; font-size: 10px; font-family: var(--mono); color: var(--text-dim); }
+
+/* ═══════════════════════════════════════════════
+   TOOLTIP SYSTEM
+═══════════════════════════════════════════════ */
+#nova-tip {
+  position: fixed; z-index: 9800;
+  background: var(--bg-raised); border: 1px solid var(--border-med);
+  color: var(--text); font-size: 11px; line-height: 1.45;
+  padding: 5px 9px; border-radius: var(--radius-sm);
+  pointer-events: none; max-width: 230px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+  white-space: normal; word-break: break-word;
+  opacity: 0; transition: opacity 0.1s;
+  display: none;
+}
+#nova-tip.show { opacity: 1; display: block; }
 </style>
 </head>
 <body>
@@ -739,6 +776,8 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 <div id="dd-view" class="dropdown">
   <div class="dd-item" onclick="toggleSidebar()"><span class="dd-icon">▐</span><span class="dd-label">Toggle Sidebar</span><span class="dd-key">Ctrl+B</span></div>
   <div class="dd-item" onclick="togglePanel()"><span class="dd-icon">◫</span><span class="dd-label">Toggle Panel</span><span class="dd-key">Ctrl+Shift+P</span></div>
+  <div class="dd-sep"></div>
+  <div class="dd-item" onclick="location.reload();closeDD()"><span class="dd-icon">↺</span><span class="dd-label">Reload UI</span><span class="dd-key">F5</span></div>
   <div class="dd-sep"></div>
   <div class="dd-header">Panel Tab</div>
   <div class="dd-item" onclick="switchPanel('thoughts')"><span class="dd-icon">🧠</span><span class="dd-label">Thoughts</span><span class="dd-check" id="vchk-thoughts"></span></div>
@@ -827,6 +866,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <span><span class="kbd">Ctrl+Shift+P</span> Panel</span>
     <span><span class="kbd">Ctrl+K</span> Focus input</span>
     <span><span class="kbd">Ctrl+E</span> Export</span>
+    <span><span class="kbd">F5</span> Reload UI</span>
     <span><span class="kbd">Esc</span> Stop / close</span>
   </div>
 </div>
@@ -880,7 +920,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
         <div class="pbar-typing" id="pb-typing-gemini"><span></span><span></span><span></span></div>
         <span class="pbar-state" id="pb-state-gemini">offline</span>
       </button>
-      <button class="pbar-auto" id="pb-auto" onclick="clickAutoToggle()" title="Autonomous mode: Nova drives herself via heartbeat ticks without waiting for Cole's input. Toggle to pause.">
+      <button class="pbar-auto" id="pb-auto" onclick="clickAutoToggle()" data-tooltip="Autonomous mode — Nova drives herself via heartbeat without waiting for input. Click to pause/resume.">
         <div class="pbar-auto-dot" id="pb-auto-dot"></div>Auto
       </button>
     </div>
@@ -900,18 +940,18 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
         </div>
         <div class="input-bar">
           <div class="input-bar-left">
-            <button class="auto-toggle" id="auto-toggle" onclick="clickAutoToggle()" title="Autonomous mode: Nova drives herself via heartbeat ticks. Toggle to pause.">
+            <button class="auto-toggle" id="auto-toggle" onclick="clickAutoToggle()" data-tooltip="Autonomous mode — Nova drives herself via heartbeat ticks without waiting for your input. Click to toggle on/off.">
               <span class="auto-dot"></span><span id="auto-label">Autonomous</span>
             </button>
-            <button id="stop-btn" onclick="stopGen()" title="Cancel all in-flight AI responses (Esc)">⏹ Stop</button>
+            <button id="stop-btn" onclick="stopGen()" data-tooltip="Stop all in-flight AI responses (Esc)">⏹ Stop</button>
           </div>
           <div class="input-bar-right">
-            <div class="verbosity-ctrl" title="Response length hint (sent silently to Nova). Concise = brief; Verbose = thorough.">
+            <div class="verbosity-ctrl" data-tooltip="Response length hint sent silently to Nova. Concise = brief and direct; Normal = balanced; Verbose = thorough and detailed.">
               <button class="verbosity-btn" id="vb-concise" onclick="setVerbosity('concise')">⊖</button>
               <button class="verbosity-btn active" id="vb-normal"  onclick="setVerbosity('normal')">Normal</button>
               <button class="verbosity-btn" id="vb-verbose" onclick="setVerbosity('verbose')">⊕</button>
             </div>
-            <div class="depth-ctrl" title="Max response tokens. 0 = model default (auto). Higher = longer responses but slower.">
+            <div class="depth-ctrl" data-tooltip="Max response length in tokens. 0 = model default (auto). Drag right for longer, more detailed responses.">
               <span>Depth</span>
               <input type="range" id="depth-slider" min="0" max="32768" step="512" value="0" oninput="onDepth(this.value)">
               <span id="depth-val" style="font-family:var(--mono);font-size:10px;color:var(--text-mute);min-width:28px">auto</span>
@@ -928,12 +968,12 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <!-- RIGHT PANEL -->
   <div id="right-panel">
     <div class="panel-tabs">
-      <div class="ptab active" data-tab="thoughts" onclick="switchPanel('thoughts')">Thoughts</div>
-      <div class="ptab" data-tab="tools"    onclick="switchPanel('tools')">Tools</div>
-      <div class="ptab" data-tab="monitor"  onclick="switchPanel('monitor')">Monitor</div>
-      <div class="ptab" data-tab="files"    onclick="switchPanel('files')">Files</div>
-      <div class="ptab" data-tab="eyes"     onclick="switchPanel('eyes')">Eyes</div>
-      <div class="ptab" data-tab="terminal" onclick="switchPanel('terminal')">Terminal</div>
+      <div class="ptab active" data-tab="thoughts" onclick="switchPanel('thoughts')" data-tooltip="Nova's reasoning — extended thinking tokens shown here as she works through problems">Thoughts</div>
+      <div class="ptab" data-tab="tools"    onclick="switchPanel('tools')"    data-tooltip="Tool calls — every file read, write, shell command, and web fetch Nova executes">Tools</div>
+      <div class="ptab" data-tab="monitor"  onclick="switchPanel('monitor')"  data-tooltip="Live system metrics — Nova's CPU, memory, active goals, and heartbeat status">Monitor</div>
+      <div class="ptab" data-tab="files"    onclick="switchPanel('files')"    data-tooltip="Workspace file tree — browse and open files from the Project Nova workspace">Files</div>
+      <div class="ptab" data-tab="eyes"     onclick="switchPanel('eyes')"     data-tooltip="Nova's desktop view — stream screenshots of what Nova sees on her screen">Eyes</div>
+      <div class="ptab" data-tab="terminal" onclick="switchPanel('terminal')" data-tooltip="Server log tail — live output from the Nova Chat server process">Terminal</div>
     </div>
 
     <div class="panel-section active" id="panel-thoughts">
@@ -1011,6 +1051,16 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <span id="sb-session"></span>
   </div>
   <div class="sb-right">
+    <!-- Live service dots always visible in status bar -->
+    <div class="sb-srv" data-tooltip="Gateway — routes between Nova Chat server and the AI clients (port 18790). Click to open Services." id="sb-gateway-pill" onclick="toggleDD('services',document.querySelector('[data-dd=services]'))" style="cursor:pointer">
+      <div class="sb-srv-dot" id="sb-dot-gateway"></div>
+      <span>GW</span>
+    </div>
+    <div class="sb-srv" data-tooltip="llama.cpp — local Nova model server on port 8080. Green = running. Click to open Services." id="sb-llama-pill" onclick="toggleDD('services',document.querySelector('[data-dd=services]'))" style="cursor:pointer">
+      <div class="sb-srv-dot" id="sb-dot-llama"></div>
+      <span>LLM</span>
+    </div>
+    <div class="sb-sep"></div>
     <button class="sb-btn active" id="panel-toggle-sb" onclick="togglePanel()">◫ Panel</button>
     <div class="sb-sep"></div>
     <span style="font-size:9.5px;opacity:0.5">Ctrl+T · new &nbsp;·&nbsp; Ctrl+B · sidebar &nbsp;·&nbsp; Esc · stop</span>
@@ -1025,6 +1075,15 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="ctx-item" onclick="ctxArchive()">📦 Archive</div>
   <div class="ctx-sep"></div>
   <div class="ctx-item danger" onclick="ctxDelete()">🗑 Delete</div>
+</div>
+
+<!-- TEXT / GLOBAL RIGHT-CLICK CONTEXT MENU -->
+<div id="text-ctx-menu">
+  <div class="ctx-item" id="tctx-copy"   onclick="textCtxCopy()">📋 Copy</div>
+  <div class="ctx-item" id="tctx-cut"    onclick="textCtxCut()">✂ Cut</div>
+  <div class="ctx-item" id="tctx-paste"  onclick="textCtxPaste()">📌 Paste</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="textCtxSelectAll()">Select All</div>
 </div>
 
 <!-- MODAL -->
@@ -1048,6 +1107,9 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <div style="display:flex;justify-content:flex-end"><button class="btn btn-cancel" onclick="closeLogs()">Close</button></div>
   </div>
 </div>
+
+<!-- TOOLTIP -->
+<div id="nova-tip"></div>
 
 <!-- TOASTS -->
 <div id="toasts"></div>
@@ -1110,7 +1172,7 @@ function connect() {
   ws.onclose = () => { setSbStatus('Reconnecting…','var(--red)'); setConnDot(false); setProcessing(false); setTimeout(connect,3000); };
   ws.onerror = () => setSbStatus('Error','var(--red)');
   ws.onmessage = e => { try { handle(JSON.parse(e.data)); } catch(_){} };
-  setInterval(() => ws?.readyState===1 && ws.send(JSON.stringify({type:'ping'})), 30000);
+  setInterval(() => ws?.readyState===1 && ws.send(JSON.stringify({type:'ping'})), 10000);
 }
 
 function setConnDot(on) {
@@ -1144,7 +1206,7 @@ function handle(d) {
     case 'mute_state':      onMuteState(d); break;
     case 'eyes_frame':      updateEyes(d); break;
     case 'nova_status':     updateMonitor(d); break;
-    case 'nova_activity':   /* nova directive — could add activity feed later */ break;
+    case 'nova_activity':   addActivityTool(d); addInlineActivity(d); break;
     case 'tool_executed':   addTool(d); addInlineTool(d); break;
     case 'thought_update':  updateThought(d); break;
     case 'vigilance':       updateVigilance(d); break;
@@ -1152,7 +1214,7 @@ function handle(d) {
     case 'gateway_error':   sysMsg(`⚠ Gateway: ${d.message}`); break;
     case 'nova_throttled':  sysMsg(`⚠ ${d.message}`); setProcessing(false); break;
     case 'nova_unthrottled':sysMsg('Nova rate-limit cleared.'); break;
-    case 'injection_notice':/* file pinned — optional: could show toast */ break;
+    case 'injection_notice':addBridgeTool(d); break;
     case 'pong': break;
   }
 }
@@ -1272,6 +1334,55 @@ function openCtxMenuAt(btn, s) {
   m.style.top =Math.min(r.bottom+2,window.innerHeight-120)+'px';
 }
 function closeCtxMenu() { document.getElementById('ctx-menu').classList.remove('open'); }
+
+/* ── Global right-click context menu (text/chat area) ── */
+document.addEventListener('contextmenu', e=>{
+  if(e.target.closest('.session-item')||e.target.closest('#ctx-menu')||e.target.closest('#text-ctx-menu')) return;
+  e.preventDefault();
+  const m=document.getElementById('text-ctx-menu');
+  // Show/hide Cut based on whether an editable element is focused
+  const inInput=document.activeElement.matches('input,textarea');
+  document.getElementById('tctx-cut').style.display=inInput?'':'none';
+  m.style.left=Math.min(e.clientX,window.innerWidth-170)+'px';
+  m.style.top=Math.min(e.clientY,window.innerHeight-140)+'px';
+  m.classList.add('open');
+  setTimeout(()=>document.addEventListener('click',()=>m.classList.remove('open'),{once:true}),50);
+});
+async function textCtxCopy(){
+  document.getElementById('text-ctx-menu').classList.remove('open');
+  const sel=window.getSelection()?.toString();
+  const inp=document.activeElement;
+  const txt=sel||(inp.matches('input,textarea')?inp.value.slice(inp.selectionStart,inp.selectionEnd):'');
+  if(txt) await navigator.clipboard.writeText(txt).catch(()=>document.execCommand('copy'));
+  else document.execCommand('copy');
+}
+async function textCtxCut(){
+  document.getElementById('text-ctx-menu').classList.remove('open');
+  const inp=document.activeElement;
+  if(inp.matches('input,textarea')){
+    const s=inp.selectionStart,e2=inp.selectionEnd;
+    const txt=inp.value.slice(s,e2);
+    if(txt){ await navigator.clipboard.writeText(txt).catch(()=>{}); inp.value=inp.value.slice(0,s)+inp.value.slice(e2); inp.selectionStart=inp.selectionEnd=s; autoResize(inp); }
+  }
+}
+async function textCtxPaste(){
+  document.getElementById('text-ctx-menu').classList.remove('open');
+  const inp=document.getElementById('input');
+  try{
+    const text=await navigator.clipboard.readText();
+    const s=inp.selectionStart,e2=inp.selectionEnd;
+    inp.value=inp.value.slice(0,s)+text+inp.value.slice(e2);
+    inp.selectionStart=inp.selectionEnd=s+text.length;
+    inp.focus(); autoResize(inp);
+  }catch(_){ inp.focus(); document.execCommand('paste'); }
+}
+function textCtxSelectAll(){
+  document.getElementById('text-ctx-menu').classList.remove('open');
+  const inp=document.getElementById('input');
+  if(document.activeElement===inp){ inp.select(); }
+  else{ window.getSelection()?.selectAllChildren(document.getElementById('chat')||document.body); }
+}
+
 function ctxRename()  { if(_ctxSess){openRenameModal(_ctxSess);} closeCtxMenu(); }
 function ctxArchive() {
   if(!_ctxSess) return;
@@ -1309,7 +1420,7 @@ function appendMsg(author, content, id, images) {
   const w=document.createElement('div');
   w.className=`msg-wrap ${m.cls}`; if(id) w.id=`msg-${id}`;
   const ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  w.innerHTML=`<div class="msg-avatar">${m.av}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span></div><div class="msg-text">${renderMD(content)}</div></div>`;
+  w.innerHTML=`<div class="msg-avatar">${m.av}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span><button class="msg-copy" onclick="copyMsgText(this)" title="Copy message">📋</button></div><div class="msg-text">${renderMD(content)}</div></div>`;
   if(images?.length){const strip=document.createElement('div');strip.className='image-strip';images.forEach(img=>{const el=document.createElement('img');el.className='image-thumb';el.src=img.dataUrl||img;el.onclick=()=>openLB(el.src);strip.appendChild(el);});w.querySelector('.msg-body').appendChild(strip);}
   document.getElementById('chat').appendChild(w); scrollBot();
 }
@@ -1318,7 +1429,7 @@ function startStream(author, id) {
   const w=document.createElement('div');
   w.className=`msg-wrap ${m.cls}`; w.id=`msg-${id}`;
   const ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  w.innerHTML=`<div class="msg-avatar">${m.av}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span></div><div class="msg-text"><span class="st"></span><span class="cursor"></span></div><div class="think-block" style="display:none"><div class="think-header" onclick="this.parentElement.classList.toggle('open')"><span class="think-chevron">▶</span><span class="think-label" style="color:var(--text-mute);font-size:10px">Thinking…</span></div><div class="think-body"></div></div></div>`;
+  w.innerHTML=`<div class="msg-avatar">${m.av}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span><button class="msg-copy" onclick="copyMsgText(this)" title="Copy message">📋</button></div><div class="msg-text"><span class="st"></span><span class="cursor"></span></div><div class="think-block" style="display:none"><div class="think-header" onclick="this.parentElement.classList.toggle('open')"><span class="think-chevron">▶</span><span class="think-label" style="color:var(--text-mute);font-size:10px">Thinking…</span></div><div class="think-body"></div></div></div>`;
   document.getElementById('chat').appendChild(w);
   streamBufs[id]={w,st:w.querySelector('.st'),tb:w.querySelector('.think-body'),tk:w.querySelector('.think-block'),tl:w.querySelector('.think-label'),text:'',think:''};
   scrollBot();
@@ -1340,6 +1451,15 @@ function finalizeMsg(id) {
   if(b.think) b.tl.textContent=(b.think.split(/[.!?\n]/)[0].trim().slice(0,80)||'View reasoning')+' →';
   delete streamBufs[id]; scrollBot();
 }
+function copyMsgText(btn) {
+  const text=(btn.closest('.msg-body')?.querySelector('.msg-text')?.innerText||'').trim();
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='✓'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='📋'; btn.classList.remove('copied'); },1500);
+  }).catch(()=>{ toast('Copy failed'); });
+}
+
 function sysMsg(text) {
   const w=document.createElement('div');
   w.className='msg-wrap system';
@@ -1370,6 +1490,36 @@ function addTool(d) {
   item.innerHTML=`<div class="tfi-top"><span class="tfi-icon">${TICONS[d.tool]||TICONS.default}</span><span class="tfi-name">${esc(d.tool||'tool')}</span><span class="tfi-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span></div><div class="tfi-res">${esc((d.error||d.result||'').toString().slice(0,130))}</div>`;
   feed.insertBefore(item,feed.firstChild);
   while(feed.querySelectorAll('.tfi').length>60) feed.removeChild(feed.lastChild);
+}
+
+const _AICONS={write:'💾',exec:'⚡',read:'📄',pause:'⏸',resume:'▶',discord:'💬',ncl:'🔗'};
+function _pushToolFeed(iconHtml, name, detail, ok=true) {
+  const feed=document.getElementById('panel-tools');
+  document.getElementById('tools-empty')?.remove();
+  const item=document.createElement('div');
+  item.className=`tfi ${ok?'ok':'err'}`;
+  item.innerHTML=`<div class="tfi-top"><span class="tfi-icon">${iconHtml}</span><span class="tfi-name">${esc(name)}</span><span class="tfi-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span></div><div class="tfi-res">${esc(String(detail||'').slice(0,160))}</div>`;
+  feed.insertBefore(item,feed.firstChild);
+  while(feed.querySelectorAll('.tfi').length>60) feed.removeChild(feed.lastChild);
+}
+function addActivityTool(d) {
+  _pushToolFeed(_AICONS[d.directive]||'🔧', d.directive||'action', d.detail, true);
+}
+function addBridgeTool(d) {
+  // d.path is the full result string from bridge (e.g. "[bridge] ✓ wrote path/to/file")
+  const result = d.path||'';
+  const ok = !result.includes('✗');
+  _pushToolFeed(ok?'✅':'❌', 'bridge', result, ok);
+}
+function addInlineActivity(d) {
+  const msgs=document.getElementById('chat').querySelectorAll('.msg-wrap.nova');
+  if(!msgs.length) return;
+  const body=msgs[msgs.length-1].querySelector('.msg-body');
+  if(!body) return;
+  const card=document.createElement('div');
+  card.className='tool-card ok';
+  card.innerHTML=`<span class="tool-card-icon">${_AICONS[d.directive]||'🔧'}</span><span class="tool-card-name">${esc(d.directive||'action')}</span><span class="tool-card-res">${esc(String(d.detail||'').slice(0,90))}</span>`;
+  body.appendChild(card); scrollBot();
 }
 
 /* ══════════════════════════════════════════════════
@@ -1417,8 +1567,9 @@ async function refreshFiles() {
     if(!data) { const r=await fetch('http://127.0.0.1:18790/api/files'); if(r.ok) data=await r.json(); }
     if(!data) throw new Error();
     em.style.display='none'; tree.innerHTML='';
-    const items=data.files||data.tree||data;
-    buildTree(tree, Array.isArray(items)?items:[], 0);
+    // Server returns root dir node {name, type:'dir', children:[]} — use .children
+    const items = data.children || data.files || data.tree || (Array.isArray(data)?data:[]);
+    buildTree(tree, items, 0);
   } catch(_) { em.textContent='File tree unavailable'; em.style.display=''; tree.innerHTML=''; }
 }
 function buildTree(parent, items, depth) {
@@ -1489,11 +1640,16 @@ async function pollServices() {
     document.getElementById('srv-status-gateway').textContent='Stopped';
     document.getElementById('srv-row-gateway').style.display = chatOn ? '' : 'none';
   }
+  // Gateway status bar dot
+  try {
+    const r=await fetch('/api/gateway/status');
+    if(r.ok){ const d=await r.json(); const gwOn=d.running; document.getElementById('sb-dot-gateway')?.classList.toggle('online',gwOn); }
+  } catch(_) { document.getElementById('sb-dot-gateway')?.classList.remove('online'); }
   // llama.cpp — check via nova_chat server endpoint (port 8765)
   try {
     const r=await fetch('/api/llama/status');
-    if(r.ok){const d=await r.json();const on=d.running;document.getElementById('srv-dot-llama').classList.toggle('online',on);document.getElementById('srv-status-llama').textContent=on?'Running':'Offline';}
-  } catch(_) { document.getElementById('srv-status-llama').textContent='Offline'; }
+    if(r.ok){const d=await r.json();const on=d.running;document.getElementById('srv-dot-llama').classList.toggle('online',on);document.getElementById('srv-status-llama').textContent=on?'Running':'Offline';document.getElementById('sb-dot-llama')?.classList.toggle('online',on);}
+  } catch(_) { document.getElementById('srv-status-llama').textContent='Offline'; document.getElementById('sb-dot-llama')?.classList.remove('online'); }
 }
 async function llamaStart() {
   try {
@@ -1666,7 +1822,20 @@ function sendMsg() {
 }
 function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }
 function autoResize(ta){ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,160)+'px';}
-function setProcessing(on){isProcessing=on;document.getElementById('send-btn').disabled=on;document.getElementById('stop-btn').classList.toggle('vis',on);}
+function setProcessing(on){
+  isProcessing=on;
+  const btn=document.getElementById('send-btn');
+  if(on){
+    btn.innerHTML='⏹'; btn.classList.add('stop-mode');
+    btn.title='Stop all responses (Esc)';
+    btn.onclick=stopGen; btn.disabled=false;
+  } else {
+    btn.innerHTML='↑'; btn.classList.remove('stop-mode');
+    btn.title='Send (Enter)';
+    btn.onclick=sendMsg; btn.disabled=false;
+  }
+  document.getElementById('stop-btn').classList.toggle('vis',false);
+}
 function stopGen(){ws?.readyState===1&&ws.send(JSON.stringify({type:'stop'}));setProcessing(false);}
 function clickAutoToggle(){setAutonomous(!autonomousMode);ws?.readyState===1&&ws.send(JSON.stringify({type:'autonomous_toggle',enabled:autonomousMode}));}
 function setAutonomous(on){
@@ -1790,8 +1959,9 @@ function toast(msg,ms=2200){const c=document.getElementById('toasts');const el=d
 ══════════════════════════════════════════════════ */
 function initResize(handleId, getW, setW, min, max) {
   const h=document.getElementById(handleId);
-  h.addEventListener('mousedown', e=>{
+  h.addEventListener('pointerdown', e=>{
     e.preventDefault();
+    h.setPointerCapture(e.pointerId); // keeps events on handle across elements (critical for WebView2)
     const startX=e.clientX, startW=getW();
     h.classList.add('dragging');
     document.body.style.cursor='col-resize';
@@ -1804,11 +1974,11 @@ function initResize(handleId, getW, setW, min, max) {
       h.classList.remove('dragging');
       document.body.style.cursor='';
       document.body.style.userSelect='';
-      document.removeEventListener('mousemove',onMove);
-      document.removeEventListener('mouseup',onUp);
+      h.removeEventListener('pointermove',onMove);
+      h.removeEventListener('pointerup',onUp);
     };
-    document.addEventListener('mousemove',onMove);
-    document.addEventListener('mouseup',onUp);
+    h.addEventListener('pointermove',onMove);
+    h.addEventListener('pointerup',onUp);
   });
 }
 
@@ -1816,12 +1986,14 @@ function initResize(handleId, getW, setW, min, max) {
    KEYBOARD SHORTCUTS
 ══════════════════════════════════════════════════ */
 document.addEventListener('keydown', e=>{
+  if(e.key==='F5'){e.preventDefault();location.reload();return;}
+  if(e.ctrlKey&&e.key==='r'){e.preventDefault();location.reload();return;}
   if(e.ctrlKey&&e.key==='t'){e.preventDefault();newSession();return;}
   if(e.ctrlKey&&e.key==='b'){e.preventDefault();toggleSidebar();return;}
   if(e.ctrlKey&&e.shiftKey&&e.key==='P'){e.preventDefault();togglePanel();return;}
   if(e.ctrlKey&&e.key==='k'){e.preventDefault();document.getElementById('input').focus();return;}
   if(e.ctrlKey&&e.key==='e'){e.preventDefault();exportCtx();return;}
-  if(e.key==='Escape'){closeDD();closeCtxMenu();closeModal();closeLogs();if(isProcessing)stopGen();}
+  if(e.key==='Escape'){closeDD();closeCtxMenu();document.getElementById('text-ctx-menu').classList.remove('open');closeModal();closeLogs();if(isProcessing)stopGen();}
 });
 
 /* ══════════════════════════════════════════════════
@@ -1830,7 +2002,17 @@ document.addEventListener('keydown', e=>{
 function renderMD(text) {
   if(!text) return '';
   const blocks=[];
-  text=text.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,lang,code)=>{const i=blocks.length;blocks.push(`<pre><code class="lang-${lang||'text'}">${escRaw(code)}</code></pre>`);return `\x00B${i}\x00`;});
+  text=text.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,lang,code)=>{
+    const i=blocks.length;
+    const label=lang||'text';
+    blocks.push(
+      `<div class="code-block">` +
+      `<div class="code-header"><span class="code-lang">${label}</span>` +
+      `<button class="code-copy" onclick="copyCode(this)">Copy</button></div>` +
+      `<pre><code class="lang-${label}">${escRaw(code)}</code></pre></div>`
+    );
+    return `\x00B${i}\x00`;
+  });
   text=text.replace(/`([^`\n]+)`/g,(_,c)=>`\x00I${escRaw(c)}\x00`);
   text=escRaw(text);
   text=text.replace(/\x00I([\s\S]*?)\x00/g,(_,c)=>`<code>${c}</code>`);
@@ -1843,11 +2025,54 @@ function renderMD(text) {
   text=text.replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>');
   text=`<p>${text}</p>`;
   blocks.forEach((b,i)=>{text=text.replace(`\x00B${i}\x00`,b);});
-  text=text.replace(/<p><\/p>/g,'').replace(/<p>(<(?:pre|ul|ol|h[1-6]|blockquote))/g,'$1').replace(/(<\/(?:pre|ul|ol|h[1-6]|blockquote)>)<\/p>/g,'$1');
+  text=text.replace(/<p><\/p>/g,'').replace(/<p>(<(?:div class="code-block"|pre|ul|ol|h[1-6]|blockquote))/g,'$1').replace(/(<\/(?:div|pre|ul|ol|h[1-6]|blockquote)>)<\/p>/g,'$1');
   return text;
 }
 function escRaw(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function esc(s){return escRaw(s||'');}
+
+function copyCode(btn) {
+  const code = btn.closest('.code-block')?.querySelector('code')?.textContent ?? '';
+  navigator.clipboard.writeText(code).then(()=>{
+    btn.textContent='Copied!';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='Copy'; btn.classList.remove('copied'); }, 2000);
+  }).catch(()=>{ btn.textContent='Failed'; setTimeout(()=>btn.textContent='Copy', 1500); });
+}
+
+/* ══════════════════════════════════════════════════
+   TOOLTIP SYSTEM
+══════════════════════════════════════════════════ */
+(function initTooltips(){
+  const tip=document.getElementById('nova-tip');
+  if(!tip) return;
+  let timer=null;
+  function show(el, e){
+    tip.textContent=el.dataset.tooltip;
+    tip.classList.add('show');
+    position(e);
+  }
+  function position(e){
+    const x=Math.min(e.clientX+14,window.innerWidth-245);
+    const y=Math.min(e.clientY+20,window.innerHeight-70);
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  }
+  function hide(){ clearTimeout(timer); tip.classList.remove('show'); }
+  document.addEventListener('mouseover',e=>{
+    const el=e.target.closest('[data-tooltip]');
+    if(!el){clearTimeout(timer);return;}
+    clearTimeout(timer);
+    timer=setTimeout(()=>show(el,e),500);
+  });
+  document.addEventListener('mousemove',e=>{
+    if(tip.classList.contains('show')) position(e);
+  });
+  document.addEventListener('mouseout',e=>{
+    if(!e.relatedTarget?.closest('[data-tooltip]')) hide();
+  });
+  document.addEventListener('click', hide);
+  document.addEventListener('scroll', hide, true);
+})();
 
 /* ══════════════════════════════════════════════════
    BOOT

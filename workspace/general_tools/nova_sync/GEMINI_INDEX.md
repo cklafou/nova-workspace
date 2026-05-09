@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-09 18:45:53_
+_Last updated: 2026-05-09 19:46:19_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -28,6 +28,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 |----------|-----------|-------------|
 | Install_Nova_Qt.cmd | `workspace/Install_Nova_Qt.cmd` | CMD file |
 | Install_Webview.cmd | `workspace/Install_Webview.cmd` | CMD file |
+| Nova_Chat_UI_Spec.md | `workspace/Nova_Chat_UI_Spec.md` | MD file |
 | nova_gateway - tokenless.json | `workspace/nova_gateway - tokenless.json` | JSON file |
 | nova_gateway.json | `workspace/nova_gateway.json` | JSON file |
 | ORIENT.md | `workspace/ORIENT.md` | MD file |
