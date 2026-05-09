@@ -55,6 +55,10 @@
   --ease:         cubic-bezier(0.22, 1, 0.36, 1);
   --t:            150ms;
   --t-mid:        240ms;
+
+  /* Aliases used in dynamic HTML blocks */
+  --surface-2:    #18182a;   /* = --bg-raised; used in live-think-block */
+  --accent:       #8f90ff;   /* = --nova; used in reasoning-live label */
 }
 
 /* ═══════════════════════════════════════════════
@@ -1057,7 +1061,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
             📎<input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
           </label>
           <textarea id="input" placeholder="Message Nova… (Enter to send, Shift+Enter for newline)" rows="1"
-            onkeydown="onKey(event)" oninput="autoResize(this);onInputAt(this)"></textarea>
+            onkeydown="onKey(event)" oninput="autoResize(this);onInputAt(this);onTypingInput()"></textarea>
           <button id="send-btn" onclick="sendMsg()" title="Send">↑</button>
         </div>
         <div class="input-bar">
@@ -1089,16 +1093,49 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 
   <!-- RIGHT PANEL -->
   <div id="right-panel">
-    <div class="panel-tabs">
-      <div class="ptab active" data-tab="thoughts" onclick="switchPanel('thoughts')" data-tooltip="Nova's reasoning — extended thinking tokens shown here as she works through problems">Thoughts</div>
-      <div class="ptab" data-tab="tools"    onclick="switchPanel('tools')"    data-tooltip="Tool calls — every file read, write, shell command, and web fetch Nova executes">Tools</div>
-      <div class="ptab" data-tab="monitor"  onclick="switchPanel('monitor')"  data-tooltip="Live system metrics — Nova's CPU, memory, active goals, and heartbeat status">Monitor</div>
-      <div class="ptab" data-tab="files"    onclick="switchPanel('files')"    data-tooltip="Workspace file tree — browse and open files from the Project Nova workspace">Files</div>
-      <div class="ptab" data-tab="eyes"     onclick="switchPanel('eyes')"     data-tooltip="Nova's desktop view — stream screenshots of what Nova sees on her screen">Eyes</div>
-      <div class="ptab" data-tab="terminal" onclick="switchPanel('terminal')" data-tooltip="Server log tail — live output from the Nova Chat server process">Terminal</div>
+    <div class="panel-tabs" id="panel-tabs-bar">
+      <div class="ptab active" data-tab="thoughts" draggable="true" onclick="switchPanel('thoughts')" data-tooltip="Nova's reasoning — extended thinking tokens shown here as she works through problems">Thoughts</div>
+      <div class="ptab" data-tab="tools"    draggable="true" onclick="switchPanel('tools')"    data-tooltip="Tool calls — every file read, write, shell command, and web fetch Nova executes">Tools</div>
+      <div class="ptab" data-tab="monitor"  draggable="true" onclick="switchPanel('monitor')"  data-tooltip="Live system metrics — Nova's CPU, memory, active goals, and heartbeat status">Monitor</div>
+      <div class="ptab" data-tab="files"    draggable="true" onclick="switchPanel('files')"    data-tooltip="Workspace file tree — browse and open files from the Project Nova workspace">Files</div>
+      <div class="ptab" data-tab="eyes"     draggable="true" onclick="switchPanel('eyes')"     data-tooltip="Nova's desktop view — stream screenshots of what Nova sees on her screen">Eyes</div>
+      <div class="ptab" data-tab="terminal" draggable="true" onclick="switchPanel('terminal')" data-tooltip="Server log tail — live output from the Nova Chat server process">Terminal</div>
     </div>
 
     <div class="panel-section active" id="panel-thoughts">
+      <!-- Live / Last reasoning block -->
+      <div id="live-think-block" style="display:none;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;font-size:11px;color:var(--text-dim);overflow:hidden;">
+        <div style="display:flex;align-items:center;padding:6px 10px 4px;border-bottom:1px solid var(--border);gap:6px;">
+          <span id="live-think-label" style="font-size:10px;color:var(--accent);letter-spacing:.05em;flex:1;">NOVA — REASONING LIVE</span>
+          <button id="think-scroll-lock" onclick="toggleThinkScrollLock()" title="Lock scroll position" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-mute);padding:1px 3px;border-radius:3px;transition:color var(--t);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-mute)'">🔓</button>
+          <button onclick="copyThinkContent()" title="Copy reasoning to clipboard" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-mute);padding:1px 3px;border-radius:3px;transition:color var(--t);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-mute)'">📋</button>
+        </div>
+        <div id="live-think-text" style="white-space:pre-wrap;line-height:1.5;padding:8px 10px;max-height:calc(50vh - 80px);overflow-y:auto;"></div>
+      </div>
+      <!-- Thought task cards injected here by thought_update events -->
+      <div id="thoughts-cards"></div>
+      <!-- Tasking/ directory browser -->
+      <div id="thoughts-dir-section" style="margin-top:4px;">
+        <button onclick="toggleThoughtsDir()" style="width:100%;background:none;border:none;border-top:1px solid var(--border);padding:7px 4px;font-size:10px;color:var(--text-mute);text-align:left;cursor:pointer;display:flex;align-items:center;gap:5px;transition:color var(--t);" onmouseover="this.style.color='var(--text-dim)'" onmouseout="this.style.color='var(--text-mute)'">
+          <span id="thoughts-dir-chevron">▶</span> Browse Tasking/
+          <span id="thoughts-inbox-badge" style="display:none;margin-left:auto;background:var(--nova-dim);color:var(--nova);border-radius:99px;padding:1px 6px;font-size:9px;"></span>
+          <button onclick="event.stopPropagation();loadThoughtsDir()" title="Refresh" style="background:none;border:none;color:var(--text-mute);cursor:pointer;font-size:11px;margin-left:4px;">↻</button>
+        </button>
+        <div id="thoughts-dir-body" style="display:none;padding:4px 0;"></div>
+      </div>
+
+      <!-- ── Session Reasoning Log (Task 3) ─────────────────────────── -->
+      <div style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px;">
+        <div style="display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none" onclick="toggleThinkLog()">
+          <span style="font-size:9.5px;color:var(--text-mute);text-transform:uppercase;letter-spacing:.08em;flex:1">Session Log</span>
+          <span id="think-log-count" style="font-size:9px;color:var(--text-mute)">0 entries</span>
+          <span id="think-log-toggle" style="font-size:10px;color:var(--text-mute);margin-left:2px">▶</span>
+        </div>
+        <div id="think-log-entries" style="display:none;max-height:220px;overflow-y:auto;margin-top:4px;">
+          <div class="panel-empty" id="think-log-empty" style="padding:8px;"><div class="ei">🗒</div>No reasoning blocks yet this session.</div>
+        </div>
+      </div>
+
       <div class="panel-empty" id="thoughts-empty"><div class="ei">🧠</div>No active thoughts.<br>Nova creates task cards here when working.</div>
     </div>
 
@@ -1114,14 +1151,63 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
           <div class="vig-reason" id="vig-reason">Not connected</div>
         </div>
       </div>
-      <div class="monitor-grid">
-        <div class="mcard"><div class="mcard-label">Tokens/s</div><div class="mcard-value" id="mon-tps">—</div></div>
+      <div class="monitor-grid" style="margin-top:6px;">
+        <!-- Row 1: Tokens/s (with live/idle dot) + Model -->
+        <div class="mcard" id="mcard-tps" onclick="toggleSparkline('tps',this)" style="cursor:pointer;" title="Click to see Tokens/s history">
+          <div class="mcard-label" style="display:flex;align-items:center;gap:4px;">Tokens/s <span id="mon-tps-dot" style="width:5px;height:5px;border-radius:50%;background:var(--text-mute);display:inline-block;"></span></div>
+          <div class="mcard-value" id="mon-tps">—</div>
+          <div class="sparkline-wrap" id="spark-tps" style="display:none;margin-top:4px;"></div>
+        </div>
         <div class="mcard"><div class="mcard-label">Model</div><div class="mcard-value" id="mon-model" style="font-size:10px;word-break:break-all;margin-top:3px">—</div></div>
+        <!-- Row 2: CPU + RAM -->
+        <div class="mcard" id="mcard-cpu" onclick="toggleSparkline('cpu',this)" style="cursor:pointer;" title="Click to see CPU history">
+          <div class="mcard-label">CPU %</div>
+          <div class="mcard-value" id="mon-cpu">—</div>
+          <div class="sparkline-wrap" id="spark-cpu" style="display:none;margin-top:4px;"></div>
+        </div>
+        <div class="mcard" id="mcard-ram" onclick="toggleSparkline('ram',this)" style="cursor:pointer;" title="Click to see RAM history">
+          <div class="mcard-label">RAM</div>
+          <div class="mcard-value" id="mon-ram">—</div>
+          <div class="sparkline-wrap" id="spark-ram" style="display:none;margin-top:4px;"></div>
+        </div>
+        <!-- Row 3: VRAM + Context -->
+        <div class="mcard" id="mcard-vram" onclick="toggleSparkline('vram',this)" style="cursor:pointer;" title="Click to see VRAM history">
+          <div class="mcard-label">GPU VRAM</div>
+          <div class="mcard-value" id="mon-vram" style="font-size:13px;">—</div>
+          <div class="sparkline-wrap" id="spark-vram" style="display:none;margin-top:4px;"></div>
+        </div>
+        <div class="mcard" id="mcard-ctx" onclick="toggleSparkline('ctx',this)" style="cursor:pointer;" title="Click to see Context % history">
+          <div class="mcard-label">Context</div>
+          <div class="mcard-value" id="mon-ctx" style="font-size:13px;">—</div>
+          <div class="sparkline-wrap" id="spark-ctx" style="display:none;margin-top:4px;"></div>
+        </div>
+        <!-- Row 4: Session tokens + Think tokens -->
+        <div class="mcard"><div class="mcard-label">Session Tokens</div><div class="mcard-value" id="mon-sess-tok" style="font-size:13px;">0</div></div>
+        <div class="mcard"><div class="mcard-label">Think Tokens</div><div class="mcard-value" id="mon-think-tok" style="font-size:13px;">0</div></div>
+        <!-- Row 5: Pulse + Uptime -->
         <div class="mcard"><div class="mcard-label">Pulse</div><div class="mcard-value" id="mon-pulse">—</div></div>
         <div class="mcard"><div class="mcard-label">Uptime</div><div class="mcard-value" id="mon-uptime">—</div></div>
+        <!-- Full width: Active Task -->
         <div class="mcard full"><div class="mcard-label">Active Task</div><div id="mon-task" style="font-size:11px;color:var(--text-dim);margin-top:3px;line-height:1.4">None</div></div>
       </div>
       <div class="error-list" id="error-list"></div>
+
+      <!-- ── Autonomy Log — silent heartbeat output (Task 4) ────────────── -->
+      <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:6px;">
+        <div style="display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none" onclick="toggleAutoLog()">
+          <span style="font-size:9.5px;color:var(--text-mute);text-transform:uppercase;letter-spacing:.08em;flex:1">Autonomy Log</span>
+          <span id="auto-log-count" style="font-size:9px;color:var(--text-mute)">0 ticks</span>
+          <span id="auto-log-toggle" style="font-size:10px;color:var(--text-mute);margin-left:2px">▶</span>
+        </div>
+        <!-- Live tick indicator — shows while a silent tick is in flight -->
+        <div id="auto-tick-live" style="display:none;font-size:9.5px;color:var(--accent);padding:3px 0;margin-top:3px;animation:pulse 1.5s ease-in-out infinite">
+          ⚡ Nova is working (autonomous tick)…
+        </div>
+        <!-- Collapsible log entries, newest first -->
+        <div id="auto-log-entries" style="display:none;max-height:220px;overflow-y:auto;margin-top:4px;">
+          <div class="panel-empty" id="auto-log-empty" style="padding:8px;"><div class="ei">🤖</div>No autonomous ticks yet.</div>
+        </div>
+      </div>
     </div>
 
     <div class="panel-section" id="panel-files">
@@ -1171,6 +1257,9 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <span id="sb-status">Connecting…</span>
     <div class="sb-sep"></div>
     <span id="sb-session"></span>
+    <div class="sb-sep"></div>
+    <!-- Git branch indicator — updated by pollGit() -->
+    <span id="sb-git-branch" data-tooltip="Git branch — click to run git status in Terminal" onclick="gitStatusToTerminal()" style="cursor:pointer;font-size:9.5px;opacity:0.7;font-family:var(--mono);display:none">⎇ <span id="sb-git-branch-name">—</span></span>
   </div>
   <div class="sb-right">
     <!-- Live service dots always visible in status bar -->
@@ -1187,7 +1276,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <div class="sb-sep"></div>
     <button class="sb-btn active" id="panel-toggle-sb" onclick="togglePanel()">◫ Panel</button>
     <div class="sb-sep"></div>
-    <span style="font-size:9.5px;opacity:0.5">Ctrl+T · new &nbsp;·&nbsp; Ctrl+B · sidebar &nbsp;·&nbsp; F5 · reload</span>
+    <span style="font-size:9.5px;opacity:0.5">Ctrl+K · focus &nbsp;·&nbsp; Ctrl+T · new &nbsp;·&nbsp; Ctrl+B · sidebar &nbsp;·&nbsp; F5 · reload</span>
   </div>
 </div>
 
@@ -1320,19 +1409,26 @@ function handle(d) {
     case 'user_message':    appendMsg(d.author, d.content, d.id, d.images); break;
     case 'message_start':   showTyping(d.author); break;
     case 'token':           appendToken(d.author, d.id, d.token); break;
-    case 'think_token':     appendThink(d.id, d.token); break;
+    case 'think_start':     liveThinkStart(); break;
+    case 'think_token':     appendThink(d.author, d.id, d.token); liveThinkAppend(d.token); break;
+    case 'think_end':       liveThinkEnd(); break;
     case 'message_end':     finalizeMsg(d.id); hideTyping(d.author); break;
     case 'processing_start':setProcessing(true); break;
-    case 'processing_end':  setProcessing(false); break;
-    case 'stopped':         setProcessing(false); break;
+    case 'processing_end':  setProcessing(false); updateVigilance({state:'sleeping',reason:'Ready'}); break;
+    case 'stopped':         setProcessing(false); updateVigilance({state:'sleeping',reason:'Stopped'}); break;
     case 'blocked':         toast('⏳ AIs are responding — press Stop to interrupt'); break;
-    case 'error':           sysMsg(`⚠ ${d.message}`); setProcessing(false); break;
+    case 'error':           sysMsg(`⚠ ${d.message}`); setProcessing(false); updateVigilance({state:'sleeping',reason:'Error'}); break;
     case 'autonomous_state':setAutonomous(d.enabled); break;
     case 'mute_state':      onMuteState(d); break;
     case 'eyes_frame':      updateEyes(d); break;
     case 'nova_status':     updateMonitor(d); break;
+    case 'generation_start':updateVigilance({state:'working',reason:'Generating…'}); break;
+    case 'generation_end':  updateVigilance({state:'awake',reason:`Done in ${d.elapsed||0}s`}); break;
     case 'nova_activity':   addActivityTool(d); addInlineActivity(d); break;
     case 'tool_executed':   addTool(d); addInlineTool(d); break;
+    case 'autonomous_start':  onAutonomousStart(d); break;
+    case 'autonomous_token':  onAutonomousToken(d); break;
+    case 'autonomous_output': onAutonomousOutput(d); break;
     case 'thought_update':  updateThought(d); break;
     case 'vigilance':       updateVigilance(d); break;
     case 'export_ready':    handleExport(d); break;
@@ -1342,6 +1438,7 @@ function handle(d) {
     case 'injection_notice':addBridgeTool(d); break;
     case 'terminal_output': appendTerminalLine(d.line||''); break;
     case 'model_changed':   onModelChanged(d); break;
+    case 'nova_progress':   updateProgressFromNova(d); break;
     case 'pong': break;
   }
 }
@@ -1592,12 +1689,231 @@ function appendToken(author, id, token) {
   const b=streamBufs[id]; b.text+=token; b.st.textContent=b.text; scrollBot();
   addCtxChars(token.length);
 }
-function appendThink(id, token) {
-  if(!streamBufs[id]) return;
+function appendThink(author, id, token) {
+  // Thinking tokens arrive BEFORE the first chat token, so streamBufs[id] may
+  // not exist yet.  Create the stream bubble early so thinking is never dropped.
+  if(!streamBufs[id]) startStream(author, id);
   const b=streamBufs[id]; b.think+=token; b.tk.style.display='';
   b.tb.textContent=b.think;
   b.tl.textContent=(b.think.split(/[.!?\n]/)[0].trim().slice(0,80)||'Thinking…');
 }
+// ── Live reasoning display in the Thoughts pane ───────────────────────────────
+let _liveThinkBuf = '';
+let _thinkScrollLocked = false;
+let _thinkHistory = [];   // [{ts, text}] newest-first, capped at 50 (Task 3)
+let _thinkLogOpen = false;
+
+function liveThinkStart() {
+  _liveThinkBuf = '';
+  _thinkScrollLocked = false;
+  const el  = document.getElementById('live-think-block');
+  const txt = document.getElementById('live-think-text');
+  const lbl = document.getElementById('live-think-label');
+  const lockBtn = document.getElementById('think-scroll-lock');
+  if(el)  el.style.display = '';
+  if(txt) txt.textContent  = '';
+  if(lbl){ lbl.textContent='NOVA — REASONING LIVE'; lbl.style.color='var(--accent)'; }
+  if(lockBtn){ lockBtn.textContent='🔓'; }
+  const em = document.getElementById('thoughts-empty');
+  if(em) em.style.display = 'none';
+}
+function liveThinkAppend(token) {
+  _liveThinkBuf += token;
+  const txt = document.getElementById('live-think-text');
+  if(txt){
+    txt.textContent = _liveThinkBuf;
+    if(!_thinkScrollLocked) txt.scrollTop = txt.scrollHeight;
+  }
+}
+function liveThinkEnd() {
+  // Keep the block visible as "LAST REASONING" — don't clear or hide
+  const lbl     = document.getElementById('live-think-label');
+  const lockBtn = document.getElementById('think-scroll-lock');
+  if(lbl){ lbl.textContent='LAST REASONING'; lbl.style.color='var(--text-dim)'; }
+  if(lockBtn){ lockBtn.textContent='🔓'; _thinkScrollLocked=false; }
+  // Scroll to top so Cole can read from the beginning
+  const txt = document.getElementById('live-think-text');
+  if(txt) setTimeout(()=>{ txt.scrollTop=0; }, 80);
+
+  // ── Session Log (Task 3) — archive this reasoning block ───────────────
+  if(_liveThinkBuf.trim()) {
+    _thinkHistory.unshift({ ts: Date.now(), text: _liveThinkBuf });
+    if(_thinkHistory.length > 50) _thinkHistory.pop();
+    _updateThinkLogBadge();
+    if(_thinkLogOpen) _renderThinkLog();
+  }
+}
+
+function _updateThinkLogBadge() {
+  const el = document.getElementById('think-log-count');
+  if(el) el.textContent = `${_thinkHistory.length} entr${_thinkHistory.length!==1?'ies':'y'}`;
+}
+
+function toggleThinkLog() {
+  _thinkLogOpen = !_thinkLogOpen;
+  document.getElementById('think-log-entries').style.display = _thinkLogOpen ? 'block' : 'none';
+  document.getElementById('think-log-toggle').textContent = _thinkLogOpen ? '▼' : '▶';
+  if(_thinkLogOpen) _renderThinkLog();
+}
+
+function _renderThinkLog() {
+  const el    = document.getElementById('think-log-entries');
+  const emEl  = document.getElementById('think-log-empty');
+  if(!el) return;
+  if(!_thinkHistory.length) { if(emEl) emEl.style.display=''; return; }
+  if(emEl) emEl.style.display='none';
+  const shown = _thinkHistory.slice(0, 25);
+  el.innerHTML = shown.map(e => {
+    const ts      = new Date(e.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const preview = e.text.trim().replace(/\n/g,' ').slice(0, 60);
+    const full    = e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const detId   = 'tkdet_' + e.ts;
+    return `<div style="border-bottom:1px solid var(--border);padding:3px 0;">
+      <div style="cursor:pointer;display:flex;gap:4px;align-items:baseline" onclick="document.getElementById('${detId}').style.display=document.getElementById('${detId}').style.display==='none'?'block':'none'">
+        <span style="font-size:8.5px;color:var(--text-mute);font-family:var(--mono);white-space:nowrap">[${ts}]</span>
+        <span style="font-size:10px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(preview)}${e.text.length>60?'…':''}</span>
+      </div>
+      <div id="${detId}" style="display:none;font-size:9.5px;color:var(--text);white-space:pre-wrap;padding:5px;background:var(--bg-hover);border-radius:var(--radius-sm);margin-top:3px;max-height:200px;overflow-y:auto;font-family:var(--mono)">${full}</div>
+    </div>`;
+  }).join('');
+}
+function toggleThinkScrollLock() {
+  _thinkScrollLocked = !_thinkScrollLocked;
+  const btn = document.getElementById('think-scroll-lock');
+  if(btn) btn.textContent = _thinkScrollLocked ? '🔒' : '🔓';
+}
+function copyThinkContent() {
+  if(!_liveThinkBuf){ toast('No reasoning to copy yet'); return; }
+  navigator.clipboard.writeText(_liveThinkBuf).then(()=>toast('Reasoning copied!')).catch(()=>toast('Copy failed'));
+}
+
+/* ══════════════════════════════════════════════════
+   THOUGHTS DIRECTORY BROWSER (P2)
+══════════════════════════════════════════════════ */
+let _thoughtsDirOpen = false;
+let _thoughtsDirTs   = 0;
+async function toggleThoughtsDir() {
+  _thoughtsDirOpen = !_thoughtsDirOpen;
+  const body    = document.getElementById('thoughts-dir-body');
+  const chevron = document.getElementById('thoughts-dir-chevron');
+  if(!body || !chevron) return;
+  chevron.textContent = _thoughtsDirOpen ? '▼' : '▶';
+  body.style.display  = _thoughtsDirOpen ? '' : 'none';
+  if(_thoughtsDirOpen && Date.now()-_thoughtsDirTs > 15000) await loadThoughtsDir();
+}
+async function loadThoughtsDir() {
+  _thoughtsDirTs = Date.now();
+  const body = document.getElementById('thoughts-dir-body');
+  if(!body) return;
+  body.innerHTML = '<div style="padding:6px 8px;font-size:10px;color:var(--text-mute)">Loading…</div>';
+  try {
+    const [prioRes, treeRes] = await Promise.all([
+      fetch('/api/files/read?path=Tasking/priority.md'),
+      fetch('/api/files/tree'),
+    ]);
+    const prioData = prioRes.ok ? await prioRes.json() : null;
+    const treeData = treeRes.ok ? await treeRes.json() : null;
+    let thoughtsNode = null;
+    if(treeData?.children) thoughtsNode = treeData.children.find(n=>n.name==='Tasking'&&n.type==='dir');
+    body.innerHTML = '';
+    // Priority queue
+    if(prioData?.content) {
+      const pBlock=document.createElement('div');
+      pBlock.style.cssText='margin:2px 0 4px;border:1px solid var(--border);border-radius:5px;overflow:hidden;';
+      const pHdr=document.createElement('div');
+      pHdr.style.cssText='padding:5px 8px;font-size:10px;font-weight:600;color:var(--text-dim);background:var(--bg-surface);cursor:pointer;display:flex;align-items:center;gap:4px;';
+      pHdr.innerHTML='<span class="td-chev">▶</span> priority.md';
+      const pBody=document.createElement('div');
+      pBody.style.cssText='display:none;padding:7px 8px;font-size:10px;color:var(--text-dim);font-family:var(--mono);white-space:pre-wrap;max-height:200px;overflow-y:auto;line-height:1.5;';
+      pBody.textContent=prioData.content;
+      pHdr.onclick=()=>{const o=pBody.style.display!=='none';pBody.style.display=o?'none':'';pHdr.querySelector('.td-chev').textContent=o?'▶':'▼';};
+      pBlock.appendChild(pHdr); pBlock.appendChild(pBody);
+      body.appendChild(pBlock);
+    }
+    if(thoughtsNode?.children) {
+      const active=[], finished=[];
+      let inboxCount=0;
+      for(const n of thoughtsNode.children) {
+        if(n.type!=='dir') continue;
+        if(n.name==='Master_Inbox'){ inboxCount=(n.children||[]).filter(f=>f.type==='file'&&!f.name.startsWith('.')).length; }
+        else if(n.name==='Finished'){ (n.children||[]).forEach(s=>{ if(s.type==='dir')(s.children||[]).filter(t=>t.type==='dir').forEach(t=>finished.push(t)); }); }
+        else if(n.name!=='THOUGHT_TEMPLATE.md'&&!n.name.endsWith('.md')){ active.push(n); }
+      }
+      const badge=document.getElementById('thoughts-inbox-badge');
+      if(badge){ badge.style.display=inboxCount>0?'':'none'; badge.textContent=`📬 ${inboxCount}`; }
+      if(active.length) {
+        const ah=document.createElement('div');
+        ah.style.cssText='padding:4px 4px 2px;font-size:9px;color:var(--text-mute);text-transform:uppercase;letter-spacing:.07em;';
+        ah.textContent=`Active (${active.length})`;
+        body.appendChild(ah);
+        active.forEach(t=>body.appendChild(buildThoughtRow(t,'🧠')));
+      }
+      if(inboxCount>0) {
+        const ih=document.createElement('div');
+        ih.style.cssText='padding:4px 4px 2px;font-size:9px;color:var(--yellow);text-transform:uppercase;letter-spacing:.07em;';
+        ih.textContent=`📬 Inbox (${inboxCount} pending)`;
+        body.appendChild(ih);
+        const inbox=thoughtsNode.children.find(n=>n.name==='Master_Inbox');
+        if(inbox)(inbox.children||[]).filter(f=>f.type==='file'&&!f.name.startsWith('.')).forEach(f=>{
+          const row=document.createElement('div');
+          row.style.cssText='padding:3px 8px;font-size:10px;color:var(--text-dim);font-family:var(--mono);cursor:pointer;border-radius:3px;transition:background var(--t);';
+          row.onmouseover=()=>row.style.background='var(--bg-hover)';
+          row.onmouseout=()=>row.style.background='';
+          row.textContent='📩 '+f.name; row.onclick=()=>openThoughtFile(f.path);
+          body.appendChild(row);
+        });
+      }
+      if(finished.length) {
+        const fBlock=document.createElement('div');
+        fBlock.style.cssText='margin-top:4px;border:1px solid var(--border);border-radius:5px;overflow:hidden;';
+        const fHdr=document.createElement('div');
+        fHdr.style.cssText='padding:5px 8px;font-size:10px;color:var(--text-mute);background:var(--bg-surface);cursor:pointer;display:flex;align-items:center;gap:4px;';
+        fHdr.innerHTML=`<span class="td-chev">▶</span> Finished (${finished.length})`;
+        const fBody=document.createElement('div'); fBody.style.display='none';
+        fHdr.onclick=()=>{const o=fBody.style.display!=='none';fBody.style.display=o?'none':'';fHdr.querySelector('.td-chev').textContent=o?'▶':'▼';};
+        finished.forEach(t=>fBody.appendChild(buildThoughtRow(t,'✅')));
+        fBlock.appendChild(fHdr); fBlock.appendChild(fBody);
+        body.appendChild(fBlock);
+      }
+    }
+    if(!body.children.length) body.innerHTML='<div style="padding:6px 8px;font-size:10px;color:var(--text-mute)">No Tasking/ directory found.</div>';
+  } catch(e) { body.innerHTML=`<div style="padding:6px 8px;font-size:10px;color:var(--red)">Load error: ${esc(String(e))}</div>`; }
+}
+function buildThoughtRow(node, icon) {
+  const row=document.createElement('div');
+  row.style.cssText='padding:3px 8px;font-size:10.5px;color:var(--text-dim);cursor:pointer;border-radius:3px;transition:background var(--t);display:flex;align-items:center;gap:5px;';
+  row.onmouseover=()=>row.style.background='var(--bg-hover)';
+  row.onmouseout=()=>row.style.background='';
+  row.innerHTML=`${icon} <span style="font-weight:500;color:var(--text);">${esc(node.name)}</span>`;
+  row.onclick=()=>openThoughtFile(node.path+'/master.md');
+  return row;
+}
+async function openThoughtFile(path) {
+  try {
+    const r=await fetch(`/api/files/read?path=${encodeURIComponent(path)}`);
+    if(!r.ok){ toast('File not found: '+path); return; }
+    const d=await r.json();
+    showThoughtFileModal(path, d.content||'(empty)');
+  } catch(e){ toast('Read error'); }
+}
+function showThoughtFileModal(path, content) {
+  const overlay=document.getElementById('modal-overlay');
+  const modal=document.getElementById('modal');
+  if(!overlay||!modal) return;
+  modal.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <span style="font-size:13px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(path)}">${esc(path.split('/').pop())}</span>
+      <button onclick="document.getElementById('modal-overlay').classList.remove('open')" style="background:none;border:none;color:var(--text-mute);cursor:pointer;font-size:18px;line-height:1;">×</button>
+    </div>
+    <div style="font-size:9.5px;color:var(--text-mute);margin-bottom:8px;font-family:var(--mono);">${esc(path)}</div>
+    <div id="modal-file-content" style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:10px;max-height:55vh;overflow-y:auto;font-size:11px;font-family:var(--mono);white-space:pre-wrap;color:var(--text-dim);line-height:1.55;">${esc(content)}</div>
+    <div style="margin-top:10px;display:flex;gap:6px;">
+      <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('modal-file-content')?.textContent||'').then(()=>toast('Copied!'))">📋 Copy</button>
+      <button class="btn btn-cancel" onclick="document.getElementById('modal-overlay').classList.remove('open')">Close</button>
+    </div>`;
+  overlay.classList.add('open');
+}
+setInterval(()=>{ if(activePanel==='thoughts'&&_thoughtsDirOpen&&Date.now()-_thoughtsDirTs>30000) loadThoughtsDir(); },15000);
 function finalizeMsg(id) {
   const b=streamBufs[id]; if(!b) return;
   b.w.querySelector('.cursor')?.remove();
@@ -1639,9 +1955,20 @@ function addTool(d) {
   const feed=document.getElementById('panel-tools');
   document.getElementById('tools-empty')?.remove();
   const ok=!d.error;
+  const fullText=(d.error||d.result||'').toString();
+  const preview=fullText.replace(/\n/g,' ').slice(0,80)+(fullText.length>80?'…':'');
+  const dur=d.duration_ms?` · ${d.duration_ms}ms`:'';
+  const detId=`tdet_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
   const item=document.createElement('div');
   item.className=`tfi ${ok?'ok':'err'}`;
-  item.innerHTML=`<div class="tfi-top"><span class="tfi-icon">${TICONS[d.tool]||TICONS.default}</span><span class="tfi-name">${esc(d.tool||'tool')}</span><span class="tfi-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span></div><div class="tfi-res">${esc((d.error||d.result||'').toString().slice(0,130))}</div>`;
+  item.innerHTML=
+    `<div class="tfi-top" style="cursor:pointer" onclick="const e=document.getElementById('${detId}');e.style.display=e.style.display==='none'?'block':'none'">
+      <span class="tfi-icon">${TICONS[d.tool]||TICONS.default}</span>
+      <span class="tfi-name">${esc(d.tool||'tool')}</span>
+      <span class="tfi-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}${esc(dur)}</span>
+    </div>
+    <div class="tfi-res">${esc(preview)}</div>
+    <div id="${detId}" style="display:none;font-size:9.5px;white-space:pre-wrap;padding:4px 5px;background:var(--bg-hover);border-radius:var(--radius-sm);margin-top:3px;max-height:150px;overflow-y:auto;font-family:var(--mono);color:var(--text)">${esc(fullText)}</div>`;
   feed.insertBefore(item,feed.firstChild);
   while(feed.querySelectorAll('.tfi').length>60) feed.removeChild(feed.lastChild);
 }
@@ -1681,12 +2008,12 @@ function addInlineActivity(d) {
 ══════════════════════════════════════════════════ */
 function updateThought(d) {
   updateInlineThoughtCard(d);  // Phase 9: also mirror to inline cards bar
-  const c=document.getElementById('panel-thoughts');
+  const c=document.getElementById('thoughts-cards');
   const em=document.getElementById('thoughts-empty');
-  if(d.action==='remove'){document.getElementById(`tc-${d.id}`)?.remove();if(!c.querySelector('.thought-card')&&em)em.style.display='';return;}
+  if(d.action==='remove'){document.getElementById(`tc-${d.id}`)?.remove();if(c&&!c.querySelector('.thought-card')&&em)em.style.display='';return;}
   if(em) em.style.display='none';
   let card=document.getElementById(`tc-${d.id}`);
-  if(!card){card=document.createElement('div');card.id=`tc-${d.id}`;c.insertBefore(card,c.firstChild);}
+  if(!card){card=document.createElement('div');card.id=`tc-${d.id}`;if(c)c.insertBefore(card,c.firstChild);}
   const pNum=Math.min(typeof d.priority==='number'?d.priority:3,4);
   const prog=d.progress||0;
   const stCls=d.status==='active'?'active':d.status==='suspended'?'suspended':'';
@@ -1700,12 +2027,12 @@ async function pollThoughts() {
     const data=await r.json();
     const raw=Array.isArray(data)?data:(data.active||[]);
     const thoughts=raw.map(t=>({id:t.id,name:t.id,priority:typeof t.priority_num==='number'?t.priority_num:3,status:t.status||'active',summary:t.summary||'',progress:t.plan_total>0?Math.round((t.plan_done/t.plan_total)*100):0,step:t.plan_total>0?`${t.plan_done}/${t.plan_total}`:null}));
-    const c=document.getElementById('panel-thoughts');
+    const c=document.getElementById('thoughts-cards');
     const em=document.getElementById('thoughts-empty');
     if(!thoughts.length){if(em)em.style.display='';return;}
     if(em)em.style.display='none';
     const ids=new Set(thoughts.map(t=>t.id));
-    c.querySelectorAll('.thought-card').forEach(el=>{if(!ids.has(el.id.replace('tc-','')))el.remove();});
+    if(c) c.querySelectorAll('.thought-card').forEach(el=>{if(!ids.has(el.id.replace('tc-','')))el.remove();});
     thoughts.forEach(t=>updateThought(t));
   } catch(_){}
 }
@@ -1714,6 +2041,7 @@ async function pollThoughts() {
    FILES PANEL
 ══════════════════════════════════════════════════ */
 async function refreshFiles() {
+  _fileTreeTs = Date.now();  // mark refresh time for stale-check logic
   const tree=document.getElementById('file-tree');
   const em  =document.getElementById('files-empty');
   try {
@@ -1760,17 +2088,178 @@ function updateVigilance(d) {
   document.getElementById('vig-reason').textContent=d.reason||'';
   document.getElementById('logo-dot').className='logo-dot'+(state==='working'?' working':state==='awake'?'':' sleeping');
 }
+
+// Rolling history buffers (last 120 samples per metric)
+const _monHist={tps:[],cpu:[],ram:[],vram:[],ctx:[]};
+const _MON_MAX=120;
+let _sessTokens=0, _thinkTokens=0;
+let _tpsActive=false; // true while Nova is generating
+
+function _pushHist(key, val) {
+  _monHist[key].push(val);
+  if(_monHist[key].length>_MON_MAX) _monHist[key].shift();
+}
+
 function updateMonitor(d) {
   if(d.pulse!==undefined)  document.getElementById('mon-pulse').textContent=d.pulse;
   if(d.model)              document.getElementById('mon-model').textContent=d.model;
-  if(d.tps!==undefined)    document.getElementById('mon-tps').textContent=parseFloat(d.tps).toFixed(1);
+  if(d.tps!==undefined)  { document.getElementById('mon-tps').textContent=parseFloat(d.tps).toFixed(1); _pushHist('tps',parseFloat(d.tps)); }
   if(d.uptime!==undefined) document.getElementById('mon-uptime').textContent=fmtUp(d.uptime);
   if(d.active_task)        document.getElementById('mon-task').textContent=d.active_task;
+  // System metrics from server poll
+  if(d.cpu_pct!==undefined){ const v=parseFloat(d.cpu_pct).toFixed(1); document.getElementById('mon-cpu').textContent=v+'%'; _pushHist('cpu',parseFloat(v)); }
+  if(d.ram_gb!==undefined) { document.getElementById('mon-ram').textContent=d.ram_gb+' GB'; _pushHist('ram',parseFloat(d.ram_gb)); }
+  if(d.vram!==undefined)   { document.getElementById('mon-vram').textContent=d.vram; const m=parseFloat(d.vram); if(!isNaN(m)) _pushHist('vram',m); }
+  if(d.ctx_pct!==undefined){ const v=Math.round(d.ctx_pct); document.getElementById('mon-ctx').textContent=v+'%'; _pushHist('ctx',v); }
   if(d.errors?.length){const el=document.getElementById('error-list');el.innerHTML='';d.errors.slice(-5).forEach(e=>{const en=document.createElement('div');en.className='error-entry';en.textContent=e;el.appendChild(en);});}
 }
 function fmtUp(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h>0?`${h}h ${m}m`:`${m}m`;}
+
+function updateProgressFromNova(d) {
+  // nova_progress: rate (chars/sec), chars, think_chars, tokens_est, elapsed, final
+  if(d.rate !== undefined) {
+    const tps = (d.rate / 3.4).toFixed(1);
+    const el = document.getElementById('mon-tps');
+    if(el) el.textContent = tps;
+    _pushHist('tps', parseFloat(tps));
+    _tpsActive = true;
+    const dot = document.getElementById('mon-tps-dot');
+    if(dot) dot.style.background='var(--green)';
+  }
+  if(d.tokens_est !== undefined) {
+    _sessTokens += Math.round(d.tokens_est);
+    document.getElementById('mon-sess-tok').textContent = fmtNum(_sessTokens);
+  }
+  if(d.think_chars !== undefined) {
+    _thinkTokens += Math.round(d.think_chars / 3.4);
+    document.getElementById('mon-think-tok').textContent = fmtNum(_thinkTokens);
+  }
+  if(d.final) {
+    // Generation done — keep last Tokens/s value but mark dot as idle (gray)
+    _tpsActive = false;
+    const dot = document.getElementById('mon-tps-dot');
+    if(dot) setTimeout(()=>{ if(!_tpsActive) dot.style.background='var(--text-mute)'; },1500);
+  }
+}
+function fmtNum(n){ return n>=1000?`${(n/1000).toFixed(1)}k`:String(n); }
+
+/* Sparkline charts */
+let _sparkOpen = null;
+function toggleSparkline(key, card) {
+  const wrap = card.querySelector('.sparkline-wrap');
+  if(!wrap) return;
+  const isOpen = wrap.style.display !== 'none';
+  // Close any other open sparkline
+  if(_sparkOpen && _sparkOpen!==key) {
+    const prev = document.getElementById('spark-'+_sparkOpen);
+    if(prev) prev.style.display='none';
+  }
+  if(isOpen){ wrap.style.display='none'; _sparkOpen=null; return; }
+  _sparkOpen = key;
+  wrap.style.display='';
+  wrap.innerHTML = drawSparkline(_monHist[key]||[]);
+}
+function drawSparkline(data) {
+  if(!data.length) return '<div style="font-size:9px;color:var(--text-mute);padding:2px 0;">No data yet</div>';
+  const W=240, H=40, pad=2;
+  const min=Math.min(...data), max=Math.max(...data);
+  const range=max-min||1;
+  const pts=data.map((v,i)=>{
+    const x=pad+i*(W-pad*2)/(Math.max(data.length-1,1));
+    const y=H-pad-(v-min)/range*(H-pad*2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const last=data[data.length-1];
+  const lx=pad+(data.length-1)*(W-pad*2)/(Math.max(data.length-1,1));
+  const ly=H-pad-(last-min)/range*(H-pad*2);
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;">
+    <polyline points="${pts}" fill="none" stroke="var(--nova)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="2.5" fill="var(--nova)"/>
+    <text x="${W-pad}" y="${H-1}" text-anchor="end" font-size="8" fill="var(--text-mute)">${max.toFixed(1)}</text>
+    <text x="${W-pad}" y="9" text-anchor="end" font-size="8" fill="var(--text-mute)">${min.toFixed(1)}</text>
+  </svg>`;
+}
+
 async function pollMonitor() {
-  try { const r=await fetch('http://127.0.0.1:18790/api/nova/status'); if(r.ok) updateMonitor(await r.json()); } catch(_){}
+  try {
+    const r=await fetch('/api/nova/status');
+    if(r.ok){
+      const d=await r.json();
+      if(d.nova_live) updateMonitor(d.nova_live);
+    }
+  } catch(_){}
+}
+
+/* ══════════════════════════════════════════════════
+   AUTONOMY LOG  (Task 4 — silent heartbeat output)
+══════════════════════════════════════════════════ */
+let _autoLogOpen = false;
+let _autoLogEntries = [];   // [{ts, content, id}] newest-first, capped at 50
+let _autoCurrentBuf = '';   // token accumulator for the in-flight tick
+
+function toggleAutoLog() {
+  _autoLogOpen = !_autoLogOpen;
+  document.getElementById('auto-log-entries').style.display = _autoLogOpen ? 'block' : 'none';
+  document.getElementById('auto-log-toggle').textContent = _autoLogOpen ? '▼' : '▶';
+  if (_autoLogOpen) _renderAutoLog();  // build DOM now that it's visible
+}
+
+function onAutonomousStart(d) {
+  _autoCurrentBuf = '';
+  const el = document.getElementById('auto-tick-live');
+  if (el) el.style.display = 'block';
+}
+
+function onAutonomousToken(d) {
+  _autoCurrentBuf += (d.token || '');
+}
+
+function onAutonomousOutput(d) {
+  // Hide live indicator
+  const liveEl = document.getElementById('auto-tick-live');
+  if (liveEl) liveEl.style.display = 'none';
+  _autoCurrentBuf = '';
+
+  // Store entry (newest first)
+  _autoLogEntries.unshift({ ts: Date.now(), content: d.content || '', id: d.id || '' });
+  if (_autoLogEntries.length > 50) _autoLogEntries.pop();
+
+  // Update count badge (always visible)
+  const countEl = document.getElementById('auto-log-count');
+  if (countEl) {
+    const n = _autoLogEntries.length;
+    countEl.textContent = `${n} tick${n !== 1 ? 's' : ''}`;
+  }
+
+  // Rebuild rendered list only if the section is expanded
+  if (_autoLogOpen) _renderAutoLog();
+}
+
+function _renderAutoLog() {
+  const entriesEl = document.getElementById('auto-log-entries');
+  const emptyEl   = document.getElementById('auto-log-empty');
+  if (!entriesEl) return;
+
+  if (_autoLogEntries.length === 0) {
+    if (emptyEl) emptyEl.style.display = '';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  const shown = _autoLogEntries.slice(0, 25);
+  entriesEl.innerHTML = shown.map((e) => {
+    const ts      = new Date(e.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const preview = (e.content.replace(/\n/g,' ').replace(/<think>[\s\S]*?<\/think>/gi,'').trim()).substring(0, 80);
+    const full    = e.content.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const detId   = 'adet_' + e.ts;
+    return `<div style="border-bottom:1px solid var(--border);padding:3px 0;">
+      <div style="cursor:pointer;display:flex;gap:4px;align-items:baseline" onclick="document.getElementById('${detId}').style.display=document.getElementById('${detId}').style.display==='none'?'block':'none'">
+        <span style="font-size:8.5px;color:var(--text-mute);font-family:var(--mono);white-space:nowrap">[${ts}]</span>
+        <span style="font-size:10px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${preview}${e.content.length > 80 ? '…' : ''}</span>
+      </div>
+      <div id="${detId}" style="display:none;font-size:10px;color:var(--text);white-space:pre-wrap;padding:5px;background:var(--bg-hover);border-radius:var(--radius-sm);margin-top:3px;max-height:180px;overflow-y:auto;font-family:var(--mono)">${full}</div>
+    </div>`;
+  }).join('');
 }
 
 /* ══════════════════════════════════════════════════
@@ -1959,7 +2448,20 @@ function setVerbosity(v) {
   ['concise','normal','verbose'].forEach(n=>document.getElementById(`vb-${n}`)?.classList.toggle('active',n===v));
 }
 
+/* P4: User typing signal — tells server Cole is composing a reply */
+let _typingTimer = null;
+function sendTypingSignal(typing) {
+  if(ws?.readyState===1) ws.send(JSON.stringify({type:'user_typing', typing}));
+}
+function onTypingInput() {
+  sendTypingSignal(true);
+  clearTimeout(_typingTimer);
+  _typingTimer = setTimeout(()=>sendTypingSignal(false), 2000);
+}
+
 async function sendMsg() {
+  sendTypingSignal(false);  // cancel any in-flight typing signal immediately
+  clearTimeout(_typingTimer);
   const inp=document.getElementById('input');
   const rawText=inp.value.trim();
   if(!rawText&&!pendingImages.length) return;
@@ -2081,6 +2583,7 @@ async function termRefresh() {
     const d=await r.json();
     const lines=(d.lines||[]);
     out.innerHTML=lines.map(l=>{
+      if(/\x1b\[/.test(l)) return ansiToHtml(l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
       const e=esc(l);
       if(/error|exception|traceback|critical/i.test(l)) return `<span class="tlog-err">${e}</span>`;
       if(/warning|warn/i.test(l)) return `<span class="tlog-warn">${e}</span>`;
@@ -2097,9 +2600,136 @@ async function termRefresh() {
 }
 
 /* ══════════════════════════════════════════════════
+   PANEL TAB DRAG-TO-REORDER
+══════════════════════════════════════════════════ */
+// Persist tab order in localStorage so it survives reloads
+const _LS_TABS = 'nova_tab_order_v1';
+function saveTabOrder() {
+  try {
+    const order = [...document.querySelectorAll('#panel-tabs-bar .ptab')].map(t=>t.dataset.tab);
+    localStorage.setItem(_LS_TABS, JSON.stringify(order));
+  } catch(_) {}
+}
+function loadTabOrder() {
+  try {
+    const order = JSON.parse(localStorage.getItem(_LS_TABS)||'[]');
+    if(!order.length) return;
+    const bar = document.getElementById('panel-tabs-bar');
+    if(!bar) return;
+    order.forEach(tab=>{
+      const el = bar.querySelector(`[data-tab="${tab}"]`);
+      if(el) bar.appendChild(el); // move to end in saved order
+    });
+  } catch(_) {}
+}
+(function initTabDrag(){
+  const bar = document.getElementById('panel-tabs-bar');
+  if(!bar) return;
+  let _dragSrc = null;
+  bar.addEventListener('dragstart', e=>{
+    const tab = e.target.closest('.ptab');
+    if(!tab) return;
+    _dragSrc = tab;
+    e.dataTransfer.effectAllowed = 'move';
+    tab.style.opacity = '0.4';
+  });
+  bar.addEventListener('dragend', e=>{
+    const tab = e.target.closest('.ptab');
+    if(tab) tab.style.opacity = '';
+    _dragSrc = null;
+    saveTabOrder();
+  });
+  bar.addEventListener('dragover', e=>{
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const over = e.target.closest('.ptab');
+    if(over && _dragSrc && over !== _dragSrc) {
+      const rect = over.getBoundingClientRect();
+      const mid  = rect.left + rect.width / 2;
+      if(e.clientX < mid) bar.insertBefore(_dragSrc, over);
+      else bar.insertBefore(_dragSrc, over.nextSibling);
+    }
+  });
+  bar.addEventListener('drop', e=>{ e.preventDefault(); saveTabOrder(); });
+})();
+
+/* ══════════════════════════════════════════════════
+   GIT BRANCH STATUS BAR
+══════════════════════════════════════════════════ */
+async function pollGit() {
+  try {
+    const r = await fetch('/api/git/branch');
+    if(!r.ok) return;
+    const d = await r.json();
+    const branch = d.branch || '';
+    const changed = d.changed || 0;
+    const indicator = document.getElementById('sb-git-branch');
+    const nameEl    = document.getElementById('sb-git-branch-name');
+    if(!branch) { if(indicator) indicator.style.display='none'; return; }
+    if(nameEl)  nameEl.textContent = branch + (changed>0 ? ` ✎${changed}` : '');
+    if(indicator) {
+      indicator.style.display = '';
+      indicator.style.color = changed > 0 ? 'var(--yellow, #facc15)' : '';
+    }
+  } catch(_) {}
+}
+async function gitStatusToTerminal() {
+  // Run git status and show output in Terminal tab
+  try {
+    const r = await fetch('/api/terminal/run', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({cmd:'git status --short'})});
+    if(!r.ok) return;
+    const d = await r.json();
+    const lines = (d.stdout||'no output').split('\n');
+    lines.forEach(l=>appendTerminalLine('[git] ' + l));
+    switchPanel('terminal');
+    toast('git status → Terminal');
+  } catch(e) { toast('git status failed'); }
+}
+
+/* ══════════════════════════════════════════════════
+   ANSI COLOR SUPPORT FOR TERMINAL
+══════════════════════════════════════════════════ */
+// Minimal ANSI escape code → HTML span converter.
+// Covers the common 16-color codes used by Python logging, git, etc.
+const _ANSI_MAP = {
+  '30':'#666','31':'#f87171','32':'#4ade80','33':'#facc15',
+  '34':'#60a5fa','35':'#c084fc','36':'#22d3ee','37':'#e2e8f0',
+  '90':'#6b7280','91':'#fca5a5','92':'#86efac','93':'#fde68a',
+  '94':'#93c5fd','95':'#d8b4fe','96':'#67e8f9','97':'#f8fafc',
+};
+function ansiToHtml(text) {
+  // Strip all ANSI escape codes — replace color codes with spans, strip others
+  return text
+    .replace(/\x1b\[([0-9;]*)m/g, (_, codes)=>{
+      if(!codes || codes==='0' || codes==='00') return '</span>';
+      const parts = codes.split(';');
+      for(const code of parts) {
+        const col = _ANSI_MAP[code];
+        if(col) return `<span style="color:${col}">`;
+        if(code==='1') return '<span style="font-weight:700">';
+      }
+      return '';
+    })
+    .replace(/\x1b\[[0-9;]*[A-HJKSTfh-l-nsu]/g, ''); // strip cursor/positioning codes
+}
+
+/* ══════════════════════════════════════════════════
+   FILE TREE AUTO-REFRESH
+══════════════════════════════════════════════════ */
+let _fileTreeTs = 0;
+async function refreshFilesIfStale(maxAgeMs=30000) {
+  if(Date.now()-_fileTreeTs > maxAgeMs) await refreshFiles();
+}
+// Auto-refresh file tree when switching to Files tab (already done in switchPanel),
+// and periodically when Files tab is active
+setInterval(()=>{ if(activePanel==='files') refreshFilesIfStale(30000); }, 15000);
+// Also refresh when the window regains focus (user switches back from another app)
+window.addEventListener('focus', ()=>{ if(activePanel==='files') refreshFilesIfStale(10000); });
+
+/* ══════════════════════════════════════════════════
    EXPORT & LOGS
 ══════════════════════════════════════════════════ */
-function exportCtx(){ws?.readyState===1&&ws.send(JSON.stringify({type:'export_context'}));closeDD();}
+function exportCtx(){ws?.readyState===1&&ws.send(JSON.stringify({type:'export_request'}));closeDD();}
 function handleExport(d){const b=new Blob([d.claude_export||''],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='nova_export.txt';a.click();toast('Exported');}
 async function showLogs() {
   const ov=document.getElementById('logs-overlay'); const ct=document.getElementById('logs-content');
@@ -2119,11 +2749,57 @@ function closeLogs(){document.getElementById('logs-overlay').classList.remove('o
 function toast(msg,ms=2200){const c=document.getElementById('toasts');const el=document.createElement('div');el.className='toast';el.textContent=msg;c.appendChild(el);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300);},ms);}
 
 /* ══════════════════════════════════════════════════
-   PANE RESIZE
+   PANE RESIZE + PERSISTENCE + COLLAPSE
 ══════════════════════════════════════════════════ */
-function initResize(handleId, getW, setW, min, max) {
+
+// ── Layout persistence ─────────────────────────────────────────────────────────
+// Saves/restores pane widths via localStorage so they survive reloads.
+const _LS_LAYOUT = 'nova_layout_v1';
+function saveLayout() {
+  try {
+    const sidebar = document.getElementById('sidebar').getBoundingClientRect().width;
+    const panel   = document.getElementById('right-panel').getBoundingClientRect().width;
+    localStorage.setItem(_LS_LAYOUT, JSON.stringify({sidebar, panel}));
+  } catch(_) {}
+}
+function loadLayout() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(_LS_LAYOUT)||'{}');
+    if(saved.sidebar && saved.sidebar >= 140 && saved.sidebar <= 380)
+      document.getElementById('sidebar').style.width = saved.sidebar+'px';
+    if(saved.panel && saved.panel >= 180 && saved.panel <= 620)
+      document.getElementById('right-panel').style.width = saved.panel+'px';
+  } catch(_) {}
+}
+
+// ── Collapse state per handle ──────────────────────────────────────────────────
+// Double-click a handle to snap-collapse the RIGHT-side pane; double-click again to restore.
+const _collapseState = {};
+function initResize(handleId, getW, setW, min, max, saveKey) {
   const h=document.getElementById(handleId);
+  let _savedW = 0;
+
+  // Double-click: collapse / restore
+  h.addEventListener('dblclick', e=>{
+    e.preventDefault();
+    if(_collapseState[handleId]) {
+      // Restore
+      const restore = _savedW || (max * 0.4);
+      setW(Math.max(min, restore));
+      _collapseState[handleId] = false;
+      h.style.opacity = '';
+    } else {
+      // Collapse
+      _savedW = getW();
+      setW(0);
+      _collapseState[handleId] = true;
+      h.style.opacity = '0.3';
+    }
+    saveLayout();
+  });
+
   h.addEventListener('pointerdown', e=>{
+    if(e.detail >= 2) return; // ignore the pointerdown that triggers dblclick
     e.preventDefault();
     h.setPointerCapture(e.pointerId); // keeps events on handle across elements (critical for WebView2)
     const startX=e.clientX, startW=getW();
@@ -2131,13 +2807,16 @@ function initResize(handleId, getW, setW, min, max) {
     document.body.style.cursor='col-resize';
     document.body.style.userSelect='none';
     const onMove=e=>{
-      const newW=Math.max(min,Math.min(max,startW+(e.clientX-startX)));
+      const newW=Math.max(0,Math.min(max,startW+(e.clientX-startX)));
       setW(newW);
+      if(newW < min/2) { _collapseState[handleId]=true; h.style.opacity='0.3'; }
+      else { _collapseState[handleId]=false; h.style.opacity=''; _savedW=newW; }
     };
     const onUp=()=>{
       h.classList.remove('dragging');
       document.body.style.cursor='';
       document.body.style.userSelect='';
+      saveLayout();
       h.removeEventListener('pointermove',onMove);
       h.removeEventListener('pointerup',onUp);
     };
@@ -2456,16 +3135,27 @@ function appendTerminalLine(line) {
   const t = document.getElementById('terminal-body');
   if(!t) return;
   const d = document.createElement('div');
-  d.style.cssText='font-family:var(--mono);font-size:10.5px;padding:1px 0;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text-dim)';
-  d.textContent = line;
-  // Color-code bridge results
-  if(line.includes('✓')){ d.style.color='var(--green)'; }
-  else if(line.includes('✗')){ d.style.color='var(--red)'; }
+  d.style.cssText='font-family:var(--mono);font-size:10.5px;padding:1px 0;border-bottom:1px solid rgba(255,255,255,0.03);';
+  // ANSI color support — parse escape codes into colored spans
+  const hasAnsi = /\x1b\[/.test(line);
+  if(hasAnsi) {
+    // HTML-escape first, then apply ANSI color parsing (ansiToHtml expects pre-escaped text)
+    d.innerHTML = ansiToHtml(line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+  } else {
+    d.textContent = line;
+    // Color-code bridge results and log levels
+    if(line.includes('✓')){ d.style.color='var(--green)'; }
+    else if(line.includes('✗')){ d.style.color='var(--red)'; }
+    else if(/error|exception|traceback|critical/i.test(line)){ d.style.color='#f87171'; }
+    else if(/warning|warn/i.test(line)){ d.style.color='#facc15'; }
+    else if(/ok|success|ready|started/i.test(line)){ d.style.color='#4ade80'; }
+    else { d.style.color='var(--text-dim)'; }
+  }
   t.appendChild(d);
   // Trim to 500 lines to prevent unbounded DOM growth in long sessions
   while(t.children.length > 500) t.removeChild(t.firstChild);
   if(document.getElementById('term-follow')?.checked) t.scrollTop = t.scrollHeight;
-  // Auto-switch to terminal tab if hidden and this is an exec result
+  // Badge the terminal tab if it's not active and this is an exec result
   if(line.startsWith('[bridge]') && document.querySelector('.ptab[data-tab="terminal"]:not(.active)')) {
     document.querySelector('.ptab[data-tab="terminal"]')?.classList.add('has-new');
   }
@@ -2512,25 +3202,31 @@ connect();
 setAutonomous(true);
 updateModelPill();  // initialize pill dot color and dropdown checkmarks
 
+// Restore saved pane sizes and tab order before wiring resize handles
+loadLayout();
+loadTabOrder();
+
 // Init resize handles — use getBoundingClientRect() for accurate rendered width
 // Only set style.width directly; no CSS variable updates to avoid style-calc conflicts
 initResize('sidebar-handle',
   ()=>document.getElementById('sidebar').getBoundingClientRect().width,
   w=>{ document.getElementById('sidebar').style.width=w+'px'; },
-  140, 380
+  140, 380, 'sidebar'
 );
 initResize('panel-handle',
   ()=>document.getElementById('right-panel').getBoundingClientRect().width,
   w=>{ document.getElementById('right-panel').style.width=w+'px'; },
-  180, 620
+  180, 620, 'panel'
 );
 
 // Polling
 setInterval(pollThoughts, 10000);
 setInterval(pollMonitor,  15000);
 setInterval(pollServices,  9000);
+setInterval(pollGit,      60000);  // git branch updates every 60s
 pollMonitor();
 pollServices();
+pollGit();
 
 // Set initial panel check
 switchPanel('thoughts');

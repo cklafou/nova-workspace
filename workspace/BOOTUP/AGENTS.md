@@ -80,12 +80,12 @@ This is not optional. `nova_status.json` is how Cole and the nova_chat UI know y
 
 ## Thoughts System — Persistent Task Memory
 
-Your long-term task memory lives in `Thoughts/`. Every multi-step task or ongoing piece of work gets a Thought. Thoughts survive session resets because they live on disk, not in your context window.
+Your long-term task memory lives in `Tasking/`. Every multi-step task or ongoing piece of work gets a Thought. Thoughts survive session resets because they live on disk, not in your context window.
 
 ### Directory layout
 
 ```
-Thoughts/
+Tasking/
   priority.md              ← Your priority queue. Read it at the start of every heartbeat.
   THOUGHT_TEMPLATE.md      ← Clone this when starting a new Thought.
   Master_Inbox/            ← All module responses land here first.
@@ -110,9 +110,9 @@ For quick one-shot questions or single exec calls: no Thought needed.
 
 ### How to create a Thought
 
-1. Create the folder: `[READ: Thoughts/THOUGHT_TEMPLATE.md]` then `[WRITE: Thoughts/ThoughtName/master.md]` with the template filled in.
-2. Create `Thoughts/ThoughtName/inbox/` and `Thoughts/ThoughtName/scratch/` subdirectories via exec.
-3. Add the task to `Thoughts/priority.md` at the correct priority level.
+1. Create the folder: `[READ: Tasking/THOUGHT_TEMPLATE.md]` then `[WRITE: Tasking/ThoughtName/master.md]` with the template filled in.
+2. Create `Tasking/ThoughtName/inbox/` and `Tasking/ThoughtName/scratch/` subdirectories via exec.
+3. Add the task to `Tasking/priority.md` at the correct priority level.
 4. Append to the Decision Log: "Thought created."
 
 **Choose a short, descriptive folder name.** Use underscores, no spaces. Example: `AAPL_Trade_Decision_0328`.
@@ -132,13 +132,13 @@ Modules must echo `[AAPL_Trade_Decision_0328]` at the start of their response. T
 On every heartbeat (see Heartbeat section), check `Master_Inbox/`:
 
 ```
-exec: python -c "import os; items = [f for f in os.listdir('Thoughts/Master_Inbox') if f.endswith('.md')]; print('\n'.join(items) if items else 'empty')"
+exec: python -c "import os; items = [f for f in os.listdir('Tasking/Master_Inbox') if f.endswith('.md')]; print('\n'.join(items) if items else 'empty')"
 ```
 
 For each item:
-1. `[READ: Thoughts/Master_Inbox/filename.md]`
+1. `[READ: Tasking/Master_Inbox/filename.md]`
 2. Find the `[TASK_ID]` header at the top.
-3. Move to the correct thought: `exec: python -c "import shutil; shutil.move('Thoughts/Master_Inbox/filename.md', 'Thoughts/ThoughtName/inbox/filename.md')"`
+3. Move to the correct thought: `exec: python -c "import shutil; shutil.move('Tasking/Master_Inbox/filename.md', 'Tasking/ThoughtName/inbox/filename.md')"`
 4. Update that thought's `master.md` — mark the module response as received, update the checklist.
 
 ### Closing a Thought
@@ -146,7 +146,7 @@ For each item:
 When a Thought is complete, move the entire folder:
 
 ```
-exec: python -c "import shutil; shutil.move('Thoughts/ThoughtName', 'Thoughts/Finished/completed_success/ThoughtName')"
+exec: python -c "import shutil; shutil.move('Tasking/ThoughtName', 'Tasking/Finished/completed_success/ThoughtName')"
 ```
 
 Then remove it from `priority.md` and append a final Decision Log entry: "Thought complete. Moved to Finished/completed_success/."
@@ -236,7 +236,7 @@ If it prints a message: decide whether to stop or finish the current step first.
 
 ### NCL Module Calls Are Fire-and-Forget — Do NOT Stop After Them
 
-NCL calls (`@eyes`, `@mentor`, `@browser`, etc.) are **asynchronous**. When you dispatch one, the response will arrive in `Thoughts/Master_Inbox/` at the next heartbeat — not in this conversation turn. You do NOT need to wait.
+NCL calls (`@eyes`, `@mentor`, `@browser`, etc.) are **asynchronous**. When you dispatch one, the response will arrive in `Tasking/Master_Inbox/` at the next heartbeat — not in this conversation turn. You do NOT need to wait.
 
 After dispatching an NCL call:
 1. Note what you dispatched in one line (e.g. "Dispatched `@mentor` for AAPL analysis — response will arrive via inbox.")

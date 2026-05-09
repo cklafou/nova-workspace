@@ -123,6 +123,12 @@ _eyes_running: bool = False        # tracks desktop streaming state
 # 1.3 -- Nova status cache: polled every 30s, injected silently into AI context
 nova_status_cache: dict = {"summary": "", "updated_at": 0.0}
 
+# P3 — System metrics cache (CPU, RAM, VRAM) — updated every 10s
+_sys_metrics: dict = {}
+# P4 — User typing state (updated via WS, written to interrupt_inbox.json)
+_user_typing: bool = False
+_user_typing_since: float = 0.0
+
 # ── Nova rate-limit failsafe ────────────────────────────────────────────────
 # TEMPORARY — see orchestrator.py for the full explanation.
 # Short version: prevents runaway Nova loops from burning Claude/Gemini API
@@ -147,7 +153,7 @@ _active_models: dict = {"Claude": claude_client.MODEL, "Gemini": gemini_client.M
 # ── Phase 4A.5 — Inbox routing ────────────────────────────────────────────────
 # Regex: matches messages that start with [TaskId] where TaskId is a word starting
 # with a letter followed by alphanumeric chars / underscores.
-# These are module response messages that should be routed to Thoughts/Master_Inbox/.
+# These are module response messages that should be routed to Tasking/Master_Inbox/.
 # Examples: "[Research_0328] Here is my analysis..."
 #           "[TradeCheck_0328] @eyes result: ..."
 import re as _re
@@ -162,7 +168,7 @@ def _maybe_route_inbox(author: str, content: str) -> None:
     Phase 4A.5 — Inbox routing.
 
     If `content` starts with a [TaskId] pattern, write it to
-    Thoughts/Master_Inbox/ so the heartbeat cycle can route it to the
+    Tasking/Master_Inbox/ so the heartbeat cycle can route it to the
     correct Thought folder on the next tick.
 
     File name: {timestamp}_{author}_{task_id}.md
@@ -191,6 +197,35 @@ def _maybe_route_inbox(author: str, content: str) -> None:
         (inbox / fname).write_text(text, encoding="utf-8")
     except Exception as _e:
         print(f"[inbox] Failed to write Master_Inbox item: {_e}")
+
+
+class HeartbeatContext:
+    """
+    Ephemeral transcript for autonomous heartbeat ticks.
+
+    Contains NO chat history — only the single heartbeat tick message.
+    This is the architectural fix for the re-processing bug (Task 5):
+    when Nova's autonomous context is built from HeartbeatContext instead
+    of the full session transcript, she never sees Cole's old messages
+    and cannot re-answer them on every tick.
+
+    Workspace context (identity files, memory) is still injected via the
+    workspace_context kwarg, so Nova has everything she needs to work.
+    """
+    def __init__(self, tick_content: str):
+        self._tick = tick_content
+
+    def to_messages(self, ai_name: str, system_prefix: str = "",
+                    workspace_context: str = "") -> list[dict]:
+        sys_content = system_prefix.strip()
+        if workspace_context:
+            sys_content += (
+                f"\n\n--- WORKSPACE CONTEXT ---\n{workspace_context}\n--- END CONTEXT ---"
+            )
+        return [
+            {"role": "system", "content": sys_content},
+            {"role": "user",   "content": self._tick},
+        ]
 
 
 def _should_agent_respond(agent: str, content: str) -> bool:
@@ -380,12 +415,44 @@ async def startup_event():
         else:
             print(f"[llama] start_llama.cmd not found at {_cmd} — skipping auto-start")
 
+    async def _bg_sys_metrics():
+        """P3 — Poll CPU, RAM, VRAM every 10s and include in nova_status broadcasts."""
+        import asyncio as _aio
+        import time as _t
+        await _aio.sleep(5)
+        while True:
+            try:
+                import psutil as _ps
+                _sys_metrics['cpu_pct']  = round(_ps.cpu_percent(interval=None), 1)
+                vm = _ps.virtual_memory()
+                _sys_metrics['ram_gb']   = round(vm.used / (1024**3), 1)
+                _sys_metrics['ram_total']= round(vm.total / (1024**3), 1)
+            except Exception:
+                pass
+            try:
+                import subprocess as _sp
+                r = _sp.run(
+                    ['nvidia-smi','--query-gpu=memory.used,memory.total','--format=csv,noheader,nounits'],
+                    capture_output=True, text=True, timeout=3
+                )
+                if r.returncode == 0:
+                    parts = r.stdout.strip().split(',')
+                    if len(parts) == 2:
+                        used_mb  = int(parts[0].strip())
+                        total_mb = int(parts[1].strip())
+                        _sys_metrics['vram']     = f"{used_mb//1024}/{total_mb//1024} GB"
+                        _sys_metrics['vram_pct'] = round(used_mb/total_mb*100, 1)
+            except Exception:
+                pass
+            await _aio.sleep(10)
+
     asyncio.ensure_future(_bg_index())
     asyncio.ensure_future(_bg_eyes_stream())
     asyncio.ensure_future(_bg_nova_status_poll())
     asyncio.ensure_future(_bg_gateway_error_watch())
     asyncio.ensure_future(_bg_transcript_flush())
     asyncio.ensure_future(_bg_llama_autostart())
+    asyncio.ensure_future(_bg_sys_metrics())
 
 
 @app.get("/")
@@ -777,7 +844,10 @@ def _build_discord_context_block(n: int = 15) -> str:
 
 async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                           latest_message: str = "",
-                          images: list = None) -> str:
+                          images: list = None,
+                          hb_ctx=None,
+                          cole_pending: bool = True,
+                          auto_log_path=None) -> str:
     """
     Stream one AI response, broadcast tokens, and return the full response text.
     The return value lets callers (e.g. _run_response_queue) inspect Nova's
@@ -785,7 +855,19 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
     images: list of {dataUrl, name} dicts from the triggering Cole message.
             Passed through to AI clients that support vision (Claude, Gemini, Nova).
+
+    hb_ctx: if provided (HeartbeatContext), this is an autonomous heartbeat tick.
+            The ephemeral context is used instead of session_mgr.active, and Nova's
+            response is NOT added to the chat transcript (Task 5+4 fix).
+    cole_pending: only meaningful when hb_ctx is set. If True, Nova is responding
+            to a new Cole message and her reply DOES go to chat as normal.
+            If False, this is a silent work tick — reply goes to autonomy log only.
+    auto_log_path: pathlib.Path to the daily autonomy tick log file.
     """
+    # Determine the transcript object to use (ephemeral HB ctx vs full session)
+    _transcript = hb_ctx if hb_ctx is not None else session_mgr.active
+    _is_hb_tick = hb_ctx is not None
+    _silent_tick = _is_hb_tick and not cole_pending   # True = don't touch chat
     # Update workspace context based on what was mentioned in the message
     # Offload to background thread to prevent event loop freeze
     if latest_message:
@@ -826,7 +908,9 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
     import time as _time
     _gen_start = _time.time()
-    await broadcast({"type": "message_start", "author": ai_name, "id": msg_id})
+    # Silent autonomous ticks use autonomous_start (invisible to chat bubble renderer)
+    _start_event = "autonomous_start" if _silent_tick else "message_start"
+    await broadcast({"type": _start_event, "author": ai_name, "id": msg_id})
     # Emit generation_start so Thoughts pane can show "Nova is generating..." indicator
     if ai_name == "Nova":
         await broadcast({"type": "generation_start", "author": ai_name, "id": msg_id,
@@ -863,7 +947,9 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     async def on_token(token):
         if _stop_requested.is_set():
             raise asyncio.CancelledError("STOP requested by user")
-        await broadcast({"type": "token", "author": ai_name, "token": token, "id": msg_id})
+        # Silent autonomous ticks stream to autonomous_token (Monitor pane) not chat
+        _tok_type = "autonomous_token" if _silent_tick else "token"
+        await broadcast({"type": _tok_type, "author": ai_name, "token": token, "id": msg_id})
 
     async def on_think_token(token):
         """Broadcasts think_start once, then think_token for each token.
@@ -898,14 +984,51 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         if _think_started[0]:
             await broadcast({"type": "think_end", "author": ai_name, "id": msg_id,
                              "elapsed": elapsed})
-        msg = session_mgr.active.add(ai_name, full)
-        session_mgr.update_meta_from_message(msg)
 
-        # --- Index for semantic memory ---
-        if memory_indexer:
-            memory_indexer.add_message(full, ai_name, session_mgr.active_id)
+        # ── Routing: silent autonomous tick vs. normal chat response ───────────
+        if _silent_tick:
+            # ── Autonomous work tick — never touches the chat transcript ────────
+            # Write to the daily autonomy tick log
+            if auto_log_path:
+                try:
+                    import json as _aj
+                    _aentry = {
+                        "type":      "response",
+                        "timestamp": datetime.now().isoformat(),
+                        "content":   full,
+                    }
+                    with open(auto_log_path, "a", encoding="utf-8") as _alf:
+                        _alf.write(_aj.dumps(_aentry, ensure_ascii=False) + "\n")
+                except Exception as _le:
+                    print(f"[autonomous] tick log write failed: {_le}")
 
-        await broadcast({"type": "message_end", "author": ai_name, "id": msg_id, "content": full})
+            # Broadcast as autonomous_output for the monitoring pane (not chat)
+            await broadcast({"type": "autonomous_output", "author": ai_name,
+                             "id": msg_id, "content": full})
+
+            # "FOR COLE:" prefix promotes that section to the chat transcript
+            _FC_MARKER = "FOR COLE:"
+            _fc_idx = full.upper().find(_FC_MARKER)
+            if _fc_idx >= 0:
+                _cole_part = full[_fc_idx + len(_FC_MARKER):].strip()
+                if _cole_part:
+                    _cmsg = session_mgr.active.add(ai_name, _cole_part)
+                    session_mgr.update_meta_from_message(_cmsg)
+                    if memory_indexer:
+                        memory_indexer.add_message(_cole_part, ai_name, session_mgr.active_id)
+                    await broadcast({"type": "message_end", "author": ai_name,
+                                     "id": msg_id + "_cole", "content": _cole_part})
+        else:
+            # ── Normal path — add response to chat transcript ────────────────────
+            msg = session_mgr.active.add(ai_name, full)
+            session_mgr.update_meta_from_message(msg)
+
+            # --- Index for semantic memory ---
+            if memory_indexer:
+                memory_indexer.add_message(full, ai_name, session_mgr.active_id)
+
+            await broadcast({"type": "message_end", "author": ai_name, "id": msg_id, "content": full})
+
         # Phase 4A.5 — Route module responses with [TASK_ID] to Master_Inbox
         _maybe_route_inbox(ai_name, full)
         # If Nova wrote action directives, forward them via nova_bridge
@@ -940,24 +1063,52 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                 await broadcast({"type": "terminal_output", "line": result})
 
     async def on_error(err):
+        # Close any open UI state before broadcasting the error:
+        # • think_end  — closes the Thoughts pane "thinking..." spinner
+        # • generation_end — resets the Monitor / vigilance indicator
+        # • message_end — finalizes the dangling message bubble so the UI
+        #   doesn't show an empty half-rendered assistant bubble after the error
+        if _think_started[0]:
+            await broadcast({"type": "think_end", "author": ai_name, "id": msg_id, "elapsed": 0})
+        if ai_name == "Nova":
+            import time as _t2
+            await broadcast({"type": "generation_end", "author": ai_name, "id": msg_id,
+                             "elapsed": round(_t2.time() - _gen_start, 1),
+                             "had_activity": False})
+        await broadcast({"type": "message_end", "author": ai_name, "id": msg_id,
+                         "content": f"⚠ {err}"})
         await broadcast({"type": "error", "author": ai_name, "message": err, "id": msg_id})
+
+    async def on_tool_executed_cb(tool_name: str, tool_input: dict,
+                                  result: str, is_error: bool, duration_ms: float):
+        """Fires tool_executed WS event so the Tools tab shows the call live (Task 2)."""
+        await broadcast({
+            "type":        "tool_executed",
+            "tool":        tool_name,
+            "input":       tool_input,
+            "result":      result,
+            "error":       is_error,
+            "duration_ms": round(duration_ms),
+        })
 
     if ai_name == "Gemini":
         await _run_gemini_response(on_token, on_done, on_error, ws_context, images=images)
     elif ai_name == "Nova":
-        # Nova supports <think> tag parsing — pass on_think_token and on_progress
+        # Nova supports <think> tag parsing — pass on_think_token and on_progress.
+        # Use _transcript (HeartbeatContext for HB ticks, session_mgr.active for normal).
         await client_mod.stream_response(
-            session_mgr.active, on_token, on_done, on_error,
+            _transcript, on_token, on_done, on_error,
             on_think_token=on_think_token,
             on_progress=on_progress,
+            on_tool_executed=on_tool_executed_cb,
             workspace_context=ws_context, images=images,
-            autonomous=autonomous_mode,
+            autonomous=autonomous_mode or _is_hb_tick,
             temperature=_nova_temperature,
             top_p=_nova_top_p,
         )
     else:
         await client_mod.stream_response(
-            session_mgr.active, on_token, on_done, on_error,
+            _transcript, on_token, on_done, on_error,
             workspace_context=ws_context, images=images
         )
 
@@ -1169,11 +1320,14 @@ async def nova_status():
     except Exception:
         pass
 
+    # P3 — Merge live system metrics into nova_live so pollMonitor picks them up
+    live_status.update({k: v for k, v in _sys_metrics.items()})
+
     return JSONResponse({
         "heartbeat":   heartbeat[:3000],
         "status":      status[:4000],
         "timestamp":   _time.time(),
-        "nova_live":   live_status,          # pulse, active_task, errors, gateway, last_run
+        "nova_live":   live_status,          # pulse, active_task, errors, gateway, last_run + sys metrics
         "status_cache": nova_status_cache.get("summary", ""),
     })
 
@@ -1478,6 +1632,33 @@ async def gateway_stop():
 
 
 
+# ── Git branch indicator ─────────────────────────────────────────────────────
+
+@app.get("/api/git/branch")
+async def git_branch():
+    """Return current git branch name for the workspace status bar."""
+    import subprocess as _sp
+    try:
+        result = _sp.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True, text=True, timeout=3,
+            cwd=str(WORKSPACE_ROOT), encoding="utf-8", errors="replace"
+        )
+        branch = result.stdout.strip()
+        if branch and result.returncode == 0:
+            # Also get short status (number of modified/staged files)
+            status = _sp.run(
+                ["git", "status", "--short"],
+                capture_output=True, text=True, timeout=3,
+                cwd=str(WORKSPACE_ROOT), encoding="utf-8", errors="replace"
+            )
+            changed = len([l for l in (status.stdout or "").splitlines() if l.strip()])
+            return JSONResponse({"branch": branch, "changed": changed})
+    except Exception:
+        pass
+    return JSONResponse({"branch": "", "changed": 0})
+
+
 # ── llama.cpp server (local inference) ──────────────────────────────────────
 
 @app.get("/api/llama/status")
@@ -1748,11 +1929,12 @@ async def inject_message(body: dict):
                     try:
                         await _run_response_queue(_listener_queue, content)
                     except asyncio.CancelledError:
-                        raise  # don't catch cancellation
+                        pass  # absorb so finally can broadcast processing_end cleanly
                     except Exception as e:
                         print(f"[chat] Error in injected listener queue: {e}")
                     finally:
                         is_processing = False
+                        await broadcast({"type": "processing_end"})
 
                 _t = asyncio.create_task(_inject_listener_run())
                 active_tasks.append(_t)
@@ -1832,7 +2014,7 @@ async def reinject_context():
         _FALLBACK = [
             "AGENTS.md", "NOVA.md", "TOOLS.md",
             "NCL_MASTER.md", "memory/STATUS.md", "memory/COLE.md",
-            "Thoughts/priority.md", "Thoughts/THOUGHT_TEMPLATE.md",
+            "Tasking/priority.md", "Tasking/THOUGHT_TEMPLATE.md",
         ]
         inject_paths = [_WORKSPACE / p for p in _FALLBACK if (_WORKSPACE / p).exists()]
 
@@ -2034,6 +2216,27 @@ async def websocket_endpoint(ws: WebSocket):
                     await broadcast({"type": "mute_state", "agent": agent, "muted": muted})
                 continue
 
+            if data.get("type") == "user_typing":
+                # P4 — Cole is typing a response; write state to interrupt_inbox.json
+                # so checkin.py can warn Nova to pause before her next action tick.
+                global _user_typing, _user_typing_since
+                import time as _tz
+                _user_typing       = bool(data.get("typing", False))
+                _user_typing_since = _tz.time() if _user_typing else 0.0
+                try:
+                    inbox_path = WORKSPACE_ROOT / "memory" / "interrupt_inbox.json"
+                    inbox_path.parent.mkdir(parents=True, exist_ok=True)
+                    existing = {}
+                    if inbox_path.exists():
+                        try: existing = json.loads(inbox_path.read_text(encoding="utf-8"))
+                        except Exception: pass
+                    existing["is_typing"]     = _user_typing
+                    existing["typing_since"]  = _user_typing_since
+                    inbox_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+                except Exception as _e:
+                    print(f"[typing] inbox write failed: {_e}")
+                continue
+
             if data.get("type") == "set_model":
                 global _active_models
                 agent = data.get("agent", "")
@@ -2106,7 +2309,18 @@ async def websocket_endpoint(ws: WebSocket):
                 })
 
                 status = await get_status()
-                queue = build_response_queue(directed_at, status)
+                if not directed_at:
+                    # No @mentions: only online + unmuted agents respond.
+                    # _mute_states[name] = False means UNMUTED (will respond).
+                    # _mute_states[name] = True  means MUTED   (silent unless @mentioned).
+                    # Use canonical response order: Claude → Gemini → Nova.
+                    queue = [
+                        name for name in ("Claude", "Gemini", "Nova")
+                        if status.get(name) and not _mute_states.get(name, True)
+                    ]
+                else:
+                    # Explicit @mentions bypass mute — direct mentions always work.
+                    queue = build_response_queue(directed_at, status)
 
                 if queue:
                     _stop_requested.clear()    # reset stop flag for this new generation
@@ -2130,7 +2344,7 @@ async def websocket_endpoint(ws: WebSocket):
                             # ── Autonomous heartbeat loop ──────────────────────────────────
                             # When autonomous_mode is ON, Nova drives herself indefinitely.
                             # After each response the server sends a minimal [HEARTBEAT N]
-                            # tick — Nova reads HEARTBEAT.md, checks Thoughts/priority.md
+                            # tick — Nova reads HEARTBEAT.md, checks Tasking/priority.md
                             # and Master_Inbox, and decides what to do next on her own.
                             #
                             # Stop conditions (in priority order):
@@ -2140,13 +2354,16 @@ async def websocket_endpoint(ws: WebSocket):
                             #   4. Nova replies with IDLE or AUTONOMOUS_COMPLETE (explicit)
                             #   5. Safety backstop: 500 ticks (emergency only)
                             # ─────────────────────────────────────────────────────────────
-                            _TICK_SAFETY = 500   # emergency backstop — not expected to hit
-                            _auto_ticks  = 0
-                            _ns_path     = Path(WORKSPACE_ROOT) / "nova_status.json"
+                            _TICK_SAFETY     = 500   # emergency backstop — not expected to hit
+                            _auto_ticks      = 0
+                            _consec_errors   = 0    # consecutive empty-reply / error count
+                            _ERROR_BACKSTOP  = 3    # halt heartbeat after 3 straight failures
+                            _ns_path         = Path(WORKSPACE_ROOT) / "nova_status.json"
 
                             while (autonomous_mode
                                    and not _stop_requested.is_set()
-                                   and _auto_ticks < _TICK_SAFETY):
+                                   and _auto_ticks < _TICK_SAFETY
+                                   and _consec_errors < _ERROR_BACKSTOP):
 
                                 _auto_ticks += 1
                                 await asyncio.sleep(2.5)   # let UI settle; respect rate limits
@@ -2174,24 +2391,88 @@ async def websocket_endpoint(ws: WebSocket):
                                     except Exception:
                                         pass
 
-                                # ── Minimal heartbeat tick ─────────────────────────────────
-                                # Just [HEARTBEAT N] — Nova reads HEARTBEAT.md to decide
-                                # what to do.  No task context injected; her Thoughts hold it.
-                                tick_content = f"[HEARTBEAT {_auto_ticks}]"
-                                _tmsg = session_mgr.active.add("System", tick_content)
-                                await broadcast({
-                                    "type":      "user_message",
-                                    "author":    "System",
-                                    "content":   tick_content,
-                                    "id":        _tmsg["id"],
-                                    "timestamp": _tmsg["timestamp"],
-                                })
+                                # ── Autonomous heartbeat tick (Tasks 4+5 fix) ──────────────
+                                # Detect whether Cole sent a new unread message.
+                                # "Unread" = Cole's last msg comes AFTER Nova's last msg.
+                                _hb_msgs     = session_mgr.active.messages
+                                _last_cole_i = next(
+                                    (i for i in range(len(_hb_msgs) - 1, -1, -1)
+                                     if _hb_msgs[i]["author"] == "Cole"),
+                                    None,
+                                )
+                                _last_nova_i = next(
+                                    (i for i in range(len(_hb_msgs) - 1, -1, -1)
+                                     if _hb_msgs[i]["author"] == "Nova"),
+                                    None,
+                                )
+                                _cole_pending = (
+                                    _last_cole_i is not None and
+                                    (_last_nova_i is None or _last_nova_i < _last_cole_i)
+                                )
 
-                                # Run Nova's response, then honour any @mentions she makes
+                                if _cole_pending:
+                                    _cole_msg = _hb_msgs[_last_cole_i]["content"]
+                                    tick_content = (
+                                        f"[HEARTBEAT {_auto_ticks}] Cole sent a new message "
+                                        f"that needs a response:\n"
+                                        f"Cole: {_cole_msg}\n\n"
+                                        f"Reply to Cole now. If relevant, briefly mention any "
+                                        f"active tasks from Tasking/priority.md."
+                                    )
+                                else:
+                                    tick_content = (
+                                        f"[HEARTBEAT {_auto_ticks}] Cole's last message has "
+                                        f"already been answered. Do NOT re-answer it.\n"
+                                        f"Check Tasking/priority.md for queued tasks and "
+                                        f"execute your next task. If the queue is empty, "
+                                        f"output AUTONOMOUS_COMPLETE."
+                                    )
+
+                                # Build the ephemeral heartbeat context (no chat history)
+                                _hb_ctx = HeartbeatContext(tick_content)
+
+                                # Log the tick to the daily autonomy file (not to chat)
+                                _auto_log_path = (
+                                    Path(WORKSPACE_ROOT) / "logs" / "autonomy_runs" /
+                                    f"{datetime.now().strftime('%Y-%m-%d')}_ticks.jsonl"
+                                )
+                                _auto_log_path.parent.mkdir(parents=True, exist_ok=True)
+                                try:
+                                    _tick_entry = {
+                                        "tick":         _auto_ticks,
+                                        "timestamp":    datetime.now().isoformat(),
+                                        "type":         "tick",
+                                        "cole_pending": _cole_pending,
+                                        "content":      tick_content,
+                                    }
+                                    with open(_auto_log_path, "a", encoding="utf-8") as _tlf:
+                                        _tlf.write(
+                                            json.dumps(_tick_entry, ensure_ascii=False) + "\n"
+                                        )
+                                except Exception as _tlog_e:
+                                    print(f"[autonomous] tick log failed: {_tlog_e}")
+
+                                # Run Nova in the ephemeral context — no chat history injected.
+                                # cole_pending=True → her reply goes to chat (she's answering Cole).
+                                # cole_pending=False → her reply is silent (logged + autonomous_output).
                                 nova_reply = await run_ai_response(
                                     "Nova", CLIENT_MAP["Nova"],
                                     str(uuid.uuid4())[:8], tick_content,
+                                    hb_ctx=_hb_ctx,
+                                    cole_pending=_cole_pending,
+                                    auto_log_path=_auto_log_path,
                                 )
+
+                                # Circuit breaker: consecutive empty replies = Nova is down or erroring.
+                                # Stop the heartbeat so errors don't flood chat forever.
+                                if not nova_reply:
+                                    _consec_errors += 1
+                                    if _consec_errors >= _ERROR_BACKSTOP:
+                                        print(f"[autonomous] {_ERROR_BACKSTOP} consecutive empty "
+                                              f"replies — halting heartbeat (Nova error?)")
+                                    continue
+                                else:
+                                    _consec_errors = 0   # reset on any successful reply
 
                                 # Fire @mention follow-ups so Gemini/Claude can respond
                                 if nova_reply and not _stop_requested.is_set():
@@ -2249,10 +2530,10 @@ async def websocket_endpoint(ws: WebSocket):
 
                     task = asyncio.ensure_future(_queued_run())
                     active_tasks.append(task)
-                    try:
-                        await task
-                    except asyncio.CancelledError:
-                        pass  # task was cancelled by a /stop request — that's fine
+                    # Do NOT await task here — awaiting blocks the receive loop so
+                    # WebSocket "stop" messages can never arrive while generation is
+                    # running.  ensure_future already schedules it; the while loop
+                    # continues to ws.receive_text() and processes stop/ping/etc.
 
     except WebSocketDisconnect:
         pass  # client closed the tab or lost connection — normal, not an error

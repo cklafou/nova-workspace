@@ -445,7 +445,7 @@ class NCLInjector:
         self, task_id: str, role: str, content: str
     ) -> None:
         """
-        Drop a .md file into Thoughts/Master_Inbox/.
+        Drop a .md file into Tasking/Master_Inbox/.
         Used by unimplemented module stubs and timeout/error notices.
         The heartbeat cycle (Phase 4A.5+) processes these on the next tick.
         """

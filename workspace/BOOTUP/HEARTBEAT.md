@@ -8,7 +8,7 @@
 
 Read your priority queue:
 
-[READ: Thoughts/priority.md]
+[READ: Tasking/priority.md]
 
 Note what is active, what is blocked, and what is highest priority.
 If priority.md shows no active or blocked thoughts, skip to Step 5.
@@ -20,7 +20,7 @@ If priority.md shows no active or blocked thoughts, skip to Step 5.
 Check whether any module responses have arrived:
 
 ```
-exec: python -c "import os; p = 'Thoughts/Master_Inbox'; items = [f for f in os.listdir(p) if f.endswith('.md')]; print('\n'.join(items) if items else 'INBOX_EMPTY')"
+exec: python -c "import os; p = 'Tasking/Master_Inbox'; items = [f for f in os.listdir(p) if f.endswith('.md')]; print('\n'.join(items) if items else 'INBOX_EMPTY')"
 ```
 
 If INBOX_EMPTY: skip to Step 3.
@@ -37,13 +37,13 @@ Each file contains:
 - The full message content under `## Message`
 
 For each item returned:
-1. Read it: [READ: Thoughts/Master_Inbox/FILENAME.md]
+1. Read it: [READ: Tasking/Master_Inbox/FILENAME.md]
 2. The Task ID is in the filename and in the `# Inbox Item: [TASK_ID]` header.
-   Match it to a Thought folder in `Thoughts/`. If no matching folder exists,
+   Match it to a Thought folder in `Tasking/`. If no matching folder exists,
    the item is noise (e.g. an [ERROR] or system notice) — delete it and move on.
 3. Route to the correct thought's inbox:
    ```
-   exec: python -c "import shutil; shutil.move('Thoughts/Master_Inbox/FILENAME.md', 'Thoughts/THOUGHT_FOLDER/inbox/FILENAME.md')"
+   exec: python -c "import shutil; shutil.move('Tasking/Master_Inbox/FILENAME.md', 'Tasking/THOUGHT_FOLDER/inbox/FILENAME.md')"
    ```
 4. Open that thought's master.md and update:
    - Mark the module as "received" in the Pending Module Responses table
@@ -58,7 +58,7 @@ Process ONE inbox item per heartbeat turn if there are multiple. The next heartb
 
 Read the master.md of the highest-priority ACTIVE thought:
 
-[READ: Thoughts/THOUGHT_FOLDER/master.md]
+[READ: Tasking/THOUGHT_FOLDER/master.md]
 
 Review the Current Plan checklist. Find the first unchecked step.
 Take ONE action toward completing that step.

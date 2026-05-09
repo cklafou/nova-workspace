@@ -1,7 +1,7 @@
 # Project Nova — Anatomical Restructure Plan
 _Living document. Update this at the start and end of every session that touches the restructure._
 _Created: 2026-05-08 (Claude, Cowork session 9)_
-_Last updated: 2026-05-08 (session 11 — Steps 2 + 4 COMPLETE — all file renames done, gateway dissolved, vigilance.py built)_
+_Last updated: 2026-05-10 (overnight session — Nova Chat V1 baseline stabilized; 8 critical bugs fixed in nova_chat; restructure Step 2 + 4 context preserved below)_
 
 ---
 
@@ -465,6 +465,38 @@ As Nova gains new capabilities, new anatomical modules:
 | 2026-05-08 | `restructure.py` extended with `--rename` flag | Step 1 revealed the tool only handled the old `tools/` prefix migration — had no concept of file-level renames. Added 3 pattern types: dotted, path-style, and bare import. Now the correct tool for all future anatomical renames |
 | 2026-05-08 | `audit_scripts.py` extended with `check_broken_imports` | Step 1 revealed the audit had no import-resolution pass. New check uses AST (not regex) to avoid docstring false-positives. try/except-guarded broken imports demoted to MEDIUM; unguarded broken imports flagged CRITICAL |
 | 2026-05-08 | `nova_memory.logger` fallbacks identified as pre-Step-2 debt | 4 files (autonomy, explorer, eyes, vision) have `except ImportError: from nova_memory.logger import log`. `nova_memory.logger` doesn't exist — should be `nova_logs.logger`. Will be fixed during Step 2 renames |
+| 2026-05-10 | Context trimmer uses `//3` (not `//4`) for token estimation | Qwen3's BPE tokenizer averages ~3.4 chars/token for English+code+markdown. `//3` (integer division) over-estimates slightly, keeping us safely under the 32K hard limit. `//4` would under-estimate and risk 400 errors at high turn counts. Docstring in nova.py updated to reflect this. |
+| 2026-05-10 | `asyncio.CancelledError` must be absorbed (not re-raised) in `_inject_listener_run` | In Python 3.8+, `CancelledError` is a `BaseException`, not `Exception`. Re-raising it in an `except` clause skips the enclosing `finally` block, so `processing_end` is never broadcast. Changed to `pass` so `finally` always runs. This is the correct pattern for any `finally`-critical async task with cancellation support. |
+| 2026-05-10 | `think_token` events arrive before `token` events — stream buffer must be created early | Nova's Qwen3 model emits reasoning tokens (`think_token`) before the first response token. The frontend's `appendThink()` was gated on `streamBufs[id]` existing, which is only created by `appendToken()`. Since no `token` events had arrived yet, all thinking content was silently dropped. Fix: `appendThink()` now calls `startStream()` itself if the buffer is missing. This is the correct pattern for any streamed message where metadata arrives before content. |
+| 2026-05-10 | nova_chat V1 baseline declared stable | After overnight audit + 8-bug fix pass, nova_chat is now the correct starting point for all future nova_chat development. Context overflow is handled, UI state machines are correct, mute/routing logic works, export works. Steps 2 + 3 of the restructure now have a working baseline to test against. |
+
+---
+
+## OVERNIGHT SESSION — Nova Chat V1 Baseline Stabilization (2026-05-10)
+
+Before Step 2 and Step 3 can be executed safely, `nova_chat` (the live inference interface) must be stable. An overnight autonomous session audited all 16 nova_chat Python files and the full `static/index.html` frontend, and resolved 8 serious bugs that were causing nova_chat to be non-functional at scale.
+
+### Bugs Fixed (see `workspace/OVERNIGHT_FIXES.md` for full detail)
+
+| # | Severity | File | Bug | Fix |
+|---|---|---|---|---|
+| 1 | CRITICAL | `clients/nova.py` | After ~50+ turns, session transcript exceeded llama.cpp's 32K context window → HTTP 400 on every message. Also caused Stop button to appear broken and Thoughts pane to appear empty. | Added `_truncate_to_context()`: walks messages newest→oldest, drops oldest turns until estimated prompt fits. Uses `len(text) // 3` (conservative overestimate of Qwen3 BPE ~3.4 chars/token) with 4,096-token safety margin. Also removed `chat_template_kwargs` (rejected by older llama.cpp builds; Qwen3 GGUF template enables thinking mode by default). |
+| 2 | HIGH | `server.py` | `on_error()` only broadcast the `error` event — never `think_end`, `generation_end`, or `message_end`. UI stuck in "Processing" forever after any error. | `on_error()` now broadcasts state-cleanup events in order: `think_end` → `generation_end` (Nova only) → `message_end` → `error`. |
+| 3 | HIGH | `server.py` | `_inject_listener_run()` had `except asyncio.CancelledError: raise` which skipped the `finally` block — `processing_end` never broadcast when Nova @mention task was cancelled. | Changed `raise` → `pass` for CancelledError; added `processing_end` broadcast in `finally`. |
+| 4 | HIGH | `server.py` | `_mute_states` defined but never used when building response queue. Claude and Gemini responded to every message even when muted. | Response queue for non-@mention messages now filtered through `_mute_states`. Explicit @mentions still bypass mute. |
+| 5 | MEDIUM | `static/index.html` | `appendThink(id, token)` returned early if `streamBufs[id]` didn't exist. Since `think_token` events arrive BEFORE `token` events, `streamBufs[id]` is always absent when thinking starts — all thinking content silently dropped from message bubble. | Changed to `appendThink(author, id, token)`; replaced early-return with `startStream(author, id)` to create the bubble early. |
+| 6 | MEDIUM | `static/index.html` | No handler for `nova_progress` events. Monitor "Tokens/s" always showed `—` during generation. | Added `case 'nova_progress': updateProgressFromNova(d); break;` and `updateProgressFromNova()` converting `rate` (chars/sec) to tps (÷ 3.4). |
+| 7 | MEDIUM | `static/index.html` | Export sent `{type: 'export_context'}` but server checks for `type === 'export_request'`. Export silently did nothing. | Changed client to send `{type: 'export_request'}`. |
+| 8 | LOW | `static/index.html` | `live-think-block` referenced `var(--surface-2)` and `var(--accent)`, neither defined in `:root`. Transparent background and missing label color. | Added `--surface-2: #18182a` and `--accent: #8f90ff` to `:root`. |
+
+### Files Audited — No Bugs Found
+`transcript.py`, `clients/claude.py`, `clients/gemini.py`, `session_manager.py`, `nova_bridge.py`, `nova_lang.py`, `orchestrator.py`, `context_export.py`, `workspace_context.py` — all clean. All 16 Python files pass syntax validation.
+
+### Known Non-Bug Limitation (Documented, Not Fixed)
+The depth slider (`set_depth` WS message) sets `_depth_max_tokens` server global but this value is never passed through to `nova_client.stream_response()`. Slider UI works; has no effect on Nova's output length. Wiring debt for a future session.
+
+### Impact on Restructure
+`nova_chat` is now V1-stable. The context trimmer ensures the 32K llama.cpp window is never exceeded regardless of session length. Steps 2 + 3 (anatomical renames) can proceed with a working baseline to test against.
 
 ---
 

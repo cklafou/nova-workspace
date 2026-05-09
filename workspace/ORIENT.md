@@ -118,7 +118,7 @@ workspace/
 │   ├── nova_senses/            ← Perception/sensing layer [PLANNED — empty]
 │   └── nova_perception_bak/    ← Backup of old perception code
 │
-├── Thoughts/                   ← Nova's persistent task memory (survives session resets)
+├── Tasking/                   ← Nova's persistent task memory (survives session resets)
 │   ├── priority.md             ← Active task queue — Nova reads this on every heartbeat
 │   ├── THOUGHT_TEMPLATE.md     ← Template for new Thought folders
 │   ├── Master_Inbox/           ← Module responses land here for routing
@@ -165,7 +165,7 @@ workspace/
 | `BOOTUP/HEARTBEAT.md` | Before touching autonomous loop or heartbeat |
 | `BOOTUP/UPGRADE_PROTOCOL.md` | Before writing any patch to Nova's source |
 | `nova_status.json` | To check Nova's live state (pulse, active_task, errors) |
-| `Thoughts/priority.md` | To see what Nova is currently working on |
+| `Tasking/priority.md` | To see what Nova is currently working on |
 | `general_tools/nova_chat/server.py` | Before touching the server, response queue, or heartbeat |
 | `general_tools/nova_qt/window.py` | Before touching the UI or signal wiring |
 | `BOOTUP/NOVA.md` | If writing Nova's system prompt or identity |
@@ -201,7 +201,7 @@ gateway.py starts NovaVigilance (background thread)   [NOT YET DONE]
                 │
                 └─ circadian.py fires
                        │
-                       ├─ prefrontal_cortex.orient()   → reads Thoughts/priority.md
+                       ├─ prefrontal_cortex.orient()   → reads Tasking/priority.md
                        ├─ auto-routes Master_Inbox/     → moves files to thought inboxes
                        ├─ builds HEARTBEAT_BRIEFING
                        └─ agent_loop.run_agent()        → llama.cpp inference
@@ -276,7 +276,7 @@ Lives in `general_tools/nova_chat/server.py` inside `_queued_run()`.
 Nova's persistent task memory. Survives session resets because it lives on disk.
 
 ```
-Thoughts/
+Tasking/
   priority.md              ← Priority queue. Read at every heartbeat Step 1.
   THOUGHT_TEMPLATE.md      ← Clone when starting a new Thought.
   Master_Inbox/            ← Module responses arrive here, routed by task_id.
@@ -291,8 +291,8 @@ Thoughts/
 ```
 
 **Heartbeat cycle (HEARTBEAT.md summary):**
-1. Read `Thoughts/priority.md`
-2. Check `Thoughts/Master_Inbox/` for pending responses
+1. Read `Tasking/priority.md`
+2. Check `Tasking/Master_Inbox/` for pending responses
 3. Advance highest-priority active Thought by one action
 4. Update `priority.md` if something changed
 5. If all done: write `pulse=Idle` to `nova_status.json` → loop stops
@@ -355,7 +355,7 @@ Before starting ANY infrastructure task on this workspace:
 1. **Read this file** (done).
 2. **Read `BOOTUP/AGENTS.md`** — Nova's operating rules. Especially the Proposed Changes Protocol and Safety section.
 3. **Read `BOOTUP/UPGRADE_PROTOCOL.md`** — patch procedure for source files.
-4. **Check `Thoughts/priority.md`** — see if Nova has in-progress tasks that could conflict.
+4. **Check `Tasking/priority.md`** — see if Nova has in-progress tasks that could conflict.
 5. **Check `nova_status.json`** — is Nova currently running? If pulse ≠ Idle, wait or coordinate.
 
 **Key conventions:**

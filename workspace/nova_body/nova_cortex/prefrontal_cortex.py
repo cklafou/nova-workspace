@@ -376,7 +376,7 @@ class NovaBrain:
             "",
             "── PRIORITY QUEUE (current) ────────────────────────────",
             "",
-            state["priority_text"].strip() or "(Thoughts/priority.md is empty)",
+            state["priority_text"].strip() or "(Tasking/priority.md is empty)",
             "",
             "── ACTIVE THOUGHTS ─────────────────────────────────────",
             "",
@@ -459,7 +459,7 @@ class NovaBrain:
             return f"(READ ERROR: {e})"
 
     def _count_inbox_items(self) -> int:
-        """Count .md files in Thoughts/Master_Inbox/."""
+        """Count .md files in Tasking/Master_Inbox/."""
         inbox = self.workspace / "Thoughts" / "Master_Inbox"
         if not inbox.exists():
             return 0

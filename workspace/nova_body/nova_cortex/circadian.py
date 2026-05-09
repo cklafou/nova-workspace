@@ -15,8 +15,8 @@ What this does (plain English):
 
 Phase 4A.6 — Thoughts Cycle Pre-processor
   The scheduler now pre-processes the Thoughts system before calling Nova:
-  1. Read Thoughts/priority.md to get the current task state
-  2. Scan Thoughts/Master_Inbox/ — auto-route any items to thought inboxes
+  1. Read Tasking/priority.md to get the current task state
+  2. Scan Tasking/Master_Inbox/ — auto-route any items to thought inboxes
      (the scheduler does the file moves so Nova doesn't waste tool calls)
   3. Read any newly-routed inbox items into the briefing context
   4. Build a structured HEARTBEAT_BRIEFING passed to Nova as her opening context
@@ -199,7 +199,7 @@ class NovaScheduler:
 
     def _read_priority_md(self) -> str:
         """
-        Read Thoughts/priority.md. Returns content string.
+        Read Tasking/priority.md. Returns content string.
         Returns a placeholder if the file doesn't exist or can't be read.
         """
         priority_path = _WORKSPACE / "Thoughts" / "priority.md"
@@ -210,22 +210,22 @@ class NovaScheduler:
                 text += f"\n[...truncated at {_PRIORITY_MAX_BYTES} bytes]"
             return text
         except FileNotFoundError:
-            return "(Thoughts/priority.md not found — run 4A.1 scaffolding first)"
+            return "(Tasking/priority.md not found — run 4A.1 scaffolding first)"
         except Exception as e:
             return f"(priority.md read error: {e})"
 
     def _route_master_inbox(self) -> list[dict]:
         """
-        Scan Thoughts/Master_Inbox/ and route each .md item to the correct
+        Scan Tasking/Master_Inbox/ and route each .md item to the correct
         Thought folder's inbox/ subdirectory.
 
         Routing logic:
           1. Extract task_id from the filename pattern {ts}_{author}_{task_id}.md
              OR from the file's "# Inbox Item: [TASK_ID]" header line.
-          2. Check if Thoughts/{task_id}/ exists. If not, leave in Master_Inbox
+          2. Check if Tasking/{task_id}/ exists. If not, leave in Master_Inbox
              (unmatched — Nova will handle on next heartbeat if the thought is
              created in the meantime).
-          3. If matched, move the file to Thoughts/{task_id}/inbox/{filename}.
+          3. If matched, move the file to Tasking/{task_id}/inbox/{filename}.
 
         Returns a list of route result dicts:
             {"file": str, "task_id": str, "status": "routed"|"no_match"|"error",

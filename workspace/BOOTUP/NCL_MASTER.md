@@ -21,13 +21,13 @@ a real module task.
 | Token | Meaning | Example |
 |-------|---------|---------|
 | `@role` | Call to a module by name | `@eyes`, `@thinkorswim`, `@coder` |
-| `<<file.md>>` | Inject a context file into the module's system prompt | `<<Thoughts/Trade_0328/scratch/brief.md>>` |
+| `<<file.md>>` | Inject a context file into the module's system prompt | `<<Tasking/Trade_0328/scratch/brief.md>>` |
 | `[[instructions]]` | Specific instructions from Nova for this call | `[[focus on the options chain only]]` |
 | `((criteria))` | Completion criteria — what the module must return | `((task_id:TradeCheck_0328; list open positions))` |
 | `;;` | Parallel separator — groups on each side run at the same time | `@eyes [[...]] ;; @coder [[...]]` |
 | `::` | Sequential pipe — steps run in order, each can use $$prev | `@browser [[research]] :: @mentor $$prev [[validate]]` |
 | `**text**` | Emphasis — marks critical info Nova wants noticed | `**do not execute any trades**` |
-| `>>path` | Output routing — where the module writes its result | `>>Thoughts/Trade_0328/inbox/` |
+| `>>path` | Output routing — where the module writes its result | `>>Tasking/Trade_0328/inbox/` |
 | `$$prev` | Reference to the previous step's output in a :: chain | `@mentor $$prev [[confirm or refute]]` |
 | `%%N` | Timeout in seconds — call is failed if not returned by then | `%%60` |
 
@@ -46,7 +46,7 @@ underscores, no spaces. Include the date if the task is time-specific.
 Format: `((task_id:TaskFolderName; what must be returned))`
 
 **Keep context files workspace-relative.** The `<<file>>` path is always relative
-to the workspace root. Use paths like `Thoughts/Trade_0328/scratch/brief.md` or
+to the workspace root. Use paths like `Tasking/Trade_0328/scratch/brief.md` or
 `memory/STATUS.md`.
 
 **;; means truly parallel.** Use `;;` only when the calls are independent — they
@@ -93,10 +93,10 @@ To see live module status: read `workspace/modules.json` if it exists.
 
 ```
 @eyes [[screenshot the current AAPL chart on the 1-minute timeframe]]
->>Thoughts/AAPL_Decision_0328/inbox/chart.md
+>>Tasking/AAPL_Decision_0328/inbox/chart.md
 ((task_id:AAPL_Decision_0328; describe chart pattern and key price levels))
 ;;
-@thinkorswim <<Thoughts/AAPL_Decision_0328/scratch/strategy.md>>
+@thinkorswim <<Tasking/AAPL_Decision_0328/scratch/strategy.md>>
 [[what are today's key support and resistance levels for AAPL]]
 ((task_id:AAPL_Decision_0328; return support and resistance levels))
 ```
@@ -104,7 +104,7 @@ To see live module status: read `workspace/modules.json` if it exists.
 ### Sequential chain — research then validate
 
 ```
-@browser <<Thoughts/Research_0328/scratch/brief.md>>
+@browser <<Tasking/Research_0328/scratch/brief.md>>
 [[find the top 3 analyst ratings for AAPL published this week]]
 ((task_id:Research_0328; return analyst name, rating, price target for each))
 ::
@@ -130,8 +130,8 @@ Every NCL call that needs a response back must include `task_id:NAME` in the
 criteria block. The NAME must exactly match the Thought folder name.
 
 When a module responds, it begins its message with `[TaskFolderName]`. The server
-reads this tag and drops the response as a `.md` file into `Thoughts/Master_Inbox/`.
-On the next heartbeat, Nova routes it to `Thoughts/TaskFolderName/inbox/`.
+reads this tag and drops the response as a `.md` file into `Tasking/Master_Inbox/`.
+On the next heartbeat, Nova routes it to `Tasking/TaskFolderName/inbox/`.
 
 If a call has no task_id, the response is a one-shot reply in Nova Chat. It will
 not be automatically routed to any inbox.

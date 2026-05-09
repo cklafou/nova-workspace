@@ -146,12 +146,20 @@ async def _fetch_llama_streaming(
         "repeat_penalty": 1.15,        # CRITICAL: prevents runaway repetition loops
         "stream":      True,
         "cache_prompt": True,          # reuse KV prefix across turns
-        "chat_template_kwargs": {"enable_thinking": enable_thinking},
+        # NOTE: chat_template_kwargs was removed — Qwen3's embedded GGUF template
+        # defaults to enable_thinking=True, so thinking mode works without this field.
+        # Older llama.cpp builds reject unknown parameters with 400; keeping this
+        # out avoids that failure while still getting extended thinking.
     }
 
     chat_response = ""   # chat content only — what's returned to the caller
     async with httpx.AsyncClient(timeout=600.0) as client:
         async with client.stream("POST", LLAMA_CPP_URL, json=payload) as resp:
+            if not resp.is_success:
+                # Read body so the error message includes the actual llama.cpp reason
+                body_bytes = await resp.aread()
+                body_str   = body_bytes.decode("utf-8", errors="replace")[:600]
+                print(f"[nova] llama.cpp {resp.status_code} for {LLAMA_CPP_URL}: {body_str}")
             resp.raise_for_status()
             async for line in resp.aiter_lines():
                 if not line.strip() or not line.startswith("data: "):
@@ -181,13 +189,67 @@ async def _fetch_llama_streaming(
 
     return chat_response
 
+def _truncate_to_context(
+    messages: list[dict],
+    ctx_limit: int = 32768,
+    max_output: int = MAX_TOKENS_CHAT,
+) -> list[dict]:
+    """
+    Trim the message list so the estimated prompt token count fits within
+    ctx_limit - max_output, always keeping the system message.
+
+    Estimation: len(text) // 3  (Qwen3's BPE tokenizer averages ~3.4 chars/token
+    for English+code+markdown; //3 intentionally over-estimates to stay safely
+    under the 32K hard limit).  We walk newest → oldest and drop the oldest
+    conversation turns until we fit.
+    """
+    # Budget: leave room for max output + a conservative 4096-token safety margin.
+    # The system message for Nova includes AGENTS.md + NOVA.md + TOOLS.md + memory/
+    # files (~8-12K tokens) so actual system token usage is high — we need
+    # the trimmer to drop conversation turns aggressively enough.
+    budget = ctx_limit - max_output - 4096
+
+    def _est(msg: dict) -> int:
+        c = msg.get("content", "")
+        if isinstance(c, list):
+            c = " ".join(x.get("text", "") for x in c if isinstance(x, dict))
+        # Use //3 (3 chars per token) — Qwen3's BPE tokenizes English+code+markdown
+        # at ~3.4 chars/token, so //3 intentionally over-estimates token usage.
+        # This keeps us comfortably under the 32K hard limit.
+        return max(1, len(str(c)) // 3)
+
+    system_msgs = [m for m in messages if m["role"] == "system"]
+    conv_msgs   = [m for m in messages if m["role"] != "system"]
+
+    budget -= sum(_est(m) for m in system_msgs)
+
+    kept: list[dict] = []
+    for msg in reversed(conv_msgs):
+        t = _est(msg)
+        if budget - t < 0:
+            break
+        budget -= t
+        kept.insert(0, msg)
+
+    dropped = len(conv_msgs) - len(kept)
+    if dropped > 0:
+        print(
+            f"[nova] context-trim: dropped {dropped} oldest messages "
+            f"({len(conv_msgs)} → {len(kept)} turns) to fit {ctx_limit}-token window"
+        )
+
+    return system_msgs + kept
+
+
 async def stream_response(
     transcript,
-    on_token:       Callable[[str], Awaitable[None]],
-    on_done:        Callable[[str], Awaitable[None]],
-    on_error:       Callable[[str], Awaitable[None]],
-    on_think_token: Optional[Callable[[str], Awaitable[None]]] = None,
-    on_progress:    Optional[Callable[..., Awaitable[None]]] = None, # Unused with basic POST but kept for signature
+    on_token:           Callable[[str], Awaitable[None]],
+    on_done:            Callable[[str], Awaitable[None]],
+    on_error:           Callable[[str], Awaitable[None]],
+    on_think_token:     Optional[Callable[[str], Awaitable[None]]] = None,
+    on_progress:        Optional[Callable[..., Awaitable[None]]] = None,
+    on_tool_executed:   Optional[Callable[..., Awaitable[None]]] = None,
+    # on_tool_executed(tool_name: str, args: dict, result: str, is_error: bool, duration_ms: float)
     workspace_context: str = "",
     images: list = None,
     max_tokens:  int   = 0,      # 0 = use default (MAX_TOKENS_CHAT); set by depth slider
@@ -215,6 +277,13 @@ async def stream_response(
         messages = transcript.to_messages(
             "Nova", system, workspace_context=workspace_context
         )
+
+        # ── Context-window guard ─────────────────────────────────────────────
+        # llama.cpp hard-errors if the prompt exceeds its context size.
+        # Drop oldest conversation turns (keeping system msg intact) until the
+        # estimated token count fits within the 32k window.
+        tok_budget_out = max_tokens if max_tokens > 0 else MAX_TOKENS_CHAT
+        messages = _truncate_to_context(messages, ctx_limit=32768, max_output=tok_budget_out)
 
         # Attach images to the last user message if provided
         if images:
@@ -334,16 +403,42 @@ async def stream_response(
                         for token in msg.split(" "):
                             await on_token(token + " ")
                             await asyncio.sleep(0.002)
-                        
-                        # Execute Tool
-                        result = execute_tool(tool_name, args)
-                        
+
+                        # Execute Tool — time it for the Tools tab display
+                        import time as _time
+                        _t0 = _time.time()
+                        _tool_err = False
+                        try:
+                            result = execute_tool(tool_name, args)
+                        except Exception as _te:
+                            result = f"[error] {_te}"
+                            _tool_err = True
+                        _dur_ms = (_time.time() - _t0) * 1000
+
+                        # Broadcast tool_executed event to the UI Tools tab
+                        if on_tool_executed:
+                            try:
+                                await on_tool_executed(
+                                    tool_name, args,
+                                    str(result)[:1000],
+                                    _tool_err,
+                                    _dur_ms,
+                                )
+                            except Exception:
+                                pass
+
                         # Re-prompt
                         messages.append({"role": "assistant", "content": full_response})
                         messages.append({"role": "user", "content": f"[System Result from {tool_name}]\n{result}\nContinue your task or provide the final answer."})
                         final_chat_buffer += f"{chat_text[:json_match.start()]}\n\n[`{tool_name}` resulted in {len(str(result))} bytes.]\n\n"
                         continue # Loop!
                 except Exception as e:
+                    # Fire tool_executed with the parse error so the Tools tab shows it
+                    if on_tool_executed:
+                        try:
+                            await on_tool_executed("(parse error)", {}, str(e), True, 0.0)
+                        except Exception:
+                            pass
                     messages.append({"role": "assistant", "content": full_response})
                     messages.append({"role": "user", "content": f"[System Error parsing JSON tool call]\n{str(e)}"})
                     continue 

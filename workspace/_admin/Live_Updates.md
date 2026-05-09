@@ -356,7 +356,7 @@ nova_qt is fully built and feature-complete. All modules implemented. See comple
 ### 2026-03-28
 - ✅ Phase 4A complete (all 8 sub-phases): brain.py, Thoughts system, HEARTBEAT.md, NCL parser, NCL_MASTER.md, Master_Inbox routing, Thoughts UI panel, brain.py wired to server.py
 - ✅ THOUGHT_TEMPLATE.md created
-- ✅ Thoughts/priority.md created
+- ✅ Tasking/priority.md created
 
 ### 2026-03-27/28
 - ✅ Phase 3 complete: nova_gateway built (9 modules, 2859 lines)

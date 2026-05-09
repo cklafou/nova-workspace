@@ -50,9 +50,13 @@ def get_session_start():
 
 def check():
     """
-    Check if Cole sent a message since this session started.
-    Prints the message if found so Nova sees it in context.
+    Check if Cole sent a message OR is actively typing a reply since this session started.
+    Prints alerts so Nova sees them in context and can decide to pause or continue.
     Silent if nothing new.
+
+    P4 update: also reads is_typing / typing_since from interrupt_inbox.json.
+    If Cole is currently composing a response, prints a pause recommendation FIRST
+    (before checking for completed messages) so Nova can hold her next action.
     """
     session_start = get_session_start()
 
@@ -65,17 +69,33 @@ def check():
     except Exception:
         return  # File being written -- skip
 
-    msg_time = data.get("timestamp", 0)
+    # --- P4: Cole is actively typing a reply ---
+    is_typing    = data.get("is_typing", False)
+    typing_since = data.get("typing_since", 0)
+    if is_typing and typing_since > 0:
+        elapsed_s = int(time.time() - typing_since)
+        # Guard against stale signals (older than 60s mean Cole stopped but signal was not cleared)
+        if elapsed_s < 60:
+            print(f"\n[COLE IS TYPING — PAUSE RECOMMENDED]")
+            print(f"Cole has been composing a response for {elapsed_s}s.")
+            print("[DECISION OPTIONS]:")
+            print("  -> If your current step is quick (< 5s): finish it, then wait")
+            print("  -> If your current step is slow (file write, exec): pause NOW before starting")
+            print("  -> Re-run checkin.check() after 10-15s to see if a message arrived")
+            print("  -> If no message arrives within 45s total: Cole likely abandoned — continue")
+            return  # Stop here — no need to check completed messages yet
+
+    # --- Completed message from Cole ---
+    msg_time    = data.get("timestamp", 0)
     msg_content = data.get("content", "").strip()
-    msg_author = data.get("author", "Cole")
 
     if not msg_content:
-        return  # Empty message
+        return  # Empty
 
     if msg_time <= session_start:
         return  # Message is from before this session -- already handled
 
-    # New message from Cole -- print it so Nova sees it
+    # New message from Cole -- print it so Nova sees it in context
     print(f"\n[COLE SENT A MESSAGE]: {msg_content}")
     print("[DECISION REQUIRED]: Should you stop your current task and respond, or finish this step first?")
     print("  -> If urgent (stop/abort/wrong/wait/no): stop now, respond to Cole")

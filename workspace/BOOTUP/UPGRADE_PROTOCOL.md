@@ -129,4 +129,4 @@ Nova can help by reading the current source and verifying the anchor strings Cla
 
 Check `_admin/Live_Updates.md` for the running list of what's in progress, what's done, and what's next.
 
-Check `Thoughts/priority.md` for Nova's active task queue.
+Check `Tasking/priority.md` for Nova's active task queue.

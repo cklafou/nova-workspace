@@ -262,29 +262,29 @@ Your persistent task memory. Thoughts survive context resets because they live o
 
 | Path | Purpose |
 |------|---------|
-| `Thoughts/priority.md` | Priority queue. Read every heartbeat. Append-only Decision Log at bottom. |
-| `Thoughts/THOUGHT_TEMPLATE.md` | Clone this to start a new Thought. |
-| `Thoughts/Master_Inbox/` | All module responses land here. Process on heartbeat. |
-| `Thoughts/[Name]/master.md` | The living checklist for one task. |
-| `Thoughts/[Name]/inbox/` | Routed module responses for this thought. |
-| `Thoughts/[Name]/scratch/` | Temp files, drafts, unvalidated output. |
-| `Thoughts/Finished/completed_success/` | Archive for completed thoughts. |
-| `Thoughts/Finished/completed_fail/` | Archive for failed thoughts (useful failure signal). |
-| `Thoughts/Finished/cancelled/` | Archive for cancelled thoughts. |
+| `Tasking/priority.md` | Priority queue. Read every heartbeat. Append-only Decision Log at bottom. |
+| `Tasking/THOUGHT_TEMPLATE.md` | Clone this to start a new Thought. |
+| `Tasking/Master_Inbox/` | All module responses land here. Process on heartbeat. |
+| `Tasking/[Name]/master.md` | The living checklist for one task. |
+| `Tasking/[Name]/inbox/` | Routed module responses for this thought. |
+| `Tasking/[Name]/scratch/` | Temp files, drafts, unvalidated output. |
+| `Tasking/Finished/completed_success/` | Archive for completed thoughts. |
+| `Tasking/Finished/completed_fail/` | Archive for failed thoughts (useful failure signal). |
+| `Tasking/Finished/cancelled/` | Archive for cancelled thoughts. |
 
 ### Creating a Thought
 
 ```
 # 1. Read the template
-[READ: Thoughts/THOUGHT_TEMPLATE.md]
+[READ: Tasking/THOUGHT_TEMPLATE.md]
 
 # 2. Write a filled copy as the new thought's master.md
-[WRITE: Thoughts/ThoughtName/master.md]
+[WRITE: Tasking/ThoughtName/master.md]
 ... (filled template) ...
 [/WRITE]
 
 # 3. Create subdirectories
-exec: python -c "from pathlib import Path; [Path(p).mkdir(parents=True, exist_ok=True) for p in ['Thoughts/ThoughtName/inbox', 'Thoughts/ThoughtName/scratch']]"
+exec: python -c "from pathlib import Path; [Path(p).mkdir(parents=True, exist_ok=True) for p in ['Tasking/ThoughtName/inbox', 'Tasking/ThoughtName/scratch']]"
 
 # 4. Add to priority.md
 [WRITE: logs/proposed/priority.md] or direct write if Cole permits
@@ -304,7 +304,7 @@ Module responses must begin with: `[ThoughtName]`
 ### Moving to Finished
 
 ```
-exec: python -c "import shutil; shutil.move('Thoughts/ThoughtName', 'Thoughts/Finished/completed_success/ThoughtName')"
+exec: python -c "import shutil; shutil.move('Tasking/ThoughtName', 'Tasking/Finished/completed_success/ThoughtName')"
 ```
 
 Remove from priority.md. Append final Decision Log entry.

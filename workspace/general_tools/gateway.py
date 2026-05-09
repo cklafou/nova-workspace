@@ -268,7 +268,7 @@ async def thoughts_status():
     """
     Return a structured snapshot of Nova's Thoughts system for nova_chat UI.
 
-    Scans workspace/Thoughts/ for active thought folders, parses each master.md,
+    Scans workspace/Tasking/ for active thought folders, parses each master.md,
     and also returns the priority queue summary from priority.md.
 
     Response shape:
@@ -283,7 +283,7 @@ async def thoughts_status():
                 "plan_total": 5,
                 "plan_done": 2,
                 "last_updated": "2026-05-09 14:22",
-                "folder": "Thoughts/TASK_NAME/"
+                "folder": "Tasking/TASK_NAME/"
             },
             ...
         ],
@@ -356,10 +356,10 @@ async def thoughts_status():
             "plan_total":  plan_total,
             "plan_done":   plan_done,
             "last_updated": last_updated,
-            "folder":      f"Thoughts/{folder_name}/",
+            "folder":      f"Tasking/{folder_name}/",
         }
 
-    # ── Scan active thoughts (direct children of Thoughts/) ──────────────────
+    # ── Scan active thoughts (direct children of Tasking/) ──────────────────
     skip_dirs = {"Finished", "Master_Inbox"}
     active = []
     for entry in sorted(thoughts_root.iterdir()):

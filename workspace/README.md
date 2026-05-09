@@ -37,7 +37,7 @@ workspace/
 │   ├── COLE.md              ← Nova's living notes about Cole
 │   └── STATUS.md            ← Source of truth for project phase + architecture
 │
-├── Thoughts/                ← Nova's persistent task memory (survives session resets)
+├── Tasking/                ← Nova's persistent task memory (survives session resets)
 │   ├── priority.md          ← Active task queue — Nova reads this every heartbeat
 │   ├── THOUGHT_TEMPLATE.md  ← Clone this to create a new Thought
 │   ├── Master_Inbox/        ← Module responses land here before routing
@@ -156,7 +156,7 @@ Run `start_llama.cmd` before launching nova_chat. See `BOOTUP/TOOLS.md` for the 
 
 | Question | Answer |
 |---|---|
-| What is Nova working on right now? | `Thoughts/priority.md` |
+| What is Nova working on right now? | `Tasking/priority.md` |
 | What phase is the project in? | `memory/STATUS.md` |
 | What are Nova's rules and protocols? | `BOOTUP/AGENTS.md` |
 | What happened in past sessions? | `memory/JOURNAL.md` |

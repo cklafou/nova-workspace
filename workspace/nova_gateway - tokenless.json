@@ -32,8 +32,8 @@
       "BOOTUP/UPGRADE_PROTOCOL.md",
       "memory/STATUS.md",
       "memory/COLE.md",
-      "Thoughts/priority.md",
-      "Thoughts/THOUGHT_TEMPLATE.md"
+      "Tasking/priority.md",
+      "Tasking/THOUGHT_TEMPLATE.md"
     ],
     "heartbeat_extra_files": [
       "BOOTUP/HEARTBEAT.md"
