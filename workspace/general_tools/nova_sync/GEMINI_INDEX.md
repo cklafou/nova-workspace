@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-10 01:04:02_
+_Last updated: 2026-05-10 15:58:36_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -26,12 +26,14 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
+| AntiGravity_Feature_Audit.md | `workspace/AntiGravity_Feature_Audit.md` | MD file |
 | Install_Nova_Qt.cmd | `workspace/Install_Nova_Qt.cmd` | CMD file |
 | Install_Webview.cmd | `workspace/Install_Webview.cmd` | CMD file |
 | Nova_Chat_UI_Spec.md | `workspace/Nova_Chat_UI_Spec.md` | MD file |
 | nova_gateway - tokenless.json | `workspace/nova_gateway - tokenless.json` | JSON file |
 | nova_gateway.json | `workspace/nova_gateway.json` | JSON file |
 | ORIENT.md | `workspace/ORIENT.md` | MD file |
+| OVERNIGHT_FIXES.md | `workspace/OVERNIGHT_FIXES.md` | MD file |
 | Patch_Nova.cmd | `workspace/Patch_Nova.cmd` | CMD file |
 | README.md | `workspace/README.md` | Project overview |
 | start_llama.cmd | `workspace/start_llama.cmd` | CMD file |
@@ -44,6 +46,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | archive_2026-02.md | `workspace/memory/archive/archive_2026-02.md` | MD file |
 | audit_queue.json | `workspace/memory/audit_queue.json` | JSON file |
 | COLE.md | `workspace/memory/COLE.md` | Cole's notes and Nova's observations about Cole |
+| interrupt_inbox.json | `workspace/memory/interrupt_inbox.json` | JSON file |
 | JOURNAL.md | `workspace/memory/JOURNAL.md` | Nova's running session log -- READ SECOND |
 | session_start.json | `workspace/memory/session_start.json` | Current session start timestamp |
 | STATUS.md | `workspace/memory/STATUS.md` | Current project state and mission -- READ FIRST |
@@ -60,6 +63,20 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | 2026-05-09_16-57-03_auto_2ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_16-57-03_auto_2ticks.jsonl` | JSONL file |
 | 2026-05-09_17-21-51_auto_6ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_17-21-51_auto_6ticks.jsonl` | JSONL file |
 | 2026-05-09_20-11-43_auto_250ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-09_20-11-43_auto_250ticks.jsonl` | JSONL file |
+| 2026-05-10_01-30-48_auto_3ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_01-30-48_auto_3ticks.jsonl` | JSONL file |
+| 2026-05-10_01-36-26_auto_3ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_01-36-26_auto_3ticks.jsonl` | JSONL file |
+| 2026-05-10_06-55-10_auto_20ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_06-55-10_auto_20ticks.jsonl` | JSONL file |
+| 2026-05-10_07-29-28_auto_11ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_07-29-28_auto_11ticks.jsonl` | JSONL file |
+| 2026-05-10_07-39-30_manual_0ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_07-39-30_manual_0ticks.jsonl` | JSONL file |
+| 2026-05-10_07-53-29_auto_1ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_07-53-29_auto_1ticks.jsonl` | JSONL file |
+| 2026-05-10_07-54-29_manual_0ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_07-54-29_manual_0ticks.jsonl` | JSONL file |
+| 2026-05-10_08-29-36_auto_1ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_08-29-36_auto_1ticks.jsonl` | JSONL file |
+| 2026-05-10_08-32-26_auto_1ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_08-32-26_auto_1ticks.jsonl` | JSONL file |
+| 2026-05-10_08-34-07_auto_1ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_08-34-07_auto_1ticks.jsonl` | JSONL file |
+| 2026-05-10_09-02-23_auto_1ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_09-02-23_auto_1ticks.jsonl` | JSONL file |
+| 2026-05-10_09-05-16_auto_1ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_09-05-16_auto_1ticks.jsonl` | JSONL file |
+| 2026-05-10_09-07-29_auto_1ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_09-07-29_auto_1ticks.jsonl` | JSONL file |
+| 2026-05-10_ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_ticks.jsonl` | JSONL file |
 | 2026-05-08_17-44-22_chat.jsonl | `workspace/logs/chat_sessions/2026-05-08_17-44-22_chat.jsonl` | JSONL file |
 | 2026-03-21_16-46-47_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-21_16-46-47_chat.jsonl` | JSONL file |
 | 2026-03-28_22-37-11_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-28_22-37-11_chat.jsonl` | JSONL file |
@@ -108,6 +125,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | f3ce5473-1c7b-43af-b126-58118fee8faf.jsonl | `workspace/logs/gateway_sessions/2026-05-08/f3ce5473-1c7b-43af-b126-58118fee8faf.jsonl` | JSONL file |
 | 0e36ef34-7fe5-4aaf-865f-03058ac2cf90.jsonl | `workspace/logs/gateway_sessions/2026-05-09/0e36ef34-7fe5-4aaf-865f-03058ac2cf90.jsonl` | JSONL file |
 | 4b934922-419d-4b97-acdf-2cdf50f72406.jsonl | `workspace/logs/gateway_sessions/2026-05-09/4b934922-419d-4b97-acdf-2cdf50f72406.jsonl` | JSONL file |
+| 4bc1d33e-9c16-4ce1-8e1e-02182a0c9407.jsonl | `workspace/logs/gateway_sessions/2026-05-09/4bc1d33e-9c16-4ce1-8e1e-02182a0c9407.jsonl` | JSONL file |
 | 655c554a-ae38-4832-8b52-fb4de2f71613.jsonl | `workspace/logs/gateway_sessions/2026-05-09/655c554a-ae38-4832-8b52-fb4de2f71613.jsonl` | JSONL file |
 | 733bb7aa-08cb-49a2-8dce-08001058f35e.jsonl | `workspace/logs/gateway_sessions/2026-05-09/733bb7aa-08cb-49a2-8dce-08001058f35e.jsonl` | JSONL file |
 | cfee17d9-a6d5-4a6c-a11c-87b52d1b907e.jsonl | `workspace/logs/gateway_sessions/2026-05-09/cfee17d9-a6d5-4a6c-a11c-87b52d1b907e.jsonl` | JSONL file |
@@ -123,6 +141,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | nova_thoughts.jsonl | `workspace/logs/sessions/2026-05-07/nova_thoughts.jsonl` | JSONL file |
 | nova_thoughts.jsonl | `workspace/logs/sessions/2026-05-08/nova_thoughts.jsonl` | JSONL file |
 | nova_thoughts.jsonl | `workspace/logs/sessions/2026-05-09/nova_thoughts.jsonl` | JSONL file |
+| nova_thoughts.jsonl | `workspace/logs/sessions/2026-05-10/nova_thoughts.jsonl` | JSONL file |
 
 ## BOOTUP/
 
@@ -151,18 +170,19 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | patch_workspace_context.ps1 | `workspace/PATCHES/patch_workspace_context.ps1` | PS1 file |
 | README.md | `workspace/PATCHES/README.md` | Project overview |
 
-## Thoughts/
+## Tasking/
 
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
-| master.md | `workspace/Thoughts/Finished/completed_success/TEST_BRAIN_PROBE/master.md` | MD file |
-| priority.md | `workspace/Thoughts/priority.md` | MD file |
-| THOUGHT_TEMPLATE.md | `workspace/Thoughts/THOUGHT_TEMPLATE.md` | MD file |
+| master.md | `workspace/Tasking/Finished/completed_success/TEST_BRAIN_PROBE/master.md` | MD file |
+| priority.md | `workspace/Tasking/priority.md` | MD file |
+| THOUGHT_TEMPLATE.md | `workspace/Tasking/THOUGHT_TEMPLATE.md` | MD file |
 
 ## _admin/
 
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
+| ISSUES_2026-05-10.md | `workspace/_admin/ISSUES_2026-05-10.md` | MD file |
 | Live_Updates.md | `workspace/_admin/Live_Updates.md` | MD file |
 | Nova_Restructure_Plan.md | `workspace/_admin/Nova_Restructure_Plan.md` | MD file |
 | PHASE2_ARCHITECTURE.md | `workspace/_admin/passover/26 MAR 2026/PHASE2_ARCHITECTURE.md` | MD file |
@@ -182,6 +202,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | passover_2026-03-28_claude.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-28_claude.md` | MD file |
 | session_notes_2026-03-22.md | `workspace/_admin/passover/3 MAR 2026/session_notes_2026-03-22.md` | MD file |
 | HANDOFF.md | `workspace/_admin/passover/6 MAY 2026/HANDOFF.md` | MD file |
+| PROPOSED_UI_FIXES_2026-05-10.md | `workspace/_admin/PROPOSED_UI_FIXES_2026-05-10.md` | MD file |
 
 ## general_tools/
 
