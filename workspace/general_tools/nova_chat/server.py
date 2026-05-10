@@ -119,6 +119,13 @@ active_tasks: list[asyncio.Task] = []
 is_processing: bool = False
 _stop_requested = asyncio.Event()  # set by STOP; cleared at start of every new response
 
+# ── Cole message queue ────────────────────────────────────────────────────────
+# When Cole sends a message while AIs are processing, we queue it instead of
+# dropping it. The queue is drained as soon as is_processing becomes False.
+# Each entry: {"content": str, "full_context_content": str, "directed_at": list,
+#              "images": list, "msg": dict}
+_cole_message_queue: list[dict] = []
+
 _eyes_running: bool = False        # tracks desktop streaming state
 # 1.3 -- Nova status cache: polled every 30s, injected silently into AI context
 nova_status_cache: dict = {"summary": "", "updated_at": 0.0}
@@ -179,7 +186,7 @@ def _maybe_route_inbox(author: str, content: str) -> None:
         return                     # Not a task response — ignore
 
     task_id = m.group(1)
-    inbox   = _INBOX_WORKSPACE / "Thoughts" / "Master_Inbox"
+    inbox   = _INBOX_WORKSPACE / "Tasking" / "Master_Inbox"
 
     try:
         inbox.mkdir(parents=True, exist_ok=True)
@@ -1688,6 +1695,176 @@ async def eyes_stop():
     _eyes_running = False
     return {"status": "stopped"}
 
+
+# ── Task Queue API  (/api/queue/*) ─────────────────────────────────────────────
+# Reads/writes Tasking/priority.md so Cole can add tasks from the UI and Nova
+# picks them up on the next heartbeat tick.
+# ──────────────────────────────────────────────────────────────────────────────
+
+_QUEUE_FILE = Path(WORKSPACE_ROOT) / "Tasking" / "priority.md"
+_PRIORITY_LABELS = {1: "PRIORITY 1", 2: "PRIORITY 2", 3: "PRIORITY 3", 4: "PRIORITY 4"}
+
+
+def _parse_queue() -> list[dict]:
+    """Parse active tasks from Tasking/priority.md. Returns list of task dicts."""
+    if not _QUEUE_FILE.exists():
+        return []
+    text = _QUEUE_FILE.read_text(encoding="utf-8")
+    tasks = []
+    current_priority = None
+    for line in text.splitlines():
+        # Detect priority section headers
+        for p, label in _PRIORITY_LABELS.items():
+            if line.startswith(f"## {label}"):
+                current_priority = p
+                break
+        else:
+            # Reset on other section headers (BLOCKED, SUSPENDED, DECISION LOG)
+            if line.startswith("## ") and current_priority is not None:
+                for label in ["BLOCKED", "SUSPENDED", "DECISION"]:
+                    if label in line.upper():
+                        current_priority = None
+                        break
+        # Extract task bullets
+        if current_priority and (line.startswith("- ") or line.startswith("* ")):
+            body = line[2:].strip()
+            if body and body not in ("_None active._", "None active."):
+                tasks.append({"priority": current_priority, "title": body, "raw": line})
+    return tasks
+
+
+def _write_task(title: str, priority: int, notes: str = "") -> bool:
+    """Append a new task under the right priority section in priority.md."""
+    if not _QUEUE_FILE.exists():
+        return False
+    text = _QUEUE_FILE.read_text(encoding="utf-8")
+    lines = text.splitlines(keepends=True)
+    label = _PRIORITY_LABELS.get(priority, "PRIORITY 3")
+    # Build the task line
+    task_line = f"- **{title}**"
+    if notes:
+        task_line += f" — {notes}"
+    task_line += "\n"
+    # Find the section header and insert after the italics description line
+    in_section = False
+    insert_at = None
+    for i, line in enumerate(lines):
+        if line.startswith(f"## {label}"):
+            in_section = True
+            continue
+        if in_section:
+            if line.startswith("## "):   # next section — insert before it
+                insert_at = i
+                break
+            # Skip the italic description line and blank lines at section start
+            stripped = line.strip()
+            if stripped.startswith("_(") or stripped == "" or stripped == "_None active._":
+                continue
+            # First real content line — insert before it
+            insert_at = i
+            break
+    if insert_at is None and in_section:
+        insert_at = len(lines)
+    if insert_at is None:
+        return False
+    # Replace "_None active._" sentinel if present on the line before insert
+    for j in range(max(0, insert_at - 3), insert_at):
+        if "_None active._" in lines[j]:
+            lines[j] = lines[j].replace("_None active._\n", "").replace("_None active._", "")
+    lines.insert(insert_at, task_line)
+    _QUEUE_FILE.write_text("".join(lines), encoding="utf-8")
+    return True
+
+
+def _complete_task(raw_line: str, title: str, action: str = "completed") -> bool:
+    """Remove a task line from priority.md and append to Decision Log."""
+    if not _QUEUE_FILE.exists():
+        return False
+    text = _QUEUE_FILE.read_text(encoding="utf-8")
+    if raw_line not in text:
+        return False
+    # Remove the task line
+    text = text.replace(raw_line + "\n", "").replace(raw_line, "")
+    # Restore "_None active._" if section is now empty
+    for p, label in _PRIORITY_LABELS.items():
+        section_header = f"## {label}"
+        if section_header not in text:
+            continue
+        idx = text.index(section_header)
+        next_section = len(text)
+        for other_label in list(_PRIORITY_LABELS.values()) + ["BLOCKED", "SUSPENDED", "DECISION"]:
+            other_header = f"## {other_label}"
+            if other_label != label and other_header in text:
+                pos = text.index(other_header)
+                if pos > idx:
+                    next_section = min(next_section, pos)
+        section_body = text[idx:next_section]
+        # No task bullets remain — add sentinel
+        has_task = any(l.startswith("- ") or l.startswith("* ")
+                       for l in section_body.splitlines()
+                       if l.strip() and "_None active._" not in l)
+        if not has_task and "_None active._" not in section_body:
+            # Insert sentinel after the italic description line
+            sec_lines = section_body.splitlines(keepends=True)
+            insert_pos = 2  # after header + italic
+            sec_lines.insert(insert_pos, "_None active._\n\n")
+            text = text[:idx] + "".join(sec_lines) + text[next_section:]
+    # Append to Decision Log
+    from datetime import datetime as _dt
+    ts = _dt.now().strftime("%Y-%m-%d")
+    log_entry = f"- {ts} — {action.capitalize()}: {title}\n"
+    if "## DECISION LOG" in text:
+        dlog_idx = text.index("## DECISION LOG")
+        header_end = text.index("\n", dlog_idx) + 1
+        # Find the first content line after the header
+        rest = text[header_end:]
+        text = text[:header_end] + log_entry + rest
+    _QUEUE_FILE.write_text(text, encoding="utf-8")
+    return True
+
+
+@app.get("/api/queue")
+async def queue_get():
+    """Return parsed active tasks from Tasking/priority.md."""
+    try:
+        return JSONResponse({"tasks": _parse_queue()})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/api/queue/add")
+async def queue_add(body: dict = Body(...)):
+    """Add a task to Tasking/priority.md under the specified priority."""
+    title    = (body.get("title") or "").strip()
+    priority = int(body.get("priority", 3))
+    notes    = (body.get("notes") or "").strip()
+    if not title:
+        return JSONResponse({"error": "title required"}, status_code=400)
+    if priority not in _PRIORITY_LABELS:
+        return JSONResponse({"error": "priority must be 1–4"}, status_code=400)
+    ok = _write_task(title, priority, notes)
+    if not ok:
+        return JSONResponse({"error": "Tasking/priority.md not found"}, status_code=404)
+    return JSONResponse({"ok": True, "title": title, "priority": priority})
+
+
+@app.post("/api/queue/complete")
+async def queue_complete(body: dict = Body(...)):
+    """Mark a task done — removes it from priority.md and logs it."""
+    raw   = (body.get("raw") or "").strip()
+    title = (body.get("title") or raw).strip()
+    ok = _complete_task(raw, title, "completed")
+    return JSONResponse({"ok": ok})
+
+
+@app.post("/api/queue/cancel")
+async def queue_cancel(body: dict = Body(...)):
+    """Cancel a task — removes it from priority.md and logs it as cancelled."""
+    raw   = (body.get("raw") or "").strip()
+    title = (body.get("title") or raw).strip()
+    ok = _complete_task(raw, title, "cancelled")
+    return JSONResponse({"ok": ok})
+
 @app.get("/api/eyes/status")
 async def eyes_status():
     return {"running": _eyes_running}
@@ -2221,8 +2398,9 @@ async def websocket_endpoint(ws: WebSocket):
                 # so checkin.py can warn Nova to pause before her next action tick.
                 global _user_typing, _user_typing_since
                 import time as _tz
+                _now_tz            = _tz.time()
                 _user_typing       = bool(data.get("typing", False))
-                _user_typing_since = _tz.time() if _user_typing else 0.0
+                _user_typing_since = _now_tz if _user_typing else _user_typing_since
                 try:
                     inbox_path = WORKSPACE_ROOT / "memory" / "interrupt_inbox.json"
                     inbox_path.parent.mkdir(parents=True, exist_ok=True)
@@ -2232,6 +2410,10 @@ async def websocket_endpoint(ws: WebSocket):
                         except Exception: pass
                     existing["is_typing"]     = _user_typing
                     existing["typing_since"]  = _user_typing_since
+                    # last_typed_at persists even after debounce clears is_typing,
+                    # giving checkin.py a 30s window to detect recent typing activity.
+                    if _user_typing:
+                        existing["last_typed_at"] = _now_tz
                     inbox_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
                 except Exception as _e:
                     print(f"[typing] inbox write failed: {_e}")
@@ -2270,16 +2452,8 @@ async def websocket_endpoint(ws: WebSocket):
                     _nova_msg_times = []
                     await broadcast({"type": "nova_unthrottled"})
 
-                # Reject new messages while AIs are still responding
-                if is_processing:
-                    await ws.send_text(json.dumps({
-                        "type": "blocked",
-                        "reason": "AIs are still responding. Press STOP to interrupt."
-                    }))
-                    continue
-
                 directed_at = parse_directed(content)
-                
+
                 # Append the telemetry-bundled content to the Backend Transcript so AIs see it
                 msg = session_mgr.active.add("Cole", full_context_content, directed_at or None,
                                              images=images)
@@ -2291,8 +2465,8 @@ async def websocket_endpoint(ws: WebSocket):
                     for img in images or []:
                         # Index each image by dataUrl (base64) and name
                         memory_indexer.add_image(
-                            img.get("dataUrl"), 
-                            caption=f"Image from Cole: {img.get('name', 'unnamed')}", 
+                            img.get("dataUrl"),
+                            caption=f"Image from Cole: {img.get('name', 'unnamed')}",
                             filename=img.get("name", "screenshot.png"),
                             session_id=session_mgr.active_id
                         )
@@ -2307,6 +2481,23 @@ async def websocket_endpoint(ws: WebSocket):
                     "directed_at": directed_at,
                     "images": images,
                 })
+
+                # ── Queue while processing; drain after ───────────────────────
+                # Instead of dropping Cole's message with "blocked", queue it.
+                # The queue is drained at the end of _queued_run (below).
+                if is_processing:
+                    _cole_message_queue.append({
+                        "content":              content,
+                        "full_context_content": full_context_content,
+                        "directed_at":          directed_at,
+                        "images":               images or [],
+                        "msg":                  msg,
+                    })
+                    await ws.send_text(json.dumps({
+                        "type":   "queued",
+                        "reason": "Nova is responding — your message is queued and will be delivered next.",
+                    }))
+                    continue
 
                 status = await get_status()
                 if not directed_at:
@@ -2422,10 +2613,21 @@ async def websocket_endpoint(ws: WebSocket):
                                 else:
                                     tick_content = (
                                         f"[HEARTBEAT {_auto_ticks}] Cole's last message has "
-                                        f"already been answered. Do NOT re-answer it.\n"
-                                        f"Check Tasking/priority.md for queued tasks and "
-                                        f"execute your next task. If the queue is empty, "
-                                        f"output AUTONOMOUS_COMPLETE."
+                                        f"already been answered. Do NOT re-answer it.\n\n"
+                                        f"WORK LOOP — follow these steps in order:\n"
+                                        f"1. Read Tasking/priority.md — check for queued tasks.\n"
+                                        f"   - If tasks exist: pick the highest-priority one and execute it now. "
+                                        f"     Then describe what you did — the next tick will continue automatically.\n"
+                                        f"   - If empty: continue to step 2.\n"
+                                        f"2. Run nova_body/nova_cortex/checkin.py — check for new messages or alerts.\n"
+                                        f"3. Scan Tasking/Master_Inbox/ for any unread items. Route them if needed.\n"
+                                        f"4. If you did something useful in steps 1-3: briefly summarize it. "
+                                        f"   The next heartbeat tick will run automatically — do NOT output AUTONOMOUS_COMPLETE.\n"
+                                        f"5. ONLY output AUTONOMOUS_COMPLETE if ALL of steps 1-3 found truly nothing "
+                                        f"to do AND you have no new tasks to add to the queue.\n\n"
+                                        f"Tip: if the queue is empty, consider adding a background task "
+                                        f"(review recent notes, check system health, update goals.py, etc.) "
+                                        f"rather than immediately outputting AUTONOMOUS_COMPLETE."
                                     )
 
                                 # Build the ephemeral heartbeat context (no chat history)
@@ -2527,6 +2729,44 @@ async def websocket_endpoint(ws: WebSocket):
                         finally:
                             is_processing = False
                             await broadcast({"type": "processing_end"})
+
+                            # ── Drain Cole's message queue ─────────────────────────────
+                            # If Cole sent messages while we were processing, deliver the
+                            # most recent one now. Earlier ones are already in the transcript.
+                            if _cole_message_queue:
+                                _queued = _cole_message_queue[-1]
+                                _cole_message_queue.clear()
+                                print(f"[queue] Delivering {1} queued Cole message")
+                                _qdir  = _queued.get("directed_at") or []
+                                _qstat = await get_status()
+                                if not _qdir:
+                                    _qqueue = [
+                                        n for n in ("Claude", "Gemini", "Nova")
+                                        if _qstat.get(n) and not _mute_states.get(n, True)
+                                    ]
+                                else:
+                                    _qqueue = build_response_queue(_qdir, _qstat)
+                                if _qqueue:
+                                    _stop_requested.clear()
+                                    is_processing = True
+                                    await broadcast({"type": "processing_start"})
+                                    _qq2   = list(_qqueue)
+                                    _qc2   = _queued["content"]
+                                    _qimgs = _queued.get("images", [])
+                                    _run_start_idx2 = len(session_mgr.active.messages)
+                                    async def _drain_run():
+                                        global is_processing
+                                        try:
+                                            await _run_response_queue(_qq2, _qc2,
+                                                                       images=_qimgs or None)
+                                        except asyncio.CancelledError:
+                                            pass
+                                        except Exception as _de:
+                                            print(f"[queue] Drain error: {_de}")
+                                        finally:
+                                            is_processing = False
+                                            await broadcast({"type": "processing_end"})
+                                    asyncio.ensure_future(_drain_run())
 
                     task = asyncio.ensure_future(_queued_run())
                     active_tasks.append(task)

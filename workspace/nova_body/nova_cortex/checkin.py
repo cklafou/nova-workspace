@@ -69,12 +69,15 @@ def check():
     except Exception:
         return  # File being written -- skip
 
-    # --- P4: Cole is actively typing a reply ---
-    is_typing    = data.get("is_typing", False)
-    typing_since = data.get("typing_since", 0)
+    # --- P4: Cole is actively typing OR typed very recently ---
+    is_typing     = data.get("is_typing", False)
+    typing_since  = data.get("typing_since", 0)
+    last_typed_at = data.get("last_typed_at", 0)
+    now           = time.time()
+
+    # Active typing: debounce hasn't fired yet
     if is_typing and typing_since > 0:
-        elapsed_s = int(time.time() - typing_since)
-        # Guard against stale signals (older than 60s mean Cole stopped but signal was not cleared)
+        elapsed_s = int(now - typing_since)
         if elapsed_s < 60:
             print(f"\n[COLE IS TYPING — PAUSE RECOMMENDED]")
             print(f"Cole has been composing a response for {elapsed_s}s.")
@@ -84,6 +87,17 @@ def check():
             print("  -> Re-run checkin.check() after 10-15s to see if a message arrived")
             print("  -> If no message arrives within 45s total: Cole likely abandoned — continue")
             return  # Stop here — no need to check completed messages yet
+
+    # Recent typing: debounce fired but Cole typed within the last 30 seconds
+    # This catches the common case where Nova runs checkin AFTER the 2s debounce clears
+    if last_typed_at > 0 and (now - last_typed_at) < 30:
+        recent_s = int(now - last_typed_at)
+        print(f"\n[COLE TYPED RECENTLY ({recent_s}s ago) — PROCEED WITH CARE]")
+        print("Cole was composing something recently. A message may be on its way.")
+        print("[DECISION OPTIONS]:")
+        print("  -> If your next step is fast: do it, then re-check")
+        print("  -> If your next step is slow: re-run checkin.check() first to see if message arrived")
+        return
 
     # --- Completed message from Cole ---
     msg_time    = data.get("timestamp", 0)

@@ -307,6 +307,34 @@ a:hover { text-decoration: underline; }
 .pbar-auto.active { border-color: rgba(143,144,255,0.3); color: var(--nova); background: var(--nova-dim); }
 .pbar-auto-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-mute); transition: all var(--t); flex-shrink: 0; }
 .pbar-auto.active .pbar-auto-dot { background: var(--nova); box-shadow: 0 0 5px rgba(143,144,255,0.6); }
+/* Nova state pill — persistent status in participant bar */
+#nova-state-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: 20px;
+  border: 1px solid var(--border);
+  font-size: 10px; font-weight: 500; font-family: var(--sans);
+  color: var(--text-mute); background: var(--bg-raised);
+  transition: all 0.2s;
+  white-space: nowrap; flex-shrink: 0;
+  user-select: none;
+}
+#nova-state-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-mute);
+  transition: background 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+#nova-state-pill.state-sleeping { color: var(--text-mute); border-color: var(--border); }
+#nova-state-pill.state-sleeping #nova-state-dot { background: var(--text-mute); box-shadow: none; }
+#nova-state-pill.state-processing { color: var(--text-dim); border-color: var(--border-med); }
+#nova-state-pill.state-processing #nova-state-dot { background: #888; box-shadow: none; }
+#nova-state-pill.state-scanning { color: #7ec8e3; border-color: rgba(126,200,227,0.4); background: rgba(126,200,227,0.06); }
+#nova-state-pill.state-scanning #nova-state-dot { background: #7ec8e3; box-shadow: 0 0 5px rgba(126,200,227,0.7); animation: pulse-dot 1.5s ease-in-out infinite; }
+#nova-state-pill.state-generating { color: var(--nova); border-color: rgba(143,144,255,0.4); background: var(--nova-dim); }
+#nova-state-pill.state-generating #nova-state-dot { background: var(--nova); box-shadow: 0 0 6px rgba(143,144,255,0.8); animation: pulse-dot 0.8s ease-in-out infinite; }
+#nova-state-pill.state-tool { color: #a5d6a7; border-color: rgba(165,214,167,0.35); background: rgba(165,214,167,0.05); }
+#nova-state-pill.state-tool #nova-state-dot { background: #a5d6a7; box-shadow: 0 0 5px rgba(165,214,167,0.6); }
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
 /* Resize handles */
 .resize-handle {
@@ -1045,6 +1073,11 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       <button class="pbar-auto" id="pb-auto" onclick="clickAutoToggle()" data-tooltip="Autonomous mode — Nova drives herself via heartbeat without waiting for input. Click to pause/resume.">
         <div class="pbar-auto-dot" id="pb-auto-dot"></div>Auto
       </button>
+      <!-- Nova state pill: always-visible status without opening Monitor tab -->
+      <div id="nova-state-pill" class="state-sleeping" data-tooltip="Nova's current state — 💤 Sleeping · 🔍 Scanning · ⚡ Generating · 🔧 Tool running">
+        <div id="nova-state-dot"></div>
+        <span id="nova-state-label">Sleeping</span>
+      </div>
     </div>
     <!-- Messages -->
     <div id="chat"></div>
@@ -1140,7 +1173,40 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     </div>
 
     <div class="panel-section" id="panel-tools">
-      <div class="panel-empty" id="tools-empty"><div class="ei">⚙</div>No tool calls yet.<br>Executions stream in live.</div>
+      <!-- ── Task Queue ──────────────────────────────────────────────── -->
+      <div id="queue-panel" style="margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">
+          <span style="font-size:9.5px;color:var(--text-mute);text-transform:uppercase;letter-spacing:.08em;flex:1">Task Queue</span>
+          <button class="sb-btn" onclick="queueRefresh()" title="Refresh queue">↻</button>
+          <button class="btn btn-cancel" id="queue-add-toggle" onclick="toggleQueueForm()" style="font-size:10px;padding:2px 8px;">＋ Add Task</button>
+        </div>
+        <!-- Add Task form (hidden by default) -->
+        <div id="queue-form" style="display:none;background:var(--bg-hover);border-radius:var(--radius-sm);padding:6px;margin-bottom:4px;">
+          <input id="queue-title" type="text" placeholder="Task title…" style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg));border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;" onkeydown="if(event.key==='Enter')queueSubmit()"/>
+          <div style="display:flex;gap:4px;margin-bottom:4px;">
+            <select id="queue-priority" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:10px;padding:3px 4px;">
+              <option value="1">P1 — Critical</option>
+              <option value="2">P2 — High</option>
+              <option value="3" selected>P3 — Medium</option>
+              <option value="4">P4 — Low</option>
+            </select>
+          </div>
+          <input id="queue-notes" type="text" placeholder="Notes (optional)…" style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg));border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;" onkeydown="if(event.key==='Enter')queueSubmit()"/>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-send" onclick="queueSubmit()" style="flex:1;font-size:10px;padding:3px 0;">Add</button>
+            <button class="btn btn-cancel" onclick="toggleQueueForm()" style="font-size:10px;padding:3px 8px;">Cancel</button>
+          </div>
+        </div>
+        <!-- Task list -->
+        <div id="queue-list">
+          <div class="panel-empty" id="queue-empty" style="padding:6px;"><div class="ei" style="font-size:18px;">📋</div>Queue is empty.</div>
+        </div>
+        <div style="border-bottom:1px solid var(--border);margin:6px 0;"></div>
+      </div>
+      <!-- ── Tool call feed ─────────────────────────────────────────── -->
+      <div id="panel-tools-feed">
+        <div class="panel-empty" id="tools-empty"><div class="ei">⚙</div>No tool calls yet.<br>Executions stream in live.</div>
+      </div>
     </div>
 
     <div class="panel-section" id="panel-monitor">
@@ -1413,22 +1479,23 @@ function handle(d) {
     case 'think_token':     appendThink(d.author, d.id, d.token); liveThinkAppend(d.token); break;
     case 'think_end':       liveThinkEnd(); break;
     case 'message_end':     finalizeMsg(d.id); hideTyping(d.author); break;
-    case 'processing_start':setProcessing(true); break;
+    case 'processing_start':setProcessing(true); setNovaStatePill('processing'); break;
     case 'processing_end':  setProcessing(false); updateVigilance({state:'sleeping',reason:'Ready'}); break;
     case 'stopped':         setProcessing(false); updateVigilance({state:'sleeping',reason:'Stopped'}); break;
     case 'blocked':         toast('⏳ AIs are responding — press Stop to interrupt'); break;
+    case 'queued':          toast('📬 Message queued — will be delivered when Nova finishes'); break;
     case 'error':           sysMsg(`⚠ ${d.message}`); setProcessing(false); updateVigilance({state:'sleeping',reason:'Error'}); break;
     case 'autonomous_state':setAutonomous(d.enabled); break;
     case 'mute_state':      onMuteState(d); break;
     case 'eyes_frame':      updateEyes(d); break;
     case 'nova_status':     updateMonitor(d); break;
-    case 'generation_start':updateVigilance({state:'working',reason:'Generating…'}); break;
-    case 'generation_end':  updateVigilance({state:'awake',reason:`Done in ${d.elapsed||0}s`}); break;
+    case 'generation_start':updateVigilance({state:'working',reason:'Generating…'}); setNovaStatePill('generating'); break;
+    case 'generation_end':  updateVigilance({state:'awake',reason:`Done in ${d.elapsed||0}s`}); setNovaStatePill('processing'); break;
     case 'nova_activity':   addActivityTool(d); addInlineActivity(d); break;
-    case 'tool_executed':   addTool(d); addInlineTool(d); break;
-    case 'autonomous_start':  onAutonomousStart(d); break;
+    case 'tool_executed':   addTool(d); addInlineTool(d); setNovaStatePill('tool'); break;
+    case 'autonomous_start':  onAutonomousStart(d); setNovaStatePill('scanning'); break;
     case 'autonomous_token':  onAutonomousToken(d); break;
-    case 'autonomous_output': onAutonomousOutput(d); break;
+    case 'autonomous_output': onAutonomousOutput(d); setNovaStatePill('processing'); break;
     case 'thought_update':  updateThought(d); break;
     case 'vigilance':       updateVigilance(d); break;
     case 'export_ready':    handleExport(d); break;
@@ -1952,7 +2019,7 @@ function addInlineTool(d) {
   body.appendChild(card); scrollBot();
 }
 function addTool(d) {
-  const feed=document.getElementById('panel-tools');
+  const feed=document.getElementById('panel-tools-feed');
   document.getElementById('tools-empty')?.remove();
   const ok=!d.error;
   const fullText=(d.error||d.result||'').toString();
@@ -1975,7 +2042,7 @@ function addTool(d) {
 
 const _AICONS={write:'💾',exec:'⚡',read:'📄',pause:'⏸',resume:'▶',discord:'💬',ncl:'🔗'};
 function _pushToolFeed(iconHtml, name, detail, ok=true) {
-  const feed=document.getElementById('panel-tools');
+  const feed=document.getElementById('panel-tools-feed');
   document.getElementById('tools-empty')?.remove();
   const item=document.createElement('div');
   item.className=`tfi ${ok?'ok':'err'}`;
@@ -2188,6 +2255,91 @@ async function pollMonitor() {
       if(d.nova_live) updateMonitor(d.nova_live);
     }
   } catch(_){}
+}
+
+/* ══════════════════════════════════════════════════
+   TASK QUEUE  (Issue 4 — Cole adds tasks via UI)
+══════════════════════════════════════════════════ */
+const PCOLORS = {1:'#ef4444',2:'#f97316',3:'#3b82f6',4:'#6b7280'};
+const PLABELS = {1:'P1',2:'P2',3:'P3',4:'P4'};
+
+function toggleQueueForm() {
+  const f=document.getElementById('queue-form');
+  if(!f) return;
+  const open = f.style.display==='none';
+  f.style.display = open ? 'block' : 'none';
+  if(open) document.getElementById('queue-title')?.focus();
+}
+
+async function queueSubmit() {
+  const title = document.getElementById('queue-title')?.value.trim();
+  const priority = parseInt(document.getElementById('queue-priority')?.value||'3');
+  const notes = document.getElementById('queue-notes')?.value.trim();
+  if(!title){ toast('Enter a task title'); return; }
+  try {
+    const r = await fetch('/api/queue/add', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({title, priority, notes})
+    });
+    const d = await r.json();
+    if(d.ok) {
+      document.getElementById('queue-title').value='';
+      document.getElementById('queue-notes').value='';
+      document.getElementById('queue-priority').value='3';
+      toggleQueueForm();
+      toast('✓ Task added to queue');
+      await queueRefresh();
+    } else {
+      toast('Error: '+(d.error||'unknown'));
+    }
+  } catch(e){ toast('Queue error: '+e); }
+}
+
+async function queueComplete(raw, title) {
+  await fetch('/api/queue/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({raw,title})});
+  toast('✓ Task marked done');
+  await queueRefresh();
+}
+
+async function queueCancel(raw, title) {
+  await fetch('/api/queue/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({raw,title})});
+  toast('✗ Task cancelled');
+  await queueRefresh();
+}
+
+async function queueRefresh() {
+  try {
+    const r = await fetch('/api/queue');
+    if(!r.ok) return;
+    const d = await r.json();
+    renderQueue(d.tasks||[]);
+  } catch(_){}
+}
+
+function renderQueue(tasks) {
+  const el = document.getElementById('queue-list');
+  const emEl = document.getElementById('queue-empty');
+  if(!el) return;
+  if(!tasks.length) {
+    el.innerHTML = '';
+    if(emEl) { emEl.style.display=''; el.appendChild(emEl); }
+    return;
+  }
+  if(emEl) emEl.style.display='none';
+  // Sort by priority
+  tasks.sort((a,b)=>a.priority-b.priority);
+  el.innerHTML = tasks.map(t => {
+    const col = PCOLORS[t.priority]||'#6b7280';
+    const lbl = PLABELS[t.priority]||'P?';
+    const rawE = esc(t.raw||'');
+    const titleE = esc(t.title||'');
+    return `<div style="display:flex;align-items:center;gap:5px;padding:4px 2px;border-bottom:1px solid var(--border);">
+      <span style="font-size:9px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 5px;white-space:nowrap">${lbl}</span>
+      <span style="flex:1;font-size:10.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${titleE}">${titleE}</span>
+      <button onclick="queueComplete('${rawE}','${titleE}')" title="Mark done" style="background:none;border:none;cursor:pointer;font-size:13px;color:#22c55e;padding:0 2px">✓</button>
+      <button onclick="queueCancel('${rawE}','${titleE}')" title="Cancel" style="background:none;border:none;cursor:pointer;font-size:13px;color:#ef4444;padding:0 2px">✗</button>
+    </div>`;
+  }).join('');
 }
 
 /* ══════════════════════════════════════════════════
@@ -2495,11 +2647,38 @@ function setProcessing(on){
     clearInterval(_cardRefreshTimer); _cardRefreshTimer=null;
     const bar=document.getElementById('thought-cards-bar');
     if(bar){bar.style.display='none'; bar.innerHTML='';}
+    // ── Cursor cleanup: remove any orphaned blinking cursors from chat ──
+    // Handles cases where message_end was lost or stream was interrupted.
+    document.querySelectorAll('#chat .cursor').forEach(c=>c.remove());
+    // ── Also ensure the autonomous tick live indicator is hidden ────────
+    const liveEl=document.getElementById('auto-tick-live');
+    if(liveEl) liveEl.style.display='none';
+    // ── Update inline Nova state pill ───────────────────────────────────
+    setNovaStatePill('sleeping');
   }
   // stop-btn (in input bar) mirrors processing state as a redundant cancel target
   document.getElementById('stop-btn').classList.toggle('vis', on);
 }
 function stopGen(){ws?.readyState===1&&ws.send(JSON.stringify({type:'stop'}));setProcessing(false);}
+
+/* ── Nova state pill ── always-visible status indicator in participant bar ── */
+const _STATE_LABELS = {
+  sleeping:   'Sleeping',
+  processing: 'Processing',
+  scanning:   'Scanning',
+  generating: 'Generating',
+  tool:       'Tool',
+};
+function setNovaStatePill(state){
+  const pill  = document.getElementById('nova-state-pill');
+  const label = document.getElementById('nova-state-label');
+  if (!pill || !label) return;
+  // Remove all state classes
+  pill.className = pill.className.replace(/\bstate-\S+/g,'').trim();
+  pill.classList.add(`state-${state}`);
+  label.textContent = _STATE_LABELS[state] || state;
+}
+
 function clickAutoToggle(){setAutonomous(!autonomousMode);ws?.readyState===1&&ws.send(JSON.stringify({type:'autonomous_toggle',enabled:autonomousMode}));}
 function setAutonomous(on){
   autonomousMode=on;
@@ -3224,9 +3403,11 @@ setInterval(pollThoughts, 10000);
 setInterval(pollMonitor,  15000);
 setInterval(pollServices,  9000);
 setInterval(pollGit,      60000);  // git branch updates every 60s
+setInterval(queueRefresh, 30000);  // queue refreshes every 30s
 pollMonitor();
 pollServices();
 pollGit();
+queueRefresh();
 
 // Set initial panel check
 switchPanel('thoughts');
