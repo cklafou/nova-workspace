@@ -62,6 +62,19 @@ class _TeeStream:
     def isatty(self):
         return False
 
+    def reconfigure(self, **kwargs):
+        # Forward reconfigure() calls to the underlying stream.
+        # Some modules call sys.stdout.reconfigure(encoding='utf-8') at import
+        # time; _TeeStream must not swallow that call or it raises AttributeError.
+        if hasattr(self._orig, "reconfigure"):
+            self._orig.reconfigure(**kwargs)
+
+    def __getattr__(self, name):
+        # Catch-all: delegate any other stream attributes (e.g. encoding,
+        # errors, buffer) to the underlying stream so _TeeStream is a
+        # transparent wrapper for code that probes stream capabilities.
+        return getattr(self._orig, name)
+
 sys.stdout = _TeeStream(sys.stdout)
 sys.stderr = _TeeStream(sys.stderr)
 
@@ -2414,7 +2427,12 @@ async def websocket_endpoint(ws: WebSocket):
                     # giving checkin.py a 30s window to detect recent typing activity.
                     if _user_typing:
                         existing["last_typed_at"] = _now_tz
-                    inbox_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+                    # Atomic write: write to .tmp then rename, so readers never see
+                    # a half-written file (write_text truncates before writing).
+                    _inbox_tmp = inbox_path.with_suffix(".tmp")
+                    _inbox_tmp.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+                    import os as _os
+                    _os.replace(_inbox_tmp, inbox_path)
                 except Exception as _e:
                     print(f"[typing] inbox write failed: {_e}")
                 continue
@@ -2494,8 +2512,9 @@ async def websocket_endpoint(ws: WebSocket):
                         "msg":                  msg,
                     })
                     await ws.send_text(json.dumps({
-                        "type":   "queued",
-                        "reason": "Nova is responding — your message is queued and will be delivered next.",
+                        "type":    "queued",
+                        "count":   len(_cole_message_queue),
+                        "reason":  "Nova is responding — your message is queued and will be delivered next.",
                     }))
                     continue
 
@@ -2562,6 +2581,36 @@ async def websocket_endpoint(ws: WebSocket):
                                 if not autonomous_mode or _stop_requested.is_set():
                                     break
 
+                                # ── Typing guard: pause if Cole is actively composing ──────
+                                # Check interrupt_inbox.json before each tick.  If Cole is
+                                # typing or typed within the last 8 seconds, hold back for up
+                                # to 20 seconds and let him finish before firing the next tick.
+                                _inbox_path = WORKSPACE_ROOT / "memory" / "interrupt_inbox.json"
+                                _typing_wait = 0
+                                while _typing_wait < 20:
+                                    _is_cole_typing = False
+                                    if _inbox_path.exists():
+                                        try:
+                                            _ib = json.loads(_inbox_path.read_text(encoding="utf-8"))
+                                            _is_typing_flag  = _ib.get("is_typing", False)
+                                            _last_typed      = _ib.get("last_typed_at", 0)
+                                            import time as _tt
+                                            _is_cole_typing  = (
+                                                _is_typing_flag or
+                                                (_last_typed > 0 and (_tt.time() - _last_typed) < 30)
+                                            )
+                                        except Exception:
+                                            pass
+                                    if not _is_cole_typing:
+                                        break
+                                    if _typing_wait == 0:
+                                        print(f"[autonomous] Cole is typing — holding tick {_auto_ticks} for up to 20s")
+                                    await asyncio.sleep(3)
+                                    _typing_wait += 3
+
+                                if not autonomous_mode or _stop_requested.is_set():
+                                    break
+
                                 nova_avail = await get_status()
                                 if not nova_avail.get("Nova"):
                                     print("[autonomous] Nova offline — halting heartbeat loop")
@@ -2607,6 +2656,11 @@ async def websocket_endpoint(ws: WebSocket):
                                         f"[HEARTBEAT {_auto_ticks}] Cole sent a new message "
                                         f"that needs a response:\n"
                                         f"Cole: {_cole_msg}\n\n"
+                                        f"IMPORTANT: If Cole is asking you to DO something "
+                                        f"(create tasks, research something, modify files, etc.), "
+                                        f"use write_file to add it to Tasking/priority.md RIGHT NOW "
+                                        f"before replying — heartbeat ticks have no shared memory, "
+                                        f"so if you don't write it down, the next tick will forget it.\n\n"
                                         f"Reply to Cole now. If relevant, briefly mention any "
                                         f"active tasks from Tasking/priority.md."
                                     )
@@ -2616,18 +2670,21 @@ async def websocket_endpoint(ws: WebSocket):
                                         f"already been answered. Do NOT re-answer it.\n\n"
                                         f"WORK LOOP — follow these steps in order:\n"
                                         f"1. Read Tasking/priority.md — check for queued tasks.\n"
-                                        f"   - If tasks exist: pick the highest-priority one and execute it now. "
-                                        f"     Then describe what you did — the next tick will continue automatically.\n"
-                                        f"   - If empty: continue to step 2.\n"
+                                        f"   - If tasks exist: pick the highest-priority one and start executing it NOW "
+                                        f"     (use your tools). Then summarize what you did — next tick continues automatically.\n"
+                                        f"   - If empty: think of one useful background task (review notes, check system health,\n"
+                                        f"     audit a file, update goals.py, etc.). Write it into Tasking/priority.md "
+                                        f"     using write_file RIGHT NOW — do not just describe it, actually write the file.\n"
+                                        f"     Then immediately start the first step of that task using your tools.\n"
                                         f"2. Run nova_body/nova_cortex/checkin.py — check for new messages or alerts.\n"
                                         f"3. Scan Tasking/Master_Inbox/ for any unread items. Route them if needed.\n"
-                                        f"4. If you did something useful in steps 1-3: briefly summarize it. "
-                                        f"   The next heartbeat tick will run automatically — do NOT output AUTONOMOUS_COMPLETE.\n"
-                                        f"5. ONLY output AUTONOMOUS_COMPLETE if ALL of steps 1-3 found truly nothing "
-                                        f"to do AND you have no new tasks to add to the queue.\n\n"
-                                        f"Tip: if the queue is empty, consider adding a background task "
-                                        f"(review recent notes, check system health, update goals.py, etc.) "
-                                        f"rather than immediately outputting AUTONOMOUS_COMPLETE."
+                                        f"4. If you took any real action in steps 1-3 (tool call, file write, etc.): "
+                                        f"   briefly summarize it. Do NOT output AUTONOMOUS_COMPLETE.\n"
+                                        f"5. ONLY output AUTONOMOUS_COMPLETE if you genuinely could not find or create "
+                                        f"any useful work AND checkin and inbox were both empty.\n\n"
+                                        f"RULE: Describing a task you plan to do is NOT the same as doing it. "
+                                        f"If you decide to add a task, call write_file on Tasking/priority.md "
+                                        f"in this same response — not the next one."
                                     )
 
                                 # Build the ephemeral heartbeat context (no chat history)
@@ -2733,6 +2790,8 @@ async def websocket_endpoint(ws: WebSocket):
                             # ── Drain Cole's message queue ─────────────────────────────
                             # If Cole sent messages while we were processing, deliver the
                             # most recent one now. Earlier ones are already in the transcript.
+                            if not _cole_message_queue:
+                                await broadcast({"type": "queue_cleared"})
                             if _cole_message_queue:
                                 _queued = _cole_message_queue[-1]
                                 _cole_message_queue.clear()

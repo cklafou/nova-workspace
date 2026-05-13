@@ -47,12 +47,14 @@ _None active._
 ## PRIORITY 4 — LOW (background / when idle)
 _(Tasks to work on only when nothing higher is pending)_
 
-_None active._
+- **TASK_BG_0512**: Run patch_depth_server.ps1 from workspace root to enable depth slider in nova_qt. Verify server.py and nova.py were patched correctly.
+  - Created: 2026-03-28 (autonomous cycle)
+  - Status: pending
 
 ---
 
 ## BLOCKED — awaiting module responses
-_(Tasks Nova has fired module calls for and is waiting on. Check Master_Inbox for updates.)_
+_(Tasks Nova has fired module calls for and are waiting on. Check Master_Inbox for updates.)_
 
 _None active._
 
@@ -68,4 +70,5 @@ _None active._
 ## DECISION LOG
 _Append-only. Newest entries at top. Record every significant priority change here._
 
+- 2026-03-28 — Autonomous cycle: Added TASK_BG_0512 (patch_depth_server.ps1) to PRIORITY 4 queue.
 - 2026-03-28 — Priority queue initialized. Thoughts system created.

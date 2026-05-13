@@ -11,40 +11,55 @@
    DESIGN TOKENS
 ═══════════════════════════════════════════════ */
 :root {
-  --bg:           #07070f;
-  --bg-mid:       #0c0c18;
-  --bg-surface:   #111120;
-  --bg-raised:    #18182a;
-  --bg-alt:       #13132a;
-  --bg-hover:     rgba(255,255,255,0.038);
-  --border:       rgba(255,255,255,0.07);
-  --border-med:   rgba(255,255,255,0.11);
-  --border-hi:    rgba(143,144,255,0.30);
+  /* ── Deep-space backgrounds ─────────────────────────────────────────── */
+  --bg:           #05050e;   /* void black — deepest space                */
+  --bg-mid:       #08081a;   /* nebula shadow — menu bar, sidebar bg      */
+  --bg-surface:   #0d0d1f;   /* surface cards                             */
+  --bg-raised:    #141428;   /* raised elements, code blocks              */
+  --bg-alt:       #0b0b1e;   /* alternate surface (code headers, etc.)    */
+  --bg-hover:     rgba(167,139,250,0.06);
 
-  --nova:         #8f90ff;
-  --nova-dim:     rgba(143,144,255,0.13);
-  --nova-glow:    0 0 20px rgba(143,144,255,0.28);
-  --claude:       #d97757;
-  --claude-dim:   rgba(217,119,87,0.12);
-  --gemini:       #4e86e4;
-  --gemini-dim:   rgba(78,134,228,0.12);
-  --cole:         #dde0f4;
+  /* ── Violet-tinted borders ──────────────────────────────────────────── */
+  --border:       rgba(167,139,250,0.09);
+  --border-med:   rgba(167,139,250,0.16);
+  --border-hi:    rgba(167,139,250,0.38);
 
+  /* ── Nova — neon violet ─────────────────────────────────────────────── */
+  --nova:         #a78bfa;   /* violet-400 — primary accent               */
+  --nova-bright:  #c4b5fd;   /* violet-300 — hover highlights             */
+  --nova-dim:     rgba(167,139,250,0.13);
+  --nova-glow:    0 0 18px rgba(167,139,250,0.45), 0 0 40px rgba(167,139,250,0.15);
+
+  /* ── Nebula gradient — used for logo, active tabs, key accents ──────── */
+  --nebula:       linear-gradient(135deg, #a78bfa 0%, #818cf8 45%, #c084fc 100%);
+  --nebula-soft:  linear-gradient(135deg, rgba(167,139,250,0.18) 0%, rgba(129,140,248,0.08) 100%);
+  --nebula-glow:  0 0 28px rgba(167,139,250,0.30), 0 0 56px rgba(129,140,248,0.12);
+
+  /* ── Other agents ───────────────────────────────────────────────────── */
+  --claude:       #e8875d;
+  --claude-dim:   rgba(232,135,93,0.12);
+  --gemini:       #5b96f0;
+  --gemini-dim:   rgba(91,150,240,0.12);
+  --cole:         #e2e6ff;
+
+  /* ── Status colors ──────────────────────────────────────────────────── */
   --green:        #4ade80;
   --green-dim:    rgba(74,222,128,0.14);
   --yellow:       #fbbf24;
   --red:          #f87171;
   --red-dim:      rgba(248,113,113,0.12);
-  --text:         #ededf8;
-  --text-dim:     #6868a0;
-  --text-mute:    #333358;
+
+  /* ── Text — readable, violet-warm ──────────────────────────────────── */
+  --text:         #f2f0ff;   /* near-white with violet warmth             */
+  --text-dim:     #9a98cc;   /* secondary text — was #6868a0, now legible */
+  --text-mute:    #5a5890;   /* muted hints — was #333358, now visible    */
 
   --sans:         'Inter', system-ui, sans-serif;
   --mono:         'JetBrains Mono', 'Cascadia Code', monospace;
 
   /* Pane widths — controlled by JS drag */
   --sidebar-w:    220px;
-  --panel-w:      308px;
+  --panel-w:      360px;
 
   --menubar-h:    30px;
   --statusbar-h:  26px;
@@ -57,8 +72,8 @@
   --t-mid:        240ms;
 
   /* Aliases used in dynamic HTML blocks */
-  --surface-2:    #18182a;   /* = --bg-raised; used in live-think-block */
-  --accent:       #8f90ff;   /* = --nova; used in reasoning-live label */
+  --surface-2:    #141428;
+  --accent:       #a78bfa;
 }
 
 /* ═══════════════════════════════════════════════
@@ -67,13 +82,45 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 ::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(143,144,255,0.2); }
+::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.18); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(167,139,250,0.38); }
 html, body { height: 100%; overflow: hidden; }
-body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+body {
+  background:
+    radial-gradient(ellipse at 15% 40%, rgba(109,40,217,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(67,56,202,0.05) 0%, transparent 45%),
+    radial-gradient(ellipse at 60% 90%, rgba(139,92,246,0.04) 0%, transparent 40%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14.5px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
 button { font-family: var(--sans); cursor: pointer; }
 a { color: var(--nova); text-decoration: none; }
 a:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════
+   GALAXY ACCENTS — nebula glows on structural panes
+═══════════════════════════════════════════════ */
+#right-panel {
+  background:
+    radial-gradient(ellipse at 80% 10%, rgba(109,40,217,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 90%, rgba(67,56,202,0.04) 0%, transparent 45%),
+    var(--bg-mid);
+}
+#sidebar {
+  background:
+    radial-gradient(ellipse at 30% 5%, rgba(139,92,246,0.05) 0%, transparent 40%),
+    var(--bg-mid);
+}
+#menubar {
+  background:
+    linear-gradient(90deg, rgba(109,40,217,0.05) 0%, transparent 30%),
+    var(--bg-mid);
+  border-bottom: 1px solid rgba(167,139,250,0.12);
+}
 
 /* ═══════════════════════════════════════════════
    APP SHELL — 3 rows: menubar | main | statusbar
@@ -103,19 +150,23 @@ a:hover { text-decoration: underline; }
 .menu-logo {
   display: flex; align-items: center; gap: 7px;
   padding: 0 14px 0 8px;
-  font-size: 13px; font-weight: 600;
-  color: var(--nova);
-  letter-spacing: -0.01em;
+  font-size: 13px; font-weight: 700;
+  background: var(--nebula);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.02em;
   flex-shrink: 0;
 }
 .menu-logo .logo-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--nova);
-  box-shadow: 0 0 6px rgba(143,144,255,0.7);
-  transition: background var(--t);
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--nebula);
+  box-shadow: 0 0 8px rgba(167,139,250,0.9), 0 0 16px rgba(167,139,250,0.4);
+  transition: background var(--t), box-shadow var(--t);
+  flex-shrink: 0;
 }
 .menu-logo .logo-dot.sleeping { background: var(--text-mute); box-shadow: none; }
-.menu-logo .logo-dot.working  { background: var(--green); box-shadow: 0 0 6px rgba(74,222,128,0.7); }
+.menu-logo .logo-dot.working  { background: var(--green); box-shadow: 0 0 8px rgba(74,222,128,0.9); }
 
 .menu-sep { width: 1px; height: 14px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
 
@@ -276,9 +327,9 @@ a:hover { text-decoration: underline; }
   flex-shrink: 0;
 }
 /* Per-agent dot colors when online */
-#pb-nova.online   .pbar-dot { background: var(--nova);   box-shadow: 0 0 6px rgba(143,144,255,0.5); }
-#pb-claude.online .pbar-dot { background: var(--claude); box-shadow: 0 0 6px rgba(217,119,87,0.45); }
-#pb-gemini.online .pbar-dot { background: var(--gemini); box-shadow: 0 0 6px rgba(78,134,228,0.45); }
+#pb-nova.online   .pbar-dot { background: var(--nova);   box-shadow: 0 0 8px rgba(167,139,250,0.8), 0 0 18px rgba(167,139,250,0.3); }
+#pb-claude.online .pbar-dot { background: var(--claude); box-shadow: 0 0 7px rgba(232,135,93,0.55); }
+#pb-gemini.online .pbar-dot { background: var(--gemini); box-shadow: 0 0 7px rgba(91,150,240,0.55); }
 .pbar-state { font-size: 9px; color: var(--text-mute); letter-spacing: 0.02em; }
 .pbar-pill.muted .pbar-state { color: inherit; }
 /* Typing bounce dots */
@@ -471,7 +522,7 @@ a:hover { text-decoration: underline; }
 .msg-wrap:hover .msg-copy { display: flex; align-items: center; }
 .msg-copy:hover { color: var(--text); background: var(--bg-hover); }
 .msg-copy.copied { color: var(--green); }
-.msg-text   { font-size: 14px; line-height: 1.65; color: var(--text); word-break: break-word; }
+.msg-text   { font-size: 14.5px; line-height: 1.68; color: var(--text); word-break: break-word; }
 .msg-text p + p { margin-top: 0.5em; }
 .msg-text pre { background: var(--bg-raised); border: 1px solid var(--border); border-radius: 0 0 var(--radius-sm) var(--radius-sm); border-top: none; padding: 11px; overflow-x: auto; margin: 0; }
 .msg-text code { font-family: var(--mono); font-size: 12px; }
@@ -490,14 +541,30 @@ a:hover { text-decoration: underline; }
 .msg-text th { background: var(--bg-raised); padding: 5px 10px; text-align: left; border: 1px solid var(--border); font-weight: 600; }
 .msg-text td { padding: 4px 10px; border: 1px solid var(--border); }
 .msg-text blockquote { border-left: 3px solid var(--border-hi); padding-left: 10px; color: var(--text-dim); margin: 6px 0; }
-.msg-wrap.nova   .msg-avatar { background: var(--nova-dim);   color: var(--nova);   border: 1px solid rgba(143,144,255,0.27); }
-.msg-wrap.nova   .msg-author { color: var(--nova); }
-.msg-wrap.claude .msg-avatar { background: var(--claude-dim); color: var(--claude); border: 1px solid rgba(217,119,87,0.27); }
-.msg-wrap.claude .msg-author { color: var(--claude); }
-.msg-wrap.gemini .msg-avatar { background: var(--gemini-dim); color: var(--gemini); border: 1px solid rgba(78,134,228,0.27); }
-.msg-wrap.gemini .msg-author { color: var(--gemini); }
-.msg-wrap.cole   .msg-avatar { background: rgba(221,224,244,0.07); color: var(--cole); border: 1px solid rgba(221,224,244,0.17); }
-.msg-wrap.cole   .msg-author { color: var(--cole); }
+.msg-wrap.nova {
+  border-left: 2px solid transparent;
+  border-image: var(--nebula) 1;
+  background: linear-gradient(90deg, rgba(167,139,250,0.03) 0%, transparent 60%);
+}
+.msg-wrap.nova   .msg-avatar {
+  background: linear-gradient(135deg, rgba(167,139,250,0.22), rgba(129,140,248,0.10));
+  color: var(--nova-bright);
+  border: 1px solid rgba(167,139,250,0.35);
+  box-shadow: 0 0 8px rgba(167,139,250,0.20);
+}
+.msg-wrap.nova   .msg-author {
+  background: var(--nebula);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+.msg-wrap.claude .msg-avatar { background: var(--claude-dim); color: var(--claude); border: 1px solid rgba(232,135,93,0.30); }
+.msg-wrap.claude .msg-author { color: var(--claude); font-weight: 700; }
+.msg-wrap.gemini .msg-avatar { background: var(--gemini-dim); color: var(--gemini); border: 1px solid rgba(91,150,240,0.30); }
+.msg-wrap.gemini .msg-author { color: var(--gemini); font-weight: 700; }
+.msg-wrap.cole   .msg-avatar { background: rgba(226,230,255,0.07); color: var(--cole); border: 1px solid rgba(226,230,255,0.18); }
+.msg-wrap.cole   .msg-author { color: var(--cole); font-weight: 600; }
 .msg-wrap.system { padding: 4px 20px; }
 .msg-wrap.system .msg-text { color: var(--text-dim); font-size: 11px; font-style: italic; }
 
@@ -532,14 +599,14 @@ a:hover { text-decoration: underline; }
 ═══════════════════════════════════════════════ */
 #input-area { padding: 7px 16px 11px; background: linear-gradient(to top, var(--bg) 52%, transparent); flex-shrink: 0; position: relative; }
 .input-box { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: border-color var(--t), box-shadow var(--t); overflow: hidden; }
-.input-box:focus-within { border-color: var(--border-hi); box-shadow: 0 0 0 3px rgba(143,144,255,0.07); }
+.input-box:focus-within { border-color: rgba(167,139,250,0.5); box-shadow: 0 0 0 3px rgba(167,139,250,0.09), 0 0 20px rgba(167,139,250,0.08); }
 .input-row { display: flex; align-items: flex-end; padding: 8px 10px; gap: 7px; }
 #input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5; resize: none; max-height: 160px; overflow-y: auto; }
 #input::placeholder { color: var(--text-mute); }
 .input-action { background: none; border: none; color: var(--text-mute); cursor: pointer; padding: 5px; border-radius: var(--radius-sm); font-size: 14px; display: flex; align-items: center; transition: color var(--t), background var(--t); flex-shrink: 0; line-height: 1; }
 .input-action:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-#send-btn { background: var(--nova); color: #fff; border: none; cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all var(--t); flex-shrink: 0; }
-#send-btn:hover { background: #a0a1ff; box-shadow: var(--nova-glow); }
+#send-btn { background: var(--nebula); color: #fff; border: none; cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all var(--t); flex-shrink: 0; box-shadow: 0 0 10px rgba(167,139,250,0.35); }
+#send-btn:hover { box-shadow: var(--nova-glow); transform: scale(1.05); }
 #send-btn:disabled { background: var(--text-mute); cursor: not-allowed; box-shadow: none; }
 #send-btn.stop-mode { background: var(--red); font-size: 10px; animation: stop-pulse 0.25s ease; }
 #send-btn.stop-mode:hover { background: #ff8a8a; box-shadow: 0 0 14px rgba(248,113,113,0.4); }
@@ -558,6 +625,10 @@ a:hover { text-decoration: underline; }
 #stop-btn { display: none; background: none; border: 1px solid rgba(248,113,113,0.3); color: var(--red); cursor: pointer; padding: 3px 9px; border-radius: 20px; font-size: 11px; transition: all var(--t); }
 #stop-btn:hover { background: var(--red-dim); }
 #stop-btn.vis { display: flex; align-items: center; gap: 5px; }
+/* Queue badge — appears next to Stop when Cole has messages waiting */
+#queue-btn { display: none; background: none; border: 1px solid rgba(143,144,255,0.35); color: var(--nova); cursor: default; padding: 3px 9px; border-radius: 20px; font-size: 11px; transition: all var(--t); }
+#queue-btn.vis { display: flex; align-items: center; gap: 4px; }
+#queue-btn-count { font-weight: 700; }
 
 .depth-ctrl { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-mute); }
 .depth-ctrl input { width: 56px; accent-color: var(--nova); }
@@ -582,8 +653,8 @@ a:hover { text-decoration: underline; }
    RIGHT PANEL
 ═══════════════════════════════════════════════ */
 #right-panel {
-  width: 308px;
-  min-width: 180px; max-width: 600px;
+  width: 360px;
+  min-width: 200px; max-width: 600px;
   background: var(--bg-mid);
   border-left: 1px solid var(--border);
   display: flex; flex-direction: column; overflow: hidden;
@@ -592,11 +663,19 @@ a:hover { text-decoration: underline; }
 }
 #right-panel.collapsed { width: 0 !important; opacity: 0; pointer-events: none; }
 
-.panel-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 5px; gap: 0; flex-shrink: 0; overflow-x: auto; }
+.panel-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 2px; gap: 0; flex-shrink: 0; overflow-x: auto; }
 .panel-tabs::-webkit-scrollbar { height: 2px; }
-.ptab { padding: 8px 9px 6px; font-size: 10px; font-weight: 600; color: var(--text-mute); cursor: pointer; border-bottom: 2px solid transparent; transition: all var(--t); letter-spacing: 0.06em; text-transform: uppercase; user-select: none; white-space: nowrap; }
+.ptab { padding: 8px 7px 6px; font-size: 10px; font-weight: 600; color: var(--text-mute); cursor: pointer; border-bottom: 2px solid transparent; transition: all var(--t); letter-spacing: 0.04em; text-transform: uppercase; user-select: none; white-space: nowrap; }
 .ptab:hover { color: var(--text-dim); }
-.ptab.active { color: var(--nova); border-bottom-color: var(--nova); }
+.ptab.active {
+  background: var(--nebula);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border-bottom: 2px solid transparent;
+  border-image: var(--nebula) 1;
+  text-shadow: none;
+}
 
 .panel-section { display: none; flex: 1; overflow-y: auto; padding: 9px; flex-direction: column; gap: 6px; }
 .panel-section.active { display: flex; }
@@ -1103,6 +1182,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
               <span class="auto-dot"></span><span id="auto-label">Autonomous</span>
             </button>
             <button id="stop-btn" onclick="stopGen()" data-tooltip="Stop all in-flight AI responses (Esc)">⏹ Stop</button>
+            <div id="queue-btn" data-tooltip="Your message is queued — Nova will see it as soon as she finishes her current response">📬 <span id="queue-btn-count">1</span> queued</div>
           </div>
           <div class="input-bar-right">
             <div class="verbosity-ctrl" data-tooltip="Response length hint sent silently to Nova. Concise = brief and direct; Normal = balanced; Verbose = thorough and detailed.">
@@ -1480,10 +1560,11 @@ function handle(d) {
     case 'think_end':       liveThinkEnd(); break;
     case 'message_end':     finalizeMsg(d.id); hideTyping(d.author); break;
     case 'processing_start':setProcessing(true); setNovaStatePill('processing'); break;
-    case 'processing_end':  setProcessing(false); updateVigilance({state:'sleeping',reason:'Ready'}); break;
-    case 'stopped':         setProcessing(false); updateVigilance({state:'sleeping',reason:'Stopped'}); break;
+    case 'processing_end':  setProcessing(false); updateVigilance({state:'sleeping',reason:'Ready'}); hideQueueBadge(); break;
+    case 'stopped':         setProcessing(false); updateVigilance({state:'sleeping',reason:'Stopped'}); hideQueueBadge(); break;
     case 'blocked':         toast('⏳ AIs are responding — press Stop to interrupt'); break;
-    case 'queued':          toast('📬 Message queued — will be delivered when Nova finishes'); break;
+    case 'queued':          showQueueBadge(d.count||1); break;
+    case 'queue_cleared':   hideQueueBadge(); break;
     case 'error':           sysMsg(`⚠ ${d.message}`); setProcessing(false); updateVigilance({state:'sleeping',reason:'Error'}); break;
     case 'autonomous_state':setAutonomous(d.enabled); break;
     case 'mute_state':      onMuteState(d); break;
@@ -2660,6 +2741,16 @@ function setProcessing(on){
   document.getElementById('stop-btn').classList.toggle('vis', on);
 }
 function stopGen(){ws?.readyState===1&&ws.send(JSON.stringify({type:'stop'}));setProcessing(false);}
+function showQueueBadge(count){
+  const btn=document.getElementById('queue-btn');
+  const cnt=document.getElementById('queue-btn-count');
+  if(!btn||!cnt) return;
+  cnt.textContent=count;
+  btn.classList.add('vis');
+}
+function hideQueueBadge(){
+  document.getElementById('queue-btn')?.classList.remove('vis');
+}
 
 /* ── Nova state pill ── always-visible status indicator in participant bar ── */
 const _STATE_LABELS = {
@@ -2946,7 +3037,7 @@ function loadLayout() {
     const saved = JSON.parse(localStorage.getItem(_LS_LAYOUT)||'{}');
     if(saved.sidebar && saved.sidebar >= 140 && saved.sidebar <= 380)
       document.getElementById('sidebar').style.width = saved.sidebar+'px';
-    if(saved.panel && saved.panel >= 180 && saved.panel <= 620)
+    if(saved.panel && saved.panel >= 200 && saved.panel <= 620)
       document.getElementById('right-panel').style.width = saved.panel+'px';
   } catch(_) {}
 }
@@ -2954,7 +3045,9 @@ function loadLayout() {
 // ── Collapse state per handle ──────────────────────────────────────────────────
 // Double-click a handle to snap-collapse the RIGHT-side pane; double-click again to restore.
 const _collapseState = {};
-function initResize(handleId, getW, setW, min, max, saveKey) {
+function initResize(handleId, getW, setW, min, max, saveKey, invert=false) {
+  // invert=true for handles on the LEFT edge of the panel being resized
+  // (e.g. the right panel's handle): dragging LEFT = grow, dragging RIGHT = shrink.
   const h=document.getElementById(handleId);
   let _savedW = 0;
 
@@ -2986,7 +3079,8 @@ function initResize(handleId, getW, setW, min, max, saveKey) {
     document.body.style.cursor='col-resize';
     document.body.style.userSelect='none';
     const onMove=e=>{
-      const newW=Math.max(0,Math.min(max,startW+(e.clientX-startX)));
+      const delta = invert ? (startX - e.clientX) : (e.clientX - startX);
+      const newW=Math.max(0,Math.min(max,startW+delta));
       setW(newW);
       if(newW < min/2) { _collapseState[handleId]=true; h.style.opacity='0.3'; }
       else { _collapseState[handleId]=false; h.style.opacity=''; _savedW=newW; }
@@ -3395,7 +3489,8 @@ initResize('sidebar-handle',
 initResize('panel-handle',
   ()=>document.getElementById('right-panel').getBoundingClientRect().width,
   w=>{ document.getElementById('right-panel').style.width=w+'px'; },
-  180, 620, 'panel'
+  180, 620, 'panel',
+  true   // invert=true: handle is left-edge of panel, so drag-left = grow
 );
 
 // Polling
