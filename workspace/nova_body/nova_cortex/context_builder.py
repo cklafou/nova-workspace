@@ -3,9 +3,8 @@ nova_cortex/context_builder.py
 ================================
 Assemble Nova's system prompt from workspace markdown files.
 
-This replaces the part of OpenClaw that reads workspace files and injects
-them into the LLM context before every run. OpenClaw did this automatically
-as part of its agent startup sequence. We do the same thing here in Python.
+Reads Nova's workspace markdown files and injects them into the LLM context
+before every run, as part of building her system prompt.
 
 Plain English: before Nova reads your message, she gets a big block of text
 that contains all her rules, personality, tools, and memory. This module

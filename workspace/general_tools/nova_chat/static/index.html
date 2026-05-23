@@ -1176,6 +1176,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
               <span class="auto-dot"></span><span id="auto-label">Autonomous</span>
             </button>
             <button id="stop-btn" onclick="stopGen()" data-tooltip="Stop all in-flight AI responses (Esc)">⏹ Stop</button>
+            <button id="reinject-btn" onclick="reinjectContext()" data-tooltip="Refresh Nova's context — reloads her current architecture &amp; memory from disk and clears stale context, while keeping this conversation. Use after changing her files mid-session." style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dim);font-size:11px;padding:4px 8px;cursor:pointer">↻ Refresh Context</button>
             <div id="queue-btn" data-tooltip="Your message is queued — Nova will see it as soon as she finishes her current response">📬 <span id="queue-btn-count">1</span> queued</div>
           </div>
           <div class="input-bar-right">
@@ -3021,6 +3022,17 @@ function closeLogs(){document.getElementById('logs-overlay').classList.remove('o
 /* ══════════════════════════════════════════════════
    TOAST
 ══════════════════════════════════════════════════ */
+async function reinjectContext(){
+  const b=document.getElementById("reinject-btn");
+  if(b){b.disabled=true;b.textContent="↻ Refreshing…";}
+  try{
+    const r=await fetch("/api/reinject_context",{method:"POST"});
+    const d=await r.json();
+    if(d&&d.ok){ toast(`↻ Context refreshed — reloaded current architecture, cleared ${d.purged||0} stale block(s); conversation kept`); }
+    else { toast("⚠ Context refresh failed"); }
+  }catch(e){ toast("⚠ Context refresh failed: "+e); }
+  finally{ if(b){b.disabled=false;b.textContent="↻ Refresh Context";} }
+}
 function toast(msg,ms=2200){const c=document.getElementById('toasts');const el=document.createElement('div');el.className='toast';el.textContent=msg;c.appendChild(el);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300);},ms);}
 
 /* ══════════════════════════════════════════════════

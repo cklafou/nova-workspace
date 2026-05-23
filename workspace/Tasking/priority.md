@@ -44,9 +44,11 @@ _None active._
 
 ## PRIORITY 4 — LOW (background / when idle)
 _(Tasks to work on only when nothing higher is pending)_
-
 _None active._
 
+
+
+- **Process pending audit_queue.json items** — audit_queue.json has 40+ unprocessed file operations (renames/deletes) from commit be877011 dated May 9th — all still marked 'pending' with no resolved_by. Need to verify which files actually exist/changed and mark each item as resolved or remove if already handled.
 ---
 
 ## BLOCKED — awaiting module responses
@@ -64,6 +66,7 @@ _None active._
 ---
 
 ## DECISION LOG
+- 2026-05-23 — Completed: **Clear Moondream task - delete master.md** — Cole explicitly said this was supposed to be deleted, not executed. Remove from active tasks and clear Tasking/Finished/cancelled/Moondream2/master.md if it exists.
 - 2026-05-23 — Queue reset to a clean slate after the failed autonomy test (bogus/meta tasks removed, legacy Thoughts-folder artifacts archived). Fresh start for the next test under the new system.
 _Append-only. Newest entries at top. Record every significant priority change here._
 

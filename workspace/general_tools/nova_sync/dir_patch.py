@@ -37,7 +37,7 @@ SYNC_DIR      = Path(__file__).parent
 FILE_INDEX    = SYNC_DIR / "FILE_INDEX.md"
 
 SKIP_DIRS = {
-    "__pycache__", ".git", "node_modules", ".clawhub",
+    "__pycache__", ".git", "node_modules",
     "backups", "logs", "screenshots",
 }
 

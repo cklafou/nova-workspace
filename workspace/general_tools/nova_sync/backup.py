@@ -56,7 +56,7 @@ SESSION_SNAPSHOT_FILES = [
 ]
 
 EXCLUDE_DIRS = {
-    ".git", "__pycache__", "node_modules", ".clawhub",
+    ".git", "__pycache__", "node_modules",
     "screenshots", "backups",
     "models",       # model weight files (GGUF etc.) — never back up, 18GB+
 }

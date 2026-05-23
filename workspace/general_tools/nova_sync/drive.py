@@ -55,7 +55,7 @@ CLIENT_SECRETS_PATHS = [
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
-EXCLUDE_DIRS     = {".git", "__pycache__", "node_modules", ".clawhub", "screenshots", "_build",
+EXCLUDE_DIRS     = {".git", "__pycache__", "node_modules", "screenshots", "_build",
                     "models"}    # model weight files (GGUF etc.) — never sync to Drive, 18GB+
 EXCLUDE_SUBPATHS = {"logs/screenshots", "tools/backups", "agents/main/sessions"}
 INCLUDE_EXTENSIONS = {".py", ".md", ".json", ".jsonl", ".txt", ".cmd", ".ps1"}

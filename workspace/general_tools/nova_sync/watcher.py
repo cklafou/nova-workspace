@@ -23,7 +23,7 @@ LINK_PATH     = SYNC_DIR / "FILE_INDEX_LINK.md"
 DEBOUNCE_SECONDS = 10
 
 EXCLUDE_DIRS = {
-    ".git", "__pycache__", "node_modules", ".clawhub", "screenshots",
+    ".git", "__pycache__", "node_modules", "screenshots",
 }
 EXCLUDE_SUBPATHS = set([
     "logs/screenshots", "nova_body/backups", "general_tools/backups",

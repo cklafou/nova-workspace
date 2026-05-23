@@ -42,7 +42,7 @@ WORKSPACE_DIR = Path(__file__).resolve().parent.parent
 SCAN_ROOTS = [
     WORKSPACE_DIR / "general_tools",
     WORKSPACE_DIR / "nova_body",
-    WORKSPACE_DIR / "nova_memory",
+    WORKSPACE_DIR / "nova_lancedb",   # workspace-root semantic-memory package
     WORKSPACE_DIR / "_build",
 ]
 # Also scan top-level .py files in workspace root
@@ -195,6 +195,12 @@ def check_legacy(path: Path) -> list[dict]:
         for line_no, line in enumerate(source.splitlines(), 1):
             for pattern, description in LEGACY_PATTERNS:
                 if re.search(pattern, line, re.IGNORECASE):
+                    # Skip openclaw/clawhub matches that are historical notes or
+                    # defensive exclude-list entries, not live dependencies.
+                    if "claw" in pattern.lower() and any(w in line.lower() for w in (
+                            "retired", "removed", "dropped", "archived", "no longer",
+                            "deleted", "exclude", "skip")):
+                        break
                     issues.append({
                         "severity": "MEDIUM",
                         "code":     "LEGACY",
@@ -262,6 +268,22 @@ def build_import_graph(files: list[Path]) -> dict[str, set[str]]:
     return graph
 
 
+def _entrypoint_scripts() -> set:
+    """Python filenames launched from .cmd/.bat scripts are entry points too."""
+    names = set()
+    for ext in ("*.cmd", "*.bat"):
+        for f in WORKSPACE_DIR.rglob(ext):
+            if any(sub in str(f) for sub in EXCLUDE_SUBPATHS):
+                continue
+            try:
+                txt = f.read_text(encoding="utf-8", errors="replace")
+            except Exception:
+                continue
+            for m in re.findall(r"([\w./-]+\.py)", txt):
+                names.add(Path(m).name)
+    return names
+
+
 def check_unreferenced(files: list[Path], graph: dict[str, set[str]]) -> list[dict]:
     """
     Flag files that are never imported by any other workspace file
@@ -272,10 +294,14 @@ def check_unreferenced(files: list[Path], graph: dict[str, set[str]]) -> list[di
     for mods in graph.values():
         all_imports.update(mods)
 
+    _cmd_entries = _entrypoint_scripts()
     issues = []
     for f in files:
         # Skip __init__.py — they're implicitly used as packages
         if f.name in ("__init__.py", "__main__.py"):
+            continue
+        # Skip scripts launched from .cmd/.bat (entry points even if never imported)
+        if f.name in _cmd_entries:
             continue
         # Skip entry points
         try:

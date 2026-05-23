@@ -14,7 +14,7 @@ Format: JSONL v4 (one JSON object per line, version field = 4)
 
 Compaction: when the conversation history is > 85% of context_window,
   we ask Nova to summarize what happened, save the summary, and drop
-  the old messages. This is the same thing OpenClaw did automatically.
+  the old messages, keeping the session within the context window.
 """
 
 from __future__ import annotations

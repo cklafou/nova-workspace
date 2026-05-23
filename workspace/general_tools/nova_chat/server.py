@@ -2740,16 +2740,25 @@ async def chat_recent(n: int = 40):
 @app.post("/api/reinject_context")
 async def reinject_context():
     """
-    Re-inject all nova_gateway.json inject_files into the active session as a
-    fresh context block.  Called by the 'Re-orient Nova' button on the landing
-    page and automatically on session switch so Nova always has current files.
+    Mid-session context refresh (the 'Refresh Context' button).
 
-    Reads each file fresh from disk (captures any changes since last boot),
-    builds a compact CONTEXT REFRESH block, and posts it as a System message
-    into the active session.  Nova reads it like any other chat message.
+      1. PURGE prior CONTEXT REFRESH system messages from the active session so
+         stale/old context can't linger or pile up. The conversation (Cole + Nova
+         messages) is kept untouched.
+      2. RE-INJECT a concise re-orientation note plus the architecture files that
+         are NOT already injected fresh every turn by build_nova_context_block().
+         That per-turn block always injects AGENTS/NOVA/TOOLS + memory
+         (STATUS/JOURNAL/COLE), so re-dumping them here would double ~30K chars and
+         blow Nova's 32K window — we deliberately skip them.
+      3. KEEP chat history so the session continues seamlessly — Nova just becomes
+         aware of the current architecture and disregards retired approaches.
 
-    Returns: { ok, files_injected, skipped, chars }
+    Returns: { ok, purged, files_injected, chars }
     """
+    # Files build_nova_context_block() already injects every turn — skip to avoid bloat.
+    _ALREADY_PER_TURN = {"agents.md", "nova.md", "tools.md",
+                         "status.md", "journal.md", "cole.md"}
+
     try:
         from gateway_config import load as _load_gw_cfg
         _cfg = _load_gw_cfg()
@@ -2757,36 +2766,53 @@ async def reinject_context():
     except Exception as _e:
         print(f"[reinject] config load failed: {_e} — using fallback list")
         _WORKSPACE = Path(__file__).resolve().parent.parent.parent
-        _FALLBACK = [
-            "AGENTS.md", "NOVA.md", "TOOLS.md",
-            "NCL_MASTER.md", "memory/STATUS.md", "memory/COLE.md",
-            "Tasking/priority.md", "Tasking/THOUGHT_TEMPLATE.md",
-        ]
+        _FALLBACK = ["BOOTUP/NCL_MASTER.md", "BOOTUP/UPGRADE_PROTOCOL.md"]
         inject_paths = [_WORKSPACE / p for p in _FALLBACK if (_WORKSPACE / p).exists()]
 
-    ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-    sections = [f"# CONTEXT REFRESH — {ts}\n_Nova's workspace files re-injected from disk._"]
-    injected, skipped = 0, 0
+    # 1) Purge stale CONTEXT REFRESH blocks from history (keep the conversation).
+    purged = 0
+    try:
+        kept = []
+        for m in session_mgr.active.messages:
+            c = (m.get("content") or "").lstrip()
+            if m.get("author") == "System" and c.startswith("# CONTEXT REFRESH"):
+                purged += 1
+                continue
+            kept.append(m)
+        if purged:
+            session_mgr.active.messages[:] = kept
+            try:
+                session_mgr.active.flush_all()
+            except Exception:
+                pass
+    except Exception as _pe:
+        print(f"[reinject] purge failed: {_pe}")
 
+    # 2) Build a concise refresh block (skip per-turn-injected identity/memory).
+    ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    sections = [
+        f"# CONTEXT REFRESH — {ts}",
+        "_Your identity, architecture, and memory files (AGENTS/NOVA/TOOLS/STATUS/COLE/"
+        "JOURNAL) are reloaded fresh from disk every turn — they are current as of now. "
+        "Re-orient to the CURRENT system described in them and DISREGARD any earlier "
+        "messages in this session that assumed older or retired architecture. The "
+        "conversation continues unchanged._",
+    ]
+    injected = 0
     for path in inject_paths:
+        if path.name.lower() in _ALREADY_PER_TURN:
+            continue
         try:
             text = path.read_text(encoding="utf-8", errors="replace").strip()
             if text:
                 sections.append(f"## [{path.name}]\n{text}")
                 injected += 1
-            else:
-                skipped += 1
         except Exception as _fe:
             print(f"[reinject] skipped {path.name}: {_fe}")
-            skipped += 1
-
-    if injected == 0:
-        return JSONResponse({"ok": False, "error": "No files could be read", "files_injected": 0})
 
     block = "\n\n---\n\n".join(sections)
     chars = len(block)
 
-    # Deliver as a System message so it's clearly labelled in the chat
     msg = session_mgr.active.add("System", block)
     session_mgr.update_meta_from_message(msg)
     await broadcast({
@@ -2797,8 +2823,9 @@ async def reinject_context():
         "timestamp": msg["timestamp"],
     })
 
-    print(f"[reinject] Context refresh: {injected} files, {chars} chars ({skipped} skipped)")
-    return JSONResponse({"ok": True, "files_injected": injected, "skipped": skipped, "chars": chars})
+    print(f"[reinject] refreshed: purged {purged} stale block(s), "
+          f"injected {injected} extra file(s), {chars} chars")
+    return JSONResponse({"ok": True, "purged": purged, "files_injected": injected, "chars": chars})
 
 
 @app.post("/shutdown")
