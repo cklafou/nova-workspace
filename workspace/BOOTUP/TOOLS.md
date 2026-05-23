@@ -23,7 +23,7 @@ from nova_logs.logger import log, log_thought
 | `nova_logs/` | All logging -- agent tools, chat thoughts, index | `logger.py`, `Logger_Index.md` |
 | `nova_motor/` | Mouse/keyboard control, autonomy loop, verification | `hands.py`, `autonomy.py`, `verify.py` |
 | `nova_senses/` | UI element detection, vision, screen exploration | `eyes.py`, `explorer.py`, `vision.py` |
-| `nova_cortex/` | Rules engine, yield check-in, cognitive router | `rules.py`, `checkin.py`, `brain.py` |
+| `nova_cortex/` | Rules engine, yield check-in, cognitive router | `rules.py`, `checkin.py`, `prefrontal_cortex.py` |
 
 **`general_tools/`** — services and launchers:
 
@@ -48,7 +48,7 @@ from nova_logs.logger import log, log_thought
 - **Logs:** `logs\`
 - **Proposed changes:** `logs\proposed\` (stage all changes here for Cole to review)
 - **Admin/planning (not for Nova):** `_admin\` (excluded from context injection)
-- **Thoughts (task memory):** `Thoughts\` (priority.md, Master_Inbox, active thought folders, Finished archive)
+- **Tasking (task memory):** `Tasking/priority.md` + `Tasking/task_state.json` (server-managed queue + progress)
 
 ## How to Run Tools
 
@@ -248,66 +248,13 @@ exec: python nova_tools/nova_cortex/rules.py
 
 ## nova_cortex/prefrontal_cortex.py -- Cognitive Router (Phase 4A.8)
 
-Currently a stub. Will become the Thoughts cycle orchestrator in Phase 4A.8:
-reads priority.md, processes Master_Inbox, determines next actions.
-Do not rely on it yet. Use HEARTBEAT.md Thoughts cycle directly for now.
+An `orient()` helper used by audit/maintenance scripts (reads priority.md and workspace state). It is NOT an autonomy loop — autonomy lives in the nova_chat sleep/wake daemon. See HEARTBEAT.md.
 
 ---
 
-## Thoughts System -- Task Memory and Autonomous Management
+## Tasking System — server-managed
 
-Your persistent task memory. Thoughts survive context resets because they live on disk.
-
-### Key paths
-
-| Path | Purpose |
-|------|---------|
-| `Tasking/priority.md` | Priority queue. Read every heartbeat. Append-only Decision Log at bottom. |
-| `Tasking/THOUGHT_TEMPLATE.md` | Clone this to start a new Thought. |
-| `Tasking/Master_Inbox/` | All module responses land here. Process on heartbeat. |
-| `Tasking/[Name]/master.md` | The living checklist for one task. |
-| `Tasking/[Name]/inbox/` | Routed module responses for this thought. |
-| `Tasking/[Name]/scratch/` | Temp files, drafts, unvalidated output. |
-| `Tasking/Finished/completed_success/` | Archive for completed thoughts. |
-| `Tasking/Finished/completed_fail/` | Archive for failed thoughts (useful failure signal). |
-| `Tasking/Finished/cancelled/` | Archive for cancelled thoughts. |
-
-### Creating a Thought
-
-```
-# 1. Read the template
-[READ: Tasking/THOUGHT_TEMPLATE.md]
-
-# 2. Write a filled copy as the new thought's master.md
-[WRITE: Tasking/ThoughtName/master.md]
-... (filled template) ...
-[/WRITE]
-
-# 3. Create subdirectories
-exec: python -c "from pathlib import Path; [Path(p).mkdir(parents=True, exist_ok=True) for p in ['Tasking/ThoughtName/inbox', 'Tasking/ThoughtName/scratch']]"
-
-# 4. Add to priority.md
-[WRITE: logs/proposed/priority.md] or direct write if Cole permits
-```
-
-### Task ID format (required for inbox routing)
-
-Every Thought has a Task ID matching its folder name.
-Include it in ALL module calls:
-
-```
-((task_id:ThoughtName; what you need the module to return))
-```
-
-Module responses must begin with: `[ThoughtName]`
-
-### Moving to Finished
-
-```
-exec: python -c "import shutil; shutil.move('Tasking/ThoughtName', 'Tasking/Finished/completed_success/ThoughtName')"
-```
-
-Remove from priority.md. Append final Decision Log entry.
+Your tasks live in `Tasking/priority.md` (human-readable queue) and `Tasking/task_state.json` (server-maintained status + per-task progress log). You do NOT create per-task folders, `master.md` files, or route Master_Inbox by hand — the server manages all of that. You advance work by emitting `TASK_PROGRESS` (one step) and `TASK_INTENT` (add/complete) blocks on each wake. See `BOOTUP/AGENTS.md` (Tasking System) and `BOOTUP/HEARTBEAT.md`.
 
 ---
 

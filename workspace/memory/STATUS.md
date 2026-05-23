@@ -1,4 +1,7 @@
 # STATUS.md -- Project Nova Current State
+
+> **ARCHITECTURE NOTE (2026-05-23):** Autonomy now runs as a sleep/wake daemon in `nova_chat/server.py`, with tasks in `priority.md` + `task_state.json`. The old `brain.py`/circadian/vigilance "Thoughts cycle" loop has been **retired** (archived under `_admin/_archive_2026-05-23/old_autonomy/`). Where this file's history below describes that loop as live/current, treat it as historical.
+
 _Last updated: 2026-05-08_
 
 ---

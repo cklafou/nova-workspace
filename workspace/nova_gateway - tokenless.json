@@ -33,7 +33,7 @@
     "health_check": {
       "enabled": false,
       "interval_min": 30,
-      "message": "Run Thoughts cycle: read priority.md, process Master_Inbox, advance highest-priority active thought by one step. Then update priority.md if anything changed."
+      "message": "DEPRECATED \u2014 autonomy is handled by the nova_chat sleep/wake daemon. This cron is disabled and unused."
     }
   },
   "context": {
@@ -45,8 +45,7 @@
       "BOOTUP/UPGRADE_PROTOCOL.md",
       "memory/STATUS.md",
       "memory/COLE.md",
-      "Tasking/priority.md",
-      "Tasking/THOUGHT_TEMPLATE.md"
+      "Tasking/priority.md"
     ],
     "heartbeat_extra_files": [
       "BOOTUP/HEARTBEAT.md"

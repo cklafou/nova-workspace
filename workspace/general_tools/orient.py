@@ -54,7 +54,6 @@ NOVA_BODY_MODULES = [
 NOVA_BODY_KEY_FILES = {
     "nova_body/nova_cortex/nova_status.py":  "nova_cortex/nova_status.py",
     "nova_body/nova_cortex/checkin.py":      "nova_cortex/checkin.py",
-    "nova_body/nova_cortex/vigilance.py":    "nova_cortex/vigilance.py",
 }
 
 

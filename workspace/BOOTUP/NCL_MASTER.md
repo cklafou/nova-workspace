@@ -41,7 +41,7 @@ a real module task.
 Wrong:  `@eyes @mentor [[do both things]]`
 Right:  `@eyes [[do vision thing]] ;; @mentor [[do reasoning thing]]`
 
-**task_id format.** Task IDs must match the Thought folder name exactly. Use
+task_id format. Task IDs should be short and stable. Use
 underscores, no spaces. Include the date if the task is time-specific.
 Format: `((task_id:TaskFolderName; what must be returned))`
 
@@ -127,11 +127,11 @@ To see live module status: read `workspace/modules.json` if it exists.
 ## Task ID and Inbox Routing
 
 Every NCL call that needs a response back must include `task_id:NAME` in the
-criteria block. The NAME must exactly match the Thought folder name.
+Use a short, stable task_id so the response can be matched back.
 
 When a module responds, it begins its message with `[TaskFolderName]`. The server
 reads this tag and drops the response as a `.md` file into `Tasking/Master_Inbox/`.
-On the next heartbeat, Nova routes it to `Tasking/TaskFolderName/inbox/`.
+A new item in Master_Inbox wakes Nova; the server surfaces it to her (no manual routing to thought folders).
 
 If a call has no task_id, the response is a one-shot reply in Nova Chat. It will
 not be automatically routed to any inbox.

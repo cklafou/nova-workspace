@@ -47,7 +47,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from gateway_config import cfg, load as load_config, CONFIG_PATH
 from nova_motor.tool_executor import ToolExecutor
 from nova_memory.session_store import list_sessions   # nova_body/nova_memory — session manager
-from nova_cortex.circadian import create_scheduler
 
 log = logging.getLogger(__name__)
 
@@ -93,43 +92,12 @@ async def startup():
     executor = ToolExecutor()
     _state["executor"] = executor
 
-    # Start scheduler
-    scheduler = create_scheduler(executor)
-    scheduler.start()
-    _state["scheduler"]      = scheduler
-    _state["scheduler_ready"] = True
+    # (Autonomy loop removed — the nova_chat sleep/wake daemon owns autonomy now.
+    #  The gateway is Discord + tools + status only; it runs no autonomy loop.)
 
     # Start nova_status polling
     asyncio.ensure_future(_poll_nova_status())
 
-    # Start NovaVigilance — sleep/wake monitor that drives the background autonomy loop.
-    # on_wake delegates to the scheduler's trigger_health_check_now(), which runs the
-    # full Thoughts cycle (priority.md → Master_Inbox routing → agent_loop).
-    try:
-        from nova_cortex.vigilance import NovaVigilance
-
-        def _on_wake(reason: str) -> None:
-            log.info("[vigilance] WAKE: %s — triggering Thoughts cycle", reason)
-            sched = _state.get("scheduler")
-            if sched is not None:
-                loop = asyncio.get_event_loop()
-                loop.call_soon_threadsafe(
-                    asyncio.ensure_future,
-                    sched.trigger_health_check_now()
-                )
-            else:
-                log.warning("[vigilance] WAKE fired but scheduler not ready — skipping")
-
-        def _on_sleep(reason: str) -> None:
-            log.info("[vigilance] SLEEP: %s", reason)
-
-        vigilance = NovaVigilance(on_wake=_on_wake, on_sleep=_on_sleep)
-        vigilance.start()
-        _state["vigilance"] = vigilance
-        _state["vigilance_ready"] = True
-        log.info("NovaVigilance started — sleep/wake monitoring active.")
-    except Exception as e:
-        log.warning("NovaVigilance failed to start: %s", e)
 
     # Start Discord bot if enabled
     if cfg.discord.get("enabled", False):
@@ -146,10 +114,6 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     log.info("Nova Gateway shutting down...")
-    if _state["vigilance"]:
-        _state["vigilance"].stop()
-    if _state["scheduler"]:
-        _state["scheduler"].stop()
     if _state["discord_bot"]:
         await _state["discord_bot"].stop()
 
@@ -178,9 +142,6 @@ async def _poll_nova_status() -> None:
                 _state["nova_status"]     = data
                 _state["nova_status_age"] = time.time()
                 summary = _build_status_summary(data)
-                # Keep scheduler and discord bot in sync
-                if _state["scheduler"]:
-                    _state["scheduler"].update_nova_status(summary)
                 if _state["discord_bot"]:
                     _state["discord_bot"].update_nova_status(summary)
         except Exception as e:
@@ -584,16 +545,6 @@ async def manual_trigger(body: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/cron/health")
-async def cron_health():
-    """Manually fire the health check job."""
-    scheduler = _state["scheduler"]
-    if scheduler is None:
-        raise HTTPException(status_code=503, detail="Scheduler not running")
-    asyncio.ensure_future(scheduler.trigger_health_check_now())
-    return {"ok": True, "message": "Health check triggered (running in background)"}
-
-
 class _DiscordSendBody(BaseModel):
     text: str
     channel_id: Optional[int] = None
@@ -704,7 +655,7 @@ def main():
         print(f"Nova model:   nova-qwen35-27b (via nova_chat @ localhost:8765)")
         print(f"Gateway port: {port}")
         print(f"Discord:      {'ENABLED' if cfg.discord.get('enabled') else 'DISABLED'}")
-        print(f"Cron:         {'ENABLED' if cfg.cron.get('health_check', {}).get('enabled') else 'DISABLED'}")
+        print("Autonomy:     handled by nova_chat sleep/wake daemon (gateway runs no loop)")
         print("\nInject files:")
         for p in cfg.inject_files():
             exists = "✓" if p.exists() else "✗ MISSING"

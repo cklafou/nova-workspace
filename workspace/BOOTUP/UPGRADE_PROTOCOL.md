@@ -99,7 +99,7 @@ general_tools/nova_chat/
 ### Core Nova Packages
 ```
 nova_tools/
-  nova_cortex/       ← brain.py (Thoughts), checkin.py, nova_status.py
+  nova_cortex/       ← prefrontal_cortex.py, checkin.py, rules.py, nova_status.py
   nova_memory/     ← journal.py, state.py
   nova_logs/       ← logger.py — ALL logging goes here
   nova_motor/     ← hands.py (mouse/keyboard), autonomy.py, verify.py
