@@ -100,7 +100,7 @@ RESPONSE_ORDER = ["Claude", "Gemini", "Nova"]
 # Each entry maps the @name (lowercase) → module metadata dict.
 # Fields:
 #   description   Human-readable purpose
-#   local_model   Primary local execution method (ExLlamaV2, pywinauto, etc.)
+#   local_model   Primary local execution method (llama.cpp, pywinauto, etc.)
 #   api_fallback  Cloud fallback when local tiers fail (or None)
 #   status        "active" | "partial" | "planned" — reflects implementation state
 #

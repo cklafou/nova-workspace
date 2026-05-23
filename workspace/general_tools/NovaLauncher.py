@@ -168,7 +168,22 @@ def main():
             time.sleep(5)
         return
 
-    log.info("Servers ready. Opening Nova Qt window...")
+    log.info("Servers ready.")
+
+    # ── Launcher-managed window mode ──────────────────────────────────────────
+    # When started by NovaStart (nova_start.py), the launcher opens a dedicated
+    # Edge/Chrome app window and owns the lifecycle. Here we just keep the
+    # in-process servers alive and skip our own (fragile) window step.
+    if _os.environ.get("NOVA_NO_WINDOW") == "1":
+        log.info("NOVA_NO_WINDOW=1 — window managed by NovaStart; keeping servers alive.")
+        try:
+            while True:
+                time.sleep(3600)
+        except (KeyboardInterrupt, SystemExit):
+            pass
+        return
+
+    log.info("Opening Nova Qt window...")
 
     # ── PyQt6 native window (replaces pywebview) ──────────────────────────────
     try:

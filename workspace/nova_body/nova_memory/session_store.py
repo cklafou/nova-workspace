@@ -134,7 +134,7 @@ class Session:
 
         role:    "user" | "assistant"
         content: str or list of content blocks (text + tool_calls)
-        model:   which model responded (e.g. "nova-exllamav2") (for assistant messages)
+        model:   which model responded (e.g. "nova-qwen35-27b") (for assistant messages)
         usage:   token usage dict from nova_chat response
         """
         record = {

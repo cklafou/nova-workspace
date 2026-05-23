@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-10 16:03:55_
+_Last updated: 2026-05-13 14:43:48_
 
 ## INITIALIZATION PROTOCOL
 Run these three steps at the start of every session in order:
@@ -78,7 +78,9 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | 2026-05-10_09-07-29_auto_1ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_09-07-29_auto_1ticks.jsonl` | JSONL file |
 | 2026-05-10_15-59-32_auto_3ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_15-59-32_auto_3ticks.jsonl` | JSONL file |
 | 2026-05-10_ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-10_ticks.jsonl` | JSONL file |
-| 2026-05-08_17-44-22_chat.jsonl | `workspace/logs/chat_sessions/2026-05-08_17-44-22_chat.jsonl` | JSONL file |
+| 2026-05-13_11-09-22_auto_4ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-13_11-09-22_auto_4ticks.jsonl` | JSONL file |
+| 2026-05-13_11-44-37_auto_11ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-13_11-44-37_auto_11ticks.jsonl` | JSONL file |
+| 2026-05-13_ticks.jsonl | `workspace/logs/autonomy_runs/2026-05-13_ticks.jsonl` | JSONL file |
 | 2026-03-21_16-46-47_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-21_16-46-47_chat.jsonl` | JSONL file |
 | 2026-03-28_22-37-11_chat.jsonl | `workspace/logs/chat_sessions/archive/2026-03-28_22-37-11_chat.jsonl` | JSONL file |
 | 2026-03-21_19-26-26_context_claude.md | `workspace/logs/chat_sessions/exports/2026-03-21_19-26-26_context_claude.md` | MD file |
@@ -143,6 +145,7 @@ Step 3: Refer to the Search Key column below for all subsequent file lookups.
 | nova_thoughts.jsonl | `workspace/logs/sessions/2026-05-08/nova_thoughts.jsonl` | JSONL file |
 | nova_thoughts.jsonl | `workspace/logs/sessions/2026-05-09/nova_thoughts.jsonl` | JSONL file |
 | nova_thoughts.jsonl | `workspace/logs/sessions/2026-05-10/nova_thoughts.jsonl` | JSONL file |
+| nova_thoughts.jsonl | `workspace/logs/sessions/2026-05-13/nova_thoughts.jsonl` | JSONL file |
 
 ## BOOTUP/
 

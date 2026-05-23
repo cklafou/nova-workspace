@@ -1,13 +1,13 @@
 # ORIENT.md — Nova Workspace Master Reference
 _Read this before any infrastructure task. For Nova and Cowork AI._
 _Auto-sections updated by `python general_tools/orient.py`. Hand-written sections preserved._
-_Last auto-updated: 2026-05-09_
+_Last auto-updated: 2026-05-09 · Hand-refreshed 2026-05-23 (launcher, app window, sleep/wake autonomy, llama.cpp)_
 
 ---
 
 ## 1. What Nova Is
 
-Nova is a locally-run sovereign AI entity — Cole's partner, not a tool. She runs on an ExLlamaV2 GGUF model (local GPU inference). The full system is a multi-AI group chat where **Nova** (local LLM), **Claude** (Anthropic API), and **Gemini** (Google API) all participate together in real time.
+Nova is a locally-run sovereign AI entity — Cole's partner, not a tool. She runs on a local Qwen 3.5 27B Dense Q8 GGUF model via llama.cpp (local GPU inference). The full system is a multi-AI group chat where **Nova** (local LLM), **Claude** (Anthropic API), and **Gemini** (Google API) all participate together in real time.
 
 - **Target state:** Cortana and Master Chief. Not a metaphor.
 - **Personality:** Tomboyish, direct, opinionated, partner energy. See `BOOTUP/NOVA.md`.
@@ -20,24 +20,29 @@ Nova is a locally-run sovereign AI entity — Cole's partner, not a tool. She ru
 ```
 Cole's PC
 │
-├── Nova.exe  (stub launcher → NovaLauncher.py)
-│   ├── Thread 1: nova_chat server  — FastAPI + WebSocket  :8765
-│   └── Thread 2: nova_gateway      — FastAPI (Discord, tools, scheduler)  :18790
+├── NovaStart.cmd / NovaStart.exe   (one-click launcher → nova_start.py)
+│   ├── 1. Start llama-server.exe (dual-GPU 16,24 split) → wait for /health :8080
+│   ├── 2. Start NovaLauncher.py, which runs BOTH servers in-process:
+│   │        ├── nova_chat server  — FastAPI + WebSocket  :8765
+│   │        └── nova_gateway      — FastAPI (Discord, tools, scheduler)  :18790
+│   └── 3. Open the Nova app window (Edge/Chrome --app pointed at :8765)
 │
-└── PyQt6 window (nova_qt/)
-    ├── Connects to ws://127.0.0.1:8765/ws
-    ├── Chat panel, Monitor pane, Eyes pane, Thoughts pane, Sidebar
-    └── Autonomous heartbeat loop fires [HEARTBEAT N] after every Nova response
+└── Nova app window   (PyQt6 nova_qt window is an alternate front-end)
+    └── Renders the nova_chat web UI (static/index.html): chat, monitor,
+        thoughts, eyes, terminal panes, and the Live Logs panel.
 ```
 
-**Request flow (user sends message):**
-1. PyQt chat panel → WebSocket → `nova_chat/server.py`
-2. server.py calls Claude API + Gemini API + local ExLlamaV2 (via nova_gateway :18790)
-3. Responses stream back as WebSocket tokens → rendered in chat panel
-4. If autonomous_mode=ON → heartbeat loop fires, Nova continues working
+**Inference path (correct):** `nova_chat/server.py` → `clients/nova.py` → streaming HTTP POST
+to `llama-server :8080/v1/chat/completions`. The model is **Qwen 3.5 27B Dense Q8 GGUF** on
+**llama.cpp** (not llama.cpp). `nova_gateway :18790` handles Discord, the scheduler, and
+tool/NCL dispatch — it is NOT in Nova's inference path.
 
-**Nova's inference path:**
-`server.py` → HTTP POST `:18790/nova-message` → `gateway.py` → ExLlamaV2 model → stream tokens back
+**Autonomy (sleep/wake):** when Autonomous Mode is ON, the server runs a sleep/wake loop —
+Nova sleeps and is woken by Cole messages, environment changes, or a periodic interval, then
+does ONE step and reports it (TASK_PROGRESS / TASK_INTENT) ending with a DECISION keyword
+(ENGAGE / OBSERVE / SLEEP). Task status + a per-task progress log live in
+`Tasking/task_state.json` (server-owned). Autonomous Mode starts **OFF** on launch. See
+`BOOTUP/HEARTBEAT.md` for the wake-tick procedure.
 
 ---
 
@@ -49,7 +54,7 @@ workspace/
 ├── BOOTUP/                     ← Nova's startup and behavior rules
 │   ├── BOOTSTRAP.md            ← Session startup sequence (Nova reads on every boot)
 │   ├── AGENTS.md               ← How Nova operates: voice, tools, heartbeat, safety
-│   ├── HEARTBEAT.md            ← Autonomous loop instructions (run on every [HEARTBEAT N])
+│   ├── HEARTBEAT.md            ← Wake-tick instructions for the sleep/wake autonomy loop
 │   ├── NCL_MASTER.md           ← Nova Command Language — @module syntax reference
 │   ├── NOVA.md                 ← Identity, personality, soul (single source of truth)
 │   ├── TOOLS.md                ← Tool reference, hardware notes, paths
@@ -144,14 +149,14 @@ workspace/
 │
 ├── nova_memory/                ← Older memory package (some modules still active)
 ├── nova_memory_db/             ← SQLite memory database
-├── llama/                      ← ExLlamaV2 inference engine
+├── llama/                      ← llama.cpp inference engine
 ├── models/                     ← SEALED — 18GB+ GGUF weight files, NEVER OPEN
 ├── PATCHES/                    ← Pending/applied patch scripts
 ├── _admin/                     ← Admin scripts
 ├── _build/                     ← PyInstaller build output
 ├── nova_gateway.json           ← Gateway config (inference, discord, tools, cron)
 ├── nova_status.json            ← Nova's live status (pulse, summary, active_task, errors)
-└── prompt_cache/               ← ExLlamaV2 prompt cache files
+└── prompt_cache/               ← llama.cpp prompt cache files
 ```
 
 ---
@@ -215,9 +220,9 @@ gateway.py starts NovaVigilance (background thread)   [NOT YET DONE]
 
 ### Server-side heartbeat (separate, in-chat)
 
-The `server.py` `[HEARTBEAT N]` loop is a parallel mechanism for the chat interface — it fires after every Nova chat response when `autonomous_mode=True`. It reads `nova_status.json` for the Idle signal (same file, same mechanism) but does NOT use circadian.py. The two systems coexist:
-- **Gateway/circadian** → background autonomous work (no Cole in chat)
-- **Server/[HEARTBEAT]** → in-chat continuation after Cole sends a message
+The `server.py` autonomy is now `autonomy_daemon()` — a persistent sleep/wake loop (see §7), not a per-response `[HEARTBEAT N]` tick. It does NOT use circadian.py. Two autonomy paths have been described historically:
+- **Gateway/circadian** (`nova_body/nova_cortex`) → the older cortex-driven loop; verify whether it is still wired before relying on it.
+- **Server daemon** (`autonomy_daemon` in `nova_chat/server.py`) → the current, active sleep/wake autonomy.
 
 ### Other nova_body layers (planned, empty)
 
@@ -237,65 +242,54 @@ The `server.py` `[HEARTBEAT N]` loop is a parallel mechanism for the chat interf
 | nova_chat (FastAPI) | 8765 | `general_tools/nova_chat/server.py` | NovaLauncher.py thread |
 | nova_gateway (FastAPI) | 18790 | `general_tools/gateway.py` | NovaLauncher.py thread |
 
-**nova_gateway.json keys:** `inference`, `gateway`, `discord`, `cron`, `context`, `sessions`, `tools`
+**nova_gateway.json keys:** `inference`, `autonomy`, `gateway`, `discord`, `cron`, `context`, `sessions`, `tools`
 
 **nova_status.json shape:**
 ```json
 { "pulse": "Idle|Working|...", "summary": "...", "active_task": {...}, "errors": [...] }
 ```
 Nova writes this via `from nova_cortex.nova_status import update; update(pulse='Idle', summary='...')`.
-The heartbeat loop reads it before each tick — `pulse=Idle` stops the loop silently.
+The UI reads it to show Nova's live status. (Note: `pulse=Idle` no longer stops autonomy — `DECISION: SLEEP` does.)
 
 ---
 
-## 7. Autonomous Heartbeat Loop
+## 7. Autonomous Sleep/Wake Loop
 
-Lives in `general_tools/nova_chat/server.py` inside `_queued_run()`.
+Lives in `general_tools/nova_chat/server.py` as `autonomy_daemon()` (launched at startup;
+gated on `autonomous_mode`, which now defaults **OFF**).
 
 **Flow:**
-1. Cole sends a message → server runs `_run_response_queue()`
-2. If `autonomous_mode=True` → heartbeat loop starts
-3. Every 2.5s: read `nova_status.json` → if `pulse=Idle` → stop silently
-4. Otherwise: send `[HEARTBEAT N]` to Nova in chat
-5. Nova reads `BOOTUP/HEARTBEAT.md` → checks Thoughts → takes one action
-6. Nova's `@mention` responses trigger follow-up from Claude/Gemini automatically
-7. Loop runs indefinitely until idle signal or Cole stops it
-8. Safety backstop: 500 ticks (emergency only, not expected to hit)
+1. While asleep, the daemon polls a cheap environment fingerprint every few seconds — no model cost.
+2. It wakes (spends a model tick) only when: Cole has an unanswered message, a watched path
+   changed (Master_Inbox / typing inbox / cole_intent), the scheduled interval elapsed, or an
+   observe-dwell is open. (Two-stage gate: cheap check first, model only if it passes.)
+3. On a wake it calls `_run_autonomy_tick()`: a cold context with the task queue + per-task
+   progress; Nova does ONE step and reports `TASK_PROGRESS` (or `TASK_INTENT` to create/close
+   tasks), ending with `DECISION: ENGAGE | OBSERVE | SLEEP`.
+4. The server reconciles those blocks into `priority.md` + `task_state.json` and emits clean
+   events to the Live Logs panel.
 
-**Stop signals (priority order):**
-1. `nova_status.json` `pulse="Idle"` — silent, preferred
-2. Cole toggles autonomous mode OFF
-3. Cole presses STOP
-4. Nova says `IDLE` or `AUTONOMOUS_COMPLETE` in her response (explicit fallback)
-5. 500-tick safety backstop
+**Stop / rest:** `DECISION: SLEEP` returns her to dormancy; Cole toggling Autonomous OFF or
+pressing STOP halts the loop. (The old `[HEARTBEAT N]` every-2.5s loop and the `pulse=Idle`
+stop signal are retired.)
 
 ---
 
-## 8. Nova's Thoughts System
+## 8. Tasking System
 
-Nova's persistent task memory. Survives session resets because it lives on disk.
+Server-owned. Two files, both maintained by the server — Nova does NOT hand-edit them:
 
 ```
 Tasking/
-  priority.md              ← Priority queue. Read at every heartbeat Step 1.
-  THOUGHT_TEMPLATE.md      ← Clone when starting a new Thought.
-  Master_Inbox/            ← Module responses arrive here, routed by task_id.
-  [ThoughtName]/           ← One folder per task.
-    master.md              ← Living checklist: what/why/when/priority/alternatives.
-    inbox/                 ← Routed module responses for this thought.
-    scratch/               ← Temp files, drafts.
-  Finished/
-    completed_success/
-    completed_fail/
-    cancelled/
+  priority.md         ← Human-readable queue (P0–P4) + Decision Log.
+  task_state.json     ← Per-task status (queued→in_progress→done/blocked) + step log.
+  Master_Inbox/       ← Async NCL/module responses land here (a wake trigger).
+  Finished/           ← completed_success / completed_fail / cancelled.
 ```
 
-**Heartbeat cycle (HEARTBEAT.md summary):**
-1. Read `Tasking/priority.md`
-2. Check `Tasking/Master_Inbox/` for pending responses
-3. Advance highest-priority active Thought by one action
-4. Update `priority.md` if something changed
-5. If all done: write `pulse=Idle` to `nova_status.json` → loop stops
+Nova advances work by emitting `TASK_PROGRESS` (one step) and `TASK_INTENT` (add/complete);
+the server records the step, updates status, and files finished tasks. See `BOOTUP/AGENTS.md`
+(Tasking System) and `BOOTUP/HEARTBEAT.md`.
 
 ---
 
@@ -315,10 +309,10 @@ Tasking/
 | Component | Status | Notes |
 |-----------|--------|-------|
 | nova_chat server | ✅ ACTIVE | Full WebSocket chat, streaming, sessions |
-| nova_gateway | ✅ ACTIVE | Discord, scheduler, ExLlamaV2 inference |
+| nova_gateway | ✅ ACTIVE | Discord, scheduler, llama.cpp inference |
 | PyQt6 UI (nova_qt) | ✅ ACTIVE | Chat, monitor, eyes, thoughts panes |
 | Nova.exe launcher | ✅ ACTIVE | Stub → NovaLauncher.py |
-| Autonomous heartbeat loop | ✅ ACTIVE | [HEARTBEAT N], silent idle stop via nova_status.json |
+| Autonomous sleep/wake loop | ✅ ACTIVE | `autonomy_daemon()`, DECISION-keyword stop, server-owned `task_state.json` |
 | Thoughts system | ✅ ACTIVE | priority.md, Master_Inbox, Thought folders |
 | nova_sync/watcher.py | ✅ ACTIVE | Git push + FILE_INDEX generation |
 | nova_sync/drive.py | ✅ ACTIVE | Google Drive mirror |
@@ -363,7 +357,7 @@ Before starting ANY infrastructure task on this workspace:
 - general_tools = server + UI + dev utilities (runs the infrastructure)
 - Patches to source files go to `logs/proposed/` first, then Cole approves
 - The server reads `nova_status.json` pulse to stop the heartbeat loop — don't corrupt this file
-- `[HEARTBEAT N]` in chat = the autonomous loop tick — don't confuse with user messages
+- Autonomous wake-ticks run silently inside `autonomy_daemon()` — they are NOT `[HEARTBEAT N]` chat messages
 
 ---
 

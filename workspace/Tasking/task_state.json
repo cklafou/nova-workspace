@@ -1,0 +1,20 @@
+{
+  "Clear existing tasks (Cole's standing instruction)": {
+    "title": "Clear existing tasks (Cole's standing instruction)",
+    "progress": [
+      {
+        "ts": "2026-05-23T19:22:58.527284",
+        "note": "Wiped TASK_MM_0513 master.md file to clear Moondream2 task"
+      }
+    ],
+    "created": "2026-05-23T19:22:58.527284",
+    "status": "in_progress",
+    "updated": "2026-05-23T19:22:58.527284"
+  },
+  "Clear Moondream task - delete master.md": {
+    "title": "Clear Moondream task - delete master.md",
+    "status": "queued",
+    "progress": [],
+    "created": "2026-05-23T19:31:45.734163"
+  }
+}

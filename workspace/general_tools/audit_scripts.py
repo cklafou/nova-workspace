@@ -294,10 +294,10 @@ def check_unreferenced(files: list[Path], graph: dict[str, set[str]]) -> list[di
             parts = list(rel.with_suffix("").parts)
             # e.g. ["general_tools", "nova_chat", "transcript"]
             # Build module name candidates from the FULL path first (before stripping),
-            # so that e.g. nova_memory/indexer.py generates "nova_memory.indexer".
+            # so that e.g. nova_lancedb/indexer.py generates "nova_lancedb.indexer".
             module_names = {stem}
             if len(parts) >= 2:
-                module_names.add(".".join(parts[-2:]))   # e.g. nova_memory.indexer
+                module_names.add(".".join(parts[-2:]))   # e.g. nova_lancedb.indexer
             if parts:
                 module_names.add(".".join(parts))         # full dotted path
             # Also strip only the first known path prefix and add shorter variants
@@ -346,7 +346,7 @@ def build_module_map(files: list[Path]) -> set[str]:
 
     Example output entries:
         "nova_cortex", "nova_cortex.rules", "nova_cortex.prefrontal_cortex",
-        "nova_chat", "nova_chat.server", "nova_memory.hippocampus", ...
+        "nova_chat", "nova_chat.server", "nova_lancedb.hippocampus", ...
 
     Used by check_broken_imports to validate that imported modules still exist.
     """

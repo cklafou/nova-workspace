@@ -225,7 +225,7 @@ async def status():
         "discord_ready":   discord_ready,
         "scheduler_ready": _state["scheduler_ready"],
         "discord_enabled": cfg.discord.get("enabled", False),
-        "nova_model":      "nova-exllamav2",
+        "nova_model":      "nova-qwen35-27b",
         "context_window":  cfg.inference["context_window"],
         "gateway_port":    cfg.gateway["port"],
         "nova_status_age": int(time.time() - _state["nova_status_age"])
@@ -701,7 +701,7 @@ def main():
     if args.dry:
         print("\n=== Nova Gateway — Dry Run ===")
         print(f"Workspace:    {cfg.workspace}")
-        print(f"Nova model:   nova-exllamav2 (via nova_chat @ localhost:8765)")
+        print(f"Nova model:   nova-qwen35-27b (via nova_chat @ localhost:8765)")
         print(f"Gateway port: {port}")
         print(f"Discord:      {'ENABLED' if cfg.discord.get('enabled') else 'DISABLED'}")
         print(f"Cron:         {'ENABLED' if cfg.cron.get('health_check', {}).get('enabled') else 'DISABLED'}")

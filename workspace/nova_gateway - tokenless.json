@@ -4,6 +4,19 @@
     "max_tokens": 16384,
     "timeout_s": 120
   },
+  "autonomy": {
+    "enabled": true,
+    "sleep_interval_s": 300,
+    "poll_s": 3,
+    "observe_dwell_ticks": 2,
+    "min_engage_summary": true,
+    "engage_gap_s": 8,
+    "watch_paths": [
+      "Tasking/Master_Inbox",
+      "memory/interrupt_inbox.json",
+      "memory/cole_intent.json"
+    ]
+  },
   "gateway": {
     "port": 18790,
     "host": "127.0.0.1",
@@ -18,7 +31,7 @@
   },
   "cron": {
     "health_check": {
-      "enabled": true,
+      "enabled": false,
       "interval_min": 30,
       "message": "Run Thoughts cycle: read priority.md, process Master_Inbox, advance highest-priority active thought by one step. Then update priority.md if anything changed."
     }

@@ -1481,6 +1481,21 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
    STATE
 ══════════════════════════════════════════════════ */
 let ws = null, sessions = [], activeId = null, isProcessing = false;
+// Stable display order for session tabs — never reordered by server data,
+// only extended (new sessions appended) or shrunk (deleted sessions removed).
+// This prevents tabs from jumping when switching changes last_active on the server.
+let tabOrder = [];
+
+function mergeSessionData(serverSessions) {
+  const serverMap  = new Map(serverSessions.map(s=>[s.session_id, s]));
+  // Remove sessions that no longer exist on the server
+  tabOrder = tabOrder.filter(id => serverMap.has(id));
+  // Append any brand-new sessions (preserve server order among new ones)
+  const known = new Set(tabOrder);
+  serverSessions.forEach(s=>{ if(!known.has(s.session_id)) tabOrder.push(s.session_id); });
+  // Replace sessions array with fresh server data (names/counts may have changed)
+  sessions = serverSessions;
+}
 let autonomousMode = true, pendingImages = [], streamBufs = {}, panelOpen = true, sidebarOpen = true;
 let muteState  = {Nova:false,Claude:false,Gemini:false};
 let agentOnline= {Nova:false,Claude:false,Gemini:false};
@@ -1550,7 +1565,7 @@ function handle(d) {
     case 'status':          updateParticipants(d.participants); break;
     case 'sessions_init':   onSessionsInit(d); break;
     case 'session_switched':onSessionSwitch(d); break;
-    case 'sessions_updated':sessions=d.sessions||sessions; renderTabs(); renderSidebar(); break;
+    case 'sessions_updated':if(d.sessions) mergeSessionData(d.sessions); renderTabs(); renderSidebar(); break;
     case 'history':         appendMsg(d.author, d.content, d.id, d.images, d.timestamp); break;
     case 'user_message':    appendMsg(d.author, d.content, d.id, d.images); break;
     case 'message_start':   showTyping(d.author); break;
@@ -1587,6 +1602,7 @@ function handle(d) {
     case 'terminal_output': appendTerminalLine(d.line||''); break;
     case 'model_changed':   onModelChanged(d); break;
     case 'nova_progress':   updateProgressFromNova(d); break;
+    case 'nova_event':      novaLogPush(d); break;
     case 'pong': break;
   }
 }
@@ -1595,7 +1611,7 @@ function handle(d) {
    SESSIONS
 ══════════════════════════════════════════════════ */
 function onSessionsInit(d) {
-  sessions = d.sessions||[]; activeId = d.active_id;
+  mergeSessionData(d.sessions||[]); activeId = d.active_id;
   renderTabs(); renderSidebar();
   // After history events arrive (give server 900ms), show a welcome if chat is still empty
   setTimeout(() => {
@@ -1605,6 +1621,9 @@ function onSessionsInit(d) {
   }, 900);
 }
 function onSessionSwitch(d) {
+  // Update the local sessions list if the server included an updated snapshot
+  // (always true for new_session; avoids stale-array bug where new tab never appears)
+  if(d.sessions) mergeSessionData(d.sessions);
   activeId = d.session_id;
   const s = sessions.find(x=>x.session_id===d.session_id);
   const name = s?.name||'Session';
@@ -1633,11 +1652,14 @@ function renderTabs() {
   const bar = document.getElementById('session-tabs');
   const add = bar.querySelector('.stab-add');
   [...bar.querySelectorAll('.stab')].forEach(t=>t.remove());
-  sessions.slice().reverse().forEach(s=>{
+  // Use tabOrder (stable client-side order) so switching sessions never
+  // reorders tabs — only drag-and-drop should change their positions.
+  tabOrder.forEach(id=>{
+    const s = sessions.find(x=>x.session_id===id);
+    if(!s) return;
     const t = document.createElement('div');
     t.className = 'stab'+(s.session_id===activeId?' active':'');
     t.innerHTML = `<span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name||'Session')}</span><span class="stab-x">✕</span>`;
-    // Use event listeners to avoid JSON.stringify-in-HTML-attribute fragility
     t.querySelector('.stab-x').addEventListener('click', e=>{ e.stopPropagation(); confirmDelete(s); });
     t.addEventListener('click', ()=>{ if(s.session_id!==activeId) switchSession(s.session_id); });
     t.addEventListener('dblclick', e=>{ e.stopPropagation(); openRenameModal(s); });
@@ -1794,8 +1816,18 @@ function ctxDelete()  { if(_ctxSess){confirmDelete(_ctxSess);} closeCtxMenu(); }
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); document.getElementById('m-input').style.display='none'; }
 function modalOk() {
   if(_modalMode==='delete'&&_ctxSess){
-    fetch(`/sessions/${_ctxSess.session_id}`,{method:'DELETE'}).then(()=>toast('Deleted')).catch(()=>{});
+    const delId = _ctxSess.session_id;
     _ctxSess=null;
+    // Prevent deleting the active session (server will reject it)
+    if(delId===activeId){toast('Switch to another session before deleting this one.');closeModal();return;}
+    // Optimistic: remove from local array and tabOrder, re-render immediately
+    sessions = sessions.filter(s=>s.session_id!==delId);
+    tabOrder = tabOrder.filter(id=>id!==delId);
+    renderTabs(); renderSidebar();
+    fetch(`/sessions/${delId}`,{method:'DELETE'})
+      .then(r=>r.json())
+      .then(d=>{ if(d.ok) toast('Deleted'); else { toast(d.error||'Delete failed'); /* server will re-broadcast sessions_updated with correct state */ } })
+      .catch(()=>toast('Delete failed'));
   }
   if(_modalMode==='rename'&&_ctxSess){
     const n=document.getElementById('m-input').value.trim();
@@ -3472,7 +3504,7 @@ function appendTerminalLine(line) {
    BOOT
 ══════════════════════════════════════════════════ */
 connect();
-setAutonomous(true);
+setAutonomous(false);   // default OFF; server syncs true state via autonomous_state on connect
 updateModelPill();  // initialize pill dot color and dropdown checkmarks
 
 // Restore saved pane sizes and tab order before wiring resize handles
@@ -3506,6 +3538,128 @@ queueRefresh();
 
 // Set initial panel check
 switchPanel('thoughts');
+</script>
+
+<!-- ── Nova Live Logs panel (added 2026-05-23) ────────────────────────────── -->
+<style>
+#novaLog{position:fixed;right:16px;bottom:16px;width:360px;max-width:calc(100vw - 32px);
+  background:rgba(12,12,22,.96);border:1px solid #2a2a3e;border-radius:10px;
+  font-family:Consolas,"SF Mono",Menlo,monospace;font-size:11.5px;color:#cfd2e6;
+  z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.5);overflow:hidden;}
+#novaLog .nl-head{display:flex;align-items:center;gap:8px;padding:7px 10px;
+  background:#15152a;border-bottom:1px solid #2a2a3e;cursor:default;user-select:none;}
+#novaLog .nl-title{font-weight:600;color:#9fa3c4;letter-spacing:.3px;flex:0 0 auto;}
+#novaLog .nl-dot{width:8px;height:8px;border-radius:50%;background:#4ad295;
+  box-shadow:0 0 6px #4ad295;flex:0 0 auto;}
+#novaLog .nl-spacer{flex:1 1 auto;}
+#novaLog .nl-toggle{display:flex;border:1px solid #2a2a3e;border-radius:6px;overflow:hidden;}
+#novaLog .nl-toggle button{background:transparent;border:0;color:#7d80a0;padding:2px 8px;
+  font-size:10.5px;cursor:pointer;font-family:inherit;}
+#novaLog .nl-toggle button.on{background:#2a2a45;color:#dfe2f5;}
+#novaLog .nl-min{background:transparent;border:0;color:#7d80a0;cursor:pointer;font-size:14px;
+  line-height:1;padding:0 4px;}
+#novaLog .nl-body{max-height:300px;overflow-y:auto;padding:6px 8px;}
+#novaLog.collapsed .nl-body{display:none;}
+#novaLog .nl-row{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.03);
+  white-space:pre-wrap;word-break:break-word;line-height:1.45;}
+#novaLog .nl-time{color:#5d6080;margin-right:6px;}
+#novaLog .nl-row.wake .nl-msg{color:#7fd0ff;}
+#novaLog .nl-row.engage .nl-msg{color:#ffd479;}
+#novaLog .nl-row.observe .nl-msg{color:#c9a0ff;}
+#novaLog .nl-row.sleep .nl-msg{color:#6d7090;}
+#novaLog .nl-row.task .nl-msg{color:#4ad295;}
+#novaLog .nl-row.cole_message .nl-msg{color:#ff9ec4;}
+#novaLog .nl-row.error .nl-msg{color:#ff6b6b;}
+#novaLog .nl-raw{color:#9aa;font-size:10.5px;}
+#novaLog .nl-empty{color:#5d6080;font-style:italic;padding:6px 2px;}
+</style>
+<div id="novaLog">
+  <div class="nl-head">
+    <span class="nl-dot" id="nlDot"></span>
+    <span class="nl-title">Nova Live Logs</span>
+    <span class="nl-spacer"></span>
+    <span class="nl-toggle">
+      <button id="nlClean" class="on">Clean</button>
+      <button id="nlRaw">Raw</button>
+    </span>
+    <button class="nl-min" id="nlMin" title="Collapse">–</button>
+  </div>
+  <div class="nl-body" id="nlBody">
+    <div class="nl-empty">Waiting for Nova activity…</div>
+  </div>
+</div>
+<script>
+(function(){
+  const S = {mode:'clean', entries:[], raw:null, started:false};
+  const body  = document.getElementById('nlBody');
+  const elClean = document.getElementById('nlClean');
+  const elRaw   = document.getElementById('nlRaw');
+  const elMin   = document.getElementById('nlMin');
+  const panel   = document.getElementById('novaLog');
+  const GLYPH = {wake:'▲',engage:'⚙',observe:'◉',sleep:'▽',task:'✓',
+                 cole_message:'✉',error:'✕',info:'•'};
+
+  function fmtTime(iso){
+    try{const d=iso?new Date(iso):new Date();
+      return d.toLocaleTimeString([], {hour12:false});}catch(_){return '';}
+  }
+  function renderClean(){
+    if(!S.entries.length){body.innerHTML='<div class="nl-empty">Waiting for Nova activity…</div>';return;}
+    body.innerHTML='';
+    for(const e of S.entries.slice(-250)){
+      const row=document.createElement('div');
+      row.className='nl-row '+(e.event||'info');
+      const g=GLYPH[e.event]||GLYPH.info;
+      row.innerHTML='<span class="nl-time">'+fmtTime(e.ts)+'</span>'+
+        '<span class="nl-msg">'+g+' '+escapeHtml(e.text||'')+'</span>';
+      body.appendChild(row);
+    }
+    body.scrollTop=body.scrollHeight;
+  }
+  function escapeHtml(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+  // Called from the WS handler on {type:'nova_event'}
+  window.novaLogPush=function(d){
+    S.entries.push(d);
+    if(S.entries.length>400) S.entries.splice(0,S.entries.length-400);
+    if(S.mode==='clean') renderClean();
+  };
+
+  function startRaw(){
+    body.innerHTML='<div class="nl-empty">Connecting to raw log stream…</div>';
+    try{
+      S.raw=new EventSource('/api/logs/stream?file=latest');
+      let first=true;
+      S.raw.onmessage=ev=>{
+        if(!ev.data) return;          // heartbeat
+        if(first){body.innerHTML='';first=false;}
+        const row=document.createElement('div');
+        row.className='nl-row';
+        row.innerHTML='<span class="nl-raw">'+escapeHtml(ev.data)+'</span>';
+        body.appendChild(row);
+        while(body.childNodes.length>500) body.removeChild(body.firstChild);
+        body.scrollTop=body.scrollHeight;
+      };
+      S.raw.onerror=()=>{};
+    }catch(e){body.innerHTML='<div class="nl-empty">Raw stream unavailable.</div>';}
+  }
+  function stopRaw(){ if(S.raw){try{S.raw.close();}catch(_){}}S.raw=null; }
+
+  elClean.addEventListener('click',()=>{
+    if(S.mode==='clean')return;
+    S.mode='clean';elClean.classList.add('on');elRaw.classList.remove('on');
+    stopRaw();renderClean();
+  });
+  elRaw.addEventListener('click',()=>{
+    if(S.mode==='raw')return;
+    S.mode='raw';elRaw.classList.add('on');elClean.classList.remove('on');
+    startRaw();
+  });
+  elMin.addEventListener('click',()=>{
+    panel.classList.toggle('collapsed');
+    elMin.textContent=panel.classList.contains('collapsed')?'+':'–';
+  });
+})();
 </script>
 </body>
 </html>

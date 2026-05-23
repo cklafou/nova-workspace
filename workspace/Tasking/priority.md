@@ -1,5 +1,5 @@
 # Nova Priority Queue
-_Last updated: 2026-03-28_
+_Last updated: 2026-05-13_
 _Managed autonomously by Nova. Updated on: task created, task completed, module response received, deadline changed, or Cole speaks._
 
 ---
@@ -47,9 +47,13 @@ _None active._
 ## PRIORITY 4 — LOW (background / when idle)
 _(Tasks to work on only when nothing higher is pending)_
 
-- **TASK_BG_0512**: Run patch_depth_server.ps1 from workspace root to enable depth slider in nova_qt. Verify server.py and nova.py were patched correctly.
-  - Created: 2026-03-28 (autonomous cycle)
-  - Status: pending
+- **Clear Moondream task - delete master.md** — Cole explicitly said this was supposed to be deleted, not executed. Remove from active tasks and clear Tasking/Finished/cancelled/Moondream2/master.md if it exists.
+- **TASK_AUDIT_0513**: Review memory/audit_queue.json for pending rename/delete events from commit be877011. Run restructure.py or manual cleanup as needed.
+  - Created: 2026-05-13 (autonomous cycle)
+  - Status: active
+
+  - Created: 2026-05-23 (Cole request)
+  - Status: queued
 
 ---
 
@@ -68,7 +72,10 @@ _None active._
 ---
 
 ## DECISION LOG
+- 2026-05-23 — Completed: **TASK_MM_0513**: Download moondream2 vision model using download_models.py script to models/ directory.
+- 2026-05-13 — Completed: **TASK_BG_0512**: Run patch_depth_server.ps1 from workspace root to enable depth slider in nova_qt. Verify server.py and nova.py were patched correctly.
 _Append-only. Newest entries at top. Record every significant priority change here._
 
+- 2026-05-13 — Autonomous cycle: Added TASK_AUDIT_0513 (audit_queue.json review) to PRIORITY 4 queue, immediately started execution.
 - 2026-03-28 — Autonomous cycle: Added TASK_BG_0512 (patch_depth_server.ps1) to PRIORITY 4 queue.
 - 2026-03-28 — Priority queue initialized. Thoughts system created.

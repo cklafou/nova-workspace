@@ -13,3 +13,13 @@ __pycache__/
 *.pyc
 .env
 nova_drive_token.json
+
+# Secrets — runtime config holds the Discord token (keep only the tokenless template tracked)
+nova_gateway.json
+
+# Regenerable artifacts / launcher junk
+.nova_app_profile*/
+build_exe/
+
+# Cleanup archive (relocated clutter — safe to delete)
+_admin/_archive_2026-05-23/

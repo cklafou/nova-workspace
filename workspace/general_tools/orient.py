@@ -112,7 +112,7 @@ def build_state_table(nova_body_scan: dict) -> str:
     """
     rows = [
         ("nova_chat server",            "✅ ACTIVE",   "Full WebSocket chat, streaming, sessions"),
-        ("nova_gateway",                "✅ ACTIVE",   "Discord, scheduler, ExLlamaV2 inference"),
+        ("nova_gateway",                "✅ ACTIVE",   "Discord, scheduler, llama.cpp inference"),
         ("PyQt6 UI (nova_qt)",          "✅ ACTIVE",   "Chat, monitor, eyes, thoughts panes"),
         ("Nova.exe launcher",           "✅ ACTIVE",   "Stub → NovaLauncher.py"),
         ("Autonomous heartbeat loop",   "✅ ACTIVE",   "[HEARTBEAT N], silent idle stop via nova_status.json"),

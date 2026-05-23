@@ -20,7 +20,7 @@ Tools intentionally NOT supported (dropped from OpenClaw):
   process        — not needed in our loop model
   memory_search  — use journal.py instead
 
-Tool call format (what ExLlamaV2 / nova_chat sends back):
+Tool call format (what llama.cpp / nova_chat sends back):
   The LLM produces tool calls in OpenAI function-calling format:
   {
     "name": "exec",
@@ -289,7 +289,7 @@ def _run_subprocess(command: str, cwd: str, timeout: int) -> str:
         return f"{_ERROR_PREFIX}subprocess error: {e}"
 
 
-# ── Parse tool calls from nova_chat/ExLlamaV2 response ───────────────────────
+# ── Parse tool calls from nova_chat/llama.cpp response ───────────────────────
 
 def parse_tool_calls(response: dict) -> list[dict]:
     """

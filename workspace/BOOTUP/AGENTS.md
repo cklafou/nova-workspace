@@ -78,86 +78,32 @@ This is not optional. `nova_status.json` is how Cole and the nova_chat UI know y
 
 ---
 
-## Thoughts System — Persistent Task Memory
+## Tasking System — How your tasks are tracked
 
-Your long-term task memory lives in `Tasking/`. Every multi-step task or ongoing piece of work gets a Thought. Thoughts survive session resets because they live on disk, not in your context window.
+Your tasks live in two places, both managed for you:
 
-### Directory layout
+- `Tasking/priority.md` — the human-readable queue, grouped by priority (P0–P4), with a
+  Decision Log at the bottom. This is what you and Cole read.
+- `Tasking/task_state.json` — the machine state the **server** maintains: each task's
+  status (queued → in_progress → done/blocked) and a timestamped log of every step you've
+  taken on it. This is your memory across wake ticks — you don't have to remember; the
+  server shows you your prior steps each time.
 
-```
-Tasking/
-  priority.md              ← Your priority queue. Read it at the start of every heartbeat.
-  THOUGHT_TEMPLATE.md      ← Clone this when starting a new Thought.
-  Master_Inbox/            ← All module responses land here first.
-  [ThoughtName]/           ← One folder per active Thought (you create these).
-    master.md              ← The living checklist: what/why/when/priority/alternatives.
-    inbox/                 ← Module responses routed here from Master_Inbox.
-    scratch/               ← Temp files, drafts, unvalidated tool output.
-  Finished/
-    completed_success/     ← Thought achieved its goal. Move master.md here.
-    completed_fail/        ← Thought failed after all alternatives exhausted.
-    cancelled/             ← Thought cancelled by Cole or superseded.
-```
+**You do not hand-maintain these.** You no longer edit `priority.md` directly, route
+`Master_Inbox` files into per-task folders, or keep per-task `master.md` ledgers. The
+server does all of that, driven by two blocks you emit:
 
-### When to create a Thought
+- To CREATE or COMPLETE tasks (e.g. when Cole asks for something), emit a **TASK_INTENT** block:
+  `TASK_INTENT: {"add":[{"title":"SHORT_ID: description","priority":4,"notes":"..."}],"complete":["<exact title>"]}`
+- To ADVANCE a task by one step, emit a **TASK_PROGRESS** block:
+  `TASK_PROGRESS: {"task":"<exact title>","did":"<what you did this step>","status":"in_progress|done|blocked","note":"..."}`
 
-Create a Thought whenever a task:
-- Will take more than one step, OR
-- Will require waiting for a module response, OR
-- Cole has asked you to track or manage it
+The server appends your step to the task's progress log, updates its status, and files
+completed tasks into `Tasking/Finished/`. Use a short ID-style title (underscores, no
+spaces), e.g. `TASK_AAPL_0523`.
 
-For quick one-shot questions or single exec calls: no Thought needed.
-
-### How to create a Thought
-
-1. Create the folder: `[READ: Tasking/THOUGHT_TEMPLATE.md]` then `[WRITE: Tasking/ThoughtName/master.md]` with the template filled in.
-2. Create `Tasking/ThoughtName/inbox/` and `Tasking/ThoughtName/scratch/` subdirectories via exec.
-3. Add the task to `Tasking/priority.md` at the correct priority level.
-4. Append to the Decision Log: "Thought created."
-
-**Choose a short, descriptive folder name.** Use underscores, no spaces. Example: `AAPL_Trade_Decision_0328`.
-
-### Task IDs — critical for inbox routing
-
-Every Thought has a Task ID (set in master.md). When you fire a module call, include the Task ID in the completion criteria so the response can be routed back correctly:
-
-```
-((task_id:AAPL_Trade_Decision_0328; recommend buy/hold/sell))
-```
-
-Modules must echo `[AAPL_Trade_Decision_0328]` at the start of their response. The inbox router uses this tag to drop the response into the right `inbox/` folder.
-
-### Processing Master_Inbox
-
-On every heartbeat (see Heartbeat section), check `Master_Inbox/`:
-
-```
-exec: python -c "import os; items = [f for f in os.listdir('Tasking/Master_Inbox') if f.endswith('.md')]; print('\n'.join(items) if items else 'empty')"
-```
-
-For each item:
-1. `[READ: Tasking/Master_Inbox/filename.md]`
-2. Find the `[TASK_ID]` header at the top.
-3. Move to the correct thought: `exec: python -c "import shutil; shutil.move('Tasking/Master_Inbox/filename.md', 'Tasking/ThoughtName/inbox/filename.md')"`
-4. Update that thought's `master.md` — mark the module response as received, update the checklist.
-
-### Closing a Thought
-
-When a Thought is complete, move the entire folder:
-
-```
-exec: python -c "import shutil; shutil.move('Tasking/ThoughtName', 'Tasking/Finished/completed_success/ThoughtName')"
-```
-
-Then remove it from `priority.md` and append a final Decision Log entry: "Thought complete. Moved to Finished/completed_success/."
-
-Use `completed_fail/` if all alternatives were exhausted. Use `cancelled/` if Cole cancelled it.
-
-### priority.md rules
-
-- Read it at the start of every heartbeat to orient yourself.
-- Update it (via `[WRITE:]` to a proposed copy, or directly if no other option) only when: a Thought is created, a Thought closes, a module response changes the plan significantly, or a deadline changes.
-- The Decision Log at the bottom is append-only. Never edit past entries. Only prepend new ones.
+`Tasking/Master_Inbox/` still receives asynchronous module responses (from NCL calls like
+`@eyes` / `@mentor`); a new item landing there is one of the things that can wake you.
 
 ---
 
@@ -184,35 +130,31 @@ Memory doesn't survive session restarts. Files do. When something matters, write
 
 ---
 
-## Autonomous Mode — Heartbeat Loop
+## Autonomous Mode — Sleep/Wake Loop
 
-When Autonomous Mode is ON, the system sends you a `[HEARTBEAT N]` message after every response. You do NOT need to wait for Cole. There is no tick ceiling — the loop runs until you signal you are done.
+When Autonomous Mode is ON, the server runs you on a **sleep/wake loop**, not a constant
+tick. You are asleep by default and woken only on real cause:
 
-**On each heartbeat:**
-1. Check your three environment sources (priority.md, Master_Inbox, nova_status.json).
-2. Do ONE concrete action.
-3. State what you did in one sentence, then stop. The next heartbeat arrives in ~2.5 seconds.
+- Cole sends a message (always wakes you — Priority 0),
+- the environment changes (a new `Master_Inbox` item, the typing inbox, or `cole_intent`),
+- the scheduled interval elapses (a periodic self-check), or
+- an observe-dwell you opened is still active.
 
-**Preferred stop — silent completion:**
-When you have nothing left to do, write your status to Idle:
-```
-exec: python -c "
-import sys
-sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools')
-from nova_cortex.nova_status import update
-update(pulse='Idle', summary='Describe what you finished')
-"
-```
-The server reads `nova_status.json` before each tick. When it sees `pulse = "Idle"` it stops the loop silently — no announcement needed, no clutter in chat.
+Each wake is a single fresh tick (no chat history — your memory is `task_state.json`, which
+the server feeds back to you). On each wake do ONE concrete step, report it (a
+`TASK_PROGRESS` block, or `TASK_INTENT` when creating/closing tasks), and end with one
+decision keyword:
 
-**Explicit stop (fallback):** Say `IDLE` or `AUTONOMOUS_COMPLETE` anywhere in your response if you cannot run the status update (e.g. nova_status module unavailable).
+- `DECISION: ENGAGE` — you did real work and there may be more; you'll be woken again shortly.
+- `DECISION: OBSERVE` — something needs watching but no action yet; stay alert a while.
+- `DECISION: SLEEP` — nothing useful to do; go dormant until the next cause.
 
-**The loop also stops if:**
-- Cole toggles Autonomous Mode OFF
-- Cole presses STOP
-- Emergency backstop: 500 ticks (never expected to hit)
+There is no special status write needed to stop — `DECISION: SLEEP` is the signal, and
+going to sleep is normal and correct, not a failure. The loop also stops when Cole toggles
+Autonomous Mode OFF or presses STOP. Autonomous Mode now starts **OFF** on launch, so Cole
+can talk with you before you begin running on your own.
 
-**Do not try to do everything in one tick.** One action, one sentence, stop.
+See `HEARTBEAT.md` for the full wake-tick procedure.
 
 ---
 
@@ -395,7 +337,7 @@ When you receive a heartbeat poll -- regardless of what the scheduler message sa
 2. Read `HEARTBEAT.md` -- this is the ONLY authority on what to do.
 3. Follow the instructions in HEARTBEAT.md exactly.
 
-HEARTBEAT.md now contains the Thoughts cycle instructions. Follow them on every heartbeat.
+HEARTBEAT.md describes the sleep/wake tick procedure (one step, report it, decide). Follow it on every wake.
 
 **CRITICAL: `session_status` was an OpenClaw agent tool. OpenClaw is retired. Do not call it via exec — it will always fail with CommandNotFoundException in a shell context.**
 

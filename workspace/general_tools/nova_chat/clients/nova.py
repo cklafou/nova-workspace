@@ -160,6 +160,29 @@ async def _fetch_llama_streaming(
                 body_bytes = await resp.aread()
                 body_str   = body_bytes.decode("utf-8", errors="replace")[:600]
                 print(f"[nova] llama.cpp {resp.status_code} for {LLAMA_CPP_URL}: {body_str}")
+                # Capture the offending request so 4xx failures can be diagnosed later.
+                try:
+                    from pathlib import Path as _P
+                    import datetime as _dt
+                    _ws = _P(__file__).resolve().parents[3]
+                    _dbg = _ws / "logs" / "llama" / f"bad_requests-{_dt.date.today():%Y-%m-%d}.jsonl"
+                    _dbg.parent.mkdir(parents=True, exist_ok=True)
+                    _rec = {
+                        "ts":           _dt.datetime.now().isoformat(),
+                        "status":       resp.status_code,
+                        "llama_body":   body_str,
+                        "n_messages":   len(messages),
+                        "total_chars":  sum(len(str(m.get("content", ""))) for m in messages),
+                        "max_tokens":   max_tokens,
+                        "temperature":  temperature,
+                        "top_p":        top_p,
+                        "payload":      payload,
+                    }
+                    with open(_dbg, "a", encoding="utf-8") as _f:
+                        _f.write(json.dumps(_rec, ensure_ascii=False, default=str) + "\n")
+                    print(f"[nova] bad-request payload captured -> {_dbg}")
+                except Exception as _e:
+                    print(f"[nova] failed to capture bad-request payload: {_e}")
             resp.raise_for_status()
             async for line in resp.aiter_lines():
                 if not line.strip() or not line.startswith("data: "):

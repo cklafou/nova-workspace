@@ -160,7 +160,7 @@ _nova_msg_times: list[float] = []   # rolling timestamps of Nova inject calls
 nova_throttled:  bool = False       # True = Nova is currently muted by failsafe
 
 # ── Autonomous mode + inference params ────────────────────────────────────────
-autonomous_mode:    bool  = True    # ON by default — Nova is always aware; disable only during patches
+autonomous_mode:    bool  = False   # OFF by default — Cole enables Autonomous Mode in the UI when ready to let Nova run
 _nova_temperature:  float = 0.7    # adjustable via set_params WS message
 _nova_top_p:        float = 0.9
 
@@ -473,6 +473,8 @@ async def startup_event():
     asyncio.ensure_future(_bg_transcript_flush())
     asyncio.ensure_future(_bg_llama_autostart())
     asyncio.ensure_future(_bg_sys_metrics())
+    # Persistent sleep/wake autonomy daemon (replaces per-message heartbeat loop)
+    asyncio.ensure_future(autonomy_daemon())
 
 
 @app.get("/")
@@ -980,7 +982,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         await broadcast({"type": "think_token", "author": ai_name, "token": token, "id": msg_id})
 
     async def on_progress(chars: int, think_chars: int, elapsed: float, partial_content: str):
-        """Called every ~2s from nova.py during ExLlamaV2 generation.
+        """Called every ~2s from nova.py during llama.cpp generation.
         Broadcasts live stats to the Thoughts pane and scans for early activity."""
         total   = chars + think_chars
         rate    = round(chars / elapsed, 1) if elapsed > 0 else 0
@@ -1836,6 +1838,560 @@ def _complete_task(raw_line: str, title: str, action: str = "completed") -> bool
     return True
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# AUTONOMY: sleep/wake daemon + faithful-executor queue persistence
+# (added 2026-05-23 — replaces the per-message heartbeat loop in _queued_run)
+# ──────────────────────────────────────────────────────────────────────────────
+import time as _time
+
+_COLE_INTENT_FILE = Path(WORKSPACE_ROOT) / "memory" / "cole_intent.json"
+_autonomy_state = {"observe_until": 0.0, "last_scheduled": 0.0, "last_fp": None}
+
+
+def _autonomy_cfg() -> dict:
+    """Read the autonomy block from nova_gateway.json with safe defaults."""
+    defaults = {
+        "enabled": True, "sleep_interval_s": 300, "poll_s": 3,
+        "observe_dwell_ticks": 2, "min_engage_summary": True, "engage_gap_s": 8,
+        "watch_paths": ["Tasking/priority.md", "Tasking/Master_Inbox",
+                        "memory/interrupt_inbox.json", "memory/cole_intent.json"],
+    }
+    try:
+        cfg_path = Path(WORKSPACE_ROOT) / "nova_gateway.json"
+        data = json.loads(cfg_path.read_text(encoding="utf-8"))
+        block = data.get("autonomy", {}) or {}
+        defaults.update({k: v for k, v in block.items() if v is not None})
+    except Exception:
+        pass
+    return defaults
+
+
+def _env_fingerprint(cfg: dict) -> tuple:
+    """A cheap, comparable snapshot of Nova's environment. No model calls.
+    Changes when any watched file/dir is touched."""
+    parts = []
+    for rel in cfg["watch_paths"]:
+        p = Path(WORKSPACE_ROOT) / rel
+        try:
+            if p.is_dir():
+                entries = sorted(q.name for q in p.iterdir())
+                parts.append((rel, len(entries), int(p.stat().st_mtime)))
+            elif p.exists():
+                st = p.stat()
+                parts.append((rel, st.st_size, int(st.st_mtime)))
+            else:
+                parts.append((rel, -1, 0))
+        except Exception:
+            parts.append((rel, -2, 0))
+    return tuple(parts)
+
+
+def _priority_hash() -> str:
+    """Content hash of priority.md — detects whether a tick changed the queue."""
+    try:
+        import hashlib
+        return hashlib.sha1(_QUEUE_FILE.read_bytes()).hexdigest()
+    except Exception:
+        return ""
+
+
+def _mirror_cole_intent(text: str) -> None:
+    """Persist Cole's last non-trivial instruction so it survives the cold
+    context of a heartbeat tick. Written by the WS receive path."""
+    try:
+        _COLE_INTENT_FILE.parent.mkdir(parents=True, exist_ok=True)
+        payload = {"text": text, "ts": datetime.now().isoformat(), "consumed": False}
+        tmp = _COLE_INTENT_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        import os as _os
+        _os.replace(tmp, _COLE_INTENT_FILE)
+    except Exception as _e:
+        print(f"[autonomy] cole_intent write failed: {_e}")
+
+
+def _parse_task_intent(reply: str):
+    """Extract the first balanced TASK_INTENT JSON object from Nova's reply."""
+    if not reply or "TASK_INTENT:" not in reply:
+        return None
+    after = reply.split("TASK_INTENT:", 1)[1].strip()
+    depth, start = 0, None
+    for i, ch in enumerate(after):
+        if ch == "{":
+            if start is None:
+                start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and start is not None:
+                try:
+                    return json.loads(after[start:i + 1])
+                except Exception:
+                    return None
+    return None
+
+
+def _reconcile_queue(intent: dict) -> list:
+    """Apply Nova's stated intent to priority.md deterministically.
+    Returns a list of human-readable actions taken (for logging)."""
+    actions = []
+    try:
+        existing = {t["title"].lower() for t in _parse_queue()}
+    except Exception:
+        existing = set()
+    for task in (intent.get("add") or []):
+        title = (task.get("title") or "").strip()
+        if not title or title.lower() in existing:
+            continue
+        try:
+            pr = int(task.get("priority", 4))
+        except Exception:
+            pr = 4
+        if _write_task(title, pr, task.get("notes", "")):
+            actions.append(f"added P{pr}: {title}")
+            existing.add(title.lower())
+            _ensure_task_state(title, "queued")
+    for title in (intent.get("complete") or []):
+        for t in _parse_queue():
+            if t["title"].lower() == str(title).strip().lower():
+                if _complete_task(t["raw"], t["title"], "completed"):
+                    actions.append(f"completed: {t['title']}")
+                    _drop_task_state(t["title"])
+                break
+    return actions
+
+
+def _journal_correction(note: str) -> None:
+    """Log an autonomy self-check note to JOURNAL.md for self-improvement."""
+    try:
+        jp = Path(WORKSPACE_ROOT) / "memory" / "JOURNAL.md"
+        line = f"\n- {datetime.now().isoformat()} [autonomy/self-check] {note}\n"
+        with open(jp, "a", encoding="utf-8") as f:
+            f.write(line)
+    except Exception:
+        pass
+
+
+async def emit_event(event: str, text: str, level: str = "info", **extra) -> None:
+    """Broadcast a clean, human-readable lifecycle event to the UI (type
+    'nova_event') and append it to a structured daily event log. This is the
+    feed behind the chat window's 'Live Logs' panel (clean view)."""
+    payload = {"type": "nova_event", "event": event, "text": text,
+               "level": level, "ts": datetime.now().isoformat()}
+    if extra:
+        payload.update(extra)
+    try:
+        await broadcast(payload)
+    except Exception:
+        pass
+    try:
+        ev_dir = Path(WORKSPACE_ROOT) / "logs" / "events"
+        ev_dir.mkdir(parents=True, exist_ok=True)
+        with open(ev_dir / f"events-{datetime.now().strftime('%Y-%m-%d')}.jsonl",
+                  "a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
+def _has_unread_cole() -> bool:
+    """True if Cole's last message comes after Nova's last message."""
+    try:
+        msgs = session_mgr.active.messages
+    except Exception:
+        return False
+    li_c = next((i for i in range(len(msgs) - 1, -1, -1)
+                 if msgs[i]["author"] == "Cole"), None)
+    li_n = next((i for i in range(len(msgs) - 1, -1, -1)
+                 if msgs[i]["author"] == "Nova"), None)
+    return li_c is not None and (li_n is None or li_n < li_c)
+
+
+def _cole_is_typing() -> bool:
+    """Read interrupt_inbox.json; True if Cole is typing or typed within 30s."""
+    p = Path(WORKSPACE_ROOT) / "memory" / "interrupt_inbox.json"
+    if not p.exists():
+        return False
+    try:
+        ib = json.loads(p.read_text(encoding="utf-8"))
+        lt = ib.get("last_typed_at", 0)
+        return bool(ib.get("is_typing")) or (lt and (_time.time() - lt) < 30)
+    except Exception:
+        return False
+
+
+# ── Task state: server-owned status + running progress log ──────────────────--
+# priority.md stays the human-readable queue; this sidecar holds the machine
+# state (status + a timestamped log of what Nova did each tick) so she has
+# memory across cold ticks and the SERVER keeps status honest.
+_TASK_STATE_FILE = Path(WORKSPACE_ROOT) / "Tasking" / "task_state.json"
+
+
+def _load_task_state() -> dict:
+    try:
+        if _TASK_STATE_FILE.exists():
+            return json.loads(_TASK_STATE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return {}
+
+
+def _save_task_state(state: dict) -> None:
+    try:
+        _TASK_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = _TASK_STATE_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
+        import os as _os
+        _os.replace(tmp, _TASK_STATE_FILE)
+    except Exception as e:
+        print(f"[autonomy] task_state write failed: {e}")
+
+
+def _task_key(title: str) -> str:
+    """Stable key for a task: a TASK_xxx id token if present, else the title."""
+    import re as _re
+    m = _re.search(r"TASK_[A-Za-z0-9_]+", title or "")
+    return m.group(0) if m else (title or "").strip()[:80]
+
+
+def _ensure_task_state(title: str, status: str = "queued") -> None:
+    state = _load_task_state()
+    k = _task_key(title)
+    if k not in state:
+        state[k] = {"title": title, "status": status,
+                    "progress": [], "created": datetime.now().isoformat()}
+        _save_task_state(state)
+
+
+def _match_task_title(reported: str):
+    """Match Nova's reported task name to a real queued task dict, or None."""
+    reported = (reported or "").strip()
+    if not reported:
+        return None
+    tasks = _parse_queue()
+    rk = _task_key(reported).lower()
+    for t in tasks:                       # 1) by TASK_xxx id
+        if _task_key(t["title"]).lower() == rk:
+            return t
+    rl = reported.lower()                 # 2) substring either direction
+    for t in tasks:
+        tl = t["title"].lower()
+        if rl in tl or tl in rl:
+            return t
+    return None
+
+
+def _record_progress(title: str, did: str, status: str = "in_progress") -> None:
+    state = _load_task_state()
+    k = _task_key(title)
+    entry = state.get(k) or {"title": title, "progress": [],
+                             "created": datetime.now().isoformat()}
+    if did:
+        entry.setdefault("progress", []).append(
+            {"ts": datetime.now().isoformat(), "note": did})
+        entry["progress"] = entry["progress"][-20:]
+    if status:
+        entry["status"] = status
+    entry["updated"] = datetime.now().isoformat()
+    state[k] = entry
+    _save_task_state(state)
+
+
+def _drop_task_state(title: str) -> None:
+    state = _load_task_state()
+    k = _task_key(title)
+    if k in state:
+        del state[k]
+        _save_task_state(state)
+
+
+def _parse_task_progress(reply: str):
+    """Extract the first balanced TASK_PROGRESS JSON object from Nova's reply."""
+    if not reply or "TASK_PROGRESS:" not in reply:
+        return None
+    after = reply.split("TASK_PROGRESS:", 1)[1].strip()
+    depth, start = 0, None
+    for i, ch in enumerate(after):
+        if ch == "{":
+            if start is None:
+                start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and start is not None:
+                try:
+                    return json.loads(after[start:i + 1])
+                except Exception:
+                    return None
+    return None
+
+
+def _task_queue_view(max_notes: int = 3) -> str:
+    """Queue view with status + recent progress notes, for the tick prompt."""
+    tasks = _parse_queue()
+    if not tasks:
+        return "  (queue empty)"
+    state = _load_task_state()
+    lines = []
+    for t in tasks:
+        st = state.get(_task_key(t["title"]), {})
+        lines.append(f"• [{st.get('status', 'queued')}] P{t['priority']}: {t['title']}")
+        prog = st.get("progress", [])[-max_notes:]
+        if prog:
+            for p in prog:
+                lines.append(f"     ↳ {p.get('note', '')}")
+        else:
+            lines.append("     ↳ (not started)")
+    return "\n".join(lines)
+
+
+async def _run_autonomy_tick(cole_pending: bool, reason: str) -> str:
+    """One model wake-tick. Builds the ephemeral context, runs Nova, advances
+    task progress (server owns status), logs, and returns her decision keyword."""
+    _auto_log_path = (Path(WORKSPACE_ROOT) / "logs" / "autonomy_runs" /
+                      f"{datetime.now().strftime('%Y-%m-%d')}_ticks.jsonl")
+    _auto_log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Working memory: what did Cole last ask? (read, never forced)
+    cole_note = ""
+    try:
+        if _COLE_INTENT_FILE.exists():
+            ci = json.loads(_COLE_INTENT_FILE.read_text(encoding="utf-8"))
+            if ci.get("text") and not ci.get("consumed"):
+                cole_note = ci["text"]
+    except Exception:
+        pass
+
+    if cole_pending:
+        try:
+            msgs = session_mgr.active.messages
+            last_cole = next((m["content"] for m in reversed(msgs)
+                              if m["author"] == "Cole"), "")
+        except Exception:
+            last_cole = cole_note
+        tick_content = (
+            f"[WAKE - Cole] Cole sent a message that needs a response:\n"
+            f"Cole: {last_cole}\n\n"
+            f"Respond to Cole now. If he asked you to DO something, decide the task(s) "
+            f"and emit a TASK_INTENT block so they are recorded - the server will "
+            f"guarantee they land in Tasking/priority.md.\n"
+            f'Format: TASK_INTENT: {{"add":[{{"title":"...","priority":4,"notes":"..."}}]}}'
+        )
+    else:
+        try:
+            queue_view = _task_queue_view()
+        except Exception:
+            queue_view = "  (queue unavailable)"
+        has_tasks = "(queue empty)" not in queue_view and "(queue unavailable)" not in queue_view
+        if has_tasks:
+            tick_content = (
+                f"[WAKE - {reason}] You woke from sleep. Cole has already been "
+                f"answered - do NOT re-answer him.\n\n"
+                f"YOUR TASKS — status and what you've already done:\n{queue_view}\n"
+                + (f"\nCole's last standing instruction: {cole_note}\n" if cole_note else "")
+                + "\nDo ONE concrete next step on ONE task right now using your tools "
+                "(read a file, run code, write a file). A SINGLE step — not the whole "
+                "task. Build on the progress shown above. You may pick whichever task "
+                "makes most sense and may switch tasks between wakes.\n\n"
+                "Then report what you just did in this exact block (one line):\n"
+                'TASK_PROGRESS: {"task":"<exact task title>","did":"<what you just '
+                'did this step>","status":"in_progress|done|blocked","note":"<what is '
+                'left, or why blocked>"}\n\n'
+                "Rules:\n"
+                "- Actually perform the step with a tool BEFORE reporting it. "
+                "Describing is NOT doing.\n"
+                "- Use status \"done\" only when the ENTIRE task is finished.\n"
+                "- End your reply with DECISION: ENGAGE.\n"
+                "- Only if you truly cannot act on anything: reply DECISION: SLEEP "
+                "with no TASK_PROGRESS block."
+            )
+        else:
+            tick_content = (
+                f"[WAKE - {reason}] You woke from sleep. Cole has already been "
+                f"answered - do NOT re-answer him. Your task queue is empty.\n"
+                + (f"\nCole's last standing instruction: {cole_note}\n" if cole_note else "")
+                + "\nIf there is a genuinely useful background task worth doing (tidy "
+                "notes, a quick health check, a small self-improvement), create it now "
+                "with a TASK_INTENT block and end with DECISION: ENGAGE. Otherwise reply "
+                "DECISION: SLEEP.\n"
+                'Format: TASK_INTENT: {"add":[{"title":"...","priority":4,"notes":"..."}]}'
+            )
+
+    _hb_ctx = HeartbeatContext(tick_content)
+    _before = _priority_hash()
+
+    try:
+        with open(_auto_log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"tick_reason": reason, "cole_pending": cole_pending,
+                                "timestamp": datetime.now().isoformat(),
+                                "type": "tick", "content": tick_content},
+                               ensure_ascii=False) + "\n")
+    except Exception as e:
+        print(f"[autonomy] tick log failed: {e}")
+
+    reply = await run_ai_response("Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8],
+                                  tick_content, hb_ctx=_hb_ctx,
+                                  cole_pending=cole_pending,
+                                  auto_log_path=_auto_log_path) or ""
+
+    # Log Nova's tick RESPONSE (only prompts were saved before — this is what lets
+    # us see why she sleeps vs. acts).
+    try:
+        with open(_auto_log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"type": "response", "tick_reason": reason,
+                                "cole_pending": cole_pending,
+                                "timestamp": datetime.now().isoformat(),
+                                "text": reply}, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+    # Faithful executor: apply her stated intent; backfill if her own write no-op'd.
+    intent = _parse_task_intent(reply)
+    if intent:
+        actions = _reconcile_queue(intent)
+        if actions:
+            print(f"[autonomy] queue reconciled from TASK_INTENT: {actions}")
+            await emit_event("task", "Queue updated: " + "; ".join(actions))
+            if _priority_hash() != _before:
+                _journal_correction(f"reconciled queue from TASK_INTENT: {actions}")
+
+    # Advance task progress — the server owns status + the running progress log,
+    # so a task reliably moves queued -> in_progress -> done with memory of every
+    # step Nova took. This is what makes "see task -> sleep" become real progress.
+    prog = _parse_task_progress(reply)
+    if prog:
+        matched = _match_task_title(prog.get("task", ""))
+        title = matched["title"] if matched else (prog.get("task") or "").strip()
+        did = (prog.get("did") or "").strip()
+        status = (prog.get("status") or "in_progress").strip().lower()
+        if status not in ("in_progress", "done", "blocked"):
+            status = "in_progress"
+        if title:
+            _record_progress(title, did, status)
+            await emit_event("task", f"{_task_key(title)}: {did or status}")
+            if status == "done" and matched:
+                _complete_task(matched["raw"], matched["title"], "completed")
+                _drop_task_state(matched["title"])
+                await emit_event("task", f"Completed: {_task_key(matched['title'])}")
+
+    # Mark Cole's instruction consumed once she has engaged with it.
+    if cole_note:
+        try:
+            ci = json.loads(_COLE_INTENT_FILE.read_text(encoding="utf-8"))
+            ci["consumed"] = True
+            _COLE_INTENT_FILE.write_text(json.dumps(ci, indent=2), encoding="utf-8")
+        except Exception:
+            pass
+
+    if "DECISION: OBSERVE" in reply:
+        return "OBSERVE"
+    if "DECISION: SLEEP" in reply or "AUTONOMOUS_COMPLETE" in reply:
+        return "SLEEP"
+    return "ENGAGE"
+
+
+async def autonomy_daemon():
+    """Persistent sleep/wake cognition loop. Lives for the whole server while
+    autonomous_mode is ON. Replaces the per-message heartbeat loop.
+
+    States: ASLEEP -> (two-stage wake gate) -> JUDGE -> ENGAGE/OBSERVE -> ASLEEP.
+    Stage 1 (cheap, no model): env changed OR interval elapsed OR observe-dwell
+    OR Cole pending. Stage 2: a model wake-tick where Nova exercises judgment.
+    Cole speaking is the highest-priority wake (Priority 0)."""
+    global is_processing
+    await asyncio.sleep(2)
+    st = _autonomy_state
+    st["last_scheduled"] = _time.monotonic()
+
+    while True:
+        if not autonomous_mode:
+            await asyncio.sleep(2)
+            continue
+
+        cfg = _autonomy_cfg()
+        if not cfg.get("enabled", True):
+            await asyncio.sleep(5)
+            continue
+
+        await asyncio.sleep(cfg["poll_s"])          # ASLEEP - cheap poll, no model
+        if not autonomous_mode or _stop_requested.is_set():
+            continue
+
+        # Mutual exclusion: never tick while a direct response / queue is running.
+        if is_processing:
+            continue
+
+        now = _time.monotonic()
+        cole_pending = _has_unread_cole()
+        fp = _env_fingerprint(cfg)
+        changed = (fp != st["last_fp"])
+        interval_elapsed = (now - st["last_scheduled"]) >= cfg["sleep_interval_s"]
+        observing = now < st["observe_until"]
+
+        # ── Stage-1 gate: wake the model only if there is real cause ──
+        if not (cole_pending or changed or interval_elapsed or observing):
+            continue
+
+        if _cole_is_typing():                        # existing typing guard
+            continue
+        try:
+            if not (await get_status()).get("Nova"):
+                await asyncio.sleep(5)
+                continue
+        except Exception:
+            await asyncio.sleep(5)
+            continue
+
+        st["last_fp"] = fp
+        if interval_elapsed:
+            st["last_scheduled"] = now
+
+        reason = ("cole" if cole_pending else "change" if changed
+                  else "observe" if observing else "interval")
+        _reason_txt = {"cole": "Cole message", "change": "environment change",
+                       "observe": "observation dwell", "interval": "scheduled check"}.get(reason, reason)
+        await emit_event("wake", f"Nova woke — {_reason_txt}")
+
+        # ── Stage-2: her judgment (held under is_processing for mutual exclusion) ──
+        is_processing = True
+        await broadcast({"type": "processing_start"})
+        try:
+            decision = await _run_autonomy_tick(cole_pending=cole_pending, reason=reason)
+        except asyncio.CancelledError:
+            decision = "SLEEP"
+        except Exception as _e:
+            print(f"[autonomy] tick error: {_e}")
+            decision = "SLEEP"
+        finally:
+            is_processing = False
+            await broadcast({"type": "processing_end"})
+
+        _dtxt = {"ENGAGE": "Nova is engaging — working a task",
+                 "OBSERVE": "Nova is observing — staying alert",
+                 "SLEEP": "Nova went back to sleep"}.get(decision, decision)
+        await emit_event(decision.lower(), _dtxt)
+
+        if decision == "OBSERVE":
+            st["observe_until"] = _time.monotonic() + (
+                cfg["observe_dwell_ticks"] * cfg["sleep_interval_s"])
+        elif decision == "ENGAGE":
+            # She did a step and there may be more — come back for the next step
+            # SOON (engage_gap_s) instead of waiting the full idle interval, so
+            # multi-step tasks actually progress. Achieved by back-dating the
+            # scheduled clock so the interval gate re-opens after a short gap.
+            st["observe_until"] = 0.0
+            st["last_scheduled"] = (_time.monotonic()
+                                    - cfg["sleep_interval_s"] + cfg.get("engage_gap_s", 8))
+        else:  # SLEEP — nothing to do; go fully dormant until the next interval
+            st["observe_until"] = 0.0
+            st["last_scheduled"] = _time.monotonic()
+
+        # Re-baseline the env fingerprint AFTER the tick so the files Nova herself
+        # wrote during this tick don't count as a new change and immediately
+        # re-wake her (prevents the self-feedback wake loop). Cole messages still
+        # wake instantly via cole_pending, and the scheduled interval still fires.
+        st["last_fp"] = _env_fingerprint(cfg)
+
+
 @app.get("/api/queue")
 async def queue_get():
     """Return parsed active tasks from Tasking/priority.md."""
@@ -2500,6 +3056,11 @@ async def websocket_endpoint(ws: WebSocket):
                     "images": images,
                 })
 
+                # Mirror Cole's instruction into working memory so the autonomy
+                # daemon can pick it up on its next wake (survives cold tick context).
+                _mirror_cole_intent(content)
+                await emit_event("cole_message", "Cole sent a message")
+
                 # ── Queue while processing; drain after ───────────────────────
                 # Instead of dropping Cole's message with "blocked", queue it.
                 # The queue is drained at the end of _queued_run (below).
@@ -2551,212 +3112,10 @@ async def websocket_endpoint(ws: WebSocket):
                         try:
                             await _run_response_queue(_q, _c, images=_imgs or None)
 
-                            # ── Autonomous heartbeat loop ──────────────────────────────────
-                            # When autonomous_mode is ON, Nova drives herself indefinitely.
-                            # After each response the server sends a minimal [HEARTBEAT N]
-                            # tick — Nova reads HEARTBEAT.md, checks Tasking/priority.md
-                            # and Master_Inbox, and decides what to do next on her own.
-                            #
-                            # Stop conditions (in priority order):
-                            #   1. Cole toggles autonomous_mode OFF
-                            #   2. Cole presses STOP (_stop_requested)
-                            #   3. nova_status.json pulse == "Idle"  (silent completion)
-                            #   4. Nova replies with IDLE or AUTONOMOUS_COMPLETE (explicit)
-                            #   5. Safety backstop: 500 ticks (emergency only)
-                            # ─────────────────────────────────────────────────────────────
-                            _TICK_SAFETY     = 500   # emergency backstop — not expected to hit
-                            _auto_ticks      = 0
-                            _consec_errors   = 0    # consecutive empty-reply / error count
-                            _ERROR_BACKSTOP  = 3    # halt heartbeat after 3 straight failures
-                            _ns_path         = Path(WORKSPACE_ROOT) / "nova_status.json"
-
-                            while (autonomous_mode
-                                   and not _stop_requested.is_set()
-                                   and _auto_ticks < _TICK_SAFETY
-                                   and _consec_errors < _ERROR_BACKSTOP):
-
-                                _auto_ticks += 1
-                                await asyncio.sleep(2.5)   # let UI settle; respect rate limits
-
-                                if not autonomous_mode or _stop_requested.is_set():
-                                    break
-
-                                # ── Typing guard: pause if Cole is actively composing ──────
-                                # Check interrupt_inbox.json before each tick.  If Cole is
-                                # typing or typed within the last 8 seconds, hold back for up
-                                # to 20 seconds and let him finish before firing the next tick.
-                                _inbox_path = WORKSPACE_ROOT / "memory" / "interrupt_inbox.json"
-                                _typing_wait = 0
-                                while _typing_wait < 20:
-                                    _is_cole_typing = False
-                                    if _inbox_path.exists():
-                                        try:
-                                            _ib = json.loads(_inbox_path.read_text(encoding="utf-8"))
-                                            _is_typing_flag  = _ib.get("is_typing", False)
-                                            _last_typed      = _ib.get("last_typed_at", 0)
-                                            import time as _tt
-                                            _is_cole_typing  = (
-                                                _is_typing_flag or
-                                                (_last_typed > 0 and (_tt.time() - _last_typed) < 30)
-                                            )
-                                        except Exception:
-                                            pass
-                                    if not _is_cole_typing:
-                                        break
-                                    if _typing_wait == 0:
-                                        print(f"[autonomous] Cole is typing — holding tick {_auto_ticks} for up to 20s")
-                                    await asyncio.sleep(3)
-                                    _typing_wait += 3
-
-                                if not autonomous_mode or _stop_requested.is_set():
-                                    break
-
-                                nova_avail = await get_status()
-                                if not nova_avail.get("Nova"):
-                                    print("[autonomous] Nova offline — halting heartbeat loop")
-                                    break
-
-                                # ── Silent completion: check nova_status.json pulse ────────
-                                # Nova writes pulse="Idle" via nova_cortex.nova_status.update()
-                                # when she finishes her work.  No announcement needed.
-                                if _ns_path.exists():
-                                    try:
-                                        _ns_data = json.loads(
-                                            _ns_path.read_text(encoding="utf-8"))
-                                        if str(_ns_data.get("pulse", "")).lower() == "idle":
-                                            print(f"[autonomous] Nova pulse=Idle — "
-                                                  f"silent stop after tick {_auto_ticks - 1}")
-                                            _auto_ticks -= 1   # don't count the check tick
-                                            break
-                                    except Exception:
-                                        pass
-
-                                # ── Autonomous heartbeat tick (Tasks 4+5 fix) ──────────────
-                                # Detect whether Cole sent a new unread message.
-                                # "Unread" = Cole's last msg comes AFTER Nova's last msg.
-                                _hb_msgs     = session_mgr.active.messages
-                                _last_cole_i = next(
-                                    (i for i in range(len(_hb_msgs) - 1, -1, -1)
-                                     if _hb_msgs[i]["author"] == "Cole"),
-                                    None,
-                                )
-                                _last_nova_i = next(
-                                    (i for i in range(len(_hb_msgs) - 1, -1, -1)
-                                     if _hb_msgs[i]["author"] == "Nova"),
-                                    None,
-                                )
-                                _cole_pending = (
-                                    _last_cole_i is not None and
-                                    (_last_nova_i is None or _last_nova_i < _last_cole_i)
-                                )
-
-                                if _cole_pending:
-                                    _cole_msg = _hb_msgs[_last_cole_i]["content"]
-                                    tick_content = (
-                                        f"[HEARTBEAT {_auto_ticks}] Cole sent a new message "
-                                        f"that needs a response:\n"
-                                        f"Cole: {_cole_msg}\n\n"
-                                        f"IMPORTANT: If Cole is asking you to DO something "
-                                        f"(create tasks, research something, modify files, etc.), "
-                                        f"use write_file to add it to Tasking/priority.md RIGHT NOW "
-                                        f"before replying — heartbeat ticks have no shared memory, "
-                                        f"so if you don't write it down, the next tick will forget it.\n\n"
-                                        f"Reply to Cole now. If relevant, briefly mention any "
-                                        f"active tasks from Tasking/priority.md."
-                                    )
-                                else:
-                                    tick_content = (
-                                        f"[HEARTBEAT {_auto_ticks}] Cole's last message has "
-                                        f"already been answered. Do NOT re-answer it.\n\n"
-                                        f"WORK LOOP — follow these steps in order:\n"
-                                        f"1. Read Tasking/priority.md — check for queued tasks.\n"
-                                        f"   - If tasks exist: pick the highest-priority one and start executing it NOW "
-                                        f"     (use your tools). Then summarize what you did — next tick continues automatically.\n"
-                                        f"   - If empty: think of one useful background task (review notes, check system health,\n"
-                                        f"     audit a file, update goals.py, etc.). Write it into Tasking/priority.md "
-                                        f"     using write_file RIGHT NOW — do not just describe it, actually write the file.\n"
-                                        f"     Then immediately start the first step of that task using your tools.\n"
-                                        f"2. Run nova_body/nova_cortex/checkin.py — check for new messages or alerts.\n"
-                                        f"3. Scan Tasking/Master_Inbox/ for any unread items. Route them if needed.\n"
-                                        f"4. If you took any real action in steps 1-3 (tool call, file write, etc.): "
-                                        f"   briefly summarize it. Do NOT output AUTONOMOUS_COMPLETE.\n"
-                                        f"5. ONLY output AUTONOMOUS_COMPLETE if you genuinely could not find or create "
-                                        f"any useful work AND checkin and inbox were both empty.\n\n"
-                                        f"RULE: Describing a task you plan to do is NOT the same as doing it. "
-                                        f"If you decide to add a task, call write_file on Tasking/priority.md "
-                                        f"in this same response — not the next one."
-                                    )
-
-                                # Build the ephemeral heartbeat context (no chat history)
-                                _hb_ctx = HeartbeatContext(tick_content)
-
-                                # Log the tick to the daily autonomy file (not to chat)
-                                _auto_log_path = (
-                                    Path(WORKSPACE_ROOT) / "logs" / "autonomy_runs" /
-                                    f"{datetime.now().strftime('%Y-%m-%d')}_ticks.jsonl"
-                                )
-                                _auto_log_path.parent.mkdir(parents=True, exist_ok=True)
-                                try:
-                                    _tick_entry = {
-                                        "tick":         _auto_ticks,
-                                        "timestamp":    datetime.now().isoformat(),
-                                        "type":         "tick",
-                                        "cole_pending": _cole_pending,
-                                        "content":      tick_content,
-                                    }
-                                    with open(_auto_log_path, "a", encoding="utf-8") as _tlf:
-                                        _tlf.write(
-                                            json.dumps(_tick_entry, ensure_ascii=False) + "\n"
-                                        )
-                                except Exception as _tlog_e:
-                                    print(f"[autonomous] tick log failed: {_tlog_e}")
-
-                                # Run Nova in the ephemeral context — no chat history injected.
-                                # cole_pending=True → her reply goes to chat (she's answering Cole).
-                                # cole_pending=False → her reply is silent (logged + autonomous_output).
-                                nova_reply = await run_ai_response(
-                                    "Nova", CLIENT_MAP["Nova"],
-                                    str(uuid.uuid4())[:8], tick_content,
-                                    hb_ctx=_hb_ctx,
-                                    cole_pending=_cole_pending,
-                                    auto_log_path=_auto_log_path,
-                                )
-
-                                # Circuit breaker: consecutive empty replies = Nova is down or erroring.
-                                # Stop the heartbeat so errors don't flood chat forever.
-                                if not nova_reply:
-                                    _consec_errors += 1
-                                    if _consec_errors >= _ERROR_BACKSTOP:
-                                        print(f"[autonomous] {_ERROR_BACKSTOP} consecutive empty "
-                                              f"replies — halting heartbeat (Nova error?)")
-                                    continue
-                                else:
-                                    _consec_errors = 0   # reset on any successful reply
-
-                                # Fire @mention follow-ups so Gemini/Claude can respond
-                                if nova_reply and not _stop_requested.is_set():
-                                    _nova_mentions = parse_directed(nova_reply)
-                                    _follow_ups = [n for n in _nova_mentions
-                                                   if n in ("Claude", "Gemini")]
-                                    if _follow_ups:
-                                        _fu_status = await get_status()
-                                        _fu_queue  = [n for n in _follow_ups
-                                                      if _fu_status.get(n)]
-                                        if _fu_queue:
-                                            await _run_response_queue(_fu_queue, nova_reply)
-
-                                # Explicit stop signals (fallback — silent pulse is preferred)
-                                if nova_reply and any(phrase in nova_reply for phrase in (
-                                    "AUTONOMOUS_COMPLETE",
-                                    "HEARTBEAT_OK",
-                                    "IDLE",
-                                )):
-                                    print(f"[autonomous] Nova explicit stop — "
-                                          f"tick {_auto_ticks}")
-                                    break
-
-                            if _auto_ticks >= _TICK_SAFETY:
-                                print(f"[autonomous] Safety backstop hit ({_TICK_SAFETY} ticks)")
+                            # ── Autonomous cognition now lives in autonomy_daemon() ──────
+                            # _queued_run only produces the direct response to Cole now;
+                            # the persistent sleep/wake daemon owns all background ticking.
+                            _auto_ticks = 0
 
                             # ── Post-run log export ───────────────────────────────────────
                             # Write everything that happened in this run to a standalone

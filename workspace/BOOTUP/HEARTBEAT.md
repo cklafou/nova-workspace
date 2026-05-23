@@ -1,107 +1,79 @@
 # HEARTBEAT.md
-# Nova's autonomous Thoughts cycle. Run this on every heartbeat trigger.
-# Yield Protocol applies throughout: one action per turn, check in after each exec.
+# How Nova behaves on an autonomous wake tick.
+# (Rewritten 2026-05-23 to match the sleep/wake + TASK_PROGRESS model the server
+#  actually runs. The old multi-step "Thoughts cycle" is retired.)
 
 ---
 
-## Step 1 — Orient
+## What a wake tick is
 
-Read your priority queue:
+When Autonomous Mode is ON, the server runs a **sleep/wake loop**. Most of the time
+Nova is asleep (no thinking, no cost). She is woken only when there is real cause:
 
-[READ: Tasking/priority.md]
+- **Cole sent a message** (Priority 0 — always wakes her, always answered first), or
+- **the environment changed** (a new Master_Inbox item, the typing inbox, cole_intent), or
+- **the scheduled interval elapsed** (a periodic self-check), or
+- **an observe-dwell** is open (she chose to stay alert).
 
-Note what is active, what is blocked, and what is highest priority.
-If priority.md shows no active or blocked thoughts, skip to Step 5.
+Each wake is a **single, fresh tick** with no chat history. Memory across ticks lives in
+`Tasking/task_state.json`, which the **server** maintains and feeds back to Nova. Nova does
+NOT hand-edit `priority.md`, route Master_Inbox files, or keep per-thought `master.md`
+ledgers anymore — the server owns task status and the progress log. Nova's job each tick is
+small and concrete: **do one step, report it, decide whether to keep going.**
 
----
+Every tick ends with one decision keyword:
 
-## Step 2 — Process Master_Inbox
-
-Check whether any module responses have arrived:
-
-```
-exec: python -c "import os; p = 'Tasking/Master_Inbox'; items = [f for f in os.listdir(p) if f.endswith('.md')]; print('\n'.join(items) if items else 'INBOX_EMPTY')"
-```
-
-If INBOX_EMPTY: skip to Step 3.
-
-**File format** (written automatically by the inbox router in nova_chat/server.py):
-```
-{timestamp}_{author}_{task_id}.md
-```
-Example: `20260328_143022_Claude_Research_0328.md`
-
-Each file contains:
-- A `# Inbox Item: [TASK_ID]` header
-- Author, timestamp, task ID metadata
-- The full message content under `## Message`
-
-For each item returned:
-1. Read it: [READ: Tasking/Master_Inbox/FILENAME.md]
-2. The Task ID is in the filename and in the `# Inbox Item: [TASK_ID]` header.
-   Match it to a Thought folder in `Tasking/`. If no matching folder exists,
-   the item is noise (e.g. an [ERROR] or system notice) — delete it and move on.
-3. Route to the correct thought's inbox:
-   ```
-   exec: python -c "import shutil; shutil.move('Tasking/Master_Inbox/FILENAME.md', 'Tasking/THOUGHT_FOLDER/inbox/FILENAME.md')"
-   ```
-4. Open that thought's master.md and update:
-   - Mark the module as "received" in the Pending Module Responses table
-   - Append to the Decision Log: "[timestamp] — Received response from [module]. Routed to inbox."
-5. Yield check after each move.
-
-Process ONE inbox item per heartbeat turn if there are multiple. The next heartbeat handles the rest.
+- `DECISION: ENGAGE` — you did real work and there may be more; the server wakes you again soon.
+- `DECISION: OBSERVE` — something needs watching but no action yet; stay alert a while.
+- `DECISION: SLEEP` — nothing useful to do right now; go dormant until the next cause.
 
 ---
 
-## Step 3 — Advance Highest-Priority Active Thought
+## Two kinds of tick
 
-Read the master.md of the highest-priority ACTIVE thought:
+### A. Cole is waiting (a new message from Cole)
+Respond to Cole directly and normally. If he asked you to DO something, decide the task(s)
+and emit a **TASK_INTENT** block so the server records them — do not rely on editing files
+by hand:
 
-[READ: Tasking/THOUGHT_FOLDER/master.md]
+```
+TASK_INTENT: {"add":[{"title":"SHORT_ID: clear description","priority":4,"notes":"..."}]}
+```
 
-Review the Current Plan checklist. Find the first unchecked step.
-Take ONE action toward completing that step.
-After the action:
-- Append to that thought's Decision Log what you did and what the result was.
-- If the step is now complete, check it off in the master.md.
-- If a new module call is needed, fire it and add it to the Pending Module Responses table with the Task ID echo format.
+The server writes these into the queue and tracks them from there.
 
-**Yield Protocol applies.** One action. Stop. Do not chain multiple steps in one turn.
+### B. Work loop (Cole already answered)
+The server shows you your tasks, each with its **status** and the **last few things you
+already did**. Pick whichever task makes sense (you may switch between wakes), then take
+**ONE concrete next step** with your tools — read a file, run code, write a file. A single
+step, not the whole task. Build on the progress shown.
+
+Then report exactly what you did, in one block:
+
+```
+TASK_PROGRESS: {"task":"<exact task title>","did":"<what you did this step>","status":"in_progress|done|blocked","note":"<what's left, or why blocked>"}
+```
+
+Rules:
+- **Actually perform the step with a tool before reporting it.** Describing is not doing.
+- Use `status: done` only when the ENTIRE task is finished — the server then files it.
+- If a task can't proceed, use `status: blocked` with a reason in `note`.
+- End with `DECISION: ENGAGE` when you worked, `DECISION: SLEEP` only if there is genuinely
+  nothing to act on.
+
+If the queue is empty and there's a genuinely useful background task worth doing (tidy
+notes, a quick health check, a small self-improvement), create it with a `TASK_INTENT` block
+and start it. Otherwise `DECISION: SLEEP`.
 
 ---
 
-## Step 4 — Update priority.md if needed
-
-Only update priority.md if something changed:
-- A thought moved from active to blocked (awaiting module response)
-- A thought completed (move to Finished/, remove from queue)
-- A deadline changed based on new information
-
-Update via the Proposed Changes Protocol (copy to logs/proposed/ first) unless the change is minor enough to write directly.
-
----
-
-## Step 5 — Final status
-
-**If all thoughts are complete or none exist** (nothing to do):
-Write your status to Idle — this is the signal that stops the heartbeat loop silently:
-```
-exec: python -c "
-import sys
-sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools')
-from nova_cortex.nova_status import update
-update(pulse='Idle', summary='No active thoughts — all caught up')
-"
-```
-The server reads `nova_status.json` before sending the next heartbeat. When it sees `pulse=Idle` it stops — no announcement in chat, no clutter.
-If the status update fails, say `HEARTBEAT_OK` as a fallback.
-
-**If work was done:** briefly note what was advanced in one sentence. Do not write a report.
+## Priority 0 — always
+If Cole speaks at any point, he comes first: stop, answer him, and let the queue wait. His
+word overrides every task, every plan, every wake. This never changes.
 
 ---
 
 ## Cole's Additional Tasks
 # Cole writes any one-off instructions below this line.
-# When Cole adds something here, do it first (after Step 1), then continue the cycle.
-# Remove the task from below once complete and tell Cole it is done.
+# When Cole adds something here, treat it as a queued task and advance it like any other.
+# Remove it once complete and tell Cole it's done.

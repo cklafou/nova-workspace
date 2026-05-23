@@ -96,7 +96,7 @@ def build_system_prompt(
                            /api/chat/recent before each Discord agent run).
 
     Returns:
-        A single string ready to be sent as the "system" role message to nova_chat/ExLlamaV2.
+        A single string ready to be sent as the "system" role message to nova_chat/llama.cpp.
     """
     sections: list[str] = [_SYSTEM_HEADER]
     inject_paths = cfg.inject_files(heartbeat=heartbeat)
@@ -176,7 +176,7 @@ def build_user_trigger(
 def build_tool_result_message(tool_name: str, result: str) -> str:
     """
     Format a tool execution result for insertion back into the conversation.
-    nova_chat/ExLlamaV2 expects tool results injected as user messages
+    nova_chat/llama.cpp expects tool results injected as user messages
     when not using the formal function-calling format.
     """
     return f"[Tool result: {tool_name}]\n{result.strip()}"
