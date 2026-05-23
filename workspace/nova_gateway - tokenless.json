@@ -17,25 +17,6 @@
       "memory/cole_intent.json"
     ]
   },
-  "gateway": {
-    "port": 18790,
-    "host": "127.0.0.1",
-    "token": "nova-gateway-local"
-  },
-  "discord": {
-    "enabled": true,
-    "token": "[place token here]",
-    "allowlist": [],
-    "dm_enabled": true,
-    "allow_bots": true
-  },
-  "cron": {
-    "health_check": {
-      "enabled": false,
-      "interval_min": 30,
-      "message": "DEPRECATED \u2014 autonomy is handled by the nova_chat sleep/wake daemon. This cron is disabled and unused."
-    }
-  },
   "context": {
     "inject_files": [
       "BOOTUP/AGENTS.md",

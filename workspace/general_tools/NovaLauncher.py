@@ -111,22 +111,9 @@ def run_nova_chat():
         log.error("nova_chat server error: %s", e, exc_info=True)
 
 
-def run_nova_gateway():
-    """
-    Start nova gateway FastAPI server in this thread.
-    Runs in-process — no subprocess, no sys.executable recursion.
-    Imports from general_tools/gateway.py (dissolved from nova_gateway, 2026-05-08).
-    """
-    try:
-        from gateway import app as gw_app
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        import uvicorn
-        config = uvicorn.Config(gw_app, host="127.0.0.1", port=GW_PORT, log_level="warning")
-        server = uvicorn.Server(config)
-        loop.run_until_complete(server.serve())
-    except Exception as e:
-        log.error("nova_gateway server error: %s", e, exc_info=True)
+# run_nova_gateway() removed 2026-05-23 — the nova_gateway server (Discord + the old
+# OpenClaw HTTP API) has been retired. nova_chat is now the single server. See
+# _admin/_archive_2026-05-23/old_gateway/ for the archived gateway code.
 
 
 def wait_for_port(port: int, timeout: float = 20.0) -> bool:
@@ -153,11 +140,10 @@ def main():
     print("=" * 52)
     print()
 
-    # Start both servers in daemon threads (die with the main process)
-    chat_thread = threading.Thread(target=run_nova_chat,    daemon=True, name="nova_chat")
-    gw_thread   = threading.Thread(target=run_nova_gateway, daemon=True, name="nova_gateway")
+    # Start the nova_chat server in a daemon thread (dies with the main process).
+    # nova_gateway retired 2026-05-23 — nova_chat is the single server now.
+    chat_thread = threading.Thread(target=run_nova_chat, daemon=True, name="nova_chat")
     chat_thread.start()
-    gw_thread.start()
 
     log.info("Waiting for nova_chat on port %d...", CHAT_PORT)
     if not wait_for_port(CHAT_PORT, timeout=25):

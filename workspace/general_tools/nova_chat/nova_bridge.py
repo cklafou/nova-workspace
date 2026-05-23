@@ -153,6 +153,7 @@ async def execute_action(action: dict) -> str:
             age = int(now - _DISCORD_SENT[text])
             return f"[bridge] ⚠ Discord duplicate blocked — same message sent {age}s ago (cooldown {_DISCORD_DEDUP_WINDOW}s)"
         _DISCORD_SENT[text] = now
+        return "[bridge] Discord integration has been removed (nova_gateway retired 2026-05-23)."
         try:
             import urllib.request, urllib.error, json as _json
             payload = _json.dumps({"text": text}).encode("utf-8")
