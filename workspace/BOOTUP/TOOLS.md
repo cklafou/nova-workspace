@@ -60,6 +60,17 @@ exec: python -c "import sys; sys.path.insert(0, 'nova_tools'); sys.path.insert(0
 
 ---
 
+## Commands run on Windows (PowerShell) — use Windows syntax
+
+`exec:` runs your shell command through **PowerShell on Windows**. Unix commands FAIL here (`test`, `ls`, `cat`, `grep`, `touch` are "not recognized"). Use:
+- file exists? → `Test-Path 'path\to\file'`  (or `python -c "import os;print(os.path.exists('path'))"`)
+- list a folder → `Get-ChildItem 'dir'` (or `dir`)
+- read a file → `Get-Content 'file'` (or `type file`)
+- search text → `Select-String 'pattern' 'file'`
+For anything non-trivial, prefer `python -c "..."` — portable and reliable.
+
+---
+
 ## CRITICAL: Apostrophes in exec commands crash on Windows
 
 Never use apostrophes inside single-quoted Python strings in exec commands.

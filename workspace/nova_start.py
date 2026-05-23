@@ -174,6 +174,33 @@ def wait_for_llama(timeout_s: int = 300) -> bool:
     return False
 
 
+# ── Pick a Python that actually has Nova's server deps ─────────────────────--
+def _pick_python() -> list | None:
+    """`py -3` can point at a Python without Nova's deps (uvicorn/fastapi), which
+    makes nova_chat fail to start. Probe candidates and return the first that can
+    import them, as a command list (e.g. ['py','-3.10']). None if nothing works."""
+    cands = []
+    if not getattr(sys, "frozen", False):
+        cands.append([sys.executable])          # the interpreter running this launcher
+    for v in ("3.10", "3.11", "3.12", "3"):
+        cands.append(["py", f"-{v}"])
+    cands += [["python"], ["python3"]]
+    seen = set()
+    for c in cands:
+        key = tuple(c)
+        if key in seen:
+            continue
+        seen.add(key)
+        try:
+            r = subprocess.run(c + ["-c", "import uvicorn, fastapi"],
+                               capture_output=True, timeout=20)
+            if r.returncode == 0:
+                return c
+        except Exception:
+            continue
+    return None
+
+
 # ── Step 3 + 4: Nova ───────────────────────────────────────────────────────--
 def start_nova() -> subprocess.Popen | None:
     if port_open(CHAT_PORT):
@@ -182,17 +209,22 @@ def start_nova() -> subprocess.Popen | None:
     if not NOVA_LAUNCH.exists():
         log(f"NovaLauncher.py not found at {NOVA_LAUNCH}", "ERROR")
         sys.exit(2)
-    log("Starting Nova (chat + gateway)...")
-    python = sys.executable
-    # When frozen, sys.executable is NovaStart.exe — fall back to a real python.
-    if getattr(sys, "frozen", False):
-        python = "python"
+    log("Starting Nova...")
+    py = _pick_python()
+    if py is None:
+        log("No Python with Nova's server deps (uvicorn + fastapi) was found.", "ERROR")
+        log("Fix: install them into your Python — e.g.  py -3 -m pip install uvicorn fastapi", "ERROR")
+        log("If you have several Pythons, install into the one that already has lancedb / "
+            "sentence-transformers (that's the one Nova has been running on).", "ERROR")
+        input("Press Enter to exit...")
+        return None
+    log(f"Using Python: {' '.join(py)}")
     creationflags = subprocess.CREATE_NEW_CONSOLE if sys.platform == "win32" else 0
     # NOVA_NO_WINDOW tells NovaLauncher to skip its own window step — we own the
     # app window (Edge/Chrome --app) and the lifecycle from here.
     env = dict(os.environ)
     env["NOVA_NO_WINDOW"] = "1"
-    proc = subprocess.Popen([python, str(NOVA_LAUNCH)], cwd=str(WS),
+    proc = subprocess.Popen(py + [str(NOVA_LAUNCH)], cwd=str(WS),
                             creationflags=creationflags, env=env)
     return proc
 

@@ -1,14 +1,14 @@
 {
-  "Clear Moondream task - delete master.md": {
-    "title": "Clear Moondream task - delete master.md",
+  "hybrid synthesis task": {
+    "title": "Hybrid Synthesis Task",
     "status": "queued",
     "progress": [],
-    "created": "2026-05-23T21:10:20.672567"
+    "created": "2026-05-24T07:26:23.022500"
   },
-  "Process pending audit_queue.json items": {
-    "title": "Process pending audit_queue.json items",
+  "cross-ai communication test": {
+    "title": "Cross-AI Communication Test",
     "status": "queued",
     "progress": [],
-    "created": "2026-05-23T21:11:34.309992"
+    "created": "2026-05-24T07:26:23.014274"
   }
 }

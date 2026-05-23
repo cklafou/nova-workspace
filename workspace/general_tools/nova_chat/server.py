@@ -475,6 +475,8 @@ async def startup_event():
     asyncio.ensure_future(_bg_sys_metrics())
     # Persistent sleep/wake autonomy daemon (replaces per-message heartbeat loop)
     asyncio.ensure_future(autonomy_daemon())
+    # Shut the stack down when the app window closes (last WS client gone)
+    asyncio.ensure_future(_window_close_watchdog())
 
 
 @app.get("/")
@@ -2047,10 +2049,27 @@ def _save_task_state(state: dict) -> None:
 
 
 def _task_key(title: str) -> str:
-    """Stable key for a task: a TASK_xxx id token if present, else the title."""
+    """Stable CANONICAL key for a task.
+
+    Prefer a TASK_xxx id token if present. Otherwise normalize the human title so
+    the SHORT form Nova emits in a TASK_INTENT ("Creative Writing Practice") and the
+    FULL markdown bullet body that _parse_queue() returns from priority.md
+    ("**Creative Writing Practice** — Write a solo piece…") collapse to the SAME
+    key. Without this, a task gets created under one key and its progress/completion
+    recorded under another, so the queue view always shows "(not started)" and Nova
+    redoes work she already did."""
     import re as _re
-    m = _re.search(r"TASK_[A-Za-z0-9_]+", title or "")
-    return m.group(0) if m else (title or "").strip()[:80]
+    t = title or ""
+    m = _re.search(r"TASK_[A-Za-z0-9_]+", t)
+    if m:
+        return m.group(0)
+    t = _re.sub(r"^\s*[-*]\s+", "", t)          # strip a leading list bullet
+    t = t.replace("**", "").replace("__", "")    # strip bold markdown
+    for sep in (" — ", " – ", " -- ", " - "):    # drop the notes after the separator
+        if sep in t:
+            t = t.split(sep, 1)[0]
+            break
+    return t.strip().lower()[:80]
 
 
 def _ensure_task_state(title: str, status: str = "queued") -> None:
@@ -2182,12 +2201,31 @@ async def _run_autonomy_tick(cole_pending: bool, reason: str) -> str:
         except Exception:
             queue_view = "  (queue unavailable)"
         has_tasks = "(queue empty)" not in queue_view and "(queue unavailable)" not in queue_view
-        if has_tasks:
+        if cole_note:
+            # Cole has given a directive — it is Priority 0. Carry it out and NOTHING
+            # else. Do not let her wander into self-invented background work (audits,
+            # cleanups) while his instruction is unfinished.
+            tick_content = (
+                f"[WAKE - {reason}] You woke from sleep. Do NOT re-answer Cole in chat.\n\n"
+                f"COLE'S CURRENT DIRECTIVE — Priority 0, and your ONLY job until it is fully "
+                f"done:\n  {cole_note}\n\n"
+                f"Your task queue:\n{queue_view}\n\n"
+                "Carry out Cole's directive — nothing else:\n"
+                "1. If the queue does NOT yet contain the task(s) his directive calls for, "
+                "create them now with a TASK_INTENT block. Break a multi-part directive into "
+                "ONE task per part (the server dedups, so re-emitting is safe).\n"
+                "2. If those tasks already exist, advance ONE of them by ONE concrete step "
+                "with your tools and report it with a TASK_PROGRESS block.\n"
+                "Do NOT invent unrelated background work (audits, cleanups, downloads, etc.) "
+                "while Cole's directive is unfinished. End with DECISION: ENGAGE.\n\n"
+                'TASK_INTENT: {"add":[{"title":"SHORT_ID: one part of the directive","priority":2,"notes":"..."}]}\n'
+                'TASK_PROGRESS: {"task":"<exact title>","did":"<what you did>","status":"in_progress|done|blocked","note":"..."}'
+            )
+        elif has_tasks:
             tick_content = (
                 f"[WAKE - {reason}] You woke from sleep. Cole has already been "
                 f"answered - do NOT re-answer him.\n\n"
                 f"YOUR TASKS — status and what you've already done:\n{queue_view}\n"
-                + (f"\nCole's last standing instruction: {cole_note}\n" if cole_note else "")
                 + "\nDo ONE concrete next step on ONE task right now using your tools "
                 "(read a file, run code, write a file). A SINGLE step — not the whole "
                 "task. Build on the progress shown above. You may pick whichever task "
@@ -2207,8 +2245,8 @@ async def _run_autonomy_tick(cole_pending: bool, reason: str) -> str:
         else:
             tick_content = (
                 f"[WAKE - {reason}] You woke from sleep. Cole has already been "
-                f"answered - do NOT re-answer him. Your task queue is empty.\n"
-                + (f"\nCole's last standing instruction: {cole_note}\n" if cole_note else "")
+                f"answered - do NOT re-answer him. Your task queue is empty and Cole has "
+                f"no pending directive.\n"
                 + "\nIf there is a genuinely useful background task worth doing (tidy "
                 "notes, a quick health check, a small self-improvement), create it now "
                 "with a TASK_INTENT block and end with DECISION: ENGAGE. Otherwise reply "
@@ -2246,9 +2284,11 @@ async def _run_autonomy_tick(cole_pending: bool, reason: str) -> str:
 
     # Faithful executor: apply her stated intent; backfill if her own write no-op'd.
     intent = _parse_task_intent(reply)
+    _added_tasks = False
     if intent:
         actions = _reconcile_queue(intent)
         if actions:
+            _added_tasks = any(str(a).startswith("added") for a in actions)
             print(f"[autonomy] queue reconciled from TASK_INTENT: {actions}")
             await emit_event("task", "Queue updated: " + "; ".join(actions))
             if _priority_hash() != _before:
@@ -2273,8 +2313,10 @@ async def _run_autonomy_tick(cole_pending: bool, reason: str) -> str:
                 _drop_task_state(matched["title"])
                 await emit_event("task", f"Completed: {_task_key(matched['title'])}")
 
-    # Mark Cole's instruction consumed once she has engaged with it.
-    if cole_note:
+    # Mark Cole's directive consumed ONLY once it has been turned into queued task(s),
+    # so it persists (and keeps steering her toward HIS instruction instead of
+    # self-invented work) until she actually creates the tasks for it.
+    if cole_note and _added_tasks:
         try:
             ci = json.loads(_COLE_INTENT_FILE.read_text(encoding="utf-8"))
             ci["consumed"] = True
@@ -2287,6 +2329,31 @@ async def _run_autonomy_tick(cole_pending: bool, reason: str) -> str:
     if "DECISION: SLEEP" in reply or "AUTONOMOUS_COMPLETE" in reply:
         return "SLEEP"
     return "ENGAGE"
+
+
+async def _window_close_watchdog():
+    """Shut the whole stack down shortly after the last UI window disconnects,
+    so closing the app actually stops Nova (closing the Chrome --app window drops
+    the WebSocket). A page reload reconnects within a couple seconds and cancels
+    the pending shutdown, so reloads don't kill the server."""
+    await asyncio.sleep(5)            # let the server boot before arming
+    had_client = False
+    empty_since = None
+    while True:
+        await asyncio.sleep(3)
+        if connected_clients:
+            had_client = True
+            empty_since = None
+            continue
+        if not had_client:
+            continue                 # no window has opened yet — stay up
+        if empty_since is None:
+            empty_since = _time.monotonic()
+        elif _time.monotonic() - empty_since >= 8:
+            print("[server] App window closed (no UI for 8s) — shutting down the stack.")
+            import os as _os, signal as _sig
+            _os.kill(_os.getpid(), _sig.SIGTERM)
+            return
 
 
 async def autonomy_daemon():

@@ -1,10 +1,10 @@
 [
   {
-    "session_id": "2026-05-23_19-10-26",
-    "name": "Hey, Nova. I am about to turn on your au",
-    "created": "2026-05-23T19:10:26.379714",
-    "last_active": "2026-05-23T21:09:14.333097",
-    "message_count": 31,
-    "preview": "Perfect \u2014 that same sequence works great for a clean test:\n\n"
+    "session_id": "2026-05-24_07-24-45",
+    "name": "Test Sequence \u2014 2026-05-23\n\nYou have thr",
+    "created": "2026-05-24T07:24:45.986555",
+    "last_active": "2026-05-24T08:08:35.801796",
+    "message_count": 6,
+    "preview": "My bad \u2014 I think my state persistence broke mid-loop. When T"
   }
 ]

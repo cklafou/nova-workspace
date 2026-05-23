@@ -13,7 +13,7 @@
       "confidence": 0.94,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "verified_2026-05-23: file does not exist on disk - stale queue item"
     },
     {
       "id": "2cb20fea",
@@ -26,7 +26,7 @@
       "confidence": 0.99,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "verified_2026-05-23: file exists on disk - old/new path identical, likely false positive rename event"
     },
     {
       "id": "167569ee",
@@ -39,7 +39,7 @@
       "confidence": 0.99,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "verified_2026-05-23: file exists on disk - old/new path identical, likely false positive rename event"
     },
     {
       "id": "bf97a224",

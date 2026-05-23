@@ -121,6 +121,39 @@ LLAMA_CPP_URL = "http://127.0.0.1:8080/v1/chat/completions"
 MAX_TOKENS_CHAT  = 2048   # normal chat turn — ~1,600 words, plenty for detailed answers
 MAX_TOKENS_AGENT = 4096   # tool-use loops — Nova may write files / plan multi-step tasks
 
+# ── Context-window safety net ────────────────────────────────────────────────
+# Nova's local model has a 32K-token window. A single large tool/file read
+# (e.g. audit_queue.json at ~158KB) can blow the window and make llama.cpp
+# reject the request with a 400 ("request exceeds available context size").
+# Cap each message and the overall prompt so it ALWAYS fits.
+_PER_MSG_MAX_CHARS = 24000   # ~6K tokens — no single message can dominate
+_PROMPT_MAX_CHARS  = 96000   # ~24K tokens — leaves room for output + headroom
+
+
+def _fit_messages_to_window(messages: list[dict]) -> list[dict]:
+    """Truncate oversized messages and trim history so the prompt fits Nova's
+    32K window. Only touches str content (image payloads are left alone)."""
+    fitted = []
+    for m in messages:
+        c = m.get("content", "")
+        if isinstance(c, str) and len(c) > _PER_MSG_MAX_CHARS:
+            omitted = len(c) - _PER_MSG_MAX_CHARS
+            c = c[:_PER_MSG_MAX_CHARS] + (
+                f"\n\n…[truncated for Nova's context window — {omitted} chars omitted; "
+                f"read the file in smaller pieces if you need more]")
+            m = {**m, "content": c}
+        fitted.append(m)
+
+    def _total(ms):
+        return sum(len(x.get("content", "")) for x in ms
+                   if isinstance(x.get("content"), str))
+
+    # If still over budget, drop the oldest non-system messages (keep [0] + newest).
+    while _total(fitted) > _PROMPT_MAX_CHARS and len(fitted) > 2:
+        del fitted[1]
+    return fitted
+
+
 async def _fetch_llama_streaming(
     messages: list[dict],
     on_token:       Callable[[str], Awaitable[None]],
@@ -137,6 +170,7 @@ async def _fetch_llama_streaming(
     separate fields, never mixed.  We call on_think_token / on_token accordingly
     so the caller never has to scan for <think> tags in the content stream.
     """
+    messages = _fit_messages_to_window(messages)   # never overflow Nova's 32K window
     payload = {
         "messages":    messages,
         "max_tokens":  max_tokens,
