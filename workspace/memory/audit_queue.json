@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-23T20:26:08+09:00",
+  "updated_at": "2026-05-23T20:54:30+09:00",
   "items": [
     {
       "id": "ffb47e3f",
@@ -9057,6 +9057,58 @@
       "detected_at": "2026-05-23T20:26:08+09:00",
       "commit": "699d3c5d",
       "old_path": "tools/download_models.py",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "aca93a4b",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-05-23T20:54:30+09:00",
+      "commit": "ff671751",
+      "old_path": "general_tools/discord_client.py",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "a0ef7660",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-05-23T20:54:30+09:00",
+      "commit": "ff671751",
+      "old_path": "general_tools/gateway.py",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "5e8bcf16",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-05-23T20:54:30+09:00",
+      "commit": "ff671751",
+      "old_path": "general_tools/nova_gateway_runner.py",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "b5a41522",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-05-23T20:54:30+09:00",
+      "commit": "ff671751",
+      "old_path": "nova_body/nova_cortex/agent_loop.py",
       "new_path": null,
       "confidence": 1.0,
       "resolved_by": null,
