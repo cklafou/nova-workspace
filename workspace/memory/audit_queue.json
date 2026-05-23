@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-23T19:52:13+09:00",
+  "updated_at": "2026-05-23T20:09:54+09:00",
   "items": [
     {
       "id": "ffb47e3f",
@@ -8876,6 +8876,32 @@
       "commit": "acf0b348",
       "old_path": null,
       "new_path": "tools/download_models.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "f9b15200",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-05-23T20:09:54+09:00",
+      "commit": "70e921ec",
+      "old_path": "Tasking/Finished/completed_success/TEST_BRAIN_PROBE/master.md",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "063bd78d",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-05-23T20:09:54+09:00",
+      "commit": "70e921ec",
+      "old_path": "Tasking/tasks/TASK_MM_0513/master.md",
+      "new_path": null,
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
