@@ -168,6 +168,9 @@ def _prune_backups(directory, suffix, keep):
 
 
 def _push_to_drive(zip_path, folder_name="weekly"):
+    # Google Drive backup push disabled 2026-05-24 — git holds workspace history and
+    # local zips in logs/backups/ are the backup. Remove this return to re-enable.
+    return
     try:
         for _p in [str(WORKSPACE_DIR / "nova_body"), str(WORKSPACE_DIR / "general_tools")]:
             if _p not in sys.path:

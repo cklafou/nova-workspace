@@ -48,10 +48,16 @@ WORKSPACE_FOLDER_NAME = "workspace"
 # Sync cache lives in nova_sync/ alongside the other sync infrastructure
 SYNC_CACHE_PATH = SYNC_DIR / ".drive_sync_cache.json"
 
-CLIENT_SECRETS_PATHS = [
-    Path.home() / "OneDrive" / "Documents" / "client_secrets.json",
-    Path.home() / "Documents" / "client_secrets.json",
+# Folders searched for the OAuth client-secret file. Google downloads it with a
+# long default name (client_secret_<id>.apps.googleusercontent.com.json), so we
+# match by pattern across these dirs rather than requiring an exact filename.
+CLIENT_SECRETS_DIRS = [
+    Path.home() / "OneDrive" / "Documents",
+    Path.home() / "Documents",
+    Path.home() / "Downloads",
+    Path.home() / "Desktop",
 ]
+CLIENT_SECRETS_PATHS = [d / "client_secrets.json" for d in CLIENT_SECRETS_DIRS]
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
@@ -71,9 +77,17 @@ EXCLUDE_FILES    = {
 # -- Auth ---------------------------------------------------------------------
 
 def _get_client_secrets():
+    # 1) exact name in the known dirs (back-compat)
     for p in CLIENT_SECRETS_PATHS:
         if p.exists():
             return p
+    # 2) Google's default download name, anywhere in the known dirs (newest wins)
+    matches = []
+    for d in CLIENT_SECRETS_DIRS:
+        if d.is_dir():
+            matches += list(d.glob("client_secret*.json"))
+    if matches:
+        return max(matches, key=lambda p: p.stat().st_mtime)
     return None
 
 

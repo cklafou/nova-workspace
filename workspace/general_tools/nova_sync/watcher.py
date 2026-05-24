@@ -536,11 +536,8 @@ def run_push_cycle():
 
 
 def run_sync_and_backup():
-    try:
-        from nova_sync.drive import sync_to_drive
-        sync_to_drive()
-    except Exception as e:
-        print(f"[drive] Sync error: {e}")
+    # Google Drive auto-sync removed 2026-05-24 — git is the backup / source of truth.
+    # drive.py remains for manual sync if ever wanted. Local backups still run.
     try:
         from nova_sync.backup import run_backup
         run_backup()
@@ -809,11 +806,6 @@ if __name__ == "__main__":
                         f"CLAUDE SESSION URL: https://raw.githubusercontent.com/"
                         f"cklafou/nova-workspace/{loop_hash}/workspace/general_tools/nova_sync/FILE_INDEX.md"
                     )
-                try:
-                    from nova_sync.drive import sync_to_drive
-                    sync_to_drive()
-                except Exception as e:
-                    print(f"[drive] Sync error: {e}")
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
