@@ -267,6 +267,15 @@ def _should_agent_respond(agent: str, content: str) -> bool:
 @app.on_event("startup")
 async def startup_event():
     """Trigger workspace index build and background monitors after server is ready."""
+    # Autonomy on/off lives in Nova's body (nova_cortex.executive), persisted across
+    # restarts. Load it so the UI + per-turn flag reflect her real state on boot.
+    global autonomous_mode
+    try:
+        from nova_cortex import executive
+        autonomous_mode = executive.autonomy_enabled()
+    except Exception as _e:
+        print(f"[autonomy] could not load autonomy state: {_e}")
+
     async def _bg_index():
         import asyncio as _aio
         await _aio.sleep(1)  # let server fully start first
@@ -1952,9 +1961,17 @@ def _reconcile_queue(intent: dict) -> list:
         existing = {t["title"].lower() for t in _parse_queue()}
     except Exception:
         existing = set()
+    # Completed tasks are removed from the active queue but remembered as "done"
+    # in task_state — never recreate one. (Recreating a completed task is what caused
+    # the redo loop where Task 1 reappeared on every wake.)
+    _state = _load_task_state()
+    _done_keys = {k for k, v in _state.items() if v.get("status") == "done"}
     for task in (intent.get("add") or []):
         title = (task.get("title") or "").strip()
         if not title or title.lower() in existing:
+            continue
+        if _task_key(title) in _done_keys:
+            actions.append(f"skipped (already completed): {title}")
             continue
         try:
             pr = int(task.get("priority", 4))
@@ -1969,7 +1986,8 @@ def _reconcile_queue(intent: dict) -> list:
             if t["title"].lower() == str(title).strip().lower():
                 if _complete_task(t["raw"], t["title"], "completed"):
                     actions.append(f"completed: {t['title']}")
-                    _drop_task_state(t["title"])
+                    # Remember as done (don't drop) so it can't be recreated.
+                    _record_progress(t["title"], "marked complete", "done")
                 break
     return actions
 
@@ -2157,21 +2175,33 @@ def _parse_task_progress(reply: str):
 
 
 def _task_queue_view(max_notes: int = 3) -> str:
-    """Queue view with status + recent progress notes, for the tick prompt."""
+    """Queue view with status + recent progress notes, for the tick prompt. Also
+    lists already-completed tasks so Nova sees what is finished and does NOT
+    recreate or redo it (the cause of the Task-1-reappears loop)."""
     tasks = _parse_queue()
-    if not tasks:
-        return "  (queue empty)"
     state = _load_task_state()
     lines = []
-    for t in tasks:
-        st = state.get(_task_key(t["title"]), {})
-        lines.append(f"• [{st.get('status', 'queued')}] P{t['priority']}: {t['title']}")
-        prog = st.get("progress", [])[-max_notes:]
-        if prog:
-            for p in prog:
-                lines.append(f"     ↳ {p.get('note', '')}")
-        else:
-            lines.append("     ↳ (not started)")
+    if tasks:
+        for t in tasks:
+            st = state.get(_task_key(t["title"]), {})
+            lines.append(f"• [{st.get('status', 'queued')}] P{t['priority']}: {t['title']}")
+            prog = st.get("progress", [])[-max_notes:]
+            if prog:
+                for p in prog:
+                    lines.append(f"     ↳ {p.get('note', '')}")
+            else:
+                lines.append("     ↳ (not started)")
+    else:
+        lines.append("  (queue empty)")
+    # Completed tasks — remembered so they are NOT recreated or redone.
+    active_keys = {_task_key(t["title"]) for t in tasks}
+    done = [v for k, v in state.items()
+            if v.get("status") == "done" and k not in active_keys]
+    if done:
+        lines.append("")
+        lines.append("  ✓ ALREADY COMPLETED (do NOT recreate or redo these):")
+        for v in done:
+            lines.append(f"      ✓ {v.get('title', '?')}")
     return "\n".join(lines)
 
 
@@ -2322,7 +2352,8 @@ async def _run_autonomy_tick(cole_pending: bool, reason: str) -> str:
             await emit_event("task", f"{_task_key(title)}: {did or status}")
             if status == "done" and matched:
                 _complete_task(matched["raw"], matched["title"], "completed")
-                _drop_task_state(matched["title"])
+                # Keep the entry as "done" (set by _record_progress above) so Nova
+                # remembers it's finished and never recreates it on a later wake.
                 await emit_event("task", f"Completed: {_task_key(matched['title'])}")
 
     # Mark Cole's directive consumed ONLY once it has been turned into queued task(s),
@@ -2377,40 +2408,25 @@ async def autonomy_daemon():
     OR Cole pending. Stage 2: a model wake-tick where Nova exercises judgment.
     Cole speaking is the highest-priority wake (Priority 0)."""
     global is_processing
+    # Drive Nova's body-resident executive faculty. The judgment — whether to wake,
+    # and what to do or whether to rest — is entirely hers, in nova_cortex.executive.
+    # This host only provides the clock tick, the model call, and her voice. Autonomy
+    # on/off is body state; the UI button merely flips executive.set_autonomy().
+    from nova_cortex import executive
     await asyncio.sleep(2)
-    st = _autonomy_state
-    st["last_scheduled"] = _time.monotonic()
 
     while True:
-        if not autonomous_mode:
+        if not executive.autonomy_enabled():
             await asyncio.sleep(2)
             continue
 
-        cfg = _autonomy_cfg()
-        if not cfg.get("enabled", True):
-            await asyncio.sleep(5)
+        await asyncio.sleep(3)                       # ASLEEP — cheap poll, no model
+        if _stop_requested.is_set() or is_processing:
             continue
 
-        await asyncio.sleep(cfg["poll_s"])          # ASLEEP - cheap poll, no model
-        if not autonomous_mode or _stop_requested.is_set():
-            continue
-
-        # Mutual exclusion: never tick while a direct response / queue is running.
-        if is_processing:
-            continue
-
-        now = _time.monotonic()
-        cole_pending = _has_unread_cole()
-        fp = _env_fingerprint(cfg)
-        changed = (fp != st["last_fp"])
-        interval_elapsed = (now - st["last_scheduled"]) >= cfg["sleep_interval_s"]
-        observing = now < st["observe_until"]
-
-        # ── Stage-1 gate: wake the model only if there is real cause ──
-        if not (cole_pending or changed or interval_elapsed or observing):
-            continue
-
-        if _cole_is_typing():                        # existing typing guard
+        cole_pending = _has_unread_cole()            # host reads the live transcript
+        should, reason = executive.should_wake(cole_pending)
+        if not should:
             continue
         try:
             if not (await get_status()).get("Nova"):
@@ -2420,55 +2436,25 @@ async def autonomy_daemon():
             await asyncio.sleep(5)
             continue
 
-        st["last_fp"] = fp
-        if interval_elapsed:
-            st["last_scheduled"] = now
+        await emit_event("wake", f"Nova woke — {reason}")
 
-        reason = ("cole" if cole_pending else "change" if changed
-                  else "observe" if observing else "interval")
-        _reason_txt = {"cole": "Cole message", "change": "environment change",
-                       "observe": "observation dwell", "interval": "scheduled check"}.get(reason, reason)
-        await emit_event("wake", f"Nova woke — {_reason_txt}")
-
-        # ── Stage-2: her judgment (held under is_processing for mutual exclusion) ──
+        # ── Her judgment (held under is_processing for mutual exclusion) ──
         is_processing = True
         await broadcast({"type": "processing_start"})
         try:
-            decision = await _run_autonomy_tick(cole_pending=cole_pending, reason=reason)
+            situation = executive.build_situation(cole_pending, reason)
+            reply = await run_ai_response(
+                "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], situation,
+                hb_ctx=HeartbeatContext(situation), cole_pending=cole_pending) or ""
+            outcome = executive.apply_decision(reply, cole_pending=cole_pending)
+            await emit_event("autonomy", outcome["summary"])
         except asyncio.CancelledError:
-            decision = "SLEEP"
+            pass
         except Exception as _e:
             print(f"[autonomy] tick error: {_e}")
-            decision = "SLEEP"
         finally:
             is_processing = False
             await broadcast({"type": "processing_end"})
-
-        _dtxt = {"ENGAGE": "Nova is engaging — working a task",
-                 "OBSERVE": "Nova is observing — staying alert",
-                 "SLEEP": "Nova went back to sleep"}.get(decision, decision)
-        await emit_event(decision.lower(), _dtxt)
-
-        if decision == "OBSERVE":
-            st["observe_until"] = _time.monotonic() + (
-                cfg["observe_dwell_ticks"] * cfg["sleep_interval_s"])
-        elif decision == "ENGAGE":
-            # She did a step and there may be more — come back for the next step
-            # SOON (engage_gap_s) instead of waiting the full idle interval, so
-            # multi-step tasks actually progress. Achieved by back-dating the
-            # scheduled clock so the interval gate re-opens after a short gap.
-            st["observe_until"] = 0.0
-            st["last_scheduled"] = (_time.monotonic()
-                                    - cfg["sleep_interval_s"] + cfg.get("engage_gap_s", 8))
-        else:  # SLEEP — nothing to do; go fully dormant until the next interval
-            st["observe_until"] = 0.0
-            st["last_scheduled"] = _time.monotonic()
-
-        # Re-baseline the env fingerprint AFTER the tick so the files Nova herself
-        # wrote during this tick don't count as a new change and immediately
-        # re-wake her (prevents the self-feedback wake loop). Cole messages still
-        # wake instantly via cole_pending, and the scheduled interval still fires.
-        st["last_fp"] = _env_fingerprint(cfg)
 
 
 @app.get("/api/queue")
@@ -3037,6 +3023,12 @@ async def websocket_endpoint(ws: WebSocket):
 
             if data.get("type") == "autonomous_toggle":
                 autonomous_mode = bool(data.get("enabled", False))
+                # Autonomy is body state — the button only flips the body's switch.
+                try:
+                    from nova_cortex import executive
+                    executive.set_autonomy(autonomous_mode)
+                except Exception as _e:
+                    print(f"[autonomy] set_autonomy failed: {_e}")
                 status_text = "ON" if autonomous_mode else "OFF"
                 _amsg = session_mgr.active.add("System",
                     f"[Autonomous Mode: {status_text}]")
