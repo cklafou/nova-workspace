@@ -1073,6 +1073,15 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                 memory_indexer.add_message(full, ai_name, session_mgr.active_id)
 
             await broadcast({"type": "message_end", "author": ai_name, "id": msg_id, "content": full})
+            if ai_name == "Nova":
+                # Refresh her time-sense so "since you last stirred" reflects THIS reply,
+                # not a stale autonomy wake (fixes her thinking minutes passed after a
+                # 3-second-old response). Also re-baselines the change fingerprint.
+                try:
+                    from nova_cortex import executive
+                    executive.note_activity()
+                except Exception:
+                    pass
 
         # Phase 4A.5 — Route module responses with [TASK_ID] to Master_Inbox
         _maybe_route_inbox(ai_name, full)

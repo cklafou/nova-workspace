@@ -30,6 +30,15 @@ def interval_elapsed(last_iso: str, interval_s: float) -> bool:
     return elapsed_seconds(last_iso) >= interval_s
 
 
+def stamp() -> str:
+    """Her real-time grounding: the actual host clock, as a human would read it
+    ('Sunday, May 25, 2026, 1:51 AM'). Platform-safe (no %-d / %#d)."""
+    n = datetime.now()
+    hour12 = n.hour % 12 or 12
+    return (f"{n:%A, %B} {n.day}, {n.year}, "
+            f"{hour12}:{n.minute:02d} {'AM' if n.hour < 12 else 'PM'}")
+
+
 def time_of_day() -> str:
     h = datetime.now().hour
     return ("late night" if h < 5 else "morning" if h < 12 else

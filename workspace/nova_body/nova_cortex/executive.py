@@ -88,6 +88,17 @@ def _cfg() -> dict:
     return dict(_DEFAULT_CFG)
 
 
+def note_activity() -> None:
+    """Mark that Nova just acted (e.g. replied in chat) so her time-sense reflects her
+    REAL last activity, not only autonomy wakes — otherwise 'since you last stirred'
+    drifts (she'd think minutes passed right after answering). Also re-baselines the
+    change fingerprint so files she just touched don't immediately re-wake her."""
+    s = _load_state()
+    s["last_wake"] = clock.now_iso()
+    s["last_fp"] = json.dumps(environment.fingerprint(_cfg()["watch_paths"]), default=list)
+    _save_state(s)
+
+
 # ── cheap wake gate (no model) ─────────────────────────────────────────────────
 def should_wake(cole_pending: bool = False) -> tuple:
     """Stage-1 gate (no model). Returns (should_wake: bool, reason: str)."""
@@ -110,8 +121,9 @@ def build_situation(cole_pending: bool, reason: str) -> str:
     board = tasking.render_board(st.get("active"))
     directive = environment.cole_directive()
     last = st.get("last_wake", "")
-    L = [f"[AUTONOMY WAKE — {reason}] It's {clock.time_of_day()}"
-         + (f", {clock.since_human(last)} since you last stirred." if last else ".")]
+    L = [f"[AUTONOMY WAKE — {reason}] Right now it is {clock.stamp()} ({clock.time_of_day()})."]
+    if last:
+        L.append(f"(You last acted {clock.since_human(last)}.)")
     L.append("You woke on your own. This is your time.")
     if directive:
         L += ["", f'COLE — PRIORITY 0 (his word comes first; weigh it): "{directive}"']
