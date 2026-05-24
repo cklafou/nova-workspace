@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "active": null,
-  "last_wake": "2026-05-25T01:45:45",
-  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 90, 1779628418], [\"memory/cole_intent.json\", 925, 1779641125]]",
-  "rest_note": ""
+  "last_wake": "2026-05-25T01:48:00",
+  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 90, 1779641257], [\"memory/cole_intent.json\", 79, 1779641257]]",
+  "rest_note": "Board is clean, no urgent items, late night — resting instead of forcing activity"
 }
