@@ -1,4 +1,5 @@
 @echo off
+REM @nova: Launcher — runs nova_start.py to bring up the whole Nova stack (double-click entry point).
 title Project Nova - Launcher
 cd /d "%~dp0"
 

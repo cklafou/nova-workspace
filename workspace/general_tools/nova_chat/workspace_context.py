@@ -45,7 +45,14 @@ TEXT_EXTENSIONS   = {".py", ".md", ".json", ".txt", ".jsonl", ".ps1", ".cmd",
 SKIP_DIRS         = {"__pycache__", ".git", "node_modules", ".clawhub",
                      "backups", "sessions", "static", "_admin"}
 SKIP_FILES        = {"FILE_INDEX.md", "FILE_INDEX_LINK.md", ".drive_sync_cache.json",
-                     "sessions_index.json"}
+                     "sessions_index.json",
+                     # Duplicated now in SELF/core (kept on disk as fallback source) —
+                     # hide from Nova's context so there is ONE self-model, not two.
+                     "NOVA.md", "AGENTS.md", "TOOLS.md", "ORIENT.md",
+                     # Generated index artifacts (consumed by tooling, not by Nova) —
+                     # keep them for calls.py/logger/drive but keep them out of context.
+                     "calls.md", "Calls_Master_Index.md", "GEMINI_INDEX.md",
+                     "Logger_Index.md"}
 
 MANIFEST_MAX       = 25000  # flat file listing — needs room for full workspace
 MEMORY_FILE_MAX    = 20000  # per memory/ file (STATUS.md can be detailed)
@@ -63,6 +70,37 @@ TOTAL_MAX          = 300000 # Sonnet 4.6=200k tokens, Gemini 2.5Pro=1M tokens --
 # We cap at 60K chars (~15K tokens) to leave generous headroom for long sessions.
 NOVA_ONDEMAND_FILE_MAX = 15000   # per on-demand file — enough for any single .md
 NOVA_TOTAL_MAX         = 60000   # ~15K tokens; leaves 17K for conversation + output
+
+# ── Nova's self-model: SELF/core/ (ordered, budgeted) ───────────────────────────
+# SELF/core/*.md is Nova's single source of self-knowledge (identity, how-she-works,
+# body manifest, tools/voice). It is loaded in numeric-prefix order every turn — this
+# is the ONE place the self-model is injected, and the reinject endpoint relies on it.
+SELF_CORE_DIR      = WORKSPACE_DIR / "SELF" / "core"
+NOVA_SELF_CORE_MAX = 44000   # char ceiling for the always-injected core (auto-measured below)
+
+
+def _load_self_core() -> tuple:
+    """Load SELF/core/*.md in numeric-prefix order, within NOVA_SELF_CORE_MAX.
+    Returns (text, chars). Empty when SELF/core is absent so callers can fall back."""
+    if not SELF_CORE_DIR.is_dir():
+        return "", 0
+    out, total = [], 0
+    for p in sorted(SELF_CORE_DIR.glob("*.md")):
+        if not p.is_file():
+            continue
+        try:
+            content = p.read_text(encoding="utf-8", errors="replace").strip()
+        except Exception:
+            continue
+        if not content:
+            continue
+        chunk = f"--- SELF/core/{p.name} ---\n{content}\n"
+        if total + len(chunk) > NOVA_SELF_CORE_MAX:
+            out.append(f"--- SELF/core/{p.name} ---\n[omitted — SELF/core budget reached]\n")
+            break
+        out.append(chunk)
+        total += len(chunk)
+    return "\n".join(out), total
 
 
 # ── Workspace manifest ────────────────────────────────────────────────────────
@@ -449,21 +487,22 @@ class WorkspaceContext:
         parts = []
         total = 0
 
-        # ── Core Identity Files (always first, every turn) ────────────────────
-        # AGENTS.md / NOVA.md / TOOLS.md define who Nova IS. They live at the
-        # workspace root and are never in memory/, so the normal loader skips
-        # them. Inject explicitly so identity survives across all launch paths
-        # (live source AND compiled exe).
-        _IDENTITY_FILES = ["AGENTS.md", "NOVA.md", "TOOLS.md"]
-        for _fname in _IDENTITY_FILES:
-            _fpath = WORKSPACE_DIR / _fname
-            try:
-                _content = _fpath.read_text(encoding="utf-8", errors="replace").strip()
-                _chunk = f"--- [{_fname}] (Core Identity) ---\n{_content}\n"
-                parts.append(_chunk)
-                total += len(_chunk)
-            except Exception:
-                pass  # missing file — skip silently
+        # ── Self-model: SELF/core/ (ordered, budgeted) — single source of truth ──
+        # SELF/core/*.md (identity, how-I-work, body manifest, tools/voice) is loaded
+        # in numeric-prefix order every turn. This is the ONE place Nova's self-model
+        # is injected; the reinject endpoint relies on it too. Falls back to the legacy
+        # root identity files only if SELF/core is not yet populated.
+        _self_core, _sc_chars = _load_self_core()
+        if _self_core:
+            parts.append(_self_core)
+            total += _sc_chars
+        else:
+            # SELF/core is the single self-model source. If it is somehow missing,
+            # surface that loudly rather than silently injecting nothing.
+            parts.append(
+                "--- [SELF/core MISSING] ---\n"
+                "Nova's self-model could not be loaded. Run "
+                "general_tools/build_manifest.py to rebuild SELF/core.\n")
 
         # Always-loaded memory files (grounding context — always present)
         if self._always:
@@ -480,7 +519,7 @@ class WorkspaceContext:
         # On-demand: files/dirs explicitly mentioned in this message
         # Skip files already emitted in the identity block to avoid duplication
         # (TOOLS.md + NOVA.md + AGENTS.md are 30K chars — doubling them blows context)
-        _already_emitted = {f.lower() for f in _IDENTITY_FILES}
+        _already_emitted = {"agents.md", "nova.md", "tools.md"}
         _on_demand_filtered = {
             k: v for k, v in self._on_demand.items()
             if k.split("/")[-1].lower() not in _already_emitted

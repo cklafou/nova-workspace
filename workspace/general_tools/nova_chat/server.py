@@ -1,4 +1,5 @@
-﻿"""
+﻿# @nova: Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the autonomy sleep/wake daemon.
+"""
 Nova Group Chat - FastAPI WebSocket Server
 Handles real-time streaming from all three AIs concurrently.
 Nova can POST messages via /nova-message endpoint.
@@ -275,6 +276,17 @@ async def startup_event():
             print("[workspace] background index ready")
         except Exception as e:
             print(f"[workspace] background index error: {e}")
+        # Refresh Nova's Body Manifest on boot so her self-model
+        # (SELF/core/03_body_manifest.md) is current regardless of the (manual)
+        # watcher. Runs off the event loop; failure is non-fatal.
+        try:
+            def _regen_manifest():
+                import build_manifest as _bm
+                _bm.main()
+            await _aio.get_event_loop().run_in_executor(None, _regen_manifest)
+            print("[manifest] startup regen complete")
+        except Exception as e:
+            print(f"[manifest] startup regen skipped: {e}")
 
     async def _bg_eyes_stream():
         """
@@ -2826,15 +2838,12 @@ async def reinject_context():
     _ALREADY_PER_TURN = {"agents.md", "nova.md", "tools.md",
                          "status.md", "journal.md", "cole.md"}
 
-    try:
-        from gateway_config import load as _load_gw_cfg
-        _cfg = _load_gw_cfg()
-        inject_paths = _cfg.inject_files(heartbeat=False)
-    except Exception as _e:
-        print(f"[reinject] config load failed: {_e} — using fallback list")
-        _WORKSPACE = Path(__file__).resolve().parent.parent.parent
-        _FALLBACK = ["BOOTUP/NCL_MASTER.md", "BOOTUP/UPGRADE_PROTOCOL.md"]
-        inject_paths = [_WORKSPACE / p for p in _FALLBACK if (_WORKSPACE / p).exists()]
+    # Re-inject the deep reference docs from SELF/reference (NCL grammar, upgrade
+    # protocol, heartbeat). SELF/core (identity, how-I-work, body manifest, tools &
+    # voice) is already injected fresh every turn, so here we only surface the
+    # on-demand reference layer that isn't normally in context.
+    _WORKSPACE = Path(__file__).resolve().parent.parent.parent
+    inject_paths = sorted((_WORKSPACE / "SELF" / "reference").glob("*.md"))
 
     # 1) Purge stale CONTEXT REFRESH blocks from history (keep the conversation).
     purged = 0
@@ -2859,11 +2868,11 @@ async def reinject_context():
     ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     sections = [
         f"# CONTEXT REFRESH — {ts}",
-        "_Your identity, architecture, and memory files (AGENTS/NOVA/TOOLS/STATUS/COLE/"
-        "JOURNAL) are reloaded fresh from disk every turn — they are current as of now. "
-        "Re-orient to the CURRENT system described in them and DISREGARD any earlier "
-        "messages in this session that assumed older or retired architecture. The "
-        "conversation continues unchanged._",
+        "_Your self-model — SELF/core/ (identity, how-you-work, body manifest, tools & "
+        "voice) — and your memory files (STATUS/COLE/JOURNAL) are reloaded fresh from "
+        "disk every turn, current as of now. Re-orient to the CURRENT system they "
+        "describe and DISREGARD any earlier messages in this session that assumed older "
+        "or retired architecture. The conversation continues unchanged._",
     ]
     injected = 0
     for path in inject_paths:

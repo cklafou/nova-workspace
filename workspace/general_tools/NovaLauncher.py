@@ -1,4 +1,5 @@
-﻿"""
+﻿# @nova: Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.
+"""
 NovaLauncher.py  (fixed)
 ========================
 Unified launcher for Project Nova.
@@ -169,22 +170,17 @@ def main():
             pass
         return
 
-    log.info("Opening Nova Qt window...")
-
-    # ── PyQt6 native window (replaces pywebview) ──────────────────────────────
+    # Standalone mode (not launched by NovaStart): open the browser UI directly.
+    # The native nova_qt window was retired — the app window is Chrome/Edge --app
+    # owned by NovaStart, or a plain browser tab here.
+    log.info("Opening Nova in the browser...")
+    import webbrowser
+    webbrowser.open(CHAT_URL)
     try:
-        from nova_qt.main import run_qt_window
-        run_qt_window()   # blocks until window is closed
-        log.info("Window closed.")
-    except Exception as e:
-        log.error("nova_qt failed (%s) — falling back to browser.", e, exc_info=True)
-        import webbrowser
-        webbrowser.open(CHAT_URL)
-        try:
-            input("Nova is running at http://127.0.0.1:8765 — Press Enter to stop.")
-        except (RuntimeError, EOFError):
-            while True:
-                time.sleep(60)
+        input(f"Nova is running at {CHAT_URL} — Press Enter to stop.")
+    except (RuntimeError, EOFError):
+        while True:
+            time.sleep(60)
 
     # Graceful shutdown: ask gateway to stop
     try:

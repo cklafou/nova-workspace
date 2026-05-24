@@ -1,3 +1,4 @@
+# @nova: Nova's file-sync layer — watchdog file watcher (auto-indexing), drive sync, and backups.
 """
 nova_sync -- Nova Tool Package
 Re-exports all public names for backward compatibility.

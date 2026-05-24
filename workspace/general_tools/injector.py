@@ -1,4 +1,5 @@
-﻿"""
+﻿# @nova: NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.
+"""
 injector.py — NCL Context Injector & Module Dispatcher
 ====================================================================
 Phase 4A.4: Executes parsed NCLCall objects from Nova Chat.

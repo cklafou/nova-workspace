@@ -655,6 +655,68 @@ def run_pup_cycle():
     return commit_hash
 
 
+def run_manifest_pass():
+    """Regenerate Nova's Body Manifest (SELF/) and log a drift summary so her
+    self-model stays in sync with the code. Added 2026-05-24 (Body Manifest)."""
+    import json as _json, subprocess as _sp
+    from datetime import datetime as _dt
+    bm = WORKSPACE_DIR / "general_tools" / "build_manifest.py"
+    if not bm.exists():
+        return
+    try:
+        _sp.run([sys.executable, str(bm)], cwd=str(WORKSPACE_DIR),
+                capture_output=True, timeout=120)
+    except Exception as e:
+        print(f"[manifest] regen error: {e}")
+        return
+    try:
+        mf = WORKSPACE_DIR / "SELF" / "reference" / "manifest.json"
+        data = _json.loads(mf.read_text(encoding="utf-8"))
+        fl = data.get("flags", {})
+        und = fl.get("undescribed", [])
+        dead = fl.get("dead_part_candidates", [])
+        text = (f"Body manifest refreshed: {data.get('part_count')} parts, "
+                f"{len(und)} undescribed, {len(dead)} no-inbound-ref")
+        print(f"[manifest] {text}")
+        ev_dir = WORKSPACE_DIR / "logs" / "events"
+        ev_dir.mkdir(parents=True, exist_ok=True)
+        payload = {"type": "nova_event", "event": "manifest", "text": text,
+                   "level": "warn" if (und or dead) else "info",
+                   "ts": _dt.now().isoformat(),
+                   "undescribed": und, "dead_part_candidates": dead}
+        with open(ev_dir / f"events-{_dt.now().strftime('%Y-%m-%d')}.jsonl",
+                  "a", encoding="utf-8") as f:
+            f.write(_json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception as e:
+        print(f"[manifest] drift-log error: {e}")
+
+
+def run_audit_pass():
+    """Run the code-health audit once and log a one-line summary so broken calls,
+    dead code, or unreferenced files (e.g. after moving docs into SELF/) are caught
+    automatically on boot. Added 2026-05-24."""
+    import subprocess as _sp, json as _aj
+    from datetime import datetime as _dt
+    ap = WORKSPACE_DIR / "general_tools" / "audit_scripts.py"
+    if not ap.exists():
+        return
+    try:
+        r = _sp.run([sys.executable, str(ap), "--summary"],
+                    capture_output=True, text=True, timeout=180, cwd=str(WORKSPACE_DIR))
+        summary = (r.stdout or "").strip() or "audit complete"
+        print(f"[audit] {summary}")
+        ev = WORKSPACE_DIR / "logs" / "events"
+        ev.mkdir(parents=True, exist_ok=True)
+        with open(ev / f"events-{_dt.now().strftime('%Y-%m-%d')}.jsonl", "a",
+                  encoding="utf-8") as f:
+            f.write(_aj.dumps({"type": "nova_event", "event": "audit",
+                               "text": summary[:300],
+                               "level": "warn" if r.returncode else "info",
+                               "ts": _dt.now().isoformat()}, ensure_ascii=False) + "\n")
+    except Exception as e:
+        print(f"[audit] pass skipped: {e}")
+
+
 class GitAutoCommit(FileSystemEventHandler):
     def __init__(self):
         self.last_event_time = 0
@@ -723,6 +785,8 @@ if __name__ == "__main__":
     commit_hash = run_push_cycle()
     run_sync_and_backup()
     print_session_urls(commit_hash, copy_url=False)
+    run_manifest_pass()
+    run_audit_pass()
 
     handler = GitAutoCommit()
     observer = Observer()
@@ -739,6 +803,7 @@ if __name__ == "__main__":
                 handler.last_event_time = 0
                 handler.changed_files.clear()
                 loop_hash = run_push_cycle()
+                run_manifest_pass()
                 if loop_hash:
                     print(
                         f"CLAUDE SESSION URL: https://raw.githubusercontent.com/"

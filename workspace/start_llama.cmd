@@ -1,4 +1,5 @@
 @echo off
+REM @nova: Starts llama.cpp serving Qwen 3.5 27B Q8 on :8080 with the dual-GPU tensor split (4090+3090).
 title llama.cpp Qwen 3.5 27B — Dual GPU (4090 + 3090 eGPU)
 cd /d "%~dp0"
 

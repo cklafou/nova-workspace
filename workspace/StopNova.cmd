@@ -1,4 +1,5 @@
 @echo off
+REM @nova: Shutdown — kills whatever is listening on Nova's ports (8080/8765/18790) for a clean restart.
 REM ====================================================================
 REM  StopNova.cmd — guaranteed clean shutdown of the whole Nova stack.
 REM  Closing the app window does NOT reliably stop the background servers

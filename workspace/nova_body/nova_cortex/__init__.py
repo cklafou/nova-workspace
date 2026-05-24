@@ -1,3 +1,4 @@
+# @nova: Nova's reasoning core — decision rules, prefrontal logic, and check-in cadence (rules, prefrontal_cortex, checkin).
 """
 nova_cortex -- Nova Tool Package
 Re-exports all public names for backward compatibility.

@@ -1,3 +1,4 @@
+# @nova: Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.
 """
 nova_start.py  --  Project Nova one-shot launcher / orchestrator
 ================================================================
@@ -40,6 +41,7 @@ LLAMA_EXE   = WS / "llama" / "llama-server.exe"
 MODEL       = WS / "models" / "qwen-27b-q8.gguf"
 MMPROJ      = WS / "models" / "qwen-27b-mmproj.gguf"
 NOVA_LAUNCH = WS / "general_tools" / "NovaLauncher.py"
+WATCHER     = WS / "general_tools" / "nova_sync" / "watcher.py"
 PROMPT_CACHE = WS / "prompt_cache"
 
 LLAMA_PORT = 8080
@@ -314,6 +316,58 @@ def stop_llama(proc: subprocess.Popen | None) -> None:
                 pass
 
 
+# ── File watcher (manifest refresh + auto-commit) ──────────────────────────--
+def start_watcher() -> subprocess.Popen | None:
+    """Launch the file watcher as part of the stack. It regenerates Nova's Body
+    Manifest on change (keeping SELF/ current) and auto-commits/pushes the
+    workspace. Set NOVA_NO_WATCHER=1 to skip. Runs in its own process group so it
+    can be stopped gracefully (avoids leaving a git index.lock)."""
+    if os.environ.get("NOVA_NO_WATCHER"):
+        log("NOVA_NO_WATCHER set — skipping the file watcher.")
+        return None
+    if not WATCHER.exists():
+        log(f"watcher.py not found at {WATCHER} — skipping.", "WARN")
+        return None
+    py = _pick_python()
+    if py is None:
+        log("No suitable Python for the watcher — skipping.", "WARN")
+        return None
+    log("Starting file watcher (manifest refresh + auto-commit)...")
+    creationflags = 0
+    if sys.platform == "win32":
+        creationflags = subprocess.CREATE_NEW_CONSOLE | subprocess.CREATE_NEW_PROCESS_GROUP
+    try:
+        return subprocess.Popen(py + [str(WATCHER)], cwd=str(WS),
+                                creationflags=creationflags)
+    except Exception as e:
+        log(f"Could not start watcher: {e}", "WARN")
+        return None
+
+
+def stop_watcher(proc: subprocess.Popen | None) -> None:
+    """Stop the watcher gracefully so its observer/git push can finish and it does
+    not leave a stale .git/index.lock behind."""
+    if not proc or proc.poll() is not None:
+        return
+    log("Stopping file watcher...")
+    try:
+        if sys.platform == "win32":
+            # CTRL_BREAK triggers watcher.py's KeyboardInterrupt -> observer.stop().
+            proc.send_signal(signal.CTRL_BREAK_EVENT)
+            try:
+                proc.wait(timeout=8)
+                return
+            except Exception:
+                pass
+        proc.terminate()
+        proc.wait(timeout=8)
+    except Exception:
+        try:
+            proc.kill()
+        except Exception:
+            pass
+
+
 # ── Main ───────────────────────────────────────────────────────────────────--
 def main() -> None:
     banner("PROJECT NOVA  --  one-click launcher")
@@ -330,6 +384,7 @@ def main() -> None:
         log("Proceeding to open the app window anyway; it may show a connection error.", "WARN")
 
     app_proc = open_app_window()
+    watcher_proc = start_watcher()
 
     banner("Nova is running.  Close the Nova app window to shut everything down.")
 
@@ -362,6 +417,7 @@ def main() -> None:
     except KeyboardInterrupt:
         log("Interrupted by user.")
     finally:
+        stop_watcher(watcher_proc)
         _shutdown_nova(nova_proc)
         stop_llama(llama_proc)
         try:

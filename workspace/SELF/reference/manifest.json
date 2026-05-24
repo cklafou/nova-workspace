@@ -1,0 +1,523 @@
+{
+  "generated": "2026-05-24T09:56:32",
+  "workspace": "/sessions/quirky-laughing-allen/mnt/Project_Nova/workspace",
+  "part_count": 21,
+  "described": 21,
+  "flags": {
+    "undescribed": [],
+    "dead_part_candidates": [
+      "nova_lancedb",
+      "nova_memory",
+      "nova_motor",
+      "audit_queue.py",
+      "audit_scripts.py",
+      "calls.py",
+      "download_models.py",
+      "gateway_config.py",
+      "injector.py",
+      "restructure.py"
+    ],
+    "stale": []
+  },
+  "parts": [
+    {
+      "name": "nova_cortex",
+      "kind": "body_part",
+      "path": "nova_body/nova_cortex",
+      "purpose": "Nova's reasoning core — decision rules, prefrontal logic, and check-in cadence (rules, prefrontal_cortex, checkin).",
+      "files": 6,
+      "lines": 1314,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [
+        "nova_cortex"
+      ],
+      "third_party": [
+        "__future__",
+        "gateway_config",
+        "logging",
+        "pyautogui"
+      ],
+      "referenced_by": [
+        "nova_chat",
+        "nova_memory",
+        "nova_motor"
+      ],
+      "launched_by": [],
+      "flags": []
+    },
+    {
+      "name": "nova_lancedb",
+      "kind": "body_part",
+      "path": "nova_lancedb",
+      "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
+      "files": 4,
+      "lines": 564,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [],
+      "third_party": [
+        "PIL",
+        "__future__",
+        "base64",
+        "embedder",
+        "hippocampus",
+        "lancedb",
+        "numpy",
+        "pyarrow",
+        "queue",
+        "sentence_transformers"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    },
+    {
+      "name": "nova_logs",
+      "kind": "body_part",
+      "path": "nova_body/nova_logs",
+      "purpose": "Nova's unified log manager — the single logging system shared by all subsystems.",
+      "files": 2,
+      "lines": 253,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [],
+      "third_party": [],
+      "referenced_by": [
+        "nova_motor",
+        "nova_senses"
+      ],
+      "launched_by": [],
+      "flags": []
+    },
+    {
+      "name": "nova_memory",
+      "kind": "body_part",
+      "path": "nova_body/nova_memory",
+      "purpose": "Nova's memory — persistent state, journal, goals/status, and daily log summaries.",
+      "files": 6,
+      "lines": 832,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [
+        "nova_cortex",
+        "nova_senses"
+      ],
+      "third_party": [
+        "__future__",
+        "gateway_config",
+        "logging"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    },
+    {
+      "name": "nova_motor",
+      "kind": "body_part",
+      "path": "nova_body/nova_motor",
+      "purpose": "Nova's motor system — executes actions (hands), plans them (motor_cortex), and verifies results.",
+      "files": 5,
+      "lines": 1227,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "8765"
+      ],
+      "nova_imports": [
+        "nova_cortex",
+        "nova_logs",
+        "nova_motor"
+      ],
+      "third_party": [
+        "__future__",
+        "ctypes",
+        "gateway_config",
+        "logging",
+        "pyautogui",
+        "urllib"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    },
+    {
+      "name": "nova_senses",
+      "kind": "body_part",
+      "path": "nova_body/nova_senses",
+      "purpose": "Nova's perception — file/system sensing (eyes), workspace self-awareness (proprioception), and vision.",
+      "files": 4,
+      "lines": 1256,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [
+        "nova_logs",
+        "nova_senses"
+      ],
+      "third_party": [
+        "anthropic",
+        "base64",
+        "pyautogui",
+        "pywinauto",
+        "transformers"
+      ],
+      "referenced_by": [
+        "nova_memory"
+      ],
+      "launched_by": [],
+      "flags": []
+    },
+    {
+      "name": "nova_start.py",
+      "kind": "entrypoint",
+      "path": "nova_start.py",
+      "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
+      "files": 1,
+      "lines": 379,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "18790",
+        "8080",
+        "8765"
+      ],
+      "nova_imports": [],
+      "third_party": [
+        "signal",
+        "socket",
+        "urllib"
+      ],
+      "referenced_by": [],
+      "launched_by": [
+        "NovaStart.cmd"
+      ],
+      "flags": []
+    },
+    {
+      "name": "NovaStart.cmd",
+      "kind": "launcher",
+      "path": "NovaStart.cmd",
+      "purpose": "Launcher — runs nova_start.py to bring up the whole Nova stack (double-click entry point).",
+      "files": 1,
+      "lines": 19,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [],
+      "third_party": [],
+      "referenced_by": [],
+      "launched_by": [
+        "StopNova.cmd",
+        "nova_start.py"
+      ],
+      "flags": []
+    },
+    {
+      "name": "StopNova.cmd",
+      "kind": "launcher",
+      "path": "StopNova.cmd",
+      "purpose": "Shutdown — kills whatever is listening on Nova's ports (8080/8765/18790) for a clean restart.",
+      "files": 1,
+      "lines": 37,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "18790",
+        "8080",
+        "8765"
+      ],
+      "nova_imports": [],
+      "third_party": [],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": []
+    },
+    {
+      "name": "start_llama.cmd",
+      "kind": "launcher",
+      "path": "start_llama.cmd",
+      "purpose": "Starts llama.cpp serving Qwen 3.5 27B Q8 on :8080 with the dual-GPU tensor split (4090+3090).",
+      "files": 1,
+      "lines": 38,
+      "age_days": 0,
+      "ports_bind": [
+        "8080"
+      ],
+      "ports_seen": [
+        "8080"
+      ],
+      "nova_imports": [],
+      "third_party": [],
+      "referenced_by": [],
+      "launched_by": [
+        "nova_start.py"
+      ],
+      "flags": []
+    },
+    {
+      "name": "NovaLauncher.py",
+      "kind": "tool",
+      "path": "general_tools/NovaLauncher.py",
+      "purpose": "Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.",
+      "files": 1,
+      "lines": 204,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "18790",
+        "8765"
+      ],
+      "nova_imports": [],
+      "third_party": [],
+      "referenced_by": [],
+      "launched_by": [
+        "nova_start.py"
+      ],
+      "flags": []
+    },
+    {
+      "name": "audit_queue.py",
+      "kind": "tool",
+      "path": "general_tools/audit_queue.py",
+      "purpose": "Persistent audit-review queue — records file-change events (rename/delete/new) for review by audit_scripts/restructure.",
+      "files": 1,
+      "lines": 288,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [],
+      "third_party": [
+        "__future__"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    },
+    {
+      "name": "audit_scripts.py",
+      "kind": "tool",
+      "path": "general_tools/audit_scripts.py",
+      "purpose": "Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.",
+      "files": 1,
+      "lines": 759,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [],
+      "third_party": [
+        "ast",
+        "audit_queue"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    },
+    {
+      "name": "build_manifest.py",
+      "kind": "tool",
+      "path": "general_tools/build_manifest.py",
+      "purpose": "Generates Nova's Body Manifest — the single derived map of every body part",
+      "files": 1,
+      "lines": 322,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "18790",
+        "8080",
+        "8765"
+      ],
+      "nova_imports": [],
+      "third_party": [
+        "ast",
+        "calls"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": []
+    },
+    {
+      "name": "calls.py",
+      "kind": "tool",
+      "path": "general_tools/calls.py",
+      "purpose": "Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.",
+      "files": 1,
+      "lines": 244,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [],
+      "third_party": [
+        "ast"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    },
+    {
+      "name": "download_models.py",
+      "kind": "tool",
+      "path": "general_tools/download_models.py",
+      "purpose": "One-time downloader for Nova's vision models into workspace/models/ (for nova_senses).",
+      "files": 1,
+      "lines": 110,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [],
+      "third_party": [
+        "argparse",
+        "huggingface_hub"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    },
+    {
+      "name": "gateway_config.py",
+      "kind": "tool",
+      "path": "general_tools/gateway_config.py",
+      "purpose": "RETIRED — legacy gateway settings loader (nova_gateway dissolved 2026-05); slated for archival.",
+      "files": 1,
+      "lines": 234,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "18790",
+        "8080"
+      ],
+      "nova_imports": [],
+      "third_party": [
+        "__future__",
+        "logging",
+        "pprint"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    },
+    {
+      "name": "injector.py",
+      "kind": "tool",
+      "path": "general_tools/injector.py",
+      "purpose": "NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.",
+      "files": 1,
+      "lines": 483,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "8765"
+      ],
+      "nova_imports": [],
+      "third_party": [],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    },
+    {
+      "name": "nova_chat",
+      "kind": "tool",
+      "path": "general_tools/nova_chat",
+      "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the autonomy sleep/wake daemon.",
+      "files": 15,
+      "lines": 6714,
+      "age_days": 0,
+      "ports_bind": [
+        "8765"
+      ],
+      "ports_seen": [
+        "18789",
+        "18790",
+        "8080",
+        "8765"
+      ],
+      "nova_imports": [
+        "nova_chat",
+        "nova_cortex"
+      ],
+      "third_party": [
+        "anthropic",
+        "base64",
+        "ctypes",
+        "google",
+        "socket",
+        "urllib",
+        "uvicorn",
+        "webbrowser"
+      ],
+      "referenced_by": [],
+      "launched_by": [
+        "StopNova.cmd",
+        "nova_start.py"
+      ],
+      "flags": []
+    },
+    {
+      "name": "nova_sync",
+      "kind": "tool",
+      "path": "general_tools/nova_sync",
+      "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), drive sync, and backups.",
+      "files": 5,
+      "lines": 2052,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [
+        "nova_sync"
+      ],
+      "third_party": [
+        "google",
+        "google_auth_oauthlib",
+        "googleapiclient"
+      ],
+      "referenced_by": [],
+      "launched_by": [
+        "nova_start.py"
+      ],
+      "flags": []
+    },
+    {
+      "name": "restructure.py",
+      "kind": "tool",
+      "path": "general_tools/restructure.py",
+      "purpose": "Restructure checker — detects stale path references after a directory move and offers interactive fixes.",
+      "files": 1,
+      "lines": 596,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [],
+      "third_party": [
+        "__future__",
+        "audit_queue"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    }
+  ]
+}
