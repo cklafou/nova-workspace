@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "active": null,
-  "last_wake": "2026-05-25T01:49:08",
-  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 90, 1779641314], [\"memory/cole_intent.json\", 79, 1779641314]]",
-  "rest_note": "Board came up clean on this wake tick — no tasks pending, nothing in the inbox worth acting on at 3am-ish. Resting instead of forcing busywork."
+  "last_wake": "2026-05-25T01:50:02",
+  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 90, 1779641367], [\"memory/cole_intent.json\", 79, 1779641367]]",
+  "rest_note": "No new tasks landed since last tick, Cole didn't trigger this wake — board's empty and nothing genuinely needs doing right now. Resting again to avoid performing productivity when there isn't any."
 }
