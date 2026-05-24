@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-from gateway_config import cfg
+from nova_config import cfg
 from nova_cortex.context_builder import estimate_tokens
 
 log = logging.getLogger(__name__)

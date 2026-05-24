@@ -14,18 +14,17 @@ Two backup types:
    - Zips entire workspace excluding noise (node_modules, __pycache__, screenshots etc)
    - Stored in logs/backups/weekly/YYYY-MM-DD_weekly.zip
    - Keeps last 4 weekly backups, auto-prunes older ones
-   - Also pushes to Google Drive backups/ folder if nova_drive is available
 
 Usage (called by nova_watcher.py on boot):
     from nova_sync.backup import run_backup
     run_backup()
 
 Manual full backup:
-    python general_general_general_general_general_tools/nova_sync/backup.py --full
+    python general_tools/nova_sync/backup.py --full
 
 Restore from backup:
-    python general_general_general_general_general_tools/nova_sync/backup.py --list
-    python general_general_general_general_general_tools/nova_sync/backup.py --restore <zip_path>
+    python general_tools/nova_sync/backup.py --list
+    python general_tools/nova_sync/backup.py --restore <zip_path>
 """
 
 import sys
@@ -47,12 +46,8 @@ SESSION_SNAPSHOT_FILES = [
     "memory/JOURNAL.md",
     "memory/COLE.md",
     "memory/session_start.json",
-    "general_general_general_general_general_tools/nova_sync/FILE_INDEX.md",
-    "general_general_general_general_general_tools/nova_sync/FILE_INDEX_LINK.md",
-    "AGENTS.md",
-    "BOOTSTRAP.md",
-    "NOVA.md",
-    "TOOLS.md",
+    "general_tools/nova_sync/FILE_INDEX.md",
+    "general_tools/nova_sync/FILE_INDEX_LINK.md",
 ]
 
 EXCLUDE_DIRS = {
@@ -95,7 +90,6 @@ def session_snapshot():
         size_kb = zip_path.stat().st_size // 1024
         print(f"[backup] Session snapshot: {zip_path.name} ({backed_up} files, {size_kb}KB)")
         _prune_backups(SESSION_BACKUP_DIR, "session.zip", MAX_SESSION_BACKUPS)
-        _push_to_drive(zip_path, folder_name="sessions")
         return True
 
     except Exception as e:
@@ -150,7 +144,6 @@ def weekly_backup(force=False):
         size_mb = zip_path.stat().st_size / (1024 * 1024)
         print(f"[backup] Weekly backup: {zip_path.name} ({backed_up} files, {size_mb:.1f}MB)")
         _prune_backups(WEEKLY_BACKUP_DIR, "weekly.zip", MAX_WEEKLY_BACKUPS)
-        _push_to_drive(zip_path, folder_name="weekly")
         return True
 
     except Exception as e:
@@ -166,48 +159,6 @@ def _prune_backups(directory, suffix, keep):
             old.unlink()
             print(f"[backup] Pruned old backup: {old.name}")
 
-
-def _push_to_drive(zip_path, folder_name="weekly"):
-    # Google Drive backup push disabled 2026-05-24 — git holds workspace history and
-    # local zips in logs/backups/ are the backup. Remove this return to re-enable.
-    return
-    try:
-        for _p in [str(WORKSPACE_DIR / "nova_body"), str(WORKSPACE_DIR / "general_tools")]:
-            if _p not in sys.path:
-                sys.path.insert(0, _p)
-        from nova_sync.drive import _connect, _get_or_create_folder, ROOT_FOLDER_ID
-        import io
-        from googleapiclient.http import MediaIoBaseUpload
-
-        service = _connect()
-        if not service:
-            return
-
-        backup_folder_id = _get_or_create_folder(service, "backups", ROOT_FOLDER_ID)
-        target_folder_id = _get_or_create_folder(service, folder_name, backup_folder_id)
-
-        query = f"name='{zip_path.name}' and '{target_folder_id}' in parents and trashed=false"
-        results = service.files().list(q=query, fields="files(id)").execute()
-        existing = results.get("files", [])
-
-        media = MediaIoBaseUpload(
-            io.BytesIO(zip_path.read_bytes()),
-            mimetype="application/zip",
-            resumable=False
-        )
-
-        if existing:
-            service.files().update(fileId=existing[0]["id"], media_body=media).execute()
-        else:
-            service.files().create(
-                body={"name": zip_path.name, "parents": [target_folder_id]},
-                media_body=media, fields="id"
-            ).execute()
-
-        print(f"[backup] Pushed {zip_path.name} to Drive backups/{folder_name}/")
-
-    except Exception as e:
-        print(f"[backup] Drive push skipped: {e}")
 
 
 def run_backup():

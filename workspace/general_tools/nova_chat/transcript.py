@@ -139,11 +139,6 @@ class Transcript:
             # Formatting for Nova's internal pattern-matching
             if ai_name == "Nova" and msg["author"] == "Nova":
                 import re as _re
-                content = _re.sub(
-                    r'\[DISCORD:\s*(.*?)\]',
-                    lambda m: f'[Nova sent Discord: "{m.group(1).strip()[:60]}"]',
-                    content, flags=_re.DOTALL | _re.IGNORECASE
-                )
                 content = _re.sub(r'\[EXEC:[^\]]*\]', '[Nova ran a command]',
                                   content, flags=_re.IGNORECASE)
                 content = _re.sub(r'\[WRITE:[^\]]*\].*?\[/WRITE\]', '[Nova wrote a file]',

@@ -6,8 +6,6 @@ Unified launcher for Project Nova.
 
 Fixes vs previous version:
   - PyInstaller freeze guard (multiprocessing.freeze_support) prevents recursive spawn
-  - nova_gateway runs IN-PROCESS via uvicorn.Server (not subprocess) so sys.executable
-    loop can't happen
   - pywebview failure is caught cleanly and falls back to one browser tab, not 194
 
 Requirements:
@@ -79,14 +77,13 @@ logging.basicConfig(
 log = logging.getLogger("NovaLauncher")
 log.info("NovaLauncher starting. frozen=%s  sys.path[0]=%s", getattr(sys, 'frozen', False), sys.path[0])
 
-# Expose the real workspace root so server.py can find nova_gateway_runner.py
+# Expose the real workspace root so the server resolves workspace paths correctly
 # even when running as a frozen bundle where __file__ paths are inside _internal/.
 import os as _os
 _os.environ.setdefault("NOVA_WORKSPACE", str(_WS))
 
 CHAT_URL  = "http://127.0.0.1:8765"
 CHAT_PORT = 8765
-GW_PORT   = 18790
 
 try:
     import webview
@@ -110,11 +107,6 @@ def run_nova_chat():
         loop.run_until_complete(server.serve())
     except Exception as e:
         log.error("nova_chat server error: %s", e, exc_info=True)
-
-
-# run_nova_gateway() removed 2026-05-23 — the nova_gateway server (Discord + the old
-# OpenClaw HTTP API) has been retired. nova_chat is now the single server. See
-# _admin/_archive_2026-05-23/old_gateway/ for the archived gateway code.
 
 
 def wait_for_port(port: int, timeout: float = 20.0) -> bool:
@@ -142,7 +134,6 @@ def main():
     print()
 
     # Start the nova_chat server in a daemon thread (dies with the main process).
-    # nova_gateway retired 2026-05-23 — nova_chat is the single server now.
     chat_thread = threading.Thread(target=run_nova_chat, daemon=True, name="nova_chat")
     chat_thread.start()
 
@@ -181,16 +172,6 @@ def main():
     except (RuntimeError, EOFError):
         while True:
             time.sleep(60)
-
-    # Graceful shutdown: ask gateway to stop
-    try:
-        import urllib.request
-        urllib.request.urlopen(
-            urllib.request.Request(f"http://127.0.0.1:{GW_PORT}/shutdown",
-                                   method="POST"), timeout=2
-        )
-    except Exception:
-        pass
 
     log.info("Nova stopped.")
 

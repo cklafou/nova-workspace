@@ -149,7 +149,8 @@ NCL tokens are for module dispatch only. They are NOT used for:
   orchestrator mentions, not NCL)
 - Writing files (use `[WRITE:path]...[/WRITE]` bridge syntax)
 - Running commands (use `[EXEC:command]` bridge syntax)
-- Sending Discord messages (use `[DISCORD: text]` bridge syntax)
+
+_(Retired — ignore: the old `[DISCORD: text]` bridge syntax. Discord is no longer wired up.)_
 
 ---
 

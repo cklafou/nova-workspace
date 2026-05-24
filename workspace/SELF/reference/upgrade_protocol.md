@@ -29,7 +29,7 @@ Nova is explicitly authorized to:
 - **Run read-only exec commands** to inspect state: `ls`, `cat`, file existence checks
 
 Nova is NOT authorized to (without explicit Cole approval):
-- Write directly to source files outside of BOOTUP/ and memory/
+- Write directly to source files — drafts go to `logs/proposed/` for Cole to review
 - Run destructive exec commands (rm, overwrite, etc.)
 - Push to git or publish anything externally
 
@@ -71,42 +71,36 @@ Nova never silently edits source. Always draft → notify → Cole approves.
 
 These are the files most likely to come up in upgrade discussions. Nova should read them proactively when dev topics come up.
 
-### nova_qt (Primary UI)
-```
-general_tools/nova_qt/
-  main.py          ← App entry point
-  window.py        ← QMainWindow — status bar, menu, WS wiring
-  chat_panel.py    ← Chat UI: ThinkingBlock, MessageWidget, depth slider, session tabs
-  sidebar.py       ← Left panel: Files / Terminal / Status / Thoughts tabs
-  ws_client.py     ← WebSocket client — signals for every message type
-  theme.py         ← Color constants (NOVA purple, COLE, CLAUDE, GEMINI, ERROR, etc.)
-  markdown.py      ← Markdown-to-HTML renderer for chat bubbles
-```
+_(Retired — ignore: the old `nova_qt` PyQt UI. My interface is the nova_chat web app, not a Qt desktop app.)_
 
-### nova_chat (Group Chat Server)
+### nova_chat (Group Chat Server — my voice/ears, a tool)
 ```
 general_tools/nova_chat/
   server.py            ← FastAPI + WebSocket — all endpoints, background monitors
   session_manager.py   ← Persistent sessions, gzip, resume on restart
-  workspace_context.py ← File injection into AI system prompts (read-only from VM)
+  workspace_context.py ← File injection into AI system prompts (loads SELF/core)
   nova_bridge.py       ← [WRITE:], [EXEC:], [READ:], [PAUSE:], [RESUME:] directives
   nova_lang.py         ← NCL parser — @role dispatch to modules
   clients/
-    claude.py   ← Claude Sonnet streaming client
-    gemini.py   ← Gemini 2.5 Pro client
+    claude.py   ← Claude streaming client
+    gemini.py   ← Gemini client
     nova.py     ← llama.cpp HTTP client — streaming + tool loop
 ```
 
-### Core Nova Packages
+### Core Nova Packages (her body)
 ```
 nova_body/
-  nova_cortex/       ← prefrontal_cortex.py, checkin.py, rules.py, nova_status.py
-  nova_memory/     ← journal.py, state.py
-  nova_logs/       ← logger.py — ALL logging goes here
-  nova_motor/     ← hands.py (mouse/keyboard), autonomy.py, verify.py
-  nova_senses/ ← eyes.py, vision.py, explorer.py
-  nova_sync/       ← watcher.py, drive.py, backup.py
+  nova_cortex/   ← executive.py (autonomy faculty), tasking.py (task board),
+                   nova_status.py, context_builder.py, rules.py, checkin.py,
+                   prefrontal_cortex.py
+  nova_memory/   ← journal.py, log_reader.py, goals.py, state.py, session_store.py
+  nova_logs/     ← logger.py — ALL logging goes here
+  nova_motor/    ← hands.py (mouse/keyboard), motor_cortex.py, tool_executor.py, verify.py
+  nova_senses/   ← clock.py (chronoception), environment.py, eyes.py, vision.py, proprioception.py
 ```
+
+`nova_sync/` (watcher, backup — the GitHub auto-commit tool) lives under `general_tools/`,
+not the body. Drive sync there is retired.
 
 ---
 
@@ -130,4 +124,4 @@ Nova can help by reading the current source and verifying the anchor strings Cla
 
 Check `_admin/Live_Updates.md` for the running list of what's in progress, what's done, and what's next.
 
-Check `Tasking/priority.md` for Nova's active task queue.
+Check `Tasking/tasks.json` (my id-keyed board) for my active tasks — `priority.md` is a generated human view of it.

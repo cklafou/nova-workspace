@@ -238,36 +238,7 @@ def build_file_index(commit_ref=None):
         print(f"[watcher] FILE_INDEX_LINK.md updated -> {commit_ref[:8]}")
 
 
-GATEWAY_REAL = WORKSPACE_DIR / "nova_gateway.json"
-GATEWAY_COPY = WORKSPACE_DIR / "nova_gateway - tokenless.json"
-GATEWAY_TOKEN_PLACEHOLDER = "[place token here]"
 
-
-def sync_gateway_copy():
-    """
-    Keep 'nova_gateway - tokenless.json' in sync with nova_gateway.json,
-    substituting the real discord token with a placeholder so the copy
-    is safe to commit to git.
-    """
-    if not GATEWAY_REAL.exists():
-        return
-    try:
-        import json as _json
-        content = _json.loads(GATEWAY_REAL.read_text(encoding="utf-8"))
-
-        # Replace only the discord token; leave everything else identical.
-        if "discord" in content and "token" in content["discord"]:
-            content["discord"]["token"] = GATEWAY_TOKEN_PLACEHOLDER
-
-        new_text = _json.dumps(content, indent=2) + "\n"
-
-        # Only write if something (other than the token) actually changed.
-        old_text = GATEWAY_COPY.read_text(encoding="utf-8") if GATEWAY_COPY.exists() else ""
-        if new_text != old_text:
-            GATEWAY_COPY.write_text(new_text, encoding="utf-8")
-            print(f"[watcher] nova_gateway - Copy.json synced")
-    except Exception as e:
-        print(f"[watcher] Warning: could not sync gateway copy: {e}")
 
 
 def _detect_and_queue_changes(watch_dir: Path, commit_hash: str) -> None:
@@ -517,8 +488,6 @@ def print_session_urls(commit_hash, copy_url=False):
 
 
 def run_push_cycle():
-    # Sync the gateway config copy (real token → placeholder) before committing
-    sync_gateway_copy()
     # Pass 1: push with a placeholder index (no commit hash yet)
     build_file_index()
     commit_hash = git_push(WATCH_DIR)
@@ -534,7 +503,7 @@ def run_push_cycle():
 
 def run_sync_and_backup():
     # Google Drive auto-sync removed 2026-05-24 — git is the backup / source of truth.
-    # drive.py remains for manual sync if ever wanted. Local backups still run.
+    # Drive sync retired (drive.py archived 2026-05-24). Git holds workspace history; local backups in logs/backups/ remain.
     try:
         from nova_sync.backup import run_backup
         run_backup()

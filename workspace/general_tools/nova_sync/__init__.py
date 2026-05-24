@@ -1,4 +1,4 @@
-# @nova: Nova's file-sync layer — watchdog file watcher (auto-indexing), drive sync, and backups.
+# @nova: Nova's file-sync layer — watchdog file watcher (auto-indexing) and local backups (Drive sync retired).
 """
 nova_sync -- Nova Tool Package
 Re-exports all public names for backward compatibility.
@@ -10,7 +10,6 @@ except ImportError:
 """
 
 from nova_sync.watcher import *  # noqa: F401,F403
-from nova_sync.drive import *  # noqa: F401,F403
 from nova_sync.backup import *  # noqa: F401,F403
 
 __all__ = []  # populated by wildcard imports above

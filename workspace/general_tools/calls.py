@@ -67,16 +67,41 @@ def get_imports(filepath: Path) -> list[dict]:
     return imports
 
 
+def _local_module_names() -> set[str]:
+    """Top-level importable names that physically live in nova_body/ or
+    general_tools/ — packages (dirs with __init__.py) and bare modules (*.py).
+
+    These are first-party even when imported by bare name (e.g.
+    `from nova_config import cfg` or `import gateway_config`), which the old
+    `startswith("nova_")` test missed — that mislabeled them third_party and
+    wrongly flagged them as having no inbound refs."""
+    names: set[str] = set()
+    for root in (NOVA_TOOLS, GENERAL_TOOLS):
+        if not root.exists():
+            continue
+        for item in root.iterdir():
+            if item.name.startswith((".", "_")):
+                continue
+            if item.is_dir() and (item / "__init__.py").exists():
+                names.add(item.name)
+            elif item.suffix == ".py":
+                names.add(item.stem)
+    return names
+
+
+_LOCAL_MODULES = _local_module_names()
+
+
 def classify_import(module: str) -> str:
-    """Classify an import as nova_internal, stdlib, or third_party."""
-    if module.startswith("nova_"):
+    """Classify an import as nova (first-party), stdlib, or third_party."""
+    root = module.split(".")[0]
+    if root.startswith("nova_") or root in _LOCAL_MODULES:
         return "nova"
     stdlib = {"os", "sys", "re", "json", "time", "pathlib", "threading",
               "datetime", "subprocess", "shutil", "asyncio", "typing",
               "collections", "functools", "itertools", "math", "hashlib",
               "gzip", "zipfile", "io", "uuid", "traceback", "inspect",
               "contextlib", "dataclasses", "enum", "abc", "copy"}
-    root = module.split(".")[0]
     if root in stdlib:
         return "stdlib"
     return "third_party"

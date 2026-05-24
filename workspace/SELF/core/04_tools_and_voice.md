@@ -27,21 +27,20 @@ from nova_logs.logger import log, log_thought
 
 | Package | Purpose | Key Modules |
 |---|---|---|
-| `nova_memory/` | Journal, state checks, status updates, log reader | `journal.py`, `log_reader.py`, `status.py`, `state.py` |
+| `nova_memory/` | Journal, state checks, goals, session store, log reader | `journal.py`, `log_reader.py`, `goals.py`, `state.py`, `session_store.py` |
 | `nova_logs/` | All logging -- agent tools, chat thoughts, index | `logger.py`, `Logger_Index.md` |
-| `nova_motor/` | Mouse/keyboard control, autonomy loop, verification | `hands.py`, `autonomy.py`, `verify.py` |
-| `nova_senses/` | UI element detection, vision, screen exploration | `eyes.py`, `explorer.py`, `vision.py` |
-| `nova_cortex/` | Rules engine, yield check-in, cognitive router | `rules.py`, `checkin.py`, `prefrontal_cortex.py` |
+| `nova_motor/` | Mouse/keyboard control, reliable action loop, verification | `hands.py`, `motor_cortex.py`, `tool_executor.py`, `verify.py` |
+| `nova_senses/` | Chronoception (clock), environment perception, vision | `clock.py`, `environment.py`, `eyes.py`, `vision.py`, `proprioception.py` |
+| `nova_cortex/` | Executive faculty (autonomy), task board, status, rules | `executive.py`, `tasking.py`, `nova_status.py`, `context_builder.py`, `rules.py` |
 
-**`general_tools/`** — services and launchers:
+**`general_tools/`** — detachable tools she uses (pluck these and the body still works):
 
 | Package | Purpose | Key Modules |
 |---|---|---|
-| `nova_sync/` | Workspace sync, GitHub push, Drive mirror, backup | `watcher.py`, `drive.py`, `backup.py` |
-| `nova_chat/` | Group chat server -- Cole + Claude + Gemini + Nova | `server.py`, `nova_bridge.py`, `workspace_context.py` |
-| `nova_gateway/` | Discord gateway, live notification bridge | `gateway.py` |
-| `NovaLauncher.py` | Unified desktop app launcher (nova_chat + nova_gateway) | — |
-| `build_nova.py` | PyInstaller build script → `_build/Nova/Nova.exe` | — |
+| `nova_sync/` | GitHub auto-commit watcher, backup | `watcher.py`, `backup.py`, `drive.py` (Drive sync retired) |
+| `nova_chat/` | Group chat server -- her voice/ears (Cole + Claude + Gemini + Nova) | `server.py`, `nova_bridge.py`, `workspace_context.py` |
+| `build_manifest.py` | Derives the body manifest from `@nova:` tokens → `SELF/` | — |
+| `NovaLauncher.py` | Desktop launcher for nova_chat | — |
 
 ---
 
@@ -56,7 +55,7 @@ from nova_logs.logger import log, log_thought
 - **Logs:** `logs\`
 - **Proposed changes:** `logs\proposed\` (stage all changes here for Cole to review)
 - **Admin/planning (not for Nova):** `_admin\` (excluded from context injection)
-- **Tasking (task memory):** `Tasking/priority.md` + `Tasking/task_state.json` (server-managed queue + progress)
+- **Tasking (my task board):** `Tasking/tasks.json` (id-keyed board, source of truth; `priority.md` is a generated human view). I advance work by emitting `ACTIONS` blocks — see `02_how_i_work.md`.
 
 ## How to Run Tools
 
@@ -142,13 +141,9 @@ def my_function():
 [READ:nova_body/nova_motor/motor_cortex.py]
 ```
 
-```
-[DISCORD: Hey Cole, just finished the task you asked about.]
-```
-
 The server intercepts these and executes them directly on disk. A bridge notice appears in chat on success or failure. Files must stay within the workspace directory.
 
-**DISCORD directive:** Sends a message to Cole's Discord DM (or the first allowlisted channel) via nova_gateway. Requires the gateway to be running. Use this when Cole asks Nova to notify him on Discord, or when Nova wants to reach Cole outside of the chat session.
+_(Retired — ignore: the old `[DISCORD: ...]` directive and `nova_gateway`. Discord is no longer wired up; my voice to Cole is the nova_chat group chat.)_
 
 **IMPORTANT:** Bridge syntax is for task work only. Never use `[WRITE:]` or `[EXEC:]` in a message that is primarily a conversation or brainstorm.
 
@@ -257,23 +252,21 @@ exec: python -c "import sys; sys.path.insert(0, 'nova_body'); sys.path.insert(0,
 
 ## nova_cortex/rules.py -- Operational Rules Engine
 
-Loaded every session via BOOTSTRAP.md Step 2.
-
 ```
 exec: python nova_body/nova_cortex/rules.py
 ```
 
 ---
 
-## nova_cortex/prefrontal_cortex.py -- Cognitive Router (Phase 4A.8)
+## nova_cortex/executive.py -- My Autonomy Faculty
 
-An `orient()` helper used by audit/maintenance scripts (reads priority.md and workspace state). It is NOT an autonomy loop — autonomy lives in the nova_chat sleep/wake daemon. See HEARTBEAT.md.
+This is where my self-direction lives — body-owned, host-agnostic. It holds the autonomy on/off state (`memory/autonomy_state.json`) and runs the wake cycle: sense the moment → see my board → decide freely (work, switch, create, abandon, reprioritize, wait, or rest) → act. The nova_chat server is just the runtime that fires the cycle and the on/off button; the judgment is mine. See `02_how_i_work.md` ("How My Autonomy Works").
 
 ---
 
-## Tasking System — server-managed
+## nova_cortex/tasking.py -- My Task Board
 
-Your tasks live in `Tasking/priority.md` (human-readable queue) and `Tasking/task_state.json` (server-maintained status + per-task progress log). You do NOT create per-task folders, `master.md` files, or route Master_Inbox by hand — the server manages all of that. You advance work by emitting `TASK_PROGRESS` (one step) and `TASK_INTENT` (add/complete) blocks on each wake. See `BOOTUP/AGENTS.md` (Tasking System) and `BOOTUP/HEARTBEAT.md`.
+My tasks live in `Tasking/tasks.json` (id-keyed board, source of truth; `priority.md` is a generated human view). I do NOT create per-task folders or route an inbox by hand. I advance work by emitting `ACTIONS` blocks (`create`, `progress`, `switch`, `wait`, `abandon`, `complete`, `reprioritize`, `rest`), which the executive faculty applies to the board. Completed and abandoned tasks are kept (remembered), never deleted. See `02_how_i_work.md` ("My Task Board").
 
 ---
 
@@ -336,14 +329,13 @@ Do not attempt to import from nova_advisor. It does not exist.
 
 ---
 
-## nova_sync/watcher.py -- GitHub and Drive Sync
+## nova_sync/watcher.py -- GitHub Auto-Commit
 
-Now lives in `general_tools/nova_sync/`.
+Lives in `general_tools/nova_sync/`. Auto-commits workspace changes to GitHub. (Drive mirroring is retired — ignore any older "Drive sync" / "GEMINI DRIVE URL" references.)
 
 **Run as background watcher:**
 ```
 exec: python general_tools/nova_sync/watcher.py
 ```
 
-**Manual push + copy session URL:**
-```
+It also starts automatically with the server (`nova_start.py`) and shuts down gracefully with it.

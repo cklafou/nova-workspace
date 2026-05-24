@@ -1,4 +1,4 @@
-﻿# @nova: Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the autonomy sleep/wake daemon.
+﻿# @nova: Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).
 """
 Nova Group Chat - FastAPI WebSocket Server
 Handles real-time streaming from all three AIs concurrently.
@@ -369,54 +369,6 @@ async def startup_event():
                 nova_status_cache["summary"] = f"[nova_status unavailable: {e}]"
             await _aio.sleep(30)
 
-    async def _bg_gateway_error_watch():
-        """
-        1.4 -- Tail nova_gateway log for ERROR lines.
-        Surfaces new errors into nova_chat as a system notice (not a chat message).
-        Runs forever in background.
-        """
-        import asyncio as _aio
-        import pathlib as _pl
-        import time as _t
-
-        await _aio.sleep(3)
-        # nova_gateway writes logs to workspace/logs/gateway/ (our stack)
-        _WORKSPACE = _pl.Path(__file__).resolve().parent.parent.parent
-        LOG_DIR = _WORKSPACE / "logs" / "gateway"
-        LOG_DIR.mkdir(parents=True, exist_ok=True)
-        last_error_seen = ""
-        last_pos = 0
-
-        while True:
-            try:
-                today = __import__('datetime').date.today().strftime("%Y-%m-%d")
-                log_path = LOG_DIR / f"gateway-{today}.log"
-                if log_path.exists():
-                    size = log_path.stat().st_size
-                    if size > last_pos:
-                        with open(log_path, encoding="utf-8", errors="replace") as f:
-                            f.seek(last_pos)
-                            new_lines = f.read()
-                        last_pos = size
-                        for line in new_lines.splitlines():
-                            if ("ERROR" in line or "error" in line.lower()) and "ImportError" not in line:
-                                if line != last_error_seen and len(line.strip()) > 10:
-                                    last_error_seen = line
-                                    # Update nova_status gateway error field
-                                    try:
-                                        from nova_cortex.nova_status import update_gateway
-                                        update_gateway(running=True, last_error=line.strip()[-200:])
-                                    except Exception:
-                                        pass
-                                    # Broadcast a quiet system notice to the UI
-                                    await broadcast({
-                                        "type": "gateway_error",
-                                        "message": line.strip()[-200:],
-                                    })
-            except Exception:
-                pass
-            await _aio.sleep(10)  # check gateway log every 10s
-
     async def _bg_transcript_flush():
         """
         Flush the active session transcript to disk every 60 seconds.
@@ -490,7 +442,6 @@ async def startup_event():
     asyncio.ensure_future(_bg_index())
     asyncio.ensure_future(_bg_eyes_stream())
     asyncio.ensure_future(_bg_nova_status_poll())
-    asyncio.ensure_future(_bg_gateway_error_watch())
     asyncio.ensure_future(_bg_transcript_flush())
     asyncio.ensure_future(_bg_llama_autostart())
     asyncio.ensure_future(_bg_sys_metrics())
@@ -821,72 +772,6 @@ async def _run_gemini_response(on_token, on_done, on_error,
         await on_done(full_response)
 
 
-def _build_discord_context_block(n: int = 15) -> str:
-    """
-    Read recent nova_gateway session JSONL files and return a formatted block
-    showing recent Discord activity. Injected into all AIs' workspace context
-    so Nova Chat participants have cross-session awareness of Discord conversations.
-
-    Reads the 3 most recent gateway_sessions, extracts up to n user/assistant
-    message pairs (skipping tool results), and formats them for system prompt
-    injection. Silent on any error — cross-session context is best-effort.
-    """
-    try:
-        gateway_dir = WORKSPACE_ROOT / "logs" / "gateway_sessions"
-        if not gateway_dir.exists():
-            return ""
-        all_files = sorted(
-            gateway_dir.rglob("*.jsonl"),
-            key=lambda p: p.stat().st_mtime,
-            reverse=True,
-        )[:3]
-        if not all_files:
-            return ""
-        collected: list[str] = []
-        for path in all_files:
-            session_lines: list[str] = []
-            trigger = "discord"
-            try:
-                with open(path, encoding="utf-8", errors="replace") as fh:
-                    for raw in fh:
-                        raw = raw.strip()
-                        if not raw:
-                            continue
-                        try:
-                            entry = json.loads(raw)
-                        except json.JSONDecodeError:
-                            continue
-                        etype = entry.get("type", "")
-                        if etype == "session":
-                            trigger = entry.get("trigger", "discord")
-                            continue
-                        if etype != "message":
-                            continue
-                        role    = entry.get("role", "")
-                        content = (entry.get("content") or "").strip()[:400]
-                        ts      = (entry.get("timestamp") or "")[:16]
-                        if not content:
-                            continue
-                        if role == "user":
-                            session_lines.append(f"  [{ts}] Discord: {content}")
-                        elif role == "assistant":
-                            session_lines.append(f"  [{ts}] Nova: {content}")
-            except Exception:
-                continue
-            if session_lines:
-                collected.extend(session_lines[-6:])   # last 6 lines per session
-        if not collected:
-            return ""
-        lines_to_show = collected[-n:]
-        return (
-            "\n--- RECENT DISCORD ACTIVITY (cross-session awareness, do not repeat unless asked) ---\n"
-            + "\n".join(lines_to_show)
-            + "\n--- END DISCORD ACTIVITY ---\n"
-        )
-    except Exception:
-        return ""
-
-
 async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                           latest_message: str = "",
                           images: list = None,
@@ -937,11 +822,6 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         loop = asyncio.get_event_loop()
         ws_context = await loop.run_in_executor(None, workspace.build_context_block)
 
-        # Cross-session awareness: inject recent Discord activity (Claude/Gemini only)
-        discord_ctx = _build_discord_context_block()
-        if discord_ctx:
-            ws_context = discord_ctx + ws_context
-
         # Prepend Nova's live status for Claude/Gemini only
         if nova_status_cache.get("summary"):
             status_block = (
@@ -971,7 +851,6 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         ("exec",    r'\[EXEC:\s*([^\]]{1,80})\]'),
         ("write",   r'\[WRITE:\s*([^\]]{1,80})\]'),
         ("read",    r'\[READ:\s*([^\]]{1,80})\]'),
-        ("discord", r'\[DISCORD:\s*([^\]]{1,80})\]'),
         ("ncl",     r'@(mentor|eyes|browser|coder|memory|voice|thinkorswim)\b'),
     ]
 
@@ -1381,7 +1260,7 @@ async def nova_status():
         "heartbeat":   heartbeat[:3000],
         "status":      status[:4000],
         "timestamp":   _time.time(),
-        "nova_live":   live_status,          # pulse, active_task, errors, gateway, last_run + sys metrics
+        "nova_live":   live_status,          # pulse, active_task, errors, last_run + sys metrics
         "status_cache": nova_status_cache.get("summary", ""),
     })
 
@@ -1500,42 +1379,6 @@ async def logs_list():
 
 
 
-@app.get("/api/logs/nova_gateway")
-async def nova_gateway_sessions(limit: int = 20):
-    """
-    List nova_gateway session files for the dashboard.
-    Tries nova_gateway HTTP API first, falls back to reading files directly.
-    """
-    import urllib.request, json as _json, pathlib, time as _t
-    # Try nova_gateway API (it's running on 18790)
-    try:
-        resp = urllib.request.urlopen("http://127.0.0.1:18790/api/sessions", timeout=2)
-        data = _json.loads(resp.read())
-        return JSONResponse({"sessions": data.get("sessions", [])[:limit]})
-    except Exception:
-        pass
-    # Fallback: read from workspace/logs/gateway_sessions/ directly
-    ws = Path(__file__).resolve().parent.parent.parent
-    sessions_dir = ws / "logs" / "gateway_sessions"
-    sessions = []
-    if sessions_dir.exists():
-        for p in sorted(sessions_dir.rglob("*.jsonl"),
-                        key=lambda x: x.stat().st_mtime, reverse=True)[:limit]:
-            try:
-                with open(p, encoding="utf-8") as f:
-                    header = _json.loads(f.readline())
-                sessions.append({
-                    "id":        header.get("id", p.stem),
-                    "trigger":   header.get("trigger", "?"),
-                    "timestamp": header.get("timestamp", ""),
-                    "messages":  sum(1 for _ in open(p)),
-                    "size_kb":   p.stat().st_size // 1024,
-                })
-            except Exception:
-                pass
-    return JSONResponse({"sessions": sessions})
-
-
 @app.get("/logs")
 async def logs_tail(n: int = 200, filter: str = ""):
     """
@@ -1606,83 +1449,6 @@ async def nova_bridge_endpoint(body: dict = Body(...)):
     result = await execute_action(action)
     await broadcast({"type": "injection_notice", "path": result, "recipients": "nova_bridge"})
     return JSONResponse({"result": result})
-
-
-
-@app.get("/api/gateway/status")
-async def gateway_status():
-    """Check if nova_gateway is running by hitting its /health endpoint on port 18790.
-    Only a valid HTTP 200 from nova_gateway counts — raw TCP or legacy port 18789
-    are no longer accepted as proof of a running gateway."""
-    import urllib.request
-    try:
-        with urllib.request.urlopen("http://127.0.0.1:18790/health", timeout=1) as resp:
-            if resp.status == 200:
-                return JSONResponse({"running": True, "port": 18790, "stack": "nova_gateway"})
-    except Exception:
-        pass
-    return JSONResponse({"running": False})
-
-
-@app.post("/api/gateway/start")
-async def gateway_start():
-    """Start nova_gateway in a new visible terminal.
-    When running inside Nova.exe (sys.frozen) the gateway is already managed
-    in-process by NovaLauncher — starting a second copy would conflict."""
-    import subprocess, sys as _sys
-    if getattr(_sys, 'frozen', False):
-        return JSONResponse({
-            "ok": False,
-            "message": "Gateway is managed by Nova.exe. Restart the app to restart the gateway."
-        })
-    # Resolve workspace root — works whether server.py runs from source or a
-    # plain python launch (not frozen).  NOVA_WORKSPACE env var wins if set.
-    _workspace = (
-        os.environ.get("NOVA_WORKSPACE")
-        or str(Path(__file__).resolve().parent.parent.parent)
-    )
-    _runner = Path(_workspace) / "nova_gateway_runner.py"
-    if not _runner.exists():
-        return JSONResponse({
-            "ok": False,
-            "error": f"nova_gateway_runner.py not found at {_runner}"
-        }, status_code=500)
-    try:
-        subprocess.Popen(
-            ["powershell", "-NoExit", "-Command",
-             f"cd '{_workspace}'; python nova_gateway_runner.py"],
-            creationflags=subprocess.CREATE_NEW_CONSOLE,
-            close_fds=True,
-        )
-        return JSONResponse({"ok": True, "message": "Nova Gateway starting on port 18790..."})
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
-
-
-@app.post("/api/gateway/stop")
-async def gateway_stop():
-    """Stop nova_gateway via its HTTP API, or kill the process."""
-    import subprocess, urllib.request
-    try:
-        # Graceful: POST to nova_gateway shutdown endpoint
-        urllib.request.urlopen(
-            urllib.request.Request("http://127.0.0.1:18790/shutdown",
-                                   method="POST"), timeout=3
-        )
-        return JSONResponse({"ok": True, "message": "Nova Gateway stopped."})
-    except Exception:
-        pass
-    try:
-        # Fallback: kill by port
-        subprocess.run(
-            ["powershell", "-Command",
-             "Get-NetTCPConnection -LocalPort 18790 -ErrorAction SilentlyContinue | "
-             "ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"],
-            capture_output=True, text=True, timeout=10
-        )
-        return JSONResponse({"ok": True, "message": "Nova Gateway process killed."})
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
 
 
@@ -2004,48 +1770,12 @@ async def run_tool(body: dict = Body(...)):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
-@app.post("/api/gateway/health-check")
-async def proxy_health_check():
-    """Proxy: fire nova_gateway health check. Avoids CORS on direct browser calls."""
-    import urllib.request as _ur
-    try:
-        resp = _ur.urlopen(
-            _ur.Request("http://127.0.0.1:18790/api/cron/health", method="POST"),
-            timeout=5
-        )
-        import json as _j
-        return JSONResponse(_j.loads(resp.read()))
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Gateway unreachable: {e}")
-
-
-@app.post("/api/gateway/trigger")
-async def proxy_trigger(body: dict = Body(...)):
-    """Proxy: send a manual trigger to nova_gateway. Avoids CORS on direct calls."""
-    import urllib.request as _ur, json as _j
-    text   = body.get("text", "").strip()
-    source = body.get("source", "manual")
-    if not text:
-        raise HTTPException(status_code=400, detail="'text' required")
-    payload = _j.dumps({"text": text, "source": source}).encode()
-    try:
-        resp = _ur.urlopen(
-            _ur.Request("http://127.0.0.1:18790/api/trigger",
-                        data=payload,
-                        headers={"Content-Type": "application/json"},
-                        method="POST"),
-            timeout=120
-        )
-        return JSONResponse(_j.loads(resp.read()))
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Gateway unreachable: {e}")
-
-
 @app.post("/api/inject_message")
 async def inject_message(body: dict):
     """
     Inject a message into the active Nova Chat session from an external source.
-    Used by the gateway so Nova can post to the group chat from Discord.
+    Used by Nova's NCL dispatch (injector.py) and her motor tool_executor so she
+    can post to the group chat from her own tools.
 
     Body: { "author": "Nova", "content": "message text" }
 
@@ -2112,7 +1842,7 @@ async def inject_message(body: dict):
     # back to Nova Chat via inject_message with a [task_id] prefix).
     _maybe_route_inbox(author, content)
 
-    # Execute any nova_bridge directives Nova wrote (e.g. [EXEC:], [DISCORD:])
+    # Execute any nova_bridge directives Nova wrote (e.g. [EXEC:], [WRITE:], [READ:])
     if author == "Nova":
         bridge_results = await handle_nova_message(content)
         for br in bridge_results:
@@ -2202,43 +1932,6 @@ async def inject_message(body: dict):
                 _t.add_done_callback(_task_cleanup)
 
     return {"ok": True, "id": msg["id"], "author": author, "chars": len(content)}
-
-
-@app.get("/api/chat/recent")
-async def chat_recent(n: int = 40):
-    """
-    Return the last N messages from the active Nova Chat session as formatted text.
-
-    Used by nova_gateway so Nova has full awareness of the Nova Chat session
-    when responding via Discord or any other external source.  Lightweight
-    plain-text format so it slots cleanly into a system prompt.
-
-    Query param:  ?n=40  (default 40 messages)
-    Returns: { session_id, message_count, formatted }
-    """
-    if session_mgr.active is None or not session_mgr.active_id:
-        return JSONResponse({
-            "session_id":    session_mgr.active_id or "",
-            "message_count": 0,
-            "formatted":     "(no active session)",
-        })
-    messages = session_mgr.active.get_recent(n)
-    lines = []
-    for msg in messages:
-        ts = msg["timestamp"][11:16]   # HH:MM
-        directed = ""
-        if msg.get("directed_at"):
-            directed = f" [@{', @'.join(msg['directed_at'])}]"
-        # Omit raw image data — note presence only
-        content = msg["content"]
-        if msg.get("images"):
-            content += f" [+ {len(msg['images'])} image(s)]"
-        lines.append(f"[{ts}] {msg['author']}{directed}: {content}")
-    return JSONResponse({
-        "session_id":    session_mgr.active_id,
-        "message_count": len(messages),
-        "formatted":     "\n".join(lines) if lines else "(no messages yet)",
-    })
 
 
 @app.post("/api/reinject_context")

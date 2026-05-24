@@ -68,7 +68,7 @@ INCLUDE_EXTENSIONS = {".py", ".md", ".json", ".jsonl", ".txt", ".cmd", ".ps1"}
 # Files that must never be uploaded to Drive — contain secrets or are too large.
 EXCLUDE_FILES    = {
     ".drive_sync_cache.json",
-    "nova_gateway.json",        # contains Discord bot token
+    "nova_config.json",         # local settings (renamed from retired nova_gateway.json)
     "nova_drive_token.json",    # OAuth token — shouldn't leave local machine
     "client_secrets.json",      # OAuth client secret
 }

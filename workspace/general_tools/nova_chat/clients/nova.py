@@ -6,7 +6,7 @@ llama.cpp server (llama-server.exe) running on port 8080.
 
 Inference path:
   stream_response() — async streaming for the nova_chat UI
-  generate_raw()    — synchronous batch for the gateway endpoint
+  generate_raw()    — synchronous batch helper (legacy; no current callers)
 """
 import json
 import re as _re

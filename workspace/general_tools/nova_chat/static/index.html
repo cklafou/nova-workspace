@@ -1220,7 +1220,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
         </div>
         <div id="live-think-text" style="white-space:pre-wrap;line-height:1.5;padding:8px 10px;max-height:calc(50vh - 80px);overflow-y:auto;"></div>
       </div>
-      <!-- Thought task cards injected here by thought_update events -->
+      <!-- Active board tasks (from /api/queue) shown here as cards -->
       <div id="thoughts-cards"></div>
       <!-- Tasking/ directory browser -->
       <div id="thoughts-dir-section" style="margin-top:4px;">
@@ -1244,7 +1244,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
         </div>
       </div>
 
-      <div class="panel-empty" id="thoughts-empty"><div class="ei">🧠</div>No active thoughts.<br>Nova creates task cards here when working.</div>
+      <div class="panel-empty" id="thoughts-empty"><div class="ei">🧠</div>No active tasks.<br>Nova's active board tasks appear here as she works.</div>
     </div>
 
     <div class="panel-section" id="panel-tools">
@@ -1583,7 +1583,6 @@ function handle(d) {
     case 'autonomous_start':  onAutonomousStart(d); setNovaStatePill('scanning'); break;
     case 'autonomous_token':  onAutonomousToken(d); break;
     case 'autonomous_output': onAutonomousOutput(d); setNovaStatePill('processing'); break;
-    case 'thought_update':  updateThought(d); break;
     case 'vigilance':       updateVigilance(d); break;
     case 'export_ready':    handleExport(d); break;
     case 'nova_throttled':  sysMsg(`⚠ ${d.message}`); setProcessing(false); break;
@@ -2192,14 +2191,21 @@ function updateThought(d) {
 }
 async function pollThoughts() {
   try {
-    const r=await fetch('http://127.0.0.1:18790/api/thoughts');
+    const r=await fetch('/api/queue');
     if(!r.ok) return;
-    const data=await r.json();
-    const raw=Array.isArray(data)?data:(data.active||[]);
-    const thoughts=raw.map(t=>({id:t.id,name:t.id,priority:typeof t.priority_num==='number'?t.priority_num:3,status:t.status||'active',summary:t.summary||'',progress:t.plan_total>0?Math.round((t.plan_done/t.plan_total)*100):0,step:t.plan_total>0?`${t.plan_done}/${t.plan_total}`:null}));
+    const d=await r.json();
+    const ACTIVE=new Set(['active','open','in_progress','waiting']);
+    const thoughts=(d.tasks||[]).filter(t=>ACTIVE.has(t.status)).map(t=>({
+      id:t.id, name:t.title||t.id,
+      priority:typeof t.priority==='number'?t.priority:3,
+      status:t.status==='in_progress'?'active':t.status,
+      summary:t.notes||((t.progress&&t.progress.length)?t.progress[t.progress.length-1].note:'')||'',
+      progress:0,
+      step:(t.progress&&t.progress.length)?`${t.progress.length} step${t.progress.length===1?'':'s'}`:null
+    }));
     const c=document.getElementById('thoughts-cards');
     const em=document.getElementById('thoughts-empty');
-    if(!thoughts.length){if(em)em.style.display='';return;}
+    if(!thoughts.length){if(c)c.querySelectorAll('.thought-card').forEach(el=>el.remove());if(em)em.style.display='';return;}
     if(em)em.style.display='none';
     const ids=new Set(thoughts.map(t=>t.id));
     if(c) c.querySelectorAll('.thought-card').forEach(el=>{if(!ids.has(el.id.replace('tc-','')))el.remove();});
@@ -2217,7 +2223,6 @@ async function refreshFiles() {
   try {
     let data=null;
     try { const r=await fetch('/api/files/tree'); if(r.ok) data=await r.json(); } catch(_){}
-    if(!data) { const r=await fetch('http://127.0.0.1:18790/api/files'); if(r.ok) data=await r.json(); }
     if(!data) throw new Error();
     em.style.display='none'; tree.innerHTML='';
     // Server returns root dir node {name, type:'dir', children:[]} — use .children
@@ -2398,14 +2403,14 @@ async function queueSubmit() {
   } catch(e){ toast('Queue error: '+e); }
 }
 
-async function queueComplete(raw, title) {
-  await fetch('/api/queue/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({raw,title})});
+async function queueComplete(id) {
+  await fetch('/api/queue/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
   toast('✓ Task marked done');
   await queueRefresh();
 }
 
-async function queueCancel(raw, title) {
-  await fetch('/api/queue/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({raw,title})});
+async function queueCancel(id) {
+  await fetch('/api/queue/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
   toast('✗ Task cancelled');
   await queueRefresh();
 }
@@ -2423,24 +2428,27 @@ function renderQueue(tasks) {
   const el = document.getElementById('queue-list');
   const emEl = document.getElementById('queue-empty');
   if(!el) return;
+  // Show only actionable tasks; the board keeps done/abandoned forever (remembered).
+  const ACTIVE = new Set(['open','active','in_progress','waiting']);
+  tasks = (tasks||[]).filter(t => ACTIVE.has(t.status));
   if(!tasks.length) {
     el.innerHTML = '';
     if(emEl) { emEl.style.display=''; el.appendChild(emEl); }
     return;
   }
   if(emEl) emEl.style.display='none';
-  // Sort by priority
-  tasks.sort((a,b)=>a.priority-b.priority);
+  tasks.sort((a,b)=>(a.priority||3)-(b.priority||3));
   el.innerHTML = tasks.map(t => {
     const col = PCOLORS[t.priority]||'#6b7280';
     const lbl = PLABELS[t.priority]||'P?';
-    const rawE = esc(t.raw||'');
-    const titleE = esc(t.title||'');
+    const idE = esc(t.id||'');
+    const titleE = esc(t.title||t.id||'');
+    const wait = t.status==='waiting' ? ` · waiting${t.waiting_on?': '+esc(t.waiting_on):''}` : '';
     return `<div style="display:flex;align-items:center;gap:5px;padding:4px 2px;border-bottom:1px solid var(--border);">
       <span style="font-size:9px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 5px;white-space:nowrap">${lbl}</span>
-      <span style="flex:1;font-size:10.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${titleE}">${titleE}</span>
-      <button onclick="queueComplete('${rawE}','${titleE}')" title="Mark done" style="background:none;border:none;cursor:pointer;font-size:13px;color:#22c55e;padding:0 2px">✓</button>
-      <button onclick="queueCancel('${rawE}','${titleE}')" title="Cancel" style="background:none;border:none;cursor:pointer;font-size:13px;color:#ef4444;padding:0 2px">✗</button>
+      <span style="flex:1;font-size:10.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${titleE}">${titleE}<span style="color:var(--text-mute)">${wait}</span></span>
+      <button onclick="queueComplete('${idE}')" title="Mark done" style="background:none;border:none;cursor:pointer;font-size:13px;color:#22c55e;padding:0 2px">✓</button>
+      <button onclick="queueCancel('${idE}')" title="Cancel" style="background:none;border:none;cursor:pointer;font-size:13px;color:#ef4444;padding:0 2px">✗</button>
     </div>`;
   }).join('');
 }
@@ -3013,7 +3021,6 @@ async function showLogs() {
   try {
     let text=null;
     try{const r=await fetch('/api/logs/list?limit=400');if(r.ok){const d=await r.json();const lg=d.logs||d.lines||d;text=Array.isArray(lg)?lg.join('\n'):String(lg);}}catch(_){}
-    if(!text){const r=await fetch('http://127.0.0.1:18790/api/logs');if(r.ok){const d=await r.json();text=(d.lines||[]).join('\n');}}
     ct.textContent=text||'(no logs)'; ct.scrollTop=ct.scrollHeight;
   } catch(_){ct.textContent='(server unreachable)';}
 }

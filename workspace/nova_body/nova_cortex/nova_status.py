@@ -74,11 +74,6 @@ def _empty_schema() -> dict:
             "summary":    "No run recorded yet"
         },
         "errors": [],       # last 10 errors, newest first
-        "gateway": {
-            "running": None,
-            "last_error": None,
-            "last_checked": None
-        }
     }
 
 
@@ -243,7 +238,7 @@ def resume_task(task_id: Optional[str] = None):
 def add_error(category: str, message: str, limit: int = 10):
     """
     Append an error to the errors list (newest first, capped at `limit`).
-    category: "vision" | "action" | "gateway" | "import" | "bridge" | etc.
+    category: "vision" | "action" | "import" | "bridge" | etc.
     """
     data   = _read()
     errors = data.get("errors", [])
@@ -258,18 +253,6 @@ def add_error(category: str, message: str, limit: int = 10):
     print(f"[nova_status] error logged: [{category}] {message[:80]}")
 
 
-def update_gateway(running: bool, last_error: Optional[str] = None):
-    """Update gateway health info (called by server.py's error detector)."""
-    data = _read()
-    data["gateway"] = {
-        "running":      running,
-        "last_error":   last_error,
-        "last_checked": _now()
-    }
-    data["updated_at"] = _now()
-    _write(data)
-
-
 def read() -> dict:
     """Return current status as a dict (for server.py polling)."""
     return _read()
@@ -282,7 +265,6 @@ def read_summary() -> str:
     task   = data.get("active_task")
     run    = data.get("last_run", {})
     errors = data.get("errors", [])
-    gw     = data.get("gateway", {})
 
     lines = [f"Nova status as of {data.get('updated_at', 'unknown')}:"]
     lines.append(f"  Pulse: {pulse}")
@@ -290,11 +272,6 @@ def read_summary() -> str:
         lines.append(f"  Active task: {task}")
     if run.get("summary"):
         lines.append(f"  Last run: {run['summary']} ({run.get('status', '?')}, {run.get('duration_s', '?')}s)")
-    if gw.get("running") is not None:
-        gw_state = "running" if gw["running"] else "OFFLINE"
-        lines.append(f"  Gateway: {gw_state}")
-        if gw.get("last_error"):
-            lines.append(f"  Gateway error: {gw['last_error']}")
     if errors:
         lines.append(f"  Recent errors ({len(errors)}):")
         for e in errors[:3]:

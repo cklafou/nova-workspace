@@ -11,7 +11,7 @@ Project Nova startup orchestrator — health-gates llama-server (:8080) then lau
 ## Body parts (nova_body)
 
 ### nova_cortex  `nova_body/nova_cortex`
-Nova's reasoning core — decision rules, prefrontal logic, and check-in cadence (rules, prefrontal_cortex, checkin).
+Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status, context assembly, and rules (nova_status, context_builder, rules, prefrontal_cortex, checkin).
 <sub>used by: nova_chat, nova_memory, nova_motor · 8 file(s), 1727 lines</sub>
 
 ### nova_lancedb  `nova_lancedb`
@@ -69,7 +69,7 @@ NCL context injector & module dispatcher — executes parsed NCL calls, building
 <sub>ports seen: 8765 · 1 file(s), 483 lines · flags: no_inbound_refs</sub>
 
 ### nova_chat  `general_tools/nova_chat`
-Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the autonomy sleep/wake daemon.
+Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).
 <sub>binds: 8765 · started by: StopNova.cmd, nova_start.py · 15 file(s), 6854 lines</sub>
 
 ### nova_sync  `general_tools/nova_sync`

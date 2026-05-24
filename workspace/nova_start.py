@@ -8,7 +8,7 @@ Double-click NovaStart.cmd (or, once built, NovaStart.exe) and this script:
      tensor split, logging its output to logs/llama/.
   2. Polls http://127.0.0.1:8080/health until llama-server reports ready.
   3. Starts Nova (general_tools/NovaLauncher.py), which brings up the
-     nova_chat (8765) + nova_gateway (18790) servers and the desktop window.
+     nova_chat (8765) server and the desktop window.
   4. Waits for the chat port, then hands off. When the Nova window closes,
      llama-server is shut down too, so one launch == one clean lifecycle.
 
@@ -46,7 +46,6 @@ PROMPT_CACHE = WS / "prompt_cache"
 
 LLAMA_PORT = 8080
 CHAT_PORT  = 8765
-GW_PORT    = 18790
 LLAMA_HEALTH = f"http://127.0.0.1:{LLAMA_PORT}/health"
 
 LOG_DIR    = WS / "logs" / "launcher"
@@ -275,12 +274,7 @@ def open_app_window():
 
 
 def _shutdown_nova(proc) -> None:
-    """Ask the gateway to stop, then terminate the NovaLauncher process."""
-    try:
-        urllib.request.urlopen(urllib.request.Request(
-            f"http://127.0.0.1:{GW_PORT}/shutdown", method="POST"), timeout=2)
-    except Exception:
-        pass
+    """Terminate the NovaLauncher process."""
     if proc and proc.poll() is None:
         try:
             proc.terminate()

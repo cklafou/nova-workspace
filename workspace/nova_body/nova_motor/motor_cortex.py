@@ -263,7 +263,7 @@ class NovaAutonomy:
         start_time = time.time()
         deadline = start_time + timeout
 
-        # Where Discord messages will be written by the bot
+        # Where Cole-interrupt messages are written (interrupt inbox)
         inbox_path = Path("memory/interrupt_inbox.json")
 
         while time.time() < deadline:

@@ -127,7 +127,7 @@ def validate_gemini_key(key: str) -> tuple[bool, str]:
         return False, f"Error: {err[:80]}"
 
 
-async def check_nova_gateway() -> tuple[bool, str]:
+async def check_llama_server() -> tuple[bool, str]:
     """Check if llama.cpp server (Nova's inference backend) is reachable on port 8080."""
     import urllib.request, urllib.error
     def _check():
@@ -220,7 +220,7 @@ def main():
 
     # ── Nova (llama.cpp) ─────────────────────────────────────────────────────
     print_section("Nova (llama.cpp on port 8080)")
-    nova_ok, nova_msg = asyncio.run(check_nova_gateway())
+    nova_ok, nova_msg = asyncio.run(check_llama_server())
     print(f"  {'✓' if nova_ok else '○'} {nova_msg}")
 
     # ── Summary ──────────────────────────────────────────────────────────────

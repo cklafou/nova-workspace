@@ -1,0 +1,17 @@
+{
+  "inference": {
+    "context_window": 32768,
+    "max_tokens": 16384,
+    "timeout_s": 120
+  },
+  "sessions": {
+    "dir": "logs/gateway_sessions",
+    "compact_at_frac": 0.85,
+    "compact_keep_pairs": 10
+  },
+  "tools": {
+    "exec_timeout_s": 60,
+    "exec_cwd": null,
+    "read_max_bytes": 524288
+  }
+}

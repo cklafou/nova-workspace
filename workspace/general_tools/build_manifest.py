@@ -43,7 +43,7 @@ DRY_RUN = "--dry" in sys.argv
 
 EXCLUDE_DIRS = {"__pycache__", ".git", "node_modules", "backups", "screenshots",
                 ".clawhub", "_archive", "_admin"}
-KNOWN_PORTS = {"8080", "8765", "18790"}
+KNOWN_PORTS = {"8080", "8765"}
 STALE_DAYS = 90
 TOKEN = "@nova:"
 BIND_PATTERNS = [

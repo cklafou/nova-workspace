@@ -19,14 +19,7 @@ import asyncio
 import os
 import re
 import subprocess
-import time
 from pathlib import Path
-
-# ── Discord dedup cache ────────────────────────────────────────────────────────
-# Prevents Nova from spamming Discord when her transcript makes her repeat the
-# same [DISCORD:] directive on consecutive turns.
-_DISCORD_SENT: dict[str, float] = {}   # message text → last sent timestamp
-_DISCORD_DEDUP_WINDOW = 300            # 5 minutes — same text = duplicate within this window
 
 WORKSPACE_DIR = (
     Path(os.environ["NOVA_WORKSPACE"])
@@ -39,8 +32,6 @@ EXEC_PATTERN    = re.compile(r'\[EXEC:([^\]]+)\]', re.IGNORECASE)
 READ_PATTERN    = re.compile(r'\[READ:([^\]]+)\]', re.IGNORECASE)
 PAUSE_PATTERN   = re.compile(r'\[PAUSE:\s*([^\]]*)\]', re.IGNORECASE)
 RESUME_PATTERN  = re.compile(r'\[RESUME:\s*([^\]]*)\]', re.IGNORECASE)
-# [DISCORD: message text] — send a message to Discord via nova_gateway
-DISCORD_PATTERN = re.compile(r'\[DISCORD:\s*(.*?)\]', re.DOTALL | re.IGNORECASE)
 
 
 def parse_actions(message: str) -> list[dict]:
@@ -55,8 +46,6 @@ def parse_actions(message: str) -> list[dict]:
         actions.append({"type": "pause", "task": m.group(1).strip()})
     for m in RESUME_PATTERN.finditer(message):
         actions.append({"type": "resume", "task": m.group(1).strip()})
-    for m in DISCORD_PATTERN.finditer(message):
-        actions.append({"type": "discord", "text": m.group(1).strip()})
     return actions
 
 
@@ -137,47 +126,6 @@ async def execute_action(action: dict) -> str:
             return f"[bridge] ▶ Resumed" + (f": {task_id}" if task_id else "")
         except Exception as e:
             return f"[bridge] ✗ Resume failed: {e}"
-
-    # DISCORD directive: send a message to Discord via nova_gateway
-    elif a_type == "discord":
-        text = action.get("text", "").strip()
-        if not text:
-            return "[bridge] ✗ Discord: no message text"
-        # Deduplication guard: reject if the same text was sent recently
-        now = time.time()
-        # Evict old entries
-        expired = [k for k, v in _DISCORD_SENT.items() if now - v > _DISCORD_DEDUP_WINDOW]
-        for k in expired:
-            del _DISCORD_SENT[k]
-        if text in _DISCORD_SENT:
-            age = int(now - _DISCORD_SENT[text])
-            return f"[bridge] ⚠ Discord duplicate blocked — same message sent {age}s ago (cooldown {_DISCORD_DEDUP_WINDOW}s)"
-        _DISCORD_SENT[text] = now
-        return "[bridge] Discord integration has been removed (nova_gateway retired 2026-05-23)."
-        try:
-            import urllib.request, urllib.error, json as _json
-            payload = _json.dumps({"text": text}).encode("utf-8")
-            req = urllib.request.Request(
-                "http://127.0.0.1:18790/api/discord/send",
-                data=payload,
-                headers={"Content-Type": "application/json"},
-                method="POST",
-            )
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                result = _json.loads(resp.read())
-            return f"[bridge] ✓ Discord message sent ({result.get('chars', '?')} chars)"
-        except urllib.error.HTTPError as e:
-            # Read gateway's error detail for better diagnostics
-            try:
-                error_body = e.read().decode("utf-8", errors="replace")
-                detail = _json.loads(error_body).get("detail", "")
-            except Exception:
-                detail = ""
-            return f"[bridge] ✗ Discord send failed: HTTP {e.code} — {detail or e.reason}"
-        except urllib.error.URLError as e:
-            return f"[bridge] ✗ Discord gateway unreachable: {e.reason}"
-        except Exception as e:
-            return f"[bridge] ✗ Discord send failed: {e}"
 
     return f"[bridge] ✗ Unknown action: {a_type}"
 

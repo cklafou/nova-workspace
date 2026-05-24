@@ -12,7 +12,6 @@ What this does (plain English):
 Tools supported:
   exec    — run a shell command (Nova's most-used tool)
   read    — read a file from the workspace
-  message — send a Discord message (routed through discord_client)
 
 Tools intentionally NOT supported (dropped from OpenClaw):
   write         — use [WRITE:] directives via nova_bridge instead (safer)
@@ -39,14 +38,9 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from gateway_config import cfg
+from nova_config import cfg
 
 log = logging.getLogger(__name__)
-
-# ── Type alias for the discord send function ─────────────────────────────────
-# We pass this in from discord_client to avoid circular imports.
-# Signature: async (channel_id: int, text: str) -> None
-DiscordSendFn = Callable[[int, str], Any]
 
 # ── Tool result when something goes wrong ────────────────────────────────────
 _ERROR_PREFIX = "[ERROR] "
@@ -59,31 +53,17 @@ class ToolExecutor:
     Dispatches tool calls to the correct handler.
 
     Usage:
-        executor = ToolExecutor(discord_send_fn=my_async_send)
+        executor = ToolExecutor()
         result, error = await executor.run("exec", {"command": "echo hello"})
     """
 
-    def __init__(self, discord_send: Optional[DiscordSendFn] = None):
-        """
-        discord_send: async function (channel_id, text) → None
-                      Injected by discord_client at startup.
-                      If None, the 'message' tool will return an error.
-        """
-        self._discord_send = discord_send
-        self._default_channel: Optional[int] = None   # set by discord_client
-
+    def __init__(self):
         # Dispatch table: tool name → async handler
         self._handlers: dict[str, Callable] = {
             "exec":      self._exec,
             "read":      self._read,
-            "message":   self._message,
             "nova_chat": self._nova_chat,   # post a message into nova_chat group chat
         }
-
-    def set_discord(self, send_fn: DiscordSendFn, default_channel: int) -> None:
-        """Called by discord_client after bot connects."""
-        self._discord_send   = send_fn
-        self._default_channel = default_channel
 
     async def run(
         self,
@@ -191,36 +171,6 @@ class ToolExecutor:
         except OSError as e:
             return f"{_ERROR_PREFIX}Cannot read {raw_path}: {e}"
 
-    # ── message ──────────────────────────────────────────────────────────────
-
-    async def _message(self, args: dict) -> str:
-        """
-        Send a Discord message.
-
-        Arguments:
-          text       (str, required)  — message to send
-          channel_id (int, optional)  — target channel (default: triggering channel)
-
-        Returns confirmation or error.
-        """
-        if self._discord_send is None:
-            return f"{_ERROR_PREFIX}Discord not connected — cannot send message."
-
-        text = args.get("text", args.get("message", "")).strip()
-        if not text:
-            return f"{_ERROR_PREFIX}message requires a 'text' argument."
-
-        channel_id = int(args.get("channel_id", self._default_channel or 0))
-        if not channel_id:
-            return f"{_ERROR_PREFIX}No channel_id provided and no default channel set."
-
-        try:
-            await self._discord_send(channel_id, text)
-            log.info("message: sent %d chars to channel %d", len(text), channel_id)
-            return f"Message sent to channel {channel_id} ({len(text)} chars)."
-        except Exception as e:
-            return f"{_ERROR_PREFIX}Discord send failed: {e}"
-
     async def _nova_chat(self, args: dict) -> str:
         """
         Post a message into the Nova Chat group chat session.
@@ -293,7 +243,7 @@ def _run_subprocess(command: str, cwd: str, timeout: int) -> str:
 
 def parse_tool_calls(response: dict) -> list[dict]:
     """
-    Extract tool calls from a nova_chat /api/gateway/infer response.
+    Extract tool calls from a nova_chat inference response.
 
     The response is OpenAI-compatible. Tool calls can appear in two ways:
       1. Standard OpenAI format: response["choices"][0]["message"]["tool_calls"]
@@ -406,7 +356,7 @@ def parse_text_directives(text: str) -> list[dict]:
         for m in bare_exec_re.finditer(text):
             calls.append({"name": "exec", "arguments": {"command": m.group(1).strip()}})
 
-        # nova_chat: message text  (simple Discord→NovacChat directive)
+        # nova_chat: message text  (post into the nova_chat group chat)
         nova_chat_re = re.compile(r'(?m)^nova_chat:\s*(.+)$', re.IGNORECASE)
         for m in nova_chat_re.finditer(text):
             calls.append({"name": "nova_chat", "arguments": {"content": m.group(1).strip(), "author": "Nova"}})
@@ -433,7 +383,7 @@ if __name__ == "__main__":
     executor = ToolExecutor()
 
     async def test():
-        result, err = await executor.run("exec", {"command": "echo Hello from nova_gateway"})
+        result, err = await executor.run("exec", {"command": "echo Hello from Nova"})
         print(f"exec result (error={err}):\n  {result}")
 
         result, err = await executor.run("read", {"path": "AGENTS.md"})

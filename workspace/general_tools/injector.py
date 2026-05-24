@@ -47,7 +47,7 @@ from typing import Optional
 
 log = logging.getLogger(__name__)
 
-# Workspace root — 3 levels up: nova_gateway/ → tools/ → workspace/
+# Workspace root — 3 levels up: nova_chat/ → general_tools/ → workspace/
 _WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Nova Chat server base URL
