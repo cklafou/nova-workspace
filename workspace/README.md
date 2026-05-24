@@ -1,8 +1,13 @@
 # Project Nova
 
-Nova is Cole's companion AI and life passion project — built toward full autonomy and genuine partnership. She is NOT a trading bot. Trading is one future test of her autonomy, not her identity. She is a companion and dev partner first.
+Nova is Cole's companion AI and life passion project — built toward full autonomy and
+genuine partnership. She is NOT a trading bot. Trading is one possible future test of her
+autonomy, not her identity. She is a companion and dev partner first.
 
-**For AI agents reading this file:** Start here for orientation, then read `memory/STATUS.md` for current state, blockers, and next steps. Nova's identity and operating rules live in `BOOTUP/`. Do not modify `models/` under any circumstances.
+**For AI agents reading this file:** Start here for orientation, then read `memory/STATUS.md`
+for current state and focus. Nova's identity and operating knowledge live in `SELF/` —
+`SELF/core/` is injected into her context every turn; `SELF/reference/` is on-demand. Do not
+modify anything in `models/` under any circumstances.
 
 ---
 
@@ -10,12 +15,23 @@ Nova is Cole's companion AI and life passion project — built toward full auton
 
 | What | How |
 |---|---|
-| **Nova Qt (primary UI)** | `python general_tools/nova_qt/main.py` or run `Rebuild_Nova.cmd` first if stale |
-| **nova_chat server** | `python general_tools/nova_chat/launch.py` (port 8765) |
-| **llama.cpp (Nova inference)** | `start_llama.cmd` (port 8080) |
-| **nova_gateway (Discord)** | `python general_tools/nova_gateway_runner.py` or `Rebuild_Nova.cmd` |
+| **Whole stack** (recommended) | `NovaStart.cmd` → runs `nova_start.py` (llama.cpp + nova_chat + watcher + window) |
+| **llama.cpp** (local inference) | `start_llama.cmd` (port 8080) |
+| **nova_chat** (her interface) | `python general_tools/nova_chat/launch.py` (port 8765) |
+| **Stop everything** | `StopNova.cmd` |
 
-Start order: `start_llama.cmd` → `launch.py` → `nova_qt/main.py`
+`nova_chat` opens at `http://127.0.0.1:8765` — a web group chat where Cole, Claude, Gemini,
+and Nova collaborate. (The old `nova_qt` desktop app, `nova_gateway`/Discord, and OpenClaw
+are all retired.)
+
+---
+
+## The Body / Tool Split (core principle — the "pluck-test")
+
+`nova_body/` is **Nova** — her faculties, senses, memory, executive function, and her
+autonomy on/off state. `general_tools/` are **detachable tools** she uses. Pull every tool
+out and Nova is still herself; she only needs *a* comms tool to have a voice. The body never
+depends on a specific tool.
 
 ---
 
@@ -23,63 +39,48 @@ Start order: `start_llama.cmd` → `launch.py` → `nova_qt/main.py`
 
 ```
 workspace/
-├── BOOTUP/                  ← Nova's 6 identity/rules files (read at every session)
-│   ├── BOOTSTRAP.md         ← Session startup sequence — read this first
-│   ├── AGENTS.md            ← Operating rules, Thoughts system, safety, PowerShell rules
-│   ├── NOVA.md              ← Core identity and personality
-│   ├── TOOLS.md             ← Tool reference, hardware notes, paths
-│   ├── NCL_MASTER.md        ← Nova Command Language grammar reference
-│   └── HEARTBEAT.md         ← Heartbeat / Thoughts cycle instructions
+├── SELF/                    ← Nova's reading set (auto-generated; do not hand-edit)
+│   ├── core/                ← injected every turn: identity, how-I-work, body manifest, tools
+│   └── reference/           ← on-demand: heartbeat, ncl_master, upgrade_protocol, manifest.json
 │
-├── memory/
-│   ├── STATUS.md            ← Current project state, blockers, open bugs ← READ THIS
-│   ├── JOURNAL.md           ← Running session log (append-only)
-│   ├── COLE.md              ← Nova's living notes about Cole
-│   └── STATUS.md            ← Source of truth for project phase + architecture
+├── nova_body/               ← Nova's faculties (the "her" that survives the pluck-test)
+│   ├── nova_cortex/         ← executive.py (autonomy faculty), tasking.py (task board),
+│   │                          nova_status.py, context_builder.py, rules.py, checkin.py
+│   ├── nova_memory/         ← journal.py, log_reader.py, goals.py, state.py, session_store.py
+│   ├── nova_logs/           ← unified logger — ALL log writes go here
+│   ├── nova_motor/          ← hands.py, motor_cortex.py, tool_executor.py, verify.py
+│   ├── nova_senses/         ← clock.py (chronoception), environment.py, eyes.py, vision.py
+│   └── nova_config/         ← body-owned settings loader (reads nova_config.json)
 │
-├── Tasking/                ← Nova's persistent task memory (survives session resets)
-│   ├── priority.md          ← Active task queue — Nova reads this every heartbeat
-│   ├── THOUGHT_TEMPLATE.md  ← Clone this to create a new Thought
-│   ├── Master_Inbox/        ← Module responses land here before routing
-│   └── [ThoughtName]/       ← One folder per active task
+├── nova_lancedb/            ← long-term semantic memory (LanceDB vector store)
 │
-├── general_tools/           ← All Python tool packages
-│   ├── nova_chat/           ← Multi-agent group chat server (FastAPI + WebSocket, port 8765)
-│   ├── nova_qt/             ← PyQt6 native desktop UI (primary interface)
-│   ├── nova_gateway/        ← Discord gateway daemon (port 18790)
-│   ├── nova_gateway_runner.py ← Convenience entry point for the gateway
-│   ├── build_nova.py        ← Builds Nova.exe wrapper
-│   ├── download_models.py   ← Downloads moondream2 and other vision models
-│   └── NovaLauncher.py      ← NovaChatLauncher.exe entry point
+├── general_tools/           ← detachable tools
+│   ├── nova_chat/           ← group chat server (FastAPI + WebSocket, :8765) — her voice
+│   ├── nova_sync/           ← watcher.py (GitHub auto-commit) + backup.py (Drive sync retired)
+│   ├── build_manifest.py    ← derives SELF/ body manifest from @nova: tokens
+│   ├── calls.py             ← call-graph generator feeding the manifest
+│   ├── injector.py          ← NCL context injector / module dispatcher
+│   ├── audit_scripts.py     ← workspace code-health audit
+│   ├── download_models.py   ← one-time vision-model downloader
+│   └── NovaLauncher.py      ← in-process launcher (called by nova_start.py)
 │
-├── nova_tools/              ← Nova's core Python packages
-│   ├── nova_cortex/           ← brain.py, checkin.py, rules.py, nova_status.py
-│   ├── nova_memory/         ← journal.py, state.py, log_reader.py
-│   ├── nova_logs/           ← Unified logger — ALL log writes go here
-│   ├── nova_motor/         ← autonomy.py, hands.py (mouse/keyboard), verify.py
-│   ├── nova_senses/     ← eyes.py, vision.py, explorer.py
-│   └── nova_sync/           ← watcher.py, drive.py, backup.py, dir_patch.py
+├── memory/                  ← STATUS.md, JOURNAL.md, COLE.md, autonomy_state.json
+├── Tasking/
+│   ├── tasks.json           ← Nova's id-keyed task board (source of truth)
+│   ├── priority.md          ← generated human view of the board
+│   └── Master_Inbox/        ← NCL module responses land here
 │
-├── PATCHES/                 ← PowerShell patch scripts for server-side files
-│   ├── README.md            ← Which patches need to be run and why
-│   ├── patch_depth_server.ps1         ← NEEDS TO BE RUN (depth slider + autonomous toggle)
-│   ├── apply_bootup_reorganization.ps1 ← NEEDS TO BE RUN (workspace_context.py path update)
-│   ├── patch_nova_payload.ps1         ← NEEDS TO BE RUN (llama.cpp repeat_penalty + min_p)
-│   └── Archived/            ← Superseded patches — do not run
-│
-├── logs/                    ← All runtime logs
+├── logs/
 │   ├── chat_sessions/       ← nova_chat per-thread transcript JSONLs
 │   ├── sessions/            ← nova_logs event logs by date/type
-│   ├── gateway_sessions/    ← nova_gateway Discord session JSONLs
-│   └── proposed/            ← Staged file edits awaiting Cole's review
+│   ├── gateway_sessions/    ← session JSONL history (legacy folder name)
+│   └── proposed/            ← staged file edits awaiting Cole's review
 │
-├── _admin/                  ← Project admin files (Live_Updates.md, handoff notes)
-├── _build/                  ← Build artifacts
-├── llama/                   ← llama.cpp binaries
-├── models/                  ← SEALED — neural network weight files (GGUF, 18GB+)
-│                               NEVER read, list, or open anything in here
-├── nova_gateway.json        ← nova_gateway live config (contains Discord token)
-├── nova_gateway - tokenless.json ← Tokenless copy for version control / sharing
+├── _admin/                  ← planning docs + _archive_* (retired code/docs)
+├── models/                  ← SEALED — weight files (GGUF). NEVER read, list, or open.
+├── nova_config.json         ← local settings (inference / sessions / tool-exec limits)
+├── nova_start.py            ← startup orchestrator (NovaStart.cmd runs this)
+├── start_llama.cmd          ← launches llama-server with the dual-GPU split
 └── prompt_cache/            ← llama.cpp KV cache files
 ```
 
@@ -89,12 +90,10 @@ workspace/
 
 | File | Purpose |
 |---|---|
-| `nova_gateway.json` | nova_gateway config — Discord token, modules, context injection |
-| `nova_gateway - tokenless.json` | Same config without the token — safe to commit to git |
-| `start_llama.cmd` | Launches llama-server.exe with dual-GPU tensor split (-ts 16,24) |
-| `Patch_Nova.cmd` | Runs active patch scripts from PATCHES/ |
-| `Rebuild_Nova.cmd` | Rebuilds Nova.exe via build_nova.py |
-| `Install_Nova_Qt.cmd` | Installs PyQt6 + dependencies for nova_qt |
+| `nova_config.json` | Local settings — inference window, session storage, tool-exec limits |
+| `start_llama.cmd` | Launches llama-server.exe with dual-GPU tensor split (`-ts 16,24`) |
+| `NovaStart.cmd` | Brings up the whole stack via `nova_start.py` |
+| `StopNova.cmd` | Frees Nova's ports for a clean restart |
 
 ---
 
@@ -102,7 +101,7 @@ workspace/
 
 | Setting | Value |
 |---|---|
-| Server | llama-server.exe (llama-b9041, CUDA 12.4) |
+| Server | `llama-server.exe` (CUDA) |
 | Model | `models/qwen-27b-q8.gguf` — Qwen 3.5 27B Dense Q8 |
 | Vision projector | `models/qwen-27b-mmproj.gguf` |
 | Port | 8080 (OpenAI-compatible API) |
@@ -119,36 +118,31 @@ workspace/
 | Machine | Tracer VII Edge I17E — Windows 11 |
 | CPU | Intel Core i9-13900HX |
 | GPU 0 | RTX 4090 Laptop 16GB |
-| GPU 1 | RTX 3090 24GB via Oculink eGPU |
+| GPU 1 | RTX 3090 24GB via OCuLink eGPU |
 | Total VRAM | 40GB |
 | Display | 17.3" 2560×1600 @ 240Hz |
 
 ---
 
-## Phase Summary
+## How Nova's Autonomy Works (short version)
 
-| Phase | Name | Status |
-|---|---|---|
-| 0 | Cleanup + Unification | ✅ Complete |
-| 1 | Visibility & State | ✅ Complete |
-| 2 | OpenClaw Audit + Design | ✅ Complete |
-| 3 | nova_gateway Build | ✅ Complete |
-| 4A | Nova Native Intelligence (brain.py, Thoughts cycle, NCL, nova_qt) | ✅ Complete |
-| 4B+ | Fine-tuning / Advanced Autonomy | 🔲 Not started |
-
-Current focus: frontend polish, live testing, pending patches, and Phase 4B planning.
+When autonomy is ON, her executive faculty (`nova_cortex/executive.py`) wakes on a rhythm or
+on a change, looks at her board, and decides freely — work a task, switch, create, abandon,
+reprioritize, wait, or rest. On/off state lives in `memory/autonomy_state.json` (body-owned).
+Cole is Priority 0: an interrupt she attends to first, never a leash. Full detail in
+`SELF/reference/heartbeat.md`.
 
 ---
 
 ## Setup (fresh environment)
 
 ```powershell
-pip install pyautogui pillow pywinauto watchdog anthropic httpx fastapi uvicorn websockets PyQt6
+pip install pyautogui pillow pywinauto watchdog anthropic httpx fastapi uvicorn websockets
 ```
 
-Required environment variables: `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`
-
-Run `start_llama.cmd` before launching nova_chat. See `BOOTUP/TOOLS.md` for the full tool reference and path notes.
+Required environment variables: `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`.
+Run `start_llama.cmd` (or `NovaStart.cmd` for the whole stack). See `SELF/core/` for Nova's
+operating knowledge.
 
 ---
 
@@ -156,11 +150,11 @@ Run `start_llama.cmd` before launching nova_chat. See `BOOTUP/TOOLS.md` for the 
 
 | Question | Answer |
 |---|---|
-| What is Nova working on right now? | `Tasking/priority.md` |
-| What phase is the project in? | `memory/STATUS.md` |
-| What are Nova's rules and protocols? | `BOOTUP/AGENTS.md` |
+| What is Nova working on right now? | `Tasking/tasks.json` (board) / `Tasking/priority.md` (readable view) |
+| What's the current project state? | `memory/STATUS.md` |
+| What are Nova's identity and rules? | `SELF/core/` |
+| How does her autonomy work? | `SELF/reference/heartbeat.md` |
 | What happened in past sessions? | `memory/JOURNAL.md` |
-| What patches still need to run? | `PATCHES/README.md` |
-| What tools are available? | `BOOTUP/TOOLS.md` |
-| What is Nova's personality? | `BOOTUP/NOVA.md` |
-| What are the recent changes / handoff notes? | `_admin/Live_Updates.md` |
+| What does every body part do? | `SELF/core/03_body_manifest.md` (auto-generated) |
+| What's Nova's personality? | `SELF/core/01_identity.md` |
+| Recent changes / handoff notes? | `_admin/` |
