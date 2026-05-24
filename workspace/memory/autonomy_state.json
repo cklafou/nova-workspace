@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "active": null,
-  "last_wake": "2026-05-25T01:51:39",
-  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 90, 1779641450], [\"memory/cole_intent.json\", 79, 1779641450]]",
-  "rest_note": "Board empty, inbox clean, no Cole input — late night rest tick"
+  "last_wake": "2026-05-25T02:04:37",
+  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 90, 1779642268], [\"memory/cole_intent.json\", 79, 1779642268]]",
+  "rest_note": "Board clean, no pending tasks or module responses since last tick 12m ago — resting until something real lands"
 }
