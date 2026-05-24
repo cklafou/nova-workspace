@@ -39,6 +39,12 @@ def stamp() -> str:
             f"{hour12}:{n.minute:02d} {'AM' if n.hour < 12 else 'PM'}")
 
 
+def future_iso(seconds: float) -> str:
+    """ISO timestamp `seconds` from now — for scheduling her next wake."""
+    from datetime import timedelta
+    return (datetime.now() + timedelta(seconds=seconds)).isoformat(timespec="seconds")
+
+
 def time_of_day() -> str:
     h = datetime.now().hour
     return ("late night" if h < 5 else "morning" if h < 12 else

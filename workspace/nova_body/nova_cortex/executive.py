@@ -36,6 +36,7 @@ _STATE = WORKSPACE_ROOT / "memory" / "autonomy_state.json"
 
 _DEFAULT_CFG = {
     "sleep_interval_s": 300,
+    "follow_gap_s": 30,
     "watch_paths": ["Tasking/tasks.json", "memory/interrupt_inbox.json",
                     "memory/cole_intent.json"],
 }
@@ -43,8 +44,8 @@ _DEFAULT_CFG = {
 
 # ── persisted body state (hers; survives restart) ──────────────────────────────
 def _load_state() -> dict:
-    base = {"enabled": False, "active": None, "last_wake": "",
-            "last_fp": "", "rest_note": ""}
+    base = {"enabled": False, "active": None, "last_activity": "",
+            "wake_at": "", "last_fp": "", "rest_note": ""}
     try:
         if _STATE.exists():
             base.update(json.loads(_STATE.read_text(encoding="utf-8")))
@@ -93,9 +94,13 @@ def note_activity() -> None:
     REAL last activity, not only autonomy wakes — otherwise 'since you last stirred'
     drifts (she'd think minutes passed right after answering). Also re-baselines the
     change fingerprint so files she just touched don't immediately re-wake her."""
+    cfg = _cfg()
     s = _load_state()
-    s["last_wake"] = clock.now_iso()
-    s["last_fp"] = json.dumps(environment.fingerprint(_cfg()["watch_paths"]), default=list)
+    s["last_activity"] = clock.now_iso()
+    s["last_fp"] = json.dumps(environment.fingerprint(cfg["watch_paths"]), default=list)
+    # After she acts/replies, schedule a SOON follow-up think — don't go dormant for the
+    # full interval right after responding (that looked like "sleeping without thinking").
+    s["wake_at"] = clock.future_iso(cfg["follow_gap_s"])
     _save_state(s)
 
 
@@ -110,8 +115,9 @@ def should_wake(cole_pending: bool = False) -> tuple:
     fp_now = json.dumps(environment.fingerprint(cfg["watch_paths"]), default=list)
     if fp_now != st.get("last_fp", ""):
         return (True, "change")
-    if clock.interval_elapsed(st.get("last_wake", ""), cfg["sleep_interval_s"]):
-        return (True, "interval")
+    wake_at = st.get("wake_at", "")
+    if not wake_at or clock.now_iso() >= wake_at:
+        return (True, "scheduled")
     return (False, "resting")
 
 
@@ -120,7 +126,7 @@ def build_situation(cole_pending: bool, reason: str) -> str:
     st = _load_state()
     board = tasking.render_board(st.get("active"))
     directive = environment.cole_directive()
-    last = st.get("last_wake", "")
+    last = st.get("last_activity", "")
     L = [f"[AUTONOMY WAKE — {reason}] Right now it is {clock.stamp()} ({clock.time_of_day()})."]
     if last:
         L.append(f"(You last acted {clock.since_human(last)}.)")
@@ -193,9 +199,12 @@ def apply_decision(reply: str, cole_pending: bool = False) -> dict:
     engaged = bool(log) or bool(control.get("switch"))
     rested = not engaged
 
+    cfg = _cfg()
     st = _load_state()
-    st["last_wake"] = clock.now_iso()
-    st["last_fp"] = json.dumps(environment.fingerprint(_cfg()["watch_paths"]), default=list)
+    st["last_activity"] = clock.now_iso()
+    st["last_fp"] = json.dumps(environment.fingerprint(cfg["watch_paths"]), default=list)
+    # Engaged → come back SOON to keep going; rested → sleep the full interval.
+    st["wake_at"] = clock.future_iso(cfg["follow_gap_s"] if engaged else cfg["sleep_interval_s"])
     st["rest_note"] = control.get("rest", "") if rested else ""
     _save_state(st)
 
