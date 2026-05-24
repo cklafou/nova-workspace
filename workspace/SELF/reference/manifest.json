@@ -1,12 +1,11 @@
 {
-  "generated": "2026-05-24T09:56:32",
-  "workspace": "/sessions/quirky-laughing-allen/mnt/Project_Nova/workspace",
+  "generated": "2026-05-24T22:12:09",
+  "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
   "flags": {
     "undescribed": [],
     "dead_part_candidates": [
-      "nova_lancedb",
       "nova_memory",
       "nova_motor",
       "audit_queue.py",
@@ -70,11 +69,11 @@
         "queue",
         "sentence_transformers"
       ],
-      "referenced_by": [],
+      "referenced_by": [
+        "nova_chat"
+      ],
       "launched_by": [],
-      "flags": [
-        "no_inbound_refs"
-      ]
+      "flags": []
     },
     {
       "name": "nova_logs",
@@ -184,7 +183,7 @@
       "path": "nova_start.py",
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
-      "lines": 379,
+      "lines": 442,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -271,7 +270,7 @@
       "path": "general_tools/NovaLauncher.py",
       "purpose": "Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.",
       "files": 1,
-      "lines": 204,
+      "lines": 199,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -442,7 +441,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the autonomy sleep/wake daemon.",
       "files": 15,
-      "lines": 6714,
+      "lines": 6853,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -455,7 +454,8 @@
       ],
       "nova_imports": [
         "nova_chat",
-        "nova_cortex"
+        "nova_cortex",
+        "nova_lancedb"
       ],
       "third_party": [
         "anthropic",
@@ -480,7 +480,7 @@
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), drive sync, and backups.",
       "files": 5,
-      "lines": 2052,
+      "lines": 2085,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
