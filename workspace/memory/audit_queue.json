@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-25T01:51:30+09:00",
+  "updated_at": "2026-05-25T02:03:57+09:00",
   "items": [
     {
       "id": "777df213",
@@ -3611,6 +3611,19 @@
       "commit": "2a2bd318",
       "old_path": null,
       "new_path": "nova_memory_db/nova_text.lance/data/1111101011001111010100117036f74debad59e26184d192a7.lance",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "78fe6e9d",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-05-25T02:03:57+09:00",
+      "commit": "fcd97580",
+      "old_path": "_admin/CODE_REVIEW_2026-05-23.md",
+      "new_path": null,
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,

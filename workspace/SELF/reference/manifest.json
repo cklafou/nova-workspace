@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-25T01:51:34",
+  "generated": "2026-05-25T02:03:54",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -25,7 +25,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's reasoning core — decision rules, prefrontal logic, and check-in cadence (rules, prefrontal_cortex, checkin).",
       "files": 8,
-      "lines": 1715,
+      "lines": 1727,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -157,7 +157,7 @@
       "path": "nova_body/nova_senses",
       "purpose": "Nova's perception — file/system sensing (eyes), workspace self-awareness (proprioception), and vision.",
       "files": 6,
-      "lines": 1400,
+      "lines": 1409,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -443,7 +443,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the autonomy sleep/wake daemon.",
       "files": 15,
-      "lines": 6845,
+      "lines": 6854,
       "age_days": 0,
       "ports_bind": [
         "8765"
