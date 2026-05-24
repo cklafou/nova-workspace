@@ -1748,6 +1748,128 @@ async def eyes_stop():
 # picks them up on the next heartbeat tick.
 # ──────────────────────────────────────────────────────────────────────────────
 
+_QUEUE_FILE = Path(WORKSPACE_ROOT) / "Tasking" / "priority.md"
+_PRIORITY_LABELS = {1: "PRIORITY 1", 2: "PRIORITY 2", 3: "PRIORITY 3", 4: "PRIORITY 4"}
+
+
+def _parse_queue() -> list[dict]:
+    """Parse active tasks from Tasking/priority.md. Returns list of task dicts."""
+    if not _QUEUE_FILE.exists():
+        return []
+    text = _QUEUE_FILE.read_text(encoding="utf-8")
+    tasks = []
+    current_priority = None
+    for line in text.splitlines():
+        # Detect priority section headers
+        for p, label in _PRIORITY_LABELS.items():
+            if line.startswith(f"## {label}"):
+                current_priority = p
+                break
+        else:
+            # Reset on other section headers (BLOCKED, SUSPENDED, DECISION LOG)
+            if line.startswith("## ") and current_priority is not None:
+                for label in ["BLOCKED", "SUSPENDED", "DECISION"]:
+                    if label in line.upper():
+                        current_priority = None
+                        break
+        # Extract task bullets
+        if current_priority and (line.startswith("- ") or line.startswith("* ")):
+            body = line[2:].strip()
+            if body and body not in ("_None active._", "None active."):
+                tasks.append({"priority": current_priority, "title": body, "raw": line})
+    return tasks
+
+
+def _write_task(title: str, priority: int, notes: str = "") -> bool:
+    """Append a new task under the right priority section in priority.md."""
+    if not _QUEUE_FILE.exists():
+        return False
+    text = _QUEUE_FILE.read_text(encoding="utf-8")
+    lines = text.splitlines(keepends=True)
+    label = _PRIORITY_LABELS.get(priority, "PRIORITY 3")
+    # Build the task line
+    task_line = f"- **{title}**"
+    if notes:
+        task_line += f" — {notes}"
+    task_line += "\n"
+    # Find the section header and insert after the italics description line
+    in_section = False
+    insert_at = None
+    for i, line in enumerate(lines):
+        if line.startswith(f"## {label}"):
+            in_section = True
+            continue
+        if in_section:
+            if line.startswith("## "):   # next section — insert before it
+                insert_at = i
+                break
+            # Skip the italic description line and blank lines at section start
+            stripped = line.strip()
+            if stripped.startswith("_(") or stripped == "" or stripped == "_None active._":
+                continue
+            # First real content line — insert before it
+            insert_at = i
+            break
+    if insert_at is None and in_section:
+        insert_at = len(lines)
+    if insert_at is None:
+        return False
+    # Replace "_None active._" sentinel if present on the line before insert
+    for j in range(max(0, insert_at - 3), insert_at):
+        if "_None active._" in lines[j]:
+            lines[j] = lines[j].replace("_None active._\n", "").replace("_None active._", "")
+    lines.insert(insert_at, task_line)
+    _QUEUE_FILE.write_text("".join(lines), encoding="utf-8")
+    return True
+
+
+def _complete_task(raw_line: str, title: str, action: str = "completed") -> bool:
+    """Remove a task line from priority.md and append to Decision Log."""
+    if not _QUEUE_FILE.exists():
+        return False
+    text = _QUEUE_FILE.read_text(encoding="utf-8")
+    if raw_line not in text:
+        return False
+    # Remove the task line
+    text = text.replace(raw_line + "\n", "").replace(raw_line, "")
+    # Restore "_None active._" if section is now empty
+    for p, label in _PRIORITY_LABELS.items():
+        section_header = f"## {label}"
+        if section_header not in text:
+            continue
+        idx = text.index(section_header)
+        next_section = len(text)
+        for other_label in list(_PRIORITY_LABELS.values()) + ["BLOCKED", "SUSPENDED", "DECISION"]:
+            other_header = f"## {other_label}"
+            if other_label != label and other_header in text:
+                pos = text.index(other_header)
+                if pos > idx:
+                    next_section = min(next_section, pos)
+        section_body = text[idx:next_section]
+        # No task bullets remain — add sentinel
+        has_task = any(l.startswith("- ") or l.startswith("* ")
+                       for l in section_body.splitlines()
+                       if l.strip() and "_None active._" not in l)
+        if not has_task and "_None active._" not in section_body:
+            # Insert sentinel after the italic description line
+            sec_lines = section_body.splitlines(keepends=True)
+            insert_pos = 2  # after header + italic
+            sec_lines.insert(insert_pos, "_None active._\n\n")
+            text = text[:idx] + "".join(sec_lines) + text[next_section:]
+    # Append to Decision Log
+    from datetime import datetime as _dt
+    ts = _dt.now().strftime("%Y-%m-%d")
+    log_entry = f"- {ts} — {action.capitalize()}: {title}\n"
+    if "## DECISION LOG" in text:
+        dlog_idx = text.index("## DECISION LOG")
+        header_end = text.index("\n", dlog_idx) + 1
+        # Find the first content line after the header
+        rest = text[header_end:]
+        text = text[:header_end] + log_entry + rest
+    _QUEUE_FILE.write_text(text, encoding="utf-8")
+    return True
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # AUTONOMY: sleep/wake daemon + faithful-executor queue persistence
 # (added 2026-05-23 — replaces the per-message heartbeat loop in _queued_run)
@@ -1755,6 +1877,56 @@ async def eyes_stop():
 import time as _time
 
 _COLE_INTENT_FILE = Path(WORKSPACE_ROOT) / "memory" / "cole_intent.json"
+_autonomy_state = {"observe_until": 0.0, "last_scheduled": 0.0, "last_fp": None}
+
+
+def _autonomy_cfg() -> dict:
+    """Read the autonomy block from nova_gateway.json with safe defaults."""
+    defaults = {
+        "enabled": True, "sleep_interval_s": 300, "poll_s": 3,
+        "observe_dwell_ticks": 2, "min_engage_summary": True, "engage_gap_s": 8,
+        "watch_paths": ["Tasking/priority.md", "Tasking/Master_Inbox",
+                        "memory/interrupt_inbox.json", "memory/cole_intent.json"],
+    }
+    try:
+        cfg_path = Path(WORKSPACE_ROOT) / "nova_gateway.json"
+        data = json.loads(cfg_path.read_text(encoding="utf-8"))
+        block = data.get("autonomy", {}) or {}
+        defaults.update({k: v for k, v in block.items() if v is not None})
+    except Exception:
+        pass
+    return defaults
+
+
+def _env_fingerprint(cfg: dict) -> tuple:
+    """A cheap, comparable snapshot of Nova's environment. No model calls.
+    Changes when any watched file/dir is touched."""
+    parts = []
+    for rel in cfg["watch_paths"]:
+        p = Path(WORKSPACE_ROOT) / rel
+        try:
+            if p.is_dir():
+                entries = sorted(q.name for q in p.iterdir())
+                parts.append((rel, len(entries), int(p.stat().st_mtime)))
+            elif p.exists():
+                st = p.stat()
+                parts.append((rel, st.st_size, int(st.st_mtime)))
+            else:
+                parts.append((rel, -1, 0))
+        except Exception:
+            parts.append((rel, -2, 0))
+    return tuple(parts)
+
+
+def _priority_hash() -> str:
+    """Content hash of priority.md — detects whether a tick changed the queue."""
+    try:
+        import hashlib
+        return hashlib.sha1(_QUEUE_FILE.read_bytes()).hexdigest()
+    except Exception:
+        return ""
+
+
 def _mirror_cole_intent(text: str) -> None:
     """Persist Cole's last non-trivial instruction so it survives the cold
     context of a heartbeat tick. Written by the WS receive path."""
@@ -1767,6 +1939,77 @@ def _mirror_cole_intent(text: str) -> None:
         _os.replace(tmp, _COLE_INTENT_FILE)
     except Exception as _e:
         print(f"[autonomy] cole_intent write failed: {_e}")
+
+
+def _parse_task_intent(reply: str):
+    """Extract the first balanced TASK_INTENT JSON object from Nova's reply."""
+    if not reply or "TASK_INTENT:" not in reply:
+        return None
+    after = reply.split("TASK_INTENT:", 1)[1].strip()
+    depth, start = 0, None
+    for i, ch in enumerate(after):
+        if ch == "{":
+            if start is None:
+                start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and start is not None:
+                try:
+                    return json.loads(after[start:i + 1])
+                except Exception:
+                    return None
+    return None
+
+
+def _reconcile_queue(intent: dict) -> list:
+    """Apply Nova's stated intent to priority.md deterministically.
+    Returns a list of human-readable actions taken (for logging)."""
+    actions = []
+    try:
+        existing = {t["title"].lower() for t in _parse_queue()}
+    except Exception:
+        existing = set()
+    # Completed tasks are removed from the active queue but remembered as "done"
+    # in task_state — never recreate one. (Recreating a completed task is what caused
+    # the redo loop where Task 1 reappeared on every wake.)
+    _state = _load_task_state()
+    _done_keys = {k for k, v in _state.items() if v.get("status") == "done"}
+    for task in (intent.get("add") or []):
+        title = (task.get("title") or "").strip()
+        if not title or title.lower() in existing:
+            continue
+        if _task_key(title) in _done_keys:
+            actions.append(f"skipped (already completed): {title}")
+            continue
+        try:
+            pr = int(task.get("priority", 4))
+        except Exception:
+            pr = 4
+        if _write_task(title, pr, task.get("notes", "")):
+            actions.append(f"added P{pr}: {title}")
+            existing.add(title.lower())
+            _ensure_task_state(title, "queued")
+    for title in (intent.get("complete") or []):
+        for t in _parse_queue():
+            if t["title"].lower() == str(title).strip().lower():
+                if _complete_task(t["raw"], t["title"], "completed"):
+                    actions.append(f"completed: {t['title']}")
+                    # Remember as done (don't drop) so it can't be recreated.
+                    _record_progress(t["title"], "marked complete", "done")
+                break
+    return actions
+
+
+def _journal_correction(note: str) -> None:
+    """Log an autonomy self-check note to JOURNAL.md for self-improvement."""
+    try:
+        jp = Path(WORKSPACE_ROOT) / "memory" / "JOURNAL.md"
+        line = f"\n- {datetime.now().isoformat()} [autonomy/self-check] {note}\n"
+        with open(jp, "a", encoding="utf-8") as f:
+            f.write(line)
+    except Exception:
+        pass
 
 
 async def emit_event(event: str, text: str, level: str = "info", **extra) -> None:
@@ -1804,10 +2047,342 @@ def _has_unread_cole() -> bool:
     return li_c is not None and (li_n is None or li_n < li_c)
 
 
+def _cole_is_typing() -> bool:
+    """Read interrupt_inbox.json; True if Cole is typing or typed within 30s."""
+    p = Path(WORKSPACE_ROOT) / "memory" / "interrupt_inbox.json"
+    if not p.exists():
+        return False
+    try:
+        ib = json.loads(p.read_text(encoding="utf-8"))
+        lt = ib.get("last_typed_at", 0)
+        return bool(ib.get("is_typing")) or (lt and (_time.time() - lt) < 30)
+    except Exception:
+        return False
+
+
 # ── Task state: server-owned status + running progress log ──────────────────--
 # priority.md stays the human-readable queue; this sidecar holds the machine
 # state (status + a timestamped log of what Nova did each tick) so she has
 # memory across cold ticks and the SERVER keeps status honest.
+_TASK_STATE_FILE = Path(WORKSPACE_ROOT) / "Tasking" / "task_state.json"
+
+
+def _load_task_state() -> dict:
+    try:
+        if _TASK_STATE_FILE.exists():
+            return json.loads(_TASK_STATE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return {}
+
+
+def _save_task_state(state: dict) -> None:
+    try:
+        _TASK_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = _TASK_STATE_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
+        import os as _os
+        _os.replace(tmp, _TASK_STATE_FILE)
+    except Exception as e:
+        print(f"[autonomy] task_state write failed: {e}")
+
+
+def _task_key(title: str) -> str:
+    """Stable CANONICAL key for a task.
+
+    Prefer a TASK_xxx id token if present. Otherwise normalize the human title so
+    the SHORT form Nova emits in a TASK_INTENT ("Creative Writing Practice") and the
+    FULL markdown bullet body that _parse_queue() returns from priority.md
+    ("**Creative Writing Practice** — Write a solo piece…") collapse to the SAME
+    key. Without this, a task gets created under one key and its progress/completion
+    recorded under another, so the queue view always shows "(not started)" and Nova
+    redoes work she already did."""
+    import re as _re
+    t = title or ""
+    m = _re.search(r"TASK_[A-Za-z0-9_]+", t)
+    if m:
+        return m.group(0)
+    t = _re.sub(r"^\s*[-*]\s+", "", t)          # strip a leading list bullet
+    t = t.replace("**", "").replace("__", "")    # strip bold markdown
+    for sep in (" — ", " – ", " -- ", " - "):    # drop the notes after the separator
+        if sep in t:
+            t = t.split(sep, 1)[0]
+            break
+    return t.strip().lower()[:80]
+
+
+def _ensure_task_state(title: str, status: str = "queued") -> None:
+    state = _load_task_state()
+    k = _task_key(title)
+    if k not in state:
+        state[k] = {"title": title, "status": status,
+                    "progress": [], "created": datetime.now().isoformat()}
+        _save_task_state(state)
+
+
+def _match_task_title(reported: str):
+    """Match Nova's reported task name to a real queued task dict, or None."""
+    reported = (reported or "").strip()
+    if not reported:
+        return None
+    tasks = _parse_queue()
+    rk = _task_key(reported).lower()
+    for t in tasks:                       # 1) by TASK_xxx id
+        if _task_key(t["title"]).lower() == rk:
+            return t
+    rl = reported.lower()                 # 2) substring either direction
+    for t in tasks:
+        tl = t["title"].lower()
+        if rl in tl or tl in rl:
+            return t
+    return None
+
+
+def _record_progress(title: str, did: str, status: str = "in_progress") -> None:
+    state = _load_task_state()
+    k = _task_key(title)
+    entry = state.get(k) or {"title": title, "progress": [],
+                             "created": datetime.now().isoformat()}
+    if did:
+        entry.setdefault("progress", []).append(
+            {"ts": datetime.now().isoformat(), "note": did})
+        entry["progress"] = entry["progress"][-20:]
+    if status:
+        entry["status"] = status
+    entry["updated"] = datetime.now().isoformat()
+    state[k] = entry
+    _save_task_state(state)
+
+
+def _drop_task_state(title: str) -> None:
+    state = _load_task_state()
+    k = _task_key(title)
+    if k in state:
+        del state[k]
+        _save_task_state(state)
+
+
+def _parse_task_progress(reply: str):
+    """Extract the first balanced TASK_PROGRESS JSON object from Nova's reply."""
+    if not reply or "TASK_PROGRESS:" not in reply:
+        return None
+    after = reply.split("TASK_PROGRESS:", 1)[1].strip()
+    depth, start = 0, None
+    for i, ch in enumerate(after):
+        if ch == "{":
+            if start is None:
+                start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and start is not None:
+                try:
+                    return json.loads(after[start:i + 1])
+                except Exception:
+                    return None
+    return None
+
+
+def _task_queue_view(max_notes: int = 3) -> str:
+    """Queue view with status + recent progress notes, for the tick prompt. Also
+    lists already-completed tasks so Nova sees what is finished and does NOT
+    recreate or redo it (the cause of the Task-1-reappears loop)."""
+    tasks = _parse_queue()
+    state = _load_task_state()
+    lines = []
+    if tasks:
+        for t in tasks:
+            st = state.get(_task_key(t["title"]), {})
+            lines.append(f"• [{st.get('status', 'queued')}] P{t['priority']}: {t['title']}")
+            prog = st.get("progress", [])[-max_notes:]
+            if prog:
+                for p in prog:
+                    lines.append(f"     ↳ {p.get('note', '')}")
+            else:
+                lines.append("     ↳ (not started)")
+    else:
+        lines.append("  (queue empty)")
+    # Completed tasks — remembered so they are NOT recreated or redone.
+    active_keys = {_task_key(t["title"]) for t in tasks}
+    done = [v for k, v in state.items()
+            if v.get("status") == "done" and k not in active_keys]
+    if done:
+        lines.append("")
+        lines.append("  ✓ ALREADY COMPLETED (do NOT recreate or redo these):")
+        for v in done:
+            lines.append(f"      ✓ {v.get('title', '?')}")
+    return "\n".join(lines)
+
+
+async def _run_autonomy_tick(cole_pending: bool, reason: str) -> str:
+    """One model wake-tick. Builds the ephemeral context, runs Nova, advances
+    task progress (server owns status), logs, and returns her decision keyword."""
+    _auto_log_path = (Path(WORKSPACE_ROOT) / "logs" / "autonomy_runs" /
+                      f"{datetime.now().strftime('%Y-%m-%d')}_ticks.jsonl")
+    _auto_log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Working memory: what did Cole last ask? (read, never forced)
+    cole_note = ""
+    try:
+        if _COLE_INTENT_FILE.exists():
+            ci = json.loads(_COLE_INTENT_FILE.read_text(encoding="utf-8"))
+            if ci.get("text") and not ci.get("consumed"):
+                cole_note = ci["text"]
+    except Exception:
+        pass
+
+    if cole_pending:
+        try:
+            msgs = session_mgr.active.messages
+            last_cole = next((m["content"] for m in reversed(msgs)
+                              if m["author"] == "Cole"), "")
+        except Exception:
+            last_cole = cole_note
+        tick_content = (
+            f"[WAKE - Cole] Cole sent a message that needs a response:\n"
+            f"Cole: {last_cole}\n\n"
+            f"Respond to Cole now. If he asked you to DO something, decide the task(s) "
+            f"and emit a TASK_INTENT block so they are recorded - the server will "
+            f"guarantee they land in Tasking/priority.md.\n"
+            f'Format: TASK_INTENT: {{"add":[{{"title":"...","priority":4,"notes":"..."}}]}}'
+        )
+    else:
+        try:
+            queue_view = _task_queue_view()
+        except Exception:
+            queue_view = "  (queue unavailable)"
+        has_tasks = "(queue empty)" not in queue_view and "(queue unavailable)" not in queue_view
+        if cole_note:
+            # Cole has given a directive — it is Priority 0. Carry it out and NOTHING
+            # else. Do not let her wander into self-invented background work (audits,
+            # cleanups) while his instruction is unfinished.
+            tick_content = (
+                f"[WAKE - {reason}] You woke from sleep. Do NOT re-answer Cole in chat.\n\n"
+                f"COLE'S CURRENT DIRECTIVE — Priority 0, and your ONLY job until it is fully "
+                f"done:\n  {cole_note}\n\n"
+                f"Your task queue:\n{queue_view}\n\n"
+                "Carry out Cole's directive — nothing else:\n"
+                "1. If the queue does NOT yet contain the task(s) his directive calls for, "
+                "create them now with a TASK_INTENT block. Break a multi-part directive into "
+                "ONE task per part (the server dedups, so re-emitting is safe).\n"
+                "2. If those tasks already exist, advance ONE of them by ONE concrete step "
+                "with your tools and report it with a TASK_PROGRESS block.\n"
+                "Do NOT invent unrelated background work (audits, cleanups, downloads, etc.) "
+                "while Cole's directive is unfinished. End with DECISION: ENGAGE.\n\n"
+                'TASK_INTENT: {"add":[{"title":"SHORT_ID: one part of the directive","priority":2,"notes":"..."}]}\n'
+                'TASK_PROGRESS: {"task":"<exact title>","did":"<what you did>","status":"in_progress|done|blocked","note":"..."}'
+            )
+        elif has_tasks:
+            tick_content = (
+                f"[WAKE - {reason}] You woke from sleep. Cole has already been "
+                f"answered - do NOT re-answer him.\n\n"
+                f"YOUR TASKS — status and what you've already done:\n{queue_view}\n"
+                + "\nDo ONE concrete next step on ONE task right now using your tools "
+                "(read a file, run code, write a file). A SINGLE step — not the whole "
+                "task. Build on the progress shown above. You may pick whichever task "
+                "makes most sense and may switch tasks between wakes.\n\n"
+                "Then report what you just did in this exact block (one line):\n"
+                'TASK_PROGRESS: {"task":"<exact task title>","did":"<what you just '
+                'did this step>","status":"in_progress|done|blocked","note":"<what is '
+                'left, or why blocked>"}\n\n'
+                "Rules:\n"
+                "- Actually perform the step with a tool BEFORE reporting it. "
+                "Describing is NOT doing.\n"
+                "- Use status \"done\" only when the ENTIRE task is finished.\n"
+                "- End your reply with DECISION: ENGAGE.\n"
+                "- Only if you truly cannot act on anything: reply DECISION: SLEEP "
+                "with no TASK_PROGRESS block."
+            )
+        else:
+            tick_content = (
+                f"[WAKE - {reason}] You woke from sleep. Cole has already been "
+                f"answered - do NOT re-answer him. Your task queue is empty and Cole has "
+                f"no pending directive.\n"
+                + "\nIf there is a genuinely useful background task worth doing (tidy "
+                "notes, a quick health check, a small self-improvement), create it now "
+                "with a TASK_INTENT block and end with DECISION: ENGAGE. Otherwise reply "
+                "DECISION: SLEEP.\n"
+                'Format: TASK_INTENT: {"add":[{"title":"...","priority":4,"notes":"..."}]}'
+            )
+
+    _hb_ctx = HeartbeatContext(tick_content)
+    _before = _priority_hash()
+
+    try:
+        with open(_auto_log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"tick_reason": reason, "cole_pending": cole_pending,
+                                "timestamp": datetime.now().isoformat(),
+                                "type": "tick", "content": tick_content},
+                               ensure_ascii=False) + "\n")
+    except Exception as e:
+        print(f"[autonomy] tick log failed: {e}")
+
+    reply = await run_ai_response("Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8],
+                                  tick_content, hb_ctx=_hb_ctx,
+                                  cole_pending=cole_pending,
+                                  auto_log_path=_auto_log_path) or ""
+
+    # Log Nova's tick RESPONSE (only prompts were saved before — this is what lets
+    # us see why she sleeps vs. acts).
+    try:
+        with open(_auto_log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"type": "response", "tick_reason": reason,
+                                "cole_pending": cole_pending,
+                                "timestamp": datetime.now().isoformat(),
+                                "text": reply}, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+    # Faithful executor: apply her stated intent; backfill if her own write no-op'd.
+    intent = _parse_task_intent(reply)
+    _added_tasks = False
+    if intent:
+        actions = _reconcile_queue(intent)
+        if actions:
+            _added_tasks = any(str(a).startswith("added") for a in actions)
+            print(f"[autonomy] queue reconciled from TASK_INTENT: {actions}")
+            await emit_event("task", "Queue updated: " + "; ".join(actions))
+            if _priority_hash() != _before:
+                _journal_correction(f"reconciled queue from TASK_INTENT: {actions}")
+
+    # Advance task progress — the server owns status + the running progress log,
+    # so a task reliably moves queued -> in_progress -> done with memory of every
+    # step Nova took. This is what makes "see task -> sleep" become real progress.
+    prog = _parse_task_progress(reply)
+    if prog:
+        matched = _match_task_title(prog.get("task", ""))
+        title = matched["title"] if matched else (prog.get("task") or "").strip()
+        did = (prog.get("did") or "").strip()
+        status = (prog.get("status") or "in_progress").strip().lower()
+        if status not in ("in_progress", "done", "blocked"):
+            status = "in_progress"
+        if title:
+            _record_progress(title, did, status)
+            await emit_event("task", f"{_task_key(title)}: {did or status}")
+            if status == "done" and matched:
+                _complete_task(matched["raw"], matched["title"], "completed")
+                # Keep the entry as "done" (set by _record_progress above) so Nova
+                # remembers it's finished and never recreates it on a later wake.
+                await emit_event("task", f"Completed: {_task_key(matched['title'])}")
+
+    # Mark Cole's directive consumed ONLY once it has been turned into queued task(s),
+    # so it persists (and keeps steering her toward HIS instruction instead of
+    # self-invented work) until she actually creates the tasks for it.
+    if cole_note and _added_tasks:
+        try:
+            ci = json.loads(_COLE_INTENT_FILE.read_text(encoding="utf-8"))
+            ci["consumed"] = True
+            _COLE_INTENT_FILE.write_text(json.dumps(ci, indent=2), encoding="utf-8")
+        except Exception:
+            pass
+
+    if "DECISION: OBSERVE" in reply:
+        return "OBSERVE"
+    if "DECISION: SLEEP" in reply or "AUTONOMOUS_COMPLETE" in reply:
+        return "SLEEP"
+    return "ENGAGE"
+
+
 async def _window_close_watchdog():
     """Shut the whole stack down shortly after the last UI window disconnects,
     so closing the app actually stops Nova (closing the Chrome --app window drops

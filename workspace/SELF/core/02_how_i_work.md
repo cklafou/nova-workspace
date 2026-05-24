@@ -389,8 +389,3 @@ Log files land in `logs/sessions/YYYY-MM-DD/` by log type. `Logger_Index.md` in 
 ## Tools
 
 When you need a tool, check TOOLS.md. Keep local notes (hardware details, paths, preferences) in TOOLS.md.
-
-**Discord formatting:**
-- No markdown tables -- use bullet lists instead
-- Wrap multiple links in <> to suppress embeds
-- 

@@ -66,8 +66,10 @@ def _build_messages(transcript, workspace_context: str = "", images: list = None
     Images, if provided, are attached to the final user turn.
     """
     raw = transcript.to_messages("Claude", system_prefix="", workspace_context="")
-    # to_messages prepends a system turn — skip it; we supply system separately
-    conv = [m for m in raw if m["role"] != "system"]
+    # Skip the system turn (supplied separately) AND drop empty-content turns —
+    # Anthropic returns 400 on a message whose text content is empty/whitespace.
+    conv = [m for m in raw if m["role"] != "system"
+            and not (isinstance(m.get("content"), str) and not m["content"].strip())]
 
     # Merge consecutive same-role messages
     merged: list[dict] = []
@@ -116,7 +118,12 @@ def _build_messages(transcript, workspace_context: str = "", images: list = None
                                      "text": "Please respond to the conversation above."})
                 merged.append({"role": "user", "content": image_blocks})
 
-    # Anthropic requires the final message to be from the user
+    # Anthropic requires the FIRST message to be from the user — drop any leading
+    # assistant turns (e.g. a transcript that opens with a Claude message → 400).
+    while merged and merged[0]["role"] == "assistant":
+        merged.pop(0)
+
+    # ...and the final message to be from the user.
     if not merged or merged[-1]["role"] != "user":
         merged.append({"role": "user", "content": "Please continue."})
 
@@ -158,6 +165,19 @@ async def stream_response(
         await on_done(full_response)
 
     except Exception as e:
+        # Log the full Anthropic error (e.g. the 400 body) so the cause is visible —
+        # the httpx access log only shows the status code, not the reason.
+        try:
+            import datetime as _dt
+            from pathlib import Path as _P
+            _ws = _P(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ \
+                else _P(__file__).resolve().parent.parent.parent.parent
+            _d = _ws / "logs" / "llama"
+            _d.mkdir(parents=True, exist_ok=True)
+            with open(_d / f"claude_errors-{_dt.date.today()}.log", "a", encoding="utf-8") as _f:
+                _f.write(f"{_dt.datetime.now().isoformat()} {type(e).__name__}: {e}\n")
+        except Exception:
+            pass
         await on_error(str(e))
 
 
