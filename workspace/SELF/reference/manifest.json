@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-25T02:17:41",
+  "generated": "2026-05-25T08:40:45",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -12,7 +12,6 @@
       "audit_scripts.py",
       "calls.py",
       "download_models.py",
-      "gateway_config.py",
       "injector.py",
       "restructure.py"
     ],
@@ -20,12 +19,36 @@
   },
   "parts": [
     {
+      "name": "nova_config",
+      "kind": "body_part",
+      "path": "nova_body/nova_config",
+      "purpose": "Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads workspace/nova_config.json; falls back to defaults. Import as: from nova_config import cfg.",
+      "files": 1,
+      "lines": 137,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "8080"
+      ],
+      "nova_imports": [],
+      "third_party": [
+        "__future__",
+        "logging"
+      ],
+      "referenced_by": [
+        "nova_memory",
+        "nova_motor"
+      ],
+      "launched_by": [],
+      "flags": []
+    },
+    {
       "name": "nova_cortex",
       "kind": "body_part",
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status, context assembly, and rules (nova_status, context_builder, rules, prefrontal_cortex, checkin).",
       "files": 8,
-      "lines": 1727,
+      "lines": 1529,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -35,8 +58,6 @@
       ],
       "third_party": [
         "__future__",
-        "gateway_config",
-        "logging",
         "pyautogui"
       ],
       "referenced_by": [
@@ -106,12 +127,12 @@
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
+        "nova_config",
         "nova_cortex",
         "nova_senses"
       ],
       "third_party": [
         "__future__",
-        "gateway_config",
         "logging"
       ],
       "referenced_by": [],
@@ -126,13 +147,14 @@
       "path": "nova_body/nova_motor",
       "purpose": "Nova's motor system — executes actions (hands), plans them (motor_cortex), and verifies results.",
       "files": 5,
-      "lines": 1227,
+      "lines": 1177,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8765"
       ],
       "nova_imports": [
+        "nova_config",
         "nova_cortex",
         "nova_logs",
         "nova_motor"
@@ -140,7 +162,6 @@
       "third_party": [
         "__future__",
         "ctypes",
-        "gateway_config",
         "logging",
         "pyautogui",
         "urllib"
@@ -157,7 +178,7 @@
       "path": "nova_body/nova_senses",
       "purpose": "Nova's perception — file/system sensing (eyes), workspace self-awareness (proprioception), and vision.",
       "files": 6,
-      "lines": 1409,
+      "lines": 1415,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -185,11 +206,10 @@
       "path": "nova_start.py",
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
-      "lines": 442,
+      "lines": 436,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
-        "18790",
         "8080",
         "8765"
       ],
@@ -234,7 +254,6 @@
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
-        "18790",
         "8080",
         "8765"
       ],
@@ -272,11 +291,10 @@
       "path": "general_tools/NovaLauncher.py",
       "purpose": "Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.",
       "files": 1,
-      "lines": 199,
+      "lines": 180,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
-        "18790",
         "8765"
       ],
       "nova_imports": [],
@@ -317,10 +335,11 @@
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
-      "nova_imports": [],
-      "third_party": [
-        "ast",
+      "nova_imports": [
         "audit_queue"
+      ],
+      "third_party": [
+        "ast"
       ],
       "referenced_by": [],
       "launched_by": [],
@@ -338,14 +357,14 @@
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
-        "18790",
         "8080",
         "8765"
       ],
-      "nova_imports": [],
-      "third_party": [
-        "ast",
+      "nova_imports": [
         "calls"
+      ],
+      "third_party": [
+        "ast"
       ],
       "referenced_by": [],
       "launched_by": [],
@@ -357,7 +376,7 @@
       "path": "general_tools/calls.py",
       "purpose": "Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.",
       "files": 1,
-      "lines": 244,
+      "lines": 269,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -393,31 +412,6 @@
       ]
     },
     {
-      "name": "gateway_config.py",
-      "kind": "tool",
-      "path": "general_tools/gateway_config.py",
-      "purpose": "RETIRED — legacy gateway settings loader (nova_gateway dissolved 2026-05); slated for archival.",
-      "files": 1,
-      "lines": 234,
-      "age_days": 0,
-      "ports_bind": [],
-      "ports_seen": [
-        "18790",
-        "8080"
-      ],
-      "nova_imports": [],
-      "third_party": [
-        "__future__",
-        "logging",
-        "pprint"
-      ],
-      "referenced_by": [],
-      "launched_by": [],
-      "flags": [
-        "no_inbound_refs"
-      ]
-    },
-    {
       "name": "injector.py",
       "kind": "tool",
       "path": "general_tools/injector.py",
@@ -443,14 +437,12 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 15,
-      "lines": 6854,
+      "lines": 5940,
       "age_days": 0,
       "ports_bind": [
         "8765"
       ],
       "ports_seen": [
-        "18789",
-        "18790",
         "8080",
         "8765"
       ],
@@ -480,20 +472,16 @@
       "name": "nova_sync",
       "kind": "tool",
       "path": "general_tools/nova_sync",
-      "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), drive sync, and backups.",
-      "files": 5,
-      "lines": 2085,
+      "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing) and local backups (Drive sync retired).",
+      "files": 4,
+      "lines": 1452,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
         "nova_sync"
       ],
-      "third_party": [
-        "google",
-        "google_auth_oauthlib",
-        "googleapiclient"
-      ],
+      "third_party": [],
       "referenced_by": [],
       "launched_by": [
         "nova_start.py"
@@ -510,10 +498,11 @@
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
-      "nova_imports": [],
-      "third_party": [
-        "__future__",
+      "nova_imports": [
         "audit_queue"
+      ],
+      "third_party": [
+        "__future__"
       ],
       "referenced_by": [],
       "launched_by": [],
