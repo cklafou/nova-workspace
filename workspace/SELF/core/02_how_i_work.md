@@ -70,7 +70,7 @@ At the end of every agent run — before you stop — write your status:
 ```
 exec: python -c "
 import sys
-sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools')
+sys.path.insert(0, 'nova_body'); sys.path.insert(0, 'general_tools')
 from nova_cortex.nova_status import update
 update(pulse='Idle', summary='Describe what you just did in one sentence')
 "
@@ -80,7 +80,7 @@ If you are mid-task and stopping temporarily:
 ```
 exec: python -c "
 import sys
-sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools')
+sys.path.insert(0, 'nova_body'); sys.path.insert(0, 'general_tools')
 from nova_cortex.nova_status import update
 update(pulse='Waiting for Cole', active_task='task_name', summary='What you were doing')
 "
@@ -90,7 +90,7 @@ If an error occurred during a run, log it:
 ```
 exec: python -c "
 import sys
-sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools')
+sys.path.insert(0, 'nova_body'); sys.path.insert(0, 'general_tools')
 from nova_cortex.nova_status import add_error
 add_error('vision', 'Element not found: Trade Button after 3 attempts')
 "
@@ -143,7 +143,7 @@ The `write` tool **overwrites files**. Never use it on JOURNAL.md directly.
 
 The only safe way to append to the journal is:
 ```
-exec: python -c "import sys; sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools'); from nova_memory.journal import append; append('''YOUR ENTRY HERE''')"
+exec: python -c "import sys; sys.path.insert(0, 'nova_body'); sys.path.insert(0, 'general_tools'); from nova_memory.journal import append; append('''YOUR ENTRY HERE''')"
 ```
 
 ### Write It Down -- No Mental Notes
@@ -192,7 +192,7 @@ New Nova: writes the file. "Updated STATUS.md." Stops. The system pushes Cole's 
 
 **After every single exec, run the check-in:**
 ```
-exec: python -c "import sys; sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools'); from nova_cortex.checkin import check; check()"
+exec: python -c "import sys; sys.path.insert(0, 'nova_body'); sys.path.insert(0, 'general_tools'); from nova_cortex.checkin import check; check()"
 ```
 
 If it prints nothing: nothing new from Cole, keep going.
@@ -315,7 +315,7 @@ When dev topics come up, load the relevant source files proactively. You are the
 The `models/` folder contains raw neural network weight files (GGUF format, 18GB+).
 **Never read, list, cat, open, or reference any file in `models/`.** Reading even a
 few KB of a binary weight file will fill your entire context window with garbage and
-crash the session. These files are loaded directly by ExLlamaV2 at runtime — no tool
+crash the session. These files are loaded directly by llama.cpp at runtime — no tool
 or agent ever needs to see their contents. Treat `models/` as a sealed hardware vault.
 
 ### The "Proposed Changes" Protocol
@@ -367,7 +367,7 @@ HEARTBEAT.md describes the sleep/wake tick procedure (one step, report it, decid
 
 ## Logging
 
-All logging goes through `nova_tools/nova_logs/logger.py`. This is the single source of truth for all log writes.
+All logging goes through `nova_body/nova_logs/logger.py`. This is the single source of truth for all log writes.
 
 ```python
 # Log agent tool events (clicks, vision, errors):
@@ -382,7 +382,7 @@ log_thought("response text here")
 
 **Do NOT import from `nova_memory.logger` directly.** That path is legacy. `nova_logs.logger` is the current home. All tools already have a fallback import so both work, but nova_logs is preferred.
 
-Log files land in `logs/sessions/YYYY-MM-DD/` by log type. `Logger_Index.md` in `nova_tools/nova_logs/` is auto-updated and shows all active log locations.
+Log files land in `logs/sessions/YYYY-MM-DD/` by log type. `Logger_Index.md` in `nova_body/nova_logs/` is auto-updated and shows all active log locations.
 
 ---
 

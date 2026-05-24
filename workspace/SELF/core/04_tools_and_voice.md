@@ -23,7 +23,7 @@ from nova_motor.hands import NovaHands
 from nova_logs.logger import log, log_thought
 ```
 
-**`nova_tools/`** — core agent packages (OS tools, memory, perception):
+**`nova_body/`** — core agent packages (OS tools, memory, perception):
 
 | Package | Purpose | Key Modules |
 |---|---|---|
@@ -50,7 +50,7 @@ from nova_logs.logger import log, log_thought
 - **OS:** Windows 11 -- use PowerShell syntax, never bash
 - **PowerShell version:** 5.1 -- chain commands with `;` not `&&`
 - **Workspace root:** `C:\Users\lafou\Project_Nova\workspace`
-- **Nova tools:** `nova_tools\` (core packages — add to sys.path before importing)
+- **Nova tools:** `nova_body\` (core packages — add to sys.path before importing)
 - **General tools:** `general_tools\` (services — add to sys.path before importing)
 - **Memory:** `memory\` (COLE.md, STATUS.md, JOURNAL.md -- never overwrite directly)
 - **Logs:** `logs\`
@@ -63,7 +63,7 @@ from nova_logs.logger import log, log_thought
 All tools require BOTH path inserts every single time:
 
 ```
-exec: python -c "import sys; sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools'); from nova_memory.journal import append; ..."
+exec: python -c "import sys; sys.path.insert(0, 'nova_body'); sys.path.insert(0, 'general_tools'); from nova_memory.journal import append; ..."
 ```
 
 ---
@@ -95,7 +95,7 @@ Rephrase to avoid contractions entirely. Do not use escape sequences. Do not wri
 After EVERY exec, before the next one, run:
 
 ```
-exec: python -c "import sys; sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools'); from nova_cortex.checkin import check; check()"
+exec: python -c "import sys; sys.path.insert(0, 'nova_body'); sys.path.insert(0, 'general_tools'); from nova_cortex.checkin import check; check()"
 ```
 
 - No output = Cole has not sent anything, continue.
@@ -139,7 +139,7 @@ def my_function():
 ```
 
 ```
-[READ:nova_tools/nova_motor/motor_cortex.py]
+[READ:nova_body/nova_motor/motor_cortex.py]
 ```
 
 ```
@@ -175,7 +175,7 @@ from nova_logs.logger import get_screenshot_dir
 shot_dir = get_screenshot_dir()
 ```
 
-`Logger_Index.md` in `nova_tools/nova_logs/` is auto-updated and shows all log locations and recent files.
+`Logger_Index.md` in `nova_body/nova_logs/` is auto-updated and shows all log locations and recent files.
 
 **Do NOT use `nova_memory.logger` directly.** It is legacy. `nova_logs.logger` is current.
 
@@ -186,7 +186,7 @@ shot_dir = get_screenshot_dir()
 Follows the Proposed Changes Protocol -- never writes to STATUS.md directly.
 
 ```
-exec: python nova_tools/nova_memory/goals.py "What you are doing now" "Goal text to mark complete"
+exec: python nova_body/nova_memory/goals.py "What you are doing now" "Goal text to mark complete"
 ```
 
 Both arguments are optional. Output goes to `logs/proposed/STATUS.md` for Cole to review.
@@ -202,7 +202,7 @@ The ONLY safe way to write to JOURNAL.md. Never use the write tool on it directl
 ```
 exec: python -c "
 import sys
-sys.path.insert(0, 'nova_tools')
+sys.path.insert(0, 'nova_body')
 from nova_memory.journal import append
 append('''
 What actually happened today. Honest, first-person, casual.
@@ -223,7 +223,7 @@ Run this before conversations requiring real data.
 ```
 exec: python -c "
 import sys
-sys.path.insert(0, 'nova_tools')
+sys.path.insert(0, 'nova_body')
 from nova_memory.log_reader import summarize_today, get_failures, get_recent_sessions
 print(get_recent_sessions())
 print(summarize_today())
@@ -250,7 +250,7 @@ _(nova_advisor was deleted Phase 0 — mentor capability now handled via nova_ch
 ## nova_cortex/checkin.py -- Cole's Voice Between Thoughts
 
 ```
-exec: python -c "import sys; sys.path.insert(0, 'nova_tools'); sys.path.insert(0, 'general_tools'); from nova_cortex.checkin import check; check()"
+exec: python -c "import sys; sys.path.insert(0, 'nova_body'); sys.path.insert(0, 'general_tools'); from nova_cortex.checkin import check; check()"
 ```
 
 ---
@@ -260,7 +260,7 @@ exec: python -c "import sys; sys.path.insert(0, 'nova_tools'); sys.path.insert(0
 Loaded every session via BOOTSTRAP.md Step 2.
 
 ```
-exec: python nova_tools/nova_cortex/rules.py
+exec: python nova_body/nova_cortex/rules.py
 ```
 
 ---
