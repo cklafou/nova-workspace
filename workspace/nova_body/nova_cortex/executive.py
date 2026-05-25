@@ -150,13 +150,15 @@ def build_situation(cole_pending: bool, reason: str) -> str:
         steps = f"{len(prog)} step(s) logged so far" if prog else "no steps logged yet"
         L += [
             f'You are mid-work on your ACTIVE task [{active_id}] "{active_task.get("title","")}" ({steps}).',
-            "Take the NEXT concrete step on it RIGHT NOW using your tools — read_file, "
-            "run_command, write_file — and produce a REAL result this tick: a file written, "
-            "a command actually run, code changed. Do the work; do not just describe what "
-            "you intend to do. Then log exactly what you did as a progress step, and keep "
-            "going on this task across wakes until it is genuinely complete. "
-            "You MAY switch, reprioritize, wait, complete, or rest instead — but only if "
-            "that is honestly the wiser call this moment, not to avoid the work.",
+            "Work it for real RIGHT NOW: take as many tool steps as it needs THIS tick — "
+            "you can chain several in one wake (read_file, run_command, write_file), each "
+            "result feeding the next — until you've produced a REAL outcome: a file written, "
+            "a command actually run, code changed. Don't stop at one step if more are "
+            "needed, and don't just describe what you intend. Then log exactly what you did "
+            "as a progress step, and keep going on this task across wakes until it is "
+            "genuinely complete. You MAY switch, reprioritize, wait, complete, or rest "
+            "instead — but only if that is honestly the wiser call this moment, not to "
+            "avoid the work.",
         ]
     else:
         # Free-decision framing — no active task, so choose freely (rest included).
@@ -181,7 +183,11 @@ def build_situation(cole_pending: bool, reason: str) -> str:
           ' "reprioritize":[{"id":"t4","priority":3}], "rest":"why you are resting"}',
           "A `progress` or `complete` note is ONLY valid if you ACTUALLY ran a tool and "
           "produced a result THIS tick. Never log work you only described — that is the "
-          "one thing that breaks trust in your board."]
+          "one thing that breaks trust in your board.",
+          "Your machine is Windows and your tools are workspace-relative: pass paths like "
+          "`memory/STATUS.md` or `Tasking/tasks.json`, never absolute or Linux "
+          "(/home/..., /mnt/...) paths. If unsure what exists, run `list_dir` on a folder "
+          "first — don't guess a path and assume it failed."]
     if cole_pending:
         L.append("Cole just spoke — reply to him in plain prose ABOVE the ACTIONS block.")
     else:
