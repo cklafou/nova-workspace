@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T07:34:46",
+  "generated": "2026-05-26T07:35:03",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -25,7 +25,7 @@
       "purpose": "Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads workspace/nova_config.json; falls back to defaults. Import as: from nova_config import cfg.",
       "files": 1,
       "lines": 137,
-      "age_days": 0,
+      "age_days": 1,
       "ports_bind": [],
       "ports_seen": [
         "8080"
