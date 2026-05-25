@@ -1,4 +1,4 @@
-﻿# Last updated: 2026-03-20 21:24:54
+# Last updated: 2026-03-20 21:24:54
 """
 nova_backup.py -- Automated Workspace Backup System
 =====================================================

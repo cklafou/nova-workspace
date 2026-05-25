@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Nova Hardware Hook Verification
 This script verifies that Nova's hardware hook (pyautogui) is working properly

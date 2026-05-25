@@ -1,4 +1,4 @@
-﻿"""
+"""
 nova_cortex/nova_status.py -- Nova's live status writer
 ======================================================
 Nova calls this at the end of every agent run to write nova_status.json.

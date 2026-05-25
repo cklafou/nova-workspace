@@ -1,4 +1,4 @@
-﻿"""
+"""
 Nova (Qwen 3.5 27B Dense) inference client for Nova Group Chat.
 ============================================================
 Runs natively via OpenAI-compatible HTTP requests to a standalone

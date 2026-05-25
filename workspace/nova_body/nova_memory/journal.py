@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # Last updated: 2026-03-20 00:00:00
 """
 nova_journal.py -- The ONLY safe way to write to JOURNAL.md.

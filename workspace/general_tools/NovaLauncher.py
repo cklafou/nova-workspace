@@ -1,4 +1,4 @@
-﻿# @nova: Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.
+# @nova: Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.
 """
 NovaLauncher.py  (fixed)
 ========================

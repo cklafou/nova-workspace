@@ -1,4 +1,4 @@
-﻿# Last updated: 2026-03-25
+# Last updated: 2026-03-25
 import re
 import sys
 import time
@@ -75,6 +75,13 @@ def update_timestamp_in_file(path: Path):
         content = path.read_text(encoding="utf-8")
     except Exception:
         return
+    # Strip a leading BOM before doing anything. Python rejects a U+FEFF that is
+    # not the very first bytes of a file, and prepending a "# Last updated" line
+    # above a BOM relocates it mid-file → fatal SyntaxError (this exact bug crashed
+    # server.py). Dropping it means we can never re-position a BOM, and we quietly
+    # clean any file we stamp.
+    if content and content[0] == "\ufeff":
+        content = content.lstrip("\ufeff")
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     if suffix == ".py":
         pattern = r"^# Last updated: .+$"
