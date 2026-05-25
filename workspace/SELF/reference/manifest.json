@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T07:35:43",
+  "generated": "2026-05-26T07:36:28",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -388,7 +388,7 @@
       "purpose": "Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.",
       "files": 1,
       "lines": 269,
-      "age_days": 0,
+      "age_days": 1,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
