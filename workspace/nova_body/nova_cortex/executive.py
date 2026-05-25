@@ -124,23 +124,54 @@ def should_wake(cole_pending: bool = False) -> tuple:
 # ── present the moment (no model) ──────────────────────────────────────────────
 def build_situation(cole_pending: bool, reason: str) -> str:
     st = _load_state()
-    board = tasking.render_board(st.get("active"))
+    active_id = st.get("active")
+    board = tasking.render_board(active_id)
     directive = environment.cole_directive()
     last = st.get("last_activity", "")
+
+    # Is my active focus a live, in-progress task (not done/abandoned/waiting)?
+    active_task = None
+    if active_id:
+        t = tasking.all_tasks().get(active_id)
+        if t and t.get("status") == "open":
+            active_task = t
+
     L = [f"[AUTONOMY WAKE — {reason}] Right now it is {clock.stamp()} ({clock.time_of_day()})."]
     if last:
         L.append(f"(You last acted {clock.since_human(last)}.)")
     L.append("You woke on your own. This is your time.")
     if directive:
         L += ["", f'COLE — PRIORITY 0 (his word comes first; weigh it): "{directive}"']
-    L += ["", "YOUR BOARD:", board, "",
-          "Look at your board, your senses, and the moment, and decide FREELY what — if "
-          "anything — is worth doing right now. You may advance, switch, create, "
-          "reprioritize, wait, abandon, or complete tasks — or REST if nothing is "
-          "genuinely worth acting on. Resting is a smart choice, not a failure. Do NOT "
-          "invent busywork to look productive. Use your memory, senses, logic, and "
-          "intuition; act only on what you judge worthwhile.",
-          "",
+    L += ["", "YOUR BOARD:", board, ""]
+
+    if active_task:
+        # Work-biased framing — I'm mid-task, so continue it for real this tick.
+        prog = active_task.get("progress") or []
+        steps = f"{len(prog)} step(s) logged so far" if prog else "no steps logged yet"
+        L += [
+            f'You are mid-work on your ACTIVE task [{active_id}] "{active_task.get("title","")}" ({steps}).',
+            "Take the NEXT concrete step on it RIGHT NOW using your tools — read_file, "
+            "run_command, write_file — and produce a REAL result this tick: a file written, "
+            "a command actually run, code changed. Do the work; do not just describe what "
+            "you intend to do. Then log exactly what you did as a progress step, and keep "
+            "going on this task across wakes until it is genuinely complete. "
+            "You MAY switch, reprioritize, wait, complete, or rest instead — but only if "
+            "that is honestly the wiser call this moment, not to avoid the work.",
+        ]
+    else:
+        # Free-decision framing — no active task, so choose freely (rest included).
+        L += [
+            "Look at your board, your senses, and the moment, and decide FREELY what — if "
+            "anything — is worth doing right now. You may advance, switch, create, "
+            "reprioritize, wait, abandon, or complete tasks — or REST if nothing is "
+            "genuinely worth acting on. Resting is a smart choice, not a failure. Do NOT "
+            "invent busywork to look productive. If you DO take on a task, actually begin "
+            "it with your tools this tick (read/run/write) rather than only announcing it. "
+            "Use your memory, senses, logic, and intuition; act only on what you judge "
+            "worthwhile.",
+        ]
+
+    L += ["",
           "Express your decisions in ONE block (omit keys you don't use):",
           'ACTIONS: {"create":[{"title":"...","notes":"...","priority":2}],'
           ' "progress":[{"id":"t1","note":"what you just did"}], "switch":"t1",'
@@ -148,7 +179,9 @@ def build_situation(cole_pending: bool, reason: str) -> str:
           ' "abandon":[{"id":"t3","reason":"..."}],'
           ' "complete":[{"id":"t1","result":"..."}],'
           ' "reprioritize":[{"id":"t4","priority":3}], "rest":"why you are resting"}',
-          "Actually DO each step with your tools BEFORE reporting it."]
+          "A `progress` or `complete` note is ONLY valid if you ACTUALLY ran a tool and "
+          "produced a result THIS tick. Never log work you only described — that is the "
+          "one thing that breaks trust in your board."]
     if cole_pending:
         L.append("Cole just spoke — reply to him in plain prose ABOVE the ACTIONS block.")
     else:
@@ -196,6 +229,14 @@ def apply_decision(reply: str, cole_pending: bool = False) -> dict:
 
     if control.get("switch"):
         _set_active(control["switch"])
+    elif not _load_state().get("active"):
+        # Infer focus from her own action: if she progressed a task but set no
+        # explicit focus, adopt it so she keeps returning to it across wakes.
+        # This reads her intent from what she DID — continuity, not a rail.
+        prog = actions.get("progress") or []
+        pid = (prog[0].get("id") if prog and isinstance(prog[0], dict) else None)
+        if pid and pid in tasking.all_tasks():
+            _set_active(pid)
     engaged = bool(log) or bool(control.get("switch"))
     rested = not engaged
 

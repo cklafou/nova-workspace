@@ -5,6 +5,15 @@ from pathlib import Path
 # Restrict operations exclusively to the workspace base directory
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
 
+def _within_workspace(target: Path) -> bool:
+    """True if `target` is inside the workspace. Case- and separator-insensitive
+    (Windows resolve() can vary drive-letter case), with a path-boundary guard so
+    a sibling like 'workspace_backup' is not mistaken for being inside 'workspace'."""
+    root = os.path.normcase(str(WORKSPACE_ROOT.resolve()))
+    tgt  = os.path.normcase(str(Path(target).resolve()))
+    return tgt == root or tgt.startswith(root + os.sep)
+
+
 def run_command(command: str, cwd: str = "") -> str:
     """Run a shell command securely within the Workspace boundaries."""
     if not cwd:
@@ -17,7 +26,7 @@ def run_command(command: str, cwd: str = "") -> str:
         else:
             working_dir = path_candidate.resolve()
             
-        if not str(working_dir).startswith(str(WORKSPACE_ROOT)):
+        if not _within_workspace(working_dir):
             return "ERROR: Permission Denied. You cannot run commands outside of the Project_Nova workspace."
             
     try:
@@ -46,7 +55,7 @@ def run_command(command: str, cwd: str = "") -> str:
 def read_file(path: str) -> str:
     """Read a file's contents safely."""
     target = (WORKSPACE_ROOT / path).resolve()
-    if not str(target).startswith(str(WORKSPACE_ROOT)):
+    if not _within_workspace(target):
         return "ERROR: Permission Denied. Cannot access files outside the workspace."
     if not target.exists():
         return f"ERROR: File not found at {target}"
@@ -59,7 +68,7 @@ def read_file(path: str) -> str:
 def write_file(path: str, content: str) -> str:
     """Create or overwrite a file."""
     target = (WORKSPACE_ROOT / path).resolve()
-    if not str(target).startswith(str(WORKSPACE_ROOT)):
+    if not _within_workspace(target):
         return "ERROR: Permission Denied. Cannot write files outside the workspace."
         
     try:
@@ -72,7 +81,7 @@ def write_file(path: str, content: str) -> str:
 def replace_file_content(path: str, target_content: str, replacement_content: str) -> str:
     """Replace an exact string match inside a file."""
     target = (WORKSPACE_ROOT / path).resolve()
-    if not str(target).startswith(str(WORKSPACE_ROOT)):
+    if not _within_workspace(target):
         return "ERROR: Permission Denied."
     if not target.exists():
         return "ERROR: File does not exist."
@@ -91,7 +100,7 @@ def replace_file_content(path: str, target_content: str, replacement_content: st
 def list_dir(path: str) -> str:
     """List directory contents."""
     target = (WORKSPACE_ROOT / path).resolve()
-    if not str(target).startswith(str(WORKSPACE_ROOT)):
+    if not _within_workspace(target):
         return "ERROR: Permission Denied."
     if not target.exists():
         return "ERROR: Directory does not exist."
