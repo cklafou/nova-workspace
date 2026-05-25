@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T00:06:32",
+  "generated": "2026-05-26T07:13:10",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -110,6 +110,7 @@
       "nova_imports": [],
       "third_party": [],
       "referenced_by": [
+        "nova_chat",
         "nova_motor",
         "nova_senses"
       ],
@@ -179,7 +180,7 @@
       "purpose": "Nova's perception — file/system sensing (eyes), workspace self-awareness (proprioception), and vision.",
       "files": 6,
       "lines": 1415,
-      "age_days": 0,
+      "age_days": 1,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -194,6 +195,7 @@
         "transformers"
       ],
       "referenced_by": [
+        "injector.py",
         "nova_cortex",
         "nova_memory"
       ],
@@ -297,8 +299,17 @@
       "ports_seen": [
         "8765"
       ],
-      "nova_imports": [],
-      "third_party": [],
+      "nova_imports": [
+        "nova_chat"
+      ],
+      "third_party": [
+        "logging",
+        "multiprocessing",
+        "socket",
+        "uvicorn",
+        "webbrowser",
+        "webview"
+      ],
       "referenced_by": [],
       "launched_by": [
         "nova_start.py"
@@ -423,8 +434,15 @@
       "ports_seen": [
         "8765"
       ],
-      "nova_imports": [],
-      "third_party": [],
+      "nova_imports": [
+        "nova_chat",
+        "nova_senses"
+      ],
+      "third_party": [
+        "__future__",
+        "logging",
+        "urllib"
+      ],
       "referenced_by": [],
       "launched_by": [],
       "flags": [
@@ -447,21 +465,34 @@
         "8765"
       ],
       "nova_imports": [
+        "build_manifest",
+        "injector",
         "nova_chat",
         "nova_cortex",
-        "nova_lancedb"
+        "nova_lancedb",
+        "nova_logs"
       ],
       "third_party": [
+        "PIL",
         "anthropic",
         "base64",
         "ctypes",
+        "fastapi",
         "google",
+        "httpx",
+        "psutil",
+        "pyautogui",
+        "pydantic",
+        "signal",
         "socket",
         "urllib",
         "uvicorn",
         "webbrowser"
       ],
-      "referenced_by": [],
+      "referenced_by": [
+        "NovaLauncher.py",
+        "injector.py"
+      ],
       "launched_by": [
         "StopNova.cmd",
         "nova_start.py"
@@ -474,14 +505,18 @@
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing) and local backups (Drive sync retired).",
       "files": 4,
-      "lines": 1459,
+      "lines": 1466,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
+        "audit_queue",
         "nova_sync"
       ],
-      "third_party": [],
+      "third_party": [
+        "tempfile",
+        "watchdog"
+      ],
       "referenced_by": [],
       "launched_by": [
         "nova_start.py"
