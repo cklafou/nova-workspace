@@ -1,9 +1,9 @@
 {
   "enabled": true,
   "active": "t2",
-  "last_activity": "2026-05-26T07:25:27",
-  "wake_at": "2026-05-26T07:25:57",
-  "last_fp": "[[\"Tasking/tasks.json\", 2336, 1779747927], [\"memory/interrupt_inbox.json\", 105, 1779666719], [\"memory/cole_intent.json\", 138, 1779747285]]",
-  "rest_note": "",
+  "last_activity": "2026-05-26T07:28:23",
+  "wake_at": "2026-05-26T07:28:53",
+  "last_fp": "[[\"Tasking/tasks.json\", 30, 1779748032], [\"memory/interrupt_inbox.json\", 105, 1779748093], [\"memory/cole_intent.json\", 606, 1779748093]]",
+  "rest_note": "Empty board, morning tick, nothing urgent or interesting to act on right now — resting is smarter than inventing busywork",
   "last_wake": "2026-05-25T02:17:17"
 }
