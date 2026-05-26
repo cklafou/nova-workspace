@@ -1,5 +1,5 @@
 {
-  "seq": 3,
+  "seq": 4,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -83,6 +83,16 @@
       ],
       "created": "2026-05-26T12:19:46",
       "updated": "2026-05-26T12:26:12"
+    },
+    "t4": {
+      "id": "t4",
+      "title": "Explain logs vs memory write decision to Cole",
+      "notes": "Cole asked for my reasoning behind choosing logs/self_notes over memory/reports for the self-note file. Need to articulate why I made that choice based on how I think about ephemeral reflection vs persistent state.",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-26T12:29:38",
+      "updated": "2026-05-26T12:29:38"
     }
   }
 }
