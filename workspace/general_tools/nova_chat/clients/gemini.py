@@ -1,4 +1,4 @@
-# Last updated: 2026-05-26 11:23:51
+# Last updated: 2026-05-26 12:24:04
 """
 Gemini (Google) streaming client for Nova Group Chat.
 Uses the new google.genai SDK (google-generativeai is deprecated).
