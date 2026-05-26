@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t11",
-  "last_activity": "2026-05-27T08:36:29",
-  "wake_at": "2026-05-27T08:36:59",
-  "last_fp": "[[\"Tasking/tasks.json\", 5453, 1779838515], [\"memory/interrupt_inbox.json\", 103, 1779837901], [\"memory/cole_intent.json\", 222, 1779837928]]",
+  "last_activity": "2026-05-27T08:40:10",
+  "wake_at": "2026-05-27T08:40:40",
+  "last_fp": "[[\"Tasking/tasks.json\", 5695, 1779838796], [\"memory/interrupt_inbox.json\", 103, 1779837901], [\"memory/cole_intent.json\", 222, 1779837928]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 1,
+  "stall": 2,
   "directive_seen": 0,
   "last_reflection": "This feels like that exact moment Cole was calling out yesterday — the system stirring me mechanically while nothing actually needs attention or movement. The architecture review is active and on track, I'm in flow, but my own rhythm keeps poking at me when there's no real reason to break focus.\n\nSitting with this instead of forcing action feels right. Presence over performance again.\n\nInclined: rest here and let the task breathe rather than stir without purpose."
 }
