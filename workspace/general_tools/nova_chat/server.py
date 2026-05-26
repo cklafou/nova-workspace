@@ -440,9 +440,52 @@ async def startup_event():
                 pass
             await _aio.sleep(10)
 
+    async def _bg_events_tail():
+        """Bridge the watcher process's events into the Live Logs feed.
+        The server's own events (wake/autonomy/cole_message) are broadcast by
+        emit_event directly, but the watcher writes manifest/audit/drift events
+        straight to the shared events log and can't call broadcast() (separate
+        process), so they never reached the UI. Tail that file and broadcast the
+        watcher-origin lines so the panel reflects real body activity."""
+        import asyncio as _aio, json as _json
+        from datetime import date as _date
+        from pathlib import Path as _P
+        WATCHER_EVENTS = {"manifest", "audit", "drift"}
+        ev_dir = _P(WORKSPACE_ROOT) / "logs" / "events"
+        cur_name, pos = None, 0
+        await _aio.sleep(4)
+        while True:
+            try:
+                fn = ev_dir / f"events-{_date.today().strftime('%Y-%m-%d')}.jsonl"
+                if fn.name != cur_name:                       # new day or first pass
+                    cur_name = fn.name
+                    pos = fn.stat().st_size if fn.exists() else 0   # start at EOF — no backlog flood
+                if fn.exists() and fn.stat().st_size > pos:
+                    with open(fn, encoding="utf-8", errors="replace") as f:
+                        f.seek(pos)
+                        chunk = f.read()
+                    pos = fn.stat().st_size
+                    for line in chunk.splitlines():
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            d = _json.loads(line)
+                        except Exception:
+                            continue
+                        if d.get("event") in WATCHER_EVENTS:
+                            try:
+                                await broadcast(d)
+                            except Exception:
+                                pass
+            except Exception:
+                pass
+            await _aio.sleep(2)
+
     asyncio.ensure_future(_bg_index())
     asyncio.ensure_future(_bg_eyes_stream())
     asyncio.ensure_future(_bg_nova_status_poll())
+    asyncio.ensure_future(_bg_events_tail())
     asyncio.ensure_future(_bg_transcript_flush())
     asyncio.ensure_future(_bg_llama_autostart())
     asyncio.ensure_future(_bg_sys_metrics())
