@@ -2099,6 +2099,14 @@ function copyThinkContent() {
 function finalizeMsg(id) {
   const b=streamBufs[id]; if(!b) return;
   b.w.querySelector('.cursor')?.remove();
+  // Suppress a hollow turn: if she produced only thinking (or nothing) and no actual
+  // spoken text, don't leave an empty chat bubble behind — her reasoning still lives
+  // in the Thoughts panel and Live Logs.
+  if(!b.text || !b.text.trim()){
+    b.w.remove();
+    delete streamBufs[id]; scrollBot();
+    return;
+  }
   b.st.innerHTML=renderMD(b.text);
   if(b.think) b.tl.textContent=(b.think.split(/[.!?\n]/)[0].trim().slice(0,80)||'View reasoning')+' →';
   delete streamBufs[id]; scrollBot();

@@ -1698,6 +1698,17 @@ async def autonomy_daemon():
             continue
 
         cole_pending = _has_unread_cole()            # host reads the live transcript
+        # A standing directive's job is to make sure she attends to Cole's word ONCE.
+        # If she has already replied (she's the last speaker, so cole_pending is False)
+        # yet a directive still lingers, it's been handled — release it so a plain
+        # conversational message doesn't keep re-waking her ("directive" loop).
+        if not cole_pending:
+            try:
+                from nova_senses import environment as _env
+                if _env.cole_directive():
+                    _env.consume_cole_directive()
+            except Exception:
+                pass
         should, reason = executive.should_wake(cole_pending)
         if not should:
             continue
