@@ -1,5 +1,5 @@
 {
-  "seq": 1,
+  "seq": 2,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -24,6 +24,21 @@
       "created": "2026-05-26T11:09:50",
       "updated": "2026-05-26T11:13:39",
       "result": "Health check complete: STATUS.md and JOURNAL.md reviewed. System healthy - autonomy cycles running on schedule, task management operational, no critical errors found after 2-day test."
+    },
+    "t2": {
+      "id": "t2",
+      "title": "Opus baseline test - explore SELF/core and write self-note",
+      "notes": "Multi-step exploration task from Opus (Cole's dev partner). Steps depend on each other - must react to findings at each stage.",
+      "priority": 0,
+      "status": "open",
+      "progress": [
+        {
+          "ts": "2026-05-26T12:08:23",
+          "note": "Starting Opus baseline test by reading SELF/core/01_identity.md to understand identity model"
+        }
+      ],
+      "created": "2026-05-26T12:08:07",
+      "updated": "2026-05-26T12:08:23"
     }
   }
 }
