@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T14:38:57",
+  "generated": "2026-05-26T14:39:14",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -179,7 +179,7 @@
       "path": "nova_body/nova_senses",
       "purpose": "Nova's perception — file/system sensing (eyes), workspace self-awareness (proprioception), and vision.",
       "files": 7,
-      "lines": 1547,
+      "lines": 1548,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
