@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-26T17:40:40+09:00",
+  "updated_at": "2026-05-26T17:43:00+09:00",
   "items": [
     {
       "id": "777df213",
@@ -8499,6 +8499,19 @@
       "commit": "082c985f",
       "old_path": null,
       "new_path": "nova_memory_db/nova_text.lance/data/100011001110100100110001849cb544de985be366efc2e759.lance",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "20ad3107",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-05-26T17:43:00+09:00",
+      "commit": "f11e0669",
+      "old_path": "general_tools/nova_sync/.drive_sync_cache.json",
+      "new_path": null,
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
