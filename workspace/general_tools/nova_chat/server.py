@@ -921,7 +921,16 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
     async def on_think_token(token):
         """Broadcasts think_start once, then think_token for each token.
-        Only wired for Nova — Claude/Gemini handle their own thinking display."""
+        Only wired for Nova — Claude/Gemini handle their own thinking display.
+
+        ROOT FIX for empty autonomy bubbles: a SILENT tick (reflection / silent work,
+        cole_pending=False) must NOT stream its thinking to the chat. The frontend
+        opens a chat bubble from the first think token, so streaming a reflection's
+        thinking here was creating an empty-bodied chat bubble for EVERY wake. Silent
+        ticks already surface in the Monitor pane (autonomous_output on_done); their
+        thinking stays out of the chat entirely."""
+        if _silent_tick:
+            return
         if not _think_started[0]:
             _think_started[0] = True
             await broadcast({"type": "think_start", "author": ai_name, "id": msg_id})
@@ -1934,6 +1943,17 @@ async def queue_cancel(body: dict = Body(...)):
     try:
         from nova_cortex import tasking
         return JSONResponse({"ok": tasking.abandon(tid, "cancelled via UI")})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/api/queue/delete")
+async def queue_delete(body: dict = Body(...)):
+    """Remove a board task entirely (by id) — Cole's manual control only."""
+    tid = (body.get("id") or body.get("raw") or "").strip()
+    try:
+        from nova_cortex import tasking
+        return JSONResponse({"ok": tasking.delete(tid)})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 

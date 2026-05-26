@@ -121,6 +121,18 @@ def reopen(tid: str) -> bool:
     return _update(tid, status=OPEN)
 
 
+def delete(tid: str) -> bool:
+    """Remove a task from the board entirely. Nova herself never deletes (she completes
+    or abandons, keeping history — see Design Principle #11); this exists only for Cole's
+    manual board controls in the UI, where an explicit remove is sometimes wanted."""
+    store = _load()
+    if tid in store.get("tasks", {}):
+        del store["tasks"][tid]
+        _save(store)
+        return True
+    return False
+
+
 def reprioritize(tid: str, priority: int) -> bool:
     try:
         return _update(tid, priority=int(priority))

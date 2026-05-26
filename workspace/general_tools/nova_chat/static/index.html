@@ -1271,10 +1271,23 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       const sub=esc(last||t.notes||'');
       const n=(t.progress&&t.progress.length)||0;
       const meta=n?('<div class="tr-meta">'+n+' step'+(n===1?'':'s')+'</div>'):'';
+      const id=esc(t.id);
+      const ctrls='<div class="tr-ctrls">'+
+        '<button class="tr-ctrl tr-done-btn" title="Mark done" onclick="taskAction(event,&#39;'+id+'&#39;,&#39;complete&#39;)">✓</button>'+
+        '<button class="tr-ctrl tr-cancel-btn" title="Cancel (abandon)" onclick="taskAction(event,&#39;'+id+'&#39;,&#39;cancel&#39;)">✕</button>'+
+        '<button class="tr-ctrl tr-del-btn" title="Delete task" onclick="taskAction(event,&#39;'+id+'&#39;,&#39;delete&#39;)">🗑</button>'+
+        '</div>';
       return '<div class="'+cls.join(' ')+'">'+
         '<div class="tr-t"><span class="tr-dot"></span><span>'+esc(t.title||t.id)+'</span></div>'+
-        (sub?'<div class="tr-sub">'+sub+'</div>':'')+meta+'</div>';
+        (sub?'<div class="tr-sub">'+sub+'</div>':'')+meta+ctrls+'</div>';
     }
+    window.taskAction=async function(ev,id,action){
+      if(ev&&ev.stopPropagation) ev.stopPropagation();
+      const ep={complete:'/api/queue/complete',cancel:'/api/queue/cancel',delete:'/api/queue/delete'}[action];
+      if(!ep) return;
+      try{ await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}); }catch(_){}
+      if(window.refreshBoard) window.refreshBoard();
+    };
     function doneRow(t){
       const ab=t.status==='abandoned';
       return '<div class="tr-task tr-done'+(ab?' tr-abandoned':'')+'">'+
@@ -3574,6 +3587,7 @@ setInterval(pollMonitor,  15000);
 setInterval(pollServices,  9000);
 setInterval(pollGit,      60000);  // git branch updates every 60s
 setInterval(queueRefresh, 30000);  // queue refreshes every 30s
+setInterval(()=>{ try{ _sweepEmptyNova(); }catch(_){} }, 4000);  // keep chat free of empty bubbles
 pollMonitor();
 pollServices();
 pollGit();
@@ -3796,6 +3810,15 @@ switchPanel('thoughts');
 .tool-group .tg-detail{display:flex;flex-direction:column;gap:4px;padding:0 8px 8px;}
 .tool-group.collapsed .tg-detail{display:none;}
 .tool-group .tool-card{margin-top:0;}
+/* Task widget per-task controls (Cole's manual complete/cancel/delete) */
+.tr-task .tr-ctrls{display:none;gap:5px;margin-top:6px;justify-content:flex-end;}
+.tr-task:hover .tr-ctrls{display:flex;}
+.tr-ctrl{background:var(--surface-2);border:1px solid var(--border);border-radius:4px;
+  cursor:pointer;font-size:10px;line-height:1;padding:2px 7px;color:var(--text-mute);}
+.tr-ctrl:hover{color:var(--text);}
+.tr-done-btn:hover{color:#4ad295;border-color:#3a8d63;}
+.tr-cancel-btn:hover{color:#ffb454;}
+.tr-del-btn:hover{color:#ff6b6b;border-color:#7a5a5a;}
 </style>
 <script>
 (function(){
