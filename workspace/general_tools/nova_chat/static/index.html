@@ -3762,8 +3762,8 @@ switchPanel('thoughts');
     terminal:{title:'Terminal',defH:4,grab:()=>document.getElementById('panel-terminal')},
   };
   const ORDER=['tasks','logs','thoughts','tools','monitor','files','eyes','terminal'];
-  const DEFAULT=[{id:'tasks',x:0,y:0,w:2,h:4},{id:'logs',x:0,y:4,w:2,h:5},
-                 {id:'thoughts',x:0,y:9,w:2,h:5},{id:'tools',x:0,y:14,w:2,h:4}];
+  const DEFAULT=[{id:'tasks',x:0,y:0,w:12,h:4},{id:'logs',x:0,y:4,w:12,h:5},
+                 {id:'thoughts',x:0,y:9,w:12,h:5},{id:'tools',x:0,y:14,w:12,h:4}];
   const STORE=document.createElement('div');STORE.style.display='none';
   let grid=null,present={},saveTimer=null;
 
