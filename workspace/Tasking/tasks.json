@@ -39,10 +39,18 @@
         {
           "ts": "2026-05-26T12:09:09",
           "note": "Reading SELF/core/02_how_i_work.md to understand operational rules and autonomy flow"
+        },
+        {
+          "ts": "2026-05-26T12:09:56",
+          "note": "Reading SELF/core/03_body_manifest.md to understand Nova's body architecture"
+        },
+        {
+          "ts": "2026-05-26T12:10:49",
+          "note": "Reading NOVA.md to synthesize self-note on identity and operational understanding"
         }
       ],
       "created": "2026-05-26T12:08:07",
-      "updated": "2026-05-26T12:09:09"
+      "updated": "2026-05-26T12:10:49"
     }
   }
 }
