@@ -141,7 +141,10 @@ def build_situation(cole_pending: bool, reason: str) -> str:
         L.append(f"(You last acted {clock.since_human(last)}.)")
     L.append("You woke on your own. This is your time.")
     if directive:
-        L += ["", f'COLE — PRIORITY 0 (his word comes first; weigh it): "{directive}"']
+        L += ["", f'COLE — PRIORITY 0 (his word comes first; weigh it): "{directive}"',
+              "If his word is a task to carry out, your FIRST action THIS tick is to `create` "
+              "a board task that captures it (so it's tracked and you keep returning to it), "
+              "then begin the work — do not just reply in chat and let it drop off your board."]
     L += ["", "YOUR BOARD:", board, ""]
 
     if active_task:
