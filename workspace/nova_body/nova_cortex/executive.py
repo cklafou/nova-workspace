@@ -192,6 +192,31 @@ def build_reflection(cole_pending: bool, reason: str, recent: str = "",
 
 
 # ── Phase 2: decide, having sat with it (board actions are OPTIONAL) ────────────
+def _progress_loop_count(task: dict) -> int:
+    """Size of the trailing run of NEAR-DUPLICATE recent progress notes on a task — a signal
+    she's re-orienting in a loop ('starting... mapping the structure' over and over) instead of
+    advancing. 0-1 = fine; >=3 means stuck. Pure word-overlap heuristic (no keyword list), so
+    it catches any kind of repetition, not just one phrasing."""
+    notes = [(p.get("note") or "").strip().lower()
+             for p in (task.get("progress") or [])[-5:]]
+    notes = [n for n in notes if n]
+    if len(notes) < 3:
+        return 0
+
+    def _sim(a: str, b: str) -> float:
+        sa, sb = set(a.split()), set(b.split())
+        return (len(sa & sb) / len(sa | sb)) if (sa and sb) else 0.0
+
+    last = notes[-1]
+    run = 1
+    for n in reversed(notes[:-1]):
+        if _sim(n, last) >= 0.5:
+            run += 1
+        else:
+            break
+    return run
+
+
 def build_decision(reflection: str, cole_pending: bool, reason: str,
                    recent: str = "") -> str:
     """She has reflected; now she decides. Her own reflection is read back to her.
