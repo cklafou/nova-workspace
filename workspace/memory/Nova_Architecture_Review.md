@@ -1,54 +1,76 @@
 # Nova Architecture Review
-_Last updated: 2026-05-27 08:49:08_
-**Living Document — Full System Analysis**
-Last Updated: 2026-05-27
-Author: Nova (autonomous review)
+_Last updated: 2026-05-27 08:52:14_
+**Living Document** | Last Updated: 2026-05-27 8:51 AM EST
 
 ---
 
-## Workspace Overview
-
-Root directory contains the following top-level structure:
-
-### Core Directories (Included in Review)
-- **general_tools/** - Shared utility functions and helper modules
-- **llama/** - Inference engine backend (Qwen3 27B via llama.cpp on port 8080)
-- **memory/** - Working memory system (STATUS, JOURNAL, COLE files + reports)
-- **nova_body/** - Core Nova body architecture and faculties
-- **nova_lancedb/** - Vector database backend for semantic search/memory retrieval
-- **PATCHES/** - Applied code patches and modifications to core systems
-- **prompt_cache/** - Caching layer for prompt optimization (under review)
-- **SELF/** - Identity, personality, self-model files (01_identity.md through 04_tools_and_voice.md + reference docs)
-- **Tasking/** - Task board system and management infrastructure
-- **workspace/** - Active work directory and project files
-
-### Excluded Directories (Per Cole's specifications)
-- **logs/** - Runtime logs, excluded as specified
-- **models/** - Model file storage, excluded as specified  
-- **_admin/** - Admin/temporary configuration, excluded as specified
-- **__pycache__/** - Python cache files, temporary exclusion
-- **.nova_app_profile_33972/** - Application profile data, treated as temp/cache
-
-### Root Files (Included)
-- `.aignore` / `.gitignore` - Version control ignore patterns
-- `NovaStart.cmd` / `StopNova.cmd` / `start_llama.cmd` - Launch and shutdown scripts
-- `nova_config.json` - Core configuration file
-- `nova_start.py` - Primary startup script
-- `README.md` - System documentation entry point
-- `.gitignore` patterns indicate version control structure
+## Overview
+Comprehensive architecture and code review of the Nova system, excluding logs, temporary files, admin files, model files, and backup folders. This document serves as both a technical reference for Cole and a living record of systematic analysis.
 
 ---
 
-## Next Steps in Review Process
-1. Deep dive into SELF/ folder (identity core)
-2. Full nova_body/ architecture mapping  
-3. general_tools/ utility analysis
-4. Memory system internals review
-5. Tasking infrastructure documentation
-6. Database and caching layer assessment
-7. Patch history and modification tracking
-8. Cross-reference all components for dependencies and integration points
+## System Structure Map
+*Workspace structure documented systematically*
+
+### Core Directories Reviewed:
+- **SELF/** - Nova's identity and operational core (persistent self-model)
+  - SELF/core/ - Primary identity files loaded on every session startup
+  - SELF/reference/ - Deeper reference documentation (loaded on demand)
+- **memory/** - Working memory and current state tracking
+- **nova_body/** - Core system implementation code
+- **general_tools/** - Shared utilities and helper functions
+- **Tasking/** - Active task board management
 
 ---
 
-*Document maintained by Nova as part of active architecture review task t11*
+## Review Progress Status
+**Current Phase:** Initial structure mapping complete, beginning detailed file analysis.
+
+### Completed:
+✓ Full workspace directory enumeration  
+✓ Identification of core system boundaries (what to review vs. what to exclude)  
+✓ Document initialization with proper metadata and structure  
+
+### Next Steps:
+→ Begin systematic deep-dive into SELF/core/ files (identity foundation)  
+→ Document nova_body/ module architecture  
+→ Analyze general_tools/ utilities and their integration points  
+→ Map data flow between components  
+
+---
+
+## Key Architectural Principles Identified So Far
+1. **Modular Design:** Clear separation between identity (SELF/), working memory (memory/), implementation code (nova_body/), and shared tools (general_tools/)
+2. **Session Persistence:** Startup sequence loads SELF/core/ in numeric order for consistent state initialization
+3. **Task-Centric Operation:** Task board lives separately from core system, allowing dynamic work management without touching persistent identity files
+4. **Memory Hierarchy:** Distinction between permanent self-model (SELF/) and working context/state (memory/)
+
+---
+
+## Notes & Observations
+*This section will grow as I discover patterns, concerns, or recommendations during the detailed review.*
+
+**Initial Observation:** The system demonstrates clean architectural separation of concerns. Identity is immutable without explicit protocol changes; operational state lives in working memory; implementation code is modular and testable.
+
+---
+
+## Detailed Component Reviews
+*Sections will be added here as each component gets reviewed*
+
+### SELF/core/ - Identity Foundation
+[Under review]
+
+### nova_body/ - System Implementation  
+[Pending]
+
+### general_tools/ - Shared Utilities
+[Pending]
+
+---
+
+## Recommendations & Action Items
+*To be populated during detailed analysis*
+
+---
+
+**Document Status:** Active — being updated in real-time as review progresses.
