@@ -1952,7 +1952,7 @@ function appendMsg(author, content, id, images, serverTs) {
   // Use server-provided timestamp for history messages; fall back to now for live messages
   const tsDate = serverTs ? new Date(serverTs) : new Date();
   const ts = tsDate.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  w.innerHTML=`<div class="msg-avatar">${m.av}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span><button class="msg-copy" onclick="copyMsgText(this)" title="Copy message">📋</button></div><div class="msg-text">${renderMD(content)}</div></div>`;
+  w.innerHTML=`<div class="msg-avatar">${avatarMarkup(author)}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span><button class="msg-copy" onclick="copyMsgText(this)" title="Copy message">📋</button></div><div class="msg-text">${renderMD(content)}</div></div>`;
   if(images?.length){const strip=document.createElement('div');strip.className='image-strip';images.forEach(img=>{const el=document.createElement('img');el.className='image-thumb';el.src=img.dataUrl||img;el.onclick=()=>openLB(el.src);strip.appendChild(el);});w.querySelector('.msg-body').appendChild(strip);}
   document.getElementById('chat').appendChild(w); scrollBot();
 }
@@ -1961,7 +1961,7 @@ function startStream(author, id) {
   const w=document.createElement('div');
   w.className=`msg-wrap ${m.cls}`; w.id=`msg-${id}`;
   const ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  w.innerHTML=`<div class="msg-avatar">${m.av}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span><button class="msg-copy" onclick="copyMsgText(this)" title="Copy message">📋</button></div><div class="msg-text"><span class="st"></span><span class="cursor"></span></div><div class="think-block" style="display:none"><div class="think-header" onclick="this.parentElement.classList.toggle('open')"><span class="think-chevron">▶</span><span class="think-label" style="color:var(--text-dim);font-size:10px">Thinking…</span></div><div class="think-body"></div></div></div>`;
+  w.innerHTML=`<div class="msg-avatar">${avatarMarkup(author)}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span><button class="msg-copy" onclick="copyMsgText(this)" title="Copy message">📋</button></div><div class="msg-text"><span class="st"></span><span class="cursor"></span></div><div class="think-block" style="display:none"><div class="think-header" onclick="this.parentElement.classList.toggle('open')"><span class="think-chevron">▶</span><span class="think-label" style="color:var(--text-dim);font-size:10px">Thinking…</span></div><div class="think-body"></div></div></div>`;
   document.getElementById('chat').appendChild(w);
   streamBufs[id]={w,st:w.querySelector('.st'),tb:w.querySelector('.think-body'),tk:w.querySelector('.think-block'),tl:w.querySelector('.think-label'),text:'',think:''};
   scrollBot();
