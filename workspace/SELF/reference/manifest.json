@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T17:37:27",
+  "generated": "2026-05-26T17:37:44",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -508,7 +508,7 @@
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing) and local backups (Drive sync retired).",
       "files": 5,
-      "lines": 2036,
+      "lines": 2054,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
