@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T14:45:51",
+  "generated": "2026-05-26T14:46:05",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -103,7 +103,7 @@
       "path": "nova_body/nova_logs",
       "purpose": "Nova's unified log manager — the single logging system shared by all subsystems.",
       "files": 2,
-      "lines": 254,
+      "lines": 251,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
