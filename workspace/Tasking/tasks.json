@@ -1,5 +1,5 @@
 {
-  "seq": 2,
+  "seq": 3,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -60,6 +60,16 @@
       "created": "2026-05-26T12:08:07",
       "updated": "2026-05-26T12:14:45",
       "result": "Synthesized self-understanding from NOVA.md and 02_how_i_work.md into logs/self_notes/opus_baseline_reflection.md with concrete insights on Priority 0, Yield Protocol, memory persistence, and dev collaborator role"
+    },
+    "t3": {
+      "id": "t3",
+      "title": "Fix logs vs memory write destination",
+      "notes": "Cole asked why I wrote to logs/self_ instead of memory/reports/who_i_am.md during Opus baseline test. Need to investigate routing logic and fix.",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-26T12:19:46",
+      "updated": "2026-05-26T12:19:46"
     }
   }
 }
