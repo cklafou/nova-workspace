@@ -35,10 +35,14 @@
         {
           "ts": "2026-05-26T12:08:23",
           "note": "Starting Opus baseline test by reading SELF/core/01_identity.md to understand identity model"
+        },
+        {
+          "ts": "2026-05-26T12:09:09",
+          "note": "Reading SELF/core/02_how_i_work.md to understand operational rules and autonomy flow"
         }
       ],
       "created": "2026-05-26T12:08:07",
-      "updated": "2026-05-26T12:08:23"
+      "updated": "2026-05-26T12:09:09"
     }
   }
 }
