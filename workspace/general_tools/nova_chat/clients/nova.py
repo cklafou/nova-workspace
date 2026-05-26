@@ -456,7 +456,14 @@ async def stream_response(
                         from nova_chat.tool_router import execute_tool
                         
                         tool_name = tool_call["tool"]
-                        args = tool_call.get("args", {})
+                        # Tolerate the common shape variance where she puts params at the
+                        # top level — {"tool":"read_file","path":"x"} — instead of nesting
+                        # them under "args". Without this, args={} → read_file("") resolves
+                        # to the workspace ROOT dir, and opening a directory as a file throws
+                        # [Errno 13] Permission denied (every read_file silently failed).
+                        args = tool_call.get("args")
+                        if not isinstance(args, dict):
+                            args = {k: v for k, v in tool_call.items() if k != "tool"}
                         
                         # Send the Tool execution placeholder
                         msg = f"\n\n[Nova is autonomously executing {tool_name}...]\n\n"
