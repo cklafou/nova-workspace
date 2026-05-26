@@ -494,23 +494,41 @@ def print_session_urls(commit_hash, copy_url=False):
         copy_to_clipboard(session_url)
 
 
+def run_drive_sync():
+    """Mirror the workspace to Google Drive so Gemini sees an up-to-date copy.
+    Diff-based (only changed files upload). Non-fatal: a Drive hiccup or missing
+    Google credentials must never block the git push or crash the watch loop.
+    Restored 2026-05-26 — Gemini can't reliably read raw GitHub URLs, so Drive is
+    the channel that keeps it able to see Project Nova."""
+    try:
+        from nova_sync import drive
+        drive.sync_to_drive()
+    except Exception as e:
+        print(f"[drive] sync skipped (non-fatal): {e}")
+
+
 def run_push_cycle():
     # Pass 1: push with a placeholder index (no commit hash yet)
     build_file_index()
     commit_hash = git_push(WATCH_DIR)
+    result = commit_hash
     if commit_hash:
         # Pass 2: rebuild index with the real commit hash so all raw URLs are
         # cache-proof, then push that updated index file.
         build_file_index(commit_ref=commit_hash)
         final_hash = git_push(WATCH_DIR)
         if final_hash:
-            return final_hash
-    return commit_hash
+            result = final_hash
+    # Drive rides along with every GitHub push so Gemini's mirror updates at the
+    # same moment Claude's GitHub index does — both at once (Cole's call 2026-05-26).
+    run_drive_sync()
+    return result
 
 
 def run_sync_and_backup():
-    # Google Drive auto-sync removed 2026-05-24 — git is the backup / source of truth.
-    # Drive sync retired (drive.py archived 2026-05-24). Git holds workspace history; local backups in logs/backups/ remain.
+    # Drive sync now rides inside run_push_cycle() (fires with every GitHub push),
+    # so this only handles local session/weekly backups. Git remains the history /
+    # source of truth; Drive is Gemini's readable mirror.
     try:
         from nova_sync.backup import run_backup
         run_backup()
