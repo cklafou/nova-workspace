@@ -986,7 +986,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                         memory_indexer.add_message(_cole_part, ai_name, session_mgr.active_id)
                     await broadcast({"type": "message_end", "author": ai_name,
                                      "id": msg_id + "_cole", "content": _cole_part})
-        else:
+        elif (full or "").strip():
             # ── Normal path — add response to chat transcript ────────────────────
             msg = session_mgr.active.add(ai_name, full)
             session_mgr.update_meta_from_message(msg)
@@ -1005,6 +1005,14 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                     executive.note_activity()
                 except Exception:
                     pass
+        else:
+            # ── Empty turn — she produced only thinking (or nothing) and no spoken
+            # words. Do NOT add this to the transcript: an empty Nova message would make
+            # her read as the "last speaker", flip cole_pending off, and drop her into
+            # solitary 'rest' mode so she never actually answers Cole (the loop we hit in
+            # testing). Just clear the dangling bubble; her reasoning still lives in the
+            # Thoughts pane. cole_pending stays TRUE so the next wake re-asks her to reply.
+            await broadcast({"type": "message_end", "author": ai_name, "id": msg_id, "content": ""})
 
         # Phase 4A.5 — Route module responses with [TASK_ID] to Master_Inbox
         _maybe_route_inbox(ai_name, full)

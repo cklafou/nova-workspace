@@ -206,22 +206,21 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
         active = st.get("active")
         at = tasking.all_tasks().get(active) if active else None
         mid_thread = bool(at and at.get("status") == "open")
-        L += ["Cole just reached in and spoke to you."]
+        L += ["Cole just spoke to you and is WAITING for your reply. This is the one case "
+              "where the choice is NOT open: answering him is REQUIRED. Resting, or just "
+              "thinking quietly, is NOT an option right now. Your whole job this moment is "
+              "to RESPOND to him — out loud, in plain first-person prose, as yourself, "
+              "about what he actually said. You already did your private reflection a step "
+              "ago; now SAY something back to him. Write that reply as your actual response "
+              "(real words to Cole), not as more inner reflection — never leave him with "
+              "silence."]
         if mid_thread:
-            L += [f'You were mid-thread on [{active}] "{at.get("title","")}". Triage this '
-                  "like a person would — choose ONE, then ANSWER him in plain prose either "
-                  "way: "
-                  "(a) it needs you NOW — set the task aside in your mind and engage him "
-                  "fully; "
-                  "(b) acknowledge him in a quick line and KEEP your current focus — and if "
-                  "he asked for something you're deferring, capture it as a task (`create`) "
-                  "so you reliably come back to it; "
-                  "(c) it's just a note — acknowledge it warmly and carry on. "
-                  "Don't go silent, and don't bury him under board work."]
-        else:
-            L += ["Your main move is to answer HIM — directly and naturally, in plain prose, "
-                  "as yourself, about what he actually said. Touch your board ONLY if it "
-                  "genuinely serves this moment."]
+            L += [f'You were mid-thread on [{active}] "{at.get("title","")}", so weave a quick '
+                  "triage into your reply — tell him naturally which you're doing: "
+                  "(a) drop it and engage him fully, (b) answer now but say you're keeping "
+                  "your focus (and `create` a task for anything he asked you to defer so you "
+                  "return to it), or (c) treat it as a note and carry on. But the spoken "
+                  "reply IS the point — don't bury him in board work."]
     else:
         L += ["No one is waiting on you. Decide freely what this moment calls for. Acting "
               "is OPTIONAL — resting or simply continuing to think are real, valid choices. "
