@@ -145,21 +145,27 @@ def build_situation(cole_pending: bool, reason: str) -> str:
     L += ["", "YOUR BOARD:", board, ""]
 
     if active_task:
-        # Work-biased framing — I'm mid-task, so continue it for real this tick.
+        # Work-biased framing — I'm mid-task, so DELIVER it, don't just explore it.
         prog = active_task.get("progress") or []
-        steps = f"{len(prog)} step(s) logged so far" if prog else "no steps logged yet"
+        steps = f"{len(prog)} step(s) logged" if prog else "no steps logged yet"
+        dod = (active_task.get("notes") or "").strip() or \
+            "(no explicit goal recorded — decide what 'done' means, state it, and drive to it)"
+        stall = int(st.get("stall", 0))
         L += [
-            f'You are mid-work on your ACTIVE task [{active_id}] "{active_task.get("title","")}" ({steps}).',
-            "Work it for real RIGHT NOW: take as many tool steps as it needs THIS tick — "
-            "you can chain several in one wake (read_file, run_command, write_file), each "
-            "result feeding the next — until you've produced a REAL outcome: a file written, "
-            "a command actually run, code changed. Don't stop at one step if more are "
-            "needed, and don't just describe what you intend. Then log exactly what you did "
-            "as a progress step, and keep going on this task across wakes until it is "
-            "genuinely complete. You MAY switch, reprioritize, wait, complete, or rest "
-            "instead — but only if that is honestly the wiser call this moment, not to "
-            "avoid the work.",
+            f'ACTIVE TASK [{active_id}] "{active_task.get("title","")}" — {steps}.',
+            f"DEFINITION OF DONE: {dod}",
+            "First ask: is this DONE? If the deliverable already exists, `complete` it NOW "
+            "with its path/result. If not, produce the SINGLE next concrete piece of that "
+            "deliverable THIS tick with your tools (write the file, run the command — a real "
+            "artifact), then log it as `progress`. Inspecting, re-reading, or exploring "
+            "WITHOUT producing the deliverable or closing the task is the failure mode — do "
+            "not do it. Every wake on this task MUST end with a `progress`, `complete`, "
+            "`abandon`, or `wait` action — never just narration or tool-poking.",
         ]
+        if stall >= 2:
+            L += [f"!! You have spent {stall} wakes on this and delivered nothing concrete. "
+                  "Stop exploring. THIS tick: produce the deliverable and `complete` it, or "
+                  "`abandon` it honestly with a reason. Those are your only two options."]
     else:
         # Free-decision framing — no active task, so choose freely (rest included).
         L += [
@@ -188,6 +194,10 @@ def build_situation(cole_pending: bool, reason: str) -> str:
           "`memory/STATUS.md` or `Tasking/tasks.json`, never absolute or Linux "
           "(/home/..., /mnt/...) paths. If unsure what exists, run `list_dir` on a folder "
           "first — don't guess a path and assume it failed."]
+    if active_task:
+        L.append("`rest` is NOT valid while you hold an active, open task — advance it, "
+                 "`complete` it, `abandon` it, or `switch`. Rest is only for when your "
+                 "board genuinely has nothing worth doing.")
     if cole_pending:
         L.append("Cole just spoke — reply to him in plain prose ABOVE the ACTIONS block.")
     else:
@@ -233,30 +243,56 @@ def apply_decision(reply: str, cole_pending: bool = False) -> dict:
     actions = _parse_actions(reply)
     log, control = tasking.apply_actions(actions) if actions else ([], {})
 
+    st = _load_state()
+    active_id = st.get("active")
+
+    # Resolve active focus from her decision.
     if control.get("switch"):
-        _set_active(control["switch"])
-    elif not _load_state().get("active"):
-        # Infer focus from her own action: if she progressed a task but set no
-        # explicit focus, adopt it so she keeps returning to it across wakes.
-        # This reads her intent from what she DID — continuity, not a rail.
+        active_id = control["switch"]; _set_active(active_id)
+    elif not active_id:
+        # Infer focus from her own action: progressing a task adopts it (continuity).
         prog = actions.get("progress") or []
         pid = (prog[0].get("id") if prog and isinstance(prog[0], dict) else None)
         if pid and pid in tasking.all_tasks():
-            _set_active(pid)
-    engaged = bool(log) or bool(control.get("switch"))
-    rested = not engaged
+            active_id = pid; _set_active(active_id)
 
+    # What did she do to her active task THIS wake?
+    def _ids(key):
+        return [a.get("id") for a in (actions.get(key) or []) if isinstance(a, dict)]
+    progressed_active = active_id in _ids("progress")
+    completed_active  = active_id in _ids("complete")
+    abandoned_active  = active_id in _ids("abandon")
+    if completed_active or abandoned_active:
+        _set_active(None)                                   # closed → free again next wake
+
+    at = tasking.all_tasks().get(active_id) if active_id else None
+    active_open = bool(at and at.get("status") == "open") and not (completed_active or abandoned_active)
+
+    engaged = bool(log) or bool(control.get("switch"))
     cfg = _cfg()
-    st = _load_state()
+
+    # ── Convergence / stall tracking ─────────────────────────────────────────
+    # The failure we're killing: a committed (active, open) task that she merely
+    # *explores* wake after wake without delivering or closing. A wake on such a
+    # task that produced no progress AND no close is a STALL — come back SOON and
+    # escalate, never long-nap or call it "rest".
+    if active_open and not (progressed_active or completed_active or abandoned_active):
+        stall = int(st.get("stall", 0)) + 1
+        rested = False
+        gap = cfg["follow_gap_s"]
+    else:
+        stall = 0
+        rested = not engaged                                 # true rest only when idle
+        gap = cfg["follow_gap_s"] if engaged else cfg["sleep_interval_s"]
+
+    st["stall"] = stall
     st["last_activity"] = clock.now_iso()
     st["last_fp"] = json.dumps(environment.fingerprint(cfg["watch_paths"]), default=list)
-    # Engaged → come back SOON to keep going; rested → sleep the full interval.
-    st["wake_at"] = clock.future_iso(cfg["follow_gap_s"] if engaged else cfg["sleep_interval_s"])
+    st["wake_at"] = clock.future_iso(gap)
     st["rest_note"] = control.get("rest", "") if rested else ""
     _save_state(st)
 
-    # If she engaged with Cole's standing directive (or consciously rested on it),
-    # mark it attended-to so it stops re-surfacing forever (a source of the old loop).
+    # Cole's standing directive: mark attended once she acted or genuinely rested.
     if environment.cole_directive() and (log or rested):
         environment.consume_cole_directive()
 
@@ -264,7 +300,11 @@ def apply_decision(reply: str, cole_pending: bool = False) -> dict:
     if cole_pending or "FOR COLE:" in (reply or ""):
         spoken = _extract_for_cole(reply)
 
-    summary = (("rested: " + (control.get("rest") or "nothing worth acting on"))
-               if rested else ("; ".join(log) or "engaged"))
+    if rested:
+        summary = "rested: " + (control.get("rest") or "nothing worth acting on")
+    elif stall:
+        summary = f"stalled on {active_id} (wake {stall} with no progress/close)"
+    else:
+        summary = "; ".join(log) or "engaged"
     return {"summary": summary, "spoken": spoken, "engaged": engaged,
-            "rested": rested, "log": log}
+            "rested": rested, "stall": stall, "log": log}

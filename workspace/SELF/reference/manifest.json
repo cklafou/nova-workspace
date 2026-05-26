@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T07:39:23",
+  "generated": "2026-05-26T10:23:22",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -48,7 +48,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status, context assembly, and rules (nova_status, context_builder, rules, prefrontal_cortex, checkin).",
       "files": 8,
-      "lines": 1576,
+      "lines": 1616,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -209,7 +209,7 @@
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
       "lines": 436,
-      "age_days": 0,
+      "age_days": 1,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -365,7 +365,7 @@
       "purpose": "Generates Nova's Body Manifest — the single derived map of every body part",
       "files": 1,
       "lines": 322,
-      "age_days": 0,
+      "age_days": 1,
       "ports_bind": [],
       "ports_seen": [
         "8080",
