@@ -1,12 +1,10 @@
 {
-  "generated": "2026-05-26T14:46:24",
+  "generated": "2026-05-26T14:46:41",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
-  "described": 20,
+  "described": 21,
   "flags": {
-    "undescribed": [
-      "download_models.py"
-    ],
+    "undescribed": [],
     "dead_part_candidates": [
       "nova_memory",
       "nova_motor",
@@ -408,7 +406,7 @@
       "name": "download_models.py",
       "kind": "tool",
       "path": "general_tools/download_models.py",
-      "purpose": null,
+      "purpose": "One-time downloader for Nova's vision models into workspace/models/ (for nova_senses).",
       "files": 1,
       "lines": 111,
       "age_days": 0,
@@ -422,7 +420,6 @@
       "referenced_by": [],
       "launched_by": [],
       "flags": [
-        "undescribed",
         "no_inbound_refs"
       ]
     },
