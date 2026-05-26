@@ -3789,7 +3789,7 @@ switchPanel('thoughts');
     opts=opts||{};
     const item=buildItem(id,opts.collapsed);
     item.setAttribute('gs-id',id);
-    item.setAttribute('gs-w',opts.w||2);
+    item.setAttribute('gs-w',opts.w||12);
     item.setAttribute('gs-h',opts.h||DEFS[id].defH);
     if(opts.x!=null)item.setAttribute('gs-x',opts.x);
     if(opts.y!=null)item.setAttribute('gs-y',opts.y);
@@ -3829,7 +3829,7 @@ switchPanel('thoughts');
     document.body.appendChild(STORE);
     const host=ce('<div id="wdash"><div class="grid-stack"></div></div>');
     panel.appendChild(host);
-    grid=GridStack.init({column:2,cellHeight:62,margin:5,handle:'.nv-whead',float:false,
+    grid=GridStack.init({column:12,cellHeight:62,margin:5,handle:'.nv-whead',float:false,
       resizable:{handles:'e,s,se'}}, host.querySelector('.grid-stack'));
     grid.on('change',()=>scheduleSave());
     let layout=null;
