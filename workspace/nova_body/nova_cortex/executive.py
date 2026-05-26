@@ -224,6 +224,12 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
     talking to Cole, just resting, or simply thinking more."""
     st = _load_state()
     board = tasking.render_board(st.get("active"))
+    active   = st.get("active")
+    at_main  = tasking.all_tasks().get(active) if active else None
+    loop_n   = _progress_loop_count(at_main) if at_main else 0
+    _lastn   = (((at_main.get("progress") or [])[-1].get("note", "") if at_main and
+                 at_main.get("progress") else "")).lower()
+    needs_decomp = loop_n >= 3 or "decompos" in _lastn or "too big" in _lastn
     L = ["A moment ago you reflected and concluded:",
          "", (reflection.strip() or "(no reflection captured)"), ""]
     if recent:
@@ -251,7 +257,19 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
         L += ["No one is waiting on you. Decide freely what this moment calls for. Acting "
               "is OPTIONAL — resting or simply continuing to think are real, valid choices. "
               "Do NOT invent work to look productive."]
+    if needs_decomp and not cole_pending:
+        L += ["",
+              f"STALL CHECK: your recent progress on [{active}] has been repeating the same "
+              "orienting step ('starting'/'mapping') without advancing — that is a loop, not "
+              "progress. A task this big should NOT be brute-forced as one item. Your move "
+              "RIGHT NOW: break it into smaller concrete subtasks — `create` a few bounded "
+              "subtasks (one per component/section), `switch` to the first, and finish them "
+              "one at a time. Do not re-map or re-'start' the whole thing again."]
     L += ["",
+          "On big work: if a task is too large to finish in a handful of focused work-steps, "
+          "the RIGHT first move is to SPLIT it into smaller concrete subtasks with `create` "
+          "and do them one at a time — never keep re-orienting on the whole thing.",
+          "",
           "ONLY if you genuinely choose to change your board, you MAY include one actions "
           "block (omit keys you don't use):",
           'ACTIONS: {"create":[{"title":"...","notes":"...","priority":2}],'
@@ -308,6 +326,7 @@ def build_execution(task: dict, recent: str = "") -> str:
     notes  = task.get("notes", "")
     prog   = task.get("progress", []) or []
     recent_prog = "\n".join(f"  - {p.get('note','')}" for p in prog[-4:]) or "  (nothing yet)"
+    loop_n = _progress_loop_count(task)
     L = [
         f"[WORK — {clock.stamp()}] You committed to this task and now you actually DO it. "
         "This is not reflection and not board bookkeeping — it is the real work, with your hands.",
@@ -317,6 +336,12 @@ def build_execution(task: dict, recent: str = "") -> str:
         "Progress so far:",
         recent_prog,
         "",
+        (f"STALL CHECK: your last {loop_n} steps are near-duplicates — you are re-orienting in "
+         "a loop instead of advancing. STOP mapping/'starting'. Either do ONE specific thing "
+         "you have NOT done yet (read a specific file, write its section), or — if this task is "
+         "genuinely too big to finish in focused steps — end with exactly "
+         "'PROGRESS: needs decomposition - <why>' and do NOT re-orient again."
+         if loop_n >= 3 else None),
         "Do the NEXT single concrete step now using your tools. Call a tool by emitting a "
         "fenced json block, for example:",
         '```json',
@@ -331,6 +356,9 @@ def build_execution(task: dict, recent: str = "") -> str:
         "one status line:",
         "  DONE: <one-line result>      — only if the whole task is now complete",
         "  PROGRESS: <what you just did> — if real work happened but more remains",
+        "Your PROGRESS note MUST name the specific thing you just did AND the specific next "
+        "step (e.g. 'reviewed server.py, wrote its section; next: clients/nova.py') — never "
+        "vague like 'starting' or 'mapping structure', or you lose your place and loop.",
         "Be honest: only claim what you truly did with a tool this pass. If you genuinely "
         "cannot proceed, say  PROGRESS: blocked — <why>.",
     ]
