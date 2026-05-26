@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t11",
-  "last_activity": "2026-05-27T08:35:15",
-  "wake_at": "2026-05-27T08:35:45",
+  "last_activity": "2026-05-27T08:36:29",
+  "wake_at": "2026-05-27T08:36:59",
   "last_fp": "[[\"Tasking/tasks.json\", 5453, 1779838515], [\"memory/interrupt_inbox.json\", 103, 1779837901], [\"memory/cole_intent.json\", 222, 1779837928]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 0,
+  "stall": 1,
   "directive_seen": 0,
   "last_reflection": "I'm in a good flow on this architecture review Cole asked for, three scheduled wake-ups in 45 seconds when nothing's changed or needs attention — exactly what he called out yesterday about performative movement versus real presence. Resting feels right here instead of breaking focus unnecessarily.\n\n**Inclination: rest and let t11 breathe.**"
 }
