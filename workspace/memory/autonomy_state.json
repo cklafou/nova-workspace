@@ -1,10 +1,10 @@
 {
   "enabled": true,
   "active": "t4",
-  "last_activity": "2026-05-26T11:30:04",
-  "wake_at": "2026-05-26T11:35:04",
-  "last_fp": "[[\"Tasking/tasks.json\", 1098, 1779761619], [\"memory/interrupt_inbox.json\", 105, 1779760192], [\"memory/cole_intent.json\", 779, 1779760297]]",
-  "rest_note": "Nothing urgent on the board and Cole's awake in chat - rest mode is smart here rather than forcing work.",
+  "last_activity": "2026-05-26T11:32:33",
+  "wake_at": "2026-05-26T11:37:33",
+  "last_fp": "[[\"Tasking/tasks.json\", 1098, 1779761619], [\"memory/interrupt_inbox.json\", 103, 1779762622], [\"memory/cole_intent.json\", 488, 1779762737]]",
+  "rest_note": "No urgent tasks, board clean post-health-check",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0
 }
