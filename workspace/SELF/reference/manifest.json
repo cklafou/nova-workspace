@@ -1,10 +1,12 @@
 {
-  "generated": "2026-05-26T11:23:18",
+  "generated": "2026-05-26T11:23:52",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
-  "described": 21,
+  "described": 20,
   "flags": {
-    "undescribed": [],
+    "undescribed": [
+      "nova_logs"
+    ],
     "dead_part_candidates": [
       "nova_memory",
       "nova_motor",
@@ -24,8 +26,8 @@
       "path": "nova_body/nova_config",
       "purpose": "Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads workspace/nova_config.json; falls back to defaults. Import as: from nova_config import cfg.",
       "files": 1,
-      "lines": 137,
-      "age_days": 1,
+      "lines": 138,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -48,7 +50,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status, context assembly, and rules (nova_status, context_builder, rules, prefrontal_cortex, checkin).",
       "files": 8,
-      "lines": 1620,
+      "lines": 1625,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -74,8 +76,8 @@
       "path": "nova_lancedb",
       "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
       "files": 4,
-      "lines": 564,
-      "age_days": 1,
+      "lines": 237,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -101,10 +103,10 @@
       "name": "nova_logs",
       "kind": "body_part",
       "path": "nova_body/nova_logs",
-      "purpose": "Nova's unified log manager — the single logging system shared by all subsystems.",
+      "purpose": null,
       "files": 2,
-      "lines": 253,
-      "age_days": 1,
+      "lines": 254,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -115,7 +117,9 @@
         "nova_senses"
       ],
       "launched_by": [],
-      "flags": []
+      "flags": [
+        "undescribed"
+      ]
     },
     {
       "name": "nova_memory",
@@ -123,7 +127,7 @@
       "path": "nova_body/nova_memory",
       "purpose": "Nova's memory — persistent state, journal, goals/status, and daily log summaries.",
       "files": 6,
-      "lines": 832,
+      "lines": 836,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -148,7 +152,7 @@
       "path": "nova_body/nova_motor",
       "purpose": "Nova's motor system — executes actions (hands), plans them (motor_cortex), and verifies results.",
       "files": 5,
-      "lines": 1177,
+      "lines": 1182,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -179,8 +183,8 @@
       "path": "nova_body/nova_senses",
       "purpose": "Nova's perception — file/system sensing (eyes), workspace self-awareness (proprioception), and vision.",
       "files": 6,
-      "lines": 1415,
-      "age_days": 1,
+      "lines": 1421,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -323,7 +327,7 @@
       "purpose": "Persistent audit-review queue — records file-change events (rename/delete/new) for review by audit_scripts/restructure.",
       "files": 1,
       "lines": 288,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -342,8 +346,8 @@
       "path": "general_tools/audit_scripts.py",
       "purpose": "Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.",
       "files": 1,
-      "lines": 759,
-      "age_days": 1,
+      "lines": 760,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -364,8 +368,8 @@
       "path": "general_tools/build_manifest.py",
       "purpose": "Generates Nova's Body Manifest — the single derived map of every body part",
       "files": 1,
-      "lines": 322,
-      "age_days": 1,
+      "lines": 323,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -388,7 +392,7 @@
       "purpose": "Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.",
       "files": 1,
       "lines": 269,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -407,8 +411,8 @@
       "path": "general_tools/download_models.py",
       "purpose": "One-time downloader for Nova's vision models into workspace/models/ (for nova_senses).",
       "files": 1,
-      "lines": 110,
-      "age_days": 1,
+      "lines": 111,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -428,7 +432,7 @@
       "path": "general_tools/injector.py",
       "purpose": "NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.",
       "files": 1,
-      "lines": 483,
+      "lines": 484,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -455,7 +459,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 15,
-      "lines": 5993,
+      "lines": 6007,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -505,7 +509,7 @@
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing) and local backups (Drive sync retired).",
       "files": 4,
-      "lines": 1466,
+      "lines": 1468,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -529,8 +533,8 @@
       "path": "general_tools/restructure.py",
       "purpose": "Restructure checker — detects stale path references after a directory move and offers interactive fixes.",
       "files": 1,
-      "lines": 596,
-      "age_days": 1,
+      "lines": 597,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [

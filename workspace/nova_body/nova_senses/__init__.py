@@ -1,3 +1,4 @@
+# Last updated: 2026-05-26 11:23:51
 # @nova: Nova's perception — file/system sensing (eyes), workspace self-awareness (proprioception), and vision.
 """
 nova_senses -- Nova Perception Package
