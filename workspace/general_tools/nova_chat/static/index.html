@@ -3722,5 +3722,128 @@ switchPanel('thoughts');
   });
 })();
 </script>
+<!-- ══════════ WIDGET DASHBOARD (Gridstack) ══════════ -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/10.3.1/gridstack.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/10.3.1/gridstack-all.min.js"></script>
+<style>
+#right-panel .panel-tabs{display:none!important;}
+#wdash{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px;}
+#wdash .grid-stack{background:transparent;}
+.nv-widget{display:flex;flex-direction:column;background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);overflow:hidden;}
+.nv-whead{display:flex;align-items:center;gap:6px;padding:5px 8px;cursor:move;flex:0 0 auto;
+  border-bottom:1px solid var(--border);background:var(--surface-2);}
+.nv-wgrip{color:var(--text-mute);font-size:11px;}
+.nv-wtitle{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-dim);
+  flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nv-wcount{font-size:9px;color:var(--text-mute);background:var(--bg-raised);border-radius:9px;padding:1px 6px;}
+.nv-wbtn{background:none;border:none;color:var(--text-mute);cursor:pointer;font-size:12px;padding:0 3px;line-height:1;}
+.nv-wbtn:hover{color:var(--text);}
+.nv-wbody{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:7px;}
+.nv-widget.collapsed .nv-wbody{display:none;}
+#wdash .panel-section{display:flex!important;flex:1;padding:0;overflow:visible;}
+#wdash #novaLog{position:static;width:auto;max-width:none;right:auto;bottom:auto;border:none;border-radius:0;
+  box-shadow:none;background:transparent;display:flex;flex-direction:column;height:100%;}
+#wdash #novaLog .nl-title,#wdash #novaLog .nl-dot,#wdash #novaLog .nl-min,#wdash #novaLog .nl-spacer{display:none;}
+#wdash #novaLog .nl-head{padding:3px 6px;justify-content:flex-end;}
+#wdash #novaLog .nl-body{max-height:none;flex:1;}
+</style>
+<script>
+(function(){
+  function ce(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstChild;}
+  const DEFS={
+    tasks:{title:'Tasks',defH:4,make:()=>ce('<div class="tr-body" id="tr-body"></div>'),countId:'tr-count'},
+    logs:{title:'Live Logs',defH:5,grab:()=>document.getElementById('novaLog')},
+    thoughts:{title:'Thoughts',defH:5,grab:()=>document.getElementById('panel-thoughts')},
+    tools:{title:'Tools',defH:4,grab:()=>document.getElementById('panel-tools')},
+    monitor:{title:'Monitor',defH:4,grab:()=>document.getElementById('panel-monitor')},
+    files:{title:'Files',defH:4,grab:()=>document.getElementById('panel-files')},
+    eyes:{title:'Eyes',defH:4,grab:()=>document.getElementById('panel-eyes')},
+    terminal:{title:'Terminal',defH:4,grab:()=>document.getElementById('panel-terminal')},
+  };
+  const ORDER=['tasks','logs','thoughts','tools','monitor','files','eyes','terminal'];
+  const DEFAULT=[{id:'tasks',x:0,y:0,w:2,h:4},{id:'logs',x:0,y:4,w:2,h:5},
+                 {id:'thoughts',x:0,y:9,w:2,h:5},{id:'tools',x:0,y:14,w:2,h:4}];
+  const STORE=document.createElement('div');STORE.style.display='none';
+  let grid=null,present={},saveTimer=null;
+
+  function buildItem(id,collapsed){
+    const def=DEFS[id];
+    const item=ce('<div class="grid-stack-item"></div>');
+    const content=ce('<div class="grid-stack-item-content nv-widget"></div>');
+    const head=ce('<div class="nv-whead"><span class="nv-wgrip">☰</span><span class="nv-wtitle">'+def.title+'</span>'+(def.countId?'<span class="nv-wcount" id="'+def.countId+'">0</span>':'')+'<button class="nv-wbtn nv-wcollapse" title="Collapse">–</button><button class="nv-wbtn nv-wremove" title="Remove widget">✕</button></div>');
+    const body=ce('<div class="nv-wbody"></div>');
+    const node = def.make ? def.make() : def.grab();
+    if(node) body.appendChild(node);
+    content.appendChild(head); content.appendChild(body); item.appendChild(content);
+    head.querySelector('.nv-wcollapse').addEventListener('click',e=>{e.stopPropagation();
+      content.classList.toggle('collapsed');
+      e.currentTarget.textContent=content.classList.contains('collapsed')?'+':'–';
+      scheduleSave();});
+    head.querySelector('.nv-wremove').addEventListener('click',e=>{e.stopPropagation();removeWidget(id);});
+    if(collapsed){content.classList.add('collapsed');head.querySelector('.nv-wcollapse').textContent='+';}
+    return item;
+  }
+  function addWidget(id,opts,silent){
+    if(present[id]||!DEFS[id]||!grid)return;
+    opts=opts||{};
+    const item=buildItem(id,opts.collapsed);
+    item.setAttribute('gs-id',id);
+    item.setAttribute('gs-w',opts.w||2);
+    item.setAttribute('gs-h',opts.h||DEFS[id].defH);
+    if(opts.x!=null)item.setAttribute('gs-x',opts.x);
+    if(opts.y!=null)item.setAttribute('gs-y',opts.y);
+    grid.el.appendChild(item);
+    grid.makeWidget(item);
+    present[id]=true;
+    if(!silent){updateChecks();scheduleSave();}
+    if(id==='tasks'&&window.refreshBoard)window.refreshBoard();
+  }
+  function removeWidget(id){
+    if(!present[id]||!grid)return;
+    const item=grid.el.querySelector('.grid-stack-item[gs-id="'+id+'"]');
+    if(item){
+      if(DEFS[id].grab){const c=item.querySelector('.nv-wbody').firstChild;if(c)STORE.appendChild(c);}
+      grid.removeWidget(item,true);
+    }
+    present[id]=false;updateChecks();scheduleSave();
+  }
+  window.toggleWidget=function(id){present[id]?removeWidget(id):addWidget(id,{});};
+  function updateChecks(){ORDER.forEach(id=>{const c=document.getElementById('wchk-'+id);if(c)c.textContent=present[id]?'✓':'';});}
+  window.updateWidgetChecks=updateChecks;
+  function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveLayout,800);}
+  function saveLayout(){
+    if(!grid)return;
+    try{
+      const items=ORDER.filter(id=>present[id]).map(id=>{
+        const item=grid.el.querySelector('.grid-stack-item[gs-id="'+id+'"]');
+        const n=(item&&item.gridstackNode)||{};
+        return {id:id,x:n.x,y:n.y,w:n.w,h:n.h,collapsed:!!(item&&item.querySelector('.nv-widget').classList.contains('collapsed'))};
+      });
+      fetch('/api/layout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({widgets:items})});
+    }catch(_){}
+  }
+  async function init(){
+    const panel=document.getElementById('right-panel');
+    if(!panel||!window.GridStack)return;
+    document.body.appendChild(STORE);
+    const host=ce('<div id="wdash"><div class="grid-stack"></div></div>');
+    panel.appendChild(host);
+    grid=GridStack.init({column:2,cellHeight:62,margin:5,handle:'.nv-whead',float:false,
+      resizable:{handles:'e,s,se'}}, host.querySelector('.grid-stack'));
+    grid.on('change',()=>scheduleSave());
+    let layout=null;
+    try{const r=await fetch('/api/layout');if(r.ok){const d=await r.json();if(d&&d.widgets&&d.widgets.length)layout=d.widgets;}}catch(_){}
+    const toAdd=layout||DEFAULT;
+    grid.batchUpdate();
+    toAdd.forEach(w=>{if(DEFS[w.id])addWidget(w.id,{x:w.x,y:w.y,w:w.w,h:w.h,collapsed:w.collapsed},true);});
+    grid.commit();
+    updateChecks();
+    if(window.refreshBoard)window.refreshBoard();
+    window.pollThoughts=function(){};
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
 </body>
 </html>
