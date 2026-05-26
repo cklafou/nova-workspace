@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-26T10:57:29+09:00",
+  "pulse": "Resting",
+  "active_task": null,
+  "last_run": {
+    "started_at": "2026-05-26T10:57:29+09:00",
+    "ended_at": "2026-05-26T10:57:29+09:00",
+    "duration_s": null,
+    "status": "ok",
+    "summary": "Board empty, inbox clean — resting on scheduled wake until something worthwhile appears"
+  },
+  "errors": []
+}
