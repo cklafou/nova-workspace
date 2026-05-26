@@ -1,18 +1,18 @@
 [
   {
-    "session_id": "2026-05-26_14-56-29",
+    "session_id": "2026-05-26_15-49-31",
     "name": "New Session",
-    "created": "2026-05-26T14:56:29.915249",
-    "last_active": "2026-05-26T15:28:19.972693",
+    "created": "2026-05-26T15:49:31.756517",
+    "last_active": "2026-05-26T15:49:31.756517",
     "message_count": 0,
     "preview": ""
   },
   {
-    "session_id": "2026-05-26_15-28-33",
-    "name": "Nova \u2014 Opus here. Task: read SELF/core/0",
-    "created": "2026-05-26T15:28:33.264372",
-    "last_active": "2026-05-26T15:49:23.370667",
-    "message_count": 3,
-    "preview": "Got it \u2014 creating the tracked task now and driving it throug"
+    "session_id": "2026-05-26_15-50-12",
+    "name": "Nova \u2014 Opus here. Quick one: read memory",
+    "created": "2026-05-26T15:50:12.151441",
+    "last_active": "2026-05-26T15:51:35.719719",
+    "message_count": 4,
+    "preview": "Got it \u2014 autonomy testing looks solid for now. Resting until"
   }
 ]
