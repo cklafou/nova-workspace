@@ -1,4 +1,15 @@
 {
-  "seq": 0,
-  "tasks": {}
+  "seq": 1,
+  "tasks": {
+    "t1": {
+      "id": "t1",
+      "title": "Check system health after 2-day autonomy test",
+      "notes": "Read STATUS.md to verify nothing critical was missed during Cole's earlier autonomy testing session",
+      "priority": 3,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-26T11:09:50",
+      "updated": "2026-05-26T11:09:50"
+    }
+  }
 }
