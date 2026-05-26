@@ -1,10 +1,10 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-05-26T12:14:45",
-  "wake_at": "2026-05-26T12:15:15",
+  "last_activity": "2026-05-26T12:15:32",
+  "wake_at": "2026-05-26T12:20:32",
   "last_fp": "[[\"Tasking/tasks.json\", 2792, 1779765285], [\"memory/interrupt_inbox.json\", 105, 1779764844], [\"memory/cole_intent.json\", 632, 1779764887]]",
-  "rest_note": "",
+  "rest_note": "No active tasks require immediate action. Both board items are complete and system is healthy from recent health check. Resting until Cole speaks or environment changes triggers wake.",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0
