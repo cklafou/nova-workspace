@@ -2636,6 +2636,23 @@ async function llamaStop() {
     toast(d.message||d.error||'Stopping llama…'); setTimeout(pollServices,2000);
   } catch(_){toast('Nova Chat unreachable');}
 }
+async function novaRestart(kind){
+  const ep={server:'/api/restart/server',nova:'/api/restart/nova',novachat:'/api/restart/novachat',full:'/api/restart/full'}[kind];
+  const confirmMsg={
+    server:'Restart the model server (llama.cpp on :8080)? Inference drops for a few seconds while it reloads.',
+    nova:"Reload Nova's mind (reset her cognition + refresh context)? The chat stays up; she wakes fresh.",
+    novachat:'Restart Nova Chat (:8765)? The page will disconnect and reconnect in a few seconds.',
+    full:'FULL restart — StopNova + NovaStart (llama + chat + watcher + window)? Everything bounces.'
+  }[kind];
+  if(!ep) return;
+  if(!confirm(confirmMsg)) { closeDD&&closeDD(); return; }
+  try{
+    const r=await fetch(ep,{method:'POST'}); const d=await r.json().catch(()=>({}));
+    toast(d.message||d.error||(d.ok?'Restarting…':'Restart failed'));
+    if(kind==='server') setTimeout(pollServices,3000);
+  }catch(_){ toast(kind+' restart issued — connection may drop, reconnecting…'); }
+  closeDD&&closeDD();
+}
 
 /* ══════════════════════════════════════════════════
    EYES (Nova desktop stream)
