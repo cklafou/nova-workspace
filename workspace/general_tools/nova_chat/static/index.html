@@ -2096,20 +2096,32 @@ function copyThinkContent() {
   navigator.clipboard.writeText(_liveThinkBuf).then(()=>toast('Reasoning copied!')).catch(()=>toast('Copy failed'));
 }
 
+// Safety net: remove any orphaned empty Nova bubble — a turn with no spoken text,
+// no live cursor, and no tool-group (i.e. an autonomy reflection that produced only
+// thinking). Catches empties regardless of how the bubble was created.
+function _sweepEmptyNova(){
+  document.querySelectorAll('#chat .msg-wrap.nova').forEach(w=>{
+    const wid=(w.id||'').replace('msg-','');
+    if(streamBufs[wid]) return;                      // still streaming — leave it
+    const t=w.querySelector('.msg-text');
+    if(t && !t.textContent.trim() && !w.querySelector('.cursor') && !w.querySelector('.tool-group'))
+      w.remove();
+  });
+}
 function finalizeMsg(id) {
-  const b=streamBufs[id]; if(!b) return;
+  const b=streamBufs[id]; if(!b){ _sweepEmptyNova(); return; }
   b.w.querySelector('.cursor')?.remove();
   // Suppress a hollow turn: if she produced only thinking (or nothing) and no actual
   // spoken text, don't leave an empty chat bubble behind — her reasoning still lives
   // in the Thoughts panel and Live Logs.
   if(!b.text || !b.text.trim()){
     b.w.remove();
-    delete streamBufs[id]; scrollBot();
+    delete streamBufs[id]; _sweepEmptyNova(); scrollBot();
     return;
   }
   b.st.innerHTML=renderMD(b.text);
   if(b.think) b.tl.textContent=(b.think.split(/[.!?\n]/)[0].trim().slice(0,80)||'View reasoning')+' →';
-  delete streamBufs[id]; scrollBot();
+  delete streamBufs[id]; _sweepEmptyNova(); scrollBot();
 }
 function copyMsgText(btn) {
   const text=(btn.closest('.msg-body')?.querySelector('.msg-text')?.innerText||'').trim();

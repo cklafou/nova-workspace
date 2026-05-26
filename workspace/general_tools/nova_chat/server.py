@@ -1610,15 +1610,28 @@ async def emit_event(event: str, text: str, level: str = "info", **extra) -> Non
 
 
 def _has_unread_cole() -> bool:
-    """True if Cole's last message comes after Nova's last message."""
+    """True if Cole's last message comes after Nova's last *substantive* message.
+    Trailing empty / thinking-only Nova turns are ignored — a hollow turn must NOT
+    make her read as the last speaker, or she'd drop into solitary 'rest' mode and
+    never actually answer Cole (and a session polluted by old empty turns would stay
+    stuck). Only a turn where she really said something counts as 'Nova spoke'."""
+    import re as _re
     try:
         msgs = session_mgr.active.messages
     except Exception:
         return False
+
+    def _nova_said_something(m) -> bool:
+        if m.get("author") != "Nova":
+            return False
+        c = _re.sub(r"<think>[\s\S]*?</think>", "", m.get("content", "") or "",
+                    flags=_re.IGNORECASE)
+        return bool(c.strip())
+
     li_c = next((i for i in range(len(msgs) - 1, -1, -1)
-                 if msgs[i]["author"] == "Cole"), None)
+                 if msgs[i].get("author") == "Cole"), None)
     li_n = next((i for i in range(len(msgs) - 1, -1, -1)
-                 if msgs[i]["author"] == "Nova"), None)
+                 if _nova_said_something(msgs[i])), None)
     return li_c is not None and (li_n is None or li_n < li_c)
 
 
