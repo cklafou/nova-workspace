@@ -112,6 +112,36 @@ def list_dir(path: str) -> str:
     except Exception as e:
         return f"ERROR: Could not list directory: {e}"
 
+# ── Task board tools — the SAFE way to create/track tasks (never hand-write
+# Tasking/tasks.json). These go through nova_cortex.tasking, so the board schema
+# stays valid and a chat-delivered task becomes a real tracked board task. write_file
+# stays fully available for genuine work products; this just gives her a proper path
+# to her board so she doesn't reach for raw writes.
+def create_task(title: str, notes: str = "", priority: int = 3) -> str:
+    try:
+        from nova_cortex import tasking
+        tid = tasking.create((title or "").strip(), notes or "", priority if priority is not None else 3)
+        return f"Created board task {tid}: {title}"
+    except Exception as e:
+        return f"ERROR: Could not create task: {e}"
+
+def task_progress(task_id: str, note: str) -> str:
+    try:
+        from nova_cortex import tasking
+        return (f"Logged progress on {task_id}." if tasking.progress(task_id, note)
+                else f"ERROR: No task with id {task_id}.")
+    except Exception as e:
+        return f"ERROR: Could not log progress: {e}"
+
+def complete_task(task_id: str, result: str = "") -> str:
+    try:
+        from nova_cortex import tasking
+        return (f"Completed {task_id}." if tasking.complete(task_id, result or "")
+                else f"ERROR: No task with id {task_id}.")
+    except Exception as e:
+        return f"ERROR: Could not complete task: {e}"
+
+
 def execute_tool(tool_name: str, args: dict) -> str:
     """Main routing dispatcher."""
     try:
@@ -125,6 +155,12 @@ def execute_tool(tool_name: str, args: dict) -> str:
             return replace_file_content(args.get("path", ""), args.get("target_content", ""), args.get("replacement_content", ""))
         elif tool_name == "list_dir":
             return list_dir(args.get("path", ""))
+        elif tool_name == "create_task":
+            return create_task(args.get("title", ""), args.get("notes", ""), args.get("priority", 3))
+        elif tool_name in ("task_progress", "progress_task"):
+            return task_progress(args.get("task_id", "") or args.get("id", ""), args.get("note", ""))
+        elif tool_name in ("complete_task", "task_complete"):
+            return complete_task(args.get("task_id", "") or args.get("id", ""), args.get("result", ""))
         else:
             return f"ERROR: Unrecognized tool {tool_name}"
     except Exception as e:

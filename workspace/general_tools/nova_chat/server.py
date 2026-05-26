@@ -2021,6 +2021,16 @@ def _spawn_detached_cmd(lines: list):
     _os.startfile(path)
 
 
+# PowerShell that closes ONLY the old Nova app window — a Chrome/Edge --app window whose
+# command line carries the unique ".nova_app_profile" profile path. This never touches
+# Cole's other browser windows. Used by the restart relaunchers so a restart REPLACES
+# the window instead of stacking a second one.
+_PS_CLOSE_APP_WINDOW = ('powershell -Command "Get-CimInstance Win32_Process | '
+                        "Where-Object { $_.CommandLine -like '*nova_app_profile*' } | "
+                        'ForEach-Object { Stop-Process -Id $_.ProcessId -Force '
+                        '-ErrorAction SilentlyContinue }"')
+
+
 @app.post("/api/restart/server")
 async def restart_server():
     """Restart the model server (llama.cpp on :8080): kill it, relaunch start_llama.cmd."""
@@ -2081,11 +2091,12 @@ async def restart_novachat():
                    '$_.OwningProcess -Force -ErrorAction SilentlyContinue }"')
         _spawn_detached_cmd([
             "timeout /t 2 /nobreak >nul",
-            ps_kill,
+            _PS_CLOSE_APP_WINDOW,            # close the OLD app window (no second window)
+            ps_kill,                         # free :8765 (old chat server)
             'cd /d "' + ws + '"',
-            "python general_tools\\nova_chat\\launch.py",
+            "call NovaStart.cmd",            # relaunch — opens exactly one fresh window
         ])
-        return JSONResponse({"ok": True, "message": "Nova Chat restarting on :8765 (reconnects in a few seconds)…"})
+        return JSONResponse({"ok": True, "message": "Nova Chat restarting — old window closes, one fresh window opens…"})
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
@@ -2098,11 +2109,12 @@ async def restart_full():
         ws = str(WORKSPACE_ROOT)
         _spawn_detached_cmd([
             "timeout /t 2 /nobreak >nul",
+            _PS_CLOSE_APP_WINDOW,            # close the OLD app window (no second window)
             'cd /d "' + ws + '"',
             "call StopNova.cmd",
             "call NovaStart.cmd",
         ])
-        return JSONResponse({"ok": True, "message": "Full stack restarting…"})
+        return JSONResponse({"ok": True, "message": "Full stack restarting — old window closes, one fresh window opens…"})
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
