@@ -1800,6 +1800,35 @@ async def autonomy_daemon():
                 hb_ctx=HeartbeatContext(dec_prompt), cole_pending=cole_pending) or ""
             outcome = executive.apply_decision(reply, cole_pending=cole_pending)
             await emit_event("autonomy", outcome["summary"])
+
+            # ── Phase 3 — execute. The decision phase only moves the BOARD; it never
+            # does the work. If she holds an open task and this wake is her own rhythm
+            # (not a live reply to Cole) and she didn't choose to rest, she now actually
+            # DOES the next concrete step with her file tools and we log honest progress.
+            # This is what turns "create a task, then work it" into a finished task
+            # instead of one that sits open forever.
+            try:
+                if not cole_pending and not outcome.get("rested"):
+                    from nova_cortex import tasking as _tasking
+                    exec_id = executive.pick_execution_target()
+                    etask   = _tasking.all_tasks().get(exec_id) if exec_id else None
+                    if etask and etask.get("status") == "open":
+                        await emit_event("autonomy",
+                                         f"working {exec_id}: {etask.get('title','')[:60]}")
+                        ex_prompt = executive.build_execution(etask, recent)
+                        ex_reply = await run_ai_response(
+                            "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], ex_prompt,
+                            hb_ctx=HeartbeatContext(ex_prompt), cole_pending=False) or ""
+                        kind, payload = executive.parse_execution(ex_reply)
+                        if kind == "done":
+                            _tasking.complete(exec_id, payload or "Completed.")
+                            executive.set_active(None)
+                            await emit_event("autonomy", f"completed {exec_id}: {payload[:80]}")
+                        elif kind == "progress" and payload.strip():
+                            _tasking.progress(exec_id, payload)
+                            await emit_event("autonomy", f"progress {exec_id}: {payload[:80]}")
+            except Exception as _xe:
+                print(f"[autonomy] execution pass error: {_xe}")
         except asyncio.CancelledError:
             pass
         except Exception as _e:
