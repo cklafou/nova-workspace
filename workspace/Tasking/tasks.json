@@ -67,9 +67,18 @@
       "notes": "Cole asked why I wrote to logs/self_ instead of memory/reports/who_i_am.md during Opus baseline test. Need to investigate routing logic and fix.",
       "priority": 2,
       "status": "open",
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-05-26T12:25:17",
+          "note": "Began investigating Opus feedback about write destination discrepancy - checking both paths"
+        },
+        {
+          "ts": "2026-05-26T12:25:33",
+          "note": "Verifying both file paths - checking if logs/self_notes/opus_baseline_reflection.md exists vs where memory/reports/self_note.md should be"
+        }
+      ],
       "created": "2026-05-26T12:19:46",
-      "updated": "2026-05-26T12:19:46"
+      "updated": "2026-05-26T12:25:33"
     }
   }
 }

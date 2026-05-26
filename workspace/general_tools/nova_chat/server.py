@@ -1766,6 +1766,36 @@ async def avatars_set(body: dict = Body(...)):
     return JSONResponse({"ok": True, "author": author, "set": bool(image)})
 
 
+# ── Dashboard widget layout  (/api/layout) ─────────────────────────────────────
+# The customizable widget dashboard (Gridstack) stores its layout — which widgets
+# are present, their grid positions/sizes, and collapsed state — here. Server-side
+# (not localStorage) so it survives the app window's fresh per-launch profile.
+_LAYOUT_FILE = WORKSPACE_ROOT / "memory" / "ui_layout.json"
+
+@app.get("/api/layout")
+async def layout_get():
+    """Return the saved dashboard layout, or {} if none."""
+    try:
+        if _LAYOUT_FILE.exists():
+            return JSONResponse(json.loads(_LAYOUT_FILE.read_text(encoding="utf-8")))
+    except Exception:
+        pass
+    return JSONResponse({})
+
+@app.post("/api/layout")
+async def layout_set(body: dict = Body(...)):
+    """Persist the dashboard layout (widget list + positions/sizes)."""
+    try:
+        _LAYOUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = _LAYOUT_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(body), encoding="utf-8")
+        import os as _os
+        _os.replace(tmp, _LAYOUT_FILE)
+        return JSONResponse({"ok": True})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.post("/api/queue/add")
 async def queue_add(body: dict = Body(...)):
     """Add a task to Nova's board."""
