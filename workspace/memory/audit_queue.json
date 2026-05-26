@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-26T17:43:00+09:00",
+  "updated_at": "2026-05-27T07:41:31+09:00",
   "items": [
     {
       "id": "777df213",
@@ -8512,6 +8512,45 @@
       "commit": "f11e0669",
       "old_path": "general_tools/nova_sync/.drive_sync_cache.json",
       "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "99285664",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-05-27T07:41:31+09:00",
+      "commit": "bc839727",
+      "old_path": null,
+      "new_path": "general_tools/nova_sync/.drive_sync_cache.json",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "6ac01279",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-05-27T07:41:31+09:00",
+      "commit": "bc839727",
+      "old_path": null,
+      "new_path": "memory/reports/code_md_review_2026-05-27.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "a7b1ad5a",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-05-27T07:41:31+09:00",
+      "commit": "bc839727",
+      "old_path": null,
+      "new_path": "memory/reports/full_review_progress.md",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
