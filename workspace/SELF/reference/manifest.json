@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T12:31:44",
+  "generated": "2026-05-26T13:46:07",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -48,7 +48,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status, context assembly, and rules (nova_status, context_builder, rules, prefrontal_cortex, checkin).",
       "files": 8,
-      "lines": 1654,
+      "lines": 1691,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -178,8 +178,8 @@
       "kind": "body_part",
       "path": "nova_body/nova_senses",
       "purpose": "Nova's perception — file/system sensing (eyes), workspace self-awareness (proprioception), and vision.",
-      "files": 6,
-      "lines": 1421,
+      "files": 7,
+      "lines": 1547,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -196,6 +196,7 @@
       ],
       "referenced_by": [
         "injector.py",
+        "nova_chat",
         "nova_cortex",
         "nova_memory"
       ],
@@ -455,7 +456,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 15,
-      "lines": 6092,
+      "lines": 6164,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -470,7 +471,8 @@
         "nova_chat",
         "nova_cortex",
         "nova_lancedb",
-        "nova_logs"
+        "nova_logs",
+        "nova_senses"
       ],
       "third_party": [
         "PIL",
