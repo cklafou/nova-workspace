@@ -3714,4 +3714,9 @@ switchPanel('thoughts');
   });
   elMin.addEventListener('click',()=>{
     panel.classList.toggle('collapsed');
-    elMin.textContent=panel.classL
+    elMin.textContent=panel.classList.contains('collapsed')?'+':'–';
+  });
+})();
+</script>
+</body>
+</html>
