@@ -1,5 +1,5 @@
 {
-  "seq": 7,
+  "seq": 8,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -84,6 +84,16 @@
       "created": "2026-05-26T12:35:21",
       "updated": "2026-05-26T15:29:20",
       "result": "4-bullet identity brief written to memory/reports/identity_brief.md"
+    },
+    "t8": {
+      "id": "t8",
+      "title": "Compare operating rules vs body structure",
+      "notes": "Read 02_how_i_work.md and 03_body_manifest.md, compare findings, write tight bullets to memory/reports/work_vs_body.md",
+      "priority": 1,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-26T16:02:56",
+      "updated": "2026-05-26T16:02:56"
     }
   }
 }
