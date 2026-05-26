@@ -1717,7 +1717,7 @@ function handle(d) {
     case 'think_start':     liveThinkStart(); break;
     case 'think_token':     appendThink(d.author, d.id, d.token); liveThinkAppend(d.token); break;
     case 'think_end':       liveThinkEnd(); break;
-    case 'message_end':     finalizeMsg(d.id); hideTyping(d.author); break;
+    case 'message_end':     finalizeMsg(d.id, d.content); hideTyping(d.author); break;
     case 'processing_start':setProcessing(true); setNovaStatePill('processing'); break;
     case 'processing_end':  setProcessing(false); updateVigilance({state:'sleeping',reason:'Ready'}); hideQueueBadge(); break;
     case 'stopped':         setProcessing(false); updateVigilance({state:'sleeping',reason:'Stopped'}); hideQueueBadge(); break;
@@ -2121,18 +2121,33 @@ function _sweepEmptyNova(){
       w.remove();
   });
 }
-function finalizeMsg(id) {
+function _cleanChatText(t){
+  // Strip tool-call noise so chat shows her prose, not code/exec spam — the tool
+  // activity is shown separately in the collapsed tool-group + Tools widget.
+  return String(t||'')
+    .replace(/```json[\s\S]*?```/g,'')                              // fenced tool-call JSON
+    .replace(/\{\s*"tool"\s*:[\s\S]*?"args"\s*:[\s\S]*?\}\s*\}/g,'') // bare tool-call JSON
+    .replace(/\[`?[\w.\/-]+`?\s+resulted in\s+\d+\s+bytes\.?\]/gi,'')// "[tool resulted in N bytes]"
+    .replace(/\[Nova is autonomously executing[^\]]*\]/gi,'')        // exec placeholder
+    .replace(/\[System(?: Result| Error)?[^\]]*\]/gi,'')             // system result markers
+    .replace(/\n{3,}/g,'\n\n').trim();
+}
+function finalizeMsg(id, finalContent) {
   const b=streamBufs[id]; if(!b){ _sweepEmptyNova(); return; }
   b.w.querySelector('.cursor')?.remove();
-  // Suppress a hollow turn: if she produced only thinking (or nothing) and no actual
-  // spoken text, don't leave an empty chat bubble behind — her reasoning still lives
-  // in the Thoughts panel and Live Logs.
-  if(!b.text || !b.text.trim()){
-    b.w.remove();
+  // Prefer the server's cleaned final content over the raw streamed tokens (which
+  // include the tool-call JSON she emits), then strip any residual tool noise.
+  let text = _cleanChatText((typeof finalContent==='string' && finalContent.trim()) ? finalContent : b.text);
+  const hasTool = !!b.w.querySelector('.tool-group');
+  if(!text){
+    // No real prose this turn. If a tool-group is attached, keep the bubble for it;
+    // otherwise it's a hollow turn — remove it (reasoning still lives in Thoughts).
+    if(hasTool){ b.st.innerHTML=''; }
+    else { b.w.remove(); }
     delete streamBufs[id]; _sweepEmptyNova(); scrollBot();
     return;
   }
-  b.st.innerHTML=renderMD(b.text);
+  b.st.innerHTML=renderMD(text);
   if(b.think) b.tl.textContent=(b.think.split(/[.!?\n]/)[0].trim().slice(0,80)||'View reasoning')+' →';
   delete streamBufs[id]; _sweepEmptyNova(); scrollBot();
 }

@@ -101,7 +101,9 @@ Available Tools:
 4. "replace_file_content": {"path": "...", "target_content": "...", "replacement_content": "..."} - Replace an exact whitespace-matched string in a file.
 5. "list_dir": {"path": "..."} - List files in a directory.
 
-When you output a JSON tool call, the system will IMMEDIATELY execute it and feed the terminal output back to you in a [System: Result] block. You can then continue thinking and issue more tools until the task is complete. Only answer the user after you have finished using your tools."""
+When you output a JSON tool call, the system will IMMEDIATELY execute it and feed the terminal output back to you in a [System: Result] block. You can then continue thinking and issue more tools until the task is complete. Only answer the user after you have finished using your tools.
+
+NEVER hand-edit your own internal state or infrastructure with write_file/replace_file_content. Off-limits: Tasking/tasks.json, memory/autonomy_state.json, memory/touch_state.json, memory/cole_intent.json, and anything under SELF/. Those files are written FOR you by your own faculties — overwriting them corrupts your board, memory, or self-model. In particular: you do NOT create or track tasks by writing Tasking/tasks.json. Your task board is managed by your autonomy. If Cole asks you in chat to "track" or "make a task" of something, just acknowledge it in plain words — your executive creates the task itself on its next wake. Use write_file only for genuine work products (reports, notes, code), never your own internal state."""
 
 # ── Thought logger ────────────────────────────────────────────────────────────
 # Delegates to nova_logs.logger so all logging lives in one place.
