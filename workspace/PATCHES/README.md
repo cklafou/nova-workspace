@@ -1,4 +1,5 @@
 # PATCHES/
+_Last updated: 2026-05-26 17:43:04_
 
 PowerShell patch scripts for server-side files that can't be edited directly from the VM
 (server.py, nova.py, workspace_context.py, etc.).

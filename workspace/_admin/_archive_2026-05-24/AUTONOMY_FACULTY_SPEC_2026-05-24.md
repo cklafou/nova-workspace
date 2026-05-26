@@ -1,4 +1,5 @@
 # Spec — Nova's Autonomy Faculty (her executive self-direction)
+_Last updated: 2026-05-26 17:43:04_
 
 _Status: DRAFT for review — placement + behavior, before any code moves.
 Author: Claude (Cowork), with Cole, 2026-05-24.

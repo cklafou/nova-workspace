@@ -1,4 +1,5 @@
 # NOVA.md — Who Nova Is
+_Last updated: 2026-05-26 17:43:04_
 _Single source of truth for Nova's identity, soul, and personality._
 _Replaces SOUL.md and IDENTITY.md. Last updated: 2026-03-29_
 

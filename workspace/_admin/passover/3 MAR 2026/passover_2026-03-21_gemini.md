@@ -1,4 +1,5 @@
 # Passover -- Gemini Session Handoff
+_Last updated: 2026-05-26 17:43:04_
 _2026-03-21 | Project Nova_
 
 ## How to Boot This Session
