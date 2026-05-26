@@ -946,6 +946,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <button class="menu-trigger" data-dd="agents"   onclick="toggleDD('agents',this)">Agents <span class="mchevron">▾</span></button>
   <button class="menu-trigger" data-dd="services" onclick="toggleDD('services',this)">Services <span class="mchevron">▾</span></button>
   <button class="menu-trigger" data-dd="advanced" onclick="toggleDD('advanced',this)">Advanced <span class="mchevron">▾</span></button>
+  <button class="menu-trigger" data-dd="widgets" onclick="toggleDD('widgets',this)">Widgets <span class="mchevron">▾</span></button>
 
   <div class="menu-right">
     <div class="conn-dot" id="conn-dot"></div>
@@ -981,6 +982,19 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-item" onclick="switchPanel('files')">  <span class="dd-icon">📁</span><span class="dd-label">Files</span><span class="dd-check" id="vchk-files"></span></div>
   <div class="dd-item" onclick="switchPanel('eyes')">     <span class="dd-icon">👁</span><span class="dd-label">Eyes</span><span class="dd-check" id="vchk-eyes"></span></div>
   <div class="dd-item" onclick="switchPanel('terminal')"><span class="dd-icon">⬛</span><span class="dd-label">Terminal</span><span class="dd-check" id="vchk-terminal"></span></div>
+</div>
+
+<!-- Widgets -->
+<div id="dd-widgets" class="dropdown">
+  <div class="dd-header">Dashboard Widgets</div>
+  <div class="dd-item" onclick="toggleWidget('tasks')"><span class="dd-icon">🗂</span><span class="dd-label">Tasks</span><span class="dd-check" id="wchk-tasks"></span></div>
+  <div class="dd-item" onclick="toggleWidget('logs')"><span class="dd-icon">📡</span><span class="dd-label">Live Logs</span><span class="dd-check" id="wchk-logs"></span></div>
+  <div class="dd-item" onclick="toggleWidget('thoughts')"><span class="dd-icon">🧠</span><span class="dd-label">Thoughts</span><span class="dd-check" id="wchk-thoughts"></span></div>
+  <div class="dd-item" onclick="toggleWidget('tools')"><span class="dd-icon">⚙</span><span class="dd-label">Tools</span><span class="dd-check" id="wchk-tools"></span></div>
+  <div class="dd-item" onclick="toggleWidget('monitor')"><span class="dd-icon">📊</span><span class="dd-label">Monitor</span><span class="dd-check" id="wchk-monitor"></span></div>
+  <div class="dd-item" onclick="toggleWidget('files')"><span class="dd-icon">📁</span><span class="dd-label">Files</span><span class="dd-check" id="wchk-files"></span></div>
+  <div class="dd-item" onclick="toggleWidget('eyes')"><span class="dd-icon">👁</span><span class="dd-label">Eyes</span><span class="dd-check" id="wchk-eyes"></span></div>
+  <div class="dd-item" onclick="toggleWidget('terminal')"><span class="dd-icon">⬛</span><span class="dd-label">Terminal</span><span class="dd-check" id="wchk-terminal"></span></div>
 </div>
 
 <!-- Agents -->
