@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-27T08:49:54+09:00",
+  "updated_at": "2026-05-27T08:50:46+09:00",
   "items": [
     {
       "id": "777df213",
@@ -9461,6 +9461,58 @@
       "commit": "edddd0b0",
       "old_path": null,
       "new_path": "nova_memory_db/nova_text.lance/data/000100101001101010011000c33d1648b5a57683fc446d4b7b.lance",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "a99f8402",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-05-27T08:50:46+09:00",
+      "commit": "23386b9c",
+      "old_path": null,
+      "new_path": "memory/Nova_Avatar_Design_Bible.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "c7fad9ec",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-05-27T08:50:46+09:00",
+      "commit": "23386b9c",
+      "old_path": null,
+      "new_path": "nova_memory_db/nova_text.lance/_transactions/401-fce38e0b-46a1-4a01-9beb-3071c65d456e.txn",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "87c56a7b",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-05-27T08:50:46+09:00",
+      "commit": "23386b9c",
+      "old_path": null,
+      "new_path": "nova_memory_db/nova_text.lance/_versions/18446744073709551213.manifest",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "7928baf9",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-05-27T08:50:46+09:00",
+      "commit": "23386b9c",
+      "old_path": null,
+      "new_path": "nova_memory_db/nova_text.lance/data/11000001100011110111111000ba5f40fda69a375d167901e6.lance",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
