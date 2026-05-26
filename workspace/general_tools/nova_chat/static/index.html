@@ -2124,14 +2124,36 @@ function scrollBot() { const c=document.getElementById('chat'); c.scrollTop=c.sc
    TOOL EXECUTION
 ══════════════════════════════════════════════════ */
 const TICONS={read_file:'📄',write_file:'💾',run_command:'⚡',list_dir:'📁',replace_file_content:'✏️',nova_chat:'💬',search:'🔍',web_fetch:'🌐',shell:'⚡',python:'🐍',default:'🔧'};
-function addInlineTool(d) {
+// Tool calls collapse into ONE expandable line per Nova message ("Nova used X, Y
+// tools (n)") instead of flooding the chat. The full per-call history still lives
+// in the Tools widget. Click the line to expand/collapse the live detail.
+window.toggleToolGroup=function(el){const g=el.closest('.tool-group');g.classList.toggle('collapsed');
+  el.querySelector('.tg-caret').textContent=g.classList.contains('collapsed')?'▸':'▾';};
+function _toolGroup(){
   const msgs=document.getElementById('chat').querySelectorAll('.msg-wrap.nova');
-  if(!msgs.length) return;
+  if(!msgs.length) return null;
   const body=msgs[msgs.length-1].querySelector('.msg-body');
-  const card=document.createElement('div');
-  card.className=`tool-card ${d.error?'err':'ok'}`;
-  card.innerHTML=`<span class="tool-card-icon">${TICONS[d.tool]||TICONS.default}</span><span class="tool-card-name">${esc(d.tool||'tool')}</span><span class="tool-card-res">${esc((d.error||d.result||'').toString().slice(0,90))}</span>`;
-  body.appendChild(card); scrollBot();
+  if(!body) return null;
+  let g=body.querySelector(':scope > .tool-group');
+  if(!g){
+    g=document.createElement('div'); g.className='tool-group collapsed'; g._tools=[];
+    g.innerHTML='<div class="tg-summary" onclick="toggleToolGroup(this)"><span class="tg-caret">▸</span><span class="tg-text">Nova is working…</span></div><div class="tg-detail"></div>';
+    body.appendChild(g);
+  }
+  return g;
+}
+function _toolGroupAdd(g,name,cls,html){
+  g._tools.push(name);
+  const card=document.createElement('div'); card.className='tool-card '+(cls||'ok'); card.innerHTML=html;
+  g.querySelector('.tg-detail').appendChild(card);
+  const uniq=[...new Set(g._tools)];
+  g.querySelector('.tg-text').textContent='Nova used '+uniq.slice(0,5).join(', ')+(uniq.length>5?'…':'')+' ('+g._tools.length+')';
+}
+function addInlineTool(d) {
+  const g=_toolGroup(); if(!g) return;
+  _toolGroupAdd(g, d.tool||'tool', d.error?'err':'ok',
+    `<span class="tool-card-icon">${TICONS[d.tool]||TICONS.default}</span><span class="tool-card-name">${esc(d.tool||'tool')}</span><span class="tool-card-res">${esc((d.error||d.result||'').toString().slice(0,90))}</span>`);
+  scrollBot();
 }
 function addTool(d) {
   const feed=document.getElementById('panel-tools-feed');
@@ -2175,14 +2197,10 @@ function addBridgeTool(d) {
   _pushToolFeed(ok?'✅':'❌', 'bridge', result, ok);
 }
 function addInlineActivity(d) {
-  const msgs=document.getElementById('chat').querySelectorAll('.msg-wrap.nova');
-  if(!msgs.length) return;
-  const body=msgs[msgs.length-1].querySelector('.msg-body');
-  if(!body) return;
-  const card=document.createElement('div');
-  card.className='tool-card ok';
-  card.innerHTML=`<span class="tool-card-icon">${_AICONS[d.directive]||'🔧'}</span><span class="tool-card-name">${esc(d.directive||'action')}</span><span class="tool-card-res">${esc(String(d.detail||'').slice(0,90))}</span>`;
-  body.appendChild(card); scrollBot();
+  const g=_toolGroup(); if(!g) return;
+  _toolGroupAdd(g, d.directive||'action', 'ok',
+    `<span class="tool-card-icon">${_AICONS[d.directive]||'🔧'}</span><span class="tool-card-name">${esc(d.directive||'action')}</span><span class="tool-card-res">${esc(String(d.detail||'').slice(0,90))}</span>`);
+  scrollBot();
 }
 
 /* ══════════════════════════════════════════════════
@@ -3658,7 +3676,8 @@ switchPanel('thoughts');
   const elMin   = document.getElementById('nlMin');
   const panel   = document.getElementById('novaLog');
   const GLYPH = {wake:'▲',engage:'⚙',observe:'◉',sleep:'▽',rest:'▽',task:'✓',
-                 autonomy:'⚙',cole_message:'✉',manifest:'🗂',audit:'🔍',error:'✕',info:'•'};
+                 autonomy:'⚙',cole_message:'✉',manifest:'🗂',audit:'🔍',error:'✕',info:'•',
+                 reflect:'💭'};
 
   function fmtTime(iso){
     try{const d=iso?new Date(iso):new Date();
@@ -3747,6 +3766,16 @@ switchPanel('thoughts');
 #wdash #novaLog .nl-title,#wdash #novaLog .nl-dot,#wdash #novaLog .nl-min,#wdash #novaLog .nl-spacer{display:none;}
 #wdash #novaLog .nl-head{padding:3px 6px;justify-content:flex-end;}
 #wdash #novaLog .nl-body{max-height:none;flex:1;}
+/* Collapsed tool-call group in chat */
+.tool-group{margin-top:5px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--bg-raised);overflow:hidden;}
+.tg-summary{display:flex;align-items:center;gap:7px;padding:5px 9px;cursor:pointer;
+  font-size:11px;color:var(--text-dim);user-select:none;}
+.tg-summary:hover{color:var(--text);}
+.tg-caret{font-size:9px;color:var(--text-mute);width:9px;flex:0 0 auto;}
+.tool-group .tg-detail{display:flex;flex-direction:column;gap:4px;padding:0 8px 8px;}
+.tool-group.collapsed .tg-detail{display:none;}
+.tool-group .tool-card{margin-top:0;}
 </style>
 <script>
 (function(){
@@ -3841,6 +3870,11 @@ switchPanel('thoughts');
     updateChecks();
     if(window.refreshBoard)window.refreshBoard();
     window.pollThoughts=function(){};
+    // Consolidate: the Tasks widget is the single board view. Hide the duplicate
+    // task queue in Tools and the board-cards area in Thoughts.
+    ['queue-panel','thoughts-cards','thoughts-empty'].forEach(function(id){
+      var e=document.getElementById(id); if(e) e.style.display='none';
+    });
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

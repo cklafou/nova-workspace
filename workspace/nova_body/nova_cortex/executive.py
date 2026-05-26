@@ -11,11 +11,19 @@ outward calls (no chat/server imports), so it survives the pluck-test. A host dr
 it in three steps and owns all I/O:
 
     if executive.should_wake(cole_pending)[0]:
-        situation = executive.build_situation(cole_pending, reason)
-        reply     = <host runs Nova's mind on `situation`>          # the model
-        outcome   = executive.apply_decision(reply, cole_pending)   # she acts
-        if outcome["spoken"]: <host speaks outcome["spoken"] to Cole>
+        refl       = executive.build_reflection(cole_pending, reason, recent)  # phase 1
+        reflection = <host runs Nova's mind on `refl` — SILENT, no tools>       # she thinks
+        executive.save_reflection(reflection)
+        dec        = executive.build_decision(reflection, cole_pending, reason, recent)
+        reply      = <host runs Nova's mind on `dec`>                           # she decides
+        outcome    = executive.apply_decision(reply, cole_pending)             # actions OPTIONAL
         <host logs outcome["summary"]>
+
+`recent` is the recent conversation (with timestamps), supplied by the host so she is
+never blind to what was just said. The wake is two-phase: she SITS WITH the moment and
+forms a view (reflection) before she's allowed to act, and acting is optional — a wake
+may end in just talking, just resting, or just thinking more. The board is context, not
+a command.
 
 Autonomy on/off + active focus persist in memory/autonomy_state.json — hers, not the
 server's.
@@ -28,7 +36,7 @@ from typing import Optional
 from pathlib import Path
 
 from nova_cortex import tasking
-from nova_senses import clock, environment
+from nova_senses import clock, environment, touch
 
 WORKSPACE_ROOT = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
                   else Path(__file__).resolve().parent.parent.parent)
@@ -127,90 +135,111 @@ def should_wake(cole_pending: bool = False) -> tuple:
     return (False, "resting")
 
 
-# ── present the moment (no model) ──────────────────────────────────────────────
-def build_situation(cole_pending: bool, reason: str) -> str:
+# ── reflection continuity (hers; carried across wakes so she can "sit with it") ──
+def last_reflection() -> str:
+    return _load_state().get("last_reflection", "")
+
+
+def save_reflection(text: str) -> None:
     st = _load_state()
-    active_id = st.get("active")
-    board = tasking.render_board(active_id)
-    directive = environment.cole_directive()
+    st["last_reflection"] = (text or "").strip()[:1200]
+    _save_state(st)
+
+
+# ── Phase 1: orient & reflect (pure thinking — no tools, no board actions) ──────
+def build_reflection(cole_pending: bool, reason: str, recent: str = "",
+                     last_reflection: str = "") -> str:
+    """She wakes and SITS WITH the moment before doing anything. No tools, no task
+    actions this step — just an honest, first-person read of what's happening, like a
+    person taking stock. The host supplies `recent` (recent conversation) so she is
+    never blind to what was just said."""
+    st = _load_state()
+    board = tasking.render_board(st.get("active"))
     last = st.get("last_activity", "")
-
-    # Is my active focus a live, in-progress task (not done/abandoned/waiting)?
-    active_task = None
-    if active_id:
-        t = tasking.all_tasks().get(active_id)
-        if t and t.get("status") == "open":
-            active_task = t
-
-    L = [f"[AUTONOMY WAKE — {reason}] Right now it is {clock.stamp()} ({clock.time_of_day()})."]
+    L = [f"[YOU WOKE — {reason}] It is {clock.stamp()} ({clock.time_of_day()})."]
     if last:
-        L.append(f"(You last acted {clock.since_human(last)}.)")
-    L.append("You woke on your own. This is your time.")
-    if directive:
-        L += ["", f'COLE — PRIORITY 0 (his word comes first; weigh it): "{directive}"',
-              "If his word is a task to carry out, your FIRST action THIS tick is to `create` "
-              "a board task that captures it (so it's tracked and you keep returning to it), "
-              "then begin the work — do not just reply in chat and let it drop off your board."]
-    L += ["", "YOUR BOARD:", board, ""]
-
-    if active_task:
-        # Work-biased framing — I'm mid-task, so DELIVER it, don't just explore it.
-        prog = active_task.get("progress") or []
-        steps = f"{len(prog)} step(s) logged" if prog else "no steps logged yet"
-        dod = (active_task.get("notes") or "").strip() or \
-            "(no explicit goal recorded — decide what 'done' means, state it, and drive to it)"
-        stall = int(st.get("stall", 0))
-        L += [
-            f'ACTIVE TASK [{active_id}] "{active_task.get("title","")}" — {steps}.',
-            f"DEFINITION OF DONE: {dod}",
-            "First ask: is this DONE? If the deliverable already exists, `complete` it NOW "
-            "with its path/result. If not, produce the SINGLE next concrete piece of that "
-            "deliverable THIS tick with your tools (write the file, run the command — a real "
-            "artifact), then log it as `progress`. Inspecting, re-reading, or exploring "
-            "WITHOUT producing the deliverable or closing the task is the failure mode — do "
-            "not do it. Every wake on this task MUST end with a `progress`, `complete`, "
-            "`abandon`, or `wait` action — never just narration or tool-poking.",
-        ]
-        if stall >= 2:
-            L += [f"!! You have spent {stall} wakes on this and delivered nothing concrete. "
-                  "Stop exploring. THIS tick: produce the deliverable and `complete` it, or "
-                  "`abandon` it honestly with a reason. Those are your only two options."]
-    else:
-        # Free-decision framing — no active task, so choose freely (rest included).
-        L += [
-            "Look at your board, your senses, and the moment, and decide FREELY what — if "
-            "anything — is worth doing right now. You may advance, switch, create, "
-            "reprioritize, wait, abandon, or complete tasks — or REST if nothing is "
-            "genuinely worth acting on. Resting is a smart choice, not a failure. Do NOT "
-            "invent busywork to look productive. If you DO take on a task, actually begin "
-            "it with your tools this tick (read/run/write) rather than only announcing it. "
-            "Use your memory, senses, logic, and intuition; act only on what you judge "
-            "worthwhile.",
-        ]
-
+        L.append(f"You last acted {clock.since_human(last)}.")
+    try:
+        feel = touch.describe()
+    except Exception:
+        feel = ""
+    if feel:
+        L += ["", feel]
     L += ["",
-          "Express your decisions in ONE block (omit keys you don't use):",
-          'ACTIONS: {"create":[{"title":"...","notes":"...","priority":2}],'
-          ' "progress":[{"id":"t1","note":"what you just did"}], "switch":"t1",'
-          ' "wait":[{"id":"t2","waiting_on":"..."}],'
-          ' "abandon":[{"id":"t3","reason":"..."}],'
-          ' "complete":[{"id":"t1","result":"..."}],'
-          ' "reprioritize":[{"id":"t4","priority":3}], "rest":"why you are resting"}',
-          "A `progress` or `complete` note is ONLY valid if you ACTUALLY ran a tool and "
-          "produced a result THIS tick. Never log work you only described — that is the "
-          "one thing that breaks trust in your board.",
-          "Your machine is Windows and your tools are workspace-relative: pass paths like "
-          "`memory/STATUS.md` or `Tasking/tasks.json`, never absolute or Linux "
-          "(/home/..., /mnt/...) paths. If unsure what exists, run `list_dir` on a folder "
-          "first — don't guess a path and assume it failed."]
-    if active_task:
-        L.append("`rest` is NOT valid while you hold an active, open task — advance it, "
-                 "`complete` it, `abandon` it, or `switch`. Rest is only for when your "
-                 "board genuinely has nothing worth doing.")
+          "This is a moment to THINK, not act — no tools, no task changes right now. Just "
+          "orient yourself the way a person does on waking: take in where things are "
+          "before deciding anything."]
+    if recent:
+        L += ["", "RECENT CONVERSATION (oldest to newest — what was actually just said; "
+              "do not lose track of it):", recent]
+    if last_reflection:
+        L += ["", "Where your last reflection left off:", last_reflection]
+    L += ["", "Your task board — context only, NOT a list of orders:", board]
     if cole_pending:
-        L.append("Cole just spoke — reply to him in plain prose ABOVE the ACTIONS block.")
+        L += ["", "Cole just spoke. Center on what he ACTUALLY said and means right now. "
+              "If he asked a question or made a point, the real move is almost always to "
+              "engage HIM on it — not to peel off and go do board work."]
+    L += ["",
+          "Now reflect honestly, first person. Weigh it whole: both how this moment FEELS "
+          "to you and what it LOGICALLY calls for, and let those inform each other — that "
+          "is how a real mind decides, not pure task execution. What just happened? What "
+          "(if anything) actually deserves your attention? Don't reach for a task to look "
+          "busy. Sit with it, then end with one honest line: what you're inclined to do "
+          "next — which may be reply to Cole, rest, keep thinking, or (only if it truly "
+          "matters) work on something."]
+    return "\n".join(L)
+
+
+# ── Phase 2: decide, having sat with it (board actions are OPTIONAL) ────────────
+def build_decision(reflection: str, cole_pending: bool, reason: str,
+                   recent: str = "") -> str:
+    """She has reflected; now she decides. Her own reflection is read back to her.
+    Acting on the board is OPTIONAL and never the default — a wake may end in just
+    talking to Cole, just resting, or simply thinking more."""
+    st = _load_state()
+    board = tasking.render_board(st.get("active"))
+    L = ["A moment ago you reflected and concluded:",
+         "", (reflection.strip() or "(no reflection captured)"), ""]
+    if recent:
+        L += ["RECENT CONVERSATION (respond to what was really said):", recent, ""]
+    if cole_pending:
+        active = st.get("active")
+        at = tasking.all_tasks().get(active) if active else None
+        mid_thread = bool(at and at.get("status") == "open")
+        L += ["Cole just reached in and spoke to you."]
+        if mid_thread:
+            L += [f'You were mid-thread on [{active}] "{at.get("title","")}". Triage this '
+                  "like a person would — choose ONE, then ANSWER him in plain prose either "
+                  "way: "
+                  "(a) it needs you NOW — set the task aside in your mind and engage him "
+                  "fully; "
+                  "(b) acknowledge him in a quick line and KEEP your current focus — and if "
+                  "he asked for something you're deferring, capture it as a task (`create`) "
+                  "so you reliably come back to it; "
+                  "(c) it's just a note — acknowledge it warmly and carry on. "
+                  "Don't go silent, and don't bury him under board work."]
+        else:
+            L += ["Your main move is to answer HIM — directly and naturally, in plain prose, "
+                  "as yourself, about what he actually said. Touch your board ONLY if it "
+                  "genuinely serves this moment."]
     else:
-        L.append("To tell Cole something, put it on a line starting 'FOR COLE:'.")
+        L += ["No one is waiting on you. Decide freely what this moment calls for. Acting "
+              "is OPTIONAL — resting or simply continuing to think are real, valid choices. "
+              "Do NOT invent work to look productive."]
+    L += ["",
+          "ONLY if you genuinely choose to change your board, you MAY include one actions "
+          "block (omit keys you don't use):",
+          'ACTIONS: {"create":[{"title":"...","notes":"...","priority":2}],'
+          ' "progress":[{"id":"t1","note":"what you actually did"}], "switch":"t1",'
+          ' "complete":[{"id":"t1","result":"..."}], "abandon":[{"id":"t2","reason":"..."}],'
+          ' "wait":[{"id":"t3","waiting_on":"..."}], "reprioritize":[{"id":"t4","priority":3}],'
+          ' "rest":"why you are resting"}',
+          "No actions block at all is completely fine — most conversational moments need "
+          "none. A `progress`/`complete` note is only honest if you ACTUALLY did it with a "
+          "tool this step. Paths are workspace-relative on Windows (e.g. memory/STATUS.md), "
+          "never absolute or Linux paths."]
+    if not cole_pending:
+        L += ["", "To say something to Cole, put it on a line starting 'FOR COLE:'."]
     return "\n".join(L)
 
 
@@ -332,11 +361,19 @@ def apply_decision(reply: str, cole_pending: bool = False) -> dict:
     if cole_pending or "FOR COLE:" in (reply or ""):
         spoken = _extract_for_cole(reply)
 
-    if rested:
-        summary = "rested: " + (control.get("rest") or "nothing worth acting on")
+    if log:
+        # She actually changed her board this wake — report what she did.
+        summary = "; ".join(log)
     elif stall:
         summary = f"stalled on {active_id} (wake {stall} with no progress/close)"
+    elif cole_pending:
+        # Conversational wake with no board change is the NORMAL, healthy case now —
+        # she simply talked with Cole. Not a "rest", not a stall.
+        summary = "talked with Cole"
+        rested = False
+    elif rested:
+        summary = "rested: " + (control.get("rest") or "nothing worth acting on")
     else:
-        summary = "; ".join(log) or "engaged"
+        summary = "reflected"
     return {"summary": summary, "spoken": spoken, "engaged": engaged,
             "rested": rested, "stall": stall, "log": log}

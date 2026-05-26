@@ -1643,6 +1643,35 @@ async def _window_close_watchdog():
             return
 
 
+def _recent_chat_context(n: int = 14) -> str:
+    """Recent conversation the host hands to Nova's reflection so she is never blind
+    to what was just said during an autonomy wake. The body stays tool-agnostic —
+    perception is supplied here, exactly like cole_pending. Returns timestamped lines,
+    oldest-to-newest, lightly trimmed of any bundled telemetry."""
+    try:
+        msgs = session_mgr.active.messages
+    except Exception:
+        return ""
+    if not msgs:
+        return ""
+    recent = msgs[-n:]
+    lines = []
+    for m in recent:
+        ts = str(m.get("timestamp", ""))[11:16]
+        author = m.get("author", "?")
+        content = (m.get("content", "") or "")
+        for marker in ("\n--- TELEMETRY", "--- TELEMETRY", "\n[CONTEXT REFRESH", "[CONTEXT REFRESH"):
+            if marker in content:
+                content = content.split(marker)[0]
+        content = " ".join(content.split())
+        if len(content) > 500:
+            content = content[:500] + "…"
+        lines.append(f"[{ts}] {author}: {content}")
+    earlier = len(msgs) - len(recent)
+    head = f"(Earlier this session: {earlier} more message(s) before these.)\n" if earlier > 0 else ""
+    return head + "\n".join(lines)
+
+
 async def autonomy_daemon():
     """Persistent sleep/wake cognition loop. Lives for the whole server while
     autonomous_mode is ON. Replaces the per-message heartbeat loop.
@@ -1682,14 +1711,52 @@ async def autonomy_daemon():
 
         await emit_event("wake", f"Nova woke — {reason}")
 
-        # ── Her judgment (held under is_processing for mutual exclusion) ──
+        # ── Two-phase wake: she SITS WITH the moment (reflect) before she may act ──
         is_processing = True
         await broadcast({"type": "processing_start"})
         try:
-            situation = executive.build_situation(cole_pending, reason)
+            recent = _recent_chat_context()
+            # Populate Touch — what is interacting with her right now — so she can FEEL
+            # it during reflection. Gathered just-in-time in this one place rather than
+            # hooked into every event, which keeps the host edits contained.
+            try:
+                from nova_senses import touch as _touch, environment as _env
+                _surfaces = []
+                try:
+                    _lf = Path(WORKSPACE_ROOT) / "memory" / "ui_layout.json"
+                    if _lf.exists():
+                        _surfaces = [w.get("id") for w in
+                                     (json.loads(_lf.read_text(encoding="utf-8")).get("widgets") or [])
+                                     if w.get("id")]
+                except Exception:
+                    pass
+                _agents = [a for a, c in (("Claude", claude_client), ("Gemini", gemini_client))
+                           if c.is_available()]
+                _touch.update(viewers=len(connected_clients), cole_typing=_env.cole_typing(),
+                              agents_online=_agents, eyes_streaming=bool(_eyes_running),
+                              autonomy_active=True, surfaces=_surfaces)
+                _touch.record_pull("Cole" if cole_pending else "your own rhythm",
+                                   "reached in and spoke" if cole_pending
+                                   else f"stirred you ({reason})")
+            except Exception as _te:
+                print(f"[touch] populate failed: {_te}")
+            # Phase 1 — reflect. Always SILENT (cole_pending=False) so it streams to her
+            # thinking pane, never as a chat bubble. This is her forming a genuine view of
+            # the moment — recent conversation, how it feels, what it logically calls for.
+            refl_prompt = executive.build_reflection(
+                cole_pending, reason, recent, executive.last_reflection())
+            reflection = await run_ai_response(
+                "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], refl_prompt,
+                hb_ctx=HeartbeatContext(refl_prompt), cole_pending=False) or ""
+            executive.save_reflection(reflection)
+            await emit_event("reflect", "Nova sat with the moment")
+            # Phase 2 — decide, having reflected. Speaks to chat iff Cole is waiting;
+            # otherwise silent. Board actions are OPTIONAL — a wake may end in just
+            # talking, just resting, or just thinking more.
+            dec_prompt = executive.build_decision(reflection, cole_pending, reason, recent)
             reply = await run_ai_response(
-                "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], situation,
-                hb_ctx=HeartbeatContext(situation), cole_pending=cole_pending) or ""
+                "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], dec_prompt,
+                hb_ctx=HeartbeatContext(dec_prompt), cole_pending=cole_pending) or ""
             outcome = executive.apply_decision(reply, cole_pending=cole_pending)
             await emit_event("autonomy", outcome["summary"])
         except asyncio.CancelledError:
@@ -1698,6 +1765,11 @@ async def autonomy_daemon():
             print(f"[autonomy] tick error: {_e}")
         finally:
             is_processing = False
+            try:
+                from nova_senses import touch as _touch
+                _touch.update(autonomy_active=False)
+            except Exception:
+                pass
             await broadcast({"type": "processing_end"})
 
 
