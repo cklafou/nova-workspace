@@ -1,4 +1,4 @@
-# Last updated: 2026-05-26 12:24:04
+# Last updated: 2026-05-26 14:46:24
 # @nova: Nova's file-sync layer — watchdog file watcher (auto-indexing) and local backups (Drive sync retired).
 """
 nova_sync -- Nova Tool Package

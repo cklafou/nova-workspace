@@ -1,10 +1,12 @@
 {
-  "generated": "2026-05-26T14:46:05",
+  "generated": "2026-05-26T14:46:24",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
-  "described": 21,
+  "described": 20,
   "flags": {
-    "undescribed": [],
+    "undescribed": [
+      "download_models.py"
+    ],
     "dead_part_candidates": [
       "nova_memory",
       "nova_motor",
@@ -103,7 +105,7 @@
       "path": "nova_body/nova_logs",
       "purpose": "Nova's unified log manager — the single logging system shared by all subsystems.",
       "files": 2,
-      "lines": 251,
+      "lines": 254,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -406,7 +408,7 @@
       "name": "download_models.py",
       "kind": "tool",
       "path": "general_tools/download_models.py",
-      "purpose": "One-time downloader for Nova's vision models into workspace/models/ (for nova_senses).",
+      "purpose": null,
       "files": 1,
       "lines": 111,
       "age_days": 0,
@@ -420,6 +422,7 @@
       "referenced_by": [],
       "launched_by": [],
       "flags": [
+        "undescribed",
         "no_inbound_refs"
       ]
     },
