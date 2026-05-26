@@ -1041,6 +1041,12 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   </div>
   <div class="dd-sep"></div>
   <div class="dd-item" onclick="pollServices()"><span class="dd-icon">↻</span><span class="dd-label">Refresh Status</span></div>
+  <div class="dd-sep"></div>
+  <div class="dd-header">Restart</div>
+  <div class="dd-item" onclick="novaRestart('server')"><span class="dd-icon">🧠</span><span class="dd-label">Restart Server</span><span class="dd-key">llama :8080</span></div>
+  <div class="dd-item" onclick="novaRestart('nova')"><span class="dd-icon">✦</span><span class="dd-label">Restart Nova</span><span class="dd-key">mind reload</span></div>
+  <div class="dd-item" onclick="novaRestart('novachat')"><span class="dd-icon">▣</span><span class="dd-label">Restart Nova Chat</span><span class="dd-key">:8765</span></div>
+  <div class="dd-item" onclick="novaRestart('full')"><span class="dd-icon">⟳</span><span class="dd-label">Full Restart</span><span class="dd-key">whole stack</span></div>
 </div>
 
 <!-- Model selector dropdown (opens from model pill in tab bar) -->
