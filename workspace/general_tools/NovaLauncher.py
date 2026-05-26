@@ -1,4 +1,4 @@
-# Last updated: 2026-05-26 14:46:05
+# Last updated: 2026-05-27 08:41:50
 # @nova: Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.
 """
 NovaLauncher.py  (fixed)

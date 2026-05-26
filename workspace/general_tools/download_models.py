@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-05-26 14:46:24
+# Last updated: 2026-05-27 08:41:50
 # @nova: One-time downloader for Nova's vision models into workspace/models/ (for nova_senses).
 """
 download_models.py — Pre-download Nova's vision models to workspace/models/
