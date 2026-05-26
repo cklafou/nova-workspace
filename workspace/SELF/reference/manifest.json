@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T17:37:14",
+  "generated": "2026-05-26T17:37:27",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -507,8 +507,8 @@
       "kind": "tool",
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing) and local backups (Drive sync retired).",
-      "files": 4,
-      "lines": 1476,
+      "files": 5,
+      "lines": 2036,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -517,6 +517,9 @@
         "nova_sync"
       ],
       "third_party": [
+        "google",
+        "google_auth_oauthlib",
+        "googleapiclient",
         "tempfile",
         "watchdog"
       ],
