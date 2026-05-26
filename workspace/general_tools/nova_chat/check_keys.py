@@ -4,7 +4,7 @@
 check_keys.py -- API Key Checker for Nova Group Chat
 =====================================================
 Checks all environment variables and config files for existing API keys.
-Run: python general_general_tools/nova_chat/check_keys.py
+Run: python general_tools/nova_chat/check_keys.py
 
 Checks:
   - ANTHROPIC_API_KEY (Claude)
@@ -255,7 +255,7 @@ def main():
         print(f"\n  {len(missing)} participant(s) will be offline in nova_chat.")
         print("  Chat works with any combination -- offline AIs are greyed out.")
     else:
-        print("\n  All participants ready. Launch: python general_general_tools/nova_chat/launch.py")
+        print("\n  All participants ready. Launch: python general_tools/nova_chat/launch.py")
 
     print()
 

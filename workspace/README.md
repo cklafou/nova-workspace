@@ -48,16 +48,18 @@ workspace/
 │   ├── nova_cortex/         ← executive.py (autonomy faculty), tasking.py (task board),
 │   │                          nova_status.py, context_builder.py, rules.py, checkin.py
 │   ├── nova_memory/         ← journal.py, log_reader.py, goals.py, state.py, session_store.py
+│   │                          (SCAFFOLDED — not yet wired; memory data lives in memory/*.md for now)
 │   ├── nova_logs/           ← unified logger — ALL log writes go here
 │   ├── nova_motor/          ← hands.py, motor_cortex.py, tool_executor.py, verify.py
-│   ├── nova_senses/         ← clock.py (chronoception), environment.py, eyes.py, vision.py
+│   │                          (SCAFFOLDED — GUI-automation phase; not wired into current nova_chat flow)
+│   ├── nova_senses/         ← clock.py (chronoception), environment.py, touch.py, eyes.py, vision.py, proprioception.py
 │   └── nova_config/         ← body-owned settings loader (reads nova_config.json)
 │
 ├── nova_lancedb/            ← long-term semantic memory (LanceDB vector store)
 │
 ├── general_tools/           ← detachable tools
 │   ├── nova_chat/           ← group chat server (FastAPI + WebSocket, :8765) — her voice
-│   ├── nova_sync/           ← watcher.py (GitHub auto-commit) + backup.py (Drive sync retired)
+│   ├── nova_sync/           ← watcher.py (GitHub auto-commit) + drive.py (Google Drive mirror for Gemini, rides with each push) + backup.py
 │   ├── build_manifest.py    ← derives SELF/ body manifest from @nova: tokens
 │   ├── calls.py             ← call-graph generator feeding the manifest
 │   ├── injector.py          ← NCL context injector / module dispatcher
@@ -127,11 +129,13 @@ workspace/
 
 ## How Nova's Autonomy Works (short version)
 
-When autonomy is ON, her executive faculty (`nova_cortex/executive.py`) wakes on a rhythm or
-on a change, looks at her board, and decides freely — work a task, switch, create, abandon,
-reprioritize, wait, or rest. On/off state lives in `memory/autonomy_state.json` (body-owned).
-Cole is Priority 0: an interrupt she attends to first, never a leash. Full detail in
-`SELF/reference/heartbeat.md`.
+When autonomy is ON, her executive faculty (`nova_cortex/executive.py`) wakes on a rhythm, on
+a change, or when Cole speaks, and runs the wake in phases: **reflect** (sit with the moment,
+fed by her Touch sense for what's interacting with her) → **decide freely** (engage Cole, work
+a task, switch, create, abandon, reprioritize, wait, or rest) → **execute** (if she holds an
+open task and isn't mid-reply or resting, do its next concrete step with her tools and log
+progress). On/off state lives in `memory/autonomy_state.json` (body-owned). Cole is Priority 0:
+an interrupt she attends to first, never a leash. Full detail in `SELF/reference/heartbeat.md`.
 
 ---
 
@@ -139,9 +143,12 @@ Cole is Priority 0: an interrupt she attends to first, never a leash. Full detai
 
 ```powershell
 pip install pyautogui pillow pywinauto watchdog anthropic httpx fastapi uvicorn websockets
+pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client   # Drive mirror for Gemini
 ```
 
 Required environment variables: `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`.
+Google Drive sync also needs a `client_secrets.json` (OAuth client) in Documents/Downloads/Desktop;
+first run of `nova_sync/drive.py` opens a one-time browser login and writes `nova_drive_token.json`.
 Run `start_llama.cmd` (or `NovaStart.cmd` for the whole stack). See `SELF/core/` for Nova's
 operating knowledge.
 

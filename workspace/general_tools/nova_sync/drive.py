@@ -67,6 +67,11 @@ CLIENT_SECRETS_PATHS = [d / "client_secrets.json" for d in CLIENT_SECRETS_DIRS]
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
+# Drive's API throws transient 500/503/rate-limit errors under load. The client
+# retries these automatically with randomized exponential backoff when execute()
+# is given num_retries — so a single blip mid-resync no longer aborts the run.
+API_RETRIES = 5
+
 # Never mirror: VCS internals, caches, screenshots, build output, model weights
 # (models/ is sealed and 18GB+), and the llama runtime binaries.
 EXCLUDE_DIRS     = {".git", "__pycache__", "node_modules", "screenshots",
@@ -84,6 +89,13 @@ EXCLUDE_FILES    = {
     "client_secrets.json",      # OAuth client secret
     "audit_queue.json",         # large, high-churn runtime queue -- not useful to Gemini
 }
+# Directory-name PREFIXES to skip (dynamic names that an exact match can't catch).
+# The Nova app runs a Chrome --app window with a per-pid profile dir
+# (.nova_app_profile_<pid>) created inside the workspace. Its files are locked
+# SQLite/JSON; trying to read one to upload it HANGS the sync and locked the server
+# (Cole, 2026-05-26). They're also worthless to Gemini. Skip any path part starting
+# with one of these prefixes.
+EXCLUDE_DIR_PREFIXES = (".nova_app_profile",)
 
 
 # -- Auth ---------------------------------------------------------------------
@@ -150,6 +162,8 @@ def _scan_local_files():
 
         if any(excl in parts for excl in EXCLUDE_DIRS):
             continue
+        if any(part.startswith(EXCLUDE_DIR_PREFIXES) for part in parts):
+            continue
         if any(rel_str.startswith(sub) for sub in EXCLUDE_SUBPATHS):
             continue
         if path.suffix.lower() not in INCLUDE_EXTENSIONS:
@@ -191,7 +205,7 @@ def _get_or_create_folder(service, name, parent_id):
 
     query = (f"name='{name}' and mimeType='application/vnd.google-apps.folder' "
              f"and '{parent_id}' in parents and trashed=false")
-    results = service.files().list(q=query, fields="files(id)").execute()
+    results = service.files().list(q=query, fields="files(id)").execute(num_retries=API_RETRIES)
     files = results.get("files", [])
 
     if files:
@@ -202,7 +216,7 @@ def _get_or_create_folder(service, name, parent_id):
             "mimeType": "application/vnd.google-apps.folder",
             "parents": [parent_id],
         }
-        folder = service.files().create(body=metadata, fields="id").execute()
+        folder = service.files().create(body=metadata, fields="id").execute(num_retries=API_RETRIES)
         folder_id = folder["id"]
 
     _folder_id_cache[cache_key] = folder_id
@@ -226,7 +240,7 @@ def _get_existing_file(service, name, parent_id):
 
     query = (f"name='{name}' and '{parent_id}' in parents and trashed=false "
              f"and mimeType!='application/vnd.google-apps.folder'")
-    results = service.files().list(q=query, fields="files(id)").execute()
+    results = service.files().list(q=query, fields="files(id)").execute(num_retries=API_RETRIES)
     files = results.get("files", [])
     file_id = files[0]["id"] if files else None
     if file_id:
@@ -252,7 +266,7 @@ def _upsert_file(service, name, content, parent_id):
         service.files().update(
             fileId=existing_id,
             media_body=media
-        ).execute()
+        ).execute(num_retries=API_RETRIES)
         return existing_id
     else:
         # Create as native Google Doc so Gemini can find it immediately
@@ -264,7 +278,7 @@ def _upsert_file(service, name, content, parent_id):
             },
             media_body=media,
             fields="id"
-        ).execute()
+        ).execute(num_retries=API_RETRIES)
         file_id = result["id"]
         _file_id_cache[f"{parent_id}/{name}"] = file_id
         return file_id
@@ -272,7 +286,7 @@ def _upsert_file(service, name, content, parent_id):
 
 def _delete_file(service, file_id):
     try:
-        service.files().delete(fileId=file_id).execute()
+        service.files().delete(fileId=file_id).execute(num_retries=API_RETRIES)
     except Exception as e:
         print(f"[drive] Warning: could not delete file {file_id}: {e}")
 
@@ -371,6 +385,8 @@ def _build_gemini_index_content() -> str:
 
         if any(excl in parts for excl in EXCLUDE_DIRS):
             continue
+        if any(part.startswith(EXCLUDE_DIR_PREFIXES) for part in parts):
+            continue
         if any(rel_str.startswith(sub) for sub in EXCLUDE_SUBPATHS):
             continue
         if path.suffix.lower() not in INCLUDE_EXTENSIONS:
@@ -440,17 +456,17 @@ def _write_gemini_index(service, root_folder_id):
     )
 
     query = f"name='GEMINI_INDEX.md' and '{root_folder_id}' in parents and trashed=false"
-    results = service.files().list(q=query, fields="files(id)").execute()
+    results = service.files().list(q=query, fields="files(id)").execute(num_retries=API_RETRIES)
     existing = results.get("files", [])
 
     if existing:
-        service.files().update(fileId=existing[0]["id"], media_body=media).execute()
+        service.files().update(fileId=existing[0]["id"], media_body=media).execute(num_retries=API_RETRIES)
     else:
         service.files().create(
             body={"name": "GEMINI_INDEX.md", "parents": [root_folder_id]},
             media_body=media,
             fields="id"
-        ).execute()
+        ).execute(num_retries=API_RETRIES)
 
     print("[drive] GEMINI_INDEX.md updated (Drive root + local nova_sync/ copy).")
 
@@ -485,6 +501,7 @@ def sync_to_drive():
         print(f"[drive] Syncing at {timestamp}: {len(to_upload)} to upload, {len(to_delete)} to delete...")
 
         uploaded = 0
+        failed = 0
         for rel_str in to_upload:
             path = WORKSPACE_DIR / rel_str.replace("/", "\\")
             parts = Path(rel_str).parts
@@ -492,8 +509,16 @@ def sync_to_drive():
                 content = path.read_text(encoding="utf-8")
             except Exception as e:
                 content = f"[could not read: {e}]"
-            parent_id = _ensure_folder_path(service, parts, workspace_id)
-            _upsert_file(service, parts[-1], content, parent_id)
+            try:
+                parent_id = _ensure_folder_path(service, parts, workspace_id)
+                _upsert_file(service, parts[-1], content, parent_id)
+            except Exception as e:
+                # One file failing (even after the client's backoff retries) must NOT
+                # abort the whole resync. Leave it out of the cache so it's retried on
+                # the next run, and keep going.
+                failed += 1
+                print(f"[drive]   SKIP (upload failed, will retry next run): {rel_str} -- {e}")
+                continue
             sync_cache[rel_str] = local_files[rel_str]
             uploaded += 1
             print(f"[drive]   UPLOAD: {rel_str}")
@@ -513,7 +538,10 @@ def sync_to_drive():
                 print(f"[drive] Warning: could not delete {rel_str}: {e}")
 
         _save_sync_cache(sync_cache)
-        print(f"[drive] Done: {uploaded} uploaded, {deleted} deleted.")
+        msg = f"[drive] Done: {uploaded} uploaded, {deleted} deleted"
+        if failed:
+            msg += f", {failed} skipped (transient errors — will retry next run)"
+        print(msg + ".")
         _write_gemini_index(service, ROOT_FOLDER_ID)
         return True
 
@@ -538,11 +566,11 @@ def full_resync():
             results = service.files().list(
                 q=f"name='{WORKSPACE_FOLDER_NAME}' and '{ROOT_FOLDER_ID}' in parents and trashed=false",
                 fields="files(id)"
-            ).execute()
+            ).execute(num_retries=API_RETRIES)
             files = results.get("files", [])
             if files:
                 print("[drive] Deleting old workspace/ folder...")
-                service.files().delete(fileId=files[0]["id"]).execute()
+                service.files().delete(fileId=files[0]["id"]).execute(num_retries=API_RETRIES)
     except Exception as e:
         print(f"[drive] Warning during cleanup: {e}")
     return sync_to_drive()

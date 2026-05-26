@@ -1,13 +1,9 @@
 # Last updated: 2026-05-26 14:46:24
-# @nova: Nova's file-sync layer — watchdog file watcher (auto-indexing) and local backups (Drive sync retired).
+# @nova: Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.
 """
-nova_sync -- Nova Tool Package
-Re-exports all public names for backward compatibility.
-Old style: from nova_logger import log  (still works)
-New style: try:
-    from nova_logs.logger import log
-except ImportError:
-    from nova_memory.logger import log  (preferred)
+nova_sync -- Nova's file-sync package (watcher, drive mirror, backup).
+Re-exports public names from watcher / backup.
+Logging lives in nova_logs: `from nova_logs.logger import log`.
 """
 
 from nova_sync.watcher import *  # noqa: F401,F403

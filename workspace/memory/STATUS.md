@@ -22,9 +22,12 @@ test of her autonomy, not her identity or current focus.
   Gemini, and Nova collaborate. This is her single voice/ears. (The `nova_qt` desktop app,
   `nova_gateway`/Discord, and OpenClaw are all retired.)
 - **Her autonomy is a body faculty:** `nova_body/nova_cortex/executive.py` runs her wake
-  cycle — sense the moment → see her board → decide freely (work, switch, create, abandon,
-  reprioritize, wait, or **rest**) → act. On/off state persists in
-  `memory/autonomy_state.json` (body-owned; the chat UI's toggle is just a remote). Cole is
+  cycle in two phases — **reflect** (sit with the moment in first person, fed by her Touch
+  sense for what's interacting with her) → **decide freely** (engage Cole, work, switch,
+  create, abandon, reprioritize, wait, or **rest**). Then a third **execute** pass: if she
+  holds an open task and isn't mid-reply to Cole or resting, she does the next concrete step
+  of it with her real tools and logs honest progress (or completes it). On/off state persists
+  in `memory/autonomy_state.json` (body-owned; the chat UI's toggle is just a remote). Cole is
   Priority 0 — an interrupt she attends to first, never a leash. Rest is a smart choice, not
   a failure; nothing tells her to invent busywork.
 - **Her task board:** `nova_body/nova_cortex/tasking.py` over `Tasking/tasks.json` — an
@@ -49,10 +52,10 @@ a specific tool.
 | Package | Purpose | Key modules |
 |---|---|---|
 | `nova_cortex` | Executive function: autonomy faculty + task board + status/rules | `executive.py`, `tasking.py`, `nova_status.py`, `context_builder.py`, `rules.py`, `checkin.py`, `prefrontal_cortex.py` |
-| `nova_memory` | Journaling, log reading, goals, session store | `journal.py`, `log_reader.py`, `goals.py`, `state.py`, `session_store.py` |
+| `nova_memory` | _Scaffolded, not yet wired into the running stack (manifest: no inbound refs)._ Intended purpose (per `@nova:` tag): persistent state, journal, goals/status, daily log summaries. Current memory data is written directly to `memory/*.md`. | `journal.py`, `log_reader.py`, `goals.py`, `state.py`, `session_store.py` |
 | `nova_logs` | Unified logging — ALL log writes go here | `logger.py`, `Logger_Index.md` |
-| `nova_motor` | Action execution (mouse/keyboard, tool dispatch, verification) | `hands.py`, `motor_cortex.py`, `tool_executor.py`, `verify.py` |
-| `nova_senses` | Perception: chronoception (clock), environment, vision | `clock.py`, `environment.py`, `eyes.py`, `vision.py`, `proprioception.py` |
+| `nova_motor` | _Scaffolded, not yet wired into the running stack (manifest: no inbound refs)._ Intended purpose (per `@nova:` tag): motor system — execute actions (`hands.py`), plan them (`motor_cortex.py`), verify results. From the GUI-automation phase; current Nova acts via `nova_chat`'s tool router, and `motor_cortex.NovaAutonomy` is superseded by `nova_cortex/executive.py`. | `hands.py`, `motor_cortex.py`, `tool_executor.py`, `verify.py` |
+| `nova_senses` | Perception: chronoception (clock), environment, touch (what's interacting with her), vision | `clock.py`, `environment.py`, `touch.py`, `eyes.py`, `vision.py`, `proprioception.py` |
 | `nova_config` | Body-owned settings loader (inference/sessions/tool limits) | reads `nova_config.json` |
 | `nova_lancedb` | Long-term semantic memory store | `hippocampus.py` |
 
@@ -65,7 +68,7 @@ autonomy_state.json) lives in `workspace/`, not inside the body.
 | Package / file | Purpose |
 |---|---|
 | `nova_chat/` | Her voice — FastAPI/WebSocket group chat server (`server.py`, `clients/`, `nova_bridge.py`, `workspace_context.py`, `nova_lang.py`) |
-| `nova_sync/` | `watcher.py` GitHub auto-commit + `backup.py` local backups (Drive sync retired) |
+| `nova_sync/` | `watcher.py` GitHub auto-commit + `drive.py` Google Drive mirror for Gemini (rides with each push) + `backup.py` local backups |
 | `build_manifest.py` | Derives the body manifest from `@nova:` tokens → `SELF/` |
 | `calls.py` | Call-graph generator feeding the manifest |
 | `injector.py`, `audit_scripts.py`, `download_models.py`, `NovaLauncher.py` | NCL dispatch, code audit, model downloads, in-process launcher |

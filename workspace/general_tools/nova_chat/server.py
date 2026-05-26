@@ -86,7 +86,7 @@ try:
     memory_indexer.start()
 except ImportError:
     memory_indexer = None
-    print("[server] WARNING: nova_memory not found. Persistent memory indexing disabled.")
+    print("[server] WARNING: nova_lancedb not found. Persistent memory indexing disabled.")
 
 app = FastAPI()
 

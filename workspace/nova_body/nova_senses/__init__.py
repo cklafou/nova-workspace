@@ -1,5 +1,5 @@
 # Last updated: 2026-05-26 14:38:57
-# @nova: Nova's perception — file/system sensing (eyes), workspace self-awareness (proprioception), and vision.
+# @nova: Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED (GUI-automation phase, not yet wired): desktop vision (eyes, vision) and UI proprioception.
 """
 nova_senses -- Nova Perception Package
 Import directly:

@@ -1,20 +1,20 @@
 @echo off
-REM @nova: Shutdown — kills whatever is listening on Nova's ports (8080/8765/18790) for a clean restart.
+REM @nova: Shutdown — kills whatever is listening on Nova's ports (8080/8765) for a clean restart.
 REM ====================================================================
 REM  StopNova.cmd — guaranteed clean shutdown of the whole Nova stack.
 REM  Closing the app window does NOT reliably stop the background servers
 REM  (Chrome's --app process handoff can detach them), so use this to be
 REM  sure everything is actually off before a fresh restart.
 REM  Kills whatever is LISTENING on:
-REM     8080  = llama-server      8765 = nova_chat      18790 = nova_gateway
+REM     8080  = llama-server      8765 = nova_chat
 REM ====================================================================
 title Stop Nova
-echo Stopping the Nova stack (ports 8080 / 8765 / 18790)...
+echo Stopping the Nova stack (ports 8080 / 8765)...
 echo.
 
 setlocal enabledelayedexpansion
 set FOUND=0
-for %%P in (8080 8765 18790) do (
+for %%P in (8080 8765) do (
     for /f "tokens=5" %%I in ('netstat -ano ^| findstr ":%%P " ^| findstr LISTENING') do (
         echo   - killing PID %%I  (port %%P)
         taskkill /F /PID %%I >nul 2>nul

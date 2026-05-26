@@ -8,10 +8,7 @@ of broken paths:
 
 1. IMPORT PATHS -- stale flat nova_* imports
      from nova_logger import log          (stale)
-  -> try:
-    from nova_logs.logger import log
-except ImportError:
-    from nova_memory.logger import log   (correct)
+  -> from nova_logs.logger import log     (correct -- nova_memory.logger is legacy/removed)
 
    In .md files, only imports inside code fences (``` blocks) or
    exec: python -c lines are checked -- never prose.
@@ -20,12 +17,12 @@ except ImportError:
      workspace / "tools" / "nova_eyes.py"                (stale, .py only)
   -> workspace / "tools" / "nova_senses" / "eyes.py" (correct)
 
-Ground truth is loaded from FILE_INDEX.md (general_general_general_general_tools/nova_sync/FILE_INDEX.md).
+Ground truth is loaded from FILE_INDEX.md (general_tools/nova_sync/FILE_INDEX.md).
 
 Usage:
-    python general_general_general_general_tools/nova_sync/dir_patch.py            # interactive y/n
-    python general_general_general_general_tools/nova_sync/dir_patch.py --report   # findings only, no changes
-    python general_general_general_general_tools/nova_sync/dir_patch.py --auto     # apply all without prompting
+    python general_tools/nova_sync/dir_patch.py            # interactive y/n
+    python general_tools/nova_sync/dir_patch.py --report   # findings only, no changes
+    python general_tools/nova_sync/dir_patch.py --auto     # apply all without prompting
 """
 
 import re

@@ -26,7 +26,7 @@ _To request a change, Nova should say: "Hey Cole, I think COLE.md baseline needs
 - **Total VRAM:** 40GB (laptop 4090 16GB + eGPU 3090 24GB) — GPU 0 = 4090, GPU 1 = 3090
 
 ### How Cole Reaches Nova
-- **Primary:** Discord (messages go to nova_gateway on port 18790)
+- **Primary:** the `nova_chat` group chat at `http://127.0.0.1:8765` (Cole + Claude + Gemini + Nova). This is her voice/ears. _(The old Discord/`nova_gateway` path is retired.)_
 - **Remote access:** Chrome Remote Desktop
 - **Direct:** Local terminal when physically at machine
 

@@ -1,6 +1,6 @@
 # Last updated: 2026-05-26 14:46:05
 """
-nova_nova_nova_nova_nova_tools/nova_logs/logger.py -- Nova's Unified Log Manager
+nova_body/nova_logs/logger.py -- Nova's Unified Log Manager
 =========================================================
 All logging for the Nova project lives here.
 Each section is clearly marked with what it logs and where files are saved.
@@ -21,8 +21,8 @@ from datetime import datetime
 from pathlib import Path
 
 # ── Paths (all absolute, resolved from this file's location) ──────────────────
-# This file lives at nova_nova_nova_nova_nova_tools/nova_logs/logger.py
-# Workspace root is two levels up: nova_nova_nova_nova_nova_tools/nova_logs -> tools -> workspace
+# This file lives at nova_body/nova_logs/logger.py
+# Workspace root is two levels up: nova_body/nova_logs -> tools -> workspace
 _THIS_FILE      = Path(__file__).resolve()
 _WORKSPACE_ROOT = _THIS_FILE.parents[2]
 
@@ -151,7 +151,7 @@ def log_thought(text: str, source: str = "nova_chat_client"):
 # ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 3 — INDEX WRITER
 # Keeps Logger_Index.md current. Called internally after every write.
-# Files saved to: nova_nova_nova_nova_nova_tools/nova_logs/Logger_Index.md
+# Files saved to: nova_body/nova_logs/Logger_Index.md
 # ═══════════════════════════════════════════════════════════════════════════════
 
 _index_lock        = threading.Lock()
@@ -193,7 +193,7 @@ def _write_index():
 
         lines = [
             "# Logger_Index.md -- Nova Logging Registry",
-            f"_Auto-updated by nova_nova_nova_nova_nova_tools/nova_logs/logger.py_",
+            f"_Auto-updated by nova_body/nova_logs/logger.py_",
             f"_Last updated: {ts}_",
             "",
             "## Log Types and Locations",

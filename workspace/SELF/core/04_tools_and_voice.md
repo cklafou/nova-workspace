@@ -37,7 +37,7 @@ from nova_logs.logger import log, log_thought
 
 | Package | Purpose | Key Modules |
 |---|---|---|
-| `nova_sync/` | GitHub auto-commit watcher, backup | `watcher.py`, `backup.py`, `drive.py` (Drive sync retired) |
+| `nova_sync/` | GitHub auto-commit watcher + Google Drive mirror for Gemini (rides with each push) + local backup | `watcher.py`, `drive.py`, `backup.py` |
 | `nova_chat/` | Group chat server -- her voice/ears (Cole + Claude + Gemini + Nova) | `server.py`, `nova_bridge.py`, `workspace_context.py` |
 | `build_manifest.py` | Derives the body manifest from `@nova:` tokens → `SELF/` | — |
 | `NovaLauncher.py` | Desktop launcher for nova_chat | — |
