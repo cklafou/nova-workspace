@@ -243,6 +243,96 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
     return "\n".join(L)
 
 
+# ── Phase 3: execute (she actually DOES the next step of her active task) ───────
+# The reflect→decide wake decides WHAT matters but only emits board ACTIONS; it
+# never performs the work. This pass is what makes "create a task, then work it"
+# actually finish: when she holds an open task and isn't resting or mid-conversation
+# with Cole, she does the next concrete step with her real file tools and the host
+# logs honest progress (or completion) from what she reports.
+def set_active(tid: Optional[str]) -> None:
+    """Public focus setter (host uses it to release focus after a task closes)."""
+    _set_active(tid)
+
+
+def pick_execution_target() -> Optional[str]:
+    """Which open task to work this wake. Her current focus if it's still open;
+    otherwise the highest-priority, oldest open task. Persists the choice as her
+    active focus so working a task adopts it (continuity). Returns id or None."""
+    st = _load_state()
+    tasks = tasking.all_tasks()
+    active = st.get("active")
+    if active and tasks.get(active, {}).get("status") == "open":
+        return active
+    open_tasks = [t for t in tasks.values() if t.get("status") == "open"]
+    if not open_tasks:
+        return None
+    open_tasks.sort(key=lambda t: (t.get("priority", 3), t.get("created", "")))
+    tid = open_tasks[0].get("id")
+    if tid:
+        _set_active(tid)
+    return tid
+
+
+def build_execution(task: dict, recent: str = "") -> str:
+    """Prompt for the execution pass: do the NEXT concrete step of THIS task now,
+    using real tools, then report honestly. She emits tool calls as fenced json
+    blocks (the host's tool loop runs them and feeds results back); when finished
+    for this wake she ends with a single PROGRESS: or DONE: line the host logs."""
+    tid    = task.get("id", "")
+    title  = task.get("title", "")
+    notes  = task.get("notes", "")
+    prog   = task.get("progress", []) or []
+    recent_prog = "\n".join(f"  - {p.get('note','')}" for p in prog[-4:]) or "  (nothing yet)"
+    L = [
+        f"[WORK — {clock.stamp()}] You committed to this task and now you actually DO it. "
+        "This is not reflection and not board bookkeeping — it is the real work, with your hands.",
+        "",
+        f'ACTIVE TASK [{tid}]: {title}',
+        (f"What it asks: {notes}" if notes else None),
+        "Progress so far:",
+        recent_prog,
+        "",
+        "Do the NEXT single concrete step now using your tools. Call a tool by emitting a "
+        "fenced json block, for example:",
+        '```json',
+        '{"tool": "read_file", "args": {"path": "SELF/core/01_identity.md"}}',
+        '```',
+        "After each tool result returns, continue (e.g. read, then write) until this step is "
+        "genuinely done. Your file tools: read_file, write_file, replace_file_content, "
+        "list_dir, run_command. Paths are workspace-relative on Windows (e.g. "
+        "memory/reports/identity_v2.md) — never absolute or Linux paths.",
+        "",
+        "When you have actually done the work for this wake, end your message with EXACTLY "
+        "one status line:",
+        "  DONE: <one-line result>      — only if the whole task is now complete",
+        "  PROGRESS: <what you just did> — if real work happened but more remains",
+        "Be honest: only claim what you truly did with a tool this pass. If you genuinely "
+        "cannot proceed, say  PROGRESS: blocked — <why>.",
+    ]
+    if recent:
+        L += ["", "(Recent conversation, for context only — do not reply to it here:)", recent]
+    return "\n".join(x for x in L if x is not None)
+
+
+def parse_execution(reply: str) -> tuple:
+    """Read her execution report. Returns ('done', result) | ('progress', note) |
+    (None, ''). Prefers an explicit DONE:/PROGRESS: line; falls back to the last
+    meaningful line (host tool-result markers stripped) so a real step still logs."""
+    if not reply:
+        return (None, "")
+    m = re.search(r"^\s*DONE:\s*(.+)$", reply, re.IGNORECASE | re.MULTILINE)
+    if m:
+        return ("done", m.group(1).strip())
+    m = re.search(r"^\s*PROGRESS:\s*(.+)$", reply, re.IGNORECASE | re.MULTILINE)
+    if m:
+        return ("progress", m.group(1).strip())
+    cleaned = re.sub(r"\[`[^`]+`\s+resulted in \d+ bytes\.\]", "", reply)
+    lines = [ln.strip() for ln in cleaned.splitlines() if ln.strip()]
+    if lines:
+        return ("progress", lines[-1][:200])
+    return (None, "")
+
+
 def _parse_actions(reply: str) -> dict:
     """Extract the first balanced ACTIONS JSON object from her reply."""
     if not reply or "ACTIONS:" not in reply:
