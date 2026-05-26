@@ -1,5 +1,5 @@
 # Nova Priority Queue
-_Last updated: 2026-05-26 17:43:04_
+_Last updated: 2026-05-27 08:42:07_
 _Managed by the autonomy server. Updated on: task created/advanced/completed, or Cole speaks._
 
 ---

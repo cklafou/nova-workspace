@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-05-26 17:43:04
+# Last updated: 2026-05-27 08:42:07
 """
 retire_dead_server_fns.py — remove the now-dead old task/autonomy functions from
 general_tools/nova_chat/server.py (superseded by nova_cortex.executive / .tasking and

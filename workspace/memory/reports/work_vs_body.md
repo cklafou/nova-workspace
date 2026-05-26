@@ -1,5 +1,5 @@
 # Work vs Body Structure Comparison
-_Last updated: 2026-05-26 16:04:47_
+_Last updated: 2026-05-27 08:42:07_
 _Generated: 2026-05-26 by Nova_
 _Comparing SELF/core/02_how_i_work.md (operating rules) against SELF/core/03_body_manifest.md (actual code structure)_
 

@@ -1,5 +1,5 @@
 # AGENTS.md - Nova's Workspace Rules
-_Last updated: 2026-05-26 17:43:04_
+_Last updated: 2026-05-27 08:42:07_
 _This file covers how Nova operates in her workspace. BOOTSTRAP.md covers session startup sequence._
 _When these files conflict, BOOTSTRAP.md wins._
 
