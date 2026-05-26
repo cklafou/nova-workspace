@@ -1998,6 +1998,115 @@ async def llama_stop():
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
 
+# ── Restart controls (troubleshooting speed) ───────────────────────────────────
+def _kill_port(port: int):
+    import subprocess
+    ps = ("Get-NetTCPConnection -LocalPort " + str(port) +
+          " -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id "
+          "$_.OwningProcess -Force -ErrorAction SilentlyContinue }")
+    try:
+        subprocess.run(["powershell", "-Command", ps], capture_output=True, text=True, timeout=10)
+    except Exception:
+        pass
+
+
+def _spawn_detached_cmd(lines: list):
+    """Write a temp .cmd and launch it detached (it survives THIS process dying), so a
+    self-restart can kill+relaunch the very server handling the request."""
+    import tempfile, os as _os
+    body = "@echo off\r\n" + "\r\n".join(lines) + "\r\n"
+    fd, path = tempfile.mkstemp(suffix=".cmd", prefix="nova_restart_")
+    with _os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(body)
+    _os.startfile(path)
+
+
+@app.post("/api/restart/server")
+async def restart_server():
+    """Restart the model server (llama.cpp on :8080): kill it, relaunch start_llama.cmd."""
+    try:
+        _kill_port(8080)
+        cmd = Path(WORKSPACE_ROOT) / "start_llama.cmd"
+        if cmd.exists():
+            import os as _os
+            _os.startfile(str(cmd))
+        else:
+            return JSONResponse({"ok": False, "error": "start_llama.cmd not found"}, status_code=500)
+        return JSONResponse({"ok": True, "message": "Model server (llama.cpp) restarting on :8080…"})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/api/restart/nova")
+async def restart_nova():
+    """Reload Nova's MIND in-place — reset her autonomy cognition (carried reflection,
+    stall, focus, directive) and refresh her SELF/workspace context, WITHOUT dropping the
+    chat server. Wakes her fresh for troubleshooting her behavior."""
+    try:
+        from nova_cortex import executive
+        st = executive._load_state()
+        st["last_reflection"] = ""
+        st["stall"] = 0
+        st["active"] = None
+        st["rest_note"] = ""
+        st["directive_seen"] = 0
+        executive._save_state(st)
+        try:
+            executive.note_activity()       # re-baseline fingerprint + schedule a soon wake
+        except Exception:
+            pass
+        try:
+            workspace.reload()              # reload her SELF/identity/memory context
+        except Exception:
+            pass
+        try:
+            from nova_senses import touch as _touch
+            _touch.clear()
+        except Exception:
+            pass
+        await emit_event("reflect", "Nova's mind reloaded — fresh wake (cognition reset, context refreshed)")
+        return JSONResponse({"ok": True, "message": "Nova reloaded: cognition reset + context refreshed."})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/api/restart/novachat")
+async def restart_novachat():
+    """Restart the Nova Chat web server (:8765). Detached relauncher waits, frees the
+    port (which drops this process), then relaunches the chat host."""
+    try:
+        ws = str(WORKSPACE_ROOT)
+        ps_kill = ('powershell -Command "Get-NetTCPConnection -LocalPort 8765 '
+                   '-ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id '
+                   '$_.OwningProcess -Force -ErrorAction SilentlyContinue }"')
+        _spawn_detached_cmd([
+            "timeout /t 2 /nobreak >nul",
+            ps_kill,
+            'cd /d "' + ws + '"',
+            "python general_tools\\nova_chat\\launch.py",
+        ])
+        return JSONResponse({"ok": True, "message": "Nova Chat restarting on :8765 (reconnects in a few seconds)…"})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/api/restart/full")
+async def restart_full():
+    """Full stack restart: StopNova (frees all ports) then NovaStart (llama + chat +
+    watcher + window). Detached so it survives this process being killed."""
+    try:
+        ws = str(WORKSPACE_ROOT)
+        _spawn_detached_cmd([
+            "timeout /t 2 /nobreak >nul",
+            'cd /d "' + ws + '"',
+            "call StopNova.cmd",
+            "call NovaStart.cmd",
+        ])
+        return JSONResponse({"ok": True, "message": "Full stack restarting…"})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
 @app.post("/api/run-tool")
 async def run_tool(body: dict = Body(...)):
     """Run a workspace tool command and return its output."""
