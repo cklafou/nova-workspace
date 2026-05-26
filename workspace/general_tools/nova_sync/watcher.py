@@ -26,7 +26,7 @@ EXCLUDE_DIRS = {
     ".git", "__pycache__", "node_modules", "screenshots",
 }
 EXCLUDE_SUBPATHS = set([
-    "logs/screenshots", "nova_body/backups", "general_tools/backups",
+    "logs", "nova_body/backups", "general_tools/backups",
     "agents/main/sessions",
 ])
 
@@ -712,6 +712,14 @@ class GitAutoCommit(FileSystemEventHandler):
         # would stamp timestamps into generated files). Generated output is still
         # committed on the next real source change.
         if "SELF" in path.parts:
+            return
+        # logs/ is pure runtime output: event feed (logs/events/*.jsonl), session
+        # transcripts, and the manifest/audit drift lines that run_manifest_pass and
+        # run_audit_pass APPEND to logs/events. Watching it creates a self-sustaining
+        # loop — a regen writes a "manifest" line, the watcher sees the .jsonl change,
+        # debounces, regenerates, writes another line, forever (~every debounce). That
+        # loop floods Nova's Live Logs feed and spams git. Logs are data, never source.
+        if "logs" in path.parts:
             return
         if any(excl in path.parts for excl in EXCLUDE_DIRS):
             return

@@ -1196,6 +1196,128 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     </div>
   </div>
 
+  <!-- ── TASK RAIL — slim always-on board (created/progressed/completed) ──────── -->
+  <style>
+  #task-rail{flex:0 0 214px;display:flex;flex-direction:column;background:var(--bg-surface);
+    border-left:1px solid var(--border);min-width:0;overflow:hidden;transition:flex-basis var(--t);}
+  #task-rail.collapsed{flex-basis:32px;}
+  #task-rail .tr-head{display:flex;align-items:center;gap:6px;padding:8px 10px;
+    border-bottom:1px solid var(--border);flex:0 0 auto;}
+  #task-rail .tr-title{font-size:10.5px;font-weight:600;color:var(--text-dim);
+    letter-spacing:.5px;flex:1;text-transform:uppercase;white-space:nowrap;}
+  #task-rail .tr-count{font-size:10px;color:var(--text-mute);
+    background:var(--surface-2);border-radius:9px;padding:1px 7px;}
+  #task-rail .tr-collapse{background:none;border:none;color:var(--text-mute);cursor:pointer;
+    font-size:13px;padding:0 2px;line-height:1;}
+  #task-rail .tr-collapse:hover{color:var(--text);}
+  #task-rail.collapsed .tr-body,#task-rail.collapsed .tr-title,#task-rail.collapsed .tr-count{display:none;}
+  #task-rail .tr-body{flex:1;overflow-y:auto;padding:6px 7px 12px;}
+  .tr-group-label{font-size:8.5px;color:var(--text-mute);text-transform:uppercase;
+    letter-spacing:.1em;margin:9px 2px 5px;font-weight:600;}
+  .tr-body>.tr-group-label:first-child{margin-top:2px;}
+  .tr-task{background:var(--surface-2);border:1px solid var(--border);
+    border-left:3px solid var(--text-mute);border-radius:var(--radius-sm);
+    padding:6px 8px;margin-bottom:5px;}
+  .tr-task.active{border-left-color:var(--accent);box-shadow:0 0 0 1px rgba(167,139,250,.16);}
+  .tr-task.p1{border-left-color:#ff6b6b;}
+  .tr-task.p2{border-left-color:#ffb454;}
+  .tr-task .tr-t{font-size:11px;color:var(--text);line-height:1.32;
+    display:flex;gap:5px;align-items:flex-start;}
+  .tr-task .tr-dot{flex:0 0 auto;width:6px;height:6px;border-radius:50%;
+    margin-top:4px;background:var(--text-mute);}
+  .tr-task.p1 .tr-dot{background:#ff6b6b;}
+  .tr-task.p2 .tr-dot{background:#ffb454;}
+  .tr-task.active .tr-dot{background:var(--accent);box-shadow:0 0 5px rgba(167,139,250,.7);}
+  .tr-task .tr-sub{font-size:9.5px;color:var(--text-dim);margin-top:4px;line-height:1.35;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .tr-task .tr-meta{font-size:8.5px;color:var(--text-mute);margin-top:3px;}
+  .tr-task.tr-done{border-left-color:#3a8d63;opacity:.8;}
+  .tr-task.tr-done.tr-abandoned{border-left-color:#7a5a5a;}
+  .tr-task.tr-done .tr-t{color:var(--text-dim);}
+  .tr-done-head{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;
+    margin:11px 2px 5px;}
+  .tr-done-head .tr-group-label{margin:0;flex:1;}
+  .tr-done-head .tr-count{font-size:9px;color:var(--text-mute);}
+  .tr-done-head .tr-arrow{font-size:9px;color:var(--text-mute);}
+  .tr-empty{font-size:10px;color:var(--text-mute);font-style:italic;padding:14px 6px;
+    text-align:center;line-height:1.5;}
+  </style>
+  <aside id="task-rail">
+    <div class="tr-head">
+      <span class="tr-title">Tasks</span>
+      <span class="tr-count" id="tr-count">0</span>
+      <button class="tr-collapse" id="tr-collapse" title="Collapse task board" onclick="toggleTaskRail()">⟩</button>
+    </div>
+    <div class="tr-body" id="tr-body">
+      <div class="tr-empty">No tasks yet.<br>Nova's tasks appear here<br>as she creates them.</div>
+    </div>
+  </aside>
+  <script>
+  (function(){
+    const PRI={1:'p1',2:'p2'};
+    const ACTIVE_STATUS=new Set(['open','active','in_progress']);
+    let doneOpen=false;
+    function esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+    function row(t,activeId){
+      const cls=['tr-task'];
+      if(t.id===activeId) cls.push('active');
+      else if(PRI[t.priority]) cls.push(PRI[t.priority]);
+      const last=(t.progress&&t.progress.length)?t.progress[t.progress.length-1].note:'';
+      const sub=esc(last||t.notes||'');
+      const n=(t.progress&&t.progress.length)||0;
+      const meta=n?('<div class="tr-meta">'+n+' step'+(n===1?'':'s')+'</div>'):'';
+      return '<div class="'+cls.join(' ')+'">'+
+        '<div class="tr-t"><span class="tr-dot"></span><span>'+esc(t.title||t.id)+'</span></div>'+
+        (sub?'<div class="tr-sub">'+sub+'</div>':'')+meta+'</div>';
+    }
+    function doneRow(t){
+      const ab=t.status==='abandoned';
+      return '<div class="tr-task tr-done'+(ab?' tr-abandoned':'')+'">'+
+        '<div class="tr-t"><span class="tr-dot"></span><span>'+(ab?'✕':'✓')+' '+esc(t.title||t.id)+'</span></div>'+
+        (t.result?'<div class="tr-sub">'+esc(t.result)+'</div>':'')+'</div>';
+    }
+    window.renderBoard=function(tasks,activeId){
+      const body=document.getElementById('tr-body'); if(!body) return;
+      tasks=tasks||[];
+      const byPri=(a,b)=>((a.priority||3)-(b.priority||3));
+      const active=tasks.filter(t=>ACTIVE_STATUS.has(t.status)).sort(byPri);
+      const waiting=tasks.filter(t=>t.status==='waiting').sort(byPri);
+      const done=tasks.filter(t=>t.status==='done'||t.status==='abandoned')
+                      .sort((a,b)=>String(b.updated||'').localeCompare(String(a.updated||'')));
+      const cEl=document.getElementById('tr-count');
+      if(cEl) cEl.textContent=active.length+waiting.length;
+      if(!tasks.length){body.innerHTML='<div class="tr-empty">No tasks yet.<br>Nova’s tasks appear here<br>as she creates them.</div>';return;}
+      let h='';
+      if(active.length) h+='<div class="tr-group-label">Active</div>'+active.map(t=>row(t,activeId)).join('');
+      if(waiting.length) h+='<div class="tr-group-label">Waiting</div>'+waiting.map(t=>row(t,activeId)).join('');
+      if(done.length){
+        h+='<div class="tr-done-head" onclick="toggleDone()">'+
+           '<span class="tr-group-label">Completed</span>'+
+           '<span class="tr-count">'+done.length+'</span>'+
+           '<span class="tr-arrow">'+(doneOpen?'▾':'▸')+'</span></div>';
+        if(doneOpen) h+=done.map(doneRow).join('');
+      }
+      body.innerHTML=h;
+    };
+    window.toggleDone=function(){doneOpen=!doneOpen;
+      if(window._lastBoard) window.renderBoard(window._lastBoard.tasks,window._lastBoard.active);};
+    window.toggleTaskRail=function(){
+      const r=document.getElementById('task-rail'),b=document.getElementById('tr-collapse');
+      r.classList.toggle('collapsed');
+      b.textContent=r.classList.contains('collapsed')?'⟨':'⟩';
+    };
+    window.refreshBoard=async function(){
+      try{const r=await fetch('/api/queue'); if(!r.ok) return;
+        const d=await r.json();
+        window._lastBoard={tasks:d.tasks||[],active:d.active||null};
+        window.renderBoard(window._lastBoard.tasks,window._lastBoard.active);
+      }catch(_){}
+    };
+    window.refreshBoard();
+    setInterval(window.refreshBoard,5000);
+  })();
+  </script>
+
   <!-- Panel resize handle -->
   <div class="resize-handle" id="panel-handle"></div>
 
@@ -1582,7 +1704,7 @@ function handle(d) {
     case 'terminal_output': appendTerminalLine(d.line||''); break;
     case 'model_changed':   onModelChanged(d); break;
     case 'nova_progress':   updateProgressFromNova(d); break;
-    case 'nova_event':      novaLogPush(d); break;
+    case 'nova_event':      novaLogPush(d); if(window.refreshBoard&&['autonomy','task','wake','cole_message'].includes(d.event)) window.refreshBoard(); break;
     case 'pong': break;
   }
 }

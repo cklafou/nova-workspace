@@ -112,6 +112,12 @@ def should_wake(cole_pending: bool = False) -> tuple:
         return (False, "cole typing")
     if cole_pending:
         return (True, "cole")
+    # A standing directive that hasn't been turned into a task yet is worth waking
+    # for — otherwise a chat instruction waits for the next scheduled nap before she
+    # acts. consume_cole_directive() clears it the moment she creates the task, so
+    # this can't spin: it wakes her at most a few times until the task lands.
+    if environment.cole_directive():
+        return (True, "directive")
     fp_now = json.dumps(environment.fingerprint(cfg["watch_paths"]), default=list)
     if fp_now != st.get("last_fp", ""):
         return (True, "change")
@@ -249,6 +255,13 @@ def apply_decision(reply: str, cole_pending: bool = False) -> dict:
     st = _load_state()
     active_id = st.get("active")
 
+    # Self-heal a ghost focus: if active points at a task that no longer exists
+    # (e.g. the board was wiped while a pointer lingered in state), clear it so
+    # build_situation doesn't keep framing around a vanished task.
+    if active_id and active_id not in tasking.all_tasks():
+        active_id = None
+        st["active"] = None
+
     # Resolve active focus from her decision.
     if control.get("switch"):
         active_id = control["switch"]; _set_active(active_id)
@@ -295,9 +308,25 @@ def apply_decision(reply: str, cole_pending: bool = False) -> dict:
     st["rest_note"] = control.get("rest", "") if rested else ""
     _save_state(st)
 
-    # Cole's standing directive: mark attended once she acted or genuinely rested.
-    if environment.cole_directive() and (log or rested):
-        environment.consume_cole_directive()
+    # Cole's standing directive: only release it once she has actually turned it
+    # into a tracked board task THIS tick. The old rule consumed it whenever she
+    # did anything at all — even rested — so a chat instruction got silently
+    # discarded without ever reaching the board (the exact "chat task never lands"
+    # bug). Now: a `create` consumes it (it became a task — success). Otherwise it
+    # KEEPS standing so it re-surfaces on the next wake and she gets another chance.
+    # A safety valve releases it after a few wakes so a non-actionable comment
+    # ("nice work") doesn't pin her attention forever.
+    if environment.cole_directive():
+        created_this_tick = bool(actions.get("create"))
+        seen = int(st.get("directive_seen", 0)) + 1
+        if created_this_tick or seen >= 3:
+            environment.consume_cole_directive()
+            seen = 0
+        st["directive_seen"] = seen
+        _save_state(st)
+    elif st.get("directive_seen"):
+        st["directive_seen"] = 0
+        _save_state(st)
 
     spoken = ""
     if cole_pending or "FOR COLE:" in (reply or ""):

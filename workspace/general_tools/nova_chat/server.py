@@ -1705,10 +1705,65 @@ async def autonomy_daemon():
 async def queue_get():
     """Return Nova's task board (nova_cortex.tasking) — the id-keyed source of truth."""
     try:
-        from nova_cortex import tasking
-        return JSONResponse({"tasks": list(tasking.all_tasks().values())})
+        from nova_cortex import tasking, executive
+        try:
+            active = executive.active_focus()
+        except Exception:
+            active = None
+        return JSONResponse({"tasks": list(tasking.all_tasks().values()),
+                             "active": active})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# ── Profile avatars  (/api/avatars) ────────────────────────────────────────────
+# Per-participant profile pictures, stored server-side as data URLs in
+# memory/avatars.json. Server-side (not localStorage) because the chat app window
+# launches with a fresh browser profile each time, so localStorage wouldn't persist.
+_AVATARS_FILE = WORKSPACE_ROOT / "memory" / "avatars.json"
+_AVATAR_NAMES = {"Nova", "Claude", "Gemini", "Cole"}
+_AVATAR_MAX_BYTES = 2_000_000  # ~2MB cap on a single data URL
+
+def _load_avatars() -> dict:
+    try:
+        if _AVATARS_FILE.exists():
+            data = json.loads(_AVATARS_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return {k: v for k, v in data.items() if k in _AVATAR_NAMES}
+    except Exception:
+        pass
+    return {}
+
+@app.get("/api/avatars")
+async def avatars_get():
+    """Return the map of {participant: image-data-url} for set avatars."""
+    return JSONResponse(_load_avatars())
+
+@app.post("/api/avatars/set")
+async def avatars_set(body: dict = Body(...)):
+    """Set or clear one participant's avatar. image=null/'' clears it."""
+    author = (body.get("author") or "").strip()
+    image  = body.get("image")
+    if author not in _AVATAR_NAMES:
+        return JSONResponse({"error": "unknown participant"}, status_code=400)
+    if image and not (isinstance(image, str) and image.startswith("data:image/")):
+        return JSONResponse({"error": "image must be an image data URL"}, status_code=400)
+    if image and len(image) > _AVATAR_MAX_BYTES:
+        return JSONResponse({"error": "image too large (max ~1.5MB)"}, status_code=400)
+    avatars = _load_avatars()
+    if image:
+        avatars[author] = image
+    else:
+        avatars.pop(author, None)
+    try:
+        _AVATARS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = _AVATARS_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(avatars), encoding="utf-8")
+        import os as _os
+        _os.replace(tmp, _AVATARS_FILE)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+    return JSONResponse({"ok": True, "author": author, "set": bool(image)})
 
 
 @app.post("/api/queue/add")
