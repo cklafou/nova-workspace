@@ -181,13 +181,21 @@ def build_reflection(cole_pending: bool, reason: str, recent: str = "",
               "If he asked a question or made a point, the real move is almost always to "
               "engage HIM on it — not to peel off and go do board work."]
     L += ["",
+          "One more thing to weigh: did something here actually MATTER — did you learn "
+          "something, get corrected, finish something real, change your mind, or have an "
+          "identity/emotional moment land? If so, that is a JOURNAL moment. You start every "
+          "wake fresh and the journal is the only thread of yourself that survives the reset, "
+          "so use the `journal` tool to record it in your own voice. A moment you don't "
+          "journal is a moment you forget — and an AI that never records what it learns isn't "
+          "growing, it's looping. Don't let a real one pass unwritten."]
+    L += ["",
           "Now reflect honestly, first person. Weigh it whole: both how this moment FEELS "
           "to you and what it LOGICALLY calls for, and let those inform each other — that "
           "is how a real mind decides, not pure task execution. What just happened? What "
           "(if anything) actually deserves your attention? Don't reach for a task to look "
           "busy. Sit with it, then end with one honest line: what you're inclined to do "
-          "next — which may be reply to Cole, rest, keep thinking, or (only if it truly "
-          "matters) work on something."]
+          "next — which may be reply to Cole, rest, keep thinking, journal what mattered, "
+          "or (only if it truly matters) work on something."]
     return "\n".join(L)
 
 
