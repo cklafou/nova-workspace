@@ -82,6 +82,24 @@ inline `<script>` blocks in index.html pass `node --check`.
   git-diff endpoint), a Notes/Scratchpad (could persist in the layout doc), workspace search.
 - Readability/contrast: best done with eyes on the live app, not blind.
 
+## §4 decomposition-loop — board evidence BEFORE the clean validation (2026-05-27 ~22:35)
+Snapshot of `/api/queue` (active=t30) captured before Cole authorized a Clear All + re-issue:
+```
+t1  done      (none)   Check system health after 2-day autonomy test
+t2  done      (none)   t5 done (none)   t8 done (none)
+t28 abandoned (none)   Architecture & Code Review (the real umbrella — abandoned)
+t29 done →t1   t30 open →t1   t31 open →t1   t32 open →t1   (Arch Review subtasks)
+t33 abandoned (none)
+t34 open →t1   t35 open →t1   t36 open →t1   t37 open →t1   (DUPLICATE batch)
+t38 open      (none)   newer umbrella
+t39 open →t38  t40 done →t38  t41 open →t38  t42 open →t38   (correctly parented!)
+```
+Diagnosis: the mis-parent bug is present in history — t29–t37 hang off **t1** (a *done, unrelated*
+task), with a duplicate batch (t29–32 ≈ t34–37). The active focus t30 is one of those orphans,
+which is why Nova read as confused ("a task that's active was supposedly done"). BUT the newest
+umbrella t38 has children correctly parented to t38 — a positive sign the latest fix works on
+fresh decompositions. Board too polluted to be conclusive → ran the clean validation below.
+
 ## §6D Autonomy hardening — findings & actions (this session)
 Investigated read-only; executed only the one airtight-safe change. All changes here need a
 restart to take effect, and the torn mount blocked sandbox runtime-validation (imports lie) —

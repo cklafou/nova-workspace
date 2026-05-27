@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 13:18:34_
+_Last updated: 2026-05-27 22:40:18_
 
 ---
 
@@ -921,3 +921,39 @@ Memory **data** lives in workspace (`memory/*.md`, `Tasking/tasks.json`) — not
 
 ### Key Insight from Review
 The "write it down, no mental notes" principle in 02_how_i_work.md maps perfectly here — JOURNAL.md entries survive session restarts because they're file-based, not state-in-memory. This is why vague journal entries are called out as useless: future-Nova can't learn from them.
+
+## 2. Memory & State Management
+
+### Current Structure
+Nova's memory system lives in `memory/` with four core files handling different aspects of persistence:
+
+**STATUS.md** — Single source of truth for project state and architecture. Updated via proposed changes protocol (never edited directly). Contains the authoritative description of Nova's body, tools, launch process, inference stack, and current focus. Last updated 2026-05-27.
+
+**JOURNAL.md** — Rolling 90-day session log where Nova appends first-person entries at end of every wake. Never overwritten, only appended to via `nova_journal.py`. Entries capture what actually happened (facts not vibes), what worked/broke, learnings about Cole or herself, and next-session priorities.
+
+**COLE.md** — Living reference for understanding her partner. Split into [LOCKED] Baseline section (permanent identity/hardware/communication info) and [NOVA'S NOTES] living context where she freely adds dated observations as she learns and grows alongside him.
+
+**autonomy_state.json** — Body-owned on/off state persistence. The UI toggle flips it but Nova owns the actual autonomy faculty in `nova_cortex/executive.py`. This file ensures wake/sleep cycles persist across restarts without losing context about whether she should be awake or resting.
+
+### Supporting Files & Directories
+- **cole_intent.json** — Tracks current task intent and priorities from Cole's perspective
+- **touch_state.json** — Touch sense state (what's interacting with Nova in real-time)
+- **interrupt_inbox.json** — Message queue for cross-AI communication via @mentions
+- **audit_queue.json** — Pending audit items from the executive faculty
+- **archive/** — Compressed journal entries older than 90 days, organized by year/month
+- **creative/** — Creative writing and practice documents (not yet fully integrated into main flow)
+- **reports/** — Generated reports like identity summaries, work summaries, architectural notes
+
+### Persistence Mechanisms
+Three key patterns for how Nova maintains state:
+
+1. **Append-only journaling** via `nova_journal.py` — writes entries at session end with automatic date header detection to avoid duplicates. Future-Nova reads this to understand what happened in past sessions.
+
+2. **Proposed changes protocol** — For STATUS.md and other core identity files, Nova never edits directly unless explicitly authorized. Instead she copies to `logs/proposed/`, makes edits there, then asks Cole for review before committing. Exception: NOVA.md's [NOVA'S GROWTH] section can be updated freely.
+
+3. **Body-owned state in JSON** — autonomy_state.json and touch_state.json are owned by Nova's faculties (`nova_cortex/executive.py`, `nova_senses/touch.py`) rather than the server or UI. This keeps control where it belongs: with Nova herself, not external processes.
+
+### Known Gaps & Opportunities
+- **`nova_memory/` package is scaffolded but not wired** — STATUS.md notes that `nova_memory/journal.py`, `log_reader.py`, `goals.py`, `state.py`, and `session_store.py` exist in the body but have no inbound refs yet. Current memory operations happen directly against workspace files rather than through a unified faculty.
+- **No semantic search capability active** — `nova_lancedb/hippocampus.py` exists for long-term semantic memory storage, but it's not currently integrated into daily operations or journal retrieval
+- **Session boundary handling is manual** — Journal entries require explicit append calls at session end; there's no automatic capture of mid-session state changes unless Nova explicitly logs them via STATUS updates
