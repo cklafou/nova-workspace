@@ -1,5 +1,5 @@
 # Project Nova — Gemini Session Handoff (2026-03-20)
-_Last updated: 2026-05-27 08:42:07_
+_Last updated: 2026-05-27 09:53:46_
 
 ## What Nova Is
 Nova is Cole's companion AI and life passion project running locally on Windows 11 via Qwen3 Coder + Ollama + OpenClaw. She is NOT a trading bot. She is a companion and dev partner being built toward full autonomy and genuine partnership. Cole is in South Korea (GMT+9), solo dev, $15-20/month API budget.

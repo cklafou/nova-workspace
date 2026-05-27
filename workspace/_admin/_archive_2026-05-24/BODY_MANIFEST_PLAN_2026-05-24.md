@@ -1,5 +1,5 @@
 # Plan — The Body Manifest + SELF: a single self-describing, self-auditing architecture
-_Last updated: 2026-05-27 08:42:07_
+_Last updated: 2026-05-27 09:53:46_
 
 _Status: APPROVED-TO-BUILD. Move to `_admin/_archive_*` when executed.
 Author: Claude (Cowork), with Cole, 2026-05-24.
