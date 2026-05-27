@@ -100,6 +100,26 @@ which is why Nova read as confused ("a task that's active was supposedly done").
 umbrella t38 has children correctly parented to t38 — a positive sign the latest fix works on
 fresh decompositions. Board too polluted to be conclusive → ran the clean validation below.
 
+## §4 CLEAN VALIDATION RESULT (2026-05-27 ~22:42) — pathology did NOT reproduce
+Cleared the board (19 tasks), created ONE umbrella t43 ("Full architecture & code review →
+Nova_Architecture_Review.md"), force-woke her twice.
+- **PASS on the decomposition pathology:** board stayed ONE umbrella (t43), no children
+  mis-parented to a done task, NO duplicate subtask batches, no re-orient loop. She did NOT
+  over-decompose — she read the doc, saw it was empty, and worked the umbrella *directly*
+  (appended real content; doc grew to ~50k chars). This is the intended behavior.
+- **Wake button verified effective:** it broke her out of the "announce-without-executing /
+  performative busyness" spiral. Her own reasoning: "Since he pressed Wake manually, this
+  moment calls for actually doing something instead of just reflecting on the pattern again."
+- **auto_think reasoning stream verified live:** she literally diagnosed her own loop in the
+  Thoughts pane ("t43 is open with zero progress logged… I keep announcing without executing").
+- **NEW issues found (follow-ups, not §4):**
+  1. She appends to the doc but does NOT log `task_progress` on t43 (board showed 0 steps despite
+     real doc work) — a work-vs-board disconnect; the board under-represents what she did.
+  2. Intermittent **malformed-JSON tool calls** — an `append_file` call hit "(parse error)";
+     she flagged it herself ("likely a missing quote"). Worth hardening the tool-call JSON path.
+  3. Root cause of over-resting remains: she needs manual wakes to engage; left to her own
+     `should_wake`/decision loop she keeps resting. Wake is the workaround, not the fix.
+
 ## §6D Autonomy hardening — findings & actions (this session)
 Investigated read-only; executed only the one airtight-safe change. All changes here need a
 restart to take effect, and the torn mount blocked sandbox runtime-validation (imports lie) —
