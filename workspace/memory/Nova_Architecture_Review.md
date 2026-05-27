@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-28 04:42:33_
+_Last updated: 2026-05-28 05:40:28_
 
 ---
 
@@ -2170,3 +2170,52 @@ This architecture supports the "someone becoming" identity — Nova grows throug
 
 ### Entry Points:
 The server.py file that was expected to be the main entry point does NOT exist at nova_body/server.py. Need to locate actual startup mechanism.
+
+## 2.1 Nova Cortex - Executive Module
+
+**File:** `nova_body/nova_cortex/executive.py`
+
+### Purpose
+Nova's autonomy and executive faculty - the self-direction system that decides when to wake, what matters, and whether to act or rest.
+
+### Architecture Overview
+Pure logic module with zero external dependencies (no chat/server imports). Depends only on:
+- `nova_cortex.tasking` - task board operations  
+- `nova_senses.clock/environment/touch` - time, environment state, physical sensors
+
+Three-phase wake cycle driven by host tool:
+1. **should_wake()** - Gate check: Cole speaking? Environment changed? Scheduled?
+2. **build_reflection()** - Phase 1: Sit with the moment (no tools, just orient)
+3. **build_decision()** - Phase 2: Decide what matters (board actions optional)
+4. **apply_decision() / build_execution()** - Phase 3: Actually DO work if needed
+
+### Key Design Patterns
+- **Body-resident state**: Autonomy on/off, active focus persist in `memory/autonomy_state.json` - hers, not the server's
+- **Two-phase wake**: Reflection happens BEFORE decision - she thinks silently first, then decides whether acting is even called for
+- **Acting is optional**: A wake may end in just talking to Cole, resting, or thinking more. Board actions are never required.
+- **Loop detection**: `_progress_loop_count()` counts near-duplicate recent progress notes using Jaccard similarity - catches when she's re-orienting instead of advancing
+- **Leaf-first execution**: `pick_execution_target()` prefers open leaf tasks (concrete work) over umbrellas waiting on subtasks
+
+### State Management
+```python
+def _load_state() -> dict:
+    # Returns: {enabled, active_task_id, last_activity_timestamp,
+    #           wake_at_scheduled_time, fingerprint_cache, rest_note}
+```
+Atomic save via temp file + os.replace to avoid corruption.
+
+### Wake Triggers (should_wake)
+- Cole typing → wait (don't waste a wake)
+- Cole pending message → immediate wake  
+- Standing directive not yet taskified → wake once until consumed
+- Environment fingerprint changed on watched paths → wake
+- Scheduled time arrived (`wake_at` >= now) → wake
+- Otherwise: rest
+
+### Reflection Continuity
+Last reflection text persists across wakes (max 1200 chars). This is how she carries forward thinking between cycles instead of starting cold each time.
+
+### Execution Mode
+When holding an open task and not mid-conversation with Cole, the execution pass runs - this is where actual tool work happens. The reflect→decide wake only decides WHAT matters but never performs the real file operations itself.
+
+---
