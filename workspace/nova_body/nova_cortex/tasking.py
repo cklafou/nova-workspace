@@ -75,7 +75,7 @@ def _update(tid: str, **fields) -> bool:
     return True
 
 
-def create(title: str, notes: str = "", priority: int = 3) -> str:
+def create(title: str, notes: str = "", priority: int = 3, parent: str = None) -> str:
     store = _load()
     store["seq"] += 1
     tid = f"t{store['seq']}"
@@ -83,9 +83,11 @@ def create(title: str, notes: str = "", priority: int = 3) -> str:
         pr = int(priority)
     except Exception:
         pr = 3
+    # Only keep a parent pointer if it refers to a real existing task (no orphans).
+    par = parent if (parent and parent in store["tasks"]) else None
     store["tasks"][tid] = {
         "id": tid, "title": (title or "").strip() or f"(untitled {tid})",
-        "notes": notes or "", "priority": pr, "status": OPEN,
+        "notes": notes or "", "priority": pr, "status": OPEN, "parent": par,
         "progress": [], "created": _now(), "updated": _now(),
     }
     _save(store)
@@ -146,8 +148,9 @@ def apply_actions(actions: dict):
     executive faculty to handle (active focus + rest live in autonomy_state, not here)."""
     log, control = [], {}
     for c in (actions.get("create") or []):
-        tid = create(c.get("title", ""), c.get("notes", ""), c.get("priority", 3))
-        log.append(f"created {tid}: {c.get('title','')}")
+        tid = create(c.get("title", ""), c.get("notes", ""), c.get("priority", 3), c.get("parent"))
+        _par = c.get("parent")
+        log.append(f"created {tid}" + (f" under {_par}" if _par else "") + f": {c.get('title','')}")
     for p in (actions.get("progress") or []):
         if progress(p.get("id", ""), p.get("note", "")):
             log.append(f"progress {p.get('id')}: {(p.get('note') or '')[:60]}")
