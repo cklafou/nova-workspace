@@ -1433,7 +1433,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
           <button id="think-scroll-lock" onclick="toggleThinkScrollLock()" title="Lock scroll position" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-mute);padding:1px 3px;border-radius:3px;transition:color var(--t);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-mute)'">🔓</button>
           <button onclick="copyThinkContent()" title="Copy reasoning to clipboard" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-mute);padding:1px 3px;border-radius:3px;transition:color var(--t);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-mute)'">📋</button>
         </div>
-        <div id="live-think-text" style="white-space:pre-wrap;line-height:1.5;padding:8px 10px;max-height:calc(50vh - 80px);overflow-y:auto;"></div>
+        <div id="live-think-text" style="white-space:pre-wrap;line-height:1.5;padding:8px 10px;height:150px;overflow-y:auto;resize:vertical;" title="Drag the bottom edge to resize"></div>
       </div>
       <!-- Active board tasks (from /api/queue) shown here as cards -->
       <div id="thoughts-cards"></div>
@@ -2135,12 +2135,19 @@ function liveThinkEnd() {
   const txt = document.getElementById('live-think-text');
   if(txt) setTimeout(()=>{ txt.scrollTop=0; }, 80);
 
-  // ── Session Log (Task 3) — archive this reasoning block ───────────────
+  // ── Session Log — archive this block NON-destructively: prepend ONE node so any
+  // entry Cole has expanded/open stays open when a new thought lands (no full rebuild).
   if(_liveThinkBuf.trim()) {
-    _thinkHistory.unshift({ ts: Date.now(), text: _liveThinkBuf });
+    const entry = { ts: Date.now(), text: _liveThinkBuf };
+    _thinkHistory.unshift(entry);
     if(_thinkHistory.length > 200) _thinkHistory.pop();
     _updateThinkLogBadge();
-    if(_thinkLogOpen) _renderThinkLog();
+    if(_thinkLogOpen) {
+      const el = document.getElementById('think-log-entries');
+      const emEl = document.getElementById('think-log-empty');
+      if(emEl) emEl.style.display = 'none';
+      if(el) el.insertBefore(_thinkEntryNode(entry), el.firstChild);
+    }
   }
 }
 
