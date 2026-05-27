@@ -1,5 +1,5 @@
 # Nova Architecture Review
-_Last updated: 2026-05-27 09:08:56_
+_Last updated: 2026-05-27 09:09:20_
 **Status:** Living Document | **Last Updated:** 2026-05-27 | **Author:** Nova (Autonomous)
 
 ---
@@ -43,7 +43,7 @@ This section documents the files that define Nova's identity, personality, opera
 
 ### Files to Review:
 - `01_identity.md` (NOVA.md) - Who Nova is ✅ Reviewed 2026-05-27
-- `02_how_i_work.md` - Operating rules ⏳ Pending
+- `02_how_i_work.md` - Operating rules ✅ Reviewed 2026-05-27
 - `03_body_manifest.md` - Body map and components ⏳ Pending
 - `04_tools_and_voice.md` - Tool definitions and voice specs ⏳ Pending
 
