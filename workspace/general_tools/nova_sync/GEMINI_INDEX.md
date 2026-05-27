@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-27 23:44:21_
+_Last updated: 2026-05-27 23:46:01_
 
 ## INITIALIZATION PROTOCOL
 Run these steps at the start of every session in order:
@@ -89,6 +89,7 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | prefrontal_cortex.py | `workspace/nova_body/nova_cortex/prefrontal_cortex.py` | PY file |
 | rules.py | `workspace/nova_body/nova_cortex/rules.py` | PY file |
 | tasking.py | `workspace/nova_body/nova_cortex/tasking.py` | Id-keyed task board (status + progress log) |
+| __init__.py | `workspace/nova_body/nova_imagination/__init__.py` | PY file |
 | __init__.py | `workspace/nova_body/nova_logs/__init__.py` | PY file |
 | calls.md | `workspace/nova_body/nova_logs/calls.md` | MD file |
 | logger.py | `workspace/nova_body/nova_logs/logger.py` | PY file |

@@ -163,6 +163,27 @@ def complete_task(task_id: str, result: str = "") -> str:
         return f"ERROR: Could not complete task: {e}"
 
 
+# ── Imagination — Nova's visual-creation faculty. Drives the local ComfyUI server to turn
+# a prompt into an actual saved PNG. as_nova=True makes her draw HERSELF with her self-LoRA +
+# identity lock so she stays consistent (see memory/reports/avatar_consistency_protocol.md).
+# Heavy nothing here — the faculty is pure stdlib and imported lazily so a missing/off ComfyUI
+# just yields a clean error string she can reason about, never a crash.
+def generate_image(prompt: str, negative: str = "", as_nova: bool = False,
+                   width: int = None, height: int = None, seed: int = None) -> str:
+    try:
+        from nova_imagination import generate_image as _gen
+    except Exception as e:
+        return f"ERROR: imagination faculty unavailable: {e}"
+    try:
+        r = _gen(prompt or "", negative or "", as_nova=bool(as_nova),
+                 width=width, height=height, seed=seed)
+    except Exception as e:
+        return f"ERROR: Could not generate image: {e}"
+    if r.get("ok"):
+        return f"Image saved to {r['path']} (seed {r.get('seed')})."
+    return f"ERROR: {r.get('detail', 'image generation failed')}"
+
+
 def execute_tool(tool_name: str, args: dict) -> str:
     """Main routing dispatcher."""
     try:
@@ -184,6 +205,13 @@ def execute_tool(tool_name: str, args: dict) -> str:
             return task_progress(args.get("task_id", "") or args.get("id", ""), args.get("note", ""))
         elif tool_name in ("complete_task", "task_complete"):
             return complete_task(args.get("task_id", "") or args.get("id", ""), args.get("result", ""))
+        elif tool_name in ("generate_image", "draw", "create_image"):
+            return generate_image(
+                args.get("prompt", "") or args.get("description", ""),
+                args.get("negative", ""),
+                bool(args.get("as_nova", False) or args.get("self_portrait", False)),
+                args.get("width"), args.get("height"), args.get("seed"),
+            )
         else:
             return f"ERROR: Unrecognized tool {tool_name}"
     except Exception as e:
