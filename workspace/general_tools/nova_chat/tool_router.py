@@ -66,18 +66,39 @@ def read_file(path: str) -> str:
     except Exception as e:
         return f"ERROR: Could not read file: {e}"
 
-def write_file(path: str, content: str) -> str:
-    """Create or overwrite a file."""
+def write_file(path: str, content: str, overwrite: bool = False) -> str:
+    """Create a NEW file. Guarded: refuses to clobber an existing file unless overwrite=True,
+    so a living document is never wiped by accident. To GROW a file use append_file; to change
+    part of it use replace_file_content (exact-match edit)."""
     target = (WORKSPACE_ROOT / path).resolve()
     if not _within_workspace(target):
         return "ERROR: Permission Denied. Cannot write files outside the workspace."
-        
+    if target.exists() and not overwrite:
+        return (f"ERROR: '{path}' already exists — write_file would OVERWRITE it and lose its "
+                "current contents. To GROW the document use append_file; to change part of it "
+                "use replace_file_content (exact-match edit). Only if you truly mean to replace "
+                'the ENTIRE file, call write_file again with "overwrite": true.')
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
         return f"Successfully wrote to {path}."
     except Exception as e:
         return f"ERROR: Could not write file: {e}"
+
+
+def append_file(path: str, content: str) -> str:
+    """Append content to the end of a file (creating it if missing). The right tool for
+    growing a living document section by section without overwriting what's already there."""
+    target = (WORKSPACE_ROOT / path).resolve()
+    if not _within_workspace(target):
+        return "ERROR: Permission Denied. Cannot write files outside the workspace."
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with open(target, "a", encoding="utf-8") as f:
+            f.write(content)
+        return f"Appended {len(content)} chars to {path}."
+    except Exception as e:
+        return f"ERROR: Could not append to file: {e}"
 
 def replace_file_content(path: str, target_content: str, replacement_content: str) -> str:
     """Replace an exact string match inside a file."""
@@ -150,8 +171,10 @@ def execute_tool(tool_name: str, args: dict) -> str:
         elif tool_name == "read_file":
             return read_file(args.get("path", ""))
         elif tool_name == "write_file":
-            return write_file(args.get("path", ""), args.get("content", ""))
-        elif tool_name == "replace_file_content":
+            return write_file(args.get("path", ""), args.get("content", ""), bool(args.get("overwrite", False)))
+        elif tool_name in ("append_file", "append"):
+            return append_file(args.get("path", ""), args.get("content", ""))
+        elif tool_name in ("replace_file_content", "edit_file", "edit"):
             return replace_file_content(args.get("path", ""), args.get("target_content", ""), args.get("replacement_content", ""))
         elif tool_name == "list_dir":
             return list_dir(args.get("path", ""))
