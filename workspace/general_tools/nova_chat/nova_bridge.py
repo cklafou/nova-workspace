@@ -1,4 +1,4 @@
-# Last updated: 2026-05-28 03:34:38
+# Last updated: 2026-05-28 04:34:49
 """
 nova_chat/nova_bridge.py -- Bridge: Nova's chat words → real disk actions
 =========================================================================
