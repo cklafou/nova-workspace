@@ -67,9 +67,9 @@
   "general_tools/nova_sync/calls.md": "335b243e4cfe7d9a10fbd851e2593564",
   "general_tools/nova_sync/dir_patch.py": "4d97e23fdbc963b55767dbf474a9ea21",
   "general_tools/nova_sync/drive.py": "1faeab6a3b4781e04186821eff7463e0",
-  "general_tools/nova_sync/FILE_INDEX.md": "430f4ddd38811fbb98b4cbf3cd9b9970",
-  "general_tools/nova_sync/FILE_INDEX_LINK.md": "27e88d91494b5b392a46f9d4f638461a",
-  "general_tools/nova_sync/GEMINI_INDEX.md": "222289c24f9de4bd6fccd0b48fbb5d6d",
+  "general_tools/nova_sync/FILE_INDEX.md": "0122457e70daf54f1025d645e352f11a",
+  "general_tools/nova_sync/FILE_INDEX_LINK.md": "ed52df096b1d9d72f5b0ccc3af47e74e",
+  "general_tools/nova_sync/GEMINI_INDEX.md": "d858171f82ad856430df33fedc593ca4",
   "general_tools/nova_sync/watcher.py": "1bb1ca13678cf48a0b7d46b68b777af9",
   "general_tools/NovaLauncher.py": "277b896cd11a4b57356b5a6d7abd82f8",
   "general_tools/restructure.py": "6b4bcad3cac83a5aba084380ecf4eefa",
@@ -136,10 +136,10 @@
   "SELF/core/00_START_HERE.md": "5b98bcb519523468d414cd8aafcd7f4b",
   "SELF/core/01_identity.md": "6d789ed42813aff4aead459efa67ab74",
   "SELF/core/02_how_i_work.md": "18424957cc51a1b09fda76e3301655db",
-  "SELF/core/03_body_manifest.md": "a24d96c86aea88b71086a0a1796a991c",
+  "SELF/core/03_body_manifest.md": "edbfa625d2f99229c3287b1acadc1b35",
   "SELF/core/04_tools_and_voice.md": "8da9a58198732747cea7886423807857",
   "SELF/reference/heartbeat.md": "ea6cc42c2bd7ec18861c9e5dd8a8c9d3",
-  "SELF/reference/manifest.json": "19506ac61156b8f3394f1ef16fbd5494",
+  "SELF/reference/manifest.json": "fb638a2875ea1f656f871e38c8a0c44a",
   "SELF/reference/ncl_master.md": "7926384443a8c71f3cb164f58bd367b0",
   "SELF/reference/upgrade_protocol.md": "522eaece17ad162c377b991c45bfad45",
   "start_llama.cmd": "bd46143635a6b0357d94d5de5e8e32ff",
@@ -160,5 +160,5 @@
   "nova_art/README.md": "992bb4b3916949d9b9bed09d4f2e76aa",
   "memory/avatar/prompt_kit.md": "fe074addeb54bf1ac2fd57c6e2f6ab70",
   "memory/reports/nova_lora_training_plan.md": "e3b7c44242cbfe9569ab6442c58c7391",
-  "memory/reports/AVATAR_MORNING_RUNBOOK.md": "414f4d250773050e5556a6861331f13b"
+  "memory/reports/AVATAR_MORNING_RUNBOOK.md": "a0959dbe140a49ae4adb542313a1ed6f"
 }
