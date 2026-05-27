@@ -203,18 +203,19 @@ def _progress_loop_count(task: dict) -> int:
     if len(notes) < 3:
         return 0
 
-    def _sim(a: str, b: str) -> float:
+    def _jac(a: str, b: str) -> float:
         sa, sb = set(a.split()), set(b.split())
-        return (len(sa & sb) / len(sa | sb)) if (sa and sb) else 0.0
+        return (len(sa & sb) / len(sa | sb)) if (sa or sb) else 0.0
 
-    last = notes[-1]
-    run = 1
-    for n in reversed(notes[:-1]):
-        if _sim(n, last) >= 0.5:
-            run += 1
-        else:
-            break
-    return run
+    # Count recent notes that have a near-twin among the others. A few near-duplicate
+    # notes = she keeps re-treading the same step instead of advancing. Twin-count is
+    # robust to small surface wording changes (and doesn't false-fire on advancing notes
+    # that merely share a template, since those name a different subject each time).
+    twinned = 0
+    for i, n in enumerate(notes):
+        if any(j != i and _jac(n, notes[j]) >= 0.65 for j in range(len(notes))):
+            twinned += 1
+    return twinned
 
 
 def build_decision(reflection: str, cole_pending: bool, reason: str,
