@@ -1,4 +1,4 @@
-# Last updated: 2026-05-27 14:11:36
+# Last updated: 2026-05-28 00:36:37
 # @nova: RETIRED — legacy gateway settings loader (nova_gateway dissolved 2026-05); slated for archival.
 """
 general_tools/gateway_config.py — Gateway Settings Loader

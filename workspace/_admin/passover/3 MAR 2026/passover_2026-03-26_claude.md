@@ -1,5 +1,5 @@
 # Passover -- Claude Session Handoff
-_Last updated: 2026-05-27 14:11:36_
+_Last updated: 2026-05-28 00:36:37_
 _2026-03-26 | Project Nova_
 
 ## How to Bootstrap This Session

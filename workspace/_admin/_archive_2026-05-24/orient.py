@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-05-27 14:11:36
+# Last updated: 2026-05-28 00:36:37
 # @nova: ORIENT.md updater — refreshes auto-generated sections while preserving hand-written content; to be superseded by SELF/.
 """
 orient.py — ORIENT.md updater for Project Nova
