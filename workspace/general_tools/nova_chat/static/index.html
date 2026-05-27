@@ -4094,18 +4094,23 @@ switchPanel('thoughts');
     const def=DEFS[id]||{title:id};
     el.classList.add('nv-glwidget');
     if(def.bare)el.classList.add('nv-bare');
-    const head=ce('<div class="nv-glhead">'+
-      (def.countId?'<span class="nv-wcount" id="'+def.countId+'">0</span>':'')+
-      '<span class="nv-opwrap">◐<input class="nv-op" type="range" min="25" max="100" value="100" title="Pane opacity"></span></div>');
     const body=ce('<div class="nv-wbody"></div>');
     const node=getNode(id); if(node)body.appendChild(node);
-    el.appendChild(head); el.appendChild(body);
-    const sl=head.querySelector('.nv-op');
-    function applyOp(v){const pane=el.closest('.lm_stack')||el.closest('.lm_item')||el;pane.style.opacity=(v/100).toFixed(2);}
-    sl.addEventListener('pointerdown',e=>e.stopPropagation());
-    sl.addEventListener('input',()=>{applyOp(sl.value);layoutDoc.opacity=layoutDoc.opacity||{};layoutDoc.opacity[id]=+sl.value;scheduleSave();});
-    const sv=layoutDoc.opacity&&layoutDoc.opacity[id];
-    if(sv!=null){sl.value=sv;setTimeout(()=>applyOp(sv),0);}
+    el.appendChild(body);
+    // Opacity/count control only on dashboard widgets — bare widgets (Chat,
+    // Sessions) own their corners with their own UI, so skip it there.
+    if(!def.bare){
+      const head=ce('<div class="nv-glhead">'+
+        (def.countId?'<span class="nv-wcount" id="'+def.countId+'">0</span>':'')+
+        '<span class="nv-opwrap">◐<input class="nv-op" type="range" min="25" max="100" value="100" title="Pane opacity"></span></div>');
+      el.appendChild(head);
+      const sl=head.querySelector('.nv-op');
+      const applyOp=v=>{const pane=el.closest('.lm_stack')||el.closest('.lm_item')||el;pane.style.opacity=(v/100).toFixed(2);};
+      sl.addEventListener('pointerdown',e=>e.stopPropagation());
+      sl.addEventListener('input',()=>{applyOp(sl.value);layoutDoc.opacity=layoutDoc.opacity||{};layoutDoc.opacity[id]=+sl.value;scheduleSave();});
+      const sv=layoutDoc.opacity&&layoutDoc.opacity[id];
+      if(sv!=null){sl.value=sv;setTimeout(()=>applyOp(sv),0);}
+    }
   }
   function glComp(id){return {type:'component',componentType:'nv',componentState:{id:id},title:DEFS[id].title};}
   function goldenDefault(){
