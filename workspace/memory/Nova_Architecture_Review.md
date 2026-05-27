@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 22:48:05_
+_Last updated: 2026-05-27 22:49:53_
 
 ---
 
@@ -1280,3 +1280,36 @@ This file is the single source of truth for what exists in Nova's codebase and h
 ---
 
 *Section 3 complete. Voice layer architecture fully documented with all background tasks, routing systems, and autonomy integration points captured.*
+
+## Executive Function (nova_cortex)
+
+### executive.py — Autonomy & Self-Direction
+Nova's autonomy faculty lives here, not in the server. The body owns her on/off state (`memory/autonomy_state.json`) and makes all decisions about when to wake, what to do, or whether to rest.
+
+**Three-phase wake cycle:**
+1. **Reflect (Phase 1):** She sits with the moment - reads board + senses + recent conversation - no tools yet, just orienting like a person waking up
+2. **Decide (Phase 2):** Having reflected, she freely decides: work, switch tasks, create new ones, abandon, wait, or rest. Acting is OPTIONAL.
+3. **Execute (Phase 3):** If she has an open task and isn't resting/mid-conversation with Cole, she actually DOES the next concrete step using real file tools
+
+**Key design:** Pure logic - depends only on her board (`tasking.py`) and senses (`clock`, `environment`). Makes ZERO outward calls to chat/server imports. Survives the pluck-test.
+
+**Stall detection:** Tracks near-duplicate progress notes (using Jaccard similarity on word overlap). If 3+ recent steps are repeating, it flags her as stuck in a loop instead of advancing - signals she needs to decompose or do something concrete rather than re-orient again.
+
+---
+
+### tasking.py — Task Board Management
+Single source of truth: `Tasking/tasks.json` (id-keyed board).
+
+**Statuses:** open / active / waiting / done / abandoned - completed and abandoned tasks are KEPT, never deleted or forgotten.
+
+**Actions Nova can emit via ACTIONS blocks:**
+- `create`: new task with title, notes, priority (1-5), optional parent for nesting
+- `progress`: log what you actually did on a specific task id
+- `switch`: change active focus to another open task
+- `complete`: mark done with result summary
+- `abandon`: drop it with reason
+- `wait`: park something waiting on external factors
+- `reprioritize`: adjust priority level
+- `rest`: explicit choice to rest (not a failure)
+
+**Parent-child structure:** Tasks can nest under umbrellas. When creating umbrella + subtasks in same ACTIONS block, use exact TITLE as parent reference since the id doesn't exist yet.

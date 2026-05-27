@@ -2163,26 +2163,27 @@ function toggleThinkLog() {
   if(_thinkLogOpen) _renderThinkLog();
 }
 
-function _renderThinkLog() {
+function _thinkEntryNode(e){
+  const ts      = new Date(e.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const preview = e.text.trim().replace(/\n/g,' ').slice(0, 60);
+  const full    = e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const wrap=document.createElement('div');
+  wrap.style.cssText='border-bottom:1px solid var(--border);padding:3px 0;';
+  wrap.innerHTML=`<div style="cursor:pointer;display:flex;gap:4px;align-items:baseline" onclick="(function(x){x.style.display=x.style.display==='none'?'block':'none';})(this.parentNode.querySelector('.tkdet'))">
+      <span style="font-size:8.5px;color:var(--text-mute);font-family:var(--mono);white-space:nowrap">[${ts}]</span>
+      <span style="font-size:10px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(preview)}${e.text.length>60?'…':''}</span>
+    </div>
+    <div class="tkdet" style="display:none;font-size:9.5px;color:var(--text);white-space:pre-wrap;padding:5px;background:var(--bg-hover);border-radius:var(--radius-sm);margin-top:3px;max-height:200px;overflow-y:auto;font-family:var(--mono)">${full}</div>`;
+  return wrap;
+}
+function _renderThinkLog() {  // full rebuild — only on user toggle, never on a new thought
   const el    = document.getElementById('think-log-entries');
   const emEl  = document.getElementById('think-log-empty');
   if(!el) return;
   if(!_thinkHistory.length) { if(emEl) emEl.style.display=''; return; }
   if(emEl) emEl.style.display='none';
-  const shown = _thinkHistory.slice(0, 80);
-  el.innerHTML = shown.map(e => {
-    const ts      = new Date(e.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    const preview = e.text.trim().replace(/\n/g,' ').slice(0, 60);
-    const full    = e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const detId   = 'tkdet_' + e.ts;
-    return `<div style="border-bottom:1px solid var(--border);padding:3px 0;">
-      <div style="cursor:pointer;display:flex;gap:4px;align-items:baseline" onclick="document.getElementById('${detId}').style.display=document.getElementById('${detId}').style.display==='none'?'block':'none'">
-        <span style="font-size:8.5px;color:var(--text-mute);font-family:var(--mono);white-space:nowrap">[${ts}]</span>
-        <span style="font-size:10px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(preview)}${e.text.length>60?'…':''}</span>
-      </div>
-      <div id="${detId}" style="display:none;font-size:9.5px;color:var(--text);white-space:pre-wrap;padding:5px;background:var(--bg-hover);border-radius:var(--radius-sm);margin-top:3px;max-height:200px;overflow-y:auto;font-family:var(--mono)">${full}</div>
-    </div>`;
-  }).join('');
+  el.innerHTML='';
+  _thinkHistory.slice(0, 80).forEach(e => el.appendChild(_thinkEntryNode(e)));
 }
 function toggleThinkScrollLock() {
   _thinkScrollLocked = !_thinkScrollLocked;
