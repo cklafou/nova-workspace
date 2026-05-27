@@ -2119,10 +2119,21 @@ async def restart_novachat():
                    '-ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id '
                    '$_.OwningProcess -Force -ErrorAction SilentlyContinue }"')
         _spawn_detached_cmd([
+            "setlocal enabledelayedexpansion",
             "timeout /t 2 /nobreak >nul",
             _PS_CLOSE_APP_WINDOW,            # close the OLD app window (no second window)
             ps_kill,                         # free :8765 (old chat server)
             'cd /d "' + ws + '"',
+            # Wait until :8765 is actually free before relaunch — closing the app window also
+            # triggers the old launcher's graceful shutdown, which races the new start and
+            # makes it skip ('already running'). Cap at ~30s.
+            "set _n=0",
+            ":waitfree",
+            "set /a _n+=1",
+            "timeout /t 1 /nobreak >nul",
+            "set _busy=",
+            'for /f %%P in (\'netstat -ano ^| findstr ":8765 " ^| findstr LISTENING\') do set _busy=1',
+            "if defined _busy if !_n! lss 30 goto waitfree",
             "call NovaStart.cmd",            # relaunch — opens exactly one fresh window
         ])
         return JSONResponse({"ok": True, "message": "Nova Chat restarting — old window closes, one fresh window opens…"})
@@ -2137,10 +2148,23 @@ async def restart_full():
     try:
         ws = str(WORKSPACE_ROOT)
         _spawn_detached_cmd([
+            "setlocal enabledelayedexpansion",
             "timeout /t 2 /nobreak >nul",
             _PS_CLOSE_APP_WINDOW,            # close the OLD app window (no second window)
             'cd /d "' + ws + '"',
             "call StopNova.cmd",
+            # CRITICAL: the OLD stack shuts down asynchronously (the window-close watchdog
+            # tears down llama+chat). Wait until BOTH ports are actually free before relaunch,
+            # or the new launcher sees the dying old server, skips ('already running'), and
+            # then the old one dies leaving nothing. Cap at ~30s so we never hang forever.
+            "set _n=0",
+            ":waitfree",
+            "set /a _n+=1",
+            "timeout /t 1 /nobreak >nul",
+            "set _busy=",
+            'for /f %%P in (\'netstat -ano ^| findstr ":8765 " ^| findstr LISTENING\') do set _busy=1',
+            'for /f %%P in (\'netstat -ano ^| findstr ":8080 " ^| findstr LISTENING\') do set _busy=1',
+            "if defined _busy if !_n! lss 30 goto waitfree",
             "call NovaStart.cmd",
         ])
         return JSONResponse({"ok": True, "message": "Full stack restarting — old window closes, one fresh window opens…"})
