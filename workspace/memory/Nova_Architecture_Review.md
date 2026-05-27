@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 10:37:13_
+_Last updated: 2026-05-27 12:49:28_
 
 ---
 
@@ -509,3 +509,103 @@ Used by: injector.py, nova_chat, nova_cortex, nova_memory
 - Undescribed parts: 0
 - No inbound refs: 8 items (nova_memory, nova_motor, audit_queue.py, audit_scripts.py, calls.py, download_models.py, injector.py, restructure.py) — these are foundational infrastructure layers others build on top of
 - Stale files (>90 days old): 0 — system is actively maintained
+
+## 2. Nova Body Manifest — Core System Architecture
+
+### Entrypoints & Orchestrators
+**nova_start.py** (`nova_start.py`) - Primary startup orchestrator invoked by `NovaStart.cmd`
+- Health-gates llama-server on port 8080 before launching Nova components
+- Coordinates the entire boot sequence from command-line launcher to full system ready state
+- Manages dual-GPU tensor split configuration (4090+3090) via start_llama.cmd integration
+
+**nova_chat/nova_server.py** (`general_tools/nova_chat/`) - Voice layer entrypoint  
+- FastAPI/WebSocket server binding to port 8765
+- Serves as the communication interface for Cole, Claude, and Gemini via @mention routing
+- Fires Nova's autonomy faculty through `nova_cortex/executive.py` integration
+
+### Core Body Components (nova_body/)
+**1. nova_config** - Settings & Configuration Layer
+- Reads workspace/nova_config.json with fallback defaults
+- Manages inference settings, session parameters, tool-execution limits
+- Imported as: `from nova_config import cfg`
+- Used by: nova_memory, nova_motor subsystems
+
+**2. nova_cortex** - Executive Faculty (8 files, 1950 lines)
+The decision-making center containing:
+- **executive.py**: Autonomy faculty and wake cycle management (reflect → decide → execute phases)
+- **tasking.py**: Task board ownership for Tasking/tasks.json with stable IDs and progress tracking
+- **nova_status.py**: Status pulse updates and error logging system
+- **context_builder.py**: Context assembly for decision-making
+- **checkin.py**: Yield protocol implementation - detects new messages during async operations
+- Used by: nova_chat, nova_memory, nova_motor (central hub pattern)
+
+**3. nova_senses** - Perception System (7 files, 1548 lines)
+Perception modules categorized as:
+- **LIVE components**: chronoception (clock.py), environmental sensing (environment.py), touch sense (touch.py - tracks interaction state)
+- **SCAFFOLDED components**: desktop vision (eyes.py, vision.py) and UI proprioception - built but not yet fully wired
+- Used by: injector.py, nova_chat, nova_cortex, nova_memory
+
+**4. nova_motor** - Action Execution System (5 files, 1182 lines)
+Motor system containing:
+- **motor_cortex**: Action planning layer
+- **hands**: Direct action execution interface for OS-level tools
+- **verification**: Result validation after tool calls
+- Flags: no_inbound_refs (terminal executor in the call chain)
+
+**5. nova_memory** - Persistent State System (6 files, 836 lines)
+Memory subsystem managing:
+- Journal appending flow via `nova_journal.py`
+- Status state tracking and daily log summaries
+- Goal/status persistence across sessions
+- Flags: no_inbound_refs (data sink pattern)
+
+**6. nova_logs** - Unified Logging Manager (2 files, 254 lines)
+Single logging system shared by all subsystems:
+- `log(type, event, details)` for agent tool events (clicks, vision checks, errors)
+- `log_thought(response_text)` for chat responses (auto-called by nova_chat)
+- Logs organized in logs/sessions/YYYY-MM-DD/ directory structure
+- Used by: nova_chat, nova_motor, nova_senses
+
+**7. nova_lancedb** - Semantic Memory Layer (4 files, 568 lines)
+Long-term vector-based memory system:
+- Embedder module for text-to-vector conversion
+- Hippocampus component for retrieval operations
+- Indexer for maintaining semantic relationships
+- Used by: nova_chat only currently (expansion potential)
+
+### Component Connection Map
+```
+nova_start.py → llama-server (:8080) + NovaLauncher.py → nova_server.py (:8765)
+                                              ↓
+                                    @mention routing to Claude/Gemini
+                                              ↓
+                                       executive.py wake cycle
+                                            ↙    ↓     ↘
+                                      reflect  decide execute
+                                        ↓        ↓       ↓
+                                  context_builder tasking motor_cortex → hands
+                                        ↓        ↓       ↓
+                                     nova_status checkin verification
+```
+
+### Data Flow Patterns
+1. **Boot Sequence**: NovaStart.cmd → start_llama.cmd (llama-server :8080) → nova_start.py health gate → NovaLauncher.py → nova_server.py (:8765)
+2. **Wake Cycle**: Time-sense/touch trigger → executive.py reflect phase → decide phase with context_builder → execute via motor_cortex
+3. **Tool Execution**: motor_cortex plan → hands execution → verification result → status update + optional checkin for Cole messages
+4. **Memory Operations**: Session work → journal append (nova_journal.py) OR status update (nova_status.py) → persistence to memory/
+5. **Cross-AI Communication**: nova_chat @mention detection → injector.py NCL parsing → module dispatch → Master_Inbox/ arrival → wake trigger
+
+### General Tools Layer (general_tools/)
+**NovaLauncher.py** - Unified in-process launcher called by nova_start.py, binds port 8765
+**injector.py** - NCL context injector and module dispatcher executing parsed @mentions to Claude/Gemini routing
+**build_manifest.py** - Auto-generates SELF/core/03_body_manifest.md from codebase analysis (DO NOT EDIT BY HAND)
+**calls.py** - AST-walks packages mapping imports/calls, feeds build_manifest.py data
+**audit_scripts.py** - Code health audit scanning for syntax errors, stale files, unreferenced modules
+**audit_queue.py** - Persistent file-change event queue for restructure tracking
+**restructure.py** - Interactive path reference checker after directory moves
+**nova_sync/** (5 files) - File-sync layer with watchdog auto-indexing, GitHub push, Google Drive mirror for Gemini, local backups
+
+### Port Architecture Summary
+- **Port 8080**: llama.cpp inference engine serving Qwen3 27B Dense Q8 model
+- **Port 8765**: nova_chat FastAPI/WebSocket server - voice and autonomy trigger point
+- Both ports health-gated by nova_start.py before Nova enters ready state

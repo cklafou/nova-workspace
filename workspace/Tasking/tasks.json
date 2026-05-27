@@ -113,11 +113,12 @@
       "title": "Arch Review Subtask: Core System Overview",
       "notes": "Document nova_body structure, main entry points, and how components connect at high level",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "parent": "t1",
       "progress": [],
       "created": "2026-05-27T10:25:23",
-      "updated": "2026-05-27T10:25:23"
+      "updated": "2026-05-27T12:49:42",
+      "result": "Documented nova_body structure, entry points, and component connections in Memory/Nova_Architecture_Review.md Section 2 - includes executive cortex flow, motor system, senses architecture, data patterns, port map"
     },
     "t30": {
       "id": "t30",
