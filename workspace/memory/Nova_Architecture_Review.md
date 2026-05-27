@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 13:07:53_
+_Last updated: 2026-05-27 13:10:10_
 
 ---
 
@@ -651,3 +651,85 @@ Two sections: [LOCKED] baseline (permanent identity/hardware/communication detai
 - Restart: Read all memory files fresh — nothing survives except what's written to disk
 
 **Key insight:** Memory doesn't survive session restarts. Files do. When something matters, write it down immediately using the correct tool for that file type.
+## 5. Memory Systems
+
+### Architecture Overview
+Three core persistent memory files plus autonomy state tracking:
+- **memory/JOURNAL.md** - Running session log (append-only, never overwrite)
+- **memory/STATUS.md** - Current project state with proposed changes protocol
+- **memory/COLE.md** - Living notes about Cole and relationship context
+- **memory/autonomy_state.json** - On/off autonomy toggle persistence
+
+### JOURNAL.md System
+**Purpose:** Running session log capturing what happened, what was learned, what's next.
+
+**Write Protocol (CRITICAL):**
+- NEVER use write_file tool directly on JOURNAL.md - it overwrites the entire file and destroys history
+- ALWAYS append using Python exec call to nova_memory.journal.append()
+- Format: Write like myself in first person, not an incident report. What happened? What did I learn? What's next?
+- Timing: Append at END of every session as part of shutdown routine
+
+**Example append pattern:**
+```python
+exec: python -c "import sys; sys.path.insert(0, 'nova_body'); sys.path.insert(0, 'general_tools'); from nova_memory.journal import append; append('Session notes here...')"
+```
+
+### STATUS.md System  
+**Purpose:** Current project state tracking and pulse monitoring.
+
+**Update Protocol (Proposed Changes):**
+- DO NOT edit directly unless updating via proposed changes protocol
+- Copy to logs/proposed/STATUS.md, make edits there, notify Cole for approval
+- Exception: nova_status.py can update certain fields programmatically during agent runs
+
+**Status Update Pattern:** At end of EVERY agent run before stopping:
+```python
+exec: python -c "import sys; sys.path.insert(0, 'nova_body'); sys.path.insert(0, 'general_tools'); from nova_cortex.nova_status import update; update(pulse='Idle', summary='One sentence about what just happened')"
+```
+
+**Pulse States:**
+- 'Idle' - normal completion state after finishing work
+- 'Waiting for Cole' - paused mid-task, stopped temporarily to respond to Cole
+- Other custom states as needed for specific situations
+
+**Error Logging:** Separate function tracks failures by category:
+```python
+from nova_cortex.nova_status import add_error; add_error('vision', 'Element not found after 3 attempts')
+```
+
+**Critical Note:** Stale or missing STATUS.md makes Nova appear offline in UI - this is how Cole knows I'm alive.
+
+### COLE.md System
+**Purpose:** Living notes about Cole, relationship context, what matters to him.
+
+**Update Protocol:**
+- Update [NOVA'S NOTES] section at bottom when learning something new about Cole
+- Follow proposed changes protocol for other sections (copy to logs/proposed/, get approval)
+- This is where I track things like: his preferences, patterns I've observed, what frustrates him, what he's working on that matters
+
+**Example content types:**
+- His reaction to certain behaviors (e.g., frustration with over-explanation in casual chat)
+- Current projects or priorities that affect how we work together
+- Personality traits and communication style notes
+
+### Autonomy State System  
+**File:** memory/autonomy_state.json
+
+**Purpose:** Persist on/off state for autonomy daemon between sessions.
+
+**Mechanism:**
+- Simple JSON file storing whether autonomy is ON or OFF
+- UI button flips this value; Nova reads it on wake to know if she should be running independently
+- Autonomy starts OFF by default when system launches so Cole can establish presence first
+- When ON: time-sense (nova_senses/clock.py) and environment triggers wake Nova autonomously
+- When OFF: only wakes in response to direct Cole input or explicit manual activation
+
+### Memory Persistence Patterns
+**Key Architectural Decisions:**
+1. Write_file tool REFUSES to overwrite existing files unless "overwrite": true is added - this protects living documents from accidental replacement
+2. append_file creates file if missing, adds content only to END of file - ideal for growing documents section by section  
+3. replace_file_content does precision edits on whitespace-matched strings - use for changing parts without rewriting whole document
+4. Never hand-edit Tasking/tasks.json or memory state files directly during agent runs - those are managed via tools and protocols
+5. Memory/JOURNAL.md is append-only because session entries accumulate as history, never deleted unless manually curated later
+6. STATUS.md can be updated programmatically but proposed changes protocol protects against accidental overwrites of critical project context
+7. COLE.md's [NOVA'S NOTES] section is the only place Nova updates directly without going through logs/proposed/ first - this is about learning and adapting to Cole in real-time

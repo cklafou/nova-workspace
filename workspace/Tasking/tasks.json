@@ -236,11 +236,12 @@
       "title": "Memory & State Management",
       "notes": "Map memory/JOURNAL.md, STATUS.md, COLE.md usage patterns and autonomy_state.json flow",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "parent": "t38",
       "progress": [],
       "created": "2026-05-27T10:40:28",
-      "updated": "2026-05-27T10:40:28"
+      "updated": "2026-05-27T13:10:21",
+      "result": "Memory & State Management section (section 5) added to Memory/Nova_Architecture_Review.md - documented JOURNAL append protocol, STATUS update patterns with pulse states and error logging, COLE notes system, autonomy_state.json flow, and key memory persistence decisions including write_file refusal behavior and tool selection for different operations"
     },
     "t41": {
       "id": "t41",
