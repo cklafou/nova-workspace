@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-27T14:11:11",
+  "generated": "2026-05-27T22:34:10",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 21,
   "described": 21,
@@ -46,9 +46,9 @@
       "name": "nova_cortex",
       "kind": "body_part",
       "path": "nova_body/nova_cortex",
-      "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status, context assembly, and rules (nova_status, context_builder, rules, prefrontal_cortex, checkin).",
+      "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).",
       "files": 8,
-      "lines": 1950,
+      "lines": 1956,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -235,7 +235,7 @@
       "purpose": "Launcher — runs nova_start.py to bring up the whole Nova stack (double-click entry point).",
       "files": 1,
       "lines": 19,
-      "age_days": 2,
+      "age_days": 3,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -273,7 +273,7 @@
       "purpose": "Starts llama.cpp serving Qwen 3.5 27B Q8 on :8080 with the dual-GPU tensor split (4090+3090).",
       "files": 1,
       "lines": 38,
-      "age_days": 2,
+      "age_days": 3,
       "ports_bind": [
         "8080"
       ],

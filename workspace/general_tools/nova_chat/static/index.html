@@ -1015,6 +1015,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-item" onclick="toggleWidget('eyes')"><span class="dd-icon">👁</span><span class="dd-label">Eyes</span><span class="dd-check" id="wchk-eyes"></span></div>
   <div class="dd-item" onclick="toggleWidget('terminal')"><span class="dd-icon">⬛</span><span class="dd-label">Terminal</span><span class="dd-check" id="wchk-terminal"></span></div>
   <div class="dd-item" onclick="toggleWidget('editor')"><span class="dd-icon">📑</span><span class="dd-label">Editor</span><span class="dd-check" id="wchk-editor"></span></div>
+  <div class="dd-item" onclick="toggleWidget('browser')"><span class="dd-icon">🌐</span><span class="dd-label">Preview</span><span class="dd-check" id="wchk-browser"></span></div>
 </div>
 
 <!-- Agents -->
@@ -2969,6 +2970,23 @@ async function wakeNova(){
   }catch(_){}
   setTimeout(()=>{const b=document.getElementById('pb-wake');if(b){b.classList.remove('waking');b.disabled=false;}},2500);
 }
+// ── Browser Preview widget controls ──
+function _nbw(el){ return el.closest('.nv-browser'); }
+function browserGo(el){
+  const w=_nbw(el); if(!w) return;
+  const inp=w.querySelector('.nbw-url'); let u=(inp.value||'').trim(); if(!u) return;
+  if(!/^https?:\/\//i.test(u) && !u.startsWith('about:'))
+    u = (/^(localhost|127\.|\d)/.test(u) ? 'http://' : 'https://') + u;
+  w.querySelector('.nbw-frame').src = u;
+}
+function browserReload(el){ const f=_nbw(el)?.querySelector('.nbw-frame'); if(f){ try{ f.contentWindow.location.reload(); }catch(_){ f.src=f.src; } } }
+function browserPop(el){ const f=_nbw(el)?.querySelector('.nbw-frame'); const u=f&&f.src; if(u&&u!=='about:blank') window.open(u,'_blank'); }
+// ── Editor widget toolbar ──
+function editorReload(){ if(window._editorPath&&window.openInEditor) window.openInEditor(window._editorPath, window._editorName); }
+function editorWrap(btn){ const c=document.getElementById('ned-code'); if(!c) return;
+  const wrap=c.style.whiteSpace!=='pre-wrap'; c.style.whiteSpace=wrap?'pre-wrap':'pre'; if(btn) btn.classList.toggle('on',wrap); }
+function editorCopy(){ const c=document.getElementById('ned-code'); if(!c) return;
+  navigator.clipboard.writeText(c.textContent||'').then(()=>toast&&toast('Copied')).catch(()=>{}); }
 function setAutonomous(on){
   autonomousMode=on;
   // Input-area pill
@@ -3975,6 +3993,25 @@ switchPanel('thoughts');
 .ned-pre{flex:1;min-height:0;margin:0;overflow:auto;background:#0c0c1c;}
 .ned-code{display:block;padding:10px 12px;font-family:var(--mono);font-size:11.5px;line-height:1.55;
   white-space:pre;color:var(--text-dim);background:transparent!important;tab-size:4;}
+.ned-tools{margin-left:auto;display:flex;gap:3px;}
+.ned-tbtn{background:none;border:1px solid transparent;color:var(--text-mute);cursor:pointer;
+  font-size:11px;line-height:1;padding:2px 6px;border-radius:4px;}
+.ned-tbtn:hover{color:var(--text);background:var(--bg-hover);}
+.ned-tbtn.on{color:var(--nova);border-color:var(--border-hi);}
+/* Browser Preview widget */
+.nv-browser{display:flex;flex-direction:column;height:100%;width:100%;background:#0c0c1c;}
+.nbw-bar{flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:5px 7px;
+  background:var(--bg-mid);border-bottom:1px solid var(--border);}
+.nbw-url{flex:1;min-width:0;background:var(--bg);border:1px solid var(--border-med);border-radius:6px;
+  color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 9px;outline:none;}
+.nbw-url:focus{border-color:var(--border-hi);}
+.nbw-btn{background:none;border:1px solid transparent;color:var(--text-mute);cursor:pointer;
+  font-size:13px;line-height:1;padding:3px 7px;border-radius:5px;}
+.nbw-btn:hover{color:var(--text);background:var(--bg-hover);}
+.nbw-go{background:var(--nova-dim);border:1px solid var(--border-hi);color:var(--nova-bright);cursor:pointer;
+  font-size:10.5px;font-weight:700;padding:4px 11px;border-radius:6px;}
+.nbw-go:hover{background:var(--nova);color:#0b0b18;}
+.nbw-frame{flex:1;min-height:0;width:100%;border:none;background:#fff;}
 /* ── Golden Layout .lm_* — re-themed to the violet palette ──── */
 .lm_goldenlayout{background:transparent;}
 .lm_content{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
@@ -4014,10 +4051,21 @@ switchPanel('thoughts');
     chat:{title:'Chat',defH:8,grab:()=>document.getElementById('chat-main'),bare:true},
     sidebar:{title:'Sessions',defH:8,grab:()=>document.getElementById('sidebar'),bare:true},
     editor:{title:'Editor',defH:6,bare:true,make:()=>ce('<div class="nv-editor">'+
-      '<div class="ned-head"><span class="ned-dot"></span><span class="ned-name" id="ned-name">No file open</span></div>'+
+      '<div class="ned-head"><span class="ned-dot"></span><span class="ned-name" id="ned-name">No file open</span>'+
+      '<span class="ned-tools"><button class="ned-tbtn" title="Reload file" onclick="editorReload()">↻</button>'+
+      '<button class="ned-tbtn" title="Toggle word wrap" onclick="editorWrap(this)">⤶</button>'+
+      '<button class="ned-tbtn" title="Copy contents" onclick="editorCopy()">⧉</button></span></div>'+
       '<pre class="ned-pre"><code class="ned-code" id="ned-code">Click a file in the Files widget to open it here.</code></pre></div>')},
+    browser:{title:'Preview',defH:6,bare:true,make:()=>ce('<div class="nv-browser">'+
+      '<div class="nbw-bar">'+
+        '<button class="nbw-btn" title="Reload" onclick="browserReload(this)">↻</button>'+
+        '<input class="nbw-url" placeholder="localhost:8765  ·  https://…" onkeydown="if(event.key===\'Enter\')browserGo(this)">'+
+        '<button class="nbw-go" onclick="browserGo(this)">Go</button>'+
+        '<button class="nbw-btn" title="Open in new tab" onclick="browserPop(this)">⇗</button>'+
+      '</div>'+
+      '<iframe class="nbw-frame" src="about:blank" referrerpolicy="no-referrer"></iframe></div>')},
   };
-  const ORDER=['sidebar','chat','tasks','logs','thoughts','tools','monitor','files','eyes','terminal','editor'];
+  const ORDER=['sidebar','chat','tasks','logs','thoughts','tools','monitor','files','eyes','terminal','editor','browser'];
   const DEFAULT=[{id:'tasks',x:0,y:0,w:12,h:4},{id:'logs',x:0,y:4,w:12,h:5},
                  {id:'thoughts',x:0,y:9,w:12,h:5},{id:'tools',x:0,y:14,w:12,h:4}];
   const STORE=document.createElement('div');STORE.style.display='none';
@@ -4191,6 +4239,7 @@ switchPanel('thoughts');
     if(engine==='golden')addGolden(id); else addWidget(id,{}); };
   window.openInEditor=async function(path,name){
     if(!path)return;
+    window._editorPath=path; window._editorName=name;
     window.ensureWidget('editor');
     loadHljs();
     const LANG={py:'python',js:'javascript',jsx:'javascript',ts:'typescript',tsx:'typescript',
