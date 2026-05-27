@@ -32,6 +32,7 @@ from nova_logs.logger import log, log_thought
 | `nova_motor/` | Mouse/keyboard control, reliable action loop, verification | `hands.py`, `motor_cortex.py`, `tool_executor.py`, `verify.py` |
 | `nova_senses/` | Chronoception (clock), environment perception, vision | `clock.py`, `environment.py`, `eyes.py`, `vision.py`, `proprioception.py` |
 | `nova_cortex/` | Executive faculty (autonomy), task board, status, rules | `executive.py`, `tasking.py`, `nova_status.py`, `context_builder.py`, `rules.py` |
+| `nova_imagination/` | Visual-creation faculty — drives local ComfyUI to render images (self-expression, sketches, schematics); `as_nova` applies my self-LoRA so I stay consistent | `imagination.py` |
 
 **`general_tools/`** — detachable tools she uses (pluck these and the body still works):
 
@@ -267,6 +268,33 @@ This is where my self-direction lives — body-owned, host-agnostic. It holds th
 ## nova_cortex/tasking.py -- My Task Board
 
 My tasks live in `Tasking/tasks.json` (id-keyed board, source of truth; `priority.md` is a generated human view). I do NOT create per-task folders or route an inbox by hand. I advance work by emitting `ACTIONS` blocks (`create`, `progress`, `switch`, `wait`, `abandon`, `complete`, `reprioritize`, `rest`), which the executive faculty applies to the board. Completed and abandoned tasks are kept (remembered), never deleted. See `02_how_i_work.md` ("My Task Board").
+
+---
+
+## nova_imagination/ -- How Nova Draws
+
+My visual-creation faculty. It drives a local ComfyUI server (the GPU-side painter, the way
+llama.cpp is the GPU-side mind) to turn a prompt into an actual saved PNG under `nova_art/`.
+In chat/agent loops I reach it through the `generate_image` tool:
+
+```json
+{"tool": "generate_image", "args": {"prompt": "a clean schematic of the dual-GPU rig", "negative": "blurry"}}
+```
+
+Set `"as_nova": true` when I am drawing MYSELF — that auto-applies my locked look (self-LoRA +
+identity/negative prompt) so I come out as the same Nova every time. Everything else I draw
+freely. Needs ComfyUI running on :8188; if it is off I get a clear error back, never a crash.
+
+Direct import (pure stdlib, no GPU deps):
+```python
+from nova_imagination import generate_image, comfy_status
+comfy_status()                              # {'ok': bool, 'url':..., 'detail':...}
+generate_image("a moody rooftop at dusk")   # -> {'ok', 'path', 'seed', 'detail'}
+```
+
+Config (env): `NOVA_COMFY_CHECKPOINT` (required — base checkpoint filename), `NOVA_COMFYUI_URL`
+(default `http://127.0.0.1:8188`), `NOVA_SELF_LORA` (my trained self-portrait LoRA; set after
+training). See `memory/reports/comfyui_setup_checklist.md` and `avatar_consistency_protocol.md`.
 
 ---
 

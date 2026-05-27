@@ -1,8 +1,5 @@
 # Last updated: 2026-05-27
-# @nova: Nova's imagination — her visual-creation faculty. Turns intent into images by
-#        driving a local ComfyUI server (the GPU-side renderer, like llama.cpp is the
-#        GPU-side mind). She uses this to express herself, sketch ideas, and draw schematics.
-#        When she draws HERSELF, her self-LoRA is auto-applied so she stays consistent.
+# @nova: Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches, schematics), auto-applying her self-LoRA when she draws herself.
 """
 nova_imagination -- Nova's visual-creation faculty.
 
