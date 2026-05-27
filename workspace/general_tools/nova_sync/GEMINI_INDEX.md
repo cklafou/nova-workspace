@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-27 23:53:57_
+_Last updated: 2026-05-27 23:54:32_
 
 ## INITIALIZATION PROTOCOL
 Run these steps at the start of every session in order:
@@ -214,6 +214,12 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | session_notes_2026-03-22.md | `workspace/_admin/passover/3 MAR 2026/session_notes_2026-03-22.md` | MD file |
 | HANDOFF.md | `workspace/_admin/passover/6 MAY 2026/HANDOFF.md` | MD file |
 | README.md | `workspace/_admin/README.md` | Project overview |
+
+## nova_art/
+
+| Filename | Search Key | Description |
+|----------|-----------|-------------|
+| README.md | `workspace/nova_art/README.md` | Project overview |
 
 ## nova_lancedb/
 
