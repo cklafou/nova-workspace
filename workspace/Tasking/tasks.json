@@ -8,9 +8,14 @@
       "priority": 1,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-05-27T22:43:42",
+          "note": "Appended Core System Overview section with detailed breakdown of SELF/core/ identity files and operating rules to Nova_Architecture_Review.md"
+        }
+      ],
       "created": "2026-05-27T22:40:41",
-      "updated": "2026-05-27T22:40:41"
+      "updated": "2026-05-27T22:43:42"
     }
   }
 }
