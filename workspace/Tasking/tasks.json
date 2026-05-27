@@ -1,4 +1,16 @@
 {
-  "seq": 42,
-  "tasks": {}
+  "seq": 43,
+  "tasks": {
+    "t43": {
+      "id": "t43",
+      "title": "Full architecture & code review into living doc Memory/Nova_Architecture_Review.md",
+      "notes": "Umbrella task: review each system area (cortex, senses, chat host, sync, tools) section by section and grow the living doc by appending each section as you finish it.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-05-27T22:40:41",
+      "updated": "2026-05-27T22:40:41"
+    }
+  }
 }
