@@ -1,5 +1,5 @@
 {
-  "seq": 19,
+  "seq": 23,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -222,6 +222,46 @@
       "progress": [],
       "created": "2026-05-27T09:07:02",
       "updated": "2026-05-27T09:07:02"
+    },
+    "t20": {
+      "id": "t20",
+      "title": "Architecture Review - Core System Overview",
+      "notes": "Document nova_body structure, main entry points, and how components connect at high level",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:10:08",
+      "updated": "2026-05-27T09:10:08"
+    },
+    "t21": {
+      "id": "t21",
+      "title": "Architecture Review - Memory & State Management",
+      "notes": "Cover memory/ folder organization, STATUS/JOURNAL/CLE.md patterns, autonomy_state workflow",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:10:08",
+      "updated": "2026-05-27T09:10:08"
+    },
+    "t22": {
+      "id": "t22",
+      "title": "Architecture Review - Tool System Design",
+      "notes": "Document the 8 available tools, their use cases, when to call each one vs not calling anything",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:10:08",
+      "updated": "2026-05-27T09:10:08"
+    },
+    "t23": {
+      "id": "t23",
+      "title": "Architecture Review - SELF/core Identity Stack",
+      "notes": "Map how NOVA.md, body_manifest, operating rules create coherent self-model across sessions",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:10:08",
+      "updated": "2026-05-27T09:10:08"
     }
   }
 }
