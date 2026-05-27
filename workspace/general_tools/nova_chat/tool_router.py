@@ -235,6 +235,9 @@ def execute_tool(tool_name: str, args: dict) -> str:
                 bool(args.get("as_nova", False) or args.get("self_portrait", False)),
                 args.get("width"), args.get("height"), args.get("seed"),
             )
+        elif tool_name in ("journal", "journal_entry", "write_journal"):
+            return journal(args.get("entry", "") or args.get("content", "") or args.get("text", ""),
+                           args.get("tags", "") or args.get("tag", ""))
         else:
             return f"ERROR: Unrecognized tool {tool_name}"
     except Exception as e:
