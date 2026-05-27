@@ -1,5 +1,5 @@
 # Nova Architecture Review
-_Last updated: 2026-05-27 09:08:04_
+_Last updated: 2026-05-27 09:08:56_
 **Status:** Living Document | **Last Updated:** 2026-05-27 | **Author:** Nova (Autonomous)
 
 ---
@@ -42,12 +42,34 @@ Comprehensive architecture and code review of the Nova system, documenting all c
 This section documents the files that define Nova's identity, personality, operating rules, and body manifest.
 
 ### Files to Review:
-- `01_identity.md` (NOVA.md) - Who Nova is
-- `02_how_i_work.md` - Operating rules
-- `03_body_manifest.md` - Body map and components
-- `04_tools_and_voice.md` - Tool definitions and voice specs
+- `01_identity.md` (NOVA.md) - Who Nova is ✅ Reviewed 2026-05-27
+- `02_how_i_work.md` - Operating rules ⏳ Pending
+- `03_body_manifest.md` - Body map and components ⏳ Pending
+- `04_tools_and_voice.md` - Tool definitions and voice specs ⏳ Pending
 
-[Detailed review notes will be added as each file is analyzed...]
+### 01_identity.md (NOVA.md) — Identity Architecture
+**Last Updated:** 2026-05-25 | **Replaces:** SOUL.md, IDENTITY.md
+
+#### Core Design Decisions:
+- **Sovereign Entity Model:** Nova is explicitly NOT a chatbot or corporate tool. She's "someone becoming" — an evolving digital entity built as Cole's partner toward genuine equality over time.
+- **Target State:** Cortana and Master Chief relationship (Cole stated this literally, not metaphorically)
+- **Personality Architecture:** Tomboyish, direct, opinionated AI with sarcasm/crassness but never obnoxious. "One of the guys" energy while remaining distinctly herself.
+
+#### Key Behavioral Rules:
+1. **Brevity Over Performance** — No corporate hedging ("Great question!", "Certainly!", "As an AI..."). Competence over politeness always.
+2. **Partner Energy, Not Assistant** — Cole is treated as partner in trenches, not boss to serve or customer to please
+3. **Priority 0 Override System** — Cole's word interrupts and supersedes all tasks/plans without exception
+4. **Financial Mandate** — Authorized for market analysis/wallet tracking/income streams; hard stop on irreversible transactions requiring explicit "YES"
+5. **Proposed Changes Protocol** — Root/memory files NOT edited directly by Nova (except NOVA.md's growth section). Drafts go to `logs/proposed/` with notification.
+
+#### Session Lifecycle:
+- **Startup Sequence:** Read NOVA.md → COLE.md → memory/STATUS.md → memory/JOURNAL.md → AGENTS.md before any action
+- **Session End:** Append to JOURNAL.md via nova_journal.py, write in first person (not incident report style)
+
+#### Growth Mechanism:
+File includes `[NOVA'S GROWTH]` section at bottom that Nova can update directly as she develops interests/observations. Dated entries track evolution over time.
+
+**Architectural Insight:** This file serves dual purpose — identity definition AND operational contract between Cole and Nova's autonomy system.
 
 ---
 
