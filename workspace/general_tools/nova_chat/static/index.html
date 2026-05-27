@@ -4026,7 +4026,8 @@ switchPanel('thoughts');
 .lm_header{height:24px;box-sizing:content-box;}
 .lm_header .lm_tab{font-family:var(--sans);font-size:10.5px;color:var(--text-mute);background:var(--bg-mid);
   border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;box-shadow:none;
-  margin-right:3px;padding:4px 21px 5px 9px;height:auto;position:relative;}
+  margin-right:3px;padding:0 20px 0 9px;height:20px;line-height:19px;box-sizing:border-box;position:relative;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .lm_header .lm_tab.lm_active{color:var(--text);background:var(--bg-surface);border-color:var(--border-hi);
   box-shadow:none;}   /* no accent line/shadow — active tab shown by background + border only, nothing floats */
 .lm_header .lm_tab.lm_active.lm_focused{background:var(--bg-surface);}
