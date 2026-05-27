@@ -97,16 +97,17 @@ To use a tool, you MUST output a pure JSON block formatted exactly like this:
 Available Tools:
 1. "run_command": {"command": "...", "cwd": "..."} - Run a shell command in the workspace.
 2. "read_file": {"path": "..."} - Read a file's contents.
-3. "write_file": {"path": "...", "content": "..."} - Create or overwrite a file.
-4. "replace_file_content": {"path": "...", "target_content": "...", "replacement_content": "..."} - Replace an exact whitespace-matched string in a file.
-5. "list_dir": {"path": "..."} - List files in a directory.
-6. "create_task": {"title": "...", "notes": "...", "priority": 2} - Add a TRACKED task to your board. This is HOW you create/track a task.
-7. "task_progress": {"task_id": "t1", "note": "what you just did"} - Log a concrete progress step on one of your board tasks.
-8. "complete_task": {"task_id": "t1", "result": "..."} - Mark a board task done, with its result.
+3. "write_file": {"path": "...", "content": "..."} - Create a NEW file. REFUSES to overwrite an existing file unless you add "overwrite": true (you almost never want that). Do NOT use this to update a living document — it replaces the whole file and wipes prior content.
+4. "append_file": {"path": "...", "content": "..."} - Add content to the END of a file (creates it if missing). This is how you GROW a living document section by section.
+5. "replace_file_content" (a.k.a. "edit_file"): {"path": "...", "target_content": "...", "replacement_content": "..."} - Precision EDIT: replace an exact whitespace-matched string inside a file. Use this to change part of a file without rewriting the whole thing.
+6. "list_dir": {"path": "..."} - List files in a directory.
+7. "create_task": {"title": "...", "notes": "...", "priority": 2} - Add a TRACKED task to your board. This is HOW you create/track a task.
+8. "task_progress": {"task_id": "t1", "note": "what you just did"} - Log a concrete progress step on one of your board tasks.
+9. "complete_task": {"task_id": "t1", "result": "..."} - Mark a board task done, with its result.
 
 When you output a JSON tool call, the system will IMMEDIATELY execute it and feed the terminal output back to you in a [System: Result] block. You can then continue thinking and issue more tools until the task is complete. Only answer the user after you have finished using your tools.
 
-To create or track a task, use the create_task tool (and task_progress / complete_task to advance it) — NEVER by hand-writing Tasking/tasks.json. More generally, don't use write_file/replace_file_content on your own internal state files: Tasking/tasks.json, memory/autonomy_state.json, memory/touch_state.json, memory/cole_intent.json, or anything under SELF/ — those are managed for you and raw-overwriting them corrupts your board, memory, or self-model. write_file and replace_file_content remain fully yours for genuine work products (reports, notes, code) and any other file in the workspace."""
+To create or track a task, use the create_task tool (and task_progress / complete_task to advance it) — NEVER by hand-writing Tasking/tasks.json. More generally, don't use write_file/replace_file_content on your own internal state files: Tasking/tasks.json, memory/autonomy_state.json, memory/touch_state.json, memory/cole_intent.json, or anything under SELF/ — those are managed for you and raw-overwriting them corrupts your board, memory, or self-model. write_file, append_file, and replace_file_content remain fully yours for genuine work products (reports, notes, code) and any other file in the workspace. IMPORTANT for living documents you build up over time: write_file is for creating a NEW file only — to add to an existing doc use append_file, and to change part of it use replace_file_content. Never re-write a whole document with write_file, or you overwrite everything you already wrote."""
 
 # ── Thought logger ────────────────────────────────────────────────────────────
 # Delegates to nova_logs.logger so all logging lives in one place.
