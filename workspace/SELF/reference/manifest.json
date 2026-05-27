@@ -1,10 +1,12 @@
 {
-  "generated": "2026-05-28T07:37:29",
+  "generated": "2026-05-28T07:37:58",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 22,
-  "described": 22,
+  "described": 21,
   "flags": {
-    "undescribed": [],
+    "undescribed": [
+      "restructure.py"
+    ],
     "dead_part_candidates": [
       "nova_memory",
       "nova_motor",
@@ -560,9 +562,9 @@
       "name": "restructure.py",
       "kind": "tool",
       "path": "general_tools/restructure.py",
-      "purpose": "Restructure checker — detects stale path references after a directory move and offers interactive fixes.",
+      "purpose": null,
       "files": 1,
-      "lines": 597,
+      "lines": 1,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -575,6 +577,7 @@
       "referenced_by": [],
       "launched_by": [],
       "flags": [
+        "undescribed",
         "no_inbound_refs"
       ]
     }
