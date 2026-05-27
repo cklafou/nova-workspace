@@ -84,6 +84,25 @@ build_manifest output) — noted but not hand-edited (they regenerate).
 ## Findings (appended as I go)
 _(newest at bottom)_
 
+### AUTONOMY FIX — re-orient loop detection + task decomposition (2026-05-27, implemented; HELD for restart-test)
+Cole's first real task (t11 "Full Architecture & Code Review") exposed a capability gap: on
+an oversized task she **looped at orientation** — 8 progress notes nearly all "Starting...
+mapping workspace structure," produced only a scaffold doc, never advanced into per-file
+review. Root cause: task too big for the per-wake model + vague non-resumable progress notes
++ no decomposition. Fix (all in `nova_cortex/executive.py`, no schema change):
+- `_progress_loop_count(task)` — counts recent progress notes that have a near-twin (jaccard
+  >= 0.65) among the last 5. >=3 = looping. Verified: fires (3) on real t11 notes, silent (0)
+  on healthy advancing notes, no false-fire on 2 early dups.
+- `build_decision`: always-on guidance that oversized tasks should be SPLIT into subtasks via
+  `create` and worked one at a time; plus a STALL CHECK that fires when `needs_decomp`
+  (loop_n>=3 or last note mentions "decompos"/"too big") telling her to decompose NOW.
+- `build_execution`: STALL CHECK when loop_n>=3 (stop re-orienting; do one specific new step
+  or signal "PROGRESS: needs decomposition"); + progress-note discipline (notes MUST name the
+  specific thing done + specific next step, never "starting"/"mapping").
+NOTE: the currently-stalled t11 on her board is the live test — after restart, the detector
+sees those 5 looping notes and should trigger the decompose nudge on her next wake.
+Restart-test required (executive.py change).
+
 ### Gemini external-review verification (2026-05-27, against ground-truth code)
 Cole confirms Gemini had the FULL updated Drive, so its wrong claims are confabulation.
 Verdict per claim:
