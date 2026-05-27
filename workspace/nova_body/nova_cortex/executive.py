@@ -225,12 +225,19 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
     talking to Cole, just resting, or simply thinking more."""
     st = _load_state()
     board = tasking.render_board(st.get("active"))
-    active   = st.get("active")
-    at_main  = tasking.all_tasks().get(active) if active else None
-    loop_n   = _progress_loop_count(at_main) if at_main else 0
-    _lastn   = (((at_main.get("progress") or [])[-1].get("note", "") if at_main and
-                 at_main.get("progress") else "")).lower()
-    needs_decomp = loop_n >= 3 or "decompos" in _lastn or "too big" in _lastn
+    active    = st.get("active")
+    _all      = tasking.all_tasks()
+    at_main   = _all.get(active) if active else None
+    loop_n    = _progress_loop_count(at_main) if at_main else 0
+    _lastn    = (((at_main.get("progress") or [])[-1].get("note", "") if at_main and
+                  at_main.get("progress") else "")).lower()
+    # Subtasks already created under the active task (its open children).
+    open_kids = ([t["id"] for t in _all.values()
+                  if t.get("parent") == active and t.get("status") == "open"]
+                 if active else [])
+    # Only nudge decomposition if she has NOT already decomposed this task. Once it has open
+    # subtasks, the right move is to WORK them — re-decomposing is the exact loop we're killing.
+    needs_decomp = (loop_n >= 3 or "decompos" in _lastn or "too big" in _lastn) and not open_kids
     L = ["A moment ago you reflected and concluded:",
          "", (reflection.strip() or "(no reflection captured)"), ""]
     if recent:
@@ -258,6 +265,13 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
         L += ["No one is waiting on you. Decide freely what this moment calls for. Acting "
               "is OPTIONAL — resting or simply continuing to think are real, valid choices. "
               "Do NOT invent work to look productive."]
+    if open_kids and not cole_pending:
+        L += ["",
+              f"You have ALREADY broken [{active}] into subtasks ({', '.join(open_kids)}). Do "
+              "NOT create more — creating another batch is just a different loop. `switch` to "
+              "ONE of those open subtasks and work it to completion (or its next concrete "
+              "step). Only create a brand-new subtask if you discover genuinely new work that "
+              "none of the existing ones cover."]
     if needs_decomp and not cole_pending:
         L += ["",
               f"STALL CHECK: your recent progress on [{active}] has been repeating the same "
