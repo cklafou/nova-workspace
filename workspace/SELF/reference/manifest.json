@@ -1,11 +1,12 @@
 {
-  "generated": "2026-05-27T23:43:54",
+  "generated": "2026-05-27T23:45:17",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
-  "part_count": 21,
-  "described": 21,
+  "part_count": 22,
+  "described": 22,
   "flags": {
     "undescribed": [],
     "dead_part_candidates": [
+      "nova_imagination",
       "nova_memory",
       "nova_motor",
       "audit_queue.py",
@@ -67,6 +68,28 @@
       ],
       "launched_by": [],
       "flags": []
+    },
+    {
+      "name": "nova_imagination",
+      "kind": "body_part",
+      "path": "nova_body/nova_imagination",
+      "purpose": "Nova's imagination — her visual-creation faculty. Turns intent into images by",
+      "files": 1,
+      "lines": 26,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "8080"
+      ],
+      "nova_imports": [
+        "nova_imagination"
+      ],
+      "third_party": [],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
     },
     {
       "name": "nova_lancedb",
