@@ -1790,6 +1790,9 @@ function handle(d) {
     case 'think_start':     liveThinkStart(); break;
     case 'think_token':     appendThink(d.author, d.id, d.token); liveThinkAppend(d.token); break;
     case 'think_end':       liveThinkEnd(); break;
+    case 'auto_think_start':liveThinkStart('autonomous'); break;
+    case 'auto_think_token':liveThinkAppend(d.token); break;
+    case 'auto_think_end':  liveThinkEnd(); break;
     case 'message_end':     finalizeMsg(d.id, d.content); hideTyping(d.author); break;
     case 'processing_start':setProcessing(true); setNovaStatePill('processing'); break;
     case 'processing_end':  setProcessing(false); updateVigilance({state:'sleeping',reason:'Ready'}); hideQueueBadge(); break;
