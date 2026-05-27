@@ -888,6 +888,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
     _result: list[str] = []  # capture full text so we can return it
     _think_started = [False]  # tracks whether think_start has been broadcast
+    _auto_think_started = [False]  # tracks auto_think_start (silent-tick reasoning → Thoughts pane only)
 
     # ── Real-time activity tracking (deduped across progress + on_done) ──────
     import re as _re
@@ -931,6 +932,13 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         ticks already surface in the Monitor pane (autonomous_output on_done); their
         thinking stays out of the chat entirely."""
         if _silent_tick:
+            # Silent autonomy tick: stream her reasoning to the Thoughts pane on a
+            # DEDICATED channel that never opens a chat bubble — so Cole can watch what
+            # she's thinking while she works/tool-calls, without the empty-bubble bug.
+            if not _auto_think_started[0]:
+                _auto_think_started[0] = True
+                await broadcast({"type": "auto_think_start", "author": ai_name, "id": msg_id})
+            await broadcast({"type": "auto_think_token", "author": ai_name, "token": token, "id": msg_id})
             return
         if not _think_started[0]:
             _think_started[0] = True
@@ -961,6 +969,10 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         # Close the think block if one was opened
         if _think_started[0]:
             await broadcast({"type": "think_end", "author": ai_name, "id": msg_id,
+                             "elapsed": elapsed})
+        # Close the autonomous reasoning block (Thoughts-pane channel) if one was opened
+        if _auto_think_started[0]:
+            await broadcast({"type": "auto_think_end", "author": ai_name, "id": msg_id,
                              "elapsed": elapsed})
 
         # ── Routing: silent autonomous tick vs. normal chat response ───────────
