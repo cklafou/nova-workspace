@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-27 10:44:27_
+_Last updated: 2026-05-27 12:12:04_
 
 ## INITIALIZATION PROTOCOL
 Run these steps at the start of every session in order:
@@ -50,6 +50,7 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | code_md_review_2026-05-27.md | `workspace/memory/reports/code_md_review_2026-05-27.md` | MD file |
 | full_review_progress.md | `workspace/memory/reports/full_review_progress.md` | MD file |
 | identity_brief.md | `workspace/memory/reports/identity_brief.md` | MD file |
+| PASSOVER_2026-05-27_opus.md | `workspace/memory/reports/PASSOVER_2026-05-27_opus.md` | MD file |
 | self_note.md | `workspace/memory/reports/self_note.md` | MD file |
 | who_i_am.md | `workspace/memory/reports/who_i_am.md` | MD file |
 | work_summary.md | `workspace/memory/reports/work_summary.md` | MD file |
@@ -137,6 +138,7 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | server_runner.py | `workspace/general_tools/nova_chat/server_runner.py` | PY file |
 | session_manager.py | `workspace/general_tools/nova_chat/session_manager.py` | PY file |
 | index.html | `workspace/general_tools/nova_chat/static/index.html` | HTML file |
+| nova_dock_prototype.html | `workspace/general_tools/nova_chat/static/nova_dock_prototype.html` | HTML file |
 | tool_router.py | `workspace/general_tools/nova_chat/tool_router.py` | Safe tool dispatch for Nova (read/write/list/run + task board) |
 | transcript.py | `workspace/general_tools/nova_chat/transcript.py` | Chat transcript -> model messages builder |
 | workspace_context.py | `workspace/general_tools/nova_chat/workspace_context.py` | Builds Nova's on-demand context block |
@@ -206,6 +208,7 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | passover_2026-03-28_claude.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-28_claude.md` | MD file |
 | session_notes_2026-03-22.md | `workspace/_admin/passover/3 MAR 2026/session_notes_2026-03-22.md` | MD file |
 | HANDOFF.md | `workspace/_admin/passover/6 MAY 2026/HANDOFF.md` | MD file |
+| README.md | `workspace/_admin/README.md` | Project overview |
 
 ## nova_lancedb/
 
