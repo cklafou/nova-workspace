@@ -1,10 +1,12 @@
 {
-  "generated": "2026-05-28T06:33:39",
+  "generated": "2026-05-28T06:35:12",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 22,
-  "described": 22,
+  "described": 21,
   "flags": {
-    "undescribed": [],
+    "undescribed": [
+      "nova_logs"
+    ],
     "dead_part_candidates": [
       "nova_memory",
       "nova_motor",
@@ -126,7 +128,7 @@
       "name": "nova_logs",
       "kind": "body_part",
       "path": "nova_body/nova_logs",
-      "purpose": "Nova's unified log manager — the single logging system shared by all subsystems.",
+      "purpose": null,
       "files": 2,
       "lines": 254,
       "age_days": 0,
@@ -141,7 +143,9 @@
         "nova_senses"
       ],
       "launched_by": [],
-      "flags": []
+      "flags": [
+        "undescribed"
+      ]
     },
     {
       "name": "nova_memory",
