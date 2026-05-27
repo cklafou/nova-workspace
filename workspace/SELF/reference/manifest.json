@@ -1,10 +1,12 @@
 {
-  "generated": "2026-05-28T04:53:58",
+  "generated": "2026-05-28T04:54:28",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 22,
-  "described": 22,
+  "described": 21,
   "flags": {
-    "undescribed": [],
+    "undescribed": [
+      "nova_imagination"
+    ],
     "dead_part_candidates": [
       "nova_memory",
       "nova_motor",
@@ -72,7 +74,7 @@
       "name": "nova_imagination",
       "kind": "body_part",
       "path": "nova_body/nova_imagination",
-      "purpose": "Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches, schematics), auto-applying her self-LoRA when she draws herself.",
+      "purpose": null,
       "files": 2,
       "lines": 328,
       "age_days": 0,
@@ -91,7 +93,9 @@
         "nova_chat"
       ],
       "launched_by": [],
-      "flags": []
+      "flags": [
+        "undescribed"
+      ]
     },
     {
       "name": "nova_lancedb",
