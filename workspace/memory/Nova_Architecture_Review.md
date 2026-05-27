@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-28 05:40:28_
+_Last updated: 2026-05-28 05:42:05_
 
 ---
 
@@ -2219,3 +2219,29 @@ Last reflection text persists across wakes (max 1200 chars). This is how she car
 When holding an open task and not mid-conversation with Cole, the execution pass runs - this is where actual tool work happens. The reflect→decide wake only decides WHAT matters but never performs the real file operations itself.
 
 ---
+## Executive Faculty (nova_cortex/executive.py)
+
+**Purpose:** Nova's autonomy engine - handles wake cycles, reflection, decision-making, and task execution. Pure logic with no external dependencies beyond her board and senses.
+
+**Key Design Pattern:** Three-phase autonomy loop:
+1. `should_wake()` - lightweight gate (no model) that checks Cole pending, time-sense, file changes
+2. `build_reflection()` + host inference - Nova "sits" with the moment before acting
+3. `build_decision()` + execution pass - optional board actions followed by concrete tool work
+
+**Core Mechanics:**
+- Autonomy on/off state persists in memory/autonomy_state.json (hers, not server's)
+- Two-phase wake: reflection happens SILENTLY first, then decision allows acting
+- `note_activity()` re-baselines after she acts so time-sense reflects real last activity
+- Stall detection via `_progress_loop_count()` - catches when Nova loops on same orienting step instead of advancing (≥3 near-duplicate notes = stuck)
+
+**Task Tree Handling:**
+- Prefers open LEAF tasks over umbrellas during execution pass
+- Auto-descends to highest-priority leaf under active umbrella if needed
+- Parent-id rule: when creating umbrella + subtasks together, use EXACT TITLE for parent field (id doesn't exist yet)
+
+**Notable Details:**
+- `recent` conversation passed by host so she's never blind to what was just said
+- Acting is OPTIONAL - a wake may end in just talking, resting, or thinking more
+- Host owns all I/O; executive makes zero outward calls (survives pluck-test)
+
+**Lines:** ~1964 across 8 files in nova_cortex package
