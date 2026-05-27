@@ -1014,6 +1014,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-item" onclick="toggleWidget('files')"><span class="dd-icon">📁</span><span class="dd-label">Files</span><span class="dd-check" id="wchk-files"></span></div>
   <div class="dd-item" onclick="toggleWidget('eyes')"><span class="dd-icon">👁</span><span class="dd-label">Eyes</span><span class="dd-check" id="wchk-eyes"></span></div>
   <div class="dd-item" onclick="toggleWidget('terminal')"><span class="dd-icon">⬛</span><span class="dd-label">Terminal</span><span class="dd-check" id="wchk-terminal"></span></div>
+  <div class="dd-item" onclick="toggleWidget('editor')"><span class="dd-icon">📑</span><span class="dd-label">Editor</span><span class="dd-check" id="wchk-editor"></span></div>
 </div>
 
 <!-- Agents -->
@@ -2401,7 +2402,10 @@ function buildTree(parent, items, depth) {
       parent.appendChild(el); parent.appendChild(kids);
     } else {
       el.className='ft-file';
+      el.style.cursor='pointer';
+      el.title='Open in Editor';
       el.innerHTML=`<span class="ft-icon">${fileIcon(item.name)}</span><span class="ft-name">${esc(item.name)}</span>`;
+      el.onclick=()=>{ if(window.openInEditor) window.openInEditor(item.path||item.name, item.name); };
       parent.appendChild(el);
     }
   });
@@ -3962,6 +3966,15 @@ switchPanel('thoughts');
 .nv-glwidget.nv-bare .nv-wbody{padding:0;overflow:hidden;}
 .nv-glwidget.nv-bare .nv-wbody>*{width:100%!important;height:100%!important;max-width:none!important;min-width:0!important;flex:1 1 auto!important;}
 #main-area>#wdash.golden{flex:1;min-width:0;}
+/* Editor widget — VS-style code viewer */
+.nv-editor{display:flex;flex-direction:column;height:100%;width:100%;background:#0c0c1c;}
+.ned-head{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:5px 10px;
+  background:var(--bg-mid);border-bottom:1px solid var(--border);}
+.ned-dot{width:8px;height:8px;border-radius:50%;background:var(--nova);flex:0 0 auto;box-shadow:0 0 6px rgba(167,139,250,.5);}
+.ned-name{font-family:var(--mono);font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ned-pre{flex:1;min-height:0;margin:0;overflow:auto;background:#0c0c1c;}
+.ned-code{display:block;padding:10px 12px;font-family:var(--mono);font-size:11.5px;line-height:1.55;
+  white-space:pre;color:var(--text-dim);background:transparent!important;tab-size:4;}
 /* ── Golden Layout .lm_* — re-themed to the violet palette ──── */
 .lm_goldenlayout{background:transparent;}
 .lm_content{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
@@ -4157,6 +4170,50 @@ switchPanel('thoughts');
     const c=document.getElementById('vchk-opacity'); if(c)c.textContent=opacityMode?'✓':'';
     if(!opacityMode&&opPop)opPop.style.display='none';
     if(typeof closeDD==='function')closeDD();
+  };
+
+  // ── Editor widget: open a file (clicked in Files) into a VS-style code pane ──
+  let _hljsLoading=null;
+  function loadHljs(){
+    if(window.hljs)return Promise.resolve();
+    if(_hljsLoading)return _hljsLoading;
+    _hljsLoading=new Promise(res=>{
+      const css=document.createElement('link');css.rel='stylesheet';
+      css.href='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css';
+      document.head.appendChild(css);
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js';
+      s.onload=()=>res(); s.onerror=()=>res(); document.head.appendChild(s);
+    });
+    return _hljsLoading;
+  }
+  window.ensureWidget=function(id){ if(present[id]||!DEFS[id])return;
+    if(engine==='golden')addGolden(id); else addWidget(id,{}); };
+  window.openInEditor=async function(path,name){
+    if(!path)return;
+    window.ensureWidget('editor');
+    loadHljs();
+    const LANG={py:'python',js:'javascript',jsx:'javascript',ts:'typescript',tsx:'typescript',
+      html:'xml',htm:'xml',xml:'xml',css:'css',json:'json',md:'markdown',sh:'bash',bat:'dos',
+      cmd:'dos',ps1:'powershell',yml:'yaml',yaml:'yaml',toml:'ini',ini:'ini',sql:'sql',
+      rs:'rust',go:'go',c:'c',cpp:'cpp',h:'cpp'};
+    let tries=0;
+    (async function apply(){
+      const nameEl=document.getElementById('ned-name'), codeEl=document.getElementById('ned-code');
+      if(!codeEl){ if(tries++<20){setTimeout(apply,60);} return; }   // wait for widget DOM
+      if(nameEl)nameEl.textContent=name||path;
+      codeEl.textContent='Loading '+(name||path)+'…'; codeEl.className='ned-code';
+      try{
+        const r=await fetch('/api/files/read?path='+encodeURIComponent(path));
+        const d=await r.json();
+        if(d&&d.error){ codeEl.textContent='⚠ '+d.error; return; }
+        codeEl.textContent=(d&&d.content!=null)?d.content:'(empty)';
+        const ext=((name||path).split('.').pop()||'').toLowerCase();
+        await loadHljs();
+        if(window.hljs){ if(LANG[ext])codeEl.classList.add('language-'+LANG[ext]);
+          try{ delete codeEl.dataset.highlighted; hljs.highlightElement(codeEl); }catch(_){} }
+      }catch(_){ codeEl.textContent='Could not read file.'; }
+    })();
   };
 
   function buildGoldenContent(el,id){
