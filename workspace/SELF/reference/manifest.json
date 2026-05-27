@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-28T00:16:51",
+  "generated": "2026-05-28T00:17:20",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 22,
   "described": 22,
@@ -280,7 +280,7 @@
       "purpose": "Shutdown — kills whatever is listening on Nova's ports (8080/8765) for a clean restart.",
       "files": 1,
       "lines": 37,
-      "age_days": 0,
+      "age_days": 1,
       "ports_bind": [],
       "ports_seen": [
         "8080",
