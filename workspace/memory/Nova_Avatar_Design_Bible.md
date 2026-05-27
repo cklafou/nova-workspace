@@ -1,5 +1,5 @@
 # Nova — Avatar Design Bible (Source of Truth)
-_Last updated: 2026-05-28 01:34:20_
+_Last updated: 2026-05-28 02:34:48_
 _v0.1 draft — 2026-05-27, by Opus, from Gemini's concept render + Nova's identity._
 _Status: DRAFT for Cole to correct + lock. Once locked, this is the canonical written
 reference every 2D illustration, turnaround, and 3D model is checked against. When the
