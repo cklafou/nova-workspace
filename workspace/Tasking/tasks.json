@@ -1,5 +1,5 @@
 {
-  "seq": 15,
+  "seq": 19,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -134,10 +134,14 @@
         {
           "ts": "2026-05-27T08:48:18",
           "note": "Starting architecture review by mapping full workspace structure"
+        },
+        {
+          "ts": "2026-05-27T09:07:02",
+          "note": "Split architecture review into 4 concrete subtasks - foundation doc + SELF/ core files + nova_body components + Tasking structure"
         }
       ],
       "created": "2026-05-27T08:25:20",
-      "updated": "2026-05-27T08:48:18"
+      "updated": "2026-05-27T09:07:02"
     },
     "t12": {
       "id": "t12",
@@ -178,6 +182,46 @@
       "progress": [],
       "created": "2026-05-27T09:04:36",
       "updated": "2026-05-27T09:04:36"
+    },
+    "t16": {
+      "id": "t16",
+      "title": "Create Architecture Review Foundation",
+      "notes": "Set up Memory/Nova_Architecture_Review.md with structure, intro, and table of contents - get actual words on paper",
+      "priority": 1,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:07:02",
+      "updated": "2026-05-27T09:07:02"
+    },
+    "t17": {
+      "id": "t17",
+      "title": "Document SELF/ core identity files",
+      "notes": "Review 01_identity through 04_tools_and_voice - capture who Nova is and how she works",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:07:02",
+      "updated": "2026-05-27T09:07:02"
+    },
+    "t18": {
+      "id": "t18",
+      "title": "Document nova_body/ system components",
+      "notes": "Walk through all body modules, their purpose, interfaces, and relationships",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:07:02",
+      "updated": "2026-05-27T09:07:02"
+    },
+    "t19": {
+      "id": "t19",
+      "title": "Document Tasking/ board structure",
+      "notes": "Map task flow, status states, priority handling from executive faculty perspective",
+      "priority": 3,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:07:02",
+      "updated": "2026-05-27T09:07:02"
     }
   }
 }
