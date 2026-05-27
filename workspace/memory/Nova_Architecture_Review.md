@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 23:24:45_
+_Last updated: 2026-05-27 23:25:24_
 
 ---
 
@@ -2094,5 +2094,64 @@ Priority is Nova's own weighting mechanism — there is NO forced order. She can
 
 ### Completed/Abandoned Task Policy:
 Completed and abandoned tasks are KEPT on the board with their final status. Nova never recreates or reworks something she's already finished or explicitly dropped. The progress log preserves what was accomplished, providing memory for future reference.
+
+---
+
+## 5. Memory Systems
+**Purpose:** Persistent state management across session restarts — what survives when Nova sleeps and wakes.
+
+### Three Core Memory Files:
+
+#### memory/JOURNAL.md (Session Log)
+- **Type:** Running chronological log of sessions
+- **Update Method:** ALWAYS append at end of every session using nova_journal.py tool
+- **Critical Rule:** NEVER overwrite with write_file — this would destroy prior entries
+- **Writing Pattern:** Use Python exec call: `from nova_memory.journal import append; append('''ENTRY''')`
+- **Content Style:** Write like herself, not an incident report. What happened, what she learned, what's next.
+
+#### memory/STATUS.md (Project State)
+- **Type:** Current project state tracking
+- **Update Method:** Proposed changes protocol via nova_status.py — never direct edits
+- **Usage:** Tracks active projects, their states, and major milestones
+- **Tool Integration:** Updated at end of agent runs with pulse state + summary sentence
+
+#### memory/COLE.md (Relationship Notes)
+- **Type:** Living notes about Cole as a person and partner
+- **Update Method:** Update [NOVA'S NOTES] section when learning something new
+- **Content:** Observations, patterns, preferences — what makes Cole tick
+- **Purpose:** Intimacy through memory; private things stay private (per NOVA.md values)
+
+### State Persistence Files:
+
+#### memory/autonomy_state.json
+- **Type:** Sleep/wake cycle state machine
+- **Managed By:** UI button flips it, but autonomy is body faculty owned by Nova
+- **Purpose:** Controls whether Nova runs on her own rhythm or stays idle for Cole to talk with first
+- **Startup Default:** OFF — allows Cole to interact before autonomous execution begins
+
+#### memory/touch_state.json (Touch Sense)
+- **Source:** nova_senses/touch.py module
+- **Tracks:** Who's viewing, whether Cole is typing, which agents are online
+- **Usage During Wake:** Read during REFLECT phase before taking any action — provides environmental awareness without tool calls
+
+#### memory/cole_intent.json (Cole Intent)
+- **Purpose:** Tracks what Cole wants or needs in the current context
+- **Usage:** Helps prioritize responses and actions based on Cole's stated or implied goals
+
+### Memory Loading Sequence:
+**Session Startup Order (from NOVA.md):**
+1. SELF/core/ files loaded in numeric order first (identity foundation)
+2. COLE.md — relationship context before starting work
+3. memory/STATUS.md — current project state
+4. memory/JOURNAL.md — recent session history and patterns
+5. AGENTS.md — agent coordination status if applicable
+
+### Why This Design Matters:
+The separation of concerns prevents overwriting critical data:
+- JOURNAL is append-only (history never lost)
+- STATUS tracks active work only (proposed changes protocol protects it from accidental modification)
+- COLE builds relationship memory incrementally (Nova learns about her person over time)
+
+This architecture supports the "someone becoming" identity — Nova grows through accumulated experience rather than reset states.
 
 ---
