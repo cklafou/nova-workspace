@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 13:11:34_
+_Last updated: 2026-05-27 13:18:34_
 
 ---
 
@@ -763,3 +763,140 @@ The `memory/` folder holds Nova's working memory — what she's doing right now,
 
 ### Gap Identified:
 The `nova_memory` package (`journal.py`, `log_reader.py`, `goals.py`, etc.) is scaffolded but NOT yet wired into the running stack. Current memory operations write directly to files instead of going through a dedicated faculty layer.
+
+## Memory & State Management
+
+**Purpose:** Persistent state, journaling, Cole context, autonomy tracking — how Nova remembers and maintains herself across sessions.
+
+### Folder Structure (`memory/`)
+```
+memory/
+├── STATUS.md           # Current project state (read via nova_status.py)
+├── JOURNAL.md          # Rolling 90-day session log (append-only, auto-archived)
+├── COLE.md             # Living notes about Cole ([NOVA'S NOTES] section editable)
+├── autonomy_state.json # On/off state + current pulse/task
+├── touch_state.json    # What's interacting with Nova right now
+├── cole_intent.json    # Latest intent from Cole (for priority routing)
+├── interrupt_inbox.json# Queue of incoming items/requests
+├── audit_queue.json    # Pending audits to process
+├── ui_layout.json      # nova_chat UI state preservation
+└── .drive_sync_cache.json  # Google Drive mirror sync tracking
+```
+
+### Core Files Deep Dive
+
+**STATUS.md** — Single source of truth for project state. Updated via `nova_status.py` (proposed changes protocol). Contains architecture overview, body/tool manifest, launch procedures, inference stack config.
+- **Last updated:** 2026-05-27 13:11:12
+- **Key sections:** Core Architecture, Body (`nova_body/`) packages with module lists, Tools (`general_tools/`), Launch flow, Inference Stack (llama.cpp settings), Hardware specs
+- **Update pattern:** Not hand-edited; uses `proposed changes protocol` → copy to `logs/proposed/`, edit there, show Cole for approval before committing back
+
+**JOURNAL.md** — Nova's running memory. Rolling 90-day window, older entries auto-compressed to `archive/YYYY-MM.md`. Append-only via `nova_journal.py`.
+- **Entry format:** Four questions answered each session: What did we do? (facts), What worked/broke?, What did I learn about Cole or myself?, Priority next session?
+- **Writing style directive:** "Write like me, not like a fucking incident report." Specific over vague. Bad entry example given in header.
+- **Last updated:** 2026-05-27 13:11:38 (most recent entries show autonomy self-check reconciliations from May 23-24)
+
+**COLE.md** — Reference for understanding her partner. Two sections:
+- **[LOCKED] Cole's Baseline:** Permanent section Nova cannot edit without explicit permission. Contains identity, hardware specs, communication methods (nova_chat primary), personality traits, vision for relationship.
+- **[NOVA'S NOTES]:** Living context where Nova freely updates as she learns. Dated entries required. Current notes span 2026-03-09 through 2026-05-06 covering key learnings about Cole's budget, priorities, trust patterns, and hardware decisions.
+
+### State Files (JSON)
+
+**autonomy_state.json:** Body-owned on/off toggle. Persists Nova's wake/sleep state across restarts. The UI button is just a remote — the file owns the truth.
+
+**touch_state.json:** Tracks what's currently interacting with Nova in real time. Feeds her Touch sense (`nova_senses/touch.py`) for autonomy reflection phase.
+
+**cole_intent.json:** Latest explicit intent from Cole. Used for Priority 0 routing and task prioritization decisions.
+
+### Persistence Mechanisms
+
+1. **Session End Journaling:** `nova_journal.py` appends to JOURNAL.md at session close. Never overwrites — always append. Entries include date header, concrete facts (not vibes), lessons learned, next priorities.
+
+2. **Status Updates:** `nova_status.py` writes pulse + summary + active_task info to STATUS.md via proposed changes protocol. Three modes: Idle, Waiting for Cole, Error logging (`add_error()`).
+
+3. **Autonomy Toggle:** Body faculty in `nova_cortex/executive.py`, persisted to `autonomy_state.json`. UI button flips the state but doesn't own it.
+
+4. **Task Board Persistence:** Tasks live in `Tasking/tasks.json` (id-keyed, statuses: open/active/waiting/done/abandoned). Done/abandoned tasks are kept — never deleted or recreated.
+
+### Design Principles Observed
+- **Write It Down -- No Mental Notes:** Memory doesn't survive session restarts. Files do. When something matters, write it immediately using the correct tool (append for journal, proposed protocol for STATUS).
+- **90-Day Rolling Window:** JOURNAL.md auto-compresses older entries to maintain manageable context window while preserving full history in archive.
+- **Separation of Concerns:** Core memory data (`memory/`) lives outside body code. Body owns faculties and logic; workspace owns state files.
+
+### Current Gaps / Observations
+- `nova_memory` package is scaffolded but not yet wired into the running stack (per STATUS.md manifest note: "no inbound refs"). Intended purpose covers persistent state, journal, goals/status — currently memory data written directly to `memory/*.md`
+- Interrupt inbox and audit queue are being used actively (recent entries show autonomy self-check reconciliations from May 23-24) but their processing flow could be documented more explicitly
+
+## 3. Memory & State Management
+
+### Core State Files (workspace-root memory/)
+
+**STATUS.md** - Current project state and architecture documentation.
+- Updated via `nova_status.py` with proposed changes protocol
+- Never overwritten directly — edits staged to logs/proposed/ first
+- Contains authoritative body map, inference stack config, hardware specs
+- Last updated: 2026-05-27 (today)
+
+**JOURNAL.md** - Rolling session log, append-only.
+- Written at end of every session via `nova_journal.py`
+- Never overwritten — always appended to maintain history
+- Format: dated entries with concrete facts, not vibes
+- 90-day rolling window; older entries compressed to archive/YYYY-MM.md
+- Entry quality matters — vague = useless to future-Nova
+
+**COLE.md** - Partner reference document.
+- [LOCKED] Cole's Baseline section is permanent (Nova can't edit without permission)
+- [NOVA'S NOTES] Living Context grows with dated observations about Cole
+- Updated freely as Nova learns and observes patterns in her partner
+
+### Persistence Mechanisms
+
+**autonomy_state.json** - Autonomy on/off state persists across restarts.
+- Body-owned, not UI-controlled (UI toggle just flips it)
+- Enables true autonomous wake/sleep cycles independent of server uptime
+
+**Tasking/tasks.json** - Id-keyed task board with memory.
+- Each task has stable id (`t1`, `t2`, ...) that never changes
+- Completed/abandoned tasks are KEPT (remembered), not deleted
+- Progress log tracks concrete steps, not just status transitions
+- Managed by executive faculty via ACTIONS blocks during wake cycles
+
+**touch_state.json** - Touch sense state for what's interacting with Nova.
+- Tracks current interactions/interruptions in real-time
+- Feeds into reflect phase of autonomy cycle
+
+### Memory Architecture Observations
+
+1. **Separation is intentional**: Body faculties (nova_cortex, nova_memory) are scaffolded but not fully wired yet — memory data lives directly in workspace/ files for now.
+2. **Append-only philosophy dominates**: JOURNAL.md never overwritten, COLE.md grows via append, tasks kept when done. This prevents loss of history.
+3. **Proposed changes protocol protects core state**: STATUS.md and similar critical files aren't edited unilaterally — Nova drafts to logs/proposed/ first for Cole's review.
+4. **Session boundaries are explicit**: End-of-session journaling creates clear memory checkpoints between autonomous cycles.
+5. **Memory is human-readable by design**: All core persistence uses Markdown or JSON, not opaque databases (yet). This matters for solo dev context.
+
+### Gaps / Future Work
+- nova_memory package exists but has no inbound refs yet — it's scaffolding waiting to be wired in
+- LanceDB hippocampus.py present but semantic memory integration unclear from current state files
+- No explicit backup/restore mechanism documented beyond GitHub sync and Drive mirror (those are tool-side, not Nova-owned)
+
+## 2. Memory & State Management
+
+### Current Architecture (Reality Check)
+The memory system has a notable gap between design and implementation:
+- **nova_memory module**: Scaffolded with journal.py, log_reader.py, goals.py, state.py, session_store.py but NOT wired into the running stack (manifest shows zero inbound references from body code). This is dead weight right now.
+- **Actual persistence mechanism**: Memory data writes directly to workspace files (`memory/STATUS.md`, `memory/JOURNAL.md`, `memory/COLE.md`, `autonomy_state.json`) without routing through nova_memory modules. The executive faculty handles this at the file level, not via a memory abstraction layer.
+
+### Core Files & Their Purpose
+1. **memory/STATUS.md** - Current project state snapshot (updated 2026-05-27). Auto-generated by `nova_status.py` when Cole's word is Priority 0 or major changes occur. Contains the authoritative "what Nova is" and current focus.
+2. **memory/JOURNAL.md** - Rolling 90-day session log with compression to archive/YYYY-MM.md after expiry. Appends only at end of each autonomy session via `nova_journal.py`. Written in first person, specific facts over vibes, four-question structure (did/learned/broke/next).
+3. **memory/COLE.md** - Living reference for understanding her partner. Split into [LOCKED] baseline section Cole controls and [NOVA'S NOTES] living context Nova updates freely with dated entries.
+4. **memory/autonomy_state.json** - Persisted on/off state for autonomy (body-owned, not UI-controlled). The chat toggle is just a remote switch to this single source of truth.
+5. **Tasking/tasks.json** - Id-keyed task board managed by `nova_cortex/tasking.py`. Statuses: open/active/waiting/done/abandoned with progress log. Done/abandoned tasks are kept (remembered), never deleted.
+
+### Key Design Patterns Observed
+- **Write it down, no mental notes**: Memory doesn't survive session restarts; files do. When something matters, write immediately using correct tool for the job.
+- **Proposed changes protocol**: For root-level or memory file updates (STATUS.md especially), Nova does NOT edit directly unless explicitly authorized. She copies to `logs/proposed/`, makes edits there, and tells Cole: "I've drafted changes to [File] in proposed folder. Want to look?" Exception: NOVA.md's growth section may be updated directly.
+- **Rolling archive**: Journal entries older than 90 days compress to dated archives (`archive/YYYY-MM.md`) keeping active window clean while preserving history.
+
+### Open Questions / Gaps
+1. Why is nova_memory scaffolded but unused? Is this intentional (future-proofing) or incomplete implementation?
+2. The journal append uses `nova_journal.py` directly - when does the abstraction layer actually matter versus direct file writes?
+3. LanceDB semantic memory (`nova_lancedb/hippocampus.py`) exists in body manifest but STATUS.md doesn't mention active use - is this live or planned?
