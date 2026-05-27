@@ -1,5 +1,5 @@
 # ORIENT.md — Nova Workspace Master Reference
-_Last updated: 2026-05-28 03:38:52_
+_Last updated: 2026-05-28 04:39:01_
 _Read this before any infrastructure task. For Nova and Cowork AI._
 _Auto-sections updated by `python general_tools/orient.py`. Hand-written sections preserved._
 _Last auto-updated: 2026-05-09 · Hand-refreshed 2026-05-23 (launcher, app window, sleep/wake autonomy, llama.cpp)_
