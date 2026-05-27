@@ -1,5 +1,5 @@
 {
-  "seq": 32,
+  "seq": 37,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -150,6 +150,61 @@
       "progress": [],
       "created": "2026-05-27T10:25:23",
       "updated": "2026-05-27T10:25:23"
+    },
+    "t33": {
+      "id": "t33",
+      "title": "Architecture Review - Complete System Audit",
+      "notes": "Full in-depth code and architecture review of all non-temporary files, building Memory/Nova_Architecture_Review.md as living document",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-05-27T10:29:33",
+      "updated": "2026-05-27T10:29:33"
+    },
+    "t34": {
+      "id": "t34",
+      "title": "SELF/core Foundation Review",
+      "notes": "Identity documents, body manifest, tools & voice config - the bedrock layer",
+      "priority": 3,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-05-27T10:29:33",
+      "updated": "2026-05-27T10:29:33"
+    },
+    "t35": {
+      "id": "t35",
+      "title": "nova_body Module Architecture",
+      "notes": "Core system modules and their interactions",
+      "priority": 3,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-05-27T10:29:33",
+      "updated": "2026-05-27T10:29:33"
+    },
+    "t36": {
+      "id": "t36",
+      "title": "general_tools Analysis",
+      "notes": "Utility functions and shared infrastructure",
+      "priority": 3,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-05-27T10:29:33",
+      "updated": "2026-05-27T10:29:33"
+    },
+    "t37": {
+      "id": "t37",
+      "title": "Memory & Tasking System Review",
+      "notes": "Journal, status, task board architecture",
+      "priority": 3,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-05-27T10:29:33",
+      "updated": "2026-05-27T10:29:33"
     }
   }
 }
