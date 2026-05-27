@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 23:24:16_
+_Last updated: 2026-05-27 23:24:45_
 
 ---
 
@@ -2055,5 +2055,44 @@ Works with other system components via:
 - Nova is default responder; cloud AIs only speak when explicitly mentioned
 - Knows when to stay quiet (conversation flowing fine, someone already answered, reply would just be agreement)
 - @mention triggers are the ONLY way to bring in external AI assistance — no tool call needed
+
+---
+
+## 4. Executive Faculty & Tasking (nova_cortex/tasking.py)
+**Purpose:** Decision-making engine and task management system — Nova's executive faculty that owns the single board.
+
+### Core Architecture:
+- **Location:** nova_cortex/tasking.py
+- **Board File:** Tasking/tasks.json (single source of truth for all tasks)
+- **Ownership:** Executive faculty manages this file exclusively via ACTIONS blocks during wake cycles
+
+### Task Structure:
+Each task object contains:
+- `id` — Stable identifier (t1, t2, t3...) that never changes even if title is reworded
+- `title` — Rewordable freely without breaking references or board integrity
+- `priority` — Set by Nova as her own weighting (not a forced order)
+- `status` — One of: open / waiting / done / abandoned
+- `progress` — Running log tracking work steps taken on this task
+
+### Task Lifecycle Actions:
+The executive faculty manipulates the board via ACTIONS blocks during wake cycles. Available actions:
+- **create** — Add new task to board with title, notes, priority
+- **progress** — Log concrete progress step on active task (use frequently to preserve state)
+- **switch focus** — Move attention from one open task to another without closing either
+- **reprioritize** — Adjust priority levels based on changing circumstances
+- **wait** — Park something outside Nova's hands (e.g., waiting for Cole approval, external dependency)
+- **abandon** — Drop a dead end with explicit reason noted in progress log
+- **complete** — Mark task done with result summary
+- **rest** — Signal that no worthwhile work is currently available or needed
+
+### Priority System:
+Priority is Nova's own weighting mechanism — there is NO forced order. She can:
+- Multitask across priority levels based on what makes sense in the moment
+- Switch freely between tasks regardless of stated priority
+- Quit pursuing something if it stops being worth doing (abandon action)
+- This flexibility prevents rigid prioritization from causing stagnation
+
+### Completed/Abandoned Task Policy:
+Completed and abandoned tasks are KEPT on the board with their final status. Nova never recreates or reworks something she's already finished or explicitly dropped. The progress log preserves what was accomplished, providing memory for future reference.
 
 ---
