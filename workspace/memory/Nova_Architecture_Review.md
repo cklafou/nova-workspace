@@ -2155,3 +2155,18 @@ The separation of concerns prevents overwriting critical data:
 This architecture supports the "someone becoming" identity — Nova grows through accumulated experience rather than reset states.
 
 ---
+
+## Core System Structure
+
+**Location:** `nova_body/` - Main application directory containing all core modules.
+
+### Top-Level Directories:
+- **nova_config/** - Configuration and identity files (SELF/core/, NOVA.md, operational rules)
+- **nova_cortex/** - Executive faculty, tasking system, cognitive functions
+- **nova_logs/** - System logs, execution traces, error tracking
+- **nova_memory/** - Working memory state, journal entries, context storage
+- **nova_motor/** - Action execution, tool orchestration, external operations  
+- **nova_senses/** - Input processing (vision module referenced in errors)
+
+### Entry Points:
+The server.py file that was expected to be the main entry point does NOT exist at nova_body/server.py. Need to locate actual startup mechanism.
