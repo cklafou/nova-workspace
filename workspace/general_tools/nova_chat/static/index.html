@@ -1176,6 +1176,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       <button class="pbar-auto" id="pb-auto" onclick="clickAutoToggle()" data-tooltip="Autonomous mode — Nova runs herself on a sleep/wake loop, waking on changes or at set intervals. Click to pause/resume.">
         <div class="pbar-auto-dot" id="pb-auto-dot"></div>Auto
       </button>
+      <button class="pbar-wake" id="pb-wake" onclick="wakeNova()" data-tooltip="Wake Nova now — forces one immediate cognition cycle even if she's asleep or leaning toward rest, and pushes her to take her next task step.">⏰ Wake</button>
       <!-- Nova state pill: always-visible status without opening Monitor tab -->
       <div id="nova-state-pill" class="state-sleeping" data-tooltip="Nova's current state — 💤 Sleeping · 🔍 Scanning · ⚡ Generating · 🔧 Tool running">
         <div id="nova-state-dot"></div>
@@ -2943,6 +2944,14 @@ function setNovaStatePill(state){
 }
 
 function clickAutoToggle(){setAutonomous(!autonomousMode);ws?.readyState===1&&ws.send(JSON.stringify({type:'autonomous_toggle',enabled:autonomousMode}));}
+async function wakeNova(){
+  const btn=document.getElementById('pb-wake');
+  try{
+    if(btn){btn.classList.add('waking');btn.disabled=true;}
+    await fetch('/api/wake',{method:'POST'});
+  }catch(_){}
+  setTimeout(()=>{const b=document.getElementById('pb-wake');if(b){b.classList.remove('waking');b.disabled=false;}},2500);
+}
 function setAutonomous(on){
   autonomousMode=on;
   // Input-area pill

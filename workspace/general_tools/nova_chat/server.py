@@ -133,6 +133,7 @@ connected_clients: list[WebSocket] = []
 active_tasks: list[asyncio.Task] = []
 is_processing: bool = False
 _stop_requested = asyncio.Event()  # set by STOP; cleared at start of every new response
+_force_wake = asyncio.Event()      # set by the Wake Up button (/api/wake) — forces one immediate cognition cycle
 
 # ── Cole message queue ────────────────────────────────────────────────────────
 # When Cole sends a message while AIs are processing, we queue it instead of
@@ -1719,13 +1720,14 @@ async def autonomy_daemon():
     await asyncio.sleep(2)
 
     while True:
-        if not executive.autonomy_enabled():
+        forced = _force_wake.is_set()                # Cole pressed Wake Up — overrides the gate
+        if not forced and not executive.autonomy_enabled():
             await asyncio.sleep(2)
             continue
 
-        await asyncio.sleep(3)                       # ASLEEP — cheap poll, no model
+        await asyncio.sleep(0.5 if forced else 3)    # ASLEEP — cheap poll, no model
         if _stop_requested.is_set() or is_processing:
-            continue
+            continue                                 # busy — keep _force_wake set; handle next loop
 
         cole_pending = _has_unread_cole()            # host reads the live transcript
         # A standing directive's job is to make sure she attends to Cole's word ONCE.
@@ -1739,7 +1741,11 @@ async def autonomy_daemon():
                     _env.consume_cole_directive()
             except Exception:
                 pass
-        should, reason = executive.should_wake(cole_pending)
+        if forced:
+            _force_wake.clear()
+            should, reason = True, "Cole pressed Wake Up"
+        else:
+            should, reason = executive.should_wake(cole_pending)
         if not should:
             continue
         try:
@@ -1808,7 +1814,7 @@ async def autonomy_daemon():
             # This is what turns "create a task, then work it" into a finished task
             # instead of one that sits open forever.
             try:
-                if not cole_pending and not outcome.get("rested"):
+                if not cole_pending and (forced or not outcome.get("rested")):
                     from nova_cortex import tasking as _tasking
                     exec_id = executive.pick_execution_target()
                     etask   = _tasking.all_tasks().get(exec_id) if exec_id else None
@@ -1841,6 +1847,18 @@ async def autonomy_daemon():
             except Exception:
                 pass
             await broadcast({"type": "processing_end"})
+
+
+@app.post("/api/wake")
+async def wake_now():
+    """Manual wake — Cole forces Nova to run one cognition cycle right now, bypassing
+    the should_wake gate and a 'rest' lean. Works even if Autonomous Mode is off."""
+    _force_wake.set()
+    try:
+        await emit_event("wake", "Manual wake — Cole pressed Wake Up")
+    except Exception:
+        pass
+    return JSONResponse({"ok": True})
 
 
 @app.get("/api/queue")
