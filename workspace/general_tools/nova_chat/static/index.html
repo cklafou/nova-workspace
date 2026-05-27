@@ -50,9 +50,9 @@
   --red-dim:      rgba(248,113,113,0.12);
 
   /* ── Text — readable, violet-warm ──────────────────────────────────── */
-  --text:         #f2f0ff;   /* near-white with violet warmth             */
-  --text-dim:     #9a98cc;   /* secondary text — was #6868a0, now legible */
-  --text-mute:    #5a5890;   /* muted hints — was #333358, now visible    */
+  --text:         #f4f2ff;   /* near-white with violet warmth             */
+  --text-dim:     #c4c2ea;   /* secondary text — brightened for legibility */
+  --text-mute:    #9491c8;   /* muted hints — brightened for legibility    */
 
   --sans:         'Inter', system-ui, sans-serif;
   --mono:         'JetBrains Mono', 'Cascadia Code', monospace;
@@ -987,6 +987,11 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 <!-- Widgets -->
 <div id="dd-widgets" class="dropdown">
   <div class="dd-header">Dashboard Widgets</div>
+  <div class="dd-engine" title="Switch the dashboard's layout engine. Grid = original Gridstack. Golden = dockable window manager (edge-dock, tab groups, pop-out). Switching reloads the panel.">
+    <span class="dd-eng-label">Layout engine</span>
+    <button class="dd-eng-btn" id="dengine-grid" onclick="setDockEngine('grid')">Grid</button>
+    <button class="dd-eng-btn" id="dengine-golden" onclick="setDockEngine('golden')">Golden</button>
+  </div>
   <div class="dd-item" onclick="toggleWidget('tasks')"><span class="dd-icon">🗂</span><span class="dd-label">Tasks</span><span class="dd-check" id="wchk-tasks"></span></div>
   <div class="dd-item" onclick="toggleWidget('logs')"><span class="dd-icon">📡</span><span class="dd-label">Live Logs</span><span class="dd-check" id="wchk-logs"></span></div>
   <div class="dd-item" onclick="toggleWidget('thoughts')"><span class="dd-icon">🧠</span><span class="dd-label">Thoughts</span><span class="dd-check" id="wchk-thoughts"></span></div>
@@ -1262,6 +1267,16 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   .tr-done-head .tr-arrow{font-size:9px;color:var(--text-mute);}
   .tr-empty{font-size:10px;color:var(--text-mute);font-style:italic;padding:14px 6px;
     text-align:center;line-height:1.5;}
+  .tr-toolbar{display:flex;align-items:center;justify-content:space-between;gap:6px;
+    flex-wrap:wrap;margin:2px 2px 9px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+  .tr-clear{background:none;border:1px solid var(--border);color:var(--text-mute);
+    font-size:8.5px;padding:2px 8px;border-radius:4px;cursor:pointer;transition:all var(--t);
+    text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+  .tr-clear:hover{color:#ff8a8a;border-color:#ff6b6b;}
+  .tr-legend{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:8.5px;color:var(--text-mute);}
+  .tr-legend>span{display:inline-flex;align-items:center;gap:3px;cursor:help;}
+  .tr-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;flex:0 0 auto;}
+  .tr-task .tr-kidline{color:var(--text-mute);opacity:.6;margin-right:3px;}
   </style>
   <script>
   (function(){
@@ -1269,7 +1284,8 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     const ACTIVE_STATUS=new Set(['open','active','in_progress']);
     let doneOpen=false;
     function esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
-    function row(t,activeId){
+    function row(t,activeId,depth){
+      depth=depth||0;
       const cls=['tr-task'];
       if(t.id===activeId) cls.push('active');
       else if(PRI[t.priority]) cls.push(PRI[t.priority]);
@@ -1278,14 +1294,32 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       const n=(t.progress&&t.progress.length)||0;
       const meta=n?('<div class="tr-meta">'+n+' step'+(n===1?'':'s')+'</div>'):'';
       const id=esc(t.id);
+      const ttl=(t.id===activeId)?'Active focus — Nova is working on this now'
+              :(t.priority===1)?'Priority 1 (high)'
+              :(t.priority===2)?'Priority 2 (medium)'
+              :'Priority 3 (normal)';
+      const ind=depth>0?' style="margin-left:'+(depth*13)+'px"':'';
+      const kidline=depth>0?'<span class="tr-kidline">└</span>':'';
       const ctrls='<div class="tr-ctrls">'+
         '<button class="tr-ctrl tr-done-btn" title="Mark done" onclick="taskAction(event,&#39;'+id+'&#39;,&#39;complete&#39;)">✓</button>'+
         '<button class="tr-ctrl tr-cancel-btn" title="Cancel (abandon)" onclick="taskAction(event,&#39;'+id+'&#39;,&#39;cancel&#39;)">✕</button>'+
         '<button class="tr-ctrl tr-del-btn" title="Delete task" onclick="taskAction(event,&#39;'+id+'&#39;,&#39;delete&#39;)">🗑</button>'+
         '</div>';
-      return '<div class="'+cls.join(' ')+'">'+
-        '<div class="tr-t"><span class="tr-dot"></span><span>'+esc(t.title||t.id)+'</span></div>'+
+      return '<div class="'+cls.join(' ')+'"'+ind+' title="'+esc(ttl)+'">'+
+        '<div class="tr-t">'+kidline+'<span class="tr-dot"></span><span>'+esc(t.title||t.id)+'</span></div>'+
         (sub?'<div class="tr-sub">'+sub+'</div>':'')+meta+ctrls+'</div>';
+    }
+    // Render open/active tasks as a TREE — children indented under their parent.
+    function treeHtml(list,activeId){
+      const byId={}; list.forEach(t=>byId[t.id]=t);
+      const kids={};
+      list.forEach(t=>{ const p=(t.parent&&byId[t.parent])?t.parent:null; (kids[p]=kids[p]||[]).push(t); });
+      const byPri=(a,b)=>((a.priority||3)-(b.priority||3));
+      let out='';
+      (function walk(pid,depth){
+        (kids[pid]||[]).sort(byPri).forEach(t=>{ out+=row(t,activeId,depth); walk(t.id,depth+1); });
+      })(null,0);
+      return out;
     }
     window.taskAction=async function(ev,id,action){
       if(ev&&ev.stopPropagation) ev.stopPropagation();
@@ -1311,9 +1345,18 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       const cEl=document.getElementById('tr-count');
       if(cEl) cEl.textContent=active.length+waiting.length;
       if(!tasks.length){body.innerHTML='<div class="tr-empty">No tasks yet.<br>Nova’s tasks appear here<br>as she creates them.</div>';return;}
-      let h='';
-      if(active.length) h+='<div class="tr-group-label">Active</div>'+active.map(t=>row(t,activeId)).join('');
-      if(waiting.length) h+='<div class="tr-group-label">Waiting</div>'+waiting.map(t=>row(t,activeId)).join('');
+      const toolbar='<div class="tr-toolbar">'+
+        '<button class="tr-clear" title="Delete ALL tasks from the board (asks to confirm first)" onclick="clearAllTasks()">Clear all</button>'+
+        '<span class="tr-legend">'+
+          '<span title="High priority (P1)"><i style="background:#ff6b6b"></i>P1</span>'+
+          '<span title="Medium priority (P2)"><i style="background:#ffb454"></i>P2</span>'+
+          '<span title="Active focus — what Nova is working on right now"><i style="background:var(--accent)"></i>Active</span>'+
+          '<span title="Done / completed"><i style="background:#3a8d63"></i>Done</span>'+
+          '<span title="Abandoned / cancelled"><i style="background:#7a5a5a"></i>Dropped</span>'+
+        '</span></div>';
+      let h=toolbar;
+      if(active.length) h+='<div class="tr-group-label">Active (subtasks nested under their parent)</div>'+treeHtml(active,activeId);
+      if(waiting.length) h+='<div class="tr-group-label">Waiting</div>'+waiting.map(t=>row(t,activeId,0)).join('');
       if(done.length){
         h+='<div class="tr-done-head" onclick="toggleDone()">'+
            '<span class="tr-group-label">Completed</span>'+
@@ -1325,6 +1368,15 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     };
     window.toggleDone=function(){doneOpen=!doneOpen;
       if(window._lastBoard) window.renderBoard(window._lastBoard.tasks,window._lastBoard.active);};
+    window.clearAllTasks=async function(){
+      const tasks=(window._lastBoard&&window._lastBoard.tasks)||[];
+      if(!tasks.length){ alert('The board is already empty.'); return; }
+      if(!confirm('Delete ALL '+tasks.length+' task(s) from the board?\n\nThis removes every task (active, waiting, and completed) and cannot be undone.')) return;
+      for(const t of tasks){
+        try{ await fetch('/api/queue/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:t.id})}); }catch(_){}
+      }
+      if(window.refreshBoard) window.refreshBoard();
+    };
     window.toggleTaskRail=function(){
       const r=document.getElementById('task-rail'),b=document.getElementById('tr-collapse');
       r.classList.toggle('collapsed');
@@ -3857,6 +3909,48 @@ switchPanel('thoughts');
 .tr-done-btn:hover{color:#4ad295;border-color:#3a8d63;}
 .tr-cancel-btn:hover{color:#ffb454;}
 .tr-del-btn:hover{color:#ff6b6b;border-color:#7a5a5a;}
+/* ── Engine switcher (in widget dropdown) ───────────────────── */
+.dd-engine{display:flex;align-items:center;gap:6px;padding:6px 12px 8px;margin-bottom:4px;
+  border-bottom:1px solid var(--border);}
+.dd-engine .dd-eng-label{flex:1;font-size:10px;color:var(--text-mute);text-transform:uppercase;letter-spacing:.05em;}
+.dd-eng-btn{background:var(--bg-surface);border:1px solid var(--border-med);color:var(--text-mute);
+  font-size:10.5px;padding:3px 10px;border-radius:5px;cursor:pointer;}
+.dd-eng-btn:hover{color:var(--text);border-color:var(--border-hi);}
+.dd-eng-btn.active{color:var(--text);background:var(--nova-dim);border-color:var(--border-hi);box-shadow:0 0 0 1px rgba(167,139,250,.12);}
+/* ── Golden Layout host + widget chrome ─────────────────────── */
+#wdash.golden{padding:0;overflow:hidden;position:relative;}
+#wdash.golden #gl-root{position:absolute;inset:0;}
+.nv-glwidget{display:flex;flex-direction:column;height:100%;background:var(--bg-surface);}
+.nv-glhead{display:flex;align-items:center;gap:6px;padding:3px 7px;flex:0 0 auto;
+  border-bottom:1px solid var(--border);background:var(--surface-2);min-height:22px;}
+.nv-glspacer{flex:1;}
+.nv-opwrap{display:flex;align-items:center;gap:5px;color:var(--text-mute);font-size:9px;}
+.nv-op{width:62px;height:3px;-webkit-appearance:none;appearance:none;background:var(--border-hi);border-radius:3px;outline:none;}
+.nv-op::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--nova);cursor:pointer;border:none;}
+.nv-op::-moz-range-thumb{width:10px;height:10px;border-radius:50%;background:var(--nova);cursor:pointer;border:none;}
+.nv-glwidget.nv-collapsed .nv-wbody{display:none;}
+/* ── Golden Layout .lm_* — re-themed to the violet palette ──── */
+.lm_goldenlayout{background:transparent;}
+.lm_content{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.lm_header{height:24px;box-sizing:content-box;}
+.lm_header .lm_tab{font-family:var(--sans);font-size:10.5px;color:var(--text-mute);background:var(--bg-mid);
+  border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;box-shadow:none;
+  margin-right:3px;padding:4px 8px 5px;height:auto;}
+.lm_header .lm_tab.lm_active{color:var(--text);background:var(--bg-surface);border-color:var(--border-med);}
+.lm_header .lm_tab.lm_active.lm_focused{background:var(--bg-surface);}
+.lm_header .lm_tab:hover{color:var(--text-dim);background:var(--bg-raised);}
+.lm_header .lm_tab.lm_active::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--nebula);}
+.lm_tab .lm_close_tab{opacity:.45;}
+.lm_tab .lm_close_tab:hover{opacity:1;}
+.lm_splitter{background:transparent;opacity:1;}
+.lm_splitter:hover,.lm_splitter.lm_dragging{background:var(--nova-dim);}
+.lm_dropTargetIndicator{box-shadow:inset 0 0 0 2px var(--border-hi);background:rgba(167,139,250,0.10);outline:none;border-radius:6px;}
+.lm_dropTargetIndicator .lm_inner{background:transparent;opacity:1;}
+.lm_dragProxy .lm_content,.lm_dragProxy .lm_header{opacity:.92;}
+.lm_header .lm_controls > *{filter:invert(78%) sepia(20%) saturate(900%) hue-rotate(215deg);opacity:.55;}
+.lm_header .lm_controls > *:hover{opacity:1;}
+.lm_maximised .lm_header{background:var(--bg-mid);}
+.lm_transition_indicator{background:var(--bg-raised);border:1px dashed var(--border-hi);}
 </style>
 <script>
 (function(){
@@ -3876,6 +3970,11 @@ switchPanel('thoughts');
                  {id:'thoughts',x:0,y:9,w:12,h:5},{id:'tools',x:0,y:14,w:12,h:4}];
   const STORE=document.createElement('div');STORE.style.display='none';
   let grid=null,present={},saveTimer=null;
+  // ── dual-engine state (grid = original Gridstack · golden = Golden Layout) ──
+  let engine='grid', layoutDoc={}, glLayout=null, panelEl=null;
+  function getNode(id){const def=DEFS[id];return def.make?def.make():def.grab();}
+  function returnNode(id,node){if(DEFS[id]&&DEFS[id].grab&&node)STORE.appendChild(node);}
+  function postDoc(){try{fetch('/api/layout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(layoutDoc)});}catch(_){}}
 
   function buildItem(id,collapsed){
     const def=DEFS[id];
@@ -3918,44 +4017,149 @@ switchPanel('thoughts');
     }
     present[id]=false;updateChecks();scheduleSave();
   }
-  window.toggleWidget=function(id){present[id]?removeWidget(id):addWidget(id,{});};
+  window.toggleWidget=function(id){
+    if(engine==='golden'){present[id]?removeGolden(id):addGolden(id);}
+    else{present[id]?removeWidget(id):addWidget(id,{});}
+  };
   function updateChecks(){ORDER.forEach(id=>{const c=document.getElementById('wchk-'+id);if(c)c.textContent=present[id]?'✓':'';});}
   window.updateWidgetChecks=updateChecks;
   function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveLayout,800);}
   function saveLayout(){
-    if(!grid)return;
-    try{
-      const items=ORDER.filter(id=>present[id]).map(id=>{
-        const item=grid.el.querySelector('.grid-stack-item[gs-id="'+id+'"]');
-        const n=(item&&item.gridstackNode)||{};
-        return {id:id,x:n.x,y:n.y,w:n.w,h:n.h,collapsed:!!(item&&item.querySelector('.nv-widget').classList.contains('collapsed'))};
-      });
-      fetch('/api/layout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({widgets:items})});
-    }catch(_){}
+    layoutDoc.engine=engine;
+    if(engine==='golden'){
+      if(glLayout){try{layoutDoc.golden=glLayout.saveLayout();}catch(_){}}
+    }else if(grid){
+      try{
+        layoutDoc.widgets=ORDER.filter(id=>present[id]).map(id=>{
+          const item=grid.el.querySelector('.grid-stack-item[gs-id="'+id+'"]');
+          const n=(item&&item.gridstackNode)||{};
+          return {id:id,x:n.x,y:n.y,w:n.w,h:n.h,collapsed:!!(item&&item.querySelector('.nv-widget').classList.contains('collapsed'))};
+        });
+      }catch(_){}
+    }
+    postDoc();
   }
-  async function init(){
-    const panel=document.getElementById('right-panel');
-    if(!panel||!window.GridStack)return;
-    document.body.appendChild(STORE);
+  function consolidateHides(){
+    // The Tasks widget is the single board view — hide the duplicate task queue
+    // in Tools and the board-cards area in Thoughts.
+    ['queue-panel','thoughts-cards','thoughts-empty'].forEach(function(id){
+      var e=document.getElementById(id); if(e) e.style.display='none';
+    });
+  }
+
+  // ════════════ GRID ENGINE (original Gridstack — unchanged behavior) ════════════
+  function initGrid(){
+    if(!window.GridStack)return;
     const host=ce('<div id="wdash"><div class="grid-stack"></div></div>');
-    panel.appendChild(host);
+    panelEl.appendChild(host);
     grid=GridStack.init({column:12,cellHeight:62,margin:5,handle:'.nv-whead',float:false,
       resizable:{handles:'e,s,se'}}, host.querySelector('.grid-stack'));
     grid.on('change',()=>scheduleSave());
-    let layout=null;
-    try{const r=await fetch('/api/layout');if(r.ok){const d=await r.json();if(d&&d.widgets&&d.widgets.length)layout=d.widgets;}}catch(_){}
-    const toAdd=layout||DEFAULT;
+    const toAdd=(layoutDoc.widgets&&layoutDoc.widgets.length)?layoutDoc.widgets:DEFAULT;
     grid.batchUpdate();
     toAdd.forEach(w=>{if(DEFS[w.id])addWidget(w.id,{x:w.x,y:w.y,w:w.w,h:w.h,collapsed:w.collapsed},true);});
     grid.commit();
     updateChecks();
     if(window.refreshBoard)window.refreshBoard();
     window.pollThoughts=function(){};
-    // Consolidate: the Tasks widget is the single board view. Hide the duplicate
-    // task queue in Tools and the board-cards area in Thoughts.
-    ['queue-panel','thoughts-cards','thoughts-empty'].forEach(function(id){
-      var e=document.getElementById(id); if(e) e.style.display='none';
+    consolidateHides();
+  }
+
+  // ════════════ GOLDEN ENGINE (dockable window manager) ════════════
+  const GL_CDN=['https://esm.sh/golden-layout@2.6.0','https://cdn.jsdelivr.net/npm/golden-layout@2.6.0/+esm'];
+  const GL_CSS=['https://cdn.jsdelivr.net/npm/golden-layout@2.6.0/dist/css/goldenlayout-base.css',
+                'https://cdn.jsdelivr.net/npm/golden-layout@2.6.0/dist/css/themes/goldenlayout-dark-theme.css'];
+  let GLmod=null;
+  const glContainers={};   // id -> ComponentContainer
+  function injectGLCss(){GL_CSS.forEach(href=>{if(document.querySelector('link[data-gl="'+href+'"]'))return;
+    const l=document.createElement('link');l.rel='stylesheet';l.href=href;l.setAttribute('data-gl',href);
+    document.head.insertBefore(l,document.head.firstChild);});}
+  async function loadGL(){if(GLmod)return GLmod;let err;
+    for(const u of GL_CDN){try{const m=await import(u);if(m&&m.GoldenLayout){GLmod=m;return m;}}catch(e){err=e;}}
+    throw err||new Error('Golden Layout failed to load');}
+
+  function buildGoldenContent(el,id){
+    const def=DEFS[id]||{title:id};
+    el.classList.add('nv-glwidget');
+    const head=ce('<div class="nv-glhead">'+
+      (def.countId?'<span class="nv-wcount" id="'+def.countId+'">0</span>':'')+
+      '<span class="nv-glspacer"></span>'+
+      '<span class="nv-opwrap">◐<input class="nv-op" type="range" min="25" max="100" value="100" title="Pane opacity"></span>'+
+      '<button class="nv-wbtn nv-wcollapse" title="Collapse body">–</button></div>');
+    const body=ce('<div class="nv-wbody"></div>');
+    const node=getNode(id); if(node)body.appendChild(node);
+    el.appendChild(head); el.appendChild(body);
+    head.querySelector('.nv-wcollapse').addEventListener('click',e=>{e.stopPropagation();
+      el.classList.toggle('nv-collapsed');
+      e.currentTarget.textContent=el.classList.contains('nv-collapsed')?'+':'–';});
+    const sl=head.querySelector('.nv-op');
+    function applyOp(v){const pane=el.closest('.lm_stack')||el.closest('.lm_item')||el;pane.style.opacity=(v/100).toFixed(2);}
+    sl.addEventListener('pointerdown',e=>e.stopPropagation());
+    sl.addEventListener('input',()=>{applyOp(sl.value);layoutDoc.opacity=layoutDoc.opacity||{};layoutDoc.opacity[id]=+sl.value;scheduleSave();});
+    const sv=layoutDoc.opacity&&layoutDoc.opacity[id];
+    if(sv!=null){sl.value=sv;setTimeout(()=>applyOp(sv),0);}
+  }
+  function goldenDefault(){
+    let ids=(layoutDoc.widgets&&layoutDoc.widgets.length)?layoutDoc.widgets.map(w=>w.id):['tasks','logs','thoughts','tools'];
+    ids=ids.filter(id=>DEFS[id]); if(!ids.length)ids=['tasks'];
+    return {root:{type:'column',content:ids.map(id=>({type:'component',componentType:'nv',componentState:{id:id},title:DEFS[id].title}))}};
+  }
+  function addGolden(id){if(!glLayout||present[id])return;try{glLayout.addComponent('nv',{id:id},DEFS[id].title);}catch(e){console.warn(e);}scheduleSave();}
+  function removeGolden(id){const c=glContainers[id];if(c){try{c.close();}catch(e){console.warn(e);}}}
+  async function initGolden(){
+    injectGLCss();
+    let mod;
+    try{mod=await loadGL();}catch(e){console.warn('Golden Layout load failed — falling back to Grid',e);engine='grid';updateEngineUI();return initGrid();}
+    const {GoldenLayout,LayoutConfig}=mod;
+    const host=ce('<div id="wdash" class="golden"><div id="gl-root"></div></div>');
+    panelEl.appendChild(host);
+    const rootEl=host.querySelector('#gl-root');
+    glLayout=new GoldenLayout(rootEl);
+    try{glLayout.resizeWithContainerAutomatically=true;}catch(_){}
+    glLayout.registerComponentFactoryFunction('nv',(container,state)=>{
+      const id=(state&&state.id)||'tasks';
+      buildGoldenContent(container.element,id);
+      glContainers[id]=container; present[id]=true; updateChecks();
+      if(id==='tasks'&&window.refreshBoard)window.refreshBoard();
+      container.on('destroy',()=>{
+        const bodyNode=container.element.querySelector('.nv-wbody');
+        returnNode(id,bodyNode&&bodyNode.firstChild);
+        delete glContainers[id]; present[id]=false; updateChecks();
+      });
     });
+    let cfg=null;
+    if(layoutDoc.golden){try{cfg=LayoutConfig.fromResolved(layoutDoc.golden);}catch(_){cfg=null;}}
+    try{glLayout.loadLayout(cfg||goldenDefault());}
+    catch(e){console.warn('Golden config load failed — using default',e);try{glLayout.loadLayout(goldenDefault());}catch(_){}}
+    glLayout.on('stateChanged',scheduleSave);
+    try{new ResizeObserver(()=>{try{glLayout.setSize(rootEl.offsetWidth,rootEl.offsetHeight);}catch(_){}}).observe(rootEl);}catch(_){}
+    try{glLayout.setSize(rootEl.offsetWidth,rootEl.offsetHeight);}catch(_){}
+    updateChecks();
+    window.pollThoughts=function(){};
+    consolidateHides();
+  }
+
+  function updateEngineUI(){
+    const g=document.getElementById('dengine-grid'),d=document.getElementById('dengine-golden');
+    if(g)g.classList.toggle('active',engine==='grid');
+    if(d)d.classList.toggle('active',engine==='golden');
+  }
+  window.setDockEngine=function(e){
+    if(e!=='grid'&&e!=='golden')return;
+    if(e===engine)return;
+    layoutDoc.engine=e; postDoc();
+    setTimeout(()=>location.reload(),150);
+  };
+
+  async function init(){
+    panelEl=document.getElementById('right-panel');
+    if(!panelEl)return;
+    document.body.appendChild(STORE);
+    try{const r=await fetch('/api/layout');if(r.ok){const d=await r.json();if(d&&typeof d==='object')layoutDoc=d;}}catch(_){}
+    engine=(layoutDoc.engine==='golden')?'golden':'grid';
+    updateEngineUI();
+    if(engine==='golden')await initGolden();
+    else initGrid();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

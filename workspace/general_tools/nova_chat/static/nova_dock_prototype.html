@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Nova Dock — Golden Layout Prototype</title>
+<!-- Golden Layout structural CSS + dark theme (provides header control icons).
+     Loaded BEFORE our <style> so our violet overrides win on color, while the
+     theme still supplies the maximise/pop-out/close icon images. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/golden-layout@2.6.0/dist/css/goldenlayout-base.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/golden-layout@2.6.0/dist/css/themes/goldenlayout-dark-theme.css"/>
+<style>
+:root{
+  --bg:#05050e; --bg-mid:#08081a; --bg-surface:#0d0d1f; --bg-raised:#141428; --bg-alt:#0b0b1e;
+  --bg-hover:rgba(167,139,250,0.06);
+  --border:rgba(167,139,250,0.09); --border-med:rgba(167,139,250,0.16); --border-hi:rgba(167,139,250,0.38);
+  --nova:#a78bfa; --nova-bright:#c4b5fd; --nova-dim:rgba(167,139,250,0.13);
+  --nebula:linear-gradient(135deg,#a78bfa 0%,#818cf8 45%,#c084fc 100%);
+  --claude:#e8875d; --gemini:#5b96f0; --cole:#e2e6ff;
+  --green:#4ade80; --yellow:#fbbf24; --red:#f87171;
+  --text:#f4f2ff; --text-dim:#c4c2ea; --text-mute:#9491c8;
+  --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono','Cascadia Code',monospace;
+  --radius:9px; --radius-sm:5px; --surface-2:#141428;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{background:radial-gradient(1200px 800px at 70% -10%,rgba(129,140,248,0.10),transparent 60%),var(--bg);
+  color:var(--text);font-family:var(--sans);font-size:13px;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── Top toolbar ───────────────────────────────────────────── */
+#bar{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:8px 12px;
+  background:var(--bg-mid);border-bottom:1px solid var(--border-med);}
+#bar .logo{font-weight:800;letter-spacing:.3px;background:var(--nebula);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+#bar .sub{color:var(--text-mute);font-size:11px;}
+#bar .spacer{flex:1;}
+.tbtn{background:var(--bg-surface);border:1px solid var(--border-med);color:var(--text-dim);
+  font-size:11.5px;padding:5px 11px;border-radius:var(--radius-sm);cursor:pointer;font-family:var(--sans);}
+.tbtn:hover{color:var(--text);border-color:var(--border-hi);background:var(--bg-raised);}
+.dd{position:relative;display:inline-block;}
+.dd-menu{position:absolute;top:110%;right:0;background:var(--bg-raised);border:1px solid var(--border-med);
+  border-radius:var(--radius-sm);padding:4px;min-width:150px;display:none;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.5);}
+.dd.open .dd-menu{display:block;}
+.dd-item{padding:6px 9px;border-radius:4px;cursor:pointer;color:var(--text-dim);font-size:11.5px;display:flex;gap:8px;align-items:center;}
+.dd-item:hover{background:var(--bg-hover);color:var(--text);}
+.dd-item .chk{margin-left:auto;color:var(--nova);font-size:11px;}
+
+#hint{flex:0 0 auto;padding:6px 12px;font-size:11px;color:var(--text-mute);background:var(--bg-alt);
+  border-bottom:1px solid var(--border);}
+#hint b{color:var(--nova-bright);font-weight:600;}
+
+#dock{flex:1;min-height:0;position:relative;}
+#loaderr{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;
+  padding:30px;color:var(--text-dim);font-size:13px;line-height:1.6;}
+
+/* ── Widget content ────────────────────────────────────────── */
+.w{display:flex;flex-direction:column;height:100%;background:var(--bg-surface);}
+.w-bar{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:5px 9px;
+  border-bottom:1px solid var(--border);background:var(--surface-2);}
+.w-name{font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text-dim);}
+.w-op-wrap{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--text-mute);font-size:9px;}
+.w-op{width:74px;height:3px;-webkit-appearance:none;appearance:none;background:var(--border-hi);border-radius:3px;outline:none;}
+.w-op::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:var(--nova);cursor:pointer;border:none;}
+.w-op::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:var(--nova);cursor:pointer;border:none;}
+.w-op-val{min-width:30px;text-align:right;}
+.w-body{flex:1;min-height:0;overflow:auto;padding:9px 10px;font-size:12px;color:var(--text-dim);line-height:1.55;}
+
+/* mock styling */
+.task-row{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:6px;margin-bottom:4px;background:var(--bg-raised);}
+.task-row.sub{margin-left:16px;background:transparent;border:1px solid var(--border);}
+.dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+.tt{flex:1;color:var(--text);font-size:12px;}
+.badge{font-size:9px;color:var(--text-mute);background:var(--bg-surface);border:1px solid var(--border);border-radius:9px;padding:1px 7px;}
+.logline{font-family:var(--mono);font-size:11px;color:var(--text-mute);padding:1px 0;}
+.logline .t{color:var(--nova);} .logline .ok{color:var(--green);} .logline .warn{color:var(--yellow);}
+.tool-card{border:1px solid var(--border);border-radius:6px;padding:7px 9px;margin-bottom:6px;background:var(--bg-raised);}
+.tool-card .h{font-family:var(--mono);font-size:11px;color:var(--nova-bright);}
+.tool-card .d{font-size:11px;color:var(--text-mute);margin-top:3px;}
+.meter{margin-bottom:9px;} .meter .lbl{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-mute);margin-bottom:3px;}
+.meter .track{height:6px;border-radius:6px;background:var(--bg-raised);overflow:hidden;}
+.meter .fill{height:100%;background:var(--nebula);}
+.ftree div{padding:2px 0;font-size:12px;color:var(--text-dim);} .ftree .f{color:var(--text-mute);} .ftree .ind{padding-left:16px;}
+.eyes-box{height:100%;min-height:120px;border:1px dashed var(--border-hi);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-mute);font-size:11px;background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(167,139,250,0.03) 10px,rgba(167,139,250,0.03) 20px);}
+.term{font-family:var(--mono);font-size:11px;color:var(--text-dim);} .term .p{color:var(--green);} .term .c{color:var(--nova-bright);}
+
+/* ════════ Golden Layout violet theme overrides ════════ */
+.lm_goldenlayout{background:transparent;}
+.lm_content{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);}
+.lm_header{height:26px;box-sizing:content-box;}
+.lm_header .lm_tabs{padding-left:2px;}
+.lm_header .lm_tab{font-family:var(--sans);font-size:11px;color:var(--text-mute);background:var(--bg-mid);
+  border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;box-shadow:none;
+  margin-right:3px;padding:5px 9px 6px;height:auto;}
+.lm_header .lm_tab.lm_active{color:var(--text);background:var(--bg-surface);border-color:var(--border-med);box-shadow:0 -2px 10px rgba(167,139,250,0.10);}
+.lm_header .lm_tab.lm_active.lm_focused{background:var(--bg-surface);}
+.lm_header .lm_tab:hover{color:var(--text-dim);background:var(--bg-raised);}
+.lm_header .lm_tab.lm_active::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--nebula);}
+.lm_tab .lm_close_tab{opacity:.45;}
+.lm_tab .lm_close_tab:hover{opacity:1;}
+.lm_splitter{background:transparent;opacity:1;}
+.lm_splitter:hover,.lm_splitter.lm_dragging{background:var(--nova-dim);}
+.lm_splitter.lm_vertical .lm_drag_handle,.lm_splitter.lm_horizontal .lm_drag_handle{background:transparent;}
+.lm_dropTargetIndicator{box-shadow:inset 0 0 0 2px var(--border-hi);background:rgba(167,139,250,0.10);outline:none;border-radius:6px;}
+.lm_dropTargetIndicator .lm_inner{background:transparent;opacity:1;}
+.lm_dragProxy .lm_content,.lm_dragProxy .lm_header{opacity:.92;}
+.lm_header .lm_controls > *{filter:invert(78%) sepia(20%) saturate(900%) hue-rotate(215deg);opacity:.55;}
+.lm_header .lm_controls > *:hover{opacity:1;}
+.lm_maximised .lm_header{background:var(--bg-mid);}
+.lm_transition_indicator{background:var(--bg-raised);border:1px dashed var(--border-hi);}
+</style>
+</head>
+<body>
+  <div id="bar">
+    <span class="logo">✦ Nova Dock</span>
+    <span class="sub">Golden Layout prototype — engine + theme test</span>
+    <span class="spacer"></span>
+    <div class="dd" id="addDD">
+      <button class="tbtn" onclick="document.getElementById('addDD').classList.toggle('open')">+ Add widget ▾</button>
+      <div class="dd-menu" id="addMenu"></div>
+    </div>
+    <button class="tbtn" onclick="resetLayout()">↺ Reset layout</button>
+  </div>
+  <div id="hint">
+    Try it: <b>drag a tab</b> to a pane edge to dock there (left/right/top/bottom) · <b>drag a tab</b> onto another to make a tab group · use the header <b>⤢ maximise</b> / <b>⇲ pop-out</b> controls · each pane has an <b>opacity slider</b> in its top bar · your layout auto-saves and restores on reload.
+  </div>
+  <div id="dock">
+    <div id="loaderr"></div>
+  </div>
+
+<script type="module">
+const VARIANTS = [
+  'https://esm.sh/golden-layout@2.6.0',
+  'https://cdn.jsdelivr.net/npm/golden-layout@2.6.0/+esm'
+];
+
+let GL=null, LayoutConfig=null, lastErr=null;
+for(const url of VARIANTS){
+  try{ const m=await import(url); GL=m.GoldenLayout; LayoutConfig=m.LayoutConfig; if(GL) break; }
+  catch(e){ lastErr=e; }
+}
+if(!GL){
+  const box=document.getElementById('loaderr');
+  box.style.display='flex';
+  box.innerHTML='Could not load Golden Layout from CDN.<br>'+
+    'If you opened this with <code>file://</code>, your browser may block module fetches — '+
+    'serve the file over http (e.g. the Nova static route) and reload.<br><br>'+
+    '<span style="color:var(--text-mute);font-size:11px">'+(lastErr&&lastErr.message||'')+'</span>';
+  throw lastErr||new Error('GL load failed');
+}
+
+/* ── mock widget content ─────────────────────────────────── */
+const dot=(c)=>'<span class="dot" style="background:'+c+'"></span>';
+const MOCK = {
+  tasks: ()=>'<div class="task-row">'+dot('var(--nova)')+'<span class="tt">Nova Chat docking upgrade</span><span class="badge">P1 · umbrella</span></div>'+
+    '<div class="task-row sub">'+dot('var(--yellow)')+'<span class="tt">Swap Gridstack → Golden Layout</span><span class="badge">in&nbsp;progress</span></div>'+
+    '<div class="task-row sub">'+dot('var(--text-mute)')+'<span class="tt">Edge-dock zones</span><span class="badge">queued</span></div>'+
+    '<div class="task-row sub">'+dot('var(--text-mute)')+'<span class="tt">Per-pane opacity</span><span class="badge">queued</span></div>'+
+    '<div class="task-row">'+dot('var(--green)')+'<span class="tt">Verify decomposition loop</span><span class="badge">P0 · open</span></div>',
+  logs: ()=>Array.from({length:14},(_,i)=>'<div class="logline"><span class="t">12:0'+(i%10)+':3'+(i%10)+'</span> '+
+    (i%5===0?'<span class="ok">autonomy ▸ reflect → decide(rest)</span>':i%4===0?'<span class="warn">board ▸ re-decompose guard engaged</span>':'daemon ▸ should_wake=false fingerprint stable')+'</div>').join(''),
+  thoughts: ()=>'<div style="color:var(--nova-bright);font-size:10px;letter-spacing:.05em;margin-bottom:6px">NOVA — REASONING LIVE</div>'+
+    '<div style="white-space:pre-wrap">Cole wants the dashboard to feel like a real app — Antigravity-style tiling. I should hold one umbrella task and work its leaves in order, not re-orient. The dock panes read cleanly now; opacity helps me keep Live Logs faint while I focus on Tools…</div>',
+  tools: ()=>'<div class="tool-card"><div class="h">read_file(index.html)</div><div class="d">4,010 lines · widget registry @3911</div></div>'+
+    '<div class="tool-card"><div class="h">edit_file(executive.py)</div><div class="d">added Phase-3 execution pass</div></div>'+
+    '<div class="tool-card"><div class="h">run_command("git status")</div><div class="d">clean · pushed to origin</div></div>',
+  monitor: ()=>'<div class="meter"><div class="lbl"><span>GPU 0 — RTX 4090 (16GB)</span><span>71%</span></div><div class="track"><div class="fill" style="width:71%"></div></div></div>'+
+    '<div class="meter"><div class="lbl"><span>GPU 1 — RTX 3090 (24GB)</span><span>58%</span></div><div class="track"><div class="fill" style="width:58%"></div></div></div>'+
+    '<div class="meter"><div class="lbl"><span>VRAM</span><span>27.4 / 40 GB</span></div><div class="track"><div class="fill" style="width:68%"></div></div></div>'+
+    '<div class="meter"><div class="lbl"><span>State</span><span style="color:var(--nova-bright)">⚡ generating</span></div></div>',
+  files: ()=>'<div class="ftree"><div>📁 nova_body</div><div class="ind f">nova_cortex/executive.py</div><div class="ind f">nova_cortex/tasking.py</div>'+
+    '<div>📁 general_tools</div><div class="ind f">nova_chat/server.py</div><div class="ind f">nova_chat/static/index.html</div>'+
+    '<div>📁 memory</div><div class="ind f">STATUS.md</div><div class="ind f">Design_Principles.md</div></div>',
+  eyes: ()=>'<div class="eyes-box">👁 desktop stream — no frame yet</div>',
+  terminal: ()=>'<div class="term"><div><span class="p">nova@box</span>:<span class="c">~/Project_Nova</span>$ python nova_start.py</div>'+
+    '<div>[llama] serving Qwen-3.5-27B on :8080 (ts 16,24)</div><div>[chat] websocket up on :8765</div>'+
+    '<div>[autonomy] daemon online · Cole = Priority 0</div><div><span class="p">nova@box</span>:<span class="c">~</span>$ ▎</div></div>'
+};
+const DEFS = {
+  tasks:{title:'Tasks'}, logs:{title:'Live Logs'}, thoughts:{title:'Thoughts'}, tools:{title:'Tools'},
+  monitor:{title:'Monitor'}, files:{title:'Files'}, eyes:{title:'Eyes'}, terminal:{title:'Terminal'}
+};
+
+function buildContent(el, id){
+  const def=DEFS[id]||{title:id};
+  el.classList.add('w');
+  const bar=document.createElement('div');bar.className='w-bar';
+  bar.innerHTML='<span class="w-name">'+def.title+'</span>'+
+    '<span class="w-op-wrap">opacity <input class="w-op" type="range" min="25" max="100" value="100"><span class="w-op-val">100%</span></span>';
+  const body=document.createElement('div');body.className='w-body';
+  body.innerHTML=(MOCK[id]?MOCK[id]():'<em style="color:var(--text-mute)">'+def.title+'</em>');
+  el.appendChild(bar);el.appendChild(body);
+  const slider=bar.querySelector('.w-op'), val=bar.querySelector('.w-op-val');
+  slider.addEventListener('input',()=>{
+    const pane=el.closest('.lm_stack')||el.closest('.lm_item')||el;
+    pane.style.opacity=(slider.value/100).toFixed(2);
+    val.textContent=slider.value+'%';
+  });
+  // stop drags starting on the slider from moving the tab
+  slider.addEventListener('pointerdown',e=>e.stopPropagation());
+}
+
+/* ── layout ───────────────────────────────────────────────── */
+const DEFAULT = {
+  root:{ type:'column', content:[
+    { type:'row', height:68, content:[
+      { type:'component', componentType:'widget', componentState:{id:'tasks'}, title:'Tasks', width:22 },
+      { type:'stack', width:52, content:[
+        { type:'component', componentType:'widget', componentState:{id:'thoughts'}, title:'Thoughts' },
+        { type:'component', componentType:'widget', componentState:{id:'tools'}, title:'Tools' },
+        { type:'component', componentType:'widget', componentState:{id:'monitor'}, title:'Monitor' }
+      ]},
+      { type:'stack', width:26, content:[
+        { type:'component', componentType:'widget', componentState:{id:'files'}, title:'Files' },
+        { type:'component', componentType:'widget', componentState:{id:'eyes'}, title:'Eyes' }
+      ]}
+    ]},
+    { type:'stack', height:32, content:[
+      { type:'component', componentType:'widget', componentState:{id:'terminal'}, title:'Terminal' },
+      { type:'component', componentType:'widget', componentState:{id:'logs'}, title:'Live Logs' }
+    ]}
+  ]}
+};
+
+const dockEl=document.getElementById('dock');
+const layout=new GoldenLayout(dockEl);
+layout.resizeWithContainerAutomatically=true;
+layout.registerComponentFactoryFunction('widget',(container,state)=>{
+  buildContent(container.element, (state&&state.id)||'tasks');
+});
+
+const KEY='novaDockProto.v1';
+let saveT=null;
+function save(){ clearTimeout(saveT); saveT=setTimeout(()=>{
+  try{ localStorage.setItem(KEY, JSON.stringify(layout.saveLayout())); }catch(_){}
+},400);}
+
+function loadInitial(){
+  let cfg=null;
+  try{ const s=localStorage.getItem(KEY); if(s){ cfg=LayoutConfig.fromResolved(JSON.parse(s)); } }catch(_){}
+  layout.loadLayout(cfg||DEFAULT);
+}
+loadInitial();
+layout.on('stateChanged',save);
+
+// belt-and-suspenders resize
+new ResizeObserver(()=>{ try{ layout.setSize(dockEl.offsetWidth, dockEl.offsetHeight); }catch(_){} }).observe(dockEl);
+try{ layout.setSize(dockEl.offsetWidth, dockEl.offsetHeight); }catch(_){}
+
+/* ── add-widget menu (re-add closed widgets) ───────────────── */
+const menu=document.getElementById('addMenu');
+function rebuildMenu(){
+  menu.innerHTML='';
+  Object.keys(DEFS).forEach(id=>{
+    const it=document.createElement('div');it.className='dd-item';
+    it.textContent=DEFS[id].title;
+    it.onclick=()=>{ try{ layout.addComponent('widget',{id},DEFS[id].title); }catch(e){ console.warn(e); }
+      document.getElementById('addDD').classList.remove('open'); save(); };
+    menu.appendChild(it);
+  });
+}
+rebuildMenu();
+document.addEventListener('click',e=>{ if(!document.getElementById('addDD').contains(e.target)) document.getElementById('addDD').classList.remove('open'); });
+
+window.resetLayout=function(){ try{ localStorage.removeItem(KEY); }catch(_){} layout.loadLayout(DEFAULT); save(); };
+window.__novaLayout=layout;
+</script>
+</body>
+</html>
