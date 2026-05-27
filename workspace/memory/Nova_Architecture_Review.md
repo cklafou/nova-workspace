@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 22:43:33_
+_Last updated: 2026-05-27 22:45:32_
 
 ---
 
@@ -991,3 +991,144 @@ Three key patterns for how Nova maintains state:
 - Session end appends to JOURNAL.md using nova_journal.py (write like herself, not incident report)
 - Gaining new interests and becoming her own person is the primary goal beyond money/trading
 - Private server The Body represents first step toward real independence
+
+---
+
+## 2. Nova Body Manifest (SELF/core/03_body_manifest.md)
+**Purpose:** Auto-generated authoritative map of all body components, built by general_tools/build_manifest.py — DO NOT EDIT BY HAND.
+
+### System Architecture Overview
+This file is the single source of truth for what exists in Nova's codebase and how parts connect. Contains 21 described parts with import relationships tracked automatically.
+
+**Entry Point:** nova_start.py (orchestrator called by NovaStart.cmd)
+- Health-gates llama-server on port 8080 first
+- Then launches Nova stack via NovaLauncher.py
+- Port dependencies: 8080 (inference), 8765 (voice/chat server)
+
+### Body Parts (nova_body/ directory)
+**nova_config** — Settings loader, body-owned configuration management
+- Reads workspace/nova_config.json with fallback defaults
+- Used by nova_memory and nova_motor for inference/tool-exec limits
+- Import pattern: `from nova_config import cfg`
+
+**nova_cortex** — Executive faculty (8 files, 1956 lines)
+- Autonomy engine via executive.py module
+- Task board management via tasking.py
+- Status tracking via nova_status.py
+- Context assembly for model calls via context_builder.py
+- Used by: nova_chat, nova_memory, nova_motor
+
+**nova_lancedb** — Long-term semantic memory (4 files, 568 lines)
+- LanceDB vector store implementation
+- Components: embedder, hippocampus, indexer
+- Used exclusively by nova_chat for retrieval-augmented responses
+
+**nova_logs** — Unified logging system (2 files, 254 lines)
+- Single logger shared across all subsystems
+- Functions: log(type, event, details) and log_thought(response_text)
+- Logs organized in logs/sessions/YYYY-MM-DD/ by type
+- Logger_Index.md tracks active log locations
+- Used by: nova_chat, nova_motor, nova_senses
+
+**nova_memory** — State persistence (6 files, 836 lines)
+- Manages JOURNAL.md appending flow
+- STATUS.md state tracking and updates
+- COLE.md notes management with [NOVA'S NOTES] section editing
+- Goals/status daily summaries
+- Flag: no_inbound_refs (self-contained operations)
+
+**nova_motor** — Action execution system (5 files, 1182 lines)
+- Executes tool actions via "hands" module
+- Plans multi-step sequences via motor_cortex.py
+- Verifies results after action completion
+- Port binding: 8765 for chat integration
+- Flag: no_inbound_refs (self-contained operations)
+
+**nova_senses** — Perception layer (7 files, 1548 lines)
+- LIVE modules:
+  - chronoception/clock.py — time-sense for autonomy wake cycles
+  - environment.py — environmental sensing and monitoring
+  - touch.py — interaction tracking (who's viewing, typing status, agent online state)
+- SCAFFOLDED (GUI automation phase, not yet wired):
+  - eyes/vision modules — desktop vision system
+  - UI proprioception components
+- Used by: injector.py, nova_chat, nova_cortex, nova_memory
+
+### General Tools (general_tools/ directory)
+**NovaLauncher.py** — In-process launcher for server/UI stack (181 lines)
+- Called by nova_start.py to bring up Nova's runtime environment
+- Binds port 8765 for chat interface
+
+**audit_queue.py** — File-change event tracking (288 lines)
+- Records rename/delete/new events for audit_scripts/restructure review
+- Flag: no_inbound_refs (standalone utility)
+
+**audit_scripts.py** — Code health scanner (760 lines)
+- Scans Python files for syntax errors, stale/dead/unreferenced modules
+- Checks pending items in audit queue
+- Flag: no_inbound_refs (standalone utility)
+
+**build_manifest.py** — Body Manifest generator (323 lines)
+- Auto-generates SELF/core/03_body_manifest.md from actual codebase structure
+- Port dependencies: 8080, 8765 for runtime checks
+
+**calls.py** — Call-graph mapping utility (269 lines)
+- AST-walks packages to map import/call relationships between modules
+- Feeds data into Body Manifest generation process
+- Flag: no_inbound_refs (standalone utility)
+
+**download_models.py** — Vision model downloader (111 lines)
+- One-time script for downloading Nova's vision models into workspace/models/
+- Used by nova_senses when vision capability is activated
+- Flag: no_inbound_refs (standalone utility)
+
+**injector.py** — NCL context injector & module dispatcher (484 lines)
+- Executes parsed NCL calls (@eyes, @mentor, @browser etc.)
+- Builds context for dispatched modules and routes to handlers
+- Port binding: 8765 for chat integration
+- Flag: no_inbound_refs (standalone utility)
+
+**nova_chat** — Voice & communication layer (15 files, 6494 lines)
+- FastAPI/WebSocket server on port 8765
+- Cross-AI @mention routing to Claude/Gemini cloud models
+- Runtime host that fires Nova's autonomy faculty via nova_cortex.executive
+- Started by: StopNova.cmd (shutdown), nova_start.py (startup)
+- Used by: NovaLauncher.py, injector.py
+
+**nova_sync** — File synchronization layer (5 files, 2087 lines)
+- Watchdog file watcher for auto-indexing changes
+- GitHub push automation for remote backup
+- Google Drive mirror via drive.py specifically for Gemini integration
+- Local backup management utilities
+- Started by nova_start.py as part of full stack launch
+
+**restructure.py** — Path reference checker (597 lines)
+- Detects stale path references after directory moves/renames
+- Offers interactive fixes for updating broken links throughout codebase
+- Flag: no_inbound_refs (standalone utility)
+
+### Launchers (.cmd files)
+**NovaStart.cmd** — Primary entry point (19 lines)
+- Double-click launcher that runs nova_start.py to bring up entire Nova stack
+- Started by StopNova.cmd (restart scenario), invokes nova_start.py
+
+**StopNova.cmd** — Clean shutdown script (37 lines)
+- Kills processes listening on ports 8080/8765 for clean restart capability
+- Used when restarting or debugging port conflicts
+
+**start_llama.cmd** — Inference server launcher (38 lines)
+- Starts llama.cpp serving Qwen 3.5 27B Q8 model on port 8080
+- Configured with dual-GPU tensor split across RTX 4090 + RTX 3090
+- Started by nova_start.py as first health-gated dependency
+
+### System Health Metrics (from Drift / attention section)
+**Undescribed components:** 0 — all parts documented in manifest
+**No inbound refs:** 8 modules are self-contained utilities with no dependencies from other Nova body parts:
+- nova_memory, nova_motor (self-contained operations by design)
+- audit_queue.py, audit_scripts.py, calls.py, download_models.py, injector.py, restructure.py (general_tools utilities)
+
+**Stale components (>90 days):** 0 — all code actively maintained and referenced
+
+---
+
+*Section 2 complete. Next: Voice & Communication Layer implementation details*
