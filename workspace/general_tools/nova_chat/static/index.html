@@ -1441,9 +1441,9 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
         <div style="display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none" onclick="toggleThinkLog()">
           <span style="font-size:9.5px;color:var(--text-mute);text-transform:uppercase;letter-spacing:.08em;flex:1">Session Log</span>
           <span id="think-log-count" style="font-size:9px;color:var(--text-mute)">0 entries</span>
-          <span id="think-log-toggle" style="font-size:10px;color:var(--text-mute);margin-left:2px">▶</span>
+          <span id="think-log-toggle" style="font-size:10px;color:var(--text-mute);margin-left:2px">▼</span>
         </div>
-        <div id="think-log-entries" style="display:none;max-height:220px;overflow-y:auto;margin-top:4px;">
+        <div id="think-log-entries" style="display:block;max-height:52vh;overflow-y:auto;margin-top:4px;">
           <div class="panel-empty" id="think-log-empty" style="padding:8px;"><div class="ei">🗒</div>No reasoning blocks yet this session.</div>
         </div>
       </div>
@@ -2098,10 +2098,10 @@ function appendThink(author, id, token) {
 // ── Live reasoning display in the Thoughts pane ───────────────────────────────
 let _liveThinkBuf = '';
 let _thinkScrollLocked = false;
-let _thinkHistory = [];   // [{ts, text}] newest-first, capped at 50 (Task 3)
-let _thinkLogOpen = false;
+let _thinkHistory = [];   // [{ts, text}] newest-first
+let _thinkLogOpen = true;  // ever-populating reasoning feed — open by default
 
-function liveThinkStart() {
+function liveThinkStart(mode) {
   _liveThinkBuf = '';
   _thinkScrollLocked = false;
   const el  = document.getElementById('live-think-block');
@@ -2110,7 +2110,7 @@ function liveThinkStart() {
   const lockBtn = document.getElementById('think-scroll-lock');
   if(el)  el.style.display = '';
   if(txt) txt.textContent  = '';
-  if(lbl){ lbl.textContent='NOVA — REASONING LIVE'; lbl.style.color='var(--accent)'; }
+  if(lbl){ lbl.textContent = (mode==='autonomous' ? 'NOVA — THINKING · AUTONOMOUS' : 'NOVA — REASONING LIVE'); lbl.style.color='var(--accent)'; }
   if(lockBtn){ lockBtn.textContent='🔓'; }
   const em = document.getElementById('thoughts-empty');
   if(em) em.style.display = 'none';
@@ -2136,7 +2136,7 @@ function liveThinkEnd() {
   // ── Session Log (Task 3) — archive this reasoning block ───────────────
   if(_liveThinkBuf.trim()) {
     _thinkHistory.unshift({ ts: Date.now(), text: _liveThinkBuf });
-    if(_thinkHistory.length > 50) _thinkHistory.pop();
+    if(_thinkHistory.length > 200) _thinkHistory.pop();
     _updateThinkLogBadge();
     if(_thinkLogOpen) _renderThinkLog();
   }
@@ -2160,7 +2160,7 @@ function _renderThinkLog() {
   if(!el) return;
   if(!_thinkHistory.length) { if(emEl) emEl.style.display=''; return; }
   if(emEl) emEl.style.display='none';
-  const shown = _thinkHistory.slice(0, 25);
+  const shown = _thinkHistory.slice(0, 80);
   el.innerHTML = shown.map(e => {
     const ts      = new Date(e.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     const preview = e.text.trim().replace(/\n/g,' ').slice(0, 60);
