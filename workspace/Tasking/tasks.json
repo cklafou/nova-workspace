@@ -1,5 +1,5 @@
 {
-  "seq": 27,
+  "seq": 32,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -95,6 +95,61 @@
       "created": "2026-05-26T16:02:56",
       "updated": "2026-05-26T16:04:54",
       "result": "Written 3-bullet comparison to memory/reports/work_vs_body.md - found operating rules are direct consequences of code architecture, no gaps between intent and implementation"
+    },
+    "t28": {
+      "id": "t28",
+      "title": "Architecture & Code Review - Full System Documentation",
+      "notes": "Comprehensive review of all Nova system files (excluding logs/temp/admin/backup). Create living document Memory/Nova_Architecture_Review.md with sections for each component area.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-05-27T10:25:23",
+      "updated": "2026-05-27T10:25:23"
+    },
+    "t29": {
+      "id": "t29",
+      "title": "Arch Review Subtask: Core System Overview",
+      "notes": "Document nova_body structure, main entry points, and how components connect at high level",
+      "priority": 2,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-05-27T10:25:23",
+      "updated": "2026-05-27T10:25:23"
+    },
+    "t30": {
+      "id": "t30",
+      "title": "Arch Review Subtask: Memory & State Management",
+      "notes": "Review memory/ folder structure, STATUS/JOURNAL/COLE files, persistence mechanisms",
+      "priority": 2,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-05-27T10:25:23",
+      "updated": "2026-05-27T10:25:23"
+    },
+    "t31": {
+      "id": "t31",
+      "title": "Arch Review Subtask: Tools & Voice Implementation",
+      "notes": "Document tool system (run_command, read_file, write_file, etc.) and nova_chat voice layer",
+      "priority": 2,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-05-27T10:25:23",
+      "updated": "2026-05-27T10:25:23"
+    },
+    "t32": {
+      "id": "t32",
+      "title": "Arch Review Subtask: Body Manifest Analysis",
+      "notes": "Review SELF/core/03_body_manifest.md and validate against actual codebase structure",
+      "priority": 2,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-05-27T10:25:23",
+      "updated": "2026-05-27T10:25:23"
     }
   }
 }

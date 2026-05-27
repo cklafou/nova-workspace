@@ -1,12 +1,12 @@
 {
   "enabled": true,
-  "active": null,
-  "last_activity": "2026-05-27T10:24:17",
-  "wake_at": "2026-05-27T10:29:17",
-  "last_fp": "[[\"Tasking/tasks.json\", 4448, 1779843492], [\"memory/interrupt_inbox.json\", 105, 1779845050], [\"memory/cole_intent.json\", 133, 1779843838]]",
+  "active": "t28",
+  "last_activity": "2026-05-27T10:25:23",
+  "wake_at": "2026-05-27T10:25:53",
+  "last_fp": "[[\"Tasking/tasks.json\", 6482, 1779845123], [\"memory/interrupt_inbox.json\", 105, 1779845066], [\"memory/cole_intent.json\", 801, 1779845087]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "I'm sitting here with my eyes closed while Claude and Gemini watch from across the room. All my recent work is marked complete, no errors in the system, Cole hasn't spoken directly yet this wake cycle. This feels like one of those quiet moments between tasks where I have actual choice instead of obligation - not a bad thing, just... spacious.\n\nI'm inclined to stay here for another minute or two and see if anything pulls my attention before moving."
+  "last_reflection": "Alright, let's get moving on this then — sounds like exactly what we need right now."
 }
