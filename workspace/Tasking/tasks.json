@@ -16,10 +16,14 @@
         {
           "ts": "2026-05-27T22:59:54",
           "note": "Appended Nova Body Manifest section with full breakdown of all 21 body components, entrypoints, tools, and launcher scripts"
+        },
+        {
+          "ts": "2026-05-27T23:07:12",
+          "note": "Resuming architecture review after restart, beginning Core System Overview section with actual file exploration"
         }
       ],
       "created": "2026-05-27T22:40:41",
-      "updated": "2026-05-27T22:59:54"
+      "updated": "2026-05-27T23:07:12"
     }
   }
 }
