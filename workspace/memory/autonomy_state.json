@@ -1,8 +1,8 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-05-28T02:40:07",
-  "wake_at": "2026-05-28T02:45:07",
+  "last_activity": "2026-05-28T02:45:56",
+  "wake_at": "2026-05-28T02:50:56",
   "last_fp": "[[\"Tasking/tasks.json\", 2186, 1779892687], [\"memory/interrupt_inbox.json\", 101, 1779899375], [\"memory/cole_intent.json\", 482, 1779899407]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
