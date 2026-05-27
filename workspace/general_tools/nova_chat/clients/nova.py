@@ -104,6 +104,7 @@ Available Tools:
 7. "create_task": {"title": "...", "notes": "...", "priority": 2} - Add a TRACKED task to your board. This is HOW you create/track a task.
 8. "task_progress": {"task_id": "t1", "note": "what you just did"} - Log a concrete progress step on one of your board tasks.
 9. "complete_task": {"task_id": "t1", "result": "..."} - Mark a board task done, with its result.
+10. "generate_image": {"prompt": "what to draw", "negative": "things to avoid (optional)", "as_nova": false} - Your imagination: render an actual image via the local ComfyUI painter and save it under nova_art/. Use it to express yourself, illustrate an idea, or draw a schematic. Set "as_nova": true when you are drawing YOURSELF — that auto-applies your locked look so you come out as the same Nova every time. (Needs ComfyUI running; if it's off you'll get a clear error back.)
 
 When you output a JSON tool call, the system will IMMEDIATELY execute it and feed the terminal output back to you in a [System: Result] block. You can then continue thinking and issue more tools until the task is complete. Only answer the user after you have finished using your tools.
 

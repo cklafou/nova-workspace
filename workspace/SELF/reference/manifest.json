@@ -1,12 +1,11 @@
 {
-  "generated": "2026-05-27T23:46:04",
+  "generated": "2026-05-27T23:47:27",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 22,
   "described": 22,
   "flags": {
     "undescribed": [],
     "dead_part_candidates": [
-      "nova_imagination",
       "nova_memory",
       "nova_motor",
       "audit_queue.py",
@@ -74,22 +73,25 @@
       "kind": "body_part",
       "path": "nova_body/nova_imagination",
       "purpose": "Nova's imagination — her visual-creation faculty. Turns intent into images by",
-      "files": 1,
-      "lines": 26,
+      "files": 2,
+      "lines": 331,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080"
       ],
       "nova_imports": [
-        "nova_imagination"
+        "nova_imagination",
+        "nova_logs"
       ],
-      "third_party": [],
-      "referenced_by": [],
+      "third_party": [
+        "urllib"
+      ],
+      "referenced_by": [
+        "nova_chat"
+      ],
       "launched_by": [],
-      "flags": [
-        "no_inbound_refs"
-      ]
+      "flags": []
     },
     {
       "name": "nova_lancedb",
@@ -134,6 +136,7 @@
       "third_party": [],
       "referenced_by": [
         "nova_chat",
+        "nova_imagination",
         "nova_motor",
         "nova_senses"
       ],
@@ -479,7 +482,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 15,
-      "lines": 6510,
+      "lines": 6539,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -493,6 +496,7 @@
         "injector",
         "nova_chat",
         "nova_cortex",
+        "nova_imagination",
         "nova_lancedb",
         "nova_logs",
         "nova_senses"
