@@ -1,5 +1,5 @@
 # @nova: Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).
-# Last updated: 2026-05-28 01:37:12
+# Last updated: 2026-05-28 02:38:24
 """
 Nova Group Chat - FastAPI WebSocket Server
 Handles real-time streaming from all three AIs concurrently.
