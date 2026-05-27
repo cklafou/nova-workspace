@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-28T04:00:33+09:00",
+  "updated_at": "2026-05-28T04:17:35+09:00",
   "items": [
     {
       "id": "777df213",
@@ -15844,6 +15844,45 @@
       "commit": "caece896",
       "old_path": null,
       "new_path": "nova_memory_db/nova_text.lance/data/111001110011111100101011b8a6904bf19735de2dd2057ebd.lance",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "7ddb2d61",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-05-28T04:17:35+09:00",
+      "commit": "0500b732",
+      "old_path": null,
+      "new_path": "nova_memory_db/nova_text.lance/_transactions/543-305f49bc-8e84-49bc-a249-7a26d731f300.txn",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "a4fc522f",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-05-28T04:17:35+09:00",
+      "commit": "0500b732",
+      "old_path": null,
+      "new_path": "nova_memory_db/nova_text.lance/_versions/18446744073709551071.manifest",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "b2528293",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-05-28T04:17:35+09:00",
+      "commit": "0500b732",
+      "old_path": null,
+      "new_path": "nova_memory_db/nova_text.lance/data/01111100110010001100010165512745d58e230255ee652ce9.lance",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
