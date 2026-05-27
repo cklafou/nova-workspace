@@ -299,19 +299,50 @@ def set_active(tid: Optional[str]) -> None:
 
 
 def pick_execution_target() -> Optional[str]:
-    """Which open task to work this wake. Her current focus if it's still open;
-    otherwise the highest-priority, oldest open task. Persists the choice as her
-    active focus so working a task adopts it (continuity). Returns id or None."""
+    """Which open task to actually WORK this wake. Prefers open LEAF tasks (open tasks
+    with no open children) — i.e. concrete work, not umbrellas waiting on their subtasks.
+    Order of preference: keep the active task if it's an open leaf; else if active is an
+    open umbrella, descend to its highest-priority open leaf; else the highest-priority
+    open leaf anywhere. Persists the choice as active focus. Returns id or None."""
     st = _load_state()
     tasks = tasking.all_tasks()
-    active = st.get("active")
-    if active and tasks.get(active, {}).get("status") == "open":
-        return active
+    # children map (parent id -> [child ids]); dangling/no parent -> top-level
+    kids = {}
+    for t in tasks.values():
+        p = t.get("parent")
+        kids.setdefault(p if p in tasks else None, []).append(t["id"])
+
+    def _is_leaf(tid):
+        return not any(tasks.get(c, {}).get("status") == "open" for c in kids.get(tid, []))
+
+    def _subtree_open_leaves(root):
+        out = []
+        for c in kids.get(root, []):
+            ct = tasks.get(c, {})
+            if ct.get("status") == "open":
+                if _is_leaf(c):
+                    out.append(ct)
+                out += _subtree_open_leaves(c)
+        return out
+
     open_tasks = [t for t in tasks.values() if t.get("status") == "open"]
     if not open_tasks:
         return None
-    open_tasks.sort(key=lambda t: (t.get("priority", 3), t.get("created", "")))
-    tid = open_tasks[0].get("id")
+    _key = lambda t: (t.get("priority", 3), t.get("created", ""))
+
+    active = st.get("active")
+    at = tasks.get(active) if active else None
+    if at and at.get("status") == "open":
+        if _is_leaf(active):
+            return active                       # already on concrete work
+        sub = sorted(_subtree_open_leaves(active), key=_key)
+        if sub:                                 # active is an umbrella → go to its next leaf
+            _set_active(sub[0]["id"])
+            return sub[0]["id"]
+
+    leaves = [t for t in open_tasks if _is_leaf(t["id"])]
+    pool = sorted(leaves or open_tasks, key=_key)
+    tid = pool[0].get("id")
     if tid:
         _set_active(tid)
     return tid
