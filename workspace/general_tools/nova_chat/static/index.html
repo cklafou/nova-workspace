@@ -3922,10 +3922,12 @@ switchPanel('thoughts');
 /* ── Golden Layout host + widget chrome ─────────────────────── */
 #wdash.golden{padding:0;overflow:hidden;position:relative;}
 #wdash.golden #gl-root{position:absolute;inset:0;}
-.nv-glwidget{display:flex;flex-direction:column;height:100%;background:var(--bg-surface);}
-.nv-glhead{display:flex;align-items:center;gap:6px;padding:3px 7px;flex:0 0 auto;
-  border-bottom:1px solid var(--border);background:var(--surface-2);min-height:22px;}
-.nv-glspacer{flex:1;}
+.nv-glwidget{display:flex;flex-direction:column;height:100%;background:var(--bg-surface);position:relative;}
+/* hover-reveal pane control (opacity + count) — floats in the top-right corner */
+.nv-glhead{position:absolute;top:4px;right:8px;z-index:6;display:flex;align-items:center;gap:8px;
+  padding:3px 9px;border-radius:8px;background:rgba(8,8,26,0.92);border:1px solid var(--border-med);
+  box-shadow:0 4px 14px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity var(--t);}
+.nv-glwidget:hover .nv-glhead{opacity:1;pointer-events:auto;}
 .nv-opwrap{display:flex;align-items:center;gap:5px;color:var(--text-mute);font-size:9px;}
 .nv-op{width:62px;height:3px;-webkit-appearance:none;appearance:none;background:var(--border-hi);border-radius:3px;outline:none;}
 .nv-op::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--nova);cursor:pointer;border:none;}
@@ -4094,15 +4096,10 @@ switchPanel('thoughts');
     if(def.bare)el.classList.add('nv-bare');
     const head=ce('<div class="nv-glhead">'+
       (def.countId?'<span class="nv-wcount" id="'+def.countId+'">0</span>':'')+
-      '<span class="nv-glspacer"></span>'+
-      '<span class="nv-opwrap">◐<input class="nv-op" type="range" min="25" max="100" value="100" title="Pane opacity"></span>'+
-      '<button class="nv-wbtn nv-wcollapse" title="Collapse body">–</button></div>');
+      '<span class="nv-opwrap">◐<input class="nv-op" type="range" min="25" max="100" value="100" title="Pane opacity"></span></div>');
     const body=ce('<div class="nv-wbody"></div>');
     const node=getNode(id); if(node)body.appendChild(node);
     el.appendChild(head); el.appendChild(body);
-    head.querySelector('.nv-wcollapse').addEventListener('click',e=>{e.stopPropagation();
-      el.classList.toggle('nv-collapsed');
-      e.currentTarget.textContent=el.classList.contains('nv-collapsed')?'+':'–';});
     const sl=head.querySelector('.nv-op');
     function applyOp(v){const pane=el.closest('.lm_stack')||el.closest('.lm_item')||el;pane.style.opacity=(v/100).toFixed(2);}
     sl.addEventListener('pointerdown',e=>e.stopPropagation());
