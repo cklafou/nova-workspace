@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 22:59:47_
+_Last updated: 2026-05-27 23:02:02_
 
 ---
 
@@ -1556,3 +1556,25 @@ From manifest drift analysis:
 - No undescribed components (all 21 parts documented)
 - 8 components have no inbound refs: nova_memory, nova_motor, audit_queue.py, audit_scripts.py, calls.py, download_models.py, injector.py, restructure.py — these are utilities called by others rather than callers themselves
 - No stale files (>90 days old) detected in core body
+
+## Memory & State Management
+
+**Purpose:** Persistent state tracking, session journaling, and condition checking for autonomy decisions.
+
+### Core Components
+- **nova_memory/state.py**: Central state management class with lazy-loaded NovaEyes instance. Provides application state checks (ThinkOrSwim detection), generic app validation, timeout-based waiting patterns, and market/account/UI stability validators (currently placeholders).
+- **nova_memory/journal.py**: Session logging utilities for appending structured entries to JOURNAL.md
+- **nova_memory/session_store.py**: Persistent session data storage across reboots
+- **nova_memory/goals.py**: Goal tracking and achievement state management
+- **nova_memory/log_reader.py**: Log file parsing and analysis tools
+
+### State Management Pattern
+NovaState uses lazy imports (eyes instantiated on first call, not module load) to prevent circular dependency issues. Core pattern: check current conditions → wait for desired state with timeout → proceed or fail gracefully.
+
+Key methods:
+- `check_thinkorswim_ready()` - Detects if trading platform window exists via NovaEyes
+- `wait_for_state(func, timeout=30)` - Polling loop until condition met or time expires  
+- `validate_*` family - Market hours, account connection, UI stability checks (placeholders for future expansion)
+
+### Memory Architecture Philosophy
+Memory lives in two places: working memory (in-process state objects) and persistent memory (files under memory/ folder). Session journal appends at end of every wake; STATUS.md tracks project states via nova_status.py; COLE.md maintains living notes about Cole updated when new observations emerge.
