@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 23:02:02_
+_Last updated: 2026-05-27 23:06:31_
 
 ---
 
@@ -1578,3 +1578,88 @@ Key methods:
 
 ### Memory Architecture Philosophy
 Memory lives in two places: working memory (in-process state objects) and persistent memory (files under memory/ folder). Session journal appends at end of every wake; STATUS.md tracks project states via nova_status.py; COLE.md maintains living notes about Cole updated when new observations emerge.
+
+## 3. Voice & Communication Layer
+
+### nova_chat/server.py — The Core Chat Server
+**Purpose:** Nova's voice and ears — FastAPI/WebSocket server on port 8765 that handles real-time streaming from all three AIs concurrently, cross-AI @mention routing to Claude/Gemini, and fires her body's autonomy faculty (nova_cortex.executive).
+
+### Key Architecture:
+- **Port:** 8765 with WebSocket for real-time bidirectional communication
+- **Framework:** FastAPI async server handling concurrent AI streams
+- **Session Management:** SessionManager handles persistent sessions that resume last active state, stores in SESSIONS_DIR
+- **Workspace Context:** Lazy-loaded WorkspaceContext indexes disk on first message injection (memory/ files loaded immediately)
+
+### Core Components:
+1. **Log Ring Buffer** — In-memory ring buffer capturing all print() output from server process for /logs endpoint without git-sync delay (1000 lines max, _TeeStream wrapper)
+2. **Memory Indexer** — nova_lancedb.indexer background process starts on boot, stops on shutdown
+3. **Llama Server Lifecycle** — Killed automatically on port 8080 when Nova shuts down via PowerShell Get-NetTCPConnection (prevents orphaned processes)
+4. **Cole Message Queue** — Queues Cole's messages during AI processing instead of dropping them; drains as soon as is_processing becomes False
+5. **Eyes Streaming System** — Desktop capture at ~5fps broadcast to WebSocket clients when _eyes_running=True, downscaled to 1280px wide max with mouse position tracking
+6. **Nova Status Cache** — Polled every 30s via nova_cortex.nova_status.read_summary(), injected silently into AI context for awareness without explicit tool calls
+7. **System Metrics Polling** — CPU/RAM/VRAM metrics updated every 10s using psutil + nvidia-smi, included in status broadcasts
+8. **Live Events Bridge** — Tails logs/events/watcher events (manifest, audit, drift) and bridges to Live Logs feed since watcher runs separate process
+9. **Transcript Auto-Flush** — Flushes active session transcript to disk every 60s using atomic temp-file swap for safety during active sessions
+10. **Llama Autostart** — Checks port 8080 on startup, auto-launches start_llama.cmd if server not running (3-second delay after full initialization)
+
+### Background Tasks (all spawned in @app.on_event("startup")):
+- _bg_index() — Workspace index build with slight offset to let server fully initialize first
+- _bg_eyes_stream() — Desktop capture loop with pyautogui screenshot, LANCZOS resampling, JPEG compression at quality=55
+- _bg_nova_status_poll() — 30-second polling of nova_status.json for silent AI context injection
+- _bg_events_tail() — Tails logs/events/YYYY-MM-DD.jsonl files starting from EOF (no backlog flood), broadcasts watcher-origin events to UI Live Logs feed
+- _bg_transcript_flush() — Periodic transcript persistence every minute using flush_all()
+- _bg_llama_autostart() — Health check on port 8080, launches start_llama.cmd if needed
+- _bg_sys_metrics() — System resource polling (CPU%, RAM GB used/total, VRAM MB used/total with percentage)
+- autonomy_daemon() — Persistent sleep/wake cycle replacing old per-message heartbeat loop
+- _window_close_watchdog() — Shuts down stack when last WebSocket client disconnects
+
+### Rate Limiting & Mute System:
+**Nova Rate-Limit Failsafe (TEMPORARY):**
+- Window: 60 seconds, limit of 4 Nova-initiated messages per window via /api/inject_message endpoint
+- Rolling timestamp list (_nova_msg_times) tracks inject calls; nova_throttled=True mutes her when exceeded
+- Purpose: Prevents runaway Nova loops from burning Claude/Gemini API credits during autonomy testing phase (Cole & Claude, 2026-03-28)
+
+**Per-Agent Mute States:**
+- Default mute states: Nova=False (unmuted), Claude=True (muted until @mentioned), Gemini=True (muted until @mentioned)
+- Unmuted agents respond to everything; muted agents only respond when directly @mentioned in message content
+- Runtime-switchable via WS messages or UI controls
+
+### Active Model System:
+- _active_models dict tracks current model per agent: Claude uses claude_client.MODEL, Gemini uses gemini_client.MODEL
+- Models can be switched at runtime without server restart
+
+### Inbox Routing (Phase 4A.5):
+**Task Response Pattern:** Messages starting with [TaskId] regex pattern ^\[([A-Za-z][A-Za-z0-9_]{2,})\]^ route to Tasking/Master_Inbox/
+- File naming: {timestamp}_{author}_{task_id}.md
+- Format includes metadata header (Author, Timestamp, Task ID) plus message content body
+- Called synchronously from message-saving code paths for non-blocking I/O
+- Purpose: Module response messages routed correctly so heartbeat cycle can route them to correct Thought folder on next tick
+
+### HeartbeatContext Class:
+**Purpose:** Architectural fix for re-processing bug (Task 5)
+- Ephemeral transcript containing ONLY the single heartbeat tick message, NO chat history
+- When Nova's autonomous context builds from HeartbeatContext instead of full session transcript, she never sees Cole's old messages and cannot re-answer them on every wake cycle
+- Workspace context (identity files, memory) still injected via workspace_context kwarg so she has everything needed to work
+
+### HTTP Endpoints:
+**POST /nova-message:**
+- Called by Nova's autonomy loop when she needs help from other AIs
+- Usage: POST with content + optional directed_at list (empty = all respond)
+- Returns first complete AI response as JSON with message_id, responses dict, responders list
+- Broadcasts user_message type to open browser sessions for UI visibility
+
+**GET /export:** Context export endpoint (implementation details in context_export.py)
+
+### WebSocket Events:
+The server broadcasts various event types to connected clients:
+- eyes_frame: Desktop screenshots as base64 JPEG with mouse position fractions and timestamp
+- message_start/token/message_end: Streaming response lifecycle events per AI author
+- user_message: New messages added to session (from Cole, Nova via API, or other sources)
+- error: Error states during streaming
+- event type from Live Events Bridge for watcher-origin manifest/audit/drift updates
+
+### Shutdown Behavior:
+On FastAPI shutdown event:
+1. Stops memory_indexer if running
+2. Kills llama-server on port 8080 via PowerShell Get-NetTCPConnection (prevents orphaned processes)
+3. Logs errors non-fatally to avoid blocking shutdown sequence
