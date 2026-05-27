@@ -2719,6 +2719,22 @@ async def websocket_endpoint(ws: WebSocket):
                                              images=images)
                 session_mgr.update_meta_from_message(msg)
 
+                # ── Image persistence (so she actually SEES what she's asked about) ──
+                # The local model only receives images attached to THIS turn; history
+                # images are not re-sent. So if Cole posts an image, then on a later
+                # text-only turn says "describe it", the model gets NO image and could
+                # confabulate. Backfill the most recent image from the last few turns
+                # for the AI call ONLY — the stored message + UI keep the original images.
+                effective_images = images
+                if not effective_images:
+                    try:
+                        for _pm in reversed(session_mgr.active.messages[-5:-1]):
+                            if _pm.get("images"):
+                                effective_images = _pm["images"]
+                                break
+                    except Exception:
+                        effective_images = images
+
                 # --- Index for semantic memory ---
                 if memory_indexer:
                     memory_indexer.add_message(full_context_content, "Cole", session_mgr.active_id)
@@ -2755,7 +2771,7 @@ async def websocket_endpoint(ws: WebSocket):
                         "content":              content,
                         "full_context_content": full_context_content,
                         "directed_at":          directed_at,
-                        "images":               images or [],
+                        "images":               effective_images or [],
                         "msg":                  msg,
                     })
                     await ws.send_text(json.dumps({
@@ -2787,7 +2803,7 @@ async def websocket_endpoint(ws: WebSocket):
                     # Capture queue, content, and images at definition time
                     _q = list(queue)    # make a copy
                     _c = content
-                    _imgs = images or []   # images from this Cole message
+                    _imgs = effective_images or []   # this turn's images, or most-recent backfilled
 
                     # Snapshot message count + original task before this run
                     _run_start_idx    = len(session_mgr.active.messages)
