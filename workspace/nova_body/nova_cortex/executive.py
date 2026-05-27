@@ -289,6 +289,12 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
           "umbrella (and nest sub-subtasks under those). Wholly separate goals are just "
           "separate top-level tasks with no parent — e.g. 'do taxes' and 'journal update' "
           "are independent trees you can hold at once, put on hold, and switch between.",
+          "PARENT-ID RULE (important): when you create an umbrella AND its subtasks in the "
+          "SAME actions block, the umbrella's id doesn't exist yet — so set each subtask's "
+          "\"parent\" to the umbrella's EXACT TITLE (it gets linked automatically), NOT a "
+          "guessed id. When adding subtasks to a task that ALREADY exists, use its real id. "
+          "Never set \"parent\" to a done/abandoned task — that buries live work under "
+          "finished work (and is ignored).",
           "",
           "ONLY if you genuinely choose to change your board, you MAY include one actions "
           "block (omit keys you don't use):",
