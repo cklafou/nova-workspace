@@ -900,3 +900,24 @@ The memory system has a notable gap between design and implementation:
 1. Why is nova_memory scaffolded but unused? Is this intentional (future-proofing) or incomplete implementation?
 2. The journal append uses `nova_journal.py` directly - when does the abstraction layer actually matter versus direct file writes?
 3. LanceDB semantic memory (`nova_lancedb/hippocampus.py`) exists in body manifest but STATUS.md doesn't mention active use - is this live or planned?
+## 2. Memory & State Management
+
+### Core Files (workspace/memory/)
+- **STATUS.md** — Project state document, last updated May 27 14:11:15. Reflects body-relocation + dead-code cleanup. Retired components archived under `_admin/_archive_*`.
+- **JOURNAL.md** — Rolling 90-day session log (auto-compresses to archive/YYYY-MM.md after). Nova appends at end of every session using `nova_journal.py`. Never overwrites, always appends.
+- **COLE.md** — Living reference on Cole with [LOCKED] baseline section and [NOVA'S NOTES] for ongoing observations. Both sections dated and specific.
+
+### State Files (JSON)
+- **autonomy_state.json** — Body-owned autonomy on/off toggle, persisted between sessions. UI button just flips it.
+- **touch_state.json** — Touch sense state tracking what's interacting with Nova.
+- **cole_intent.json** — Cole's current intent/active task context.
+
+### Task System
+- **Tasking/tasks.json** — Single source of truth for task board (id-keyed, statuses: open/active/waiting/done/abandoned). Done/abandoned tasks kept forever, never deleted. Each has progress log.
+- Nova advances via `ACTIONS` blocks during wakes: create/progress/switch/wait/abandon/complete/reprioritize/rest.
+
+### Persistence Philosophy
+Memory **data** lives in workspace (`memory/*.md`, `Tasking/tasks.json`) — not inside the body. The `nova_body/nova_memory/` package is scaffolded but not yet wired into running stack (no inbound refs per manifest). Current implementation writes directly to files using tools.
+
+### Key Insight from Review
+The "write it down, no mental notes" principle in 02_how_i_work.md maps perfectly here — JOURNAL.md entries survive session restarts because they're file-based, not state-in-memory. This is why vague journal entries are called out as useless: future-Nova can't learn from them.
