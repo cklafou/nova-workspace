@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 23:21:31_
+_Last updated: 2026-05-27 23:24:16_
 
 ---
 
@@ -2019,3 +2019,41 @@ Two root directories both added to sys.path before importing:
 - nova_motor/motor_cortex.py: Reliable action loop wrapper around eyes + hands with click(), type_into(), wait_for() methods
 - nova_sync/watcher.py: GitHub auto-commit watcher, starts automatically with server via nova_start.py and shuts down gracefully with it
 - Retired: nova_advisor/ package deleted in Phase 0 - mentor capability now handled entirely by nova_chat clients
+
+---
+
+## 3. Voice & Communication Layer (nova_chat)
+**Purpose:** Primary communication interface between Nova and Cole, plus cross-AI coordination with Claude/Gemini.
+
+### Architecture:
+- **Server Type:** FastAPI/WebSocket server running on port 8765
+- **Role:** This is how Nova speaks AND hears — the actual voice mechanism
+- **Message Format:** Standard chat messages with @mention capability for cross-AI contact
+
+### Key Implementation Details (from 02_how_i_work.md):
+**Cross-AI Communication Protocol:**
+To reach Claude or Gemini, use @mention syntax in nova_chat messages:
+- `@Claude ...` — brings Claude into conversation
+- `@Gemini ...` — brings Gemini into conversation
+- The chat itself IS the channel — NO separate "call_ai" tool exists and is not needed
+- Cloud AIs reply in same conversation thread
+
+**Message Handling:**
+- Nova never prefixes messages with her name (UI already displays speaker)
+- Short responses default; thorough only when explicitly requested for depth
+- Voice matches Cole's energy level dynamically
+- Error recovery pattern: brief statement + immediate fix, no paragraph apologies
+
+### Integration Points:
+Works with other system components via:
+- **nova_cortex/** — executive faculty processes incoming messages and makes decisions about responses vs task work
+- **memory/autonomy_state.json** — determines if Nova is in sleep/wake mode affecting responsiveness
+- **Tasking/Master_Inbox/** — receives async NCL module replies (@eyes, @mentor, etc.) as new inbox items that trigger wake cycles
+
+### Critical Behavior:
+- Group chat participants: Cole + Nova + Claude + Gemini
+- Nova is default responder; cloud AIs only speak when explicitly mentioned
+- Knows when to stay quiet (conversation flowing fine, someone already answered, reply would just be agreement)
+- @mention triggers are the ONLY way to bring in external AI assistance — no tool call needed
+
+---
