@@ -3964,8 +3964,10 @@ switchPanel('thoughts');
     files:{title:'Files',defH:4,grab:()=>document.getElementById('panel-files')},
     eyes:{title:'Eyes',defH:4,grab:()=>document.getElementById('panel-eyes')},
     terminal:{title:'Terminal',defH:4,grab:()=>document.getElementById('panel-terminal')},
+    chat:{title:'Chat',defH:8,grab:()=>document.getElementById('chat-main'),bare:true},
+    sidebar:{title:'Sessions',defH:8,grab:()=>document.getElementById('sidebar'),bare:true},
   };
-  const ORDER=['tasks','logs','thoughts','tools','monitor','files','eyes','terminal'];
+  const ORDER=['sidebar','chat','tasks','logs','thoughts','tools','monitor','files','eyes','terminal'];
   const DEFAULT=[{id:'tasks',x:0,y:0,w:12,h:4},{id:'logs',x:0,y:4,w:12,h:5},
                  {id:'thoughts',x:0,y:9,w:12,h:5},{id:'tools',x:0,y:14,w:12,h:4}];
   const STORE=document.createElement('div');STORE.style.display='none';
@@ -4027,7 +4029,7 @@ switchPanel('thoughts');
   function saveLayout(){
     layoutDoc.engine=engine;
     if(engine==='golden'){
-      if(glLayout){try{layoutDoc.golden=glLayout.saveLayout();}catch(_){}}
+      if(glLayout){try{layoutDoc.golden=glLayout.saveLayout();layoutDoc.glv=GLV;}catch(_){}}
     }else if(grid){
       try{
         layoutDoc.widgets=ORDER.filter(id=>present[id]).map(id=>{
@@ -4066,6 +4068,7 @@ switchPanel('thoughts');
   }
 
   // ════════════ GOLDEN ENGINE (dockable window manager) ════════════
+  const GLV=2;   // golden-layout schema version — bump to discard incompatible saved layouts
   const GL_CDN=['https://esm.sh/golden-layout@2.6.0','https://cdn.jsdelivr.net/npm/golden-layout@2.6.0/+esm'];
   const GL_CSS=['https://cdn.jsdelivr.net/npm/golden-layout@2.6.0/dist/css/goldenlayout-base.css',
                 'https://cdn.jsdelivr.net/npm/golden-layout@2.6.0/dist/css/themes/goldenlayout-dark-theme.css'];
@@ -4081,6 +4084,7 @@ switchPanel('thoughts');
   function buildGoldenContent(el,id){
     const def=DEFS[id]||{title:id};
     el.classList.add('nv-glwidget');
+    if(def.bare)el.classList.add('nv-bare');
     const head=ce('<div class="nv-glhead">'+
       (def.countId?'<span class="nv-wcount" id="'+def.countId+'">0</span>':'')+
       '<span class="nv-glspacer"></span>'+
@@ -4099,10 +4103,17 @@ switchPanel('thoughts');
     const sv=layoutDoc.opacity&&layoutDoc.opacity[id];
     if(sv!=null){sl.value=sv;setTimeout(()=>applyOp(sv),0);}
   }
+  function glComp(id){return {type:'component',componentType:'nv',componentState:{id:id},title:DEFS[id].title};}
   function goldenDefault(){
-    let ids=(layoutDoc.widgets&&layoutDoc.widgets.length)?layoutDoc.widgets.map(w=>w.id):['tasks','logs','thoughts','tools'];
-    ids=ids.filter(id=>DEFS[id]); if(!ids.length)ids=['tasks'];
-    return {root:{type:'column',content:ids.map(id=>({type:'component',componentType:'nv',componentState:{id:id},title:DEFS[id].title}))}};
+    // Full-window IDE arrangement: Sessions | Chat | right dashboard column.
+    return {root:{type:'row',content:[
+      Object.assign(glComp('sidebar'),{width:15}),
+      Object.assign(glComp('chat'),{width:55}),
+      {type:'column',width:30,content:[
+        {type:'stack',height:58,content:[glComp('tasks'),glComp('thoughts'),glComp('tools')]},
+        Object.assign(glComp('logs'),{height:42})
+      ]}
+    ]}};
   }
   function addGolden(id){if(!glLayout||present[id])return;try{glLayout.addComponent('nv',{id:id},DEFS[id].title);}catch(e){console.warn(e);}scheduleSave();}
   function removeGolden(id){const c=glContainers[id];if(c){try{c.close();}catch(e){console.warn(e);}}}
@@ -4111,8 +4122,12 @@ switchPanel('thoughts');
     let mod;
     try{mod=await loadGL();}catch(e){console.warn('Golden Layout load failed — falling back to Grid',e);engine='grid';updateEngineUI();return initGrid();}
     const {GoldenLayout,LayoutConfig}=mod;
+    // Full-window dock: Golden Layout takes over the whole main area; every
+    // module (chat + sidebar included) becomes a movable widget.
+    const main=document.getElementById('main-area')||panelEl;
+    ['sidebar-handle','panel-handle','right-panel'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
     const host=ce('<div id="wdash" class="golden"><div id="gl-root"></div></div>');
-    panelEl.appendChild(host);
+    main.appendChild(host);
     const rootEl=host.querySelector('#gl-root');
     glLayout=new GoldenLayout(rootEl);
     try{glLayout.resizeWithContainerAutomatically=true;}catch(_){}
@@ -4128,7 +4143,7 @@ switchPanel('thoughts');
       });
     });
     let cfg=null;
-    if(layoutDoc.golden){try{cfg=LayoutConfig.fromResolved(layoutDoc.golden);}catch(_){cfg=null;}}
+    if(layoutDoc.golden&&layoutDoc.glv===GLV){try{cfg=LayoutConfig.fromResolved(layoutDoc.golden);}catch(_){cfg=null;}}
     try{glLayout.loadLayout(cfg||goldenDefault());}
     catch(e){console.warn('Golden config load failed — using default',e);try{glLayout.loadLayout(goldenDefault());}catch(_){}}
     glLayout.on('stateChanged',scheduleSave);
