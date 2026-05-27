@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-27 23:04:54_
+_Last updated: 2026-05-27 23:05:53_
 
 ## INITIALIZATION PROTOCOL
 Run these steps at the start of every session in order:
@@ -46,6 +46,7 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | JOURNAL.md | `workspace/memory/JOURNAL.md` | Nova's running session log -- READ SECOND |
 | Nova_Architecture_Review.md | `workspace/memory/Nova_Architecture_Review.md` | MD file |
 | Nova_Avatar_Design_Bible.md | `workspace/memory/Nova_Avatar_Design_Bible.md` | MD file |
+| avatar_consistency_protocol.md | `workspace/memory/reports/avatar_consistency_protocol.md` | MD file |
 | avatar_pipeline_tools.md | `workspace/memory/reports/avatar_pipeline_tools.md` | MD file |
 | code_md_review_2026-05-27.md | `workspace/memory/reports/code_md_review_2026-05-27.md` | MD file |
 | full_review_progress.md | `workspace/memory/reports/full_review_progress.md` | MD file |
