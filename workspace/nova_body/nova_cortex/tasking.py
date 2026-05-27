@@ -173,41 +173,75 @@ def apply_actions(actions: dict):
     return log, control
 
 
-def render_board(active_id: str = None, max_notes: int = 2) -> str:
-    """Nova's cognition view of her board — what she sees each wake to decide freely.
-    Shows her active focus, what's open to advance/switch, what's parked, and what's
-    settled (so she never recreates or redoes it)."""
+def _children_map(tasks: dict) -> dict:
+    """parent-id -> [child task dicts]. Tasks with no/dangling parent hang under None
+    (top-level). Independent goals are simply separate top-level trees."""
+    kids = {}
+    for t in tasks.values():
+        p = t.get("parent")
+        p = p if (p in tasks) else None
+        kids.setdefault(p, []).append(t)
+    return kids
+
+
+def render_board(active_id: str = None, max_notes: int = 1) -> str:
+    """Nova's cognition view of her board as a TREE — umbrellas with their subtasks
+    (and sub-subtasks) nested beneath, so she sees which work feeds what and why.
+    Independent goals are separate top-level trees (e.g. 'do taxes' vs 'journal update').
+    Settled tasks stay visible (compactly) so she never recreates or redoes them."""
     tasks = all_tasks()
     if not tasks:
         return ("YOUR BOARD is empty — no tasks yet. If something is worth doing, "
                 "create it; if nothing is, that's fine.")
-    buckets = {OPEN: [], WAITING: [], DONE: [], ABANDONED: []}
-    for t in tasks.values():
-        buckets.get(t.get("status", OPEN), buckets[OPEN]).append(t)
+    kids   = _children_map(tasks)
+    glyph  = {OPEN: "[ ]", WAITING: "[~]", DONE: "[x]", ABANDONED: "[-]"}
+    order  = {OPEN: 0, WAITING: 1, DONE: 2, ABANDONED: 3}
+
+    def _done_count(tid):
+        ch = kids.get(tid, [])
+        return sum(1 for c in ch if c.get("status") in (DONE, ABANDONED)), len(ch)
+
     L = []
     af = tasks.get(active_id) if active_id else None
     L.append(f"ACTIVE FOCUS: {active_id} — {af['title']}" if af
              else "ACTIVE FOCUS: none (you're not focused on anything right now)")
-    if buckets[OPEN]:
-        L += ["", "OPEN (yours to advance, switch among, reprioritize, or leave):"]
-        for t in sorted(buckets[OPEN], key=lambda x: x.get("priority", 3)):
-            L.append(f"  {t['id']} [P{t.get('priority',3)}] {t['title']}")
+    L += ["", "YOUR BOARD (tree — subtasks nest under their parent; separate trees are "
+          "independent goals):"]
+
+    def _sortkey(t):
+        return (order.get(t.get("status"), 9), t.get("priority", 3), t.get("created", ""))
+
+    def render(t, depth, seen):
+        tid = t["id"]
+        if tid in seen or depth > 8:
+            return
+        seen.add(tid)
+        ind = "  " * depth
+        stat = t.get("status", OPEN)
+        line = f"{ind}{glyph.get(stat,'[ ]')} {tid} [P{t.get('priority',3)}] {t['title']}"
+        done, total = _done_count(tid)
+        if total:
+            line += f"  ({done}/{total} subtasks done)"
+        if tid == active_id:
+            line += "   <-- active"
+        if stat == DONE and t.get("result"):
+            line += f"  — {(t.get('result') or '')[:70]}"
+        if stat == ABANDONED:
+            line += f"  — dropped: {(t.get('abandon_reason') or '?')[:50]}"
+        if stat == WAITING:
+            line += f"  — waiting on: {t.get('waiting_on','?')}"
+        L.append(line)
+        # last progress note only for OPEN leaves (concrete in-flight work)
+        if stat == OPEN and not kids.get(tid):
             notes = (t.get("progress") or [])[-max_notes:]
             for n in notes:
-                L.append(f"        ↳ {n.get('note','')}")
+                L.append(f"{ind}      ↳ {n.get('note','')}")
             if not notes:
-                L.append("        ↳ (not started)")
-    if buckets[WAITING]:
-        L += ["", "WAITING (parked — outside your hands; resume when it clears):"]
-        for t in buckets[WAITING]:
-            L.append(f"  {t['id']} {t['title']} — waiting on: {t.get('waiting_on','?')}")
-    if buckets[DONE]:
-        L += ["", "DONE (finished — do NOT recreate or redo):"]
-        for t in buckets[DONE]:
-            extra = f" — {(t.get('result') or '')[:80]}" if t.get("result") else ""
-            L.append(f"  {t['id']} {t['title']}{extra}")
-    if buckets[ABANDONED]:
-        L += ["", "ABANDONED (you dropped these — do NOT recreate or redo):"]
-        for t in buckets[ABANDONED]:
-            L.append(f"  {t['id']} {t['title']} — reason: {t.get('abandon_reason','?')}")
+                L.append(f"{ind}      ↳ (not started)")
+        for c in sorted(kids.get(tid, []), key=_sortkey):
+            render(c, depth + 1, seen)
+
+    seen = set()
+    for root in sorted(kids.get(None, []), key=_sortkey):
+        render(root, 0, seen)
     return "\n".join(L)
