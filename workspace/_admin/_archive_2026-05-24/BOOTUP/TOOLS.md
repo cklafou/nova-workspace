@@ -1,5 +1,5 @@
 # TOOLS.md -- Nova's Tool Reference
-_Last updated: 2026-05-28 05:40:33_
+_Last updated: 2026-05-28 06:41:30_
 _Read this every session. It tells you what you can do and how to do it._
 _This file is the source of truth for all tool usage._
 

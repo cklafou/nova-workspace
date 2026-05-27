@@ -1,4 +1,4 @@
-# Last updated: 2026-05-28 05:40:33
+# Last updated: 2026-05-28 06:41:30
 """
 nova_drive.py -- Google Drive Workspace Mirror for Gemini Live Access
 ======================================================================
