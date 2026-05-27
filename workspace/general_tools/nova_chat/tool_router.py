@@ -184,6 +184,29 @@ def generate_image(prompt: str, negative: str = "", as_nova: bool = False,
     return f"ERROR: {r.get('detail', 'image generation failed')}"
 
 
+def journal(entry: str, tags: str = "") -> str:
+    """Append a dated, timestamped reflective entry to memory/JOURNAL.md — Nova's own
+    running memory that carries forward across her fresh-wake resets. This is HOW she
+    learns and grows: what happened, what it meant, what she realized, what's next.
+    Append-only — it never overwrites prior entries. Use her own voice, not a report."""
+    if not (entry or "").strip():
+        return "ERROR: Nothing to journal (empty entry)."
+    target = (WORKSPACE_ROOT / "memory" / "JOURNAL.md").resolve()
+    if not _within_workspace(target):
+        return "ERROR: Permission Denied."
+    try:
+        from datetime import datetime
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M")
+        tagstr = f"  ·  _{tags.strip()}_" if (tags or "").strip() else ""
+        block = f"\n\n---\n### {ts}{tagstr}\n{entry.strip()}\n"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with open(target, "a", encoding="utf-8") as f:
+            f.write(block)
+        return f"Journaled to memory/JOURNAL.md ({len(entry)} chars). This carries forward to your next wake."
+    except Exception as e:
+        return f"ERROR: Could not journal: {e}"
+
+
 def execute_tool(tool_name: str, args: dict) -> str:
     """Main routing dispatcher."""
     try:
