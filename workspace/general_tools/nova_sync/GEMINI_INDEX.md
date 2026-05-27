@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-27 23:55:08_
+_Last updated: 2026-05-27 23:55:47_
 
 ## INITIALIZATION PROTOCOL
 Run these steps at the start of every session in order:
@@ -39,6 +39,7 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 |----------|-----------|-------------|
 | archive_2026-02.md | `workspace/memory/archive/archive_2026-02.md` | MD file |
 | autonomy_state.json | `workspace/memory/autonomy_state.json` | Nova's persisted wake/sleep + focus + reflection state |
+| prompt_kit.md | `workspace/memory/avatar/prompt_kit.md` | MD file |
 | COLE.md | `workspace/memory/COLE.md` | Who Cole is and Nova's notes about him |
 | cole_intent.json | `workspace/memory/cole_intent.json` | Latest standing directive from Cole (chat -> autonomy) |
 | Design_Principles.md | `workspace/memory/Design_Principles.md` | Living best-practices Nova learns from (suggestions, not hard rules) |
