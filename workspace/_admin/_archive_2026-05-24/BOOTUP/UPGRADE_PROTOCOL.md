@@ -1,5 +1,5 @@
 # UPGRADE_PROTOCOL.md — Nova as Dev Collaborator
-_Last updated: 2026-05-28 02:38:40_
+_Last updated: 2026-05-28 03:38:52_
 _Nova is a first-class participant in her own development. This file defines how that works._
 
 ---
