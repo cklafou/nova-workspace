@@ -67,9 +67,9 @@
   "general_tools/nova_sync/calls.md": "aeddf19a2be6e7319df1041d0263cd7f",
   "general_tools/nova_sync/dir_patch.py": "7b1635e4ec7fd5542c9e16cb55e48b1a",
   "general_tools/nova_sync/drive.py": "aee6d3078b8ebc915602d7d260f6480e",
-  "general_tools/nova_sync/FILE_INDEX.md": "1a490556809c1ccf52a7e0b85a252890",
-  "general_tools/nova_sync/FILE_INDEX_LINK.md": "ff19a24c53453551bae2bc5f407b7710",
-  "general_tools/nova_sync/GEMINI_INDEX.md": "8d9008d0077151930c12812ed96477dd",
+  "general_tools/nova_sync/FILE_INDEX.md": "3d8323d4ef892416f420c0aac8ff81d9",
+  "general_tools/nova_sync/FILE_INDEX_LINK.md": "5b1832ca807cf50ca290276fcf19b519",
+  "general_tools/nova_sync/GEMINI_INDEX.md": "2d9d1f7262cabcb48d834e1b1f067653",
   "general_tools/nova_sync/watcher.py": "e11d6cd7f5a184a8fbe65172b9544285",
   "general_tools/NovaLauncher.py": "38a9ca3cdd115ad94f6a85e228d027b7",
   "general_tools/restructure.py": "d70efeea142ee7f14677a1b3446677f6",
@@ -136,10 +136,10 @@
   "SELF/core/00_START_HERE.md": "5b98bcb519523468d414cd8aafcd7f4b",
   "SELF/core/01_identity.md": "8ba14f298166f9540d48f67a1ab9194e",
   "SELF/core/02_how_i_work.md": "18424957cc51a1b09fda76e3301655db",
-  "SELF/core/03_body_manifest.md": "c0f1f97c50a7240b5432dbbc116cd463",
+  "SELF/core/03_body_manifest.md": "04d190f48bbf523d8bd76328d2adb2b7",
   "SELF/core/04_tools_and_voice.md": "8da9a58198732747cea7886423807857",
   "SELF/reference/heartbeat.md": "ea6cc42c2bd7ec18861c9e5dd8a8c9d3",
-  "SELF/reference/manifest.json": "6f261c2db056a1a35b96bd2a6d930e2e",
+  "SELF/reference/manifest.json": "8f32b6e6628b5d0e8e31e298ba8ea880",
   "SELF/reference/ncl_master.md": "7926384443a8c71f3cb164f58bd367b0",
   "SELF/reference/upgrade_protocol.md": "522eaece17ad162c377b991c45bfad45",
   "start_llama.cmd": "bd46143635a6b0357d94d5de5e8e32ff",
@@ -159,5 +159,6 @@
   "memory/reports/comfyui_setup_checklist.md": "3e205d00b419112dd5ccd80390f7e395",
   "nova_art/README.md": "2332397aed5ae44b37ea34c26f7fcf0b",
   "memory/avatar/prompt_kit.md": "6f5644e941c3ca69d578b233542d1163",
-  "memory/reports/nova_lora_training_plan.md": "77a5ad6026d86c13c648a99dddbc120d"
+  "memory/reports/nova_lora_training_plan.md": "77a5ad6026d86c13c648a99dddbc120d",
+  "memory/reports/AVATAR_MORNING_RUNBOOK.md": "293a3eca394698511c43d4348642d3a2"
 }
