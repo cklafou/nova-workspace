@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-27 23:55:47_
+_Last updated: 2026-05-27 23:57:01_
 
 ## INITIALIZATION PROTOCOL
 Run these steps at the start of every session in order:
@@ -48,11 +48,13 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | Nova_Architecture_Review.md | `workspace/memory/Nova_Architecture_Review.md` | MD file |
 | Nova_Avatar_Design_Bible.md | `workspace/memory/Nova_Avatar_Design_Bible.md` | MD file |
 | avatar_consistency_protocol.md | `workspace/memory/reports/avatar_consistency_protocol.md` | MD file |
+| AVATAR_MORNING_RUNBOOK.md | `workspace/memory/reports/AVATAR_MORNING_RUNBOOK.md` | MD file |
 | avatar_pipeline_tools.md | `workspace/memory/reports/avatar_pipeline_tools.md` | MD file |
 | code_md_review_2026-05-27.md | `workspace/memory/reports/code_md_review_2026-05-27.md` | MD file |
 | comfyui_setup_checklist.md | `workspace/memory/reports/comfyui_setup_checklist.md` | MD file |
 | full_review_progress.md | `workspace/memory/reports/full_review_progress.md` | MD file |
 | identity_brief.md | `workspace/memory/reports/identity_brief.md` | MD file |
+| nova_lora_training_plan.md | `workspace/memory/reports/nova_lora_training_plan.md` | MD file |
 | PASSOVER_2026-05-27_opus.md | `workspace/memory/reports/PASSOVER_2026-05-27_opus.md` | MD file |
 | self_note.md | `workspace/memory/reports/self_note.md` | MD file |
 | UI_OVERHAUL_2026-05-27.md | `workspace/memory/reports/UI_OVERHAUL_2026-05-27.md` | MD file |
