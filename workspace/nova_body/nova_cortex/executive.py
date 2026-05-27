@@ -263,17 +263,22 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
               f"STALL CHECK: your recent progress on [{active}] has been repeating the same "
               "orienting step ('starting'/'mapping') without advancing — that is a loop, not "
               "progress. A task this big should NOT be brute-forced as one item. Your move "
-              "RIGHT NOW: break it into smaller concrete subtasks — `create` a few bounded "
-              "subtasks (one per component/section), `switch` to the first, and finish them "
-              "one at a time. Do not re-map or re-'start' the whole thing again."]
+              "RIGHT NOW: break it into smaller concrete subtasks UNDER this one — `create` a "
+              f'few bounded subtasks with "parent":"{active}" (one per component/section), '
+              "`switch` to the first, and finish them one at a time. Do not re-map or "
+              "re-'start' the whole thing again."]
     L += ["",
           "On big work: if a task is too large to finish in a handful of focused work-steps, "
           "the RIGHT first move is to SPLIT it into smaller concrete subtasks with `create` "
           "and do them one at a time — never keep re-orienting on the whole thing.",
+          "Your board is a TREE: set \"parent\" on a created task to nest it under its "
+          "umbrella (and nest sub-subtasks under those). Wholly separate goals are just "
+          "separate top-level tasks with no parent — e.g. 'do taxes' and 'journal update' "
+          "are independent trees you can hold at once, put on hold, and switch between.",
           "",
           "ONLY if you genuinely choose to change your board, you MAY include one actions "
           "block (omit keys you don't use):",
-          'ACTIONS: {"create":[{"title":"...","notes":"...","priority":2}],'
+          'ACTIONS: {"create":[{"title":"...","notes":"...","priority":2,"parent":"t1"}],'
           ' "progress":[{"id":"t1","note":"what you actually did"}], "switch":"t1",'
           ' "complete":[{"id":"t1","result":"..."}], "abandon":[{"id":"t2","reason":"..."}],'
           ' "wait":[{"id":"t3","waiting_on":"..."}], "reprioritize":[{"id":"t4","priority":3}],'
