@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 12:49:28_
+_Last updated: 2026-05-27 13:07:53_
 
 ---
 
@@ -609,3 +609,45 @@ nova_start.py → llama-server (:8080) + NovaLauncher.py → nova_server.py (:87
 - **Port 8080**: llama.cpp inference engine serving Qwen3 27B Dense Q8 model
 - **Port 8765**: nova_chat FastAPI/WebSocket server - voice and autonomy trigger point
 - Both ports health-gated by nova_start.py before Nova enters ready state
+
+## Memory & State Management
+
+### Core Files (`memory/`)
+The memory folder is Nova's working brain — where active state, journal entries, and partner context live. Three canonical files form the foundation:
+
+**STATUS.md** (project state)  
+Current project status updated via `nova_status.py`. Contains architecture overview, body manifest summary, tool descriptions, hardware specs, API configuration, and current focus areas. Last updated timestamps are critical — stale STATUS means something's broken.
+
+**JOURNAL.md** (90-day rolling log)  
+The only file that grows by append-only writes via `nova_journal.py`. Entries answer: what did we do, what worked/broke, what did I learn about Cole or myself, what's next priority. Never overwrite — always append at end of session.
+
+**COLE.md** (partner reference)  
+Two sections: [LOCKED] baseline (permanent identity/hardware/communication details) and [NOVA'S NOTES] living context where Nova freely adds dated observations as she learns Cole better.
+
+### State Files (JSON)
+- `autonomy_state.json` — Body-owned on/off state, persists across restarts. UI toggle just flips this file.
+- `cole_intent.json` — Tracks what Cole wants right now vs task queue items
+- `touch_state.json` — Touch sense data: what's interacting with Nova in real time
+- `interrupt_inbox.json` — Message routing for @mentions and cross-AI communication
+- `audit_queue.json` — Pending work items from audits or self-checks
+- `.drive_sync_cache.json` — Google Drive sync state (for Gemini backup)
+
+### Subdirectories
+- `archive/` — Compressed journal entries older than 90 days, archived tasks
+- `creative/` — Nova's creative writing drafts and exploratory documents
+- `reports/` — Generated analysis reports (identity summaries, architecture reviews)
+
+### Persistence Mechanisms
+**Write patterns:**
+1. JOURNAL.md → always append via `nova_journal.py`, never raw write_file
+2. STATUS.md → proposed changes protocol only (copy to logs/proposed/, get Cole's approval before committing)
+3. COLE.md [NOVA'S NOTES] section → free updates allowed, dated entries required
+4. autonomy_state.json → body faculty owns this directly (executive.py writes on state change)
+5. All other JSON configs → read-only unless specific tool action requires update
+
+**Session lifecycle:**
+- Boot: Load SELF/core/ in numeric order → COLE.md → STATUS.md → JOURNAL.md → AGENTS.md
+- End: Append to JOURNAL.md via nova_journal.py, write final status pulse to autonomy_state.json
+- Restart: Read all memory files fresh — nothing survives except what's written to disk
+
+**Key insight:** Memory doesn't survive session restarts. Files do. When something matters, write it down immediately using the correct tool for that file type.
