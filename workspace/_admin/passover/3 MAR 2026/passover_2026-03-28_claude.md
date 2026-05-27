@@ -297,5 +297,5 @@ Discord message → discord_client.py → _handle_message()
 
 ---
 
-_Last updated: 2026-05-28 04:39:01_
+_Last updated: 2026-05-28 05:40:33_
 _Written by: Cowork Claude_
