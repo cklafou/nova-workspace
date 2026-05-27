@@ -1,5 +1,5 @@
 # Project Nova — Claude Handoff Document
-_Last updated: 2026-05-28 07:41:31_
+_Last updated: 2026-05-28 08:41:49_
 **Written:** 2026-05-23  
 **Context:** OCuLink eGPU troubleshooting. Nova.exe launch state unknown. Cole upgrades to Claude MAX and switches to Opus for future sessions.
 
