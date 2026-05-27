@@ -12,10 +12,14 @@
         {
           "ts": "2026-05-27T22:43:42",
           "note": "Appended Core System Overview section with detailed breakdown of SELF/core/ identity files and operating rules to Nova_Architecture_Review.md"
+        },
+        {
+          "ts": "2026-05-27T22:59:54",
+          "note": "Appended Nova Body Manifest section with full breakdown of all 21 body components, entrypoints, tools, and launcher scripts"
         }
       ],
       "created": "2026-05-27T22:40:41",
-      "updated": "2026-05-27T22:43:42"
+      "updated": "2026-05-27T22:59:54"
     }
   }
 }

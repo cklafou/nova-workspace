@@ -1433,7 +1433,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
           <button id="think-scroll-lock" onclick="toggleThinkScrollLock()" title="Lock scroll position" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-mute);padding:1px 3px;border-radius:3px;transition:color var(--t);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-mute)'">🔓</button>
           <button onclick="copyThinkContent()" title="Copy reasoning to clipboard" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-mute);padding:1px 3px;border-radius:3px;transition:color var(--t);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-mute)'">📋</button>
         </div>
-        <div id="live-think-text" style="white-space:pre-wrap;line-height:1.5;padding:8px 10px;height:150px;overflow-y:auto;resize:vertical;" title="Drag the bottom edge to resize"></div>
+        <div id="live-think-text" style="white-space:pre-wrap;line-height:1.55;padding:8px 10px;height:300px;min-height:120px;overflow-y:auto;resize:vertical;font-size:11.5px;" title="Drag the bottom edge to resize"></div>
       </div>
       <!-- Active board tasks (from /api/queue) shown here as cards -->
       <div id="thoughts-cards"></div>
