@@ -1,5 +1,5 @@
 {
-  "seq": 23,
+  "seq": 27,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -262,6 +262,46 @@
       "progress": [],
       "created": "2026-05-27T09:10:08",
       "updated": "2026-05-27T09:10:08"
+    },
+    "t24": {
+      "id": "t24",
+      "title": "Architecture Review - Core System Overview",
+      "notes": "Document nova_body structure, main entry points, how components connect at high level",
+      "priority": 1,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:12:42",
+      "updated": "2026-05-27T09:12:42"
+    },
+    "t25": {
+      "id": "t25",
+      "title": "Architecture Review - Memory & State Management",
+      "notes": "Cover STATUS.md, JOURNAL.md, COLE.md, autonomy_state.json - how state persists across sessions",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:12:42",
+      "updated": "2026-05-27T09:12:42"
+    },
+    "t26": {
+      "id": "t26",
+      "title": "Architecture Review - Tools & Voice Implementation",
+      "notes": "nova_chat server on 8765, llama.cpp backend on 8080, available tools and their usage patterns",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:12:42",
+      "updated": "2026-05-27T09:12:42"
+    },
+    "t27": {
+      "id": "t27",
+      "title": "Create Architecture Document Foundation",
+      "notes": "Write Memory/Nova_Architecture_Review.md with intro, structure, table of contents - get actual words on paper Cole can see",
+      "priority": 1,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:12:42",
+      "updated": "2026-05-27T09:12:42"
     }
   }
 }
