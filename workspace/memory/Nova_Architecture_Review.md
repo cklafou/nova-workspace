@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 22:45:32_
+_Last updated: 2026-05-27 22:48:05_
 
 ---
 
@@ -1132,3 +1132,151 @@ This file is the single source of truth for what exists in Nova's codebase and h
 ---
 
 *Section 2 complete. Next: Voice & Communication Layer implementation details*
+
+
+---
+
+## 3. Voice & Communication Layer (nova_chat/server.py)
+**Purpose:** FastAPI/WebSocket server on port 8765 — Nova's voice, cross-AI routing, autonomy runtime host.
+
+### Core Architecture
+- **Binding:** Port 8765 for chat interface and WebSocket connections
+- **Framework:** FastAPI with real-time streaming support from all three AIs concurrently (Nova, Claude, Gemini)
+- **Session Management:** Persistent sessions via SessionManager class — resumes last active session on restart
+- **Workspace Context:** Lazy-loaded workspace context builder that indexes disk on first message to avoid boot bloat
+
+### Key Components & Modules Imported
+**nova_chat.transcript.Transcript** — Message history storage and retrieval for current chat session
+**nova_chat.session_manager.SessionManager** — Persistent session handling, resumes last active transcript
+**nova_chat.orchestrator** — Core routing logic:
+- parse_directed() — extracts @mentions to determine which AIs should respond
+- should_respond(agent, content) — checks mute state and direct mentions for response eligibility
+- build_response_queue() — orchestrates multi-AI response ordering
+- is_ncl_message() — detects NCL module call patterns (@eyes, @mentor, etc.)
+**nova_chat.context_export.export_session** — Exports full session context to file for debugging/sharing
+**nova_chat.workspace_context.WorkspaceContext** — Builds workspace context blocks with identity files and memory data injected into AI prompts
+**Client modules:** claude_client.py, gemini_client.py, nova_client.py — individual AI connection handlers
+**nova_bridge.handle_nova_message() / parse_actions()** — Nova-specific message handling and ACTIONS block parsing for tool execution
+
+### In-Memory Log Ring Buffer System (Phase 4A.1)
+- **Purpose:** Captures all print() output from server process so /logs endpoint can return it without git-sync delay
+- **Implementation:** _TeeStream wrapper around sys.stdout/sys.stderr writes to original stream AND ring buffer simultaneously
+- **Capacity:** LOG_RING_SIZE = 1000 lines max (FIFO deque)
+- **Threading-safe:** Uses lock (_log_lock) for concurrent access from multiple threads
+- **Feature complete:** Includes reconfigure() and __getattr__ delegation so wrapped streams behave transparently to code that probes stream capabilities
+
+### Background Task Architecture (startup_event async functions)
+**_bg_index() — Workspace Index Builder**
+- Runs 1 second after server fully starts
+- Calls workspace._refresh() in executor thread for non-blocking disk indexing
+- Regenerates Body Manifest on boot via build_manifest.main() to ensure self-model is current regardless of watcher state
+
+**_bg_eyes_stream() — Desktop Vision Broadcasting (~5fps)**
+- Captures pyautogui screenshots, downscales to 1280px wide max (720p height) for bandwidth efficiency
+- Encodes as JPEG with quality=55, optimize=True to minimize payload size
+- Broadcasts WebSocket frames: {"type": "eyes_frame", "data": base64_jpeg, "mouse": [xfraction, yfraction]}
+- Mouse position reported as fractions of original screen dimensions (normalized 0.0–1.0)
+- Only runs while _eyes_running global flag is True; sleeps otherwise to avoid wasted cycles
+
+**_bg_nova_status_poll() — Status Cache (30s interval)**
+- Polls nova_cortex.nova_status.read_summary() every 30 seconds
+- Caches result in nova_status_cache dict with summary + updated_at timestamp
+- Injected silently into AI context blocks so all AIs see current Nova status without explicit mention
+- Handles exceptions gracefully — if unavailable, stores error message string instead of crashing
+
+**_bg_transcript_flush() — Session Persistence Guard (60s interval)**
+- Flushes active transcript to disk every 60 seconds using atomic temp-file swap via flush_all()
+- Guards against individual _persist() failures leaving messages only in volatile memory during long sessions
+- Runs silently without blocking chat flow since it uses async sleep between flush cycles
+
+**_bg_llama_autostart() — Inference Server Health Gate**
+- Checks port 8080 health endpoint after 3-second server initialization delay
+- If llama-server not responding, launches start_llama.cmd to bring up inference engine automatically
+- Uses NOVA_WORKSPACE environment variable or resolves workspace path relative to nova_chat/server.py location
+- Prevents orphaned Nova process running without active model backend
+
+**_bg_sys_metrics() — System Resource Monitor (10s interval)**
+- Polls CPU percentage, RAM usage/total via psutil library every 10 seconds
+- Queries nvidia-smi for VRAM used/total and calculates percentage utilization
+- Stores in _sys_metrics dict: cpu_pct, ram_gb, ram_total, vram string (e.g. "6/24 GB"), vram_pct
+- Included in nova_status broadcasts so UI can display real-time resource consumption without separate polling endpoint
+
+**_bg_events_tail() — Watcher Process Event Bridge**
+- Tails logs/events/events-{date}.jsonl file to bridge watcher process events into Live Logs feed
+- Starts at EOF (no backlog flood) and only reads new lines as they're appended by watcher
+- Filters for WATCHER_EVENTS: {"manifest", "audit", "drift"} — body activity from separate process that can't call broadcast() directly
+- Runs every 2 seconds with error suppression so failures don't crash the monitoring loop
+
+### Autonomy Daemon (Persistent Sleep/Wake Cycle)
+**Replaces:** Old per-message heartbeat loop architecture (Task 5 fix)
+**Implementation:** asyncio.ensure_future(autonomy_daemon()) started in startup_event()
+- Runs continuously as background task independent of chat messages
+- Implements proper sleep/wake cycle via nova_cortex.executive faculty
+- Wakes on: environment changes, Cole speaking (Priority 0), time-sense triggers from clock module
+- Each wake runs REFLECT → DECIDE → EXECUTE phases with tool usage and progress logging
+- Respects autonomous_mode global flag loaded from executive.autonomy_enabled() at startup
+
+### HeartbeatContext Class (Architectural Fix for Re-processing Bug)
+**Purpose:** Ephemeral transcript for autonomous heartbeat ticks containing NO chat history — only the single tick message
+- **Problem solved:** When Nova's autonomy loop ran with full session transcript, she kept re-seeing Cole's old messages and re-answered them every cycle instead of working on tasks
+- **Solution:** HeartbeatContext.to_messages() builds minimal context: system prompt + workspace_context injection (identity files, memory) + single tick content as user message
+- **Result:** Nova has everything needed to work (self-model, state) without chat history bloat during autonomous cycles
+- **Usage:** Passed via heartbeat_tick parameter when building autonomy loop context instead of full session transcript
+
+### Cole Message Queue System
+**Purpose:** Prevents dropped messages when AIs are processing and nova_chat is blocked
+**Implementation:** _cole_message_queue list stores incoming Cole messages as dicts with {"content", "full_context_content", "directed_at", "images", "msg"}
+- Messages queued during is_processing=True state instead of being lost or causing race conditions
+- Queue drained automatically once processing completes (is_processing=False)
+- Ensures Priority 0 protocol works correctly — Cole's word never gets dropped even if Nova mid-task with tool execution in flight
+
+### Rate Limit Failsafe for Nova Autonomy (Temporary Protection)
+**_NOVA_RATE_WINDOW = 60 seconds, _NOVA_RATE_LIMIT = 4 messages max per window**
+- Rolling timestamp list (_nova_msg_times) tracks when Nova injects via /api/inject_message endpoint
+- Prevents runaway autonomy loops from burning through Claude/Gemini API credits during development/testing phases
+- When limit exceeded: nova_throttled flag set to True, muting Nova until window expires and counter resets
+- **Note:** This is temporary — will be removed once autonomy loop proven stable (per Cole & Claude annotation dated 2026-03-28)
+
+### Mute State System Per Agent
+**_mute_states dict:** {"Nova": False, "Claude": True, "Gemini": True} default configuration
+- **Unmuted agents (False):** Respond to every message in chat automatically
+- **Muted agents (True):** Only respond when directly @mentioned by name in message content
+- **Default rationale:** Nova is always unmuted as primary local AI; cloud AIs muted by default to avoid unnecessary API consumption unless explicitly called upon
+- Toggle via UI mute buttons or programmatically during autonomy runs to control response volume
+
+### Active Model Runtime Switching
+**_active_models dict:** {"Claude": claude_client.MODEL, "Gemini": gemini_client.MODEL}
+- Allows runtime model switching per agent without code changes — useful for testing different models or cost optimization strategies
+- Updated via UI controls or API calls; change takes effect on next message generation cycle
+- Enables Cole to swap Claude/Gemini between free/premium tiers dynamically based on task complexity requirements
+
+### Phase 4A.5 Inbox Routing System (Task Response Collection)
+**Purpose:** Route module response messages back into Tasking/Master_Inbox/ for heartbeat cycle processing
+**Regex Pattern:** ^\[([A-Za-z][A-Za-z0-9_]{2,})\] — matches [TaskId] at message start where ID is letter followed by 2+ alphanumeric/underscore chars
+- **Examples of valid task IDs:** [Research_0328], [TradeCheck_0527], [Module_Response]
+- **File naming format:** {timestamp}_{author}_{task_id}.md written to Tasking/Master_Inbox/
+- **Content structure:** Markdown file with header containing author, timestamp UTC, task ID + full message body
+- **Called from:** Message-saving code paths (synchronous non-blocking I/O)
+- **Integration:** Heartbeat cycle reads Master_Inbox/ on next tick and routes items to correct Thought folders for processing by executive faculty
+
+### WebSocket Broadcast System
+**broadcast() function:** Sends real-time updates to all connected browser sessions
+- **Message types supported:**
+  - "user_message" — new chat message with author, content, id, timestamp, directed_at list, source flag
+  - "message_start" / "token" / "message_end" — streaming response lifecycle for UI token-by-token display
+  - "error" — error state notification during generation
+  - "eyes_frame" — vision module screenshot frames with mouse position overlay data
+- **Connected clients tracking:** connected_clients WebSocket list maintains active browser sessions for broadcast targeting
+- **Error handling:** Silent failure on individual client disconnects to avoid crashing entire server process
+
+### Shutdown Event Handler
+**On shutdown_event():**
+1. Stops memory_indexer if running (graceful LanceDB vector store shutdown)
+2. Kills llama-server on port 8080 via PowerShell command — prevents orphaned inference process after Nova stack stops
+3. Uses Get-NetTCPConnection to find OwningProcess ID, then Stop-Process -Force for clean termination
+4. Timeout=8 seconds ensures shutdown doesn't hang waiting on stuck processes
+5. Error exceptions caught and logged so one failure doesn't block subsequent cleanup steps
+
+---
+
+*Section 3 complete. Voice layer architecture fully documented with all background tasks, routing systems, and autonomy integration points captured.*
