@@ -975,6 +975,8 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-sep"></div>
   <div class="dd-item" onclick="location.reload();closeDD()"><span class="dd-icon">↺</span><span class="dd-label">Reload UI</span><span class="dd-key">F5</span></div>
   <div class="dd-sep"></div>
+  <div class="dd-item" onclick="toggleWidgetOpacity()" title="When on, hovering a dashboard widget shows an opacity slider anchored to its tab. Off by default."><span class="dd-icon">◐</span><span class="dd-label">Widget Opacity</span><span class="dd-check" id="vchk-opacity"></span></div>
+  <div class="dd-sep"></div>
   <div class="dd-header">Panel Tab</div>
   <div class="dd-item" onclick="switchPanel('thoughts')"><span class="dd-icon">🧠</span><span class="dd-label">Thoughts</span><span class="dd-check" id="vchk-thoughts"></span></div>
   <div class="dd-item" onclick="switchPanel('tools')">  <span class="dd-icon">⚙</span><span class="dd-label">Tools</span><span class="dd-check" id="vchk-tools"></span></div>
