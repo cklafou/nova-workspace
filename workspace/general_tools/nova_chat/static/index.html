@@ -4000,8 +4000,11 @@ switchPanel('thoughts');
     terminal:{title:'Terminal',defH:4,grab:()=>document.getElementById('panel-terminal')},
     chat:{title:'Chat',defH:8,grab:()=>document.getElementById('chat-main'),bare:true},
     sidebar:{title:'Sessions',defH:8,grab:()=>document.getElementById('sidebar'),bare:true},
+    editor:{title:'Editor',defH:6,bare:true,make:()=>ce('<div class="nv-editor">'+
+      '<div class="ned-head"><span class="ned-dot"></span><span class="ned-name" id="ned-name">No file open</span></div>'+
+      '<pre class="ned-pre"><code class="ned-code" id="ned-code">Click a file in the Files widget to open it here.</code></pre></div>')},
   };
-  const ORDER=['sidebar','chat','tasks','logs','thoughts','tools','monitor','files','eyes','terminal'];
+  const ORDER=['sidebar','chat','tasks','logs','thoughts','tools','monitor','files','eyes','terminal','editor'];
   const DEFAULT=[{id:'tasks',x:0,y:0,w:12,h:4},{id:'logs',x:0,y:4,w:12,h:5},
                  {id:'thoughts',x:0,y:9,w:12,h:5},{id:'tools',x:0,y:14,w:12,h:4}];
   const STORE=document.createElement('div');STORE.style.display='none';

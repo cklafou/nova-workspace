@@ -1190,7 +1190,9 @@ WORKSPACE_ROOT = (
     else Path(__file__).parent.parent.parent
 )
 TEXT_EXTS      = {".py", ".md", ".json", ".jsonl", ".txt", ".ps1", ".cmd",
-                  ".yaml", ".yml", ".toml", ".ini", ".cfg", ".env"}
+                  ".yaml", ".yml", ".toml", ".ini", ".cfg", ".env",
+                  ".js", ".ts", ".jsx", ".tsx", ".html", ".htm", ".css",
+                  ".sh", ".bat", ".xml", ".csv", ".log", ".sql", ".rs", ".go", ".c", ".cpp", ".h"}
 EXCLUDE_DIRS   = {"__pycache__", ".git", "node_modules", ".clawhub",
                   "backups"}
 
