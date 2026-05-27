@@ -193,9 +193,14 @@
       "notes": "Set up Memory/Nova_Architecture_Review.md with structure, intro, and table of contents - get actual words on paper",
       "priority": 1,
       "status": "open",
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-05-27T09:14:57",
+          "note": "Created Memory/Nova_Architecture_Review.md foundation document with structure for Core System, Memory & State, Tools & Voice, and Body Manifest sections"
+        }
+      ],
       "created": "2026-05-27T09:07:02",
-      "updated": "2026-05-27T09:07:02"
+      "updated": "2026-05-27T09:14:57"
     },
     "t17": {
       "id": "t17",
