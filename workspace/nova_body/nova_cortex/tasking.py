@@ -83,8 +83,13 @@ def create(title: str, notes: str = "", priority: int = 3, parent: str = None) -
         pr = int(priority)
     except Exception:
         pr = 3
-    # Only keep a parent pointer if it refers to a real existing task (no orphans).
-    par = parent if (parent and parent in store["tasks"]) else None
+    # Keep a parent pointer only if it refers to a real, still-OPEN task — never nest a
+    # subtask under a done/abandoned task (that buries live work under finished work, the
+    # exact mis-parent bug we hit when she used an old done id as a stand-in).
+    par = None
+    if parent and parent in store["tasks"]:
+        if store["tasks"][parent].get("status") not in (DONE, ABANDONED):
+            par = parent
     store["tasks"][tid] = {
         "id": tid, "title": (title or "").strip() or f"(untitled {tid})",
         "notes": notes or "", "priority": pr, "status": OPEN, "parent": par,
@@ -147,10 +152,19 @@ def apply_actions(actions: dict):
     carries the non-board decisions ('switch' focus id, 'rest' reason) for the
     executive faculty to handle (active focus + rest live in autonomy_state, not here)."""
     log, control = [], {}
+    made = {}                       # title(lower) -> new id, for in-batch parent references
+    _existing = all_tasks()
     for c in (actions.get("create") or []):
-        tid = create(c.get("title", ""), c.get("notes", ""), c.get("priority", 3), c.get("parent"))
-        _par = c.get("parent")
-        log.append(f"created {tid}" + (f" under {_par}" if _par else "") + f": {c.get('title','')}")
+        par = c.get("parent")
+        # If `parent` isn't a real task id, it may be a reference to an umbrella created
+        # EARLIER in this same batch — resolve it by that task's title (her id won't exist
+        # yet when she writes the block). Falls through unchanged if it's already a real id.
+        if par and par not in _existing:
+            par = made.get(str(par).strip().lower(), par)
+        tid = create(c.get("title", ""), c.get("notes", ""), c.get("priority", 3), par)
+        made[(c.get("title", "") or "").strip().lower()] = tid
+        _actual = (get(tid) or {}).get("parent")
+        log.append(f"created {tid}" + (f" under {_actual}" if _actual else "") + f": {c.get('title','')}")
     for p in (actions.get("progress") or []):
         if progress(p.get("id", ""), p.get("note", "")):
             log.append(f"progress {p.get('id')}: {(p.get('note') or '')[:60]}")
