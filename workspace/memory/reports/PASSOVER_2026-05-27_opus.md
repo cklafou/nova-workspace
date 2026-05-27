@@ -1,5 +1,5 @@
 # PASSOVER — Project Nova (Opus → Opus handoff)
-_Last updated: 2026-05-28 01:37:30_
+_Last updated: 2026-05-28 02:38:41_
 _Written 2026-05-27 by the outgoing Opus session. Read this first, then `memory/STATUS.md`._
 
 You are picking up a long, productive session building **Project Nova** with **Cole**
