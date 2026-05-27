@@ -1,4 +1,5 @@
 # _admin/ — HISTORICAL ARCHIVE ONLY (do not treat as current)
+_Last updated: 2026-05-27 13:11:35_
 
 _Index added 2026-05-27 so a fresh session isn't confused by retired material._
 

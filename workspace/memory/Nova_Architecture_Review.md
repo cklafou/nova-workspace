@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 13:10:10_
+_Last updated: 2026-05-27 13:11:34_
 
 ---
 
@@ -733,3 +733,33 @@ from nova_cortex.nova_status import add_error; add_error('vision', 'Element not 
 5. Memory/JOURNAL.md is append-only because session entries accumulate as history, never deleted unless manually curated later
 6. STATUS.md can be updated programmatically but proposed changes protocol protects against accidental overwrites of critical project context
 7. COLE.md's [NOVA'S NOTES] section is the only place Nova updates directly without going through logs/proposed/ first - this is about learning and adapting to Cole in real-time
+## 2. Memory & State Management
+
+### Core Files (Workspace Root)
+The `memory/` folder holds Nova's working memory — what she's doing right now, who Cole is to her, and the running log of sessions.
+
+| File | Purpose | How It Updates |
+|------|---------|----------------|
+| `STATUS.md` | Current project state & architecture reference | Proposed changes protocol only (draft in logs/proposed/, review with Cole) |
+| `JOURNAL.md` | Rolling 90-day session log | Append at end of every session via `nova_journal.py`. Never overwrite. |
+| `COLE.md` | Living notes about Cole | `[NOVA'S NOTES]` section updated freely as Nova learns new context |
+
+### State Files (JSON)
+- **autonomy_state.json** — Body-owned on/off state for autonomy loop. UI toggle is remote control.
+- **touch_state.json** — What's currently interacting with Nova (sense layer).
+- **cole_intent.json** — Cole's current intent/priority signals.
+
+### Key Design Principles Found:
+1. **Write it down, no mental notes** — Memory doesn't survive session restarts; files do.
+2. **Journal is append-only** — Use `nova_journal.py` to write entries at end of every wake cycle.
+3. **STATUS.md changes are proposed first** — Don't edit root-level memory directly without Cole's review (except `[NOVA'S GROWTH]` section in NOVA.md).
+4. **90-day rolling journal** — Older entries compress into `archive/YYYY-MM.md` automatically.
+5. **Body owns autonomy state** — The executive faculty (`nova_cortex/executive.py`) controls on/off, not the server or UI.
+
+### Current Memory Data Flow:
+- Session start: Load `SELF/core/*.md` → `memory/STATUS.md` → `memory/JOURNAL.md` → `memory/COLE.md`
+- During session: Touch sense updates interactions to `touch_state.json`, autonomy state persists in `autonomy_state.json`
+- Session end: Append entry to `JOURNAL.md` via `nova_journal.py`
+
+### Gap Identified:
+The `nova_memory` package (`journal.py`, `log_reader.py`, `goals.py`, etc.) is scaffolded but NOT yet wired into the running stack. Current memory operations write directly to files instead of going through a dedicated faculty layer.

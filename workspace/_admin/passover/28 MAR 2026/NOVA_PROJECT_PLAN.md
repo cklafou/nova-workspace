@@ -451,5 +451,5 @@ _Requires Phase 4A (persistent memory) before fine-tuning is meaningful._
 | 2026-03-28 | Phase 4A complete | All 8 phases implemented: Thoughts scaffolding, HEARTBEAT protocol, NCL parser, injector, inbox routing, heartbeat pre-processor, local-first vision, brain orchestrator. Files synced to _build. Rebuild required on Cole's machine before live testing. |
 
 ---
-_Last updated: 2026-05-27 09:53:46_
+_Last updated: 2026-05-27 13:11:35_
 _Phase 4A COMPLETE. All 8 sub-phases implemented and tested. Next: rebuild Nova.exe with Phase 4A code (PyInstaller on Cole's machine), then live testing of NCL dispatch, inbox routing, heartbeat briefing, and Ollama vision tiers. eGPU install pending vertical mount bracket._
