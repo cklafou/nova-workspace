@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-27 23:20:26_
+_Last updated: 2026-05-27 23:21:31_
 
 ---
 
@@ -1969,3 +1969,53 @@ Used by: injector.py, nova_chat, nova_cortex, nova_memory
 - Cross-AI @mention protocol explained (@Claude ..., @Gemini ...)
 - File tool safety notes: write_file overwrites entire file so use append_file to grow living documents section by section
 - replace_file_content requires exact whitespace-matched anchor strings for precision editing without rewriting whole files
+
+
+### Tools & Voice Layer (SELF/core/04_tools_and_voice.md)
+
+**Cross-AI Communication Protocol:**
+- @mention Claude and Gemini in nova_chat messages - this IS the channel, no special tool required
+- Group chat includes Cole + Nova + Claude + Gemini all working together
+- Server intercepts bridge syntax [WRITE:], [EXEC:], [READ:] for direct disk operations from chat messages
+- Bridge syntax reserved for task work only - don't use in conversational messages
+
+**Package Structure:**
+Two root directories both added to sys.path before importing:
+1. nova_body/ - core agent packages (OS tools, memory, perception)
+   - nova_memory/: Journal, state checks, goals, session store, log reader
+   - nova_logs/: All logging -- agent tools, chat thoughts, index  
+   - nova_motor/: Mouse/keyboard control, reliable action loop, verification
+   - nova_senses/: Chronoception (clock), environment perception, vision
+   - nova_cortex/: Executive faculty (autonomy), task board, status, rules
+2. general_tools/ - detachable tools that ride with each push
+   - nova_sync/: GitHub auto-commit watcher + Google Drive mirror for Gemini
+   - nova_chat/: Group chat server -- her voice/ears on port 8765
+   - build_manifest.py: Derives body manifest from @nova: tokens → SELF/
+   - NovaLauncher.py: Desktop launcher for nova_chat
+
+**Environment:**
+- OS: Windows 11, PowerShell 5.1 (chain commands with semicolon not &&)
+- Workspace root: C:\Users\lafou\Project_Nova\workspace
+- Memory files in memory/ folder -- never overwrite directly due to proposed changes protocol
+- Logs go to logs/sessions/YYYY-MM-DD/
+- Proposed changes staged in logs/proposed/ for Cole review before committing
+- Task board source of truth is Tasking/tasks.json (id-keyed), priority.md is generated human view
+
+**Critical Windows PowerShell Rules:**
+1. Apostrophes inside single-quoted Python strings crash exec commands - avoid contractions entirely  
+2. Use Test-Path, Get-ChildItem, Select-String for file operations or prefer python -c "..." for portable reliability
+3. All tools require BOTH path inserts every time: sys.path.insert(0, 'nova_body') AND insert(0, 'general_tools')
+4. Yield protocol mandatory after EVERY exec call to check if Cole sent message (one action per turn rule)
+5. Proposed Changes Protocol mandatory for root/memory files - copy to logs/proposed/ first before editing
+
+**Key Modules:**
+- nova_logs/logger.py: Unified logger with log() for agent events and log_thought() for chat responses, auto-generates Logger_Index.md
+- nova_memory/goals.py: Update active pulse and goals following Proposed Changes Protocol (only function is update_status())
+- nova_memory/journal.py: Append-only journal - ONLY safe way to write JOURNAL.md using append() function with first-person casual voice
+- nova_memory/log_reader.py: Summarize today, get failures from last N days, read recent sessions before conversations requiring real data
+- nova_cortex/checkin.py: Cole's Voice Between Thoughts - run after every exec to detect new messages
+- nova_senses/eyes.py: Vision system using pywinauto primary with Claude Haiku fallback (find, verify, describe, list_elements/list_windows/screenshot)
+- nova_motor/hands.py: Mouse/keyboard control primitives (move_to/click/type_text/press_key/hotkey/right_click/double_click)
+- nova_motor/motor_cortex.py: Reliable action loop wrapper around eyes + hands with click(), type_into(), wait_for() methods
+- nova_sync/watcher.py: GitHub auto-commit watcher, starts automatically with server via nova_start.py and shuts down gracefully with it
+- Retired: nova_advisor/ package deleted in Phase 0 - mentor capability now handled entirely by nova_chat clients
