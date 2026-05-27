@@ -1,5 +1,5 @@
 {
-  "seq": 37,
+  "seq": 42,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -101,11 +101,12 @@
       "title": "Architecture & Code Review - Full System Documentation",
       "notes": "Comprehensive review of all Nova system files (excluding logs/temp/admin/backup). Create living document Memory/Nova_Architecture_Review.md with sections for each component area.",
       "priority": 2,
-      "status": "open",
+      "status": "abandoned",
       "parent": null,
       "progress": [],
       "created": "2026-05-27T10:25:23",
-      "updated": "2026-05-27T10:25:23"
+      "updated": "2026-05-27T10:40:28",
+      "abandon_reason": "Duplicate architecture review task - consolidating into single clean structure"
     },
     "t29": {
       "id": "t29",
@@ -156,11 +157,12 @@
       "title": "Architecture Review - Complete System Audit",
       "notes": "Full in-depth code and architecture review of all non-temporary files, building Memory/Nova_Architecture_Review.md as living document",
       "priority": 2,
-      "status": "open",
+      "status": "abandoned",
       "parent": null,
       "progress": [],
       "created": "2026-05-27T10:29:33",
-      "updated": "2026-05-27T10:29:33"
+      "updated": "2026-05-27T10:40:28",
+      "abandon_reason": "Duplicate of t28 - removing to eliminate confusion"
     },
     "t34": {
       "id": "t34",
@@ -205,6 +207,61 @@
       "progress": [],
       "created": "2026-05-27T10:29:33",
       "updated": "2026-05-27T10:29:33"
+    },
+    "t38": {
+      "id": "t38",
+      "title": "Architecture Review",
+      "notes": "Full code and system review creating Memory/Nova_Architecture_Review.md as living document. Section-by-section approach for clarity.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-05-27T10:40:28",
+      "updated": "2026-05-27T10:40:28"
+    },
+    "t39": {
+      "id": "t39",
+      "title": "Core System Overview",
+      "notes": "Document nova_body structure, main entry points, how components connect at high level",
+      "priority": 2,
+      "status": "open",
+      "parent": "t38",
+      "progress": [],
+      "created": "2026-05-27T10:40:28",
+      "updated": "2026-05-27T10:40:28"
+    },
+    "t40": {
+      "id": "t40",
+      "title": "Memory & State Management",
+      "notes": "Map memory/JOURNAL.md, STATUS.md, COLE.md usage patterns and autonomy_state.json flow",
+      "priority": 2,
+      "status": "open",
+      "parent": "t38",
+      "progress": [],
+      "created": "2026-05-27T10:40:28",
+      "updated": "2026-05-27T10:40:28"
+    },
+    "t41": {
+      "id": "t41",
+      "title": "Tools & Voice Interface",
+      "notes": "Review nova_chat voice layer, tool execution pipeline, how @mentions work for Claude/Gemini",
+      "priority": 2,
+      "status": "open",
+      "parent": "t38",
+      "progress": [],
+      "created": "2026-05-27T10:40:28",
+      "updated": "2026-05-27T10:40:28"
+    },
+    "t42": {
+      "id": "t42",
+      "title": "Body Manifest Structure",
+      "notes": "Document SELF/core folder contents and what each file defines about Nova's identity/operations",
+      "priority": 3,
+      "status": "open",
+      "parent": "t38",
+      "progress": [],
+      "created": "2026-05-27T10:40:28",
+      "updated": "2026-05-27T10:40:28"
     }
   }
 }
