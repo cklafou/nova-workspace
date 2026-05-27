@@ -1,5 +1,5 @@
 {
-  "seq": 11,
+  "seq": 15,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -138,6 +138,46 @@
       ],
       "created": "2026-05-27T08:25:20",
       "updated": "2026-05-27T08:48:18"
+    },
+    "t12": {
+      "id": "t12",
+      "title": "Create Architecture Review Foundation",
+      "notes": "Set up Memory/Nova_Architecture_Review.md with structure, intro, and table of contents - get actual words on paper",
+      "priority": 1,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:04:36",
+      "updated": "2026-05-27T09:04:36"
+    },
+    "t13": {
+      "id": "t13",
+      "title": "Document SELF/core/ System",
+      "notes": "Review all identity files (00_START_HERE through 04_tools_and_voice) and document their purpose/content in the review doc",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:04:36",
+      "updated": "2026-05-27T09:04:36"
+    },
+    "t14": {
+      "id": "t14",
+      "title": "Document nova_cortex/ Executive Functions",
+      "notes": "Review executive.py, tasking.py, status module - how decision-making works",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:04:36",
+      "updated": "2026-05-27T09:04:36"
+    },
+    "t15": {
+      "id": "t15",
+      "title": "Document nova_senses/ Input Systems",
+      "notes": "Review clock.py, touch.py and other sensory modules - what Nova perceives",
+      "priority": 2,
+      "status": "open",
+      "progress": [],
+      "created": "2026-05-27T09:04:36",
+      "updated": "2026-05-27T09:04:36"
     }
   }
 }
