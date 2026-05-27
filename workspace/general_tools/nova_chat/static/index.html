@@ -3925,12 +3925,13 @@ switchPanel('thoughts');
 #wdash.golden{padding:0;overflow:hidden;position:relative;}
 #wdash.golden #gl-root{position:absolute;inset:0;}
 .nv-glwidget{display:flex;flex-direction:column;height:100%;background:var(--bg-surface);position:relative;}
-/* hover-reveal pane control (opacity + count) — floats in the top-right corner */
-.nv-glhead{position:absolute;top:4px;right:8px;z-index:6;display:flex;align-items:center;gap:8px;
-  padding:3px 9px;border-radius:8px;background:rgba(8,8,26,0.92);border:1px solid var(--border-med);
-  box-shadow:0 4px 14px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity var(--t);}
-.nv-glwidget:hover .nv-glhead{opacity:1;pointer-events:auto;}
-.nv-opwrap{display:flex;align-items:center;gap:5px;color:var(--text-mute);font-size:9px;}
+/* shared opacity popover — anchored to a widget's tab, gated by View ▸ Widget Opacity */
+#nv-op-pop{position:fixed;z-index:9999;display:none;align-items:center;gap:7px;padding:4px 10px;
+  border-radius:8px;background:rgba(8,8,26,0.97);border:1px solid var(--border-hi);
+  box-shadow:0 6px 22px rgba(0,0,0,.55);font-size:9px;color:var(--text-mute);}
+#nv-op-pop .op-ic{font-size:11px;color:var(--text-dim);}
+#nv-op-pop .op-val{min-width:30px;text-align:right;color:var(--text-dim);}
+#nv-op-pop .nv-op{width:96px;}
 .nv-op{width:62px;height:3px;-webkit-appearance:none;appearance:none;background:var(--border-hi);border-radius:3px;outline:none;}
 .nv-op::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--nova);cursor:pointer;border:none;}
 .nv-op::-moz-range-thumb{width:10px;height:10px;border-radius:50%;background:var(--nova);cursor:pointer;border:none;}
@@ -4092,6 +4093,47 @@ switchPanel('thoughts');
     for(const u of GL_CDN){try{const m=await import(u);if(m&&m.GoldenLayout){GLmod=m;return m;}}catch(e){err=e;}}
     throw err||new Error('Golden Layout failed to load');}
 
+  // ── shared opacity popover — anchored to a widget's tab, gated by a toggle ──
+  let opacityMode=false, opPop=null, opTarget=null, opHideT=null;
+  function ensureOpPop(){
+    if(opPop)return opPop;
+    opPop=document.createElement('div'); opPop.id='nv-op-pop';
+    opPop.innerHTML='<span class="op-ic">◐</span><input type="range" class="nv-op" min="25" max="100" value="100"><span class="op-val">100%</span>';
+    document.body.appendChild(opPop);
+    const sl=opPop.querySelector('.nv-op'), val=opPop.querySelector('.op-val');
+    sl.addEventListener('input',()=>{ if(!opTarget)return;
+      opTarget.el.style.opacity=(sl.value/100).toFixed(2); val.textContent=sl.value+'%';
+      layoutDoc.opacity=layoutDoc.opacity||{}; layoutDoc.opacity[opTarget.id]=+sl.value; scheduleSave(); });
+    opPop.addEventListener('mouseenter',()=>clearTimeout(opHideT));
+    opPop.addEventListener('mouseleave',opPopHideSoon);
+    return opPop;
+  }
+  function opPopShow(el,id){
+    if(!opacityMode)return;
+    clearTimeout(opHideT);
+    const pop=ensureOpPop(); opTarget={el:el,id:id};
+    const cur=Math.round((parseFloat(el.style.opacity||'1'))*100);
+    pop.querySelector('.nv-op').value=cur; pop.querySelector('.op-val').textContent=cur+'%';
+    const stack=el.closest('.lm_stack');
+    const tab=stack&&(stack.querySelector('.lm_tabs .lm_tab.lm_active')||stack.querySelector('.lm_tabs .lm_tab'));
+    pop.style.visibility='hidden'; pop.style.display='flex';
+    const ph=pop.offsetHeight, pw=pop.offsetWidth;
+    let top,left;
+    if(tab){ const r=tab.getBoundingClientRect(); left=r.left; top=r.top-ph-6;
+      if(top<34) top=r.bottom+6;                                   // no room above → below the tab
+      if(left+pw>window.innerWidth-6) left=window.innerWidth-pw-6;
+    } else { const r=el.getBoundingClientRect(); left=r.left+8; top=r.top+8; }
+    pop.style.left=Math.max(6,left)+'px'; pop.style.top=top+'px'; pop.style.visibility='visible';
+  }
+  function opPopHideSoon(){ clearTimeout(opHideT); opHideT=setTimeout(()=>{ if(opPop)opPop.style.display='none'; opTarget=null; },180); }
+  window.toggleWidgetOpacity=function(){
+    opacityMode=!opacityMode;
+    layoutDoc.opacityMode=opacityMode; postDoc();
+    const c=document.getElementById('vchk-opacity'); if(c)c.textContent=opacityMode?'✓':'';
+    if(!opacityMode&&opPop)opPop.style.display='none';
+    if(typeof closeDD==='function')closeDD();
+  };
+
   function buildGoldenContent(el,id){
     const def=DEFS[id]||{title:id};
     el.classList.add('nv-glwidget');
@@ -4099,19 +4141,12 @@ switchPanel('thoughts');
     const body=ce('<div class="nv-wbody"></div>');
     const node=getNode(id); if(node)body.appendChild(node);
     el.appendChild(body);
-    // Opacity/count control only on dashboard widgets — bare widgets (Chat,
-    // Sessions) own their corners with their own UI, so skip it there.
+    // Per-widget opacity (dashboard widgets only) via the shared tab-anchored popover.
     if(!def.bare){
-      const head=ce('<div class="nv-glhead">'+
-        (def.countId?'<span class="nv-wcount" id="'+def.countId+'">0</span>':'')+
-        '<span class="nv-opwrap">◐<input class="nv-op" type="range" min="25" max="100" value="100" title="Pane opacity"></span></div>');
-      el.appendChild(head);
-      const sl=head.querySelector('.nv-op');
-      const applyOp=v=>{const pane=el.closest('.lm_stack')||el.closest('.lm_item')||el;pane.style.opacity=(v/100).toFixed(2);};
-      sl.addEventListener('pointerdown',e=>e.stopPropagation());
-      sl.addEventListener('input',()=>{applyOp(sl.value);layoutDoc.opacity=layoutDoc.opacity||{};layoutDoc.opacity[id]=+sl.value;scheduleSave();});
       const sv=layoutDoc.opacity&&layoutDoc.opacity[id];
-      if(sv!=null){sl.value=sv;setTimeout(()=>applyOp(sv),0);}
+      if(sv!=null)el.style.opacity=(sv/100).toFixed(2);
+      el.addEventListener('mouseenter',()=>opPopShow(el,id));
+      el.addEventListener('mouseleave',opPopHideSoon);
     }
   }
   function glComp(id){return {type:'component',componentType:'nv',componentState:{id:id},title:DEFS[id].title};}
@@ -4184,6 +4219,8 @@ switchPanel('thoughts');
     try{const r=await fetch('/api/layout');if(r.ok){const d=await r.json();if(d&&typeof d==='object')layoutDoc=d;}}catch(_){}
     engine=(layoutDoc.engine==='golden')?'golden':'grid';
     updateEngineUI();
+    opacityMode=!!layoutDoc.opacityMode;
+    const oc=document.getElementById('vchk-opacity'); if(oc)oc.textContent=opacityMode?'✓':'';
     if(engine==='golden')await initGolden();
     else initGrid();
   }
