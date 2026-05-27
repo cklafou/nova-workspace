@@ -184,12 +184,20 @@ def generate_image(prompt: str, negative: str = "", as_nova: bool = False,
     return f"ERROR: {r.get('detail', 'image generation failed')}"
 
 
-def journal(entry: str, tags: str = "") -> str:
+def journal(entry="", tags="") -> str:
     """Append a dated, timestamped reflective entry to memory/JOURNAL.md — Nova's own
     running memory that carries forward across her fresh-wake resets. This is HOW she
     learns and grows: what happened, what it meant, what she realized, what's next.
     Append-only — it never overwrites prior entries. Use her own voice, not a report."""
-    if not (entry or "").strip():
+    # Forgiving about arg shapes the model emits: entry may arrive non-string, tags as a
+    # list. Coerce both so a format quirk never costs her a memory (she hit exactly this).
+    if isinstance(entry, (list, tuple)):
+        entry = "\n".join(str(e) for e in entry)
+    entry = str(entry if entry is not None else "")
+    if isinstance(tags, (list, tuple)):
+        tags = " ".join(str(t) for t in tags)
+    tags = str(tags if tags is not None else "")
+    if not entry.strip():
         return "ERROR: Nothing to journal (empty entry)."
     target = (WORKSPACE_ROOT / "memory" / "JOURNAL.md").resolve()
     if not _within_workspace(target):
@@ -197,7 +205,7 @@ def journal(entry: str, tags: str = "") -> str:
     try:
         from datetime import datetime
         ts = datetime.now().strftime("%Y-%m-%d %H:%M")
-        tagstr = f"  ·  _{tags.strip()}_" if (tags or "").strip() else ""
+        tagstr = f"  ·  _{tags.strip()}_" if tags.strip() else ""
         block = f"\n\n---\n### {ts}{tagstr}\n{entry.strip()}\n"
         target.parent.mkdir(parents=True, exist_ok=True)
         with open(target, "a", encoding="utf-8") as f:
