@@ -1,5 +1,5 @@
 # Plan — Relocate Nova's body code into nova_body/
-_Last updated: 2026-05-28 00:36:37_
+_Last updated: 2026-05-28 01:37:29_
 
 _Status: DRAFT for review. Move to `_admin/_archive_*` when executed.
 Author: Claude (Cowork), with Cole, 2026-05-24.
