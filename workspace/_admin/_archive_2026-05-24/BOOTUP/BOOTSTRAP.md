@@ -1,5 +1,5 @@
 # BOOTSTRAP.md -- Mandatory Session Startup
-_Last updated: 2026-05-28 08:41:49_
+_Last updated: 2026-05-28 12:55:18_
 _Execute every step in order before responding to Cole._
 
 ## How to Start a Claude Session
