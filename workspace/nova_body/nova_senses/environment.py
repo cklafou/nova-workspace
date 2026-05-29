@@ -1,4 +1,4 @@
-# Last updated: 2026-05-29 17:52:43
+# Last updated: 2026-05-29 18:53:11
 # @nova: Environmental perception — I sense my surroundings: which of my watched places
 #        changed since I last looked, Cole's standing directive (his word = Priority 0),
 #        and whether he's typing. The filesystem is universal, so I read it directly.
