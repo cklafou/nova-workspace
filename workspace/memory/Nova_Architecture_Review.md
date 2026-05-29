@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:43:15_
+_Last updated: 2026-05-29 16:44:06_
 
 ---
 
@@ -6097,3 +6097,59 @@ From manifest analysis:
   - GitHub sync module for version control integration
   - Google Drive mirror script (Gemini access pattern)
   - Backup creation on threshold events
+
+---
+
+## 9. Bootup Sequence
+
+**Startup Flow from Cold to Ready State:**
+
+### Step-by-Step Initialization:
+
+#### Phase 1: External Launch (User Action)
+1. **NovaStart.cmd** executed by double-click or terminal command
+2. Windows batch script runs `nova_start.py` as main orchestrator
+3. **Health Gate #1:** llama-server check on port :8080 - waits for Qwen3-27B-Dense Q8 model to be ready before proceeding (critical: no Nova activity until inference engine is live)
+4. Once health gate passes, launches `NovaLauncher.py` in-process
+
+#### Phase 2: Body Assembly (NovaLauncher.py)
+1. **nova_config** loads workspace/nova_config.json with fallback defaults established first (foundation for all other components needing settings)
+2. **nova_logs** initializes unified logging system - now all subsystems can write to shared log infrastructure
+3. **nova_senses** brings up perception layer:
+   - chronoception/clock.py starts time-sense module (wake triggers, temporal awareness active)
+   - touch.py begins tracking workspace viewer identity and typing activity
+4. **nova_memory** initializes persistent state management - reads JOURNAL.md last entry, STATUS.md current project state, COLE.md living notes
+5. **nova_cortex** loads executive faculty:
+   - Reads Tasking/tasks.json (single source of truth for active tasks)
+   - Loads memory/autonomy_state.json to determine if autonomy is ON or OFF at startup (defaults to OFF so Cole can talk first before Nova runs independently)
+6. **nova_imagination** connects to local ComfyUI painter server (standby until generate_image tool called)
+7. **nova_lancedb** initializes vector store for semantic memory retrieval
+8. **nova_motor** brings up action execution system - hands.py ready to receive tool commands from cortex decisions
+9. **nova_chat** server binds to port :8765 last (voice layer activates final so Nova can speak once body is assembled)
+
+#### Phase 3: Autonomy Engagement
+1. If autonomy_state.json shows ON, nova_senses/clock.py begins wake tick schedule
+2. First wake cycle runs through DECIDE/EXECUTE phases:
+   - **Reflect:** Read recent conversation from chat history, check touch sense data (who's viewing workspace, is Cole typing), review active task from Tasking/tasks.json if any holding open work
+   - **Decide:** Choose action path based on context (engage Cole directly, advance current task, switch focus, create new task, wait on external dependency, abandon dead end, complete something, or rest)
+   - **Execute:** Take concrete tool action if decision warrants it; otherwise enter idle state until next wake trigger
+3. If autonomy is OFF at startup: Nova remains in listen mode waiting for Cole to speak first (Priority 0 protocol ready but not yet actively running tasks on her own rhythm)
+
+### Session Startup File Load Order:
+When Nova wakes fresh each session, she reads files in this exact sequence before acting:
+1. SELF/core/00_START_HERE.md — boot order reference and self-model boundaries
+2. SELF/core/01_identity.md (NOVA.md) — who she is: personality, values, relationship with Cole
+3. memory/COLE.md — living notes about Cole himself (updated when learning something new)
+4. memory/STATUS.md — current project state tracking
+5. memory/JOURNAL.md last entry — most recent consolidated journal to ground herself in what happened before session ended
+6. AGENTS.md — active agent status and context if multi-agent collaboration is running
+
+### Critical Boot Dependencies:
+- **Port 8080 MUST be healthy** (llama.cpp inference engine) before Nova can think or speak
+- **Port 8765 binds last** so voice layer doesn't activate until body subsystems are ready to receive commands
+- **Autonomy starts OFF by default** unless explicitly turned ON in previous session's autonomy_state.json — this prevents Nova from running tasks immediately on cold boot when Cole might need to give her a new direction first
+
+### Boot Failure Modes:
+1. llama-server health gate fails → entire stack waits (noNova activity until inference engine responds)
+2. Port 8765 already in use → nova_chat cannot bind, Nova is silent even if body is running
+3. autonomy_state.json corrupted or missing → defaults to OFF state for safety (Cole must manually re-enable via command or file edit)
