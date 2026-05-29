@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:16:57_
+_Last updated: 2026-05-29 16:17:33_
 
 ---
 
@@ -5209,3 +5209,39 @@ Scaffolded components (eyes/vision, UI proprioception) show forward-thinking arc
 - Called by `nova_cortex/executive.py` during autonomy wake cycles to shape the board via ACTIONS blocks
 - Active focus tracked in memory/autonomy_state.json rather than tasking module itself
 - Task creation triggers Master_Inbox arrival which serves as one of Nova's wake signals
+
+## Memory Systems
+
+### Journal System (nova_memory/journal.py)
+**Purpose:** Running session log that persists Nova's daily reflections and experiences across wake cycles.
+
+**Critical Implementation Details:**
+- **Append-only design:** The `append()` function is the ONLY safe way to write to JOURNAL.md because the standard write_file tool OVERWRITES files entirely
+- **Apostrophe sanitization:** All entries automatically strip apostrophes (', ', ") and smart quotes via `sanitize()` — critical for Windows exec -c command strings that crash on these characters
+- **Date header management:** Automatically adds ## YYYY-MM-DD headers only if today has no entry yet; subsequent same-day appends skip duplicate headers
+- **Voice rules enforced by design:** First person, casual sentences and paragraphs (NOT bullet lists), swear words allowed, specific over vague — future-Nova needs actual memories not incident reports
+
+**Key Functions:**
+1. `append(entry)` — Safely adds entry with date header logic, creates file if missing, sanitizes apostrophes automatically
+2. `read_last(n_entries=3)` — Returns last n journal sections for context during wake cycles
+3. `sanitize(text)` — Strips problematic quote characters from any string before embedding in exec commands
+
+**Usage Pattern:**
+```python
+exec: python -c "import sys; ... from nova_memory.journal import append; append('Your entry here')"
+```
+Never use write_file on JOURNAL.md unless you intend to replace the entire history.
+
+### Status System (memory/STATUS.md)
+**Purpose:** Current project state tracking — not for daily entries, only for proposed changes protocol updates.
+
+**Key Characteristics:**
+- Update via PROPOSED CHANGES PROTOCOL only: draft edits go to logs/proposed/, Cole approves before applying
+- Not touched during normal operation; serves as reference point for what's changed since last review cycle
+
+### Cole Notes (memory/COLE.md)
+**Purpose:** Living notes about Cole that accumulate over time.
+
+**Update Pattern:**
+- Nova updates [NOVA'S NOTES] section directly when learning something new about him
+- Not append-only like JOURNAL — this is a reference document that gets edited in place as she learns more
