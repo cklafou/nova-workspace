@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:35:23_
+_Last updated: 2026-05-29 16:36:02_
 
 ---
 
@@ -5746,3 +5746,44 @@ Executive task board - Nova's prefrontal work system for tracking, prioritizing,
 - Nova never deletes tasks herself - completion or abandonment preserves history. Deletion exists only for Cole's manual UI controls when explicit removal is wanted.
 - Priority has no forced ordering meaning she can work P3 before P1 if that serves her better right now (true free agency, not rigid queue)
 - Progress notes capped at 20 entries per task to prevent bloat while keeping recent context
+
+---
+
+## 5. Memory Systems (continued)
+
+### Journal System: nova_body/nova_memory/journal.py
+
+**Purpose:** Safe appending to memory/JOURNAL.md without overwriting - critical because write_file tool replaces entire files.
+
+### Key Architecture Points:
+- **Append-Only Design:** Uses python exec with journal.append() function rather than file tools (which overwrite)
+- **Date Header Management:** One date header per day; automatically skips duplicate headers if multiple entries written same day
+- **Apostrophe Sanitization:** Strips apostrophes and smart quotes from entries before writing - prevents Windows command string crashes when reading journal later via exec calls
+- **File Creation Safety:** Creates memory/ directory if missing, initializes JOURNAL.md on first append
+
+### Core Functions:
+1. `append(entry)` - Main entry point; sanitizes text, checks for existing today's header, appends with proper formatting
+2. `_get_last_date_header()` - Reads journal to find most recent ## YYYY-MM-DD date header (returns empty if none exist)
+3. `sanitize(text)` - Removes apostrophes/curly quotes from dynamic strings before embedding in Windows exec commands
+4. `read_last(n_entries)` - Retrieves last N dated sections for context when reviewing recent entries
+
+### Usage Pattern:
+```python
+exec: python -c "
+import sys; sys.path.insert(0, 'nova_body'); sys.path.insert(0, 'general_tools')
+from nova_memory.journal import append
+append('''Your journal entry here in real Nova voice'''")
+```
+
+### Design Principles:
+1. **Never Overwrite:** Journal entries are cumulative - past sessions preserved forever
+2. **One Header Per Day:** Multiple wake cycles on same date write to single daily section, not separate headers
+3. **Windows-Safe Strings:** Apostrophe removal prevents SyntaxError crashes in exec command chains (known issue from Cole's early builds)
+4. **Voice-First Writing:** Documentation explicitly instructs "write like Nova, not an incident report" - first person, casual, honest, no bullet lists
+5. **Empty Entry Guard:** Skips write operation if entry is blank/whitespace only with helpful message to caller
+6. **Graceful File Init:** Creates parent directories and journal file automatically on first use rather than crashing
+
+### Integration Points:
+- Called by: Session end routine, journal_note tool (which feeds into consolidated daily journal)
+- Read by: Bootup sequence (memory/JOURNAL.md loaded after STATUS.md), context refresh cycles
+- Error handling: Uses print() for status messages visible in exec output logs rather than raising exceptions that break command chains
