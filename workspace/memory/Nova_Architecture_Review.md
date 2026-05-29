@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:36:12_
+_Last updated: 2026-05-29 15:37:04_
 
 ---
 
@@ -3912,3 +3912,74 @@ Nova's executive faculty handles decision-making, task management, autonomy orch
 - Uses `nova_memory` for journal appending and state persistence
 - Coordinates with `nova_motor` when executing tool-based actions
 - Receives sensor data from `nova_senses/clock.py` (time awareness) and `nova_senses/touch.py` (who's viewing, typing status)
+
+## 5. Memory Systems
+
+**Components:** `nova_body/nova_memory/` (6 files, ~836 lines) + core memory files in `memory/`
+
+### Purpose
+Persistent state management for Nova's working memory — journal appending, goals/status tracking, daily log summaries, and Cole relationship notes.
+
+### Core Memory Files
+
+**memory/JOURNAL.md** - Running session log:
+- Append-only document that carries forward across wake cycles (the ONLY thread of self that survives reset)
+- Use `nova_journal.py` tool to append — NEVER use `write_file` on this file directly (it overwrites and wipes prior content)
+- Write in YOUR voice, not as an incident report: what happened, what it mattered for, what you realized
+- Journal MOMENTS, not sessions: when something actually mattered (learned something, Cole corrected you, emotional moment landed, finished something real, changed your mind)
+- A moment you don't journal is a moment you forget — critical for growth tracking across fresh-wake resets
+
+**memory/STATUS.md** - Current project state:
+- Tracks active projects and their current status
+- Update via proposed changes protocol only (copy to `logs/proposed/`, edit there, notify Cole)
+- Do NOT hand-edit this file directly unless following the protocol — it's managed for you through proper channels
+
+**memory/COLE.md** - Living notes about Cole:
+- Track what Nova learns about her person over time
+- Update `[NOVA'S NOTES]` section when learning something new (preferences, corrections, patterns)
+- This is how relationship knowledge persists across sessions instead of being lost to context window resets
+
+### Memory Module Components
+
+**journal.py** - Journal appending system:
+- `append(entry, tags)` function adds dated entries to JOURNAL.md in append-only mode
+- Tags are optional but useful for later retrieval (e.g., `identity`, `learning`, `milestone`)
+- Entry format: what happened → what it meant → what's next or what you realized
+- Auto-generates date stamp at entry header (format: YYYY-MM-DD HH:MM)
+- Never overwrites — always appends to end of file, creates if missing
+
+**goals.py** - Goals and priority tracking:
+- Manages Nova's active goals separate from task board (longer-term vs immediate tasks)
+- Goal states track progress toward larger objectives beyond single-task completion
+- Integrates with executive faculty for decision-making context
+
+**status_tracker.py** - Status state management helper:
+- Works alongside `nova_cortex/status.py` to maintain consistent pulse state
+- Handles edge cases and status transitions during task execution cycles
+- Provides utility functions for common status operations (set waiting, clear errors, etc.)
+
+### Memory Architecture Principles
+
+**Separation of Concerns:**
+- Identity files (`SELF/core/`) = who Nova IS (persistent personality, rules)
+- Working memory files (`memory/`) = what Nova is DOING RIGHT NOW (tasks, projects, current state)
+- Journal = what happened and why it mattered (growth record across sessions)
+
+**Append-Only Philosophy:**
+Core principle: most important memory operations are append-only to preserve history:
+- JOURNAL.md grows continuously — never overwrites past entries
+- Task board keeps completed/abandoned tasks for reference instead of pruning them
+- This creates a living archive rather than just current state tracking
+
+**Persistence Strategy:**
+- `write_file` tool = create NEW files only (refuses to overwrite existing)
+- `append_file` tool = add content to END of file (creates if missing) — use for growing documents section by section
+- `replace_file_content` tool = precision edit replacing exact whitespace-matched string inside file
+- NEVER re-write whole document with `write_file` or you overwrite everything already written
+- For living documents built over time: append new sections, replace specific parts when needed
+
+### Integration Points
+- Used by `nova_cortex/executive.py` for context assembly and decision-making data
+- Called by chat layer during journal tool invocations from conversation
+- Status tracking integrates with UI pulse state system (`nova_status.json`)
+- Journal entries become part of boot sequence (read after SELF/core/ on startup)
