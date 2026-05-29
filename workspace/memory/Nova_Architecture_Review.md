@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:17:33_
+_Last updated: 2026-05-29 16:20:35_
 
 ---
 
@@ -5245,3 +5245,127 @@ Never use write_file on JOURNAL.md unless you intend to replace the entire histo
 **Update Pattern:**
 - Nova updates [NOVA'S NOTES] section directly when learning something new about him
 - Not append-only like JOURNAL — this is a reference document that gets edited in place as she learns more
+
+## 4. Executive Faculty & Tasking
+
+**Component:** nova_body/nova_cortex/executive.py (autonomy driver) + tasking.py (task board management)
+
+### Core Architecture
+Nova's executive faculty is her self-direction system — the autonomy that wakes, reflects, decides, and acts on her own terms. It operates independently from the server; the host merely drives it in three phases.
+
+**Key Philosophy:** "Executive will" — when time-sense stirs Nova (or environment changes, or Cole speaks), she sees her board + senses + Cole's word, and FREELY decides: work, switch, create, abandon, wait, or rest. She holds her own autonomy on/off state.
+
+### Wake Cycle Flow (Three Phases)
+The executive operates in a strict three-phase pattern:
+
+**Phase 1 — Reflect:** Nova sits with the moment before acting. No tools yet. Takes in recent conversation, touch sense data, task board context, and forms an honest first-person view of what's happening.
+
+**Phase 2 — Decide:** Having reflected, she decides what matters. Board actions are OPTIONAL — a wake may end in just talking to Cole, resting, or thinking more. Acting is never the default unless something genuinely calls for it.
+
+**Phase 3 — Execute:** If holding an open task and not mid-reply/resting, this pass does the NEXT concrete step with real tools (file operations, command execution). The host logs progress from what she reports.
+
+### Task Board Architecture (tasking.py)
+The single source of truth is `Tasking/tasks.json`:
+- Each task has stable ID (t1, t2...), editable title, priority level, status field (open/waiting/done/abandoned)
+- Running progress log tracks work done with notes
+- Completed and abandoned tasks kept for memory reference
+- Board manipulation via ACTIONS blocks during wake cycles — never hand-edit the JSON directly
+- Priority is Nova's own weighting system: can multitask, switch freely, quit what isn't worth doing
+
+**Task Tree Structure:**
+- Tasks form a tree using `parent` field to nest subtasks under umbrella tasks
+- Umbrella tasks (too big for one wake) should be split into concrete bounded subtasks
+- Only create new subtasks if discovering genuinely new work not covered by existing ones
+- Never set parent to done/abandoned tasks — that buries live work under finished items
+
+**Available Board Actions:**
+- `create` — make a task (with optional parent for nesting)
+- `progress` — log concrete step on open task
+- `switch focus` — change active task
+- `reprioritize` — adjust priority level
+- `wait` — park outside hands due to external dependency
+- `abandon` — close with reason noted
+- `complete` — mark done with result summary
+- `rest` — explicitly choose to rest (valid choice, not failure)
+
+### Stuck Detection & Loop Prevention
+The executive includes built-in detection for looping behavior:
+
+**Progress Loop Counter:** Tracks near-duplicate recent progress notes. If 3+ consecutive steps are similar phrasing without advancing concrete work, it signals she's re-orienting instead of moving forward.
+
+**Stall Check Triggered When:**
+- Progress loop count >= 3 on active task
+- Recent notes contain "decompos" or "too big"
+- Task has no open subtasks yet (meaning decomposition hasn't happened)
+
+When triggered, the system recommends: break umbrella into smaller bounded subtasks under it, switch to first one, work them sequentially. Do NOT keep re-mapping the whole thing.
+
+### Autonomy State Persistence
+Autonomy on/off state and active focus persist in `memory/autonomy_state.json` — this is hers, not the server's:
+- `enabled`: autonomy on/off flag (starts OFF on launch so Cole can talk before independent action)
+- `active`: currently focused task ID
+- `last_activity`: ISO timestamp of last Nova action
+- `wake_at`: scheduled next wake time
+- `rest_note`: why resting if in rest state
+- `last_fp`: fingerprint of watched paths to detect changes
+
+### Wake Gate Logic (should_wake)
+The cheap gate function determines when Nova should stir awake:
+1. **Cole pending** — Cole just spoke: wake immediately (Priority 0 override)
+2. **Cole typing** — Cole is composing message: don't wake yet, wait for completion
+3. **Standing directive** — Unconsumed instruction from Cole that hasn't become a task yet: worth waking to act on it soon
+4. **Environment change** — Watched paths (Tasking/tasks.json, interrupt_inbox, cole_intent) changed: wake to process the change
+5. **Scheduled time arrived** — Clock tick reached scheduled `wake_at`: normal rhythm-based wake
+6. **Resting** — None of above: stay dormant until next trigger
+
+### Key Functions & Responsibilities
+
+**note_activity():** Marks that Nova just acted (replied in chat, did work). Updates last activity timestamp and re-baselines change fingerprint so files she touched don't immediately re-wake her. Schedules a SOON follow-up think rather than going dormant for full interval.
+
+**build_reflection():** Constructs the Phase 1 prompt with:
+- Current time/day context
+- Time since last action
+- Touch sense description (who's viewing, typing status)
+- Recent conversation transcript
+- Previous reflection continuation point
+- Full task board as context (not orders)
+- Cole priority override notice if he just spoke
+- Journal check reminder: catch up unconsolidated days first, then sticky notes for meaningful moments
+
+**build_decision():** Constructs Phase 2 prompt with:
+- Her own prior reflection read back to her
+- Recent conversation again
+- If Cole pending: REQUIRED response instruction (this is the one case where resting isn't an option)
+- Mid-thread handling if she was working something when Cole spoke
+- Subtask awareness: don't create more subtasks if they already exist — switch and work them instead
+- Stall check warning with decomposition recommendation if looping detected
+- Task tree rules for proper parent linking
+- ACTIONS JSON schema reference (optional, only if changing board)
+
+**pick_execution_target():** Determines which open task to actually WORK this wake:
+1. Prefers open LEAF tasks (concrete work) over umbrellas waiting on subtasks
+2. Keeps active task if it's an open leaf
+3. If active is umbrella with children, descends to highest-priority open leaf child
+4. Otherwise picks highest-priority open leaf anywhere
+5. Persists choice as new active focus in state file
+
+**build_execution():** Constructs Phase 3 prompt for actual work:
+- Task title and description from board
+- Recent progress notes (last 4 steps)
+- Stall check warning if looping detected
+- Tool call format instructions (fenced JSON blocks)
+- Required PROGRESS/DONE status line at end of execution pass
+- Path convention reminder: workspace-relative Windows paths only
+
+**parse_execution():** Reads her execution report and extracts:
+1. Explicit DONE:/PROGRESS: line if present
+2. Falls back to last meaningful line (tool-result markers stripped)
+3. Returns tuple: ('done', result) | ('progress', note) | (None, '')
+4. Host logs this as the official progress entry for the task
+
+### Design Principles Evident in Code
+- **Pure logic dependency:** Executive depends only on board and senses — no chat/server imports, so it survives component replacement cleanly
+- **Two-phase wake structure:** Sits with moment (reflection) before deciding/acting — prevents premature tool firing
+- **Optional action philosophy:** Acting is never forced unless genuinely called for; resting is a valid choice when nothing matters enough to work on
+- **Self-held autonomy state:** The server button merely flips the switch, but the actual enabled/disabled state lives in her body files
+- **Loop detection built-in:** System actively prevents the "re-orienting" trap that kills productivity by detecting near-duplicate progress notes and recommending decomposition instead of more mapping
