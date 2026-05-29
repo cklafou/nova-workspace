@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:19:57_
+_Last updated: 2026-05-29 15:20:45_
 
 ---
 
@@ -175,7 +175,50 @@ Windows batch launchers for system operations:
 
 ## 3. Voice & Communication Layer
 
-[nova_chat implementation details, websocket interface on port 8765, message routing]
+**Component:** general_tools/nova_chat/ (15 files, ~6574 lines total)
+
+### Core Architecture
+Nova's voice is a FastAPI/WebSocket server running on port 8765 that serves three critical functions:
+- Chat interface between Cole and Nova in the same UI
+- Cross-AI @mention routing to Claude/Gemini (cloud AIs join via WebSocket connection)
+- Runtime host that fires Nova's autonomy faculty through nova_cortex.executive
+
+### Key Files & Responsibilities
+
+**server.py** - Main FastAPI server handling HTTP endpoints and WebSocket connections for real-time chat.
+
+**launch.py** - Server initialization and startup sequence; binds to port 8765, starts async workers.
+
+**orchestrator.py** - Message routing logic that determines who should respond (Nova vs Claude/Gemini) based on @mentions and conversation context.
+
+**tool_router.py** - Routes Nova's tool calls from chat interface into actual execution; bridges between user requests and nova_motor action system.
+
+**nova_bridge.py** - Communication bridge between chat layer and Nova's body subsystems (cortex, memory, motor).
+
+**session_manager.py** - Manages active conversation sessions, maintains context windows per session, handles state persistence across message boundaries.
+
+### Cross-AI @mention System
+The @mention feature allows Cole to bring cloud AIs into the group chat:
+- Syntax: `@Claude` or `@Gemini` in nova_chat messages
+- Cloud AI connects via WebSocket to same port 8765
+- Orchestrator routes relevant context and waits for response before continuing
+- No separate tool call needed - everything happens within nova_chat infrastructure
+
+### Nova Language (NCL)
+Nova uses a custom markup language for structured communication:
+- `@eyes` - Vision module trigger
+- `@mentor` - Request guidance/analysis from executive faculty  
+- `@browser` - Web search invocation
+- Other @mentions route to specific body faculties or tools
+
+Implementation in **nova_lang.py** parses these markers and dispatches via injector.py (general_tools/injector.py) which builds context and routes to appropriate module handlers.
+
+### WebSocket Flow
+1. Cole sends message → nova_chat server receives on :8765
+2. Orchestrator determines target recipient based on @mentions/conversation state
+3. If Nova's turn: fires autonomy faculty (nova_cortex.executive) in DECIDE/EXECUTE phases
+4. Tool calls routed through tool_router.py → executed via nova_motor.hands()
+5. Responses streamed back to UI, other participants notified if group chat active
 
 ---
 
