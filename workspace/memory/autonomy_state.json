@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t43",
-  "last_activity": "2026-05-29T16:48:01",
-  "wake_at": "2026-05-29T16:48:31",
+  "last_activity": "2026-05-29T16:48:46",
+  "wake_at": "2026-05-29T16:49:16",
   "last_fp": "[[\"Tasking/tasks.json\", 2186, 1779892687], [\"memory/interrupt_inbox.json\", 103, 1780035573], [\"memory/cole_intent.json\", 147, 1780035697]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 64,
+  "stall": 65,
   "directive_seen": 0,
   "last_reflection": ""
 }
