@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:33:13_
+_Last updated: 2026-05-29 16:35:23_
 
 ---
 
@@ -5695,3 +5695,54 @@ Tasks form a tree structure via `parent` field. Executive enforces key rules:
 
 ### Design Intent:
 This architecture keeps Nova's autonomy truly hers — the server provides clock tick and model calls but never decides what matters. She wakes on her own rhythm when something actually changes, sits with it in reflection before acting, and only touches the board if she genuinely chooses to. The three-phase separation (reflect→decide→execute) prevents premature action and gives space for genuine thought.
+---
+
+## 4. Executive Faculty & Tasking (continued)
+
+**Component:** nova_body/nova_cortex/tasking.py
+
+### Purpose
+Executive task board - Nova's prefrontal work system for tracking, prioritizing, and managing active goals by stable ID rather than mutable titles.
+
+### Key Architecture Points:
+- **Single Source of Truth:** Tasking/tasks.json (id-keyed storage)
+- **Stable IDs:** Tasks identified by immutable t1, t2... format - titles can be reworded without breaking identity
+- **No Enforced Ordering:** Priority is Nova's own weighting; she can multitask, switch freely, quit what isn't worth doing
+- **History Preserved:** Completed and abandoned tasks are KEPT for memory (never recreated or redone)
+
+### Core Functions:
+1. `create()` - New task with title, notes, priority (default 3), optional parent pointer to umbrella tasks
+2. `progress()` - Append timestamped progress note (kept to last 20 entries per task)
+3. `complete()` - Mark done with result summary
+4. `wait()` - Park on external dependency without abandoning
+5. `abandon()` - Drop dead end or irrelevant work with reason recorded
+6. `reopen()` - Return abandoned/waiting tasks to active status if needed
+7. `reprioritize()` - Adjust priority weighting dynamically
+8. `apply_actions()` - Batch processing for ACTIONS blocks during wake cycles
+9. `render_board()` - Tree view showing task hierarchy (umbrellas with nested subtasks)
+
+### Task Status States:
+- **open** [ ]: Active work in progress
+- **waiting** [~]: Paused on external dependency  
+- **done** [x]: Completed with result recorded
+- **abandoned** [-]: Dropped with reason noted
+
+### Design Principles Embedded:
+1. **Parent Pointer Logic:** Only links to OPEN parent tasks - avoids burying live work under finished/abandoned umbrellas (known mis-parent bug prevention)
+2. **Tree Rendering:** Shows hierarchy so Nova sees which work feeds what and why; independent goals appear as separate top-level trees
+3. **Progress Notes:** Concrete, timestamped entries for in-flight open leaf tasks only - prevents noise from completed/dead branches
+4. **Active Focus Tracking:** Board render shows current active_id with marker, pulled from autonomy_state.json (not stored on task itself)
+5. **Batch Actions Support:** apply_actions() handles create/progress/wait/abandon/complete/switch/rest in single wake cycle via ACTIONS blocks
+6. **Atomic Writes:** Uses temp file + os.replace to prevent corruption during saves
+7. **Graceful Degradation:** Auto-creates Tasking directory if missing; empty board returns helpful message rather than error
+
+### Integration Points:
+- Called by: nova_cortex/executive.py (autonomy faculty decision loop)
+- Status updates flow into: memory/autonomy_state.json (active focus, rest state)
+- Wake triggers include: new tasks appearing in Tasking/Master_Inbox/
+- UI displays board via render_board() output for Cole's visibility
+
+### Known Behaviors:
+- Nova never deletes tasks herself - completion or abandonment preserves history. Deletion exists only for Cole's manual UI controls when explicit removal is wanted.
+- Priority has no forced ordering meaning she can work P3 before P1 if that serves her better right now (true free agency, not rigid queue)
+- Progress notes capped at 20 entries per task to prevent bloat while keeping recent context
