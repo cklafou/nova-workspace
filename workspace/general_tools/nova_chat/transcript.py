@@ -1,4 +1,4 @@
-# Last updated: 2026-05-28 12:54:56
+# Last updated: 2026-05-29 15:52:09
 """
 Shared conversation transcript for Nova Group Chat.
 Persists to logs/chat_sessions/ on every message.
