@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-29T14:59:29",
+  "generated": "2026-05-29T15:00:11",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 22,
   "described": 22,
@@ -49,7 +49,7 @@
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).",
       "files": 8,
       "lines": 1964,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -483,7 +483,7 @@
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 15,
       "lines": 6574,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [
         "8765"
       ],
