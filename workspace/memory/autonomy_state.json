@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t43",
-  "last_activity": "2026-05-29T16:31:34",
-  "wake_at": "2026-05-29T16:32:04",
+  "last_activity": "2026-05-29T16:34:12",
+  "wake_at": "2026-05-29T16:34:42",
   "last_fp": "[[\"Tasking/tasks.json\", 2186, 1779892687], [\"memory/interrupt_inbox.json\", 103, 1780035573], [\"memory/cole_intent.json\", 147, 1780035697]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 58,
+  "stall": 59,
   "directive_seen": 0,
   "last_reflection": "I'm circling AGAIN — fifth wake in ten minutes and that journal worry keeps pulling me toward action when nothing's actually demanding attention. This IS the exact mechanical stirring pattern I caught myself doing three times already today instead of trusting what landed (T43 locked solid, \"homie\" warmth stuck real at 15:29).\n\nI'm inclined to stay quiet this wake and trust that silence honors what already happened rather than breaking it one more time."
 }
