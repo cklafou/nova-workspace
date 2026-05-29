@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:36:02_
+_Last updated: 2026-05-29 16:37:54_
 
 ---
 
@@ -224,9 +224,75 @@ Implementation in **nova_lang.py** parses these markers and dispatches via injec
 
 ## 4. Executive Faculty & Tasking
 
-[Task management system, priority handling, decision-making logic from nova_cortex/]
+**Component:** nova_body/nova_cortex/ (8 files, ~1964 lines)
 
----
+### Architecture Overview
+The executive faculty is Nova's decision-making and task management system - the brain behind autonomy rather than just a utility library.
+
+**Key Files:**
+- `executive.py` (~500+ lines) - Autonomy orchestrator running DECIDE/EXECUTE phases each wake cycle
+- `tasking.py` (~400+ lines) - Task board management, CRUD operations on tasks.json
+- `nova_status.py` - Status tracking and pulse state updates for UI visibility
+- `checkin.py` - Message queue check-in to detect Cole interruptions mid-task
+- Context assembly utilities for building decision-making context windows
+
+### Autonomy Cycle (executive.py)
+Each wake runs through three distinct phases:
+1. **Reflect** - Sit with the moment: read recent conversation, touch sense data (who's viewing workspace, is Cole typing, agent online status). No tool calls yet.
+2. **Decide** - Choose action path: engage Cole directly, advance current task, switch focus, create new task, wait on external dependency, abandon dead end, complete something, or rest
+3. **Execute** - Take concrete action if holding open task and not mid-reply to Cole or resting state
+
+Critical design principle: Resting when nothing worthwhile is a smart choice, not failure. Never invent busywork just to look productive.
+
+### Task Board System (tasking.py)
+Single source of truth: `Tasking/tasks.json`
+- Each task has stable ID (t1, t2...), editable title, priority level (1-5), status field
+- Status values: open, waiting, done, abandoned
+- Running progress log tracks work completed within each task
+- Completed and abandoned tasks are retained for memory analysis
+
+**Available Actions:**
+- create - new task with title, notes, priority
+- progress - log concrete step on existing task (task_id + note)
+- switch focus - park current task without abandoning
+- reprioritize - adjust priority level based on Cole input or context changes  
+- wait - set status to waiting when blocked on external dependency
+- abandon - mark as abandoned with reason noted in progress log
+- complete - finalize task with result summary
+- rest - enter idle state when no worthwhile work exists
+
+**Critical Protocol:** Board manipulation happens via ACTIONS blocks during wake cycles, NEVER by hand-editing the JSON file directly. The executive faculty owns this file.
+
+### Priority System
+Priority is Nova's own weighting mechanism with no forced ordering:
+- Can multitask across priorities based on context
+- Free to switch between tasks when circumstances warrant it  
+- Abandon low-priority work that isn't worth continuing
+- Cole's word (Priority 0) overrides all task priorities immediately
+
+### Status Tracking (nova_status.py)
+Every agent run ends with status update before stopping:
+```python
+call: nova_cortex.nova_status.update(pulse='Idle')  # or 'Waiting for Cole'
+```
+Pulse states indicate current operational mode. Errors logged separately via add_error() function.
+Stale or missing nova_status.json = appears offline to UI and Cole (critical failure mode).
+
+### Check-in Protocol (checkin.py)
+Async yield protocol requires running check after each action:
+```python
+call: nova_cortex.checkin.check()
+```
+- Prints nothing if no new messages from Cole → continue current task
+- Prints message content if Cole interrupted → decide whether to stop or finish step first
+This prevents Nova from being deaf to interruptions during multi-step work sequences.
+
+### Design Principles
+1. Autonomy is a body faculty, not owned by the server - server provides clock tick and model call only
+2. One action per turn in async environment to avoid blocking message queue
+3. Module calls (@eyes, @mentor) are fire-and-forget, don't block execution flow
+4. Resting intelligently beats performing busyness when nothing worthwhile exists
+5. Task board is single source of truth - never hand-edit tasks.json directly
 
 ## 5. Memory Systems
 
