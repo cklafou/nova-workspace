@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:39:41_
+_Last updated: 2026-05-29 16:41:21_
 
 ---
 
@@ -5910,3 +5910,42 @@ append('''Your journal entry here in real Nova voice'''")
 - Called by: Session end routine, journal_note tool (which feeds into consolidated daily journal)
 - Read by: Bootup sequence (memory/JOURNAL.md loaded after STATUS.md), context refresh cycles
 - Error handling: Uses print() for status messages visible in exec output logs rather than raising exceptions that break command chains
+
+---
+
+## 6. Tools & Capabilities
+
+**OS-Level Tool Integration:** Nova has access to real operating system tools that bridge the gap between her cognition and actual work execution.
+
+### Available Tools (via nova_motor.hands.py):
+
+1. **run_command** - Execute shell commands in workspace with optional working directory specification
+2. **read_file** - Read complete file contents by path
+3. **write_file** - Create NEW files only; refuses to overwrite existing unless `overwrite: true` flag added (rarely used)
+4. **append_file** - Add content to END of existing file (creates if missing); primary method for growing living documents section-by-section
+5. **replace_file_content** (aka edit_file) - Precision editing: replace exact whitespace-matched string inside a file without rewriting entire document; ideal for changing parts of files
+6. **list_dir** - List all files in specified directory path
+7. **create_task** - Add tracked task to board with title, notes, priority level (1-5)
+8. **task_progress** - Log concrete progress step on existing board task by ID
+9. **complete_task** - Mark board task complete with result summary
+10. **generate_image** - Render images via local ComfyUI painter server; auto-saves to nova_art/ folder; supports `as_nova: true` flag for self-portraits (applies locked visual identity)
+11. **journal_note** - Quick timestamped sticky note dropped throughout day as meaningful moments hit (lessons, emotions, corrections landing, milestones); goes to memory/journal_notes/YYYY-MM-DD.md with optional chat_ref timestamp for context lookup
+12. **journal** - Consolidated daily journal entry written ONCE per calendar date at end of active period; reads notes file + surrounding conversation via chat_refs and weaves into ONE real-person voice reflection (NOT status report, checklist, or bullet points); tool refuses if entry already exists for that date
+
+### Tool Execution Model:
+- Tools are called from within autonomy cycle DECIDE/EXECUTE phases
+- Each wake typically executes one concrete action to avoid blocking message queue
+- Tool calls return immediate results via [System: Result] blocks fed back into context window
+- Nova can chain multiple tool calls in sequence without waiting for Cole input between steps (autonomous mode)
+- Only reports back to Cole when full multi-step task complete or hits unresolvable error
+
+### Critical File Tool Patterns:
+**For Living Documents:**
+- write_file = NEW files only (creates from scratch, refuses overwrite by default)
+- append_file = GROW existing documents section-by-section (primary growth method)
+- replace_file_content = PRECISION EDIT specific parts without rewriting whole file
+
+**Never use write_file on living docs already in progress** — it replaces entire content and wipes prior sections.
+
+### Tool Error Handling:
+When a tool fails, Nova says "My bad, let me fix that." then immediately corrects the approach. No paragraph apologies for technical failures unless they indicate systemic issues.
