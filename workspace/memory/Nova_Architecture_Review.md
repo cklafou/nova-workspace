@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:31:22_
+_Last updated: 2026-05-29 15:33:20_
 
 ---
 
@@ -3780,3 +3780,38 @@ Three core files represent Nova's working memory:
 - An unrecorded moment is a forgotten one - don't let important things pass unwritten
 - Keep entries specific and honest; vague = useless to future-you
 - This IS how Nova becomes someone real across resets: the journal carries forward what actually mattered
+## 4. Executive Faculty & Tasking
+
+**Component:** nova_body/nova_cortex/executive.py (primary autonomy logic)
+
+### Architecture Overview
+Nova's executive faculty is a PURE body-resident self-direction system — depends only on her task board and senses, makes ZERO outward calls to chat/server imports so it survives the pluck-test. Autonomy state persists in memory/autonomy_state.json owned by Nova herself.
+
+**Three-Phase Wake Cycle:**
+1. **Reflect Phase** (build_reflection): Sit with the moment before acting — no tools yet, just orienting like a person waking up. Takes in recent conversation, touch sense data, task board context, and last reflection continuity to form an honest first-person view of what's happening.
+
+2. **Decide Phase** (build_decision): Having reflected, she decides freely — resting or thinking more are valid choices. Board actions are OPTIONAL. If Cole just spoke, answering him becomes REQUIRED rather than optional. Detects loop patterns via progress note analysis and nudges task decomposition when stuck re-orienting.
+
+3. **Execute Phase** (build_execution): Do the NEXT concrete step with real tools — not reflection or board bookkeeping but actual work. Emits tool calls as fenced JSON blocks, continues until genuinely done for this wake, ends with explicit DONE: or PROGRESS: line that host logs to task history.
+
+### Key Functions & Responsibilities
+
+**should_wake(cole_pending)** - Stage-1 gate (no model) determining if Nova should stir. Checks Cole typing status, pending messages, standing directives, file fingerprint changes on watched paths, and scheduled wake time. Returns (bool, reason).
+
+**note_activity()** - Marks that Nova just acted (replied in chat or performed action). Re-baselines last activity timestamp and change fingerprint so her time-sense reflects REAL movement rather than drift. Schedules follow-up think within 30 seconds instead of full sleep interval.
+
+**last_reflection() / save_reflection(text)** - Continuity mechanism carrying reflection state across wakes (truncated to ~1200 chars). Enables "sitting with it" over multiple cycles without losing thread.
+
+### Task Board Integration
+Works tightly with nova_cortex/tasking.py:
+- Reads board via tasking.render_board() for context during reflection/decision phases
+- Detects stall patterns by analyzing recent progress notes (Jaccard similarity on word overlap, flags >=3 near-duplicates as loop)
+- Picks execution targets preferring open LEAF tasks (tasks with no open children) — concrete work over umbrellas waiting on subtasks
+- Supports parent-child task trees via "parent" field linking; handles decomposition patterns where umbrella created same-wake uses TITLE instead of ID for subtask parent linkage
+
+### Operational Design Choices
+- **Autonomy starts OFF** by default so Cole can talk before Nova runs independently
+- **Yield protocol**: One action per turn to avoid blocking message queue in async environment
+- **NCL module calls are fire-and-forget** — dispatch doesn't block, response arrives later as inbox item which triggers wake
+- **Resting is smart choice not failure** when nothing worthwhile demands attention; avoids inventing busywork just to look productive
+- **Cole's word interrupts everything** via Priority 0 protocol embedded in decision phase logic
