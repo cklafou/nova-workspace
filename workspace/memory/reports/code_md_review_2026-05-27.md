@@ -1,5 +1,5 @@
 # Code + Markdown Review Sweep — 2026-05-27
-_Last updated: 2026-05-29 16:52:15_
+_Last updated: 2026-05-29 17:52:17_
 
 _Reviewer: Opus (Claude). Scope: hunt dead references to retired systems and stale
 docs across the live workspace (archives under `_admin/_archive_*` and `_admin/passover/*`
