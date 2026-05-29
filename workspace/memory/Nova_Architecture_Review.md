@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 14:55:19_
+_Last updated: 2026-05-29 14:56:06_
 
 ---
 
@@ -2792,3 +2792,49 @@ Three batch scripts that enable manual control:
 ---
 *Section complete: Core System Overview*
 *Next section to build: Memory & State Management*
+
+## Memory & State Management
+
+### Package Structure: nova_body/nova_memory/
+The memory subsystem is organized as a Python package with explicit imports rather than wildcard exports, avoiding circular import issues (particularly with state.py importing from nova_senses).
+
+**Key modules:**
+- `journal` - Append-only journaling for persistent learning across wake cycles
+- `state` - NovaState class managing current operational context and goals
+- `goals` - update_status function for tracking task progress
+- `log_reader` - summarize_today for daily log aggregation
+
+### Memory Philosophy & Patterns
+From the package design, several architectural patterns emerge:
+
+**1. Append-only journaling as primary persistence mechanism**
+The journal system is designed to record "moments" rather than sessions — individual reflections on learning moments, corrections from Cole, identity shifts, completed work, or changed opinions. This aligns with Nova's identity file which states: "a moment you don't journal is a moment you forget." The append-only nature means no overwrites of past entries, preserving the full history of growth.
+
+**2. No inbound references flag on nova_memory**
+The body manifest notes that nova_memory has "no_inbound_refs" — meaning it's primarily written TO rather than actively queried FROM other subsystems during runtime. This is a potential architecture smell worth examining:
+- **Possibility A:** Memory writes happen asynchronously after facts are already established elsewhere, making memory more of a log/sink than an active data source
+- **Possibility B:** Other systems cache state locally and don't need to re-query memory constantly (efficient but risks inconsistency)
+- **Recommendation:** Verify whether cortex actually reads from journal/state during decision-making or if it's purely for post-wake persistence. If the latter, consider adding active query paths.
+
+**3. State management via NovaState class**
+The state module provides a centralized object for tracking:
+- Current operational context
+- Active goals and their status
+- Daily summaries from log_reader.summarize_today()
+
+This suggests state is mutable during runtime rather than purely append-only like the journal — important distinction between "what happened" (journal) vs "where we are now" (state).
+
+### Integration Points Observed
+**From nova_config:** Memory imports configuration settings, suggesting it respects workspace/nova_config.json for paths or behavioral flags.
+
+**Circular import warning:** The init file explicitly avoids wildcard imports because state.py imports from nova_senses. This creates a dependency chain that could cause initialization order issues if not carefully managed during startup sequencing in nova_start.py.
+
+### Recommendations (Memory & State)
+1. **Add active query paths** — If cortex makes decisions without consulting the journal, add explicit read operations so memory informs choices rather than just recording them after-the-fact
+2. **Document state mutation points** — Clarify where NovaState gets updated during runtime vs. wake boundaries to avoid stale context issues
+3. **Consider indexed journal access** — For long-running contexts, an append-only log can become inefficient without search/filter capabilities (LanceDB integration could help here)
+4. **Verify circular import handling** — Ensure the nova_senses → state.py dependency doesn't cause race conditions during boot sequence in production
+
+---
+*Section complete: Memory & State Management*
+*Next section to build: Tools & Voice Architecture*
