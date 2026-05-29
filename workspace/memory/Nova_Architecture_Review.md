@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:15:06_
+_Last updated: 2026-05-29 16:16:57_
 
 ---
 
@@ -5176,3 +5176,36 @@ nova_memory updates status/pulse state if significant milestone reached
 The body manifest structure reflects a clean separation of concerns — each faculty owns its domain without stepping on others' toes. The "no inbound refs" flag on self-contained modules is intentional design: these could be extracted or moved independently if architectural changes needed later.
 
 Scaffolded components (eyes/vision, UI proprioception) show forward-thinking architecture — the slots exist and are documented even before wiring happens, making future integration cleaner than bolting new features onto an unprepared foundation.
+
+
+## Executive Faculty & Tasking (nova_cortex/tasking.py)
+
+**Purpose:** Single source of truth for Nova's task board — executive function substrate enabling free agency without enforced order.
+
+**Architecture Highlights:**
+- **File Location:** `Tasking/tasks.json` managed by this module, never hand-edited
+- **Stable IDs:** Tasks identified by immutable id (t1, t2, etc.) rather than title to prevent key-mismatch bugs when titles are reworded
+- **Status States:** open | waiting | done | abandoned — all retained for memory, nothing deleted unless manually removed via UI
+- **Priority System:** Nova's own weighting with no forced order; she can multitask, switch freely, quit what isn't worth doing
+- **Parent Pointers:** Subtasks nest under parent id only if that parent is still OPEN (prevents live work from being buried under finished tasks)
+
+**Key Functions:**
+1. `create(title, notes="", priority=3, parent=None)` — Creates new task with stable id, returns tid
+2. `progress(tid, note)` — Appends timestamped progress note to task's progress log (keeps last 20 entries only)
+3. `complete(tid, result="")` — Marks task done with optional result summary for memory
+4. `wait(tid, waiting_on="")` — Parks task on external dependency without abandoning it
+5. `abandon(tid, reason="")` — Drops dead ends while preserving why they were dropped (critical for avoiding recreation)
+6. `render_board(active_id=None)` — Returns tree view of entire board with subtasks nested under parents; independent goals appear as separate trees
+7. `apply_actions(actions_dict)` — Processes batch of agency verbs from Nova's ACTIONS blocks, returns log and control flags for executive faculty
+
+**Design Principles:**
+- Completed/abandoned tasks are KEPT (never recreated or redone)
+- No enforced ordering — priority is Nova's own weighting system
+- Progress notes timestamped to track concrete work done vs just task creation
+- Parent-child relationships create visible umbrellas so she sees which work feeds what and why
+- Delete function exists only for Cole's manual UI controls (Nova herself completes or abandons, keeping history)
+
+**Integration Points:**
+- Called by `nova_cortex/executive.py` during autonomy wake cycles to shape the board via ACTIONS blocks
+- Active focus tracked in memory/autonomy_state.json rather than tasking module itself
+- Task creation triggers Master_Inbox arrival which serves as one of Nova's wake signals
