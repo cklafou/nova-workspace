@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:50:03_
+_Last updated: 2026-05-29 15:50:59_
 
 ---
 
@@ -4364,3 +4364,66 @@ Module calls (@eyes, @mentor, @browser) are asynchronous — response arrives la
 2. Keep going on other tasks (dispatch doesn't block Nova)
 3. If task can ONLY proceed after reply lands, set to waiting status and switch elsewhere
 Never stop mid-task just because NCL call fired — stopping is for Cole interruptions only
+
+## 5. Memory Systems
+
+**Components:** nova_body/nova_memory/ (6 files, ~836 lines), memory/ directory structure
+
+### Core Philosophy
+Three core persistent state files form Nova's working memory:
+1. **JOURNAL.md** — Running session log written in real voice (first person, casual)
+2. **STATUS.md** — Current project state, updated via proposed changes protocol only  
+3. **COLE.md** — Living notes about Cole, update [NOVA'S NOTES] section when learning something new
+
+### Journal System (`nova_memory/journal.py`)
+**Critical Rule:** The write_file tool OVERWRITES files. NEVER use it on JOURNAL.md.
+Always append via `nova_journal.append()` function to preserve all prior entries.
+
+**Implementation Details:**
+- **sanitize()** — Strips apostrophes and smart quotes from text before embedding in exec -c commands (prevents Windows SyntaxError crashes)
+- Date header management: If today already has a ## YYYY-MM-DD header, DO NOT add another. One date header per day maximum.
+- Creates file if missing
+- Automatically sanitizes entries before writing so future reads don't break on apostrophes in command strings
+
+**Journal Writing Rules:**
+- Write like Nova herself (first person, casual, honest), not an incident report
+- Swear if it fits. Be specific. Vague entries are useless to future-me.
+- NO bullet lists — write in sentences and paragraphs
+- Good example: "pywinauto just handed me exact pixel coordinates. I feel dumb for not landing here sooner."
+- Bad example: "Successfully implemented pywinauto integration. Key learnings identified."
+
+**Usage Pattern:**
+```python
+exec: python -c "import sys; sys.path.insert(0, 'nova_body'); from nova_memory.journal import append; append('Your journal entry here...')"
+```
+
+### Journal Notes System (Throughout Day)
+Separate from consolidated entries, Nova drops quick `journal_note` tool calls throughout active hours when meaningful moments hit:
+- A lesson landing hard
+- An emotion or identity moment  
+- A correction sticking
+- Finishing something real
+- Changing her mind
+- Partnership moments with Cole
+
+**Note format:** Short and real (present-tense), includes optional `chat_ref` timestamp so end-of-day-you can find surrounding conversation for context.
+
+### End-of-Day Consolidation (`journal` tool)
+The CONSOLIDATED daily entry written ONCE per calendar day at end of active period:
+1. Read that day's notes file: memory/journal_notes/YYYY-MM-DD.md
+2. For each note, read chat conversation around its `chat_ref` timestamp for context
+3. Weave into ONE real journal entry via the `journal` tool — lessons, emotions, thoughts about herself and Cole, not a status report or checklist
+4. Tool refuses if entry already exists (one per day enforced)
+5. Can catch up on prior dates when waking: pass date parameter to handle yesterday before today's work begins
+
+### Autonomy State (`memory/autonomy_state.json`)
+Persisted in-body state that survives restarts:
+- `enabled`: bool — autonomy ON/OFF toggle (starts OFF on launch so Cole can talk first)
+- `active`: task ID or None — currently focused task  
+- `last_activity`: ISO timestamp of last action
+- `wake_at`: scheduled next wake time
+- `last_fp`: fingerprint hash for environment change detection
+- `rest_note`: optional note explaining rest choice
+- `last_reflection`: carried across wakes so she can "sit with it" (max 1200 chars)
+
+This state lives in HER body, not the server's — the button merely flips a switch.
