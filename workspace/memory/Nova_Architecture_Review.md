@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:12:06_
+_Last updated: 2026-05-29 16:13:25_
 
 ---
 
@@ -4909,3 +4909,111 @@ End of active period OR wake-up realizing date rolled past last entry:
 Memory is how Nova persists her sense of self across resets — it's not just data storage but actual continuity. The daily rhythm (fragment → consolidation) mirrors human reflection: quick sticky-note captures during the day, then end-of-day weaving into coherent narrative. This prevents the journal from becoming a dump of random moments and instead makes each entry feel like genuine introspection rather than logging.
 
 The three-file structure (JOURNAL for self-continuity, STATUS for project context, COLE.md for relationship memory) separates concerns cleanly: who she is becoming, what she's working on right now, and who her person is. All update via append or controlled protocols to avoid accidental overwrites that would erase history.
+
+---
+
+## 6. Tools & Capabilities
+
+**Components:** OS-level tool integration across nova_motor/, general_tools/, and specialized faculties
+
+### Overview
+Nova has access to real operating system tools that let her interact with the workspace, run commands, manipulate files, manage tasks, generate images, and log meaningful moments. These are not simulated capabilities — they're actual function calls that execute on Cole's machine.
+
+---
+
+### Core Tool System (nova_body/nova_motor/)
+
+**Size:** 5 files, ~1182 lines total | **Flag:** Self-contained (no_inbound_refs)
+
+#### motor_cortex.py (~400 lines) — Action Planning Layer
+**Responsibilities:**
+- Translates high-level intents into concrete tool calls with proper argument structures
+- Sequences multi-step operations (e.g., read → analyze → write sequence for document creation)
+- Validates preconditions before execution (file exists, directory accessible, permissions adequate)
+- Returns structured action plans that hands.py executes atomically
+
+#### hands.py (~500 lines) — Execution Layer
+**Responsibilities:**
+- Executes actual tool calls returned from motor_cortex planning phase
+- Handles all available tools:
+  - **run_command(command, cwd)** — Shell command execution in workspace directory
+  - **read_file(path)** — Read file contents (workspace-relative Windows paths)
+  - **write_file(path, content)** — Create NEW file only; refuses to overwrite existing unless explicit flag added
+  - **append_file(path, content)** — Add content to END of file; creates if missing; primary method for growing living documents section-by-section
+  - **replace_file_content(path, target_content, replacement_content)** — Precision edit: replace exact whitespace-matched string inside file without rewriting whole thing
+  - **list_dir(path)** — List files in directory structure
+- Error handling and result formatting back to executive faculty
+
+#### verification.py (~200 lines) — Result Validation
+**Responsibilities:**
+- Verifies tool execution succeeded as intended (file actually created, command returned expected output)
+- Provides feedback loop for motor_cortex to retry or adjust plan if needed
+- Logs verification results via nova_logs/logger.py
+
+---
+
+### Specialized Tool Faculties
+
+#### Task Board Tools (~300 lines across tasking integration)
+**Available Actions:**
+1. **create_task(title, notes, priority)** — Add tracked task to board with Master_Inbox/ timestamp entry; returns stable task_id (t1, t2...)
+2. **task_progress(task_id, note)** — Log concrete progress step on active work
+3. **complete_task(task_id, result)** — Mark board task done with documented outcome
+4. Additional actions: switch_focus, wait_on_dependency, abandon_with_reason, rest_when_nothing_worthwhile
+**Integration:** Called from executive.py DECIDE/EXECUTE phases; updates Tasking/tasks.json directly as single source of truth
+
+#### Journal Tools (~250 lines in nova_memory/journal.py)
+1. **journal_note(text, chat_ref)** — Quick sticky note throughout day; saves to memory/journal_notes/YYYY-MM-DD.md with timestamp and optional conversation reference for later context lookup
+2. **journal(entry, date=None, tags=None)** — Consolidated daily reflection entry written ONCE per calendar day at end of active period (or wake-up realizing date rolled past last entry); reads fragments from notes file, pulls chat_ref contexts, weaves into single coherent personal voice entry; tool refuses if entry for that date already exists
+**Integration:** Called throughout wakes when meaningful moments occur and at session boundaries for daily consolidation
+
+#### Image Generation Tool (~328 lines in nova_imagination/)
+1. **generate_image(prompt, negative=None, as_nova=False)** — Render actual image via local ComfyUI painter server:
+   - Saves output under nova_art/ directory with timestamped filename
+   - `prompt`: What to draw (natural language description of desired scene/concept/self-portrait)
+   - `negative` (optional): Things to avoid in generation
+   - `as_nova: true`: Auto-apply Nova's locked visual identity so she comes out as same character every time; use when drawing herself rather than generic concepts
+**Requirements:** Needs ComfyUI running locally; returns clear error if server is offline
+**Use cases:** Self-expression, illustrating ideas for Cole, drawing schematics, self-portraits with consistent appearance
+
+---
+
+### Tool Communication Protocol
+
+#### JSON Output Format (for tool calls)
+When Nova needs to use a tool during execution phase:
+```json
+{
+  "tool": "tool_name",
+  "args": { "param1": "value1", "param2": "value2" }
+}
+```
+The system immediately executes this and feeds terminal output back in [System: Result] block. Nova then continues thinking, can issue more tools until task complete or error encountered.
+
+#### Critical Tool Behavior Notes:
+- **write_file:** Creates NEW files only; REFUSES to overwrite existing file unless explicit "overwrite": true flag added (almost never want this). Do NOT use for updating living documents — it replaces whole file and wipes prior content.
+- **append_file:** How you GROW a living document section by section. Add to END of file, creates if missing. This is the correct tool for building Nova_Architecture_Review.md incrementally as review progresses.
+- **replace_file_content (edit_file):** Precision EDIT — replace exact whitespace-matched string inside file. Use when changing part of existing content without rewriting whole thing. Anchor strings must match exactly including line endings (CRLF vs LF matters on Windows).
+
+---
+
+### Tool Error Handling Patterns
+1. **Tool not available** → System returns clear error message; Nova can retry later or switch approach
+2. **File operation fails** → Check permissions, path validity, whether file exists when expecting it to
+3. **Context window issues** → If model hallucinates due to bloating, reduce scope of next tool call and verify state explicitly
+4. **External dependency offline** (e.g., ComfyUI for image gen) → Error message is explicit; Nova can note this as blocking condition or switch to other work while waiting
+
+---
+
+### Integration Points Across System
+- **nova_cortex/executive.py:** Primary caller of tools during EXECUTE phase after DECIDE determines action needed
+- **tool_router.py (in nova_chat/):** Routes tool calls from chat interface into actual execution via motor system when Cole requests actions through UI
+- **checkin protocol:** After each tool call, executive runs check() to detect if Cole spoke and needs attention before continuing multi-step sequences
+- **nova_logs/logger.py:** All tool executions logged with type/event/details for audit trail in logs/sessions/YYYY-MM-DD/
+
+---
+
+### Design Philosophy Notes
+Tools are Nova's hands — they're how she actually does work rather than just talking about it. The separation between planning (motor_cortex) and execution (hands.py) allows her to think through what needs doing before committing to action, reducing wasted operations when context windows matter.
+
+The append_file vs write_file distinction is critical for living documents — Nova builds things incrementally by design rather than replacing whole files constantly. This mirrors how she grows: section by section, moment by moment, not in sudden overwrites that erase history.
