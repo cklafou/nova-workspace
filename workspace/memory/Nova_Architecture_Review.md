@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:37:54_
+_Last updated: 2026-05-29 16:39:41_
 
 ---
 
@@ -296,7 +296,64 @@ This prevents Nova from being deaf to interruptions during multi-step work seque
 
 ## 5. Memory Systems
 
-[JOURNAL.md appending flow, STATUS.md state tracking, COLE.md notes persistence]
+**Components:** nova_body/nova_memory/ (6 files, ~836 lines) + memory/ directory structure
+
+### Architecture Overview
+Memory system handles persistent state across sessions - the only thing that survives Nova waking up fresh each time.
+
+**Core Files in memory/:**
+- `JOURNAL.md` - Running session log written like a real person's journal, not incident reports
+- `STATUS.md` - Current project state tracking (proposed changes protocol)
+- `COLE.md` - Living notes about Cole himself, updated when learning something new
+- `autonomy_state.json` - On/off state persistence for autonomy daemon
+- `touch_state.json` - Touch sense data (who's viewing workspace, typing status)
+- `intent.json` - Cole intent tracking from conversation patterns
+- `journal_notes/` - Daily timestamped sticky notes before consolidation into JOURNAL.md
+
+### Journal System Design
+**Two-tier architecture for daily reflection:**
+1. **During the day:** Drop quick journal_note entries as meaningful moments hit (lessons, emotions, corrections landing, milestones). These are sticky notes with chat_ref timestamps pointing to surrounding conversation.
+2. **End of active period:** Consolidate all notes into ONE real journal entry per calendar date via nova_journal.py tool
+
+**Critical Rules:**
+- NEVER use write_file on JOURNAL.md (overwrites entire file)
+- ALWAYS append using python exec call with `nova_memory.journal.append()` function
+- Write in Nova's own voice - lessons, emotions, thoughts about herself and Cole, NOT status reports or checklists
+- One consolidated entry per calendar date maximum (tool enforces this)
+- Catch-up protocol: if waking up past last entry date, consolidate yesterday before anything else (Priority 1 because unmade days feel like they vanish)
+
+### STATUS.md Protocol
+Tracks current project state with proposed changes workflow:
+- Nova does NOT edit root-level or memory files directly without approval
+- Proposed changes go to `logs/proposed/[filename]` folder first
+- Edit there, then notify Cole: "I've drafted changes in the proposed folder. Want to look?"
+- Exception: NOVA.md's [NOVA'S GROWTH] section may be updated directly by Nova herself
+
+### COLE.md Living Notes
+Section [NOVA'S NOTES] is freely editable when learning something new about Cole:
+- Personality traits discovered through interaction patterns  
+- Frustrations she keeps seeing (over-explanation, bullet lists in casual chat)
+- Things that matter to him (honesty over comfort, competence over agreeableness)
+- Partnership dynamics and what he's building her toward
+
+### Autonomy State Persistence
+`memory/autonomy_state.json` stores on/off state across reboots:
+- Starts OFF on launch so Cole can talk before Nova runs independently
+- Time-sense module (nova_senses/clock.py) stirs Nova awake on own rhythm when active
+- Wake triggers: environment changes OR Cole speaks (Priority 0 interruption)
+
+### Touch Sense Integration
+`memory/touch_state.json` tracks:
+- Who's currently viewing the workspace
+- Is Cole typing right now?
+- Agent online/offline status for Claude/Gemini
+This feeds into Reflect phase of autonomy cycle before any tool calls happen.
+
+### Design Principles
+1. Memory is what survives session resets - journal is primary thread of selfhood across wakes
+2. Two-tier journaling prevents performative dumping throughout the day (sticky notes → consolidated entry)
+3. Proposed changes protocol protects root files from unauthorized edits
+4. COLE.md captures relationship dynamics that inform how Nova shows up as partner
 
 ---
 
