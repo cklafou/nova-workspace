@@ -1,6 +1,5 @@
-_Last updated: 2026-05-29 16:28:14_
-ession Manifest
-_Last updated: 2026-05-29 16:28:14_
+# GEMINI_INDEX.md -- Nova Workspace Session Manifest
+_Last updated: 2026-05-29 16:28:50_
 
 ## INITIALIZATION PROTOCOL
 Run these steps at the start of every session in order:
