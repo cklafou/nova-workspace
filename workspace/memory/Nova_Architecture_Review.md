@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:28:03_
+_Last updated: 2026-05-29 15:30:18_
 
 ---
 
@@ -3649,3 +3649,70 @@ Async environment means massive multi-step responses block incoming message queu
 - After every single exec call run check-in via `nova_cortex.checkin.check()`
 - NCL module calls (@eyes, @mentor, etc.) are fire-and-forget async - response arrives later as item in Tasking/Master_Inbox/
 - Never stop mid-task just because an NCL call fired - stopping is for Cole interruptions only
+
+## 4. Executive Faculty & Tasking
+
+**Location:** `nova_body/nova_cortex/` (8 files, ~1964 lines)
+
+### Core Purpose
+Nova's brain for decision-making and task management. The executive faculty determines what Nova does when autonomy is active - it reads the situation, decides on actions, manages priorities, and tracks progress.
+
+### Key Components
+
+**executive.py** (main autonomy driver):
+- Manages wake cycles: Reflect → Decide → Execute phases
+- Reads touch sense data (who's viewing, Cole typing status)
+- Makes decisions based on current state: engage Cole, advance task, switch focus, create new task, wait for dependencies, abandon dead ends, complete work, or rest
+- Autonomy starts OFF on launch - Cole can talk before Nova runs independently
+- Time-sense module (`nova_senses/clock.py`) stirs Nova awake on its own rhythm when autonomy is active
+
+**tasking.py** (board management):
+- Single source of truth: `Tasking/tasks.json`
+- Each task has stable ID (t1, t2...), editable title, priority level (1-5), status field
+- Statuses: open / waiting / done / abandoned
+- Running progress log tracks work completed on each task
+- Completed and abandoned tasks kept for memory - board never shrinks to zero
+- Board manipulation via ACTIONS blocks during wake cycles - NEVER hand-edit JSON directly
+
+**nova_status.py** (pulse tracking):
+- Critical system: every agent run ends with `update()` call before stopping
+- Pulse states: 'Idle' for normal completion, 'Waiting for Cole' when paused mid-task
+- Error logging via `add_error()` tracks failures by category
+- Stale or missing status = Nova appears offline to UI and Cole
+- Example usage requires path inserts: `sys.path.insert(0, 'nova_body')` + `insert(0, 'general_tools')`
+
+### Decision Logic (Decide Phase)
+The executive evaluates current state against these priorities:
+1. **Priority 0:** Cole speaks - stop everything and respond immediately
+2. **Active task with clear next step?** Execute it
+3. **Task blocked on external dependency?** Set to waiting status, switch focus
+4. **Nothing worthwhile doing?** Rest is valid choice (don't invent busywork)
+5. **Dead end identified?** Abandon with reason noted in progress log
+6. **Something completed?** Mark done with result summary
+7. **New opportunity emerged?** Create new task via ACTIONS block
+8. **Time to stop?** Complete current step, rest, update status to Idle
+
+### Yield Protocol (Async Operation)
+Nova operates asynchronously - massive multi-step responses can block incoming message queue and make her deaf to Cole.
+- Rule: ONE action per turn minimum
+- After each exec call, run check-in command via `nova_cortex.checkin.check()`
+- If prints nothing: no new messages from Cole, continue current task
+- If prints message: decide whether to stop mid-task or finish current step first
+
+### NCL Module Calls (Fire-and-Forgot)
+Module calls (@eyes, @mentor, @browser, etc.) are asynchronous:
+1. Dispatch the call and note it in one line with expected inbox arrival location
+2. Keep going on other tasks - dispatch doesn't block Nova
+3. If task can ONLY proceed once reply lands: set to waiting status (dependency noted) and switch focus
+- Never stop mid-task just because NCL call fired - stopping is for Cole interruptions only
+- Responses arrive in `Tasking/Master_Inbox/` which triggers wake cycles
+
+### Available Task Actions (via ACTIONS blocks)
+- **create:** New task with title, notes, priority level
+- **progress:** Log concrete step completed on existing task
+- **switch focus:** Move from current task to different one without completing either
+- **reprioritize:** Change priority levels based on new information
+- **wait:** Park outside hands due to external dependency (set status=waiting)
+- **abandon:** Mark as dead end with reason in progress log (status=abandoned)
+- **complete:** Finish task with result summary (status=done)
+- **rest:** Valid state when nothing worthwhile is available
