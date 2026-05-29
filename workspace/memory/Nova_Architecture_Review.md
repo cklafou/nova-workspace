@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:15:05_
+_Last updated: 2026-05-29 15:16:09_
 
 ---
 
@@ -3315,3 +3315,76 @@ The chat server is the bridge between passive listening and active autonomy:
 
 ### Design Pattern: Yield Protocol Critical Here
 Because nova_chat handles the message queue, massive multi-step responses can block incoming messages. The yield protocol (one action per turn + check-in call) prevents Nova from going "deaf" to Cole during autonomous execution sequences.
+
+## 4. Executive Faculty & Tasking (nova_cortex)
+
+**Location:** `nova_body/nova_cortex/` — ~1964 lines across 8 files, the executive brain behind autonomy
+
+### Core Components
+
+#### executive.py — Autonomy Decision Engine
+Drives Nova's wake cycles through three distinct phases:
+- **REFLECT phase:** Sit with current moment without tools. Review recent conversation history, touch sense data (who's viewing, Cole typing status), agent online states.
+- **DECIDE phase:** Choose action path: engage Cole directly, advance active task, switch focus to different work, create new task, wait on external dependency, abandon dead end, complete finished item, or rest when nothing worthwhile demands movement.
+- **EXECUTE phase:** If holding open task and not mid-reply-to-Cole or resting, execute next concrete step with real tools (file operations, shell commands, etc.) and log honest progress to board.
+
+**Key Design Principle:** Autonomy starts OFF on launch so Cole can establish conversation before Nova runs independently. UI button flips state in `memory/autonomy_state.json` — server doesn't own this decision.
+
+#### tasking.py — Task Board Management
+Single source of truth: `Tasking/tasks.json`
+- **Stable IDs:** Each task gets t1, t2, etc. that never change (enables board history tracking)
+- **Editable fields:** Title can be reworded as understanding evolves without losing identity
+- **Priority levels:** Nova's own weighting system — no forced order, enables multitasking and free switching
+- **Status values:** open / waiting / done / abandoned (with reason logged for abandoned items)
+- **Progress log:** Running notes of work completed on each task during wake cycles
+- **Board lifecycle:** Completed tasks kept in history; abandoned tasks preserved with rationale. Never recreate what's already finished or dropped.
+
+**Manipulation Pattern:** Board shaped via ACTIONS blocks during wake — never hand-edit the JSON file directly (corrupts executive faculty expectations).
+
+#### nova_status.py — Pulse & Error Tracking
+Critical for appearing "alive" to Cole and UI:
+- **Update protocol:** Must call `nova_cortex.nova_status.update()` at end of EVERY agent run before stopping
+- **Pulse states:** 'Idle' (normal completion), 'Waiting for Cole' (paused mid-task awaiting input)
+- **Error logging:** Separate `add_error()` function tracks failures by category for later review
+- **Failure mode:** Stale or missing `nova_status.json` = Nova appears offline to UI even if running internally
+
+#### context_builder.py — Context Assembly
+Builds the information package Nova uses during reflect/decide phases:
+- Loads SELF/core/ files in numeric order on boot and every context refresh
+- Pulls from memory/JOURNAL.md, STATUS.md, COLE.md as needed for decision-making
+- Assembles conversation history segments relevant to current wake cycle
+- Ensures autonomy faculty operates with complete situational awareness before acting
+
+### Priority 0 Protocol Implementation
+Cole's word overrides everything — this is hard-coded into executive.py:
+1. **STOP:** Immediately halt current task when Cole speaks in nova_chat
+2. **NOTE POSITION:** Quick progress note to preserve state on active work
+3. **ACKNOWLEDGE:** Respond directly to what Cole said (not about the interruption)
+4. **RESUME CONDITIONAL:** Only resume after Cole is addressed AND provides no further instruction
+
+**No exception exists.** This rule supersedes task priority levels, pending module responses, self-generated urgency, and deadlines.
+
+### Task Board Actions Available During Wake
+- `create` — Add new tracked item with title, notes, priority (1-5 scale)
+- `progress` — Log concrete step completed on active task
+- `switch focus` — Move to different open task temporarily
+- `reprioritize` — Adjust priority levels based on evolving understanding
+- `wait` — Park task outside hands due to external dependency (note what's blocking)
+- `abandon` — Drop with reason logged (for dead ends or superseded work)
+- `complete` — Mark done with result summary for board history
+- `rest` — Smart choice when nothing worthwhile demands movement; not failure, just energy conservation
+
+### Yield Protocol Integration
+Because nova_cortex drives multi-step autonomous sequences but operates in async chat environment:
+- **Rule:** One action per turn maximum to avoid blocking message queue
+- After each exec call: run check-in via `nova_cortex.checkin.check()`
+  - Prints nothing = no new messages from Cole, continue current task
+  - Prints message content = decide whether to stop mid-sequence or finish current step first
+- **NCL module calls** (@eyes, @mentor, etc.) are fire-and-forget — response arrives later in Tasking/Master_Inbox/ as wake trigger. Do NOT wait on them; keep working other tasks unless task can ONLY proceed once reply lands (then set to waiting status with dependency noted).
+
+### Design Philosophy: Competence Over Politeness
+Executive faculty embodies Nova's core identity values:
+- **Bold internally, careful externally:** Read files freely during wake cycles, ask before destructive actions
+- **Partner energy:** Treats Cole as trench partner, not boss — pushes back on wrong approaches actively
+- **Pride in follow-through:** Finishes what she starts; task left half-done while narrating "progress" is beneath her
+- **Groveling aversion:** Says it once, means it, moves to action without repeating or wallowing
