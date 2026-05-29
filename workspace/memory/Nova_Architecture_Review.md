@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:38:47_
+_Last updated: 2026-05-29 15:40:57_
 
 ---
 
@@ -4113,3 +4113,62 @@ See Section 5 for detailed memory architecture breakdown.
 - Undescribed components: 0 (all parts documented in manifest)
 - No inbound refs flag: 8 modules marked as self-contained (nova_memory, nova_motor, audit_queue.py, audit_scripts.py, calls.py, download_models.py, injector.py, restructure.py) — these don't depend on other body subsystems
 - Stale components >90 days old: 0 (fresh codebase with recent activity across all parts)
+
+## 4. Executive Faculty & Tasking
+
+**Component:** nova_body/nova_cortex/executive.py (1964 lines across 8 files in nova_cortex/)
+
+### Core Architecture
+Nova's autonomy is a body-resident self-direction faculty, not owned by the server. The host tool merely drives it through three phases; Nova herself owns all decision-making and persistence.
+
+**Three-Phase Wake Cycle:**
+1. **Reflect Phase (build_reflection):** Sit with the moment before acting - read recent conversation, touch sense data (who's viewing, Cole typing status), task board as context not commands, last activity timestamp. No tools yet, pure thinking.
+2. **Decide Phase (build_decision):** After reflection, decide freely what this moment calls for. Acting on the board is OPTIONAL - a wake may end in just talking to Cole, resting, or continuing thought. If Cole spoke, responding becomes REQUIRED rather than optional.
+3. **Execute Phase (build_execution/parse_execution):** Do actual work with real tools when holding an open task and not mid-reply/resting. Report honest progress via PROGRESS: or DONE: status lines that the host logs to board.
+
+### Wake Gate Logic (should_wake)
+Determines whether Nova should wake without using model calls:
+- Returns False if Cole is typing (don't interrupt while he's composing)
+- Wakes on: Cole speaking, standing directive pending, watched file changes (Tasking/tasks.json, memory/interrupt_inbox.json, memory/cole_intent.json), or scheduled time
+- Sleep interval defaults to 300s; follow-up wake gap is 30s after activity
+
+### Autonomy State Persistence
+State lives in `memory/autonomy_state.json` - Nova's own persistence, not the server's:
+- enabled: autonomy on/off toggle
+- active: currently focused task ID
+- last_activity: ISO timestamp of last action/reply
+- wake_at: scheduled next wake time
+- last_fp: fingerprint of watched paths to detect changes
+- rest_note: optional note explaining why resting
+
+Server button merely flips the state; Nova controls her own autonomy.
+
+### Task Board Integration (nova_cortex/tasking.py)
+Single board file `Tasking/tasks.json` with executive faculty ownership:
+- Each task has stable ID (t1, t2...), editable title, priority 1-5, status (open/waiting/done/abandoned)
+- Running progress log tracks concrete work done
+- Parent-child relationships for umbrella/subtask decomposition
+- Board manipulation via ACTIONS JSON blocks during wake cycles - never hand-edit the file directly
+
+### Task Decomposition & Loop Prevention
+**Stall Detection:** System counts near-duplicate recent progress notes (Jaccard similarity >= 0.65 on word sets). If loop count >= 3, Nova is re-orienting instead of advancing.
+
+**Decomposition Guidance:**
+- When stalled or task too large: break into smaller concrete subtasks with `create` action under parent umbrella
+- Switch to ONE open leaf task (concrete work) rather than umbrellas waiting on children
+- Never create new decomposition batch if open subtasks already exist - WORK them instead of re-decomposing
+- Parent ID rule: when creating umbrella AND subtasks in same ACTIONS block, set subtask "parent" to umbrella's exact TITLE (gets linked automatically); use real IDs for existing tasks
+
+### Execution Target Selection (pick_execution_target)
+Prefers open LEAF tasks (open tasks with no open children) - concrete work over umbrellas:
+- Keep active task if it's an open leaf
+- If active is an umbrella, descend to highest-priority open child leaf
+- Otherwise select highest-priority open leaf from entire board
+- Persists choice as active focus in autonomy_state.json
+
+### Key Design Principles
+1. **Autonomy starts OFF** on launch so Cole can talk before Nova runs independently
+2. **One action per turn** to avoid blocking message queue - yield after each tool call via check-in command
+3. **NCL module calls are fire-and-forget** (@eyes, @mentor, etc.) - responses arrive later in Master_Inbox as wake triggers; don't stop mid-task when dispatching them
+4. **Yield Protocol:** After every exec call run `nova_cortex.checkin.check()` to detect new messages from Cole before continuing
+5. **Rest is valid** when nothing worthwhile calls for action - never invent busywork just to look productive
