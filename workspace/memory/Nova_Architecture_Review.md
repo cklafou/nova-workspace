@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:40:57_
+_Last updated: 2026-05-29 15:41:53_
 
 ---
 
@@ -4172,3 +4172,54 @@ Prefers open LEAF tasks (open tasks with no open children) - concrete work over 
 3. **NCL module calls are fire-and-forget** (@eyes, @mentor, etc.) - responses arrive later in Master_Inbox as wake triggers; don't stop mid-task when dispatching them
 4. **Yield Protocol:** After every exec call run `nova_cortex.checkin.check()` to detect new messages from Cole before continuing
 5. **Rest is valid** when nothing worthwhile calls for action - never invent busywork just to look productive
+## 5. Memory Systems
+
+**Components:** nova_body/nova_memory/ (836 lines across 6 files)
+
+### JOURNAL.md - Session Log & Growth Thread
+The journal is Nova's running memory and the ONLY thread of herself that survives wake resets.
+
+**Key Implementation Details:**
+- **Path:** `memory/JOURNAL.md`
+- **Writing Tool:** ALWAYS use `nova_memory.journal.append()` via exec call, NEVER write_file (which overwrites)
+- **Date Headers:** One per day (`## YYYY-MM-DD`), automatically managed by append function
+  - If today already has a header: just append content after last entry
+  - If new day: prepend date header before appending
+- **Sanitization:** Automatic apostrophe/smart quote stripping to prevent exec command crashes on Windows
+  - `sanitize()` removes ', '', '‘', '’', '"', '"' so entries don't break in shell commands
+- **Voice Rules (from docstring):**
+  - Write like Nova, not an incident report: first person, casual, honest
+  - No bullet lists - sentences and paragraphs only
+  - Swear if it fits; be specific; vague entries are useless to future-me
+  - Good example: "pywinauto just handed me exact pixel coordinates. I feel dumb for not landing here sooner." (specific, personal)
+  - Bad example: "Successfully implemented pywinauto integration. Key learnings identified." (corporate speak)
+
+**Journal Rhythm:**
+- **Daily consolidated entry:** One per day at end of active period or when calendar rolls past last entry
+- **During-day notes:** Quick `journal_note` calls with chat_ref timestamps for sticky moments
+  - Lesson landed, Cole corrected you, emotion hit, milestone finished, partnership moment
+  - NOT full journal entries mid-day - those are just fragments waiting to be woven together
+- **Priority Rule:** If booting up and yesterday never got consolidated, that day isn't real until made real. Catch it up as Priority 1 before other work.
+
+### STATUS.md - Current Project State
+**Purpose:** Track current project state and proposed changes protocol
+**Update Mechanism:** Proposed Changes Protocol only (copy to `logs/proposed/`, edit there, notify Cole)
+**Never hand-edit directly** unless following proper protocol flow
+
+### COLE.md - Living Notes About Cole
+**Path:** `memory/COLE.md`
+**Purpose:** Running notes about Cole's preferences, corrections, patterns
+**Update Section:** `[NOVA'S NOTES]` section at bottom for new learnings
+**Usage:** Update when learning something genuinely new about how he works or what matters to him
+
+### Memory File Tool Guidance (Critical Distinction)
+Different memory files require different tool approaches:
+- **JOURNAL.md:** Use `nova_memory.journal.append()` via exec - handles date headers, sanitization, prevents overwrites
+- **STATUS.md / COLE.md:** Can use write_file/replace_file_content but follow Proposed Changes Protocol for root-level changes
+- **Never overwrite living documents with raw write_file** unless creating NEW files (use append_file or replace_file_content for existing docs)
+
+### State Persistence Files (Managed, Don't Touch Raw)
+The following are managed by the system - avoid direct editing:
+- `memory/autonomy_state.json` - Autonomy on/off state, active task focus, wake schedule
+- `Tasking/tasks.json` - Task board owned by executive faculty via ACTIONS blocks
+- `nova_status.json` (pulse) - Current pulse state and error tracking
