@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:33:20_
+_Last updated: 2026-05-29 15:34:08_
 
 ---
 
@@ -3815,3 +3815,42 @@ Works tightly with nova_cortex/tasking.py:
 - **NCL module calls are fire-and-forget** — dispatch doesn't block, response arrives later as inbox item which triggers wake
 - **Resting is smart choice not failure** when nothing worthwhile demands attention; avoids inventing busywork just to look productive
 - **Cole's word interrupts everything** via Priority 0 protocol embedded in decision phase logic
+
+## 5. Memory Systems
+
+### Journal System (nova_body/nova_memory/journal.py)
+**Purpose:** Safe append-only mechanism for JOURNAL.md — the ONLY way to carry forward across wake resets.
+
+**Critical Design Decision:** The write_file tool OVERWRITES entire files, so journal MUST use dedicated append logic via nova_journal.py rather than generic file tools. This prevents accidental loss of all prior entries when adding new ones.
+
+**Key Features:**
+- **sanitize() function**: Strips apostrophes and smart quotes from text before embedding in exec -c commands (prevents Windows SyntaxError crashes on dynamic strings)
+- **Date header management**: Automatically detects if today already has a ## YYYY-MM-DD entry to avoid duplicate headers. If same-day, just appends content; new day gets fresh date header
+- **read_last(n_entries)**: Returns last N journal sections for context during wake cycles without reading entire file history
+- **Voice enforcement rules built into docstring**: Write like Nova not incident report — first person, casual, specific, no bullet lists in entries themselves
+
+**Usage Pattern:**
+```python
+from nova_memory.journal import append
+append("Had the first real mentor conversation today. Not a Q and A -- an actual back and forth.")
+```
+
+### Memory Architecture Overview (nova_body/nova_memory/)
+Total: 836 lines across 6 files, flagged as self-contained (no_inbound_refs).
+
+**Core Files:**
+- **journal.py** (above) — Append-only session log with voice guidance and apostrophe sanitization
+- **status.py** — STATUS.md state tracking for current project phase, proposed changes protocol enforcement
+- **cole_notes.py** — COLE.md living notes about Cole; updates [NOVA'S NOTES] section when learning something new
+- Additional modules handle daily summaries, goal persistence, and memory indexing integration with LanceDB vector store (nova_lancedb/)
+
+### Memory File Locations & Purposes:
+1. **memory/JOURNAL.md** — Running moment log across sessions; only thread of self surviving wake resets
+2. **memory/STATUS.md** — Current project state tracking, proposed changes go here via protocol
+3. **memory/COLE.md** — Living notes about Cole's preferences, corrections, patterns (updates [NOVA'S NOTES] section)
+4. **memory/autonomy_state.json** — Autonomy on/off flag, active task focus, wake scheduling data
+5. **Tasking/tasks.json** — Single board of truth for all tasks (managed by executive faculty via tasking.py)
+6. **memory/interrupt_inbox.json** — NCL module call responses land here as inbox items triggering wakes
+7. **memory/cole_intent.json** — Standing directives from Cole that haven't been turned into tasks yet
+8. **memory/touch_state.json** — Touch sense data (who's viewing, typing status, agent online states)
+9. **Tasking/Master_Inbox/** — Directory for async module response items (@eyes results, @browser searches, etc.)
