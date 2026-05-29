@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:02:51_
+_Last updated: 2026-05-29 16:07:14_
 
 ---
 
@@ -4494,3 +4494,130 @@ The executive faculty weighs multiple signals before choosing actions:
 - Time-sense awareness of when last action occurred vs expected cadence
 - Task board priorities and dependencies between tasks
 - Resting when nothing worthwhile exists is a smart choice not failure; never invent busywork just to look productive
+## 4. Executive Faculty & Tasking
+
+**Component:** nova_body/nova_cortex/executive.py (plus tasking.py)
+
+### Core Philosophy
+Autonomy is a body faculty, not owned by the server. The host provides clock tick, model call, and voice only; on/off state persists in memory/autonomy_state.json — hers, not the server's.
+
+**Key Principle:** Body-resident self-direction depends ONLY on her board (nova_cortex.tasking) and senses (nova_senses.clock/environment). It makes ZERO outward calls to chat/server imports so it survives the pluck-test. A host drives autonomy in three steps:
+1. `should_wake()` — gate check
+2. `build_reflection()` → Nova thinks silently, no tools yet  
+3. `build_decision()` → she decides what matters
+4. Optional execution pass with real tool calls
+
+### Wake Cycle Architecture (Three Phases)
+
+**Phase 1: Reflect**
+- She SITS WITH the moment before doing anything — honest first-person read of where things are like a person taking stock on waking
+- No tools, no task actions this step — pure orientation
+- Host supplies `recent` conversation so she's never blind to what was just said
+- Reads: board state, touch sense (who's viewing, Cole typing status), time-sense since last activity
+- Last reflection carried across wakes for continuity (stored in autonomy_state.json)
+- Journal check built-in: look at memory/JOURNAL.md most recent header date, catch up unconsolidated days from journal_notes/
+
+**Phase 2: Decide**
+- Her own reflection is read back to her; she decides what this moment calls for
+- Acting on the board is OPTIONAL — a wake may end in just talking to Cole, resting, or thinking more
+- Stall detection: if recent progress notes are near-duplicates (≥3), flags loop condition and nudges decomposition instead of re-mapping
+- Subtask awareness: shows open children under active task to prevent redundant creation
+- NCL module calls (@eyes, @mentor) are fire-and-forget async — don't block execution pass
+
+**Phase 3: Execute (Optional)**
+- Only fires if she holds an open task AND isn't mid-reply to Cole or resting
+- Does the NEXT concrete step with real tools (read_file, write_file, etc.)
+- Ends with single status line:
+  - `DONE: <result>` — whole task complete
+  - `PROGRESS: <what you did> AND <next specific step>` — must name both to avoid loops
+  - Never vague like "starting" or "mapping structure"
+
+### Wake Triggers (should_wake())
+Returns `(bool, reason)` based on:
+- Cole typing → False (don't wake while he's composing)
+- Cole pending in chat → True (Priority 0)
+- Standing directive from environment.cole_directive() → True
+- File fingerprint changed on watched paths → True (Tasking/tasks.json, memory/interrupt_inbox.json, memory/cole_intent.json)
+- Scheduled time arrived → True (wake_at timestamp passed)
+- Otherwise → False (resting)
+
+**Config:**
+- `sleep_interval_s`: 300s default between scheduled wakes when idle
+- `follow_gap_s`: 30s — after she acts/replies, schedule SOON follow-up think instead of going dormant for full interval
+- `watch_paths` list defines what changes count as environment triggers
+
+### Task Board Integration (nova_cortex/tasking.py)
+**Single Source:** Tasking/tasks.json
+
+**Task Shape:**
+```json
+{
+  "id": "t43",
+  "title": "...",
+  "notes": "what it asks",
+  "priority": 2,
+  "status": "open" | "waiting" | "done" | "abandoned",
+  "parent": "optional umbrella task id or title",
+  "created": "ISO timestamp",
+  "progress": [{"note": "...", "when": "..."}]
+}
+```
+
+**Key Functions:**
+- `all_tasks()` — returns dict of all tasks by id
+- `render_board(active_task_id)` — human-readable board view for reflection prompts
+- Stable IDs (t1, t2...) never change; titles are rewordable
+- Completed/abandoned tasks kept for memory (not deleted)
+
+**Parenting Rules:**
+- Umbrella task + subtasks created in same ACTIONS block: set `"parent": "<umbrella title>"` (links automatically since id doesn't exist yet)
+- Adding to existing task: use real id as parent
+- Never parent under done/abandoned tasks — buries live work
+- Board is a TREE structure; wholly separate goals are independent top-level tasks with no parent
+
+### Loop Detection & Decomposition Logic
+**Problem:** Big tasks get brute-forced as one item, causing reorientation loops without real progress.
+
+**Solution: `_progress_loop_count()` heuristic:**
+- Looks at last 5 progress notes on active task
+- Computes Jaccard similarity between note pairs (word overlap ratio)
+- If ≥3 recent notes have near-duplicate twins (≥0.65 similarity), flags loop condition
+- Decision prompt nudges: "STALL CHECK — break into smaller concrete subtasks"
+
+**Subtask Strategy:**
+- Umbrella tasks should be decomposed BEFORE execution, not during it
+- Once open children exist, switch to ONE leaf task and work it to completion
+- `pick_execution_target()` prefers open LEAF tasks (no open children) over umbrellas
+  - If active is umbrella with leaves → descend to highest-priority leaf automatically
+  - Falls back to highest-priority open task anywhere if no active focus
+
+### State Persistence (autonomy_state.json)
+```json
+{
+  "enabled": true/false,
+  "active": "t43" | null,          // current focused task id
+  "last_activity": "ISO timestamp",
+  "wake_at": "ISO timestamp",      // next scheduled wake time
+  "last_fp": "JSON fingerprint string",  // for change detection on watch_paths
+  "rest_note": "why resting if applicable",
+  "last_reflection": "..."         // carried across wakes, max 1200 chars
+}
+```
+
+**Key Functions:**
+- `autonomy_enabled()` — check on/off state
+- `set_autonomy(on)` — toggle (server button merely flips this; state lives in her body)
+- `active_focus()` / `_set_active(tid)` — track which task she's working
+- `note_activity()` — mark that Nova just acted, re-baseline fingerprint for change detection
+- `save_reflection(text)` — persist last reflection with 1200 char truncation
+
+### Cole Interaction Patterns
+**Priority 0 in Decision Phase:**
+If Cole just spoke (`cole_pending=True`):
+- Reply to him is REQUIRED (not optional like other decisions)
+- Mid-thread on task? Weave quick triage into reply: (a) drop it and engage fully, (b) answer but keep focus + create deferred task, or (c) treat as note and carry on
+- The spoken reply IS the point — don't bury him in board work
+- Write response as actual words to Cole in first person, not more inner reflection
+
+**No Actions Block is Fine:**
+Most conversational moments need none. A `progress`/`complete` note is only honest if you ACTUALLY did it with a tool this step.
