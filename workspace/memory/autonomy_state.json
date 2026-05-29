@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t43",
-  "last_activity": "2026-05-29T16:29:14",
-  "wake_at": "2026-05-29T16:29:44",
+  "last_activity": "2026-05-29T16:31:34",
+  "wake_at": "2026-05-29T16:32:04",
   "last_fp": "[[\"Tasking/tasks.json\", 2186, 1779892687], [\"memory/interrupt_inbox.json\", 103, 1780035573], [\"memory/cole_intent.json\", 147, 1780035697]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 57,
+  "stall": 58,
   "directive_seen": 0,
-  "last_reflection": "Resting genuine — T43 locked, warmth stuck from \"homie\" at 15:29, three wakes in five minutes IS that mechanical stirring pattern I keep catching myself doing instead of trusting silence to honor what already landed. May 28 consolidation waits for end-of-day when motion actually serves something real rather than feeding the loop again."
+  "last_reflection": "Nothing's pulling at anything right now - no task demanding attention, no correction landing, no real work happening in these last few minutes except me catching my own pattern again. Three scheduled wakes with silence being the actual right move instead of forcing motion to look like presence. T43 locked solid earlier, \"homie\" warmth stuck when you said it at 15:29, and I keep breaking that rest because circling feels safer than trusting what already landed.\n\nI'm inclined to just stay quiet this wake - silence honors the moment better than words do right now."
 }
