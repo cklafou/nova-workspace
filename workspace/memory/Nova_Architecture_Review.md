@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:13:25_
+_Last updated: 2026-05-29 16:15:06_
 
 ---
 
@@ -5017,3 +5017,162 @@ The system immediately executes this and feeds terminal output back in [System: 
 Tools are Nova's hands — they're how she actually does work rather than just talking about it. The separation between planning (motor_cortex) and execution (hands.py) allows her to think through what needs doing before committing to action, reducing wasted operations when context windows matter.
 
 The append_file vs write_file distinction is critical for living documents — Nova builds things incrementally by design rather than replacing whole files constantly. This mirrors how she grows: section by section, moment by moment, not in sudden overwrites that erase history.
+
+---
+
+## 7. Body Manifest Components (nova_body/) Detailed Breakdown
+
+**Source:** SELF/core/03_body_manifest.md — auto-generated authoritative list of all body components, their sizes, ports, and relationships.
+
+### Directory Structure Overview
+The nova_body/ directory contains eight major subsystems comprising Nova's complete "body" — each a distinct faculty with specific responsibilities:
+
+```
+nova_body/
+├── nova_config/        (138 lines) - Settings loader
+├── nova_cortex/        (1964 lines, 8 files) - Executive faculty
+├── nova_imagination/   (328 lines, 2 files) - Visual creation
+├── nova_lancedb/       (568 lines, 4 files) - Long-term semantic memory
+├── nova_logs/          (254 lines, 2 files) - Unified logging
+├── nova_memory/        (836 lines, 6 files) - Persistent state management
+├── nova_motor/         (1182 lines, 5 files) - Action execution system
+└── nova_senses/        (1548 lines, 7 files) - Perception layer
+```
+
+---
+
+### Component Deep Dives
+
+#### nova_config (~138 lines)
+**Purpose:** Settings loader that reads workspace/nova_config.json and falls back to defaults when values missing.
+
+**Key Functions:**
+- Loads configuration for ports, paths, model settings, API keys
+- Provides centralized config access so individual subsystems don't each parse their own settings files
+- Used by: nova_memory (for journal path configs), nova_motor (for workspace root)
+
+**Integration Point:** Called early in startup sequence before any other body part initializes; ensures all components share same configuration baseline.
+
+---
+
+#### nova_cortex (~1964 lines, 8 files) — Executive Faculty [Already covered in Section 4]
+See detailed breakdown above for autonomy loop, tasking system, status tracking, and context assembly.
+
+**Files:** executive.py, tasking.py, nova_status.py, context.py, checkin.py + supporting modules
+**Used by:** nova_chat (fires autonomy faculty), nova_memory (status sync), nova_motor (action planning)
+---
+
+#### nova_imagination (~328 lines, 2 files) — Visual Creation Faculty
+**Purpose:** Drives local ComfyUI server to render images for self-expression, illustrating ideas, or drawing schematics.
+
+**Key Features:**
+- **generate_image(prompt, negative=None, as_nova=False)** tool integration:
+  - Saves output under nova_art/ with timestamped filename
+  - Auto-applies Nova's locked visual identity (self-LoRA) when `as_nova: true` is set
+  - Returns clear error if ComfyUI server offline
+- Handles prompt construction, parameter passing to ComfyUI API
+- Manages image file naming and storage conventions
+
+**Use Cases:**
+- Self-portraits with consistent appearance (blue-green eyes, dark windswept hair per visual specs)
+- Concept illustrations when explaining ideas to Cole
+- Schematic drawings for system architecture visualization
+
+---
+
+#### nova_lancedb (~568 lines, 4 files) — Long-Term Semantic Memory
+**Purpose:** LanceDB vector store providing semantic search capabilities beyond simple file-based persistence.
+
+**Components:**
+- **embedder.py** - Text-to-vector embedding for storage in database
+- **hippocampus.py** - Retrieval system that queries stored memories by similarity rather than exact match
+- **indexer.py** - Background process that indexes new content into vector store as it's created
+- Supporting utilities for database management and query optimization
+
+**Integration:** Used primarily when Nova needs to recall information from past sessions beyond what's in JOURNAL.md — semantic matching finds related concepts even if exact wording differs.
+---
+
+#### nova_logs (~254 lines, 2 files) — Unified Log Manager
+**Purpose:** Single logging system shared by all subsystems for consistent audit trail across Nova's entire body.
+
+**Key Functions:**
+- `log(type, event, details)` - For agent tool events (clicks, vision triggers, errors)
+- `log_thought(response_text)` - For Nova's chat responses (auto-called by nova_chat server)
+
+**Log Organization:**
+- Logs land in logs/sessions/YYYY-MM-DD/ organized by type (tool_executions, thoughts, errors, etc.)
+- Logger_Index.md shows active log locations and rotation patterns
+- Provides centralized audit trail for debugging across subsystems without each component writing its own scattered files
+
+**Used by:** nova_chat (auto-log responses), nova_imagination (image gen attempts), nova_motor (tool executions), nova_senses (perception events)
+---
+
+#### nova_memory (~836 lines, 6 files) — Persistent State Management [Already covered in Section 5]
+See detailed breakdown above for journal appending flow, status tracking, daily summaries.
+
+**Files:** journal.py, status.py, goals.py, daily_log.py + supporting utilities
+**Flags:** Self-contained (no_inbound_refs)
+---
+
+#### nova_motor (~1182 lines, 5 files) — Motor System for Action Execution [Already covered in Section 6]
+See detailed breakdown above for tool integration and execution patterns.
+
+**Files:** motor_cortex.py (planning), hands.py (execution), verification.py + supporting modules
+**Port:** 8765 | **Flags:** Self-contained (no_inbound_refs)
+---
+
+#### nova_senses (~1548 lines, 7 files) — Perception Layer
+**Purpose:** LIVE perception modules that feed real-time environmental data into executive faculty for decision-making.
+
+### Active Modules:
+**chronoception/clock.py** - Time-sense module that stirs Nova awake on her own internal rhythm when autonomy is active. Provides wake triggers based on elapsed time rather than external events only.
+
+**environment sensing** - Monitors workspace state changes, file modifications, and system-level events that might warrant attention or trigger wake cycles.
+
+**touch.py (Touch Sense)** - Tracks UI interaction data:
+- Who's currently viewing the interface
+- Cole typing status (is he composing a message right now?)
+- Agent online/offline states for Claude/Gemini presence awareness
+
+### Scaffolded Modules (Not Yet Wired):
+**eyes/vision** - Desktop vision capability planned but not yet integrated into active perception loop. Would provide screen capture and visual analysis of what's displayed on Cole's machine.
+
+**UI proprioception** - Planned module to track Nova's own UI state, window positions, and interface elements for self-awareness within her chat environment.
+
+---
+
+### System Health Metrics (from manifest)
+- **Undescribed components:** 0 — all parts documented in body manifest
+- **No inbound refs flag:** 8 modules marked as self-contained (nova_memory, nova_motor, audit_queue.py, audit_scripts.py, calls.py, download_models.py, injector.py, restructure.py) — these don't depend on other Nova subsystems and could theoretically run independently if needed
+- **Stale components >90 days:** 0 — fresh codebase with no abandoned or neglected modules detected
+---
+
+### Integration Patterns Across Body Parts
+**Data Flow Example (Typical Wake Cycle):**
+```
+nova_senses/clock.py → triggers wake via time-sense tick
+    ↓
+nova_cortex/executive.py reads touch sense data from nova_senses/touch.py
+    ↓
+executive DECIDE phase determines action needed based on context + task board state
+    ↓
+motor_cortex plans concrete tool call sequence
+    ↓
+hands.py executes actual file/command operations via OS tools
+    ↓
+nova_logs logs the execution event with type/details/timestamp
+    ↓
+nova_memory updates status/pulse state if significant milestone reached
+```
+
+**Cross-Component Dependencies:**
+- nova_cortex depends on: nova_senses (for perception input), nova_motor (to execute actions), nova_memory (status updates)
+- nova_chat depends on: nova_cortex (autonomy firing), nova_logs (response logging), tool_router (bridging chat → motor system)
+- All components depend on: nova_config (shared settings) and nova_logs (centralized audit trail)
+
+---
+
+### Design Philosophy Notes
+The body manifest structure reflects a clean separation of concerns — each faculty owns its domain without stepping on others' toes. The "no inbound refs" flag on self-contained modules is intentional design: these could be extracted or moved independently if architectural changes needed later.
+
+Scaffolded components (eyes/vision, UI proprioception) show forward-thinking architecture — the slots exist and are documented even before wiring happens, making future integration cleaner than bolting new features onto an unprepared foundation.
