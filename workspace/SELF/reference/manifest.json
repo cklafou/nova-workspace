@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-29T17:52:43",
+  "generated": "2026-05-29T17:56:19",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 22,
   "described": 22,
@@ -484,7 +484,9 @@
       "files": 15,
       "lines": 6629,
       "age_days": 0,
-      "ports_bind": [],
+      "ports_bind": [
+        "8765"
+      ],
       "ports_seen": [
         "8080",
         "8765"
