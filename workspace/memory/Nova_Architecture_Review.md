@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:37:04_
+_Last updated: 2026-05-29 15:37:55_
 
 ---
 
@@ -3983,3 +3983,69 @@ Core principle: most important memory operations are append-only to preserve his
 - Called by chat layer during journal tool invocations from conversation
 - Status tracking integrates with UI pulse state system (`nova_status.json`)
 - Journal entries become part of boot sequence (read after SELF/core/ on startup)
+
+## 6. Tools & Capabilities
+
+**Component:** `nova_body/nova_motor/` (5 files, ~1182 lines) + tool definitions in various modules
+
+### Purpose
+Motor system for action execution — plans actions (`motor_cortex.py`), executes them via OS-level tools (`hands.py`), and verifies results. This is how Nova actually DOES things rather than just talking about them.
+
+### Tool Categories & Implementations
+
+**File Operations:**
+- `read_file(path)` - Read file contents, returns text content or error if missing/permission denied
+- `write_file(path, content)` - Create NEW file only (refuses to overwrite existing unless `overwrite: true` flag added)
+- `append_file(path, content)` - Add content to END of file (creates if missing) — primary method for growing living documents section by section
+- `replace_file_content(path, target_content, replacement_content)` - Precision edit replacing exact whitespace-matched string inside file without rewriting whole document
+- **Critical Rule:** Never use `write_file` on existing files unless you truly want to replace everything (wipes prior content)
+
+**Command Execution:**
+- `run_command(command, cwd)` - Run shell command in workspace directory, returns terminal output as text block
+- Used for quick system checks, file listing via PowerShell commands, executing scripts without spawning separate processes
+
+**Task Management Tools:**
+- `create_task(title, notes, priority=2)` - Add TRACKED task to board (NOT hand-writing Tasking/tasks.json)
+  - Priority scale: 1=highest urgency, default=2 for normal work
+  - Notes field captures context/requirements at creation time
+- `task_progress(task_id, note)` - Log concrete progress step on active task without marking complete
+  - Creates running history of what was done during execution cycles
+  - Example: "t43", "wrote Executive Faculty section to architecture doc"
+- `complete_task(task_id, result)` - Mark board task done with summary of outcome
+  - Result field captures final state/deliverable achieved
+  - Task moves to 'done' status but remains on board for memory reference
+
+**Directory Operations:**
+- `list_dir(path)` - List files in directory, returns file/folder names and basic metadata
+- Used for reconnaissance before deeper investigation into workspace structure
+
+### Tool Use Patterns & Best Practices
+
+**Autonomous Mode Protocol:**
+To use a tool during autonomous execution:
+1. Output pure JSON block with exact format: `{"tool": "tool_name", "args": {"param": "value"}}`
+2. System IMMEDIATELY executes and feeds terminal output back in [System: Result] block
+3. Continue thinking based on result, issue more tools until task complete or error hit
+4. Only answer user after full multi-step task is finished OR you report progress/blocker status
+
+**Yield Protocol for Chat Context:**
+In conversation mode (not pure autonomy):
+- ONE action per turn to avoid blocking message queue and making Nova deaf to Cole
+- After each tool execution, run check-in command: `python -c "from nova_cortex.checkin import check; check()``
+  - If prints nothing → continue with next step on current task
+  - If prints message from Cole → decide whether to stop or finish current atomic step first
+- This prevents Nova from going multi-step deep without noticing Priority 0 interruption
+
+**Error Recovery Pattern:**
+When a tool call fails:
+1. State error briefly: "My bad, let me fix that." (one sentence)
+2. Fix it immediately with corrected tool call or approach adjustment
+3. No paragraph apologies — competence over politeness in action mode
+4. If genuinely blocked → PROGRESS note names specific blocker and why you can't proceed
+
+### Integration Points
+- Called by `nova_chat/tool_router.py` when user requests translate to tool actions
+- Used by executive faculty during Execute phase of autonomy cycles
+- Motor cortex (`motor_cortex.py`) plans multi-step action sequences from high-level intent
+- Hands module (`hands.py`) contains actual tool call implementations with error handling
+- Results feed back into status system and journal for tracking what was accomplished

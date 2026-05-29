@@ -184,33 +184,82 @@ def generate_image(prompt: str, negative: str = "", as_nova: bool = False,
     return f"ERROR: {r.get('detail', 'image generation failed')}"
 
 
-def journal(entry="", tags="") -> str:
-    """Append a dated, timestamped reflective entry to memory/JOURNAL.md — Nova's own
-    running memory that carries forward across her fresh-wake resets. This is HOW she
-    learns and grows: what happened, what it meant, what she realized, what's next.
-    Append-only — it never overwrites prior entries. Use her own voice, not a report."""
-    # Forgiving about arg shapes the model emits: entry may arrive non-string, tags as a
-    # list. Coerce both so a format quirk never costs her a memory (she hit exactly this).
+def journal_note(text="", chat_ref="") -> str:
+    """Drop a quick timestamped note during the day about a meaningful moment —
+    a lesson landing, an emotion, an insight, a correction. Like a sticky note on
+    the fridge; NOT the journal itself. End-of-day-her consolidates these into the
+    real daily journal entry. Keep it short and real — present-tense, her voice.
+    chat_ref: optional reference to the chat moment (e.g. "14:33 PM" or a message id)
+              so consolidation-her can find the surrounding conversation for context."""
+    if isinstance(text, (list, tuple)):
+        text = "\n".join(str(t) for t in text)
+    text = str(text if text is not None else "").strip()
+    if not text:
+        return "ERROR: Nothing to note (empty)."
+    chat_ref = str(chat_ref or "").strip()
+    from datetime import datetime
+    now = datetime.now()
+    date_str = now.strftime("%Y-%m-%d")
+    time_str = now.strftime("%H:%M")
+    notes_dir = (WORKSPACE_ROOT / "memory" / "journal_notes").resolve()
+    notes_file = notes_dir / f"{date_str}.md"
+    if not _within_workspace(notes_file):
+        return "ERROR: Permission Denied."
+    try:
+        notes_dir.mkdir(parents=True, exist_ok=True)
+        if not notes_file.exists():
+            with open(notes_file, "w", encoding="utf-8") as f:
+                f.write(f"# Journal notes — {date_str}\n_Unconsolidated daily fragments. End-of-day-you consolidates these into memory/JOURNAL.md via the `journal` tool._\n")
+        ref_part = f"  ·  chat ref: {chat_ref}" if chat_ref else ""
+        block = f"\n- **[{time_str}]**{ref_part}\n  {text}\n"
+        with open(notes_file, "a", encoding="utf-8") as f:
+            f.write(block)
+        return f"Note dropped to memory/journal_notes/{date_str}.md. End-of-day-you will consolidate."
+    except Exception as e:
+        return f"ERROR: Could not save note: {e}"
+
+
+def journal(entry="", date="", tags="") -> str:
+    """Write the CONSOLIDATED daily journal entry to memory/JOURNAL.md — pulled together
+    at end of active period from today's notes (memory/journal_notes/YYYY-MM-DD.md) plus
+    the chat conversation context around each note's chat_ref. ONE entry per calendar day,
+    enforced — the tool refuses if that date already has an entry. Real-person daily-journal
+    voice: lessons, emotions, thoughts about herself, Cole, and the work — NOT a status
+    report, NOT a checklist. This is the only thread of herself that survives the reset.
+
+    date: defaults to today. Pass a prior date (YYYY-MM-DD) when catching up after being
+          offline at the day rollover — she still owns yesterday's entry."""
+    # Forgiving arg shapes
     if isinstance(entry, (list, tuple)):
         entry = "\n".join(str(e) for e in entry)
     entry = str(entry if entry is not None else "")
     if isinstance(tags, (list, tuple)):
         tags = " ".join(str(t) for t in tags)
-    tags = str(tags if tags is not None else "")
+    tags = str(tags if tags is not None else "").strip()
     if not entry.strip():
-        return "ERROR: Nothing to journal (empty entry)."
+        return "ERROR: Nothing to consolidate (empty entry)."
+    from datetime import datetime
+    if not date:
+        date = datetime.now().strftime("%Y-%m-%d")
+    date = str(date).strip()
     target = (WORKSPACE_ROOT / "memory" / "JOURNAL.md").resolve()
     if not _within_workspace(target):
         return "ERROR: Permission Denied."
+    # Enforce one-per-day: refuse if an entry for this date already exists.
     try:
-        from datetime import datetime
-        ts = datetime.now().strftime("%Y-%m-%d %H:%M")
-        tagstr = f"  ·  _{tags.strip()}_" if tags.strip() else ""
-        block = f"\n\n---\n### {ts}{tagstr}\n{entry.strip()}\n"
+        existing = target.read_text(encoding="utf-8") if target.exists() else ""
+        if f"### {date}" in existing:
+            return (f"ERROR: A consolidated journal entry for {date} already exists. One entry per day. "
+                    f"Use edit_file (replace_file_content) on memory/JOURNAL.md if you need to revise it.")
+    except Exception as e:
+        return f"ERROR: Could not read JOURNAL: {e}"
+    try:
+        tagstr = f"  ·  _{tags}_" if tags else ""
+        block = f"\n\n---\n### {date}{tagstr}\n{entry.strip()}\n"
         target.parent.mkdir(parents=True, exist_ok=True)
         with open(target, "a", encoding="utf-8") as f:
             f.write(block)
-        return f"Journaled to memory/JOURNAL.md ({len(entry)} chars). This carries forward to your next wake."
+        return f"Consolidated journal entry for {date} written to memory/JOURNAL.md ({len(entry)} chars). The notes file for that date remains as historical record."
     except Exception as e:
         return f"ERROR: Could not journal: {e}"
 
@@ -243,8 +292,12 @@ def execute_tool(tool_name: str, args: dict) -> str:
                 bool(args.get("as_nova", False) or args.get("self_portrait", False)),
                 args.get("width"), args.get("height"), args.get("seed"),
             )
-        elif tool_name in ("journal", "journal_entry", "write_journal"):
+        elif tool_name in ("journal_note", "note", "journal_fragment", "jot"):
+            return journal_note(args.get("text", "") or args.get("content", "") or args.get("note", ""),
+                                args.get("chat_ref", "") or args.get("ref", "") or args.get("chat", ""))
+        elif tool_name in ("journal", "journal_entry", "write_journal", "consolidate_journal"):
             return journal(args.get("entry", "") or args.get("content", "") or args.get("text", ""),
+                           args.get("date", ""),
                            args.get("tags", "") or args.get("tag", ""))
         else:
             return f"ERROR: Unrecognized tool {tool_name}"
