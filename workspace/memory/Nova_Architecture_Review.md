@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:08:27_
+_Last updated: 2026-05-29 16:10:38_
 
 ---
 
@@ -4703,3 +4703,93 @@ When `note_activity()` fires (after she acts or replies):
 - Stores as `last_fp` in autonomy_state.json
 - Next wake compares new fingerprint to stored one → if different, environment changed and worth waking for
 - Prevents false wakes from changes she herself just made
+
+---
+
+## 4. Executive Faculty & Tasking
+
+**Component:** nova_body/nova_cortex/ (8 files, ~1964 lines total)
+
+### Overview
+The executive faculty is Nova's decision-making and action-planning system. It owns the autonomy loop, task board management, status tracking, and context assembly for every wake cycle.
+
+### Key Files & Responsibilities
+
+**executive.py** (~500 lines) - The autonomy brain that runs every wake:
+- Manages sleep/wake state (starts OFF on launch per memory/autonomy_state.json)
+- Implements three-phase wake cycle: REFLECT → DECIDE → EXECUTE
+  - Reflect: sit with moment, read recent conversation + touch sense data without tools yet
+  - Decide: choose action from set {engage Cole, advance task, switch tasks, create new task, wait on dependency, abandon dead end, complete something, rest}
+  - Execute: if holding open task and not mid-reply/resting, take next concrete step with real tools and log progress via task_progress()
+- Reads nova_senses/clock.py for time-sense (internal rhythm wake-ups)
+- Reads nova_senses/touch.py for who's viewing UI, Cole typing status, agent online state
+- Yields after each action per Yield Protocol to avoid blocking message queue
+
+**tasking.py** (~400 lines) - Single source of truth task board manager:
+- Manages Tasking/tasks.json as the authoritative board (never hand-edit)
+- Each task has: stable id (t1, t2...), rewordable title, priority level 1-5, status {open/waiting/done/abandoned}, progress log
+- Available actions exposed to executive:
+  - create(title, notes, priority) — add tracked task with timestamped entry in Master_Inbox/
+  - progress(task_id, note) — log concrete step on active work
+  - switch_focus(from_task, to_task) — reprioritize mid-wake without abandoning old task
+  - wait(task_id, reason) — park outside hands due to external dependency (e.g., NCL reply pending)
+  - abandon(task_id, reason) — kill dead end with documented why
+  - complete(task_id, result) — mark done and preserve for memory review later
+  - rest() — smart choice when nothing worthwhile demands motion
+- Completed/abandoned tasks kept on board as historical record, not deleted immediately
+- Board manipulation happens via ACTIONS blocks during wake cycles (JSON output interpreted by executive)
+
+**nova_status.py** (~300 lines) - Pulse state and error tracking:
+- Status file: memory/nova_status.json with {pulse_state, last_message, timestamp}
+- Pulse states track what Nova is doing right now: 'Idle', 'Working on task X', 'Waiting for Cole', etc.
+- Must call update() at end of EVERY agent run before stopping — stale/missing = appears offline to UI
+- Separate add_error(category, message) function logs failures by type (tool error, context window issue, tool timeout)
+- Example usage requires sys.path.insert(0, 'nova_body') + insert(0, 'general_tools') for imports
+
+**context.py** (~250 lines) - Context window assembly:
+- Builds what Nova sees each wake: recent conversation history, active task from board, touch sense data (viewer status), time-sense clock state
+- Manages context window limits to avoid bloating — pulls only relevant slices of conversation based on recency and @mentions
+- Feeds assembled context into executive.py for DECIDE phase input
+
+**checkin.py** (~150 lines) - Yield Protocol enforcement:
+- check() function detects new messages from Cole after each action/exec cycle
+- Prints nothing = no interruption, keep going on current task
+- Prints message text = decide whether to stop immediately or finish atomic step first before acknowledging
+- Critical for async operation — prevents Nova from being deaf while executing multi-step tasks
+
+### Autonomy Flow (Wake Cycle)
+```
+1. Trigger: Clock tick OR environment change OR Cole speaks in nova_chat (Priority 0 override)
+2. REFLECT phase:
+   - Read recent conversation history from context.py
+   - Check touch sense: who's viewing UI, is Cole typing right now, are Claude/Gemini agents online?
+   - No tools fired yet — just sitting with the moment
+3. DECIDE phase:
+   - If Priority 0 (Cole spoke): engage Cole immediately, pause other work
+   - Else if holding open task: advance it OR switch to higher priority OR create new one if gap spotted
+   - Edge cases: wait on external dependency (set status + park outside hands), abandon dead end with reason, complete something finished, or rest when nothing worthwhile exists
+4. EXECUTE phase:
+   - Take ONE concrete step using real tools (file read/write, command run, task board action)
+   - Log progress via task_progress(task_id, "what just happened") if advancing active work
+   - Call checkin.check() immediately after to detect Cole interruption before next move
+5. Repeat until wake ends or Cole interrupts with Priority 0 instruction
+```
+
+### Task Board Architecture Details
+- **File location:** Tasking/tasks.json (single source of truth)
+- **Task ID format:** t1, t2, t3... stable across sessions even if title changes
+- **Priority levels:** 1 = highest urgency/directive from Cole, 5 = background/low priority
+- **Status states:**
+  - open — actively working or queued for work
+  - waiting — parked due to external dependency (NCL reply pending, awaiting approval, blocked on other task)
+  - done — completed with result stored in progress log
+  - abandoned — killed with documented reason why it died
+- **Progress tracking:** Each call to task_progress() appends timestamped note to that task's running work log; visible when Cole asks for status updates
+- **Board manipulation protocol:** Use ACTIONS blocks during wake (JSON output) rather than hand-editing tasks.json directly — prevents corruption from manual edits
+
+### Integration Points
+- Receives time-sense triggers from nova_senses/clock.py (internal rhythm wake-ups)
+- Reads touch sense data from nova_senses/touch.py (viewer status, typing indicators)
+- Feeds tool calls to nova_motor for execution (file operations, command runs, task board writes)
+- Logs all executive decisions and actions via nova_logs/logger.py
+- Updates memory/nova_status.json pulse state at end of every run cycle
