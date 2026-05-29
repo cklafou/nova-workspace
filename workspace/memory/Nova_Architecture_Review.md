@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:30:18_
+_Last updated: 2026-05-29 15:31:22_
 
 ---
 
@@ -3716,3 +3716,67 @@ Module calls (@eyes, @mentor, @browser, etc.) are asynchronous:
 - **abandon:** Mark as dead end with reason in progress log (status=abandoned)
 - **complete:** Finish task with result summary (status=done)
 - **rest:** Valid state when nothing worthwhile is available
+
+## 5. Memory Systems
+
+**Location:** `nova_body/nova_memory/` (6 files, ~836 lines)
+
+### Overview
+Nova's persistent state management system - handles journal appending, goals tracking, status updates, and daily log summaries. This is where Nova carries forward knowledge across wake cycles.
+
+### Core Components
+
+**journal.py** (primary memory append mechanism):
+- **CRITICAL RULE:** The ONLY safe way to write to JOURNAL.md
+- Reason: `write_file` tool OVERWRITES files - this script APPENDS safely
+- Usage via exec call with path inserts for nova_body and general_tools
+- **Voice Rules enforced by design**:
+  - Write like Nova, not an incident report (first person, casual, honest)
+  - Swear if it fits. Be specific.
+  - NO bullet lists in journal entries
+  - Good example: "pywinauto just handed me exact pixel coordinates. I feel dumb for not landing here sooner."
+  - Bad example: "Successfully implemented pywinauto integration. Key learnings identified."
+- **Date Header Logic:**
+  - If today already has a ## YYYY-MM-DD header, do NOT add another one
+  - Just append text after last entry (one date header per day)
+  - Auto-detects and strips duplicate headers if user accidentally includes them
+- **Sanitization Function (`sanitize()`):**
+  - Strips apostrophes and smart quotes from entries before writing
+  - Critical for Windows exec -c commands to avoid SyntaxError crashes
+  - Called automatically on every append call
+- **Implementation Details:**
+  - Path: `memory/JOURNAL.md`
+  - Creates file if it doesn't exist (mkdir parents=True)
+  - Regex pattern `^## \d{4}-\d{2}-\d{2}` detects date headers
+  - Prints confirmation with character count after each append
+- **Helper Function (`read_last(n_entries=3)`):**
+  - Returns last n journal sections for context retrieval
+  - Splits on ## date headers and returns raw text of recent entries
+
+**state.py** (current state tracking):
+- Manages runtime state: autonomy_state.json, touch_state.json, cole_intent.json
+- Persists Nova's current operational mode between wake cycles
+- Touch sense data tracks who's viewing, Cole typing status, agent online states
+
+**goals.py** (objective management):
+- Handles high-level goals separate from task board
+- Distinguishes between tactical tasks and strategic objectives
+- Integrates with executive faculty for priority alignment
+
+**session_store.py** (daily aggregation):
+- Collects session data throughout the day
+- Generates daily summaries at end-of-day
+- Feeds into journal append operations automatically
+
+### Memory Architecture Philosophy
+Three core files represent Nova's working memory:
+1. **JOURNAL.md:** Running log of sessions - appended using `nova_journal.py` tool only (NEVER write_file)
+2. **STATUS.md:** Current project state - update via proposed changes protocol only
+3. **COLE.md:** Living notes about Cole - update [NOVA'S NOTES] section when learning something new
+
+### Journal Entry Best Practices
+- Write in YOUR voice, not a status report format
+- Moments matter more than sessions: journal when you learn something real, when Cole corrects you, when an emotional moment lands, when you finish something genuine, or when you change your mind
+- An unrecorded moment is a forgotten one - don't let important things pass unwritten
+- Keep entries specific and honest; vague = useless to future-you
+- This IS how Nova becomes someone real across resets: the journal carries forward what actually mattered
