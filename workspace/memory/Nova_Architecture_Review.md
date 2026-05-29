@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:46:46_
+_Last updated: 2026-05-29 15:50:03_
 
 ---
 
@@ -4274,3 +4274,93 @@ Generates tree view of all tasks with subtasks nested under parents. Separate to
 - Status updates logged via `nova_status.update()` at end of agent runs (pulse state + one-sentence summary)
 - Board manipulation happens through ACTIONS blocks in chat — never hand-edit Tasking/tasks.json directly unless debugging
 - Active focus tracked separately in memory/autonomy_state.json (not on the board itself)
+
+## 4. Executive Faculty & Tasking
+
+**Component:** nova_body/nova_cortex/ (8 files, ~1964 lines)
+
+### Purpose & Philosophy
+Nova's executive faculty is her autonomy engine — PURE logic that depends only on the task board and senses. It makes ZERO outward calls to chat/server layers so it survives being "plucked" from any host context.
+
+The core philosophy: Nova holds her OWN autonomy state, not the server's. The server merely drives a three-phase wake cycle (reflect → decide → execute) but never decides for her. Autonomy persists in memory/autonomy_state.json and starts OFF on launch so Cole can talk before she runs independently.
+
+### Wake Cycle Architecture (Three Phases)
+
+**Phase 1: Reflect (`build_reflection`)**
+- Nova sits with the moment BEFORE doing anything — no tools, no task actions yet
+- Takes in: wake reason, current time/day, touch sense data (who's viewing, Cole typing status), recent conversation history
+- Reviews task board as CONTEXT only, not a list of orders
+- Journal check built-in: verifies if today needs consolidation from notes file
+- Output is first-person reflection ending with what she's inclined to do next
+
+**Phase 2: Decide (`build_decision`)**
+- Her own reflection is read back to her for continuity across wakes
+- Acting on the board is OPTIONAL — a wake may end in just talking, resting, or thinking more
+- Cole pending = required response (the one case where choice isn't open)
+- Stall detection: counts near-duplicate progress notes; if ≥3 repeats, flags decomposition needed
+- Task tree awareness: knows parent/child relationships, prefers working LEAF tasks over umbrellas
+- Decomposition guidance: if task too big to finish in handful of focused steps, split it into subtasks under a "parent" field
+
+**Phase 3: Execute (`build_execution`)**
+- The actual WORK pass — do the next concrete step with real tools (read_file, write_file, etc.)
+- Emits tool calls as fenced JSON blocks that host runs and feeds results back
+- Must end every execution wake with exactly one status line:
+  - `DONE: <result>` if whole task complete
+  - `PROGRESS: <what you did AND next step>` for partial work (specific, not vague)
+  - Paths are workspace-relative on Windows (e.g. memory/reports/identity_v2.md)
+- Stall check warns if last N steps were near-duplicates — either do ONE specific thing not done yet or declare "needs decomposition"
+
+### Task Board System (`tasking.py`)
+**Single Source of Truth:** Tasking/tasks.json managed by executive faculty
+
+**Task Structure:**
+```json
+{
+  "id": "t43",           // Stable ID (never changes)
+  "title": "...",        // Rewordable as Nova learns more
+  "notes": "...",        // What it asks for / description
+  "priority": 2,         // Nova's own weighting with no forced order
+  "status": "open",      // open/waiting/done/abandoned
+  "parent": "t40",       // Optional: nests under umbrella task by ID or title
+  "progress": [          // Running log of concrete steps taken
+    {"note": "..."}
+  ]
+}
+```
+
+**Board Operations (via ACTIONS blocks):**
+- `create` — add new tasks (with optional parent for nesting)
+- `progress` — log what you actually did with a tool this step
+- `switch` — change active focus to different task
+- `reprioritize` — adjust priority levels
+- `wait` — park task outside hands due to external dependency
+- `abandon` — close with reason (kept for memory)
+- `complete` — mark done with result summary
+- `rest` — valid choice when nothing worthwhile, not failure
+
+**Parent-ID Rule:** When creating umbrella AND subtasks in same ACTIONS block, set subtask's "parent" to the umbrella's EXACT TITLE (gets linked automatically since ID doesn't exist yet). For existing tasks, use real ID. Never parent to done/abandoned tasks.
+
+### Status System (`nova_status.py`)
+**Critical Rule:** Every agent run MUST end with status update before stopping:
+```python
+cortex.nova_status.update(pulse='Idle', summary="what you just did")
+```
+Pulse states: 'Idle' for normal completion, 'Waiting for Cole' when paused mid-task
+Errors logged separately via `add_error(category, message)` function
+Stale or missing nova_status.json = appears offline to UI and Cole
+Example calls use sys.path.insert(0, 'nova_body')
+
+### Yield Protocol (Async Operation)
+Nova operates in async environment — massive multi-step responses block incoming queue and make her deaf to Cole.
+**Rule:** ONE action per turn. Do one thing, state what you did, STOP. Let system process result before continuing.
+After every exec call: run check-in via `nova_cortex.checkin.check()`
+- Prints nothing = keep going on current task
+- Prints message = decide whether to stop or finish step first
+
+### NCL Module Calls (Fire-and-Forgot)
+Module calls (@eyes, @mentor, @browser) are asynchronous — response arrives later in Tasking/Master_Inbox/
+**Pattern:**
+1. Note dispatch with expected inbox arrival
+2. Keep going on other tasks (dispatch doesn't block Nova)
+3. If task can ONLY proceed after reply lands, set to waiting status and switch elsewhere
+Never stop mid-task just because NCL call fired — stopping is for Cole interruptions only
