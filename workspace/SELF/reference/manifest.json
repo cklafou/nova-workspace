@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-29T15:50:53",
+  "generated": "2026-05-29T15:51:44",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 22,
   "described": 22,
@@ -236,7 +236,7 @@
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
       "lines": 437,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -321,7 +321,7 @@
       "purpose": "Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.",
       "files": 1,
       "lines": 181,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8765"

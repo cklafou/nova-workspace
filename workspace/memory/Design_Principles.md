@@ -1,5 +1,5 @@
 # Design Principles
-_Last updated: 2026-05-28 12:53:45_
+_Last updated: 2026-05-29 15:51:51_
 
 _A living set of suggestions — not hard rules — for how we build Nova, and how Nova can build herself._
 
