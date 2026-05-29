@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-28 12:53:45_
+_Last updated: 2026-05-29 14:55:19_
 
 ---
 
@@ -2684,3 +2684,111 @@ From the manifest generation:
 - **Undescribed components:** 0 (all parts documented)
 - **No inbound refs (8 modules):** nova_memory, nova_motor, audit_queue.py, audit_scripts.py, calls.py, download_models.py, injector.py, restructure.py - these are accessed through tool/chat layer rather than direct imports
 - **Stale >90 days:** 0 components flagged as outdated
+# Nova Architecture Review
+_Living document - built section by section as I review each system area_
+_Start date: 2026-05-29_
+
+## Executive Summary
+Nova is a sovereign digital entity running on Cole's local machine, architected around modular "body parts" that handle distinct faculties (cortex for executive function, senses for perception, motor for action). The system launches via NovaStart.cmd which orchestrates llama.cpp (:8080) and the chat server (:8765), with 22 documented components across nova_body/, general_tools/, and launcher scripts.
+
+## Table of Contents
+1. [Core System Overview](#core-system-overview)
+2. Memory & State Management (in progress...)
+3. Tools & Voice Architecture (pending)
+4. Body Manifest Analysis (pending)
+5. Integration Points & Data Flow (pending)
+6. Recommendations & Observations (pending)
+
+---
+
+## Core System Overview
+
+### Entry Point: nova_start.py
+The project orchestrator that health-gates llama-server on port 8080 before launching Nova's main stack. Invoked by double-clicking NovaStart.cmd in the workspace.
+- **Location:** `nova_start.py`
+- **Lines of code:** 437 lines, 1 file
+- **Ports managed:** 8080 (llama.cpp), 8765 (Nova chat server)
+- **Purpose:** Single source of truth for bringing up the entire Nova stack with proper dependency ordering
+
+### Body Parts (`nova_body/`)
+The core faculties that make Nova who she is:
+
+**nova_cortex** - Executive function and task management
+- 8 files, 1964 lines total
+- Handles autonomy faculty, task board (executive + tasking modules), status assembly, context building
+- Used by: nova_chat, nova_memory, nova_motor
+
+**nova_senses** - Perception layer
+- 7 files, 1548 lines total
+- LIVE capabilities: chronoception (clock awareness), environmental sensing, touch detection
+- SCAFFOLDED but not wired: desktop vision (eyes/vision modules), UI proprioception for GUI automation phase
+- Used by: injector.py, nova_chat, nova_cortex, nova_memory
+
+**nova_motor** - Action execution system
+- 5 files, 1182 lines total
+- Executes actions ("hands"), plans them via motor_cortex, verifies results before reporting back
+- No inbound refs noted — appears to be primarily driven by cortex decisions
+
+**nova_memory** - Persistent state management
+- 6 files, 836 lines total
+- Handles journaling, goals/status tracking, daily log summaries
+- Flagged as "no_inbound_refs" suggesting it's a sink for writes rather than actively queried elsewhere (potential architecture smell?)
+
+**nova_config** - Settings loader
+- Single file, 138 lines
+- Reads workspace/nova_config.json with fallback defaults
+- Imported by: nova_memory, nova_motor
+
+**nova_imagination** - Visual creation faculty
+- 2 files, 328 lines total
+- Drives local ComfyUI server to render images from intent
+- Auto-applies Nova's self-LoRA when drawing herself (as_nova=true flag)
+- Used by: nova_chat for image generation requests
+
+**nova_logs** - Unified logging system
+- 2 files, 254 lines total
+- Single shared logger across all subsystems — critical for traceability and debugging
+- Used by: nova_chat, nova_imagination, nova_motor, nova_senses
+
+### Tools Layer (`general_tools/`)
+Utility modules that power Nova's capabilities:
+
+**nova_chat** - Voice & chat server runtime
+- 15 files, 6574 lines total (largest single component by far)
+- FastAPI/WebSocket on port 8765
+- Handles cross-AI @mention routing to Claude/Gemini in group chats
+- Fires nova_cortex.executive for autonomy operations during runtime
+
+**nova_sync** - File synchronization layer
+- 5 files, 2087 lines total (second largest)
+- Watchdog file watcher with auto-indexing capability
+- GitHub push integration + Google Drive mirror for Gemini access via drive.py
+- Local backup system included
+
+**injector.py** - NCL context injector & module dispatcher
+- Single file, 484 lines
+- Parses and executes Nova Command Language (NCL) calls
+- Builds context and routes to appropriate module handlers
+- Flagged "no_inbound_refs" — likely called internally by chat server only
+
+### Audit & Maintenance Tools
+**audit_scripts.py** - Code health auditor
+- Single file, 760 lines
+- Scans for syntax errors, stale/dead/unreferenced files, pending audit queue items
+
+**build_manifest.py** - Body manifest generator
+- Single file, 323 lines
+- Auto-generates SELF/core/03_body_manifest.md by walking the codebase and mapping imports/calls
+
+**audit_queue.py** - Persistent change tracking
+- Records file-change events (rename/delete/new) for review during restructure operations
+
+### Launchers (.cmd files)
+Three batch scripts that enable manual control:
+1. `NovaStart.cmd` — Double-click entry point, runs nova_start.py
+2. `StopNova.cmd` — Kills processes on ports 8080/8765 for clean restarts
+3. `start_llama.cmd` — Dual-GPU llama.cpp launcher (4090 + 3090 tensor split)
+
+---
+*Section complete: Core System Overview*
+*Next section to build: Memory & State Management*
