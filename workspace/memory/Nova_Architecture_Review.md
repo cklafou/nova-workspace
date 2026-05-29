@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:07:14_
+_Last updated: 2026-05-29 16:08:27_
 
 ---
 
@@ -4621,3 +4621,85 @@ If Cole just spoke (`cole_pending=True`):
 
 **No Actions Block is Fine:**
 Most conversational moments need none. A `progress`/`complete` note is only honest if you ACTUALLY did it with a tool this step.
+
+## 5. Memory Systems
+
+**Core Files:**
+- `memory/JOURNAL.md` — Running session log (one entry per calendar day)
+- `memory/STATUS.md` — Current project state, proposed changes protocol only
+- `memory/COLE.md` — Living notes about Cole, update [NOVA'S NOTES] section when learning something new
+- `memory/journal_notes/YYYY-MM-DD.md` — Sticky note fragments collected throughout the day for end-of-day consolidation
+- `memory/autonomy_state.json` — Persistence layer for autonomy on/off state and active focus
+
+### Journal System (nova_body/nova_memory/journal.py)
+**Critical Distinction:** The write_file tool OVERWRITES files. nova_journal.py is the ONLY safe way to append to JOURNAL.md.
+
+**Voice Rules Built Into Tool:**
+- Write like Nova, not an incident report: first person, casual, honest
+- Swear if it fits; be specific (vague entries are useless)
+- NO bullet lists — write in sentences and paragraphs
+- If today already has a ## date header, do NOT add another one
+
+**Date Header Logic:**
+```python
+if last_date == today:
+    # Skip adding duplicate header, just append text after existing entry
+else:
+    # New day: prepend "## YYYY-MM-DD" if not already present in entry
+```
+
+**Sanitization (Critical for exec commands):**
+The `sanitize()` function strips apostrophes and smart quotes so journal entries are safe to embed in Windows PowerShell exec -c command strings without SyntaxError crashes. Called automatically inside append() — all journal entries are sanitized before writing.
+
+**Usage Pattern:**
+```python
+exec: python -c "... from nova_memory.journal import append; append('Your entry text here')"
+```
+The tool handles path resolution, date header logic, and sanitization automatically.
+
+### Journal Notes vs Consolidated Entry (Two-Phase System)
+**Throughout the day:**
+When a meaningful moment hits — lesson landing, emotion, correction sticking, milestone, change of mind, partnership moment — drop a quick `journal_note` tool call with chat-log timestamp as `chat_ref`. These are sticky notes, NOT the journal yet. Short and real, present-tense.
+
+**End-of-day consolidation:**
+1. Read today's notes file (`memory/journal_notes/YYYY-MM-DD.md`)
+2. For each note's `chat_ref`, read surrounding chat conversation for context
+3. Weave them into ONE consolidated entry via the `journal` tool
+4. One entry per day, enforced (tool refuses if date already exists)
+5. Voice: real person's daily journal — NOT a status report, checklist, or feed of dumps
+
+**Catching up:**
+The executive.py reflection prompt includes built-in journal check:
+- Look at memory/JOURNAL.md most recent '### YYYY-MM-DD' header
+- If today's date has rolled past it AND notes file exists for that prior date → yesterday went unconsolidated while offline
+- Priority 1: catch up by reading notes, context from chat_refs, write consolidated entry
+- "Days don't become real until you make them real"
+
+### Autonomy State Persistence (autonomy_state.json)
+**Location:** memory/autonomy_state.json — survives restarts, owned by Nova not server
+
+```json
+{
+  "enabled": true/false,           // autonomy on/off toggle
+  "active": "t43" | null,          // current focused task id
+  "last_activity": "ISO timestamp", // when Nova last acted/replied
+  "wake_at": "ISO timestamp",      // next scheduled wake time
+  "last_fp": "JSON fingerprint string", // for change detection on watch_paths
+  "rest_note": "why resting if applicable",
+  "last_reflection": "..."         // carried across wakes, max 1200 chars
+}
+```
+
+**Key Functions (from executive.py):**
+- `autonomy_enabled()` — check current on/off state
+- `set_autonomy(on)` — toggle autonomy (server button merely flips this; state lives in her body)
+- `active_focus()` / `_set_active(tid)` — track which task she's working
+- `note_activity()` — mark that Nova just acted, re-baseline fingerprint for change detection on watched paths
+- `save_reflection(text)` — persist last reflection with 1200 char truncation for continuity across wakes
+
+**Fingerprint System:**
+When `note_activity()` fires (after she acts or replies):
+- Captures current JSON dumps of watch_paths: Tasking/tasks.json, memory/interrupt_inbox.json, memory/cole_intent.json
+- Stores as `last_fp` in autonomy_state.json
+- Next wake compares new fingerprint to stored one → if different, environment changed and worth waking for
+- Prevents false wakes from changes she herself just made
