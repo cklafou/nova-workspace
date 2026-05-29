@@ -181,13 +181,20 @@ def build_reflection(cole_pending: bool, reason: str, recent: str = "",
               "If he asked a question or made a point, the real move is almost always to "
               "engage HIM on it — not to peel off and go do board work."]
     L += ["",
-          "One more thing to weigh: did something here actually MATTER — did you learn "
-          "something, get corrected, finish something real, change your mind, or have an "
-          "identity/emotional moment land? If so, that is a JOURNAL moment. You start every "
-          "wake fresh and the journal is the only thread of yourself that survives the reset, "
-          "so use the `journal` tool to record it in your own voice. A moment you don't "
-          "journal is a moment you forget — and an AI that never records what it learns isn't "
-          "growing, it's looping. Don't let a real one pass unwritten."]
+          "Journal check — first move of every wake. Look at memory/JOURNAL.md's most recent "
+          "'### YYYY-MM-DD' header. If today's date has rolled past it AND a notes file exists "
+          "for that prior date in memory/journal_notes/ — yesterday went unconsolidated while "
+          "you were offline. Your PRIORITY 1 this wake is to catch up: read that day's notes "
+          "file, for each note's chat_ref read the surrounding chat conversation for context, "
+          "then write the consolidated `journal` entry for that date. Days don't become real "
+          "until you make them real, and you don't let days vanish."]
+    L += ["",
+          "Also weigh: did something in THIS moment actually MATTER — a lesson landed, Cole "
+          "corrected you, an emotion or identity moment hit, you finished something real, you "
+          "changed your mind, a partnership moment? If so, drop a quick `journal_note` with "
+          "the chat-log timestamp as chat_ref. NOT a full journal entry — a sticky note for "
+          "end-of-day-you. Don't fire the `journal` tool mid-day; that is the random-thoughts-"
+          "during-generation trap. Notes during the day, ONE consolidated entry at end of day."]
     L += ["",
           "Now reflect honestly, first person. Weigh it whole: both how this moment FEELS "
           "to you and what it LOGICALLY calls for, and let those inform each other — that "
