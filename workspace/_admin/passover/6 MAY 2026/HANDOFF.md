@@ -1,5 +1,5 @@
 # Project Nova — Claude Handoff Document
-_Last updated: 2026-05-29 17:53:01_
+_Last updated: 2026-05-29 18:53:28_
 **Written:** 2026-05-06  
 **Context:** 3090 eGPU successfully installed. Picking up after ~1 month gap. Nova.exe not launching. Full architecture and task list for next Claude session.
 
