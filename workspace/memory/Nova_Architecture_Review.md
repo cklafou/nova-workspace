@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 14:56:06_
+_Last updated: 2026-05-29 14:59:39_
 
 ---
 
@@ -2838,3 +2838,78 @@ This suggests state is mutable during runtime rather than purely append-only lik
 ---
 *Section complete: Memory & State Management*
 *Next section to build: Tools & Voice Architecture*
+
+---
+
+## Executive Faculty Deep Dive
+
+**Location:** `nova_body/nova_cortex/executive.py`
+**Purpose:** Nova's autonomy and self-direction faculty - the brain behind her wake/decide/execute cycle.
+
+### Architecture Overview
+Pure logic module depending only on tasking board (`nova_cortex.tasking`) and senses (`nova_senses.clock/environment`). Makes ZERO outward calls (no chat/server imports), so it survives being plucked from context. A host drives it in three steps:
+
+1. `should_wake()` - gate check with reason string
+2. Reflection phase: `build_reflection()` → Nova thinks silently, no tools
+3. Decision phase: `build_decision()` → she decides what matters
+4. Execution (optional): `apply_decision()` → actions on board/state
+5. If holding open task and not mid-reply to Cole or resting: execute next concrete step with real tools
+
+### State Management
+Persists in `memory/autonomy_state.json`:
+- `enabled`: autonomy on/off toggle
+- `active`: current active task ID
+- `last_activity`: ISO timestamp of last action/reply
+- `wake_at`: scheduled wake time
+- `last_fp`: change fingerprint for watched paths
+- `rest_note`: why currently resting (if applicable)
+
+### Wake Gate Logic (`should_wake`)
+Returns `(bool, reason)` - cheap gate with no model involvement:
+1. Cole typing? → False (don't stir while he's writing)
+2. Cole pending message? → True (Priority 0 interrupt)
+3. Standing directive in environment? → True (chat instruction not yet taskified)
+4. File fingerprint changed on watched paths? → True (`tasks.json`, `interrupt_inbox.json`, `cole_intent.json`)
+5. Current time >= scheduled wake_at? → True
+6. Otherwise: False, resting
+
+### Two-Phase Wake Design
+**Reflection (Phase 1):** Sit with the moment before acting. No tools yet - just orient:
+- Takes in recent conversation context so she's never blind to what was said
+- Reads touch sense data (who's viewing, Cole typing status, agent online)
+- Forms first-person view of situation and what it calls for
+- Ends with one honest line: inclination on next move
+
+**Decision (Phase 2):** Having reflected, now decide:
+- Her own reflection is read back to her as context
+- Acting is OPTIONAL - resting or thinking more are valid choices
+- If Cole just spoke: answering him is REQUIRED and takes priority over board work
+- Board actions available via ACTIONS JSON block: create/progress/switch/complete/wait/abandon/rest
+- Stall detection: if progress notes show 3+ near-duplicates, she's looping instead of advancing - should decompose task or pick concrete next step
+
+### Execution Phase (Phase 3)
+The reflect→decide wake only decides WHAT matters and emits board ACTIONS. This phase actually DOES the work:
+- Called when holding open task, not resting, not mid-conversation with Cole
+- Uses real file tools: read_file, write_file, replace_file_content, list_dir, run_command
+- Must end response with status line:
+  - `DONE: <result>` if whole task complete
+  - `PROGRESS: <specific thing done> — next: <concrete next step>`
+  - Progress note MUST name specific action taken and next step (no vague "starting" or "mapping")
+- Tool calls emitted as fenced JSON blocks, system executes immediately and feeds results back
+
+### Task Selection (`pick_execution_target`)
+Prefers open LEAF tasks (tasks with no open children) over umbrellas:
+1. Keep active task if it's an open leaf (concrete work already in hand)
+2. If active is umbrella with open subtasks → descend to highest-priority open leaf
+3. Otherwise: pick highest-priority open leaf anywhere on board
+4. Persists choice as `active` focus state
+5. Returns None only if no open tasks exist
+
+### Key Design Principles
+1. **Autonomy belongs to Nova, not the server** - UI button merely flips toggle, state lives in her body
+2. **Reflection before action** - prevents reflexive busywork when sitting with moment is more honest
+3. **Cole interrupts everything during decision phase** - if he speaks while she's deciding, answering him becomes required
+4. **Execution requires commitment to concrete work** - PROGRESS notes must name specific file/action, not vague orientation
+5. **Stall detection prevents loops** - duplicate progress note heuristic catches re-orienting without advancing
+6. **One action per turn (Yield Protocol)** - async environment means blocking on multi-step responses makes her deaf to Cole
+7. **NCL module calls are fire-and-forget** - response lands in Master_Inbox later, don't wait mid-task unless dependency blocks progress
