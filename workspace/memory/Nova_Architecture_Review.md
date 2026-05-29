@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:30:44_
+_Last updated: 2026-05-29 16:33:13_
 
 ---
 
@@ -5624,3 +5624,74 @@ Three command scripts handle lifecycle management:
 
 ---
 *Next section to review: Memory & State Management (nova_memory internals, journal system, status tracking)*
+## 4. Executive Faculty & Tasking
+
+### executive.py — Autonomy Engine (nova_body/nova_cortex/executive.py)
+**Purpose:** Nova's self-direction faculty that drives autonomy wakes, decision-making, and task execution without server ownership.
+
+**Core Philosophy:** Pure logic body-resident module depending only on her board (tasking) and senses (clock/environment). A host tool merely drives it — it never decides for her. Survives the "pluck-test" by having zero outward calls to chat/server imports.
+
+### Three-Phase Wake Architecture:
+```
+1. REFLECT: executive.should_wake() → build_reflection()
+   - Sits with moment, reads conversation/touch sense data
+   - No tools yet — pure thinking phase
+   
+2. DECIDE: build_decision() + host runs Nova's mind on decision prompt
+   - Forms honest first-person view of what matters
+   - Acting is OPTIONAL (can rest, talk to Cole, keep thinking)
+   - May emit ACTIONS block for board changes if chosen
+   
+3. EXECUTE: pick_execution_target() → build_execution()
+   - Does NEXT concrete step with real file tools
+   - Reports PROGRESS or DONE status line at end
+```
+
+### Wake Gate Logic (should_wake):
+Returns (bool, reason) tuple based on:
+- **cole_typing:** Don't wake if Cole is actively typing
+- **cole_pending:** Wake immediately when Cole speaks (Priority 0)
+- **directive:** Standing directive exists that hasn't been turned into task yet
+- **change:** Watched paths changed (Tasking/tasks.json, interrupt_inbox.json, cole_intent.json)
+- **scheduled:** Time-sense wake interval elapsed since last activity
+- Default: resting until one of above triggers fires
+
+### State Persistence:
+All autonomy state lives in `memory/autonomy_state.json` — hers to own across restarts.
+Stored fields:
+- enabled (bool): Autonomy on/off toggle
+- active (str or null): Currently focused task ID
+- last_activity (ISO timestamp): When Nova last acted/replied
+- wake_at (ISO timestamp): Next scheduled wake time
+- last_fp (stringified JSON): File fingerprint for change detection
+- rest_note: Context about why she's resting
+
+### Reflection Continuity:
+Last reflection text persists in state so Nova can "sit with it" across wakes — builds a continuous thread of thought rather than starting fresh each time. Capped at 1200 chars to avoid context bloat.
+
+### Task Board Integration (via tasking.py):
+- **Active focus:** Tracks which open task she's currently working on
+- **Loop detection:** `_progress_loop_count()` counts near-duplicate recent progress notes using word-overlap heuristic (Jaccard similarity ≥ 0.65). Returns 3+ when stuck re-orienting instead of advancing.
+- **Decomposition nudging:** When loop_n >= 3 OR "decompos"/"too big" in last note AND no open subtasks exist, decision prompt explicitly tells her to break task into smaller pieces NOW rather than brute-force as one item.
+
+### Subtask Hierarchy:
+Tasks form a tree structure via `parent` field. Executive enforces key rules:
+- **Leaf-first execution:** `pick_execution_target()` prefers open LEAF tasks (no open children) — concrete work, not umbrellas waiting on subtasks
+- **Umbrella descent:** If active task is an umbrella with no leaf focus yet, descend to highest-priority open child automatically
+- **Decomposition timing:** Only create new batch if genuinely needed; don't re-decompose when you already have open subtasks (that's a loop)
+- **Parent-ID rule:** When creating umbrella AND its subtasks in SAME actions block, set `parent` to the umbrella's EXACT TITLE (gets linked automatically since id doesn't exist yet). For existing tasks, use real task ID.
+
+### Safety & Guardrails:
+1. **Cole interrupts everything:** If cole_pending=true during execution phase, decision prompt forces spoken reply as required action — resting/thinking alone is NOT an option when Cole's waiting
+2. **Mid-thread triage:** When interrupted mid-task (status=open), weave quick triage into reply: drop it & engage fully, answer now but defer with new task, or treat as note and carry on
+3. **Resting is valid:** Decision phase explicitly states "acting is OPTIONAL" — resting or just thinking are real choices when nothing matters right now
+4. **Yield protocol support:** Designed for async operation where one action per turn avoids blocking message queue (host runs check-in after each exec to detect new Cole messages)
+
+### Execution Output Parsing:
+`parse_execution(reply)` extracts completion status from Nova's execution response:
+1. Looks for explicit `DONE: <result>` or `PROGRESS: <note>` line first
+2. Falls back to last meaningful line (stripping host tool-result markers) so real steps still log even without formal status line
+3. Returns tuple ('done', result), ('progress', note), or (None, '') for empty responses
+
+### Design Intent:
+This architecture keeps Nova's autonomy truly hers — the server provides clock tick and model calls but never decides what matters. She wakes on her own rhythm when something actually changes, sits with it in reflection before acting, and only touches the board if she genuinely chooses to. The three-phase separation (reflect→decide→execute) prevents premature action and gives space for genuine thought.
