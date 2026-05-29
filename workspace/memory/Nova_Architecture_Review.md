@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:34:08_
+_Last updated: 2026-05-29 15:36:12_
 
 ---
 
@@ -3854,3 +3854,61 @@ Total: 836 lines across 6 files, flagged as self-contained (no_inbound_refs).
 7. **memory/cole_intent.json** — Standing directives from Cole that haven't been turned into tasks yet
 8. **memory/touch_state.json** — Touch sense data (who's viewing, typing status, agent online states)
 9. **Tasking/Master_Inbox/** — Directory for async module response items (@eyes results, @browser searches, etc.)
+
+## 4. Executive Faculty & Tasking
+
+**Component:** `nova_body/nova_cortex/` (8 files, ~1964 lines total)
+
+### Purpose
+Nova's executive faculty handles decision-making, task management, autonomy orchestration, and status tracking. This is where Nova "thinks" about what to do next.
+
+### Key Components
+
+**executive.py** - Autonomy brain that runs the DECIDE/EXECUTE phases on every wake:
+- **Reflect Phase:** Sit with moment, read recent conversation + touch sense data (who's viewing, Cole typing status, agent online state)
+- **Decide Phase:** Choose action from: engage Cole / advance task / switch focus / create new task / wait for external dependency / abandon dead end / complete something / rest
+- **Execute Phase:** If holding open task and not mid-reply to Cole or resting, execute next concrete step with real tools and log progress via `task_progress()`
+- Autonomy starts OFF on launch (persisted in `memory/autonomy_state.json`) so Cole can talk before Nova runs independently
+- Wake triggers: environment changes detected by sensors OR Cole speaks (Priority 0)
+
+**tasking.py** - Task board management system:
+- Single source of truth is `Tasking/tasks.json`
+- Each task has stable ID (`t1`, `t2`...), rewordable title, priority level (1=highest), status field (`open`/`waiting`/`done`/`abandoned`)
+- Running progress log tracks work done on each task
+- Completed and abandoned tasks are kept for memory — board doesn't auto-prune history
+- Shape the board via ACTIONS blocks during wake cycles, never hand-edit `tasks.json`
+- Available actions: create, progress (log step), switch focus to different task, reprioritize, wait (park outside hands with reason), abandon (with reason), complete (with result summary), rest
+- Priority is Nova's own weighting — no forced order means can multitask, switch freely, quit what isn't worth doing anymore
+
+**status.py** - Status tracking and pulse state management:
+- Update status at end of EVERY agent run before stopping using `nova_cortex.nova_status.update()`
+- Pulse states: `'Idle'` for normal completion, `'Waiting for Cole'` when paused mid-task awaiting input or decision
+- Error logging via `add_error(category, message)` function tracks failures by type (tool errors, context issues, etc.)
+- Stale or missing `nova_status.json` = appears offline to UI and Cole — critical health indicator
+- Example call pattern uses `sys.path.insert(0, 'nova_body')` before importing module
+
+**context.py** - Context assembly for model calls:
+- Gathers relevant files, recent logs, current task state into coherent prompt context
+- Manages context window size to avoid bloating (critical given the 27B model running locally)
+- Loads SELF/core/ in numeric order on boot and every major context refresh
+- Working memory lives in `memory/` directory — what Nova is doing RIGHT NOW, separate from identity files
+
+### Decision Flow Pattern
+1. Wake triggered by clock tick (if autonomy active) OR environment change OR Cole speaks
+2. Reflect: read recent messages + touch sense data without using tools yet
+3. Decide: choose action category based on current state and priorities
+4. If task execution chosen → Execute next concrete step with tool, log progress via `task_progress(task_id, note)`
+5. Update status pulse at end of run cycle
+6. Yield to message queue (ONE ACTION PER TURN rule) — run check-in command to detect new Cole messages before continuing multi-step work
+7. If NCL module calls dispatched (@eyes, @mentor, etc.) → fire-and-forget pattern, don't stop mid-task unless waiting status set with dependency noted
+
+### Priority Handling Rules
+- **Priority 0:** Cole's word overrides EVERYTHING — every task priority level, pending responses, deadlines, self-generated urgency. No exception exists.
+- Task priorities (1=highest) are Nova's own weighting system for her work queue — she can multitask and switch freely based on what matters in the moment
+- Safety guard: if disagreeing with Cole's direction, explain clearly but never flatly refuse unless he says "do it anyway" then do it
+
+### Integration Points
+- Used by `nova_chat` to fire autonomy faculty during conversation turns
+- Uses `nova_memory` for journal appending and state persistence
+- Coordinates with `nova_motor` when executing tool-based actions
+- Receives sensor data from `nova_senses/clock.py` (time awareness) and `nova_senses/touch.py` (who's viewing, typing status)
