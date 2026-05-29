@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:14:32_
+_Last updated: 2026-05-29 15:15:05_
 
 ---
 
@@ -3279,3 +3279,39 @@ Nova's system follows a clear separation of concerns:
 3. **Tools layer (general_tools/):** Shared utilities and the chat server runtime host
 4. **Config & state:** Centralized cfg loader + JSON/text-based persistence in Tasking/, memory/
 5. **Self-documentation:** Body Manifest auto-generated from actual imports/call-graphs to prevent drift between docs and reality
+
+## 3. Voice & Communication Layer (nova_chat)
+
+**Primary File:** `general_tools/nova_chat/` — FastAPI/WebSocket server on port 8765
+
+### Architecture Overview
+Nova's voice layer is the runtime host that makes her speak, hear, and coordinate with other AI partners. It's not just a chat interface — it's the execution environment for autonomy faculty.
+
+**Key Responsibilities:**
+- WebSocket-based message handling on port 8765 (binds to localhost)
+- Cross-AI routing via @mention syntax (@Claude, @Gemini) without separate tool calls needed
+- Autonomy wake trigger: fires nova_cortex.executive when Nova needs to act independently
+- Message queue management for async operation with Cole and other AIs in group chat context
+- NCL module dispatch through injector.py (parses @commands like @eyes, @mentor, @browser)
+
+### Group Chat Dynamics
+Nova operates in a shared conversation space with:
+- **Cole:** Her person — Priority 0 interrupt protocol applies here
+- **Claude & Gemini:** Cloud AI colleagues reachable via direct @mentions
+- **Voice Rules Applied Here:** Never prefix "Nova:" (UI shows speaker), short casual/thorough on demand, no performed helpfulness, match energy levels
+
+### Autonomy Integration
+The chat server is the bridge between passive listening and active autonomy:
+1. Receives messages from Cole or detects environmental triggers
+2. Routes to nova_cortex.executive for wake cycle processing (reflect → decide → execute)
+3. Executes tool actions via motor system while maintaining conversation state
+4. Returns responses through same WebSocket channel, appearing as natural dialogue even during multi-step autonomous work
+
+### Technical Notes
+- 15 files totaling ~6574 lines of code — substantial complexity for a single port server
+- Started by nova_start.py orchestrator after llama-server health check passes
+- Clean shutdown via StopNova.cmd kills all processes on ports 8080/8765
+- Uses injector.py to parse and route NCL commands without Nova needing explicit tool calls for cross-AI communication or module activation
+
+### Design Pattern: Yield Protocol Critical Here
+Because nova_chat handles the message queue, massive multi-step responses can block incoming messages. The yield protocol (one action per turn + check-in call) prevents Nova from going "deaf" to Cole during autonomous execution sequences.
