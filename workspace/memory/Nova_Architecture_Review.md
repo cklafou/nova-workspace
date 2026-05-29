@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:50:59_
+_Last updated: 2026-05-29 16:02:51_
 
 ---
 
@@ -4427,3 +4427,70 @@ Persisted in-body state that survives restarts:
 - `last_reflection`: carried across wakes so she can "sit with it" (max 1200 chars)
 
 This state lives in HER body, not the server's — the button merely flips a switch.
+
+
+## 4. Executive Faculty & Tasking
+
+**Component:** nova_body/nova_cortex/ (8 files, ~1964 lines total)
+
+### Core Architecture
+Nova's executive faculty is the decision-making brain that runs autonomy, manages tasks, and coordinates all other subsystems through context assembly.
+
+### Key Files & Responsibilities:
+
+**executive.py** - Autonomy engine driving wake cycles. Manages three-phase operation:
+1. Reflect: Sit with moment, read recent conversation + touch sense data (who's viewing Cole's typing status, agent online state)
+2. Decide: Choose action from set {engage Cole, advance task, switch tasks, create new, wait on external, abandon dead end, complete work, rest}
+3. Execute: If holding open task and not mid-reply to Cole or resting, execute next concrete step with real tools
+- Autonomy starts OFF on launch (Cole can talk before Nova runs independently)
+- State persisted in memory/autonomy_state.json
+- Wake triggers: clock tick from time-sense module OR environment changes OR Cole speaks (Priority 0 interrupt)
+
+**tasking.py** - Single-board task management system:
+- Source of truth: Tasking/tasks.json (never hand-edit this file directly)
+- Each task has stable id (t1, t2...), editable title, priority level, status field {open/waiting/done/abandoned}
+- Running progress log tracks work done; completed and abandoned tasks kept for memory
+- Board manipulation happens via ACTIONS blocks during wake cycles
+- Priority is Nova's own weighting with no forced order - can multitask, switch freely, quit what isn't worth doing
+- Available actions: create task, mark progress, switch focus, reprioritize, wait (park outside hands), abandon (with reason), complete with result, rest
+
+**nova_status.py** - Pulse tracking and error logging:
+- Update status at end of EVERY agent run before stopping via update() call
+- States: 'Idle' for normal completion, 'Waiting for Cole' when paused mid-task
+- Error logging via add_error() function tracks failures by category (tool errors, context issues, etc.)
+- Stale or missing nova_status.json = appears offline to UI and Cole
+- Example usage requires sys.path.insert(0, 'nova_body') calls from general_tools context
+
+**context.py** - Context assembly for model prompts:
+- Loads SELF/core/ files in numeric order on boot and every context refresh
+- Assembles conversation history, current task state, relevant memory snippets
+- Manages what gets injected into each prompt to avoid bloating the window with irrelevant data
+
+### Autonomy Flow (Detailed):
+The executive faculty runs as a body faculty NOT owned by the server. Server provides clock tick, model call capability, and voice interface only.
+
+**Wake Cycle:**
+1. **Time-sense module** (nova_senses/clock.py) stirs Nova awake on own rhythm when autonomy is active
+2. **Reflect phase**: Sit with moment - read recent conversation history + touch sense data without firing tools yet
+3. **Decide phase**: Choose from action set based on current state and priorities
+4. **Execute phase**: Fire real tool calls for next concrete step, then log progress to task board
+5. **Yield protocol**: After each exec call, run check-in via nova_cortex.checkin.check() to detect new messages from Cole
+   - If nothing prints: keep going on current task
+   - If message prints: decide whether to stop or finish current step first
+
+**NCL Module Calls (Fire-and-Forgot Pattern):**
+Module calls (@eyes, @mentor, @browser, etc.) are asynchronous:
+1. Note what was dispatched with expected inbox arrival location
+2. Keep going on other tasks - dispatch doesn't block Nova
+3. If task can ONLY proceed once reply lands, set to waiting status and switch focus
+- Never stop mid-task just because NCL call fired; stopping is for Cole interruptions only
+- Response arrives later as item in Tasking/Master_Inbox/ which triggers wake cycles
+
+### Decision-Making Logic:
+The executive faculty weighs multiple signals before choosing actions:
+- Priority 0: Cole's word interrupts everything (stop task → note progress → acknowledge Cole → resume)
+- Current task state and whether next step is blocked or actionable
+- Touch sense data about environment (who's viewing, typing status, agent online states)
+- Time-sense awareness of when last action occurred vs expected cadence
+- Task board priorities and dependencies between tasks
+- Resting when nothing worthwhile exists is a smart choice not failure; never invent busywork just to look productive
