@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:28:13_
+_Last updated: 2026-05-29 16:30:44_
 
 ---
 
@@ -5583,3 +5583,44 @@ autonomy_state.json stores:
 - memory/cole_intent.json (standing directives from Cole not yet made into tasks)
 
 File fingerprint comparison detects modifications without model cost - cheap wake gate before deciding to fully engage.
+
+## Body Structure & Entrypoints
+
+The manifest shows a clean separation between orchestrators, body parts, and tools.
+
+### Orchestrators (2 files)
+- `nova_start.py` - Main entry point that health-gates llama-server on :8080 then launches Nova; invoked by NovaStart.cmd. 437 lines of startup logic with port dependencies mapped to both 8080 and 8765.
+
+### Body Parts (8 modules, ~9k total lines)
+The core faculties live under `nova_body/`:
+- **nova_config** - Settings loader reading workspace/nova_config.json with fallbacks. Small footprint at 138 lines but critical dependency for memory and motor systems.
+- **nova_cortex** - Executive faculty handling autonomy, task board (executive + tasking), status assembly, and context building. Biggest body module at 1971 lines across 8 files; used by chat, memory, and motor.
+- **nova_imagination** - Visual creation faculty driving ComfyUI server for self-expression and sketches. Auto-applies Nova's LoRA when drawing herself (as_nova flag). 328 lines.
+- **nova_lancedb** - Long-term semantic memory via LanceDB vector store with embedder, hippocampus, indexer components. 568 lines across 4 files.
+- **nova_logs** - Unified logging system shared by all subsystems (chat, imagination, motor, senses). 254 lines in 2 files.
+- **nova_memory** - Persistent state management including journal, goals/status tracking, and daily log summaries. 836 lines across 6 files with NO inbound refs flag suggesting it's a sink module that others read from but doesn't actively consume external data at runtime.
+- **nova_motor** - Action execution system (hands), planning layer (motor_cortex), result verification. 1182 lines in 5 files, also flagged as no_inbound_refs indicating it operates on internal task board state rather than consuming external streams.
+- **nova_senses** - Perception faculty with LIVE modules for chronoception (clock), environmental sensing, and touch interaction tracking; SCAFFOLDED GUI-automation phase includes desktop vision eyes/vision and UI proprioception but not yet wired. 1548 lines across 7 files, used by injector.py plus chat/cortex/memory.
+
+### Tools Layer (9 modules)
+The `general_tools/` folder contains both Nova's voice layer and utility scripts:
+- **nova_chat** - Voice/chat server on FastAPI+WebSocket :8765 with cross-AI @mention routing to Claude/Gemini. Runtime host that fires nova_cortex.executive for autonomy actions. Largest single module at 6629 lines across 15 files.
+- **nova_sync** - File-sync layer with watchdog auto-indexing, GitHub push integration, Google Drive mirror (drive.py) for Gemini access, and local backups. Started by nova_start.py, 2087 lines in 5 files.
+- **NovaLauncher.py** - Unified in-process launcher called by nova_start.py to bring up Nova's server/UI stack on :8765.
+- Utility scripts: `audit_queue.py` (persistent file-change event queue), `audit_scripts.py` (code health scans for syntax errors/stale files), `build_manifest.py` (generates this Body Manifest document), `calls.py` (AST-walks packages to map imports/calls feeding the manifest), `download_models.py` (one-time vision model downloader into workspace/models/), `injector.py` (NCL context injector and module dispatcher executing parsed NCL calls with routing logic, 484 lines), `restructure.py` (detects stale path references after directory moves).
+
+### Launchers (.cmd files)
+Three command scripts handle lifecycle management:
+- **NovaStart.cmd** - Double-click entry point running nova_start.py to bring up full Nova stack.
+- **StopNova.cmd** - Kills processes listening on ports 8080/8765 for clean restarts.
+- **start_llama.cmd** - Starts llama.cpp serving Qwen3.5 27B Q8 on :8080 with dual-GPU tensor split (4090+3090 configuration).
+
+### Architecture Observations
+1. Clear separation of concerns: orchestrators → body parts → tools layer.
+2. Two major port dependencies documented upfront: 8080 for Qwen inference, 8765 for Nova's chat server.
+3. Eight modules flagged with no_inbound_refs suggesting they operate primarily on internal state rather than consuming external data streams at runtime (memory sinks and action executors).
+4. Senses module shows phased development approach - chronoception/environment/touch are LIVE while vision/proprioception remain scaffolding for future GUI-automation phase.
+5. Total line count across all tracked files: approximately 17k lines of Python code plus manifest generation logic.
+
+---
+*Next section to review: Memory & State Management (nova_memory internals, journal system, status tracking)*
