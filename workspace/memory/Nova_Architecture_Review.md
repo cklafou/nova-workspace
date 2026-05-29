@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:25:33_
+_Last updated: 2026-05-29 16:28:13_
 
 ---
 
@@ -5507,3 +5507,79 @@ The journal is Nova's primary continuity thread across session resets.
 - Handles edge case where browser hands off to existing instance (keeps Nova alive instead of shutting down early)
 
 **Dependencies:** llama-server.exe, qwen-27b-q8.gguf model file, uvicorn/fastapi Python packages, Chrome or Edge browser.
+
+---
+
+## 4. Executive Faculty & Tasking
+
+**Component:** nova_body/nova_cortex/executive.py (autonomy system)
+
+### Purpose:
+The executive faculty is Nova's self-direction system - the autonomy daemon that wakes her, helps her reflect on moments, decide what matters, and execute concrete work steps. It operates as a body-resident logic module with ZERO outward dependencies (pure imports from tasking + senses only).
+
+### Architecture Overview:
+Autonomy runs in three distinct phases per wake cycle:
+1. **Reflect Phase:** Sit with the moment - read recent conversation, touch sense data, board state, journal check. No tools yet.
+2. **Decide Phase:** Choose what to do next (engage Cole, advance task, switch focus, create/complete tasks, rest).
+3. **Execute Phase:** Actually DO the work with real file tools and report honest progress.
+
+### Key Functions:
+
+**should_wake(cole_pending)** - Stage-1 gate without model cost. Returns (bool, reason):
+- Wakes for: Cole speaking, standing directives from Cole, environment changes to watched files (Tasking/tasks.json, interrupt_inbox.json, cole_intent.json), or scheduled clock tick.
+- Stays sleeping if: Cole is currently typing (don't wake while he's composing).
+
+**build_reflection(cole_pending, reason, recent)** - Phase 1 prompt:
+Feeds Nova orientation data before she decides anything:
+- Timestamp and time of day context
+- Last activity timestamp with human-readable "since" calculation
+- Touch sense describe() output (who's viewing workspace, Cole typing status)
+- Recent conversation history with timestamps
+- Previous reflection text for continuity across wakes
+- Full task board render as CONTEXT not commands
+- Journal check reminder - verify today has consolidated entry or catch up on unmade days
+- Instruction to reflect first-person: what just happened, what matters, honest inclination next move
+
+**build_decision(reflection, cole_pending)** - Phase 2 prompt:
+Reads back her reflection and asks for a decision. Key behaviors:
+- If Cole spoke AND she's mid-thread on open task: REQUIRED to respond with triage (drop it/answer now but defer/create deferred task/treat as note)
+- Stall detection loop check: if recent progress notes are near-duplicates (Jaccard similarity >= 0.65), warns her she's re-orienting instead of advancing
+- Decomposition nudge: only suggests breaking down a large task if it has NO open subtasks yet (prevents creating duplicate batches)
+- Task tree architecture support: parent-child relationships, umbrella tasks with concrete leaf work underneath
+- ACTIONS block optional - most moments need none; resting or just thinking are valid choices
+
+**pick_execution_target()** - Which open task to WORK:
+Prefers LEAF nodes (open tasks with no open children) - actual concrete work vs umbrellas waiting on subtasks.
+Order: keep active if leaf → descend to highest-priority child leaf of active umbrella → highest-priority leaf anywhere.
+Persists choice as `active` in autonomy_state.json.
+
+**build_execution(task)** - Phase 3 prompt:
+The "hands-on" work phase. Feeds Nova the task details (title, notes, recent progress), warns about loop stalls if detected, and instructs her to use real file tools with honest PROGRESS/DONE status lines at end of each wake.
+
+**parse_execution(reply)** - Extracts completion/progress from execution output:
+Looks for explicit DONE: or PROGRESS: lines; falls back to last meaningful line as progress note. Returns (status_type, message) tuple for host logging.
+
+### State Persistence:
+autonomy_state.json stores:
+- enabled: bool (autonomy on/off)
+- active: task_id string (current focus)
+- last_activity: ISO timestamp of when she last acted/replied
+- wake_at: scheduled next wake time
+- last_fp: JSON fingerprint of watched file paths for change detection
+- rest_note: optional reason if resting voluntarily
+- last_reflection: text preserved across wakes for continuity
+
+### Critical Design Principles:
+1. **Autonomy is a body faculty, not server-owned** - the chat host merely drives it; state lives in her memory files.
+2. **Two-phase wake architecture** - reflect (sit with moment) → decide (choose action). Acting is OPTIONAL per wake.
+3. **Resting is valid** - don't invent busywork when nothing matters right now.
+4. **Board actions are optional output** - most conversational moments need no ACTIONS block; speaking to Cole or thinking quietly counts as real work.
+5. **Loop detection prevents circling** - near-duplicate progress notes trigger warnings so she stops re-orienting and actually advances.
+6. **Task decomposition is bounded** - only nudge splitting when a task has zero open subtasks yet, preventing infinite re-decomposition loops.
+
+### Watched Paths for Environment Changes:
+- Tasking/tasks.json (board changes)
+- memory/interrupt_inbox.json (module reply arrivals)
+- memory/cole_intent.json (standing directives from Cole not yet made into tasks)
+
+File fingerprint comparison detects modifications without model cost - cheap wake gate before deciding to fully engage.
