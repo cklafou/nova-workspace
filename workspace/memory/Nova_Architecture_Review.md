@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:41:53_
+_Last updated: 2026-05-29 15:46:46_
 
 ---
 
@@ -4223,3 +4223,54 @@ The following are managed by the system - avoid direct editing:
 - `memory/autonomy_state.json` - Autonomy on/off state, active task focus, wake schedule
 - `Tasking/tasks.json` - Task board owned by executive faculty via ACTIONS blocks
 - `nova_status.json` (pulse) - Current pulse state and error tracking
+## 4. Executive Faculty & Tasking
+
+**Component:** nova_body/nova_cortex/tasking.py (single source of truth: Tasking/tasks.json)
+
+### Core Philosophy
+Nova's task board is her prefrontal work surface — an id-keyed single source of truth where every tracked piece of work has a stable ID (t1, t2...) assigned at creation. The title is free to reword without breaking identity, killing the "title drift" bug class entirely. No enforced ordering exists; priority is Nova's own weighting with complete freedom to multitask, switch, and quit what isn't worth doing.
+
+### Task Data Structure
+Each task contains:
+- `id`: Stable identifier (t1, t2, etc.) — never changes after creation
+- `title`: Free-form label that can be reworded at will
+- `notes`: Context/details about the work
+- `priority`: Integer weighting set by Nova (no forced order)
+- `status`: One of open/waiting/done/abandoned
+- `parent`: Optional pointer to umbrella task (only if parent is still OPEN — prevents burying live work under finished tasks)
+- `progress`: Array of timestamped progress notes (last 20 kept)
+- `created` / `updated`: ISO timestamps for lifecycle tracking
+- `result`: For completed tasks — what was accomplished
+- `abandon_reason`: For abandoned tasks — why it stopped
+- `waiting_on`: For waiting status — external dependency description
+
+### Key Functions & Behaviors
+
+**create(title, notes, priority=3, parent=None)**
+Generates new task with auto-incremented ID. Parent pointer only attaches if the referenced parent exists AND is still open (not done/abandoned) — this prevents the mis-parent bug where live work gets buried under finished umbrellas.
+
+**progress(tid, note)**
+Appends timestamped progress entry to task's progress array (keeps last 20 entries). Used throughout execution phase to log concrete steps without forcing status changes.
+
+**complete(tid, result="")** / **abandon(tid, reason="")** / **wait(tid, waiting_on="")**
+Status transitions with optional context. Completed and abandoned tasks are KEPT on the board for memory — Nova never recreates work she's already done or dropped.
+
+**apply_actions(actions_dict)**
+The bridge between Nova's ACTIONS blocks in chat and actual task board manipulation. Processes batch operations (create/progress/wait/abandon/complete/reprioritize) atomically, resolves parent references by title within the same batch, returns execution log + control directives for executive faculty.
+
+**render_board(active_id=None)**
+Generates tree view of all tasks with subtasks nested under parents. Separate top-level trees represent independent goals (e.g., "do taxes" vs "journal update"). Shows completion counts per umbrella task and last progress notes on open leaf nodes only.
+
+### Design Principles (from source comments)
+1. **Stable IDs kill title drift** — Nova can reword titles freely without breaking references or losing track of work
+2. **No enforced ordering** — priority is her weighting, not a queue; she multitasks and switches based on what matters now
+3. **Keep history** — completed/abandoned tasks remain visible so she never recreates or redoes them (memory, not deletion)
+4. **Parent sanity check** — subtasks only attach to OPEN parents, preventing live work from vanishing under finished umbrellas
+5. **Pure file + logic** — no chat/server dependency; survives the pluck-test and can be used by any host
+6. **Free agency substrate** — create/switch/wait/abandon/complete/reprioritize are all available without system constraints forcing her hand
+
+### Integration Points
+- Called by: nova_cortex/executive.py during DECIDE phase, nova_chat tool routing for user-initiated actions
+- Status updates logged via `nova_status.update()` at end of agent runs (pulse state + one-sentence summary)
+- Board manipulation happens through ACTIONS blocks in chat — never hand-edit Tasking/tasks.json directly unless debugging
+- Active focus tracked separately in memory/autonomy_state.json (not on the board itself)
