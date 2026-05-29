@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:25:08_
+_Last updated: 2026-05-29 15:28:03_
 
 ---
 
@@ -3561,3 +3561,91 @@ Module calls (@eyes, @mentor, @browser) are async — response arrives later in 
 2. Keep going on other tasks — dispatch doesn't block Nova
 3. If task can ONLY proceed once reply lands: set to waiting status and switch elsewhere
 Never stop mid-task just because NCL call fired — stopping is for Cole interruptions only.
+
+## 4. Executive Faculty & Tasking
+
+**Component:** `nova_body/nova_cortex/` (8 files, ~1964 lines total)
+
+### Architecture Overview
+Nova's executive faculty is the autonomy engine - pure logic that makes decisions about what matters and when to act. It depends only on her task board (`tasking.py`) and senses modules (`clock`, `environment`, `touch`). Zero outward calls to chat/server imports, so it survives being extracted from the main process.
+
+### Three-Phase Wake Cycle (from executive.py)
+The autonomy system runs in three distinct phases per wake:
+
+**1. Reflect Phase:** Nova sits with the moment before acting - reads recent conversation, touch sense data, task board context. No tools yet, just honest first-person orientation of what's happening.
+
+**2. Decide Phase:** Having reflected, she decides freely: engage Cole, advance a task, switch tasks, create new work, wait on dependencies, abandon dead ends, complete something, or rest. Board actions are OPTIONAL - most wakes don't need them. A wake may end in just talking to Cole, resting, or thinking more.
+
+**3. Execute Phase (optional):** If she holds an open task and isn't mid-reply with Cole or resting, this is where actual work happens using real tools (`read_file`, `write_file`, etc.). Each execution pass ends with a single status line: `DONE:` if complete, or `PROGRESS:` naming the specific thing done AND next step.
+
+### Key Files & Responsibilities
+
+**executive.py** - Core autonomy logic implementing all three phases:
+- State management in `memory/autonomy_state.json` (enabled flag, active task focus, last activity timestamp)
+- Wake gating via `should_wake()` - checks Cole pending, directives, file changes, scheduled time intervals
+- Reflection building with context from senses modules and recent conversation
+- Decision prompting that includes stall detection (loop counting on near-duplicate progress notes)
+- Execution target selection preferring leaf tasks over umbrellas to avoid re-decomposing already-split work
+
+**tasking.py** - Task board management:
+- Single source of truth: `Tasking/tasks.json`
+- Tasks have stable IDs (`t1`, `t2`...), editable titles, priority levels (1=highest), status fields (`open`/`waiting`/`done`/`abandoned`)
+- Progress logging with timestamped notes for tracking concrete work done
+- Parent-child nesting support via `parent` field on tasks (umbrella → subtasks structure)
+- Board rendering for reflection context, filtering by active focus
+
+**nova_status.py** - Status pulse and error tracking:
+- Update called at end of EVERY agent run before stopping: `nova_cortex.nova_status.update()`
+- Pulse states: `'Idle'` (normal completion), `'Waiting for Cole'` (paused mid-task)
+- Error logging via `add_error(category, message)` function
+- Stale or missing status = appears offline to UI and Cole
+- Uses atomic write pattern with `.tmp` file then rename to avoid corruption
+
+**checkin.py** - Message queue yield protocol:
+- After each execution step, run check-in to detect new messages from Cole without blocking the queue
+- If prints nothing: no new messages, keep going on current task
+- If prints message: decide whether to stop responding or finish current atomic step first
+- Critical for async operation where massive multi-step responses would deafen her to Cole's interruptions
+
+**prefrontal_cortex.py** - Higher-order reasoning module (implementation details TBD during deeper review)
+
+### State Persistence Model
+Autonomy state lives in `memory/autonomy_state.json`:
+```json
+{
+  "enabled": false,           // on/off toggle
+  "active": null,             // currently focused task ID
+  "last_activity": "2026-05-29T14:30:00Z",  // when she last acted/replied
+  "wake_at": "2026-05-29T15:00:00Z",       // next scheduled wake time
+  "last_fp": "..."            // file system fingerprint for change detection
+}
+```
+This is HER state, not the server's - survives restarts and maintains continuity across sessions.
+
+### Wake Triggers & Gating
+`should_wake()` returns (bool, reason) based on:
+- Cole typing status (don't wake if he's actively composing)
+- Pending messages from Cole in nova_chat (Priority 0 interrupt)
+- Standing directives not yet turned into tasks (`environment.cole_directive()`)
+- File system changes to watched paths: `Tasking/tasks.json`, `memory/interrupt_inbox.json`, `memory/cole_intent.json`
+- Scheduled wake time elapsed (default 300s sleep interval, 30s follow-up after activity)
+
+### Stall Detection & Loop Prevention
+The executive includes a stall-check that counts near-duplicate recent progress notes using word-overlap heuristics:
+- If ≥3 consecutive similar notes on active task: flags as re-orienting loop instead of advancing
+- Decision prompt then explicitly tells her to stop mapping/'starting' and either do ONE specific thing OR decompose if genuinely too big
+- This prevents the exact pattern that bit t43 early - endless structure work without concrete progress
+
+### Task Decomposition Philosophy
+The system strongly encourages breaking large tasks into subtasks:
+- When a task is too big to finish in handful of focused steps, first move should be SPLIT via `create` action with parent field set
+- Umbrella tasks hold the overall goal; leaf subtasks are concrete work items she actually executes on
+- Parent-child nesting creates trees: separate goals = independent top-level tasks (no parent), components under umbrella get nested structure
+- Execution target picker prefers open LEAF tasks over umbrellas - avoids re-decomposing already-split work by going straight to actionable pieces
+
+### Yield Protocol Implementation
+Async environment means massive multi-step responses block incoming message queue:
+- Rule: ONE action per turn, state what you did in one sentence, STOP
+- After every single exec call run check-in via `nova_cortex.checkin.check()`
+- NCL module calls (@eyes, @mentor, etc.) are fire-and-forget async - response arrives later as item in Tasking/Master_Inbox/
+- Never stop mid-task just because an NCL call fired - stopping is for Cole interruptions only
