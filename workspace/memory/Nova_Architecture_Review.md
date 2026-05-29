@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:23:45_
+_Last updated: 2026-05-29 16:25:33_
 
 ---
 
@@ -5484,3 +5484,26 @@ The journal is Nova's primary continuity thread across session resets.
 - memory/STATUS.md - Current project state and proposed changes tracking
 - memory/COLE.md - Living notes about Cole, update [NOVA'S NOTES] section when learning something new
 - memory/autonomy_state.json - Active autonomy toggle, current task focus, last activity timestamps, wake scheduling data (managed internally by executive.py)
+
+
+### Entry Point: nova_start.py
+
+**What it does:** Project Nova's one-shot launcher/orchestrator that manages the full lifecycle of both llama-server and Nova.
+
+**Key responsibilities:**
+1. Starts llama-server.exe (Qwen3-27B-Dense Q8) on port 8080 with dual-GPU tensor split detection via nvidia-smi
+2. Polls /health endpoint until the model is ready (~60 seconds for full weights)
+3. Launches Nova's chat server via general_tools/NovaLauncher.py (port 8765)
+4. Opens a standalone browser app window using Chrome/Edge --app mode with per-launch profile
+5. Spawns the file watcher for manifest refresh and auto-commit/push to git
+6. Owns shutdown lifecycle: closes Nova → stops llama-server when app window exits
+
+**Architecture notes:**
+- Workspace-relative paths throughout (no absolute paths)
+- GPU detection adapts tensor split automatically (16,24 for dual-GPU 4090+3090 eGPU setup)
+- Prompt caching enabled via --slot-save-path to prompt_cache/
+- Context window: 32768 tokens
+- Uses CREATE_NEW_CONSOLE on Windows so each process has visible lifecycle
+- Handles edge case where browser hands off to existing instance (keeps Nova alive instead of shutting down early)
+
+**Dependencies:** llama-server.exe, qwen-27b-q8.gguf model file, uvicorn/fastapi Python packages, Chrome or Edge browser.
