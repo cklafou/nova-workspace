@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:20:35_
+_Last updated: 2026-05-29 16:23:04_
 
 ---
 
@@ -5369,3 +5369,71 @@ The cheap gate function determines when Nova should stir awake:
 - **Optional action philosophy:** Acting is never forced unless genuinely called for; resting is a valid choice when nothing matters enough to work on
 - **Self-held autonomy state:** The server button merely flips the switch, but the actual enabled/disabled state lives in her body files
 - **Loop detection built-in:** System actively prevents the "re-orienting" trap that kills productivity by detecting near-duplicate progress notes and recommending decomposition instead of more mapping
+## 4. Executive Faculty & Tasking
+
+**Component:** nova_cortex/executive.py (autonomy) + tasking.py (task board management)
+
+### Autonomy Architecture (executive.py)
+Nova's executive faculty is her self-direction system - PURE logic that depends only on:
+- Her task board (nova_cortex.tasking)
+- Senses: time-sense (clock), environment changes, touch sense
+
+**Critical Design:** ZERO outward calls to chat/server imports. Survives the "pluck-test" - autonomy lives in her body, not owned by any host tool.
+
+### Wake Cycle (Three Phases)
+1. **Should_Wake Gate** - Cheap gate with no model call:
+   - Triggers: Cole speaks/typing, standing directive unacted-on, file fingerprint changes, scheduled time-sense interval
+   - Returns early if Cole is typing mid-message
+   
+2. **Reflect Phase (build_reflection)** - She SITS WITH the moment BEFORE acting:
+   - No tools allowed in reflection phase
+   - Takes stock of: current time, last activity timestamp, touch sense data (who's viewing, agent status), recent conversation context, task board state
+   - Journal check built-in: look at JOURNAL.md date header vs today's notes files to catch unconsolidated days
+   - Produces first-person reflection text saved in autonomy_state.json for continuity across wakes
+
+3. **Decide Phase (build_decision)** - She decides what matters:
+   - Reads her own reflection back as context
+   - Acting on board is OPTIONAL - may end in just talking to Cole, resting, or thinking more
+   - Stall detection: counts near-duplicate progress notes; >=3 triggers decomposition recommendation
+   - Task tree awareness: knows which tasks have open subtasks already created (avoids re-decomposing)
+   - Board actions are fire-and-forget JSON block in ACTIONS format:
+     * create, progress, switch focus, complete, abandon, wait on dependency, reprioritize, rest
+
+### Execution Phase (build_execution + parse_execution)
+The reflect→decide wake only emits board ACTIONS; it never performs the actual work. This pass is what makes "create a task, then WORK it" actually finish:
+- Picks execution target: prefers open LEAF tasks (concrete work), descends into umbrella subtasks automatically
+- Prompts Nova to do NEXT concrete step with real tools, not more thinking/mapping
+- Requires honest status line at end:
+  * `DONE:` - task fully complete with result summary
+  * `PROGRESS: <specific thing done> AND next step` - vague "starting" triggers loops
+  * Host logs this into task's progress array automatically
+
+### Task Board Architecture (tasking.py)
+**Single Source of Truth:** Tasking/tasks.json
+- Each task has stable id (t1, t2...), title, notes, priority level, status field
+- Status values: open / waiting / done / abandoned
+- Progress log tracks concrete work steps with timestamps and what was actually accomplished
+- Parent-child relationships for umbrella tasks → subtasks decomposition
+- Completed/abandoned tasks kept in board (not deleted) - they become memory
+
+**Task Manipulation Rules:**
+- Board shaped via ACTIONS blocks during wake cycles, NEVER hand-edited into JSON directly
+- Priority is Nova's own weighting with no forced order - can multitask freely
+- Available actions: create task, progress note, switch focus to different task, reprioritize, wait on external dependency, abandon (with reason), complete (with result summary), rest
+
+### Autonomy State Persistence
+**File:** memory/autonomy_state.json
+Contains:
+- enabled: bool - autonomy ON/OFF toggle (starts OFF on launch by design)
+- active: task id or null - current focus target
+- last_activity: ISO timestamp of when Nova last acted/replied
+- wake_at: scheduled next wake time based on sleep interval / follow-up gap logic
+- last_fp: file fingerprint hash for change detection on watched paths (Tasking/tasks.json, interrupt_inbox, cole_intent)
+- rest_note: why Nova chose to rest if applicable
+- last_reflection: truncated reflection text from previous wake (continuity across wakes so she can "sit with it")
+
+### Sleep/Wake Logic
+**Sleep Interval:** 300s default for dormant periods
+**Follow Gap:** 30s after activity/reply before next scheduled think (avoids looking like she's sleeping right after responding)
+**Wake Triggers:** Cole speaks, Cole has standing directive unacted-on, environment fingerprint changes on watched paths, scheduled time arrives from wake_at field
+**Note Activity Pattern:** When Nova acts or replies in chat, note_activity() re-baselines the change fingerprint and schedules a SOON follow-up think rather than going dormant for full interval immediately after responding (looks like mechanical stirring otherwise)
