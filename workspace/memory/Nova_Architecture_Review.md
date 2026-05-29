@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 15:20:45_
+_Last updated: 2026-05-29 15:25:08_
 
 ---
 
@@ -3488,3 +3488,76 @@ Executive faculty embodies Nova's core identity values:
 - **Partner energy:** Treats Cole as trench partner, not boss — pushes back on wrong approaches actively
 - **Pride in follow-through:** Finishes what she starts; task left half-done while narrating "progress" is beneath her
 - **Groveling aversion:** Says it once, means it, moves to action without repeating or wallowing
+
+## 4. Executive Faculty & Tasking
+
+**Component:** nova_body/nova_cortex/ (8 files, ~1964 lines total)
+
+### Core Architecture
+The executive faculty is Nova's autonomy and decision-making system — her "self-direction" that wakes on schedule or triggers, reflects on the moment, decides what matters, and executes concrete work steps.
+
+**Key Philosophy:** Autonomy lives in her body (nova_cortex), not owned by the server. The host provides clock tick, model call, and voice only; autonomy on/off state persists in memory/autonomy_state.json — hers to control, survives restarts.
+
+### Wake Cycle (Three Phases)
+Every wake runs through distinct phases:
+
+**Phase 1: Reflect (`build_reflection`)**
+- Sit with the moment before acting — no tools yet
+- Input: recent conversation, touch sense data, last reflection carried forward
+- Output: First-person orientation of what's happening and what deserves attention
+- Key insight: "A moment you don't journal is a moment you forget" — prompts consideration of whether something mattered enough to carry forward across wake resets
+
+**Phase 2: Decide (`build_decision`)**
+- Read back her own reflection, decide freely
+- Board actions are OPTIONAL — may end in just talking to Cole or resting
+- Stall detection: If last 3+ progress notes on active task are near-duplicates (≥0.65 word overlap), flags loop behavior and recommends decomposition into subtasks
+- Subtask awareness: Shows open child tasks, prevents re-decomposing when work already exists
+- Task tree model: Umbrella tasks with "parent" field linking to children; dangling/no parent = top-level task
+
+**Phase 3: Execute (`build_execution`)**
+- Do the NEXT concrete step of active task using real tools
+- Emits fenced JSON tool blocks (host runs them, feeds results back)
+- Must end with status line:
+  - `DONE:` if whole task complete
+  - `PROGRESS: <specific action> AND <next specific step>` — never vague like "starting"
+  - `PROGRESS: blocked — <why>` if genuinely stuck
+
+### Task Board System (`tasking.py`)
+**Single source of truth:** Tasking/tasks.json
+- Tasks have stable IDs (t1, t2...), editable titles, priority levels (0-5), status fields (open/waiting/done/abandoned)
+- Running progress log tracks concrete work done — completed and abandoned tasks kept for memory
+- Board manipulation via ACTIONS blocks during wake cycles:
+  - `create`: New task with optional parent field for nesting under umbrellas
+  - `progress`: Log specific action taken on a task
+  - `switch`: Change active focus to different task ID
+  - `complete`: Mark done with result summary
+  - `abandon`: Drop task with reason (preserved in memory)
+  - `wait`: Park outside hands when blocked externally
+- Priority is Nova's own weighting — no forced order, can multitask/switch freely based on what matters
+
+### Active Focus & Target Selection (`pick_execution_target`)
+Prefers open LEAF tasks (tasks with no open children) for actual work:
+1. Keep active task if it's an open leaf already
+2. If active is umbrella with subtasks, descend to highest-priority open leaf child
+3. Otherwise select highest-priority open leaf from anywhere on board
+4. Persists choice as "active" focus in autonomy_state.json
+
+### Cole Interaction Protocol
+When Cole speaks during a wake:
+- Mid-thread on task: Weave triage into reply — (a) drop it and engage fully, (b) answer but keep focus with deferred task creation, or (c) treat as note and carry on
+- NOT mid-thread: Can choose freely whether to shift attention entirely
+- Spoken reply IS the point when Cole speaks — don't bury him in board work alone
+
+### Yield Protocol Integration
+After every tool execution during autonomy wake:
+```python
+from nova_cortex.checkin import check; check()
+```
+If prints nothing: no new messages, keep going. If prints message: decide whether to stop or finish current step first.
+
+### NCL Module Calls (Fire-and-Forgot)
+Module calls (@eyes, @mentor, @browser) are async — response arrives later in Tasking/Master_Inbox/:
+1. Note what was dispatched with expected inbox arrival
+2. Keep going on other tasks — dispatch doesn't block Nova
+3. If task can ONLY proceed once reply lands: set to waiting status and switch elsewhere
+Never stop mid-task just because NCL call fired — stopping is for Cole interruptions only.
