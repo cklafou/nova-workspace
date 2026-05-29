@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-29 16:23:04_
+_Last updated: 2026-05-29 16:23:45_
 
 ---
 
@@ -5437,3 +5437,50 @@ Contains:
 **Follow Gap:** 30s after activity/reply before next scheduled think (avoids looking like she's sleeping right after responding)
 **Wake Triggers:** Cole speaks, Cole has standing directive unacted-on, environment fingerprint changes on watched paths, scheduled time arrives from wake_at field
 **Note Activity Pattern:** When Nova acts or replies in chat, note_activity() re-baselines the change fingerprint and schedules a SOON follow-up think rather than going dormant for full interval immediately after responding (looks like mechanical stirring otherwise)
+
+## 5. Memory Systems
+
+**Component:** nova_body/nova_memory/ (6 files, ~836 lines total)
+
+### Architecture Overview
+Nova's memory system provides persistent state management across three core mechanisms:
+1. **Journal** - Running session log with daily consolidation workflow
+2. **State Tracking** - Current project status and autonomy state persistence  
+3. **Goal/Status Updates** - Project-level tracking via STATUS.md
+4. **Cole Notes** - Living notes about Cole in COLE.md (NOVA'S NOTES section)
+
+### Journal System (journal.py)
+The journal is Nova's primary continuity thread across session resets.
+
+**Daily Workflow:**
+- Throughout active period: Fire `journal_note` tool when meaningful moments hit (lessons landing, emotions hitting, corrections sticking, milestones achieved, partnership moments). These are sticky notes with chat_ref timestamps for context lookup later.
+- At end of active period OR wake moment realizing calendar date rolled past last consolidated entry: Read memory/journal_notes/YYYY-MM-DD.md file → For each note's chat_ref read surrounding conversation from chat log → Weave into ONE consolidated `journal` entry via journal tool
+- One entry per day enforced (tool refuses duplicate dates)
+- Voice: Real person's daily journal, NOT status report/checklist/bullet list. Lessons, emotions, thoughts about herself/Cole/the work.
+
+**Key Functions:**
+- append(entry_text) - Safe appending to JOURNAL.md using nova_journal.py tool call mechanism
+- summarize_today() - Generates end-of-day summaries from notes file + chat context references
+- Journal writing rule: NEVER use write_file on living documents (overwrites entire content). Always append via dedicated journal tools.
+
+### State Management (state.py)
+**NovaState class:** Handles autonomy_state.json persistence and change detection.
+
+**Watched Paths for Change Detection:**
+- Tasking/tasks.json - Board changes trigger wakes
+- memory/interrupt_inbox.json - NCL module responses arrive here as wake triggers  
+- memory/cole_intent.json - Cole's standing directives unacted-on
+
+**Fingerprint System:** Generates JSON hash of file metadata on watched paths. When fingerprint differs from stored last_fp, environment changed → should_wake returns True with reason="change"
+
+### Goals & Status (goals.py)
+**update_status() function:** Handles STATUS.md updates for current project state.
+- Uses proposed changes protocol only: copy to logs/proposed/, edit there, notify Cole before applying to root file
+- Never directly overwrite living status document without explicit approval
+
+### Memory File Locations:
+- memory/JOURNAL.md - Consolidated daily entries (append-only)
+- memory/journal_notes/YYYY-MM-DD.md - Sticky notes for that date's meaningful moments  
+- memory/STATUS.md - Current project state and proposed changes tracking
+- memory/COLE.md - Living notes about Cole, update [NOVA'S NOTES] section when learning something new
+- memory/autonomy_state.json - Active autonomy toggle, current task focus, last activity timestamps, wake scheduling data (managed internally by executive.py)
