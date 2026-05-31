@@ -135,6 +135,14 @@ is_processing: bool = False
 _stop_requested = asyncio.Event()  # set by STOP; cleared at start of every new response
 _force_wake = asyncio.Event()      # set by the Wake Up button (/api/wake) — forces one immediate cognition cycle
 
+# ── Resilience: dedup chat-spam from repeated llama errors + auto-pause autonomy
+#    after persistent failures so a model-down state doesn't cascade into chaos.
+_llama_error_streak: int = 0       # consecutive llama-error count; resets on any successful generation
+_LLAMA_ERROR_BACKOFF: int = 3      # pause autonomy after this many consecutive llama errors
+_last_error_msg: str = ""          # last broadcast error text (for dedup)
+_last_error_time: float = 0.0      # when it was last broadcast (epoch seconds)
+_ERROR_DEDUP_WINDOW: float = 30.0  # seconds — suppress identical errors within this window
+
 # ── Cole message queue ────────────────────────────────────────────────────────
 # When Cole sends a message while AIs are processing, we queue it instead of
 # dropping it. The queue is drained as soon as is_processing becomes False.
@@ -965,6 +973,10 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
     async def on_done(full):
         _result.append(full)
+        # Successful generation → reset the llama error streak (model is alive again)
+        global _llama_error_streak
+        if _llama_error_streak > 0:
+            _llama_error_streak = 0
         elapsed = round(_time.time() - _gen_start, 1)
         # Close the think block if one was opened
         if _think_started[0]:
@@ -1075,16 +1087,44 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         # • generation_end — resets the Monitor / vigilance indicator
         # • message_end — finalizes the dangling message bubble so the UI
         #   doesn't show an empty half-rendered assistant bubble after the error
+        global _llama_error_streak, _last_error_msg, _last_error_time
+        import time as _t2
+        _now2 = _t2.time()
+        _err_str = str(err)
+        _is_llama = ("llama" in _err_str.lower()) or ("streaming error" in _err_str.lower()) or ("500 internal server error" in _err_str.lower())
+        # Always close the dangling UI state, even on a duplicate, so spinners don't hang.
         if _think_started[0]:
             await broadcast({"type": "think_end", "author": ai_name, "id": msg_id, "elapsed": 0})
         if ai_name == "Nova":
-            import time as _t2
             await broadcast({"type": "generation_end", "author": ai_name, "id": msg_id,
-                             "elapsed": round(_t2.time() - _gen_start, 1),
+                             "elapsed": round(_now2 - _gen_start, 1),
                              "had_activity": False})
-        await broadcast({"type": "message_end", "author": ai_name, "id": msg_id,
-                         "content": f"⚠ {err}"})
-        await broadcast({"type": "error", "author": ai_name, "message": err, "id": msg_id})
+        # Dedup: if this is the same error within the dedup window, suppress the bubble +
+        # error event so chat doesn't get spammed with identical lines.
+        _dup = (_err_str == _last_error_msg) and ((_now2 - _last_error_time) < _ERROR_DEDUP_WINDOW)
+        _last_error_msg = _err_str
+        _last_error_time = _now2
+        if _is_llama:
+            _llama_error_streak += 1
+        if not _dup:
+            await broadcast({"type": "message_end", "author": ai_name, "id": msg_id,
+                             "content": f"⚠ {err}"})
+            await broadcast({"type": "error", "author": ai_name, "message": err, "id": msg_id})
+        # Backoff: if llama has failed N times in a row, pause autonomy with one clear
+        # System notice so the daemon stops hammering a dead model.
+        if _is_llama and _llama_error_streak == _LLAMA_ERROR_BACKOFF:
+            try:
+                from nova_cortex import executive
+                if executive.autonomy_enabled():
+                    executive.set_autonomy(False)
+                    await broadcast({"type": "user_message", "author": "System",
+                                     "content": (f"[Autonomy paused — model unreachable after "
+                                                 f"{_LLAMA_ERROR_BACKOFF} consecutive errors. "
+                                                 f"Fix the model and press ⏰ Wake to retry, "
+                                                 f"or toggle Autonomous back on.]"),
+                                     "id": f"sys_backoff_{int(_now2)}"})
+            except Exception as _be:
+                print(f"[backoff] could not pause autonomy: {_be}")
 
     async def on_tool_executed_cb(tool_name: str, tool_input: dict,
                                   result: str, is_error: bool, duration_ms: float):

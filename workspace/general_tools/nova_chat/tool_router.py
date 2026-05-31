@@ -86,12 +86,40 @@ def write_file(path: str, content: str, overwrite: bool = False) -> str:
         return f"ERROR: Could not write file: {e}"
 
 
+def _md_headings(text: str) -> list:
+    """ATX markdown headings (# .. ###### followed by a space) in a blob, stripped."""
+    out = []
+    for ln in text.splitlines():
+        s = ln.lstrip()
+        i = 0
+        while i < len(s) and s[i] == "#":
+            i += 1
+        if 0 < i <= 6 and i < len(s) and s[i] == " ":
+            out.append(s.strip())
+    return out
+
+
 def append_file(path: str, content: str) -> str:
     """Append content to the end of a file (creating it if missing). The right tool for
     growing a living document section by section without overwriting what's already there."""
     target = (WORKSPACE_ROOT / path).resolve()
     if not _within_workspace(target):
         return "ERROR: Permission Denied. Cannot write files outside the workspace."
+    # Idempotency guard: refuse to append a section heading the file already has — this is what
+    # stops the "rewrite the whole doc every wake and append it" loop. Defensive: a read hiccup
+    # must never block a legitimate write.
+    try:
+        if target.exists() and target.suffix.lower() in (".md", ".markdown", ".txt"):
+            have = set(_md_headings(target.read_text(encoding="utf-8")))
+            dupes = [h for h in _md_headings(content) if h in have]
+            if dupes:
+                return ("REFUSED: '" + path + "' already contains section heading(s): "
+                        + "; ".join(dupes[:5]) + ("; …" if len(dupes) > 5 else "")
+                        + ". You're re-adding sections that already exist. read_file it, find the "
+                        "FIRST gap or stub, and edit that with replace_file_content — don't append "
+                        "duplicate sections.")
+    except Exception:
+        pass
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
         with open(target, "a", encoding="utf-8") as f:
@@ -182,6 +210,37 @@ def generate_image(prompt: str, negative: str = "", as_nova: bool = False,
     if r.get("ok"):
         return f"Image saved to {r['path']} (seed {r.get('seed')})."
     return f"ERROR: {r.get('detail', 'image generation failed')}"
+
+
+def memory_search(query="", max_chars=4000) -> str:
+    """Semantic search over Nova's full memory — every past message, AI response, journal
+    entry, and image she's seen has been embedded into her LanceDB store (nova_lancedb).
+    Use this to recall something she's forgotten, surface relevant context from prior
+    sessions she can't remember directly, check whether a topic / file / lesson has come
+    up before, or pull back the conversational context around a moment. Returns a
+    formatted block combining the top text + visual hits for the query.
+
+    query: what to search for — phrase it like a natural search, e.g. "the avatar
+           concept Cole showed me" or "when I got corrected about sycophancy".
+    max_chars: cap on returned content (default 4000)."""
+    query = str(query if query is not None else "").strip()
+    if not query:
+        return "ERROR: Empty query — pass something to search for."
+    try:
+        from nova_lancedb.hippocampus import get_store
+        store = get_store()
+        if store is None:
+            return "ERROR: Memory store unavailable (LanceDB not initialized in this environment)."
+        try:
+            mc = int(max_chars) if max_chars else 4000
+        except Exception:
+            mc = 4000
+        result = store.build_context_block(query, max_chars=mc)
+        if not (result or "").strip():
+            return f"No memory matches for: {query}"
+        return result
+    except Exception as e:
+        return f"ERROR: memory_search failed: {e}"
 
 
 def journal_note(text="", chat_ref="") -> str:
@@ -292,6 +351,9 @@ def execute_tool(tool_name: str, args: dict) -> str:
                 bool(args.get("as_nova", False) or args.get("self_portrait", False)),
                 args.get("width"), args.get("height"), args.get("seed"),
             )
+        elif tool_name in ("memory_search", "recall", "search_memory", "remember", "memsearch"):
+            return memory_search(args.get("query", "") or args.get("q", "") or args.get("text", ""),
+                                 args.get("max_chars", 4000))
         elif tool_name in ("journal_note", "note", "journal_fragment", "jot"):
             return journal_note(args.get("text", "") or args.get("content", "") or args.get("note", ""),
                                 args.get("chat_ref", "") or args.get("ref", "") or args.get("chat", ""))

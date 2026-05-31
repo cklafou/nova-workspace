@@ -111,15 +111,23 @@ def build_llama_cmd() -> list:
            "--mmproj", str(MMPROJ),
            "-ngl", "999"]
     if n >= 2:
-        log(f"Detected {n} GPUs -> dual-GPU tensor split 16,24 (4090 + 3090 eGPU)")
-        cmd += ["-ts", "16,24"]
+        log(f"Detected {n} GPUs -> dual-GPU tensor split 12,28 (4090 + 3090 eGPU)")
+        log("Rationale: 4090 also carries mmproj + Python overhead, so it gets the")
+        log("           smaller share (30%) to keep ~4-5GB headroom for compute spikes.")
+        cmd += ["-ts", "12,28"]
     elif n == 1:
-        log("Only 1 GPU detected. Q8 (~28.5GB) will NOT fully fit on the 4090 "
-            "alone — is the eGPU connected? Starting single-GPU anyway; it may "
-            "spill to CPU or OOM. Ctrl-C to abort.", "WARN")
+        log("Only 1 GPU detected — the eGPU (3090) is NOT enumerated. The 27B Q8 "
+            "model (~28.5GB) will not fit on the 4090 alone (16GB); attempting to "
+            "load anyway always ends in CUDA OOM mid-inference. Aborting startup "
+            "so the chat host doesn't keep getting 500s from a broken model.", "ERROR")
+        log("Fix: check eGPU connection (OCuLink), run nvidia-smi to confirm both "
+            "cards visible, then re-run NovaStart.", "ERROR")
+        sys.exit(2)
     else:
-        log("No GPUs detected via nvidia-smi. Starting with default offload; "
-            "this will likely be slow or fail.", "WARN")
+        log("No GPUs detected via nvidia-smi. Aborting startup — CPU offload of a "
+            "27B Q8 model is unworkable for live use.", "ERROR")
+        log("Fix: install/restart NVIDIA drivers so nvidia-smi resolves, then re-run.", "ERROR")
+        sys.exit(2)
     cmd += ["-c", "32768",
             "-fa", "on",
             "--cache-prompt",

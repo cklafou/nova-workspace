@@ -388,6 +388,40 @@ def pick_execution_target() -> Optional[str]:
     return tid
 
 
+def _artifact_path(task: dict) -> Optional[str]:
+    """Find an output-file path named in the task title/notes (workspace-relative)."""
+    blob = f"{task.get('title','')} {task.get('notes','')}"
+    m = re.search(r'([A-Za-z0-9_][A-Za-z0-9_./\\-]*\.(?:md|markdown|txt|json|jsonl|csv|py))', blob)
+    return m.group(1) if m else None
+
+
+def _artifact_hint(task: dict) -> Optional[str]:
+    """If this task writes to an output file that already exists, tell her to CONTINUE it
+    (read it, fill the first gap) rather than re-emit sections it already has. This is what
+    stops the 'rewrite the whole doc every wake and append it' loop that bloated the review."""
+    rel = _artifact_path(task)
+    if not rel:
+        return None
+    try:
+        p = (WORKSPACE_ROOT / rel).resolve()
+        if not p.exists():
+            return None
+        text = p.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    heads = [ln.strip() for ln in text.splitlines()
+             if ln.lstrip()[:1] == "#" and " " in ln.lstrip()[:8]]
+    head_list = "\n".join(f"    {h}" for h in heads[-25:]) or "    (no headings yet)"
+    return (
+        f"OUTPUT FILE [{rel}] ALREADY EXISTS — {len(text.splitlines())} lines, {len(heads)} "
+        f"headings. Its current sections:\n{head_list}\n"
+        "CONTINUE this file; do NOT re-emit sections it already has. read_file it, find the FIRST "
+        "gap or stub, and fill ONLY that (append a genuinely-missing section, or use "
+        "replace_file_content to flesh out a stub). If every planned section already has real "
+        "content, this task is DONE — say so instead of rewriting what's there."
+    )
+
+
 def build_execution(task: dict, recent: str = "") -> str:
     """Prompt for the execution pass: do the NEXT concrete step of THIS task now,
     using real tools, then report honestly. She emits tool calls as fenced json
@@ -399,6 +433,7 @@ def build_execution(task: dict, recent: str = "") -> str:
     prog   = task.get("progress", []) or []
     recent_prog = "\n".join(f"  - {p.get('note','')}" for p in prog[-4:]) or "  (nothing yet)"
     loop_n = _progress_loop_count(task)
+    art_block = _artifact_hint(task)
     L = [
         f"[WORK — {clock.stamp()}] You committed to this task and now you actually DO it. "
         "This is not reflection and not board bookkeeping — it is the real work, with your hands.",
@@ -408,6 +443,7 @@ def build_execution(task: dict, recent: str = "") -> str:
         "Progress so far:",
         recent_prog,
         "",
+        art_block,
         (f"STALL CHECK: your last {loop_n} steps are near-duplicates — you are re-orienting in "
          "a loop instead of advancing. STOP mapping/'starting'. Either do ONE specific thing "
          "you have NOT done yet (read a specific file, write its section), or — if this task is "

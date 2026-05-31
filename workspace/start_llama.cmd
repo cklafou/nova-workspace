@@ -6,7 +6,13 @@ cd /d "%~dp0"
 echo [llama.cpp] Starting Qwen 3.5 27B Dense Q8 with dual-GPU split...
 echo.
 echo GPU layout assumed: GPU 0 = RTX 4090 Laptop (16GB), GPU 1 = RTX 3090 eGPU (24GB)
-echo Run 'nvidia-smi -L' to verify. If reversed, swap -ts to 24,16 below.
+echo Run 'nvidia-smi -L' to verify. If reversed, swap -ts to 28,12 below.
+echo.
+echo Tensor split: 12,28 (4090 holds 30%% of layers, 3090 holds 70%%).
+echo Rationale: 4090 also carries mmproj + Python overhead, so it needs the larger
+echo headroom margin. 16,24 left only ~1.8GB free on the 4090 and caused inference
+echo OOMs on long-context prompts; 12,28 gives ~4.7GB free on the 4090 and ~2.6GB
+echo on the 3090 — both safe with room for compute spikes.
 echo.
 echo Model : models\qwen-27b-q8.gguf
 echo Vision: models\qwen-27b-mmproj.gguf
@@ -24,7 +30,7 @@ if not exist "prompt_cache" mkdir "prompt_cache"
     -m models\qwen-27b-q8.gguf ^
     --mmproj models\qwen-27b-mmproj.gguf ^
     -ngl 999 ^
-    -ts 16,24 ^
+    -ts 12,28 ^
     -c 32768 ^
     -fa on ^
     --cache-prompt ^

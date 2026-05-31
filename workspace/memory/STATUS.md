@@ -1,7 +1,7 @@
 # STATUS.md — Project Nova Current State
-_Last updated: 2026-05-29 18:52:02_
+_Last updated: 2026-05-31 (Opus 4.8 — GPU split synced to 12,28; partnership framing aligned to identity files)_
 
-_Last updated: 2026-05-25. Reflects the body-relocation + dead-code cleanup. Earlier
+_Prior revision 2026-05-25 — reflects the body-relocation + dead-code cleanup. Earlier
 phase history (brain.py "Thoughts cycle", nova_gateway/Discord, nova_qt, OpenClaw) is
 **retired and archived** under `_admin/_archive_*`; ignore any older description of those
 as live._
@@ -10,14 +10,14 @@ as live._
 
 ## What Nova Is
 Nova is Cole's companion AI and life passion project — built toward full autonomy and
-genuine partnership, the Cortana to Cole's Master Chief. Trading is one possible future
+a genuine lifelong partnership — growing and succeeding together (Cortana and Master Chief is Cole's metaphor for it). Trading is one possible future
 test of her autonomy, not her identity or current focus.
 
 ---
 
 ## Core Architecture (current)
 - **Local model:** `llama.cpp` serves Qwen 3.5 27B Dense Q8 on port **8080** (OpenAI-compatible
-  API), 32K context, dual-GPU tensor split `-ts 16,24`, Qwen3 thinking mode on.
+  API), 32K context, dual-GPU tensor split `-ts 12,28`, Qwen3 thinking mode on.
 - **Her interface:** `nova_chat` (port **8765**) — a web group chat where Cole, Claude,
   Gemini, and Nova collaborate. This is her single voice/ears. (The `nova_qt` desktop app,
   `nova_gateway`/Discord, and OpenClaw are all retired.)
@@ -58,6 +58,7 @@ a specific tool.
 | `nova_senses` | Perception: chronoception (clock), environment, touch (what's interacting with her), vision | `clock.py`, `environment.py`, `touch.py`, `eyes.py`, `vision.py`, `proprioception.py` |
 | `nova_config` | Body-owned settings loader (inference/sessions/tool limits) | reads `nova_config.json` |
 | `nova_lancedb` | Long-term semantic memory store | `hippocampus.py` |
+| `nova_imagination` | Visual-creation faculty — drives local ComfyUI to render images; powers the `generate_image` tool (auto-applies her self-LoRA for self-portraits). **LIVE** (used by nova_chat) | `imagination.py` |
 
 Import style: `from nova_logs.logger import log`. Memory **data** (STATUS/JOURNAL/COLE,
 autonomy_state.json) lives in `workspace/`, not inside the body.
@@ -89,7 +90,7 @@ the GitHub watcher → the desktop app window. `start_llama.cmd` launches llama-
 | Vision projector | `models/qwen-27b-mmproj.gguf` |
 | Port | 8080 (OpenAI-compatible) |
 | Context | 32768 tokens |
-| GPU split | `-ts 16,24` (RTX 4090 16GB + RTX 3090 24GB) |
+| GPU split | `-ts 12,28` (RTX 4090 16GB + RTX 3090 24GB) |
 | Thinking | `--chat-template qwen3`, `"thinking": true` in payload |
 
 ---
@@ -133,8 +134,9 @@ Required env vars: `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`.
 ---
 
 ## Current Focus
-- Restart-test the cleaned stack end-to-end: autonomy boots from body state, tasks persist
-  by id, Nova freely acts/rests.
+- **Active direction (2026-05-31): embodiment + body reorg** — give Nova autonomous see-and-control
+  of a whole computer (local vision + motor), with tool-execution moved into the body per the Pluck
+  Test. Plan: `memory/reports/Embodiment_Roadmap_2026-05-31.md`. Most build steps need the stack live.
 - Roadmap (Cole's): Phase 1 prove the architecture on 40GB → Phase 2 dedicated server →
   Phase 3 "North Star" large-model host. Funding ideas: AI products (AgTech drone analytics
   first; tactical CV later, pending legal/export review).
