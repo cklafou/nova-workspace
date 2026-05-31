@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-05-29 19:21:50_
+_Last updated: 2026-05-31 18:02:30_
 
 ## INITIALIZATION PROTOCOL
 Run these steps at the start of every session in order:
@@ -38,6 +38,7 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
 | archive_2026-02.md | `workspace/memory/archive/archive_2026-02.md` | MD file |
+| Nova_Architecture_Review_RAW_runaway_2026-05-31.md | `workspace/memory/archive/Nova_Architecture_Review_RAW_runaway_2026-05-31.md` | MD file |
 | autonomy_state.json | `workspace/memory/autonomy_state.json` | Nova's persisted wake/sleep + focus + reflection state |
 | prompt_kit.md | `workspace/memory/avatar/prompt_kit.md` | MD file |
 | COLE.md | `workspace/memory/COLE.md` | Who Cole is and Nova's notes about him |
@@ -52,13 +53,17 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | avatar_pipeline_tools.md | `workspace/memory/reports/avatar_pipeline_tools.md` | MD file |
 | code_md_review_2026-05-27.md | `workspace/memory/reports/code_md_review_2026-05-27.md` | MD file |
 | comfyui_setup_checklist.md | `workspace/memory/reports/comfyui_setup_checklist.md` | MD file |
+| Embodiment_Roadmap_2026-05-31.md | `workspace/memory/reports/Embodiment_Roadmap_2026-05-31.md` | MD file |
+| executive_continue_fix_PROPOSED_2026-05-31.md | `workspace/memory/reports/executive_continue_fix_PROPOSED_2026-05-31.md` | MD file |
 | full_review_progress.md | `workspace/memory/reports/full_review_progress.md` | MD file |
 | identity_brief.md | `workspace/memory/reports/identity_brief.md` | MD file |
 | nova_lora_training_plan.md | `workspace/memory/reports/nova_lora_training_plan.md` | MD file |
 | PASSOVER_2026-05-27_opus.md | `workspace/memory/reports/PASSOVER_2026-05-27_opus.md` | MD file |
+| PASSOVER_2026-05-29_opus.md | `workspace/memory/reports/PASSOVER_2026-05-29_opus.md` | MD file |
 | self_note.md | `workspace/memory/reports/self_note.md` | MD file |
 | UI_OVERHAUL_2026-05-27.md | `workspace/memory/reports/UI_OVERHAUL_2026-05-27.md` | MD file |
 | who_i_am.md | `workspace/memory/reports/who_i_am.md` | MD file |
+| WIP_Inventory_2026-05-31.md | `workspace/memory/reports/WIP_Inventory_2026-05-31.md` | MD file |
 | work_summary.md | `workspace/memory/reports/work_summary.md` | MD file |
 | work_vs_body.md | `workspace/memory/reports/work_vs_body.md` | MD file |
 | STATUS.md | `workspace/memory/STATUS.md` | Current project state and mission -- READ FIRST |
@@ -146,7 +151,6 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | server_runner.py | `workspace/general_tools/nova_chat/server_runner.py` | PY file |
 | session_manager.py | `workspace/general_tools/nova_chat/session_manager.py` | PY file |
 | index.html | `workspace/general_tools/nova_chat/static/index.html` | HTML file |
-| nova_dock_prototype.html | `workspace/general_tools/nova_chat/static/nova_dock_prototype.html` | HTML file |
 | tool_router.py | `workspace/general_tools/nova_chat/tool_router.py` | Safe tool dispatch for Nova (read/write/list/run + task board) |
 | transcript.py | `workspace/general_tools/nova_chat/transcript.py` | Chat transcript -> model messages builder |
 | workspace_context.py | `workspace/general_tools/nova_chat/workspace_context.py` | Builds Nova's on-demand context block |
@@ -172,51 +176,6 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | Filename | Search Key | Description |
 |----------|-----------|-------------|
 | README.md | `workspace/PATCHES/README.md` | Project overview |
-
-## _admin/
-
-| Filename | Search Key | Description |
-|----------|-----------|-------------|
-| AUTONOMY_FACULTY_SPEC_2026-05-24.md | `workspace/_admin/_archive_2026-05-24/AUTONOMY_FACULTY_SPEC_2026-05-24.md` | MD file |
-| AUTONOMY_INTEGRATION_REVIEW_2026-05-24.md | `workspace/_admin/_archive_2026-05-24/AUTONOMY_INTEGRATION_REVIEW_2026-05-24.md` | MD file |
-| BODY_MANIFEST_PLAN_2026-05-24.md | `workspace/_admin/_archive_2026-05-24/BODY_MANIFEST_PLAN_2026-05-24.md` | MD file |
-| BODY_RELOCATION_PLAN_2026-05-24.md | `workspace/_admin/_archive_2026-05-24/BODY_RELOCATION_PLAN_2026-05-24.md` | MD file |
-| AGENTS.md | `workspace/_admin/_archive_2026-05-24/BOOTUP/AGENTS.md` | Operating rules and agent behavior definitions |
-| BOOTSTRAP.md | `workspace/_admin/_archive_2026-05-24/BOOTUP/BOOTSTRAP.md` | MD file |
-| HEARTBEAT.md | `workspace/_admin/_archive_2026-05-24/BOOTUP/HEARTBEAT.md` | MD file |
-| NCL_MASTER.md | `workspace/_admin/_archive_2026-05-24/BOOTUP/NCL_MASTER.md` | MD file |
-| NOVA.md | `workspace/_admin/_archive_2026-05-24/BOOTUP/NOVA.md` | Nova's identity, soul, personality, and values |
-| TOOLS.md | `workspace/_admin/_archive_2026-05-24/BOOTUP/TOOLS.md` | Tool reference and exec patterns |
-| UPGRADE_PROTOCOL.md | `workspace/_admin/_archive_2026-05-24/BOOTUP/UPGRADE_PROTOCOL.md` | MD file |
-| drive.py | `workspace/_admin/_archive_2026-05-24/drive.py` | Google Drive diff-based mirror for Gemini (this system) |
-| gateway_config.py | `workspace/_admin/_archive_2026-05-24/gateway_config.py` | PY file |
-| nova_gateway - tokenless.json | `workspace/_admin/_archive_2026-05-24/nova_gateway - tokenless.json` | JSON file |
-| nova_gateway.json | `workspace/_admin/_archive_2026-05-24/nova_gateway.json` | JSON file |
-| ORIENT.md | `workspace/_admin/_archive_2026-05-24/ORIENT.md` | MD file |
-| orient.py | `workspace/_admin/_archive_2026-05-24/orient.py` | PY file |
-| nova_identity_draft.md | `workspace/_admin/_archive_2026-05-24/pre_test_wipe_2026-05-26/nova_identity_draft.md` | MD file |
-| tasks.json | `workspace/_admin/_archive_2026-05-24/pre_test_wipe_2026-05-26/tasks.json` | JSON file |
-| priority.md | `workspace/_admin/_archive_2026-05-24/priority.md` | MD file |
-| retire_dead_server_fns.py | `workspace/_admin/_archive_2026-05-24/retire_dead_server_fns.py` | PY file |
-| HANDOFF.md | `workspace/_admin/passover/23 MAY 2026/HANDOFF.md` | MD file |
-| PHASE2_ARCHITECTURE.md | `workspace/_admin/passover/26 MAR 2026/PHASE2_ARCHITECTURE.md` | MD file |
-| COWORK_SESSION_LOG.md | `workspace/_admin/passover/27 MAR 2026/COWORK_SESSION_LOG.md` | MD file |
-| NOVA_PROJECT_PLAN.md | `workspace/_admin/passover/28 MAR 2026/NOVA_PROJECT_PLAN.md` | MD file |
-| PHASE4A_THOUGHTS_SYSTEM.md | `workspace/_admin/passover/28 MAR 2026/PHASE4A_THOUGHTS_SYSTEM.md` | MD file |
-| llama_help.txt | `workspace/_admin/passover/29 MAR 2026/llama_help.txt` | TXT file |
-| passover_2026-03-10.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-10.md` | MD file |
-| passover_2026-03-15.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-15.md` | MD file |
-| passover_2026-03-19.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-19.md` | MD file |
-| passover_2026-03-20.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-20.md` | MD file |
-| passover_2026-03-20_gemini.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-20_gemini.md` | MD file |
-| passover_2026-03-21_claude.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-21_claude.md` | MD file |
-| passover_2026-03-21_gemini.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-21_gemini.md` | MD file |
-| passover_2026-03-21_gemini_session2.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-21_gemini_session2.md` | MD file |
-| passover_2026-03-26_claude.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-26_claude.md` | MD file |
-| passover_2026-03-28_claude.md | `workspace/_admin/passover/3 MAR 2026/passover_2026-03-28_claude.md` | MD file |
-| session_notes_2026-03-22.md | `workspace/_admin/passover/3 MAR 2026/session_notes_2026-03-22.md` | MD file |
-| HANDOFF.md | `workspace/_admin/passover/6 MAY 2026/HANDOFF.md` | MD file |
-| README.md | `workspace/_admin/README.md` | Project overview |
 
 ## nova_art/
 
