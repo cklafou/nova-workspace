@@ -1,5 +1,5 @@
 {
-  "text": "Run this ONE command verbatim, nothing else, and paste the raw output: Write-Output alpha; Write-Output bravo; Write-Output charlie",
-  "ts": "2026-06-01T15:35:14.593587",
+  "text": "Pause the review for a sec, I need one isolated tool test. Run ONLY this command, nothing else: Get-Content memory/STATUS.md -Tail 5 | Out-File -Encoding utf8 memory/reports/_ps_probe.txt ; then just say done.",
+  "ts": "2026-06-01T15:36:55.256806",
   "consumed": false
 }
