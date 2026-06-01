@@ -1,5 +1,5 @@
 {
-  "text": "Clean re-test, autonomy off. Run exactly this with run_command and paste the raw output: Get-Content memory/STATUS.md -Tail 5",
-  "ts": "2026-06-01T15:31:27.305697",
+  "text": "Run this ONE command verbatim, nothing else, and paste the raw output: Write-Output alpha; Write-Output bravo; Write-Output charlie",
+  "ts": "2026-06-01T15:35:14.593587",
   "consumed": false
 }
