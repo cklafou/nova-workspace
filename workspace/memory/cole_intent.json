@@ -1,5 +1,5 @@
 {
-  "text": "One more probe to pin down that blank result \u2014 run exactly this with run_command and show me the raw output verbatim (don't summarize): powershell -NoProfile -Command \"Get-Location; Test-Path memory/STATUS.md; (Get-Content memory/STATUS.md).Count\"",
-  "ts": "2026-06-01T15:25:10.343292",
-  "consumed": true
+  "text": "Clean re-test, autonomy off. Run exactly this with run_command and paste the raw output: Get-Content memory/STATUS.md -Tail 5",
+  "ts": "2026-06-01T15:31:27.305697",
+  "consumed": false
 }
