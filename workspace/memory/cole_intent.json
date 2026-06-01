@@ -1,5 +1,5 @@
 {
-  "text": "Pause the review for a sec, I need one isolated tool test. Run ONLY this command, nothing else: Get-Content memory/STATUS.md -Tail 5 | Out-File -Encoding utf8 memory/reports/_ps_probe.txt ; then just say done.",
-  "ts": "2026-06-01T15:36:55.256806",
+  "text": "STATUS.md is NOT empty \u2014 it's 136 lines on disk. The earlier blank was the old cmd bug; ignore it. Re-run fresh, exactly this, and tell me the number it prints: (Get-Content memory/STATUS.md).Count",
+  "ts": "2026-06-01T15:38:45.929376",
   "consumed": false
 }
