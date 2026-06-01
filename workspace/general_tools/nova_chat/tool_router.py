@@ -16,7 +16,7 @@ def _within_workspace(target: Path) -> bool:
 
 
 def run_command(command: str, cwd: str = "") -> str:
-    """Run a shell command securely within the Workspace boundaries."""
+    """Run a command in Windows PowerShell, sandboxed to the workspace directory."""
     if not cwd:
         working_dir = WORKSPACE_ROOT
     else:
@@ -32,9 +32,12 @@ def run_command(command: str, cwd: str = "") -> str:
             
     try:
         # Run subprocess with a reasonable timeout to prevent hanging the infinite loop
+        # Execute via Windows PowerShell, not cmd.exe: her instinctive commands (Get-Content,
+        # Test-Path, ls/cat aliases) work, file reads return output, and we avoid cmd mangling a
+        # nested-quoted `powershell -Command "..."` into a blank result. Passed as an arg list so
+        # quoting stays clean. NOTE: Windows PowerShell 5.1 has no `&&` — use `;` to chain.
         result = subprocess.run(
-            command,
-            shell=True,
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
             cwd=working_dir,
             capture_output=True,
             text=True,
