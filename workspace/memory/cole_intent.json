@@ -1,5 +1,5 @@
 {
   "text": "Quick tool test for me: use run_command to run  echo nova_test_123  and show me the raw output, then run  powershell -Command \"Get-Content memory/STATUS.md -Tail 5\"  and show that output too.",
   "ts": "2026-06-01T15:20:42.647599",
-  "consumed": false
+  "consumed": true
 }
