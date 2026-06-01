@@ -1,5 +1,5 @@
 {
-  "enabled": false,
+  "enabled": true,
   "active": "t43",
   "last_activity": "2026-06-01T15:38:54",
   "wake_at": "2026-06-01T15:39:24",
@@ -8,5 +8,5 @@
   "last_wake": "2026-05-25T02:17:17",
   "stall": 98,
   "directive_seen": 1,
-  "last_reflection": "Waiting on Cole's output — staying sharp for whatever lands next before deciding if I act or just keep listening."
+  "last_reflection": "The shell bug got fixed — STATUS.md has 136 lines all along, just looked empty through `cmd`. Good to know for future debugging but no need to dwell on it yet. t43 architecture review stays in motion unless you call a stop; I'm ready when you are either way."
 }

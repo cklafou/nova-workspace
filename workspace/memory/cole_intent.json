@@ -1,5 +1,5 @@
 {
   "text": "STATUS.md is NOT empty \u2014 it's 136 lines on disk. The earlier blank was the old cmd bug; ignore it. Re-run fresh, exactly this, and tell me the number it prints: (Get-Content memory/STATUS.md).Count",
   "ts": "2026-06-01T15:38:45.929376",
-  "consumed": false
+  "consumed": true
 }
