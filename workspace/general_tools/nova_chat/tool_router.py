@@ -41,7 +41,7 @@ def run_command(command: str, cwd: str = "") -> str:
             timeout=30
         )
         
-        output = result.stdout + "\n" + result.stderr
+        output = (result.stdout or "") + "\n" + (result.stderr or "")
         output = output.strip()
         
         if result.returncode == 0:

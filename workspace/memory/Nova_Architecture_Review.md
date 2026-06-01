@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-31 (consolidated from a runaway state by Opus 4.8 — see Audit Caveats at end)_
+_Last updated: 2026-05-31 18:17:45_
 
 ---
 
