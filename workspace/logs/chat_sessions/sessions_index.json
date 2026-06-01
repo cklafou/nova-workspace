@@ -3,8 +3,8 @@
     "session_id": "2026-06-01_15-19-38",
     "name": "Quick tool test for me: use run_command ",
     "created": "2026-06-01T15:19:38.522008",
-    "last_active": "2026-06-01T15:20:42.644601",
-    "message_count": 1,
-    "preview": "Quick tool test for me: use run_command to run  echo nova_te"
+    "last_active": "2026-06-01T15:21:41.682836",
+    "message_count": 3,
+    "preview": "Tool test complete \u2014 `echo nova_test_123` returned exactly a"
   }
 ]
