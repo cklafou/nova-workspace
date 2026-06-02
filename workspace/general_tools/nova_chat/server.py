@@ -168,7 +168,16 @@ _user_typing_since: float = 0.0
 _NOVA_RATE_WINDOW = 60    # seconds
 _NOVA_RATE_LIMIT  = 4     # max Nova-initiated messages allowed per window
 _nova_msg_times: list[float] = []   # rolling timestamps of Nova inject calls
-nova_throttled:  bool = False       # True = Nova is currently muted by failsafe
+nova_throttled:  bool = False       # True = Nova is currently muted by failsafe (vestigial; see _rt_guard)
+
+# ── STEP 2 (runtime extraction): model-server life-support + model-call guards now live in
+# the body (nova_body/nova_runtime). The endpoints/loops below DELEGATE to these, so the chat
+# server is a thin face over them. KoELS self-restart will extend _rt_llama.restart().
+from nova_runtime.llama_control import LlamaControl
+from nova_runtime.model_guard import ModelGuard
+_rt_workspace = Path(os.environ.get("NOVA_WORKSPACE") or Path(__file__).resolve().parent.parent.parent)
+_rt_llama = LlamaControl(_rt_workspace)
+_rt_guard = ModelGuard(rate_limit=_NOVA_RATE_LIMIT, rate_window=_NOVA_RATE_WINDOW, error_backoff=_LLAMA_ERROR_BACKOFF)
 
 # ── Autonomous mode + inference params ────────────────────────────────────────
 autonomous_mode:    bool  = False   # OFF by default — Cole enables Autonomous Mode in the UI when ready to let Nova run
@@ -397,26 +406,12 @@ async def startup_event():
             await _aio.sleep(60)
 
     async def _bg_llama_autostart():
-        """Auto-launch start_llama.cmd on startup if llama-server isn't already running."""
-        import asyncio as _aio, urllib.request as _ur, os as _os
+        """Auto-launch the model server on startup if it isn't already running.
+        Delegates to the body's LlamaControl (life-support lives in the runtime)."""
+        import asyncio as _aio
         await _aio.sleep(3)  # let server fully initialize first
-        try:
-            with _ur.urlopen("http://127.0.0.1:8080/health", timeout=1) as _r:
-                if _r.status == 200:
-                    print("[llama] already running on port 8080 — skipping auto-start")
-                    return
-        except Exception:
-            pass  # not running — fall through to launch
-        _ws = _os.environ.get("NOVA_WORKSPACE") or str(Path(__file__).resolve().parent.parent.parent)
-        _cmd = Path(_ws) / "start_llama.cmd"
-        if _cmd.exists():
-            try:
-                _os.startfile(str(_cmd))
-                print(f"[llama] auto-started: {_cmd}")
-            except Exception as _e:
-                print(f"[llama] auto-start failed: {_e}")
-        else:
-            print(f"[llama] start_llama.cmd not found at {_cmd} — skipping auto-start")
+        res = _rt_llama.autostart()
+        print(f"[llama] autostart → {res}")
 
     async def _bg_sys_metrics():
         """P3 — Poll CPU, RAM, VRAM every 10s and include in nova_status broadcasts."""
@@ -973,10 +968,8 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
     async def on_done(full):
         _result.append(full)
-        # Successful generation → reset the llama error streak (model is alive again)
-        global _llama_error_streak
-        if _llama_error_streak > 0:
-            _llama_error_streak = 0
+        # Successful generation → clear the model-error streak (model is alive again)
+        _rt_guard.record_success()
         elapsed = round(_time.time() - _gen_start, 1)
         # Close the think block if one was opened
         if _think_started[0]:
@@ -1104,15 +1097,14 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         _dup = (_err_str == _last_error_msg) and ((_now2 - _last_error_time) < _ERROR_DEDUP_WINDOW)
         _last_error_msg = _err_str
         _last_error_time = _now2
-        if _is_llama:
-            _llama_error_streak += 1
+        _should_pause = _rt_guard.record_error(err)
         if not _dup:
             await broadcast({"type": "message_end", "author": ai_name, "id": msg_id,
                              "content": f"⚠ {err}"})
             await broadcast({"type": "error", "author": ai_name, "message": err, "id": msg_id})
         # Backoff: if llama has failed N times in a row, pause autonomy with one clear
         # System notice so the daemon stops hammering a dead model.
-        if _is_llama and _llama_error_streak == _LLAMA_ERROR_BACKOFF:
+        if _should_pause:
             try:
                 from nova_cortex import executive
                 if executive.autonomy_enabled():
@@ -1599,15 +1591,8 @@ async def git_branch():
 
 @app.get("/api/llama/status")
 async def llama_status():
-    """Check if llama-server is running on port 8080."""
-    import urllib.request
-    try:
-        with urllib.request.urlopen("http://127.0.0.1:8080/health", timeout=1) as resp:
-            if resp.status == 200:
-                return JSONResponse({"running": True})
-    except Exception:
-        pass
-    return JSONResponse({"running": False})
+    """Check if the model server is running (delegates to the body's LlamaControl)."""
+    return JSONResponse({"running": _rt_llama.is_running()})
 
 
 @app.post("/api/eyes/start")
@@ -2064,39 +2049,16 @@ async def eyes_status():
 
 @app.post("/api/llama/start")
 async def llama_start():
-    """Launch start_llama.cmd in a new console window."""
-    import subprocess
-    _workspace = (
-        os.environ.get("NOVA_WORKSPACE")
-        or str(Path(__file__).resolve().parent.parent.parent)
-    )
-    cmd_path = Path(_workspace) / "start_llama.cmd"
-    if not cmd_path.exists():
-        return JSONResponse({"ok": False, "error": f"start_llama.cmd not found at {cmd_path}"}, status_code=500)
-    try:
-        # os.startfile is equivalent to double-clicking the .cmd file —
-        # opens a new console window reliably without pywebview/subprocess flag issues
-        import os as _os
-        _os.startfile(str(cmd_path))
-        return JSONResponse({"ok": True, "message": "llama-server starting on port 8080..."})
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    """Launch the model server (delegates to the body's LlamaControl)."""
+    res = _rt_llama.start()
+    return JSONResponse(res, status_code=200 if res.get("ok") else 500)
 
 
 @app.post("/api/llama/stop")
 async def llama_stop():
-    """Kill the llama-server process listening on port 8080."""
-    import subprocess
-    try:
-        subprocess.run(
-            ["powershell", "-Command",
-             "Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue | "
-             "ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"],
-            capture_output=True, text=True, timeout=10
-        )
-        return JSONResponse({"ok": True, "message": "llama-server stopped."})
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    """Stop the model server (delegates to the body's LlamaControl)."""
+    res = _rt_llama.stop()
+    return JSONResponse(res, status_code=200 if res.get("ok") else 500)
 
 
 # ── Restart controls (troubleshooting speed) ───────────────────────────────────
@@ -2134,18 +2096,10 @@ _PS_CLOSE_APP_WINDOW = ('powershell -Command "Get-CimInstance Win32_Process | '
 
 @app.post("/api/restart/server")
 async def restart_server():
-    """Restart the model server (llama.cpp on :8080): kill it, relaunch start_llama.cmd."""
-    try:
-        _kill_port(8080)
-        cmd = Path(WORKSPACE_ROOT) / "start_llama.cmd"
-        if cmd.exists():
-            import os as _os
-            _os.startfile(str(cmd))
-        else:
-            return JSONResponse({"ok": False, "error": "start_llama.cmd not found"}, status_code=500)
-        return JSONResponse({"ok": True, "message": "Model server (llama.cpp) restarting on :8080…"})
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    """Restart the model server on :8080 (delegates to the body's LlamaControl — the same
+    path KoELS self-restart will extend to relaunch with a chosen loadout)."""
+    res = _rt_llama.restart()
+    return JSONResponse(res, status_code=200 if res.get("ok") else 500)
 
 
 @app.post("/api/restart/nova")
@@ -2290,13 +2244,8 @@ async def inject_message(body: dict):
 
     # ── Nova rate-limit failsafe ──────────────────────────────────────────────
     if author == "Nova":
-        now = time.time()
-        # Evict timestamps outside the rolling window
-        _nova_msg_times = [t for t in _nova_msg_times if now - t < _NOVA_RATE_WINDOW]
-
-        if len(_nova_msg_times) >= _NOVA_RATE_LIMIT:
+        if not _rt_guard.allow_message():
             # Failsafe tripped: mute Nova, cancel in-flight tasks, warn UI
-            nova_throttled = True
             for task in active_tasks:
                 if not task.done():
                     task.cancel()
@@ -2304,21 +2253,18 @@ async def inject_message(body: dict):
             is_processing = False
             await broadcast({
                 "type": "nova_throttled",
-                "limit": _NOVA_RATE_LIMIT,
-                "window": _NOVA_RATE_WINDOW,
+                "limit": _rt_guard.rate_limit,
+                "window": _rt_guard.rate_window,
                 "message": (
-                    f"⚠ Nova rate-limit tripped: {_NOVA_RATE_LIMIT}+ messages in "
-                    f"{_NOVA_RATE_WINDOW}s. Nova auto-stopped to protect API budget. "
+                    f"⚠ Nova rate-limit tripped: {_rt_guard.rate_limit}+ messages in "
+                    f"{_rt_guard.rate_window}s. Nova auto-stopped to protect API budget. "
                     f"Send any message to Nova Chat to reset."
                 ),
             })
             raise HTTPException(
                 status_code=429,
-                detail=f"Nova throttled — exceeded {_NOVA_RATE_LIMIT} messages/{_NOVA_RATE_WINDOW}s",
+                detail=f"Nova throttled — exceeded {_rt_guard.rate_limit} messages/{_rt_guard.rate_window}s",
             )
-
-        _nova_msg_times.append(now)
-        nova_throttled = False   # within limits — clear any previous throttle flag
 
     # ── Deliver message ───────────────────────────────────────────────────────
     msg = session_mgr.active.add(author, content)
@@ -2390,7 +2336,7 @@ async def inject_message(body: dict):
     # Nova writes "@Claude ..." in her message → Claude gets triggered.
     # Uses the same sequential queue as Cole's messages.
     # Nova is excluded from auto-triggering here (no recursion on inject).
-    if not nova_throttled:
+    if not _rt_guard.throttled:
         _directed = parse_directed(content)
         # Only trigger listener AIs (not Nova again — she just spoke)
         _listener_directed = [n for n in _directed if n in ("Claude", "Gemini")]
@@ -2746,10 +2692,8 @@ async def websocket_endpoint(ws: WebSocket):
                     full_context_content = f"[System Telemetry (Invisible to user UI)]\n{telemetry}\n[End Telemetry]\n\n{content}"
 
                 # Cole sending a message resets the Nova throttle and rate window
-                global nova_throttled, _nova_msg_times
-                if nova_throttled:
-                    nova_throttled = False
-                    _nova_msg_times = []
+                if _rt_guard.throttled:
+                    _rt_guard.reset()
                     await broadcast({"type": "nova_unthrottled"})
 
                 directed_at = parse_directed(content)
