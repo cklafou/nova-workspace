@@ -476,10 +476,29 @@ async def startup_event():
                 pass
             await _aio.sleep(2)
 
+    async def _bg_runtime_events():
+        """The server as a FACE on Nova's event bus (Step 5 — the broadcast→bus inversion).
+        Her lifecycle signals (wake/reflect/autonomy) are now published in the body via
+        _rt.emit; this subscribes to her bus and relays each to connected clients. When the
+        server is plucked, the bus simply has no subscriber — her emits no-op at the surface
+        while still hitting the durable event log, so nothing in the body depends on a face."""
+        q = _rt.attach_face()
+        try:
+            while True:
+                ev = await q.get()
+                try:
+                    await broadcast(ev)
+                except Exception:
+                    pass
+        except asyncio.CancelledError:
+            _rt.detach_face(q)
+            raise
+
     asyncio.ensure_future(_bg_index())
     asyncio.ensure_future(_bg_eyes_stream())
     asyncio.ensure_future(_bg_nova_status_poll())
     asyncio.ensure_future(_bg_events_tail())
+    asyncio.ensure_future(_bg_runtime_events())   # STEP 5: render Nova's bus events as a face
     asyncio.ensure_future(_bg_transcript_flush())
     asyncio.ensure_future(_bg_llama_autostart())
     asyncio.ensure_future(_bg_sys_metrics())
@@ -999,6 +1018,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                 if _cole_part:
                     _cmsg = session_mgr.active.add(ai_name, _cole_part)
                     session_mgr.update_meta_from_message(_cmsg)
+                    _mirror_to_runtime(ai_name, _cole_part)   # STEP 6a
                     if memory_indexer:
                         memory_indexer.add_message(_cole_part, ai_name, session_mgr.active_id)
                     await broadcast({"type": "message_end", "author": ai_name,
@@ -1007,6 +1027,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             # ── Normal path — add response to chat transcript ────────────────────
             msg = session_mgr.active.add(ai_name, full)
             session_mgr.update_meta_from_message(msg)
+            _mirror_to_runtime(ai_name, full)   # STEP 6a: mirror her spoken reply into runtime perception
 
             # --- Index for semantic memory ---
             if memory_indexer:
@@ -1669,6 +1690,18 @@ def _has_unread_cole() -> bool:
     return li_c is not None and (li_n is None or li_n < li_c)
 
 
+def _mirror_to_runtime(author: str, content: str) -> None:
+    """STEP 6a — mirror a conversational turn into Nova's runtime transcript (seam #4 write
+    side), so her body can perceive the conversation with NO chat server attached. Text only:
+    perception is textual, so images/telemetry are deliberately not carried. Fail-safe — a
+    mirror error never disturbs the live chat path. The runtime-owned `attended_through`
+    marker is advanced by the daemon (Step 6b), not here; this step only feeds the log."""
+    try:
+        _rt.transcript.append(author, content)
+    except Exception as _me:
+        print(f"[nova_runtime] transcript mirror failed: {_me}")
+
+
 # ── Task state: server-owned status + running progress log ──────────────────--
 # priority.md stays the human-readable queue; this sidecar holds the machine
 # state (status + a timestamped log of what Nova did each tick) so she has
@@ -1780,37 +1813,24 @@ async def autonomy_daemon():
             await asyncio.sleep(5)
             continue
 
-        await emit_event("wake", f"Nova woke — {reason}")
+        await _rt.emit("wake", f"Nova woke — {reason}")
 
         # ── Two-phase wake: she SITS WITH the moment (reflect) before she may act ──
         is_processing = True
         await broadcast({"type": "processing_start"})
         try:
             recent = _recent_chat_context()
-            # Populate Touch — what is interacting with her right now — so she can FEEL
-            # it during reflection. Gathered just-in-time in this one place rather than
-            # hooked into every event, which keeps the host edits contained.
-            try:
-                from nova_senses import touch as _touch, environment as _env
-                _surfaces = []
-                try:
-                    _lf = Path(WORKSPACE_ROOT) / "memory" / "ui_layout.json"
-                    if _lf.exists():
-                        _surfaces = [w.get("id") for w in
-                                     (json.loads(_lf.read_text(encoding="utf-8")).get("widgets") or [])
-                                     if w.get("id")]
-                except Exception:
-                    pass
-                _agents = [a for a, c in (("Claude", claude_client), ("Gemini", gemini_client))
-                           if c.is_available()]
-                _touch.update(viewers=len(connected_clients), cole_typing=_env.cole_typing(),
-                              agents_online=_agents, eyes_streaming=bool(_eyes_running),
-                              autonomy_active=True, surfaces=_surfaces)
-                _touch.record_pull("Cole" if cole_pending else "your own rhythm",
-                                   "reached in and spoke" if cole_pending
-                                   else f"stirred you ({reason})")
-            except Exception as _te:
-                print(f"[touch] populate failed: {_te}")
+            # Populate Touch — what is interacting with her right now — so she can FEEL it
+            # during reflection. The body owns the sense mechanics now (Step 5); the host
+            # supplies only the face-state it alone knows (viewers, eyes, which agents are up).
+            _agents = [a for a, c in (("Claude", claude_client), ("Gemini", gemini_client))
+                       if c.is_available()]
+            _rt.populate_touch(
+                viewers=len(connected_clients), agents_online=_agents,
+                eyes_streaming=bool(_eyes_running),
+                who=("Cole" if cole_pending else "your own rhythm"),
+                what=("reached in and spoke" if cole_pending else f"stirred you ({reason})"),
+            )
             # Phase 1 — reflect. Always SILENT (cole_pending=False) so it streams to her
             # thinking pane, never as a chat bubble. This is her forming a genuine view of
             # the moment — recent conversation, how it feels, what it logically calls for.
@@ -1820,7 +1840,7 @@ async def autonomy_daemon():
                 "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], refl_prompt,
                 hb_ctx=HeartbeatContext(refl_prompt), cole_pending=False) or ""
             executive.save_reflection(reflection)
-            await emit_event("reflect", "Nova sat with the moment")
+            await _rt.emit("reflect", "Nova sat with the moment")
             # Phase 2 — decide, having reflected. Speaks to chat iff Cole is waiting;
             # otherwise silent. Board actions are OPTIONAL — a wake may end in just
             # talking, just resting, or just thinking more.
@@ -1829,7 +1849,7 @@ async def autonomy_daemon():
                 "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], dec_prompt,
                 hb_ctx=HeartbeatContext(dec_prompt), cole_pending=cole_pending) or ""
             outcome = executive.apply_decision(reply, cole_pending=cole_pending)
-            await emit_event("autonomy", outcome["summary"])
+            await _rt.emit("autonomy", outcome["summary"])
 
             # ── Phase 3 — execute. The decision phase only moves the BOARD; it never
             # does the work. If she holds an open task and this wake is her own rhythm
@@ -1843,8 +1863,7 @@ async def autonomy_daemon():
                     exec_id = executive.pick_execution_target()
                     etask   = _tasking.all_tasks().get(exec_id) if exec_id else None
                     if etask and etask.get("status") == "open":
-                        await emit_event("autonomy",
-                                         f"working {exec_id}: {etask.get('title','')[:60]}")
+                        await _rt.emit("autonomy", f"working {exec_id}: {etask.get('title','')[:60]}")
                         ex_prompt = executive.build_execution(etask, recent)
                         ex_reply = await run_ai_response(
                             "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], ex_prompt,
@@ -1853,10 +1872,10 @@ async def autonomy_daemon():
                         if kind == "done":
                             _tasking.complete(exec_id, payload or "Completed.")
                             executive.set_active(None)
-                            await emit_event("autonomy", f"completed {exec_id}: {payload[:80]}")
+                            await _rt.emit("autonomy", f"completed {exec_id}: {payload[:80]}")
                         elif kind == "progress" and payload.strip():
                             _tasking.progress(exec_id, payload)
-                            await emit_event("autonomy", f"progress {exec_id}: {payload[:80]}")
+                            await _rt.emit("autonomy", f"progress {exec_id}: {payload[:80]}")
             except Exception as _xe:
                 print(f"[autonomy] execution pass error: {_xe}")
         except asyncio.CancelledError:
@@ -1865,11 +1884,7 @@ async def autonomy_daemon():
             print(f"[autonomy] tick error: {_e}")
         finally:
             is_processing = False
-            try:
-                from nova_senses import touch as _touch
-                _touch.update(autonomy_active=False)
-            except Exception:
-                pass
+            _rt.clear_touch_active()
             await broadcast({"type": "processing_end"})
 
 
@@ -2687,6 +2702,7 @@ async def websocket_endpoint(ws: WebSocket):
                 msg = session_mgr.active.add("Cole", full_context_content, directed_at or None,
                                              images=images)
                 session_mgr.update_meta_from_message(msg)
+                _mirror_to_runtime("Cole", content)   # STEP 6a: feed her runtime perception (raw text)
 
                 # ── Image persistence (so she actually SEES what she's asked about) ──
                 # The local model only receives images attached to THIS turn; history

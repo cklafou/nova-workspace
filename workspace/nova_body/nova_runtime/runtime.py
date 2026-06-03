@@ -145,6 +145,49 @@ class NovaRuntime:
             pass
         return m
 
+    # ── STEP 5: sense population (body-owned). The runtime populates her Touch sense — what is
+    #    interacting with her right now — so she can FEEL it during reflection. The host passes
+    #    only the face-state it alone knows (viewers, eyes); cole_typing + surfaces are read from
+    #    her own environment/memory here. The daemon (still hosted in the chat server for now)
+    #    calls these; once the loop relocates (Step 6) they're called from inside her body. ──
+
+    def surfaces_from_layout(self) -> list:
+        """The UI widget ids she's currently 'looked at' through — read from her own
+        memory/ui_layout.json. Best-effort; empty list if absent/unreadable."""
+        try:
+            import json as _json
+            lf = self.workspace / "memory" / "ui_layout.json"
+            if lf.exists():
+                widgets = _json.loads(lf.read_text(encoding="utf-8")).get("widgets") or []
+                return [w.get("id") for w in widgets if w.get("id")]
+        except Exception:
+            pass
+        return []
+
+    def populate_touch(self, *, viewers: int = 0, agents_online: list = None,
+                       eyes_streaming: bool = False, who: str = None, what: str = None,
+                       autonomy_active: bool = True) -> None:
+        """Update her Touch sense + (optionally) record who is pulling on her this moment.
+        cole_typing + surfaces come from her own senses/memory; viewers/eyes/agents are the
+        face-state the host supplies. Best-effort — a missing senses module never breaks a tick."""
+        try:
+            from nova_senses import touch as _touch, environment as _env
+            _touch.update(viewers=viewers, cole_typing=_env.cole_typing(),
+                          agents_online=agents_online or [], eyes_streaming=eyes_streaming,
+                          autonomy_active=autonomy_active, surfaces=self.surfaces_from_layout())
+            if who is not None:
+                _touch.record_pull(who, what or "")
+        except Exception as e:
+            print(f"[nova_runtime] touch populate failed: {e}")
+
+    def clear_touch_active(self) -> None:
+        """Tick over — she's no longer actively engaged. Best-effort."""
+        try:
+            from nova_senses import touch as _touch
+            _touch.update(autonomy_active=False)
+        except Exception:
+            pass
+
     # ── lifecycle ──
 
     async def run(self) -> None:
