@@ -1,5 +1,5 @@
 # GEMINI_INDEX.md -- Nova Workspace Session Manifest
-_Last updated: 2026-06-02 01:26:03_
+_Last updated: 2026-06-02 13:29:17_
 
 ## INITIALIZATION PROTOCOL
 Run these steps at the start of every session in order:
@@ -58,9 +58,13 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | executive_continue_fix_PROPOSED_2026-05-31.md | `workspace/memory/reports/executive_continue_fix_PROPOSED_2026-05-31.md` | MD file |
 | full_review_progress.md | `workspace/memory/reports/full_review_progress.md` | MD file |
 | identity_brief.md | `workspace/memory/reports/identity_brief.md` | MD file |
+| KoELS_design_spec.md | `workspace/memory/reports/KoELS_design_spec.md` | MD file |
+| KoELS_lora_runtime_finding_2026-06-01.md | `workspace/memory/reports/KoELS_lora_runtime_finding_2026-06-01.md` | MD file |
+| KoELS_runtime_extraction_directive.md | `workspace/memory/reports/KoELS_runtime_extraction_directive.md` | MD file |
 | nova_lora_training_plan.md | `workspace/memory/reports/nova_lora_training_plan.md` | MD file |
 | PASSOVER_2026-05-27_opus.md | `workspace/memory/reports/PASSOVER_2026-05-27_opus.md` | MD file |
 | PASSOVER_2026-05-29_opus.md | `workspace/memory/reports/PASSOVER_2026-05-29_opus.md` | MD file |
+| runtime_extraction_inventory_2026-06-01.md | `workspace/memory/reports/runtime_extraction_inventory_2026-06-01.md` | MD file |
 | self_note.md | `workspace/memory/reports/self_note.md` | MD file |
 | UI_OVERHAUL_2026-05-27.md | `workspace/memory/reports/UI_OVERHAUL_2026-05-27.md` | MD file |
 | who_i_am.md | `workspace/memory/reports/who_i_am.md` | MD file |
@@ -118,6 +122,13 @@ Step 3: Use the Search Key column below for all subsequent file lookups.
 | motor_cortex.py | `workspace/nova_body/nova_motor/motor_cortex.py` | PY file |
 | tool_executor.py | `workspace/nova_body/nova_motor/tool_executor.py` | PY file |
 | verify.py | `workspace/nova_body/nova_motor/verify.py` | PY file |
+| __init__.py | `workspace/nova_body/nova_runtime/__init__.py` | PY file |
+| __main__.py | `workspace/nova_body/nova_runtime/__main__.py` | PY file |
+| event_bus.py | `workspace/nova_body/nova_runtime/event_bus.py` | PY file |
+| llama_control.py | `workspace/nova_body/nova_runtime/llama_control.py` | PY file |
+| model_guard.py | `workspace/nova_body/nova_runtime/model_guard.py` | PY file |
+| runtime.py | `workspace/nova_body/nova_runtime/runtime.py` | PY file |
+| transcript_store.py | `workspace/nova_body/nova_runtime/transcript_store.py` | PY file |
 | __init__.py | `workspace/nova_body/nova_senses/__init__.py` | PY file |
 | calls.md | `workspace/nova_body/nova_senses/calls.md` | MD file |
 | clock.py | `workspace/nova_body/nova_senses/clock.py` | Time-sense: stamps, since-human, scheduling helpers |
