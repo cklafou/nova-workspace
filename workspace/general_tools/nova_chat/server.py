@@ -80,20 +80,16 @@ class _TeeStream:
 sys.stdout = _TeeStream(sys.stdout)
 sys.stderr = _TeeStream(sys.stderr)
 
-try:
-    from nova_lancedb.indexer import get_indexer
-    memory_indexer = get_indexer()
-    memory_indexer.start()
-except ImportError:
-    memory_indexer = None
-    print("[server] WARNING: nova_lancedb not found. Persistent memory indexing disabled.")
+# The runtime (_rt, created below) owns the semantic-memory indexer now. It's started in
+# startup_event and this module global is aliased to it there, so existing call-sites
+# (`if memory_indexer: memory_indexer.add_message(...)`) keep working unchanged.
+memory_indexer = None
 
 app = FastAPI()
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    if memory_indexer:
-        memory_indexer.stop()
+    _rt.stop_indexer()
     # Kill llama-server on port 8080 so it doesn't outlive the Nova process
     try:
         import subprocess as _sp
@@ -178,6 +174,12 @@ from nova_runtime.model_guard import ModelGuard
 _rt_workspace = Path(os.environ.get("NOVA_WORKSPACE") or Path(__file__).resolve().parent.parent.parent)
 _rt_llama = LlamaControl(_rt_workspace)
 _rt_guard = ModelGuard(rate_limit=_NOVA_RATE_LIMIT, rate_window=_NOVA_RATE_WINDOW, error_backoff=_LLAMA_ERROR_BACKOFF)
+
+# STEP 3: the unified runtime body — owns the memory indexer + proprioception (and, from
+# Steps 5–6, the daemon/senses/llama too). For now we use it for the indexer + sys-metrics;
+# llama/guard above stay until the boot host flips to the runtime (Step 6).
+from nova_runtime.runtime import NovaRuntime
+_rt = NovaRuntime()
 
 # ── Autonomous mode + inference params ────────────────────────────────────────
 autonomous_mode:    bool  = False   # OFF by default — Cole enables Autonomous Mode in the UI when ready to let Nova run
@@ -286,6 +288,13 @@ def _should_agent_respond(agent: str, content: str) -> bool:
 @app.on_event("startup")
 async def startup_event():
     """Trigger workspace index build and background monitors after server is ready."""
+    global memory_indexer
+    _rt.start_indexer()              # runtime owns the indexer; bring it up
+    memory_indexer = _rt.indexer     # alias the module global to it so existing call-sites work
+    # STEP 4: hand the model client modules to the body's dispatch faculty. CLIENT_MAP and
+    # _run_gemini_response are module-level (defined below), so they exist by the time startup
+    # runs. After this, run_ai_response delegates the model-call to _rt.model_client.generate().
+    _rt.model_client.register(CLIENT_MAP, gemini_runner=_run_gemini_response)
     # Autonomy on/off lives in Nova's body (nova_cortex.executive), persisted across
     # restarts. Load it so the UI + per-turn flag reflect her real state on boot.
     global autonomous_mode
@@ -420,26 +429,7 @@ async def startup_event():
         await _aio.sleep(5)
         while True:
             try:
-                import psutil as _ps
-                _sys_metrics['cpu_pct']  = round(_ps.cpu_percent(interval=None), 1)
-                vm = _ps.virtual_memory()
-                _sys_metrics['ram_gb']   = round(vm.used / (1024**3), 1)
-                _sys_metrics['ram_total']= round(vm.total / (1024**3), 1)
-            except Exception:
-                pass
-            try:
-                import subprocess as _sp
-                r = _sp.run(
-                    ['nvidia-smi','--query-gpu=memory.used,memory.total','--format=csv,noheader,nounits'],
-                    capture_output=True, text=True, timeout=3
-                )
-                if r.returncode == 0:
-                    parts = r.stdout.strip().split(',')
-                    if len(parts) == 2:
-                        used_mb  = int(parts[0].strip())
-                        total_mb = int(parts[1].strip())
-                        _sys_metrics['vram']     = f"{used_mb//1024}/{total_mb//1024} GB"
-                        _sys_metrics['vram_pct'] = round(used_mb/total_mb*100, 1)
+                _sys_metrics.update(_rt.read_system_metrics())   # proprioception now lives in the body
             except Exception:
                 pass
             await _aio.sleep(10)
@@ -1130,26 +1120,21 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             "duration_ms": round(duration_ms),
         })
 
-    if ai_name == "Gemini":
-        await _run_gemini_response(on_token, on_done, on_error, ws_context, images=images)
-    elif ai_name == "Nova":
-        # Nova supports <think> tag parsing — pass on_think_token and on_progress.
-        # Use _transcript (HeartbeatContext for HB ticks, session_mgr.active for normal).
-        await client_mod.stream_response(
-            _transcript, on_token, on_done, on_error,
-            on_think_token=on_think_token,
-            on_progress=on_progress,
-            on_tool_executed=on_tool_executed_cb,
-            workspace_context=ws_context, images=images,
-            autonomous=autonomous_mode or _is_hb_tick,
-            temperature=_nova_temperature,
-            top_p=_nova_top_p,
-        )
-    else:
-        await client_mod.stream_response(
-            _transcript, on_token, on_done, on_error,
-            workspace_context=ws_context, images=images
-        )
+    # STEP 4: the model-call is a body faculty now. run_ai_response still builds the context +
+    # the broadcast sinks above; the runtime owns WHICH client and HOW it's driven — the dispatch
+    # + per-model call conventions, relocated verbatim to nova_runtime/model_client.py. The body
+    # resolves the client by ai_name (registered at startup), so client_mod isn't used here now.
+    await _rt.model_client.generate(
+        ai_name, _transcript,
+        on_token=on_token, on_done=on_done, on_error=on_error,
+        on_think_token=on_think_token,
+        on_progress=on_progress,
+        on_tool_executed=on_tool_executed_cb,
+        workspace_context=ws_context, images=images,
+        autonomous=autonomous_mode or _is_hb_tick,
+        temperature=_nova_temperature,
+        top_p=_nova_top_p,
+    )
 
     return _result[0] if _result else ""
 

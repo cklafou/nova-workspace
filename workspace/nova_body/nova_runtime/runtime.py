@@ -25,6 +25,7 @@ from nova_runtime.event_bus import EventBus
 from nova_runtime.transcript_store import TranscriptStore
 from nova_runtime.llama_control import LlamaControl
 from nova_runtime.model_guard import ModelGuard
+from nova_runtime.model_client import ModelClient
 
 _WORKSPACE = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
               else Path(__file__).resolve().parent.parent.parent)
@@ -42,8 +43,12 @@ class NovaRuntime:
         self.llama = LlamaControl(self.workspace)   # health / autostart / stop / restart (+ KoELS equip later)
         self.guard = ModelGuard()                   # rate-limit failsafe + consecutive-llama-error backoff
 
+        # ── STEP 4 (done): the model-dispatch faculty — owns WHICH client + HOW it's driven.
+        #    A host registers the client modules (model_client.register); the faculty stays
+        #    import-clean of any chat-server module so generation survives the pluck. ──
+        self.model_client = ModelClient()
+
         # ── slots filled by later extraction steps (kept in server.py until then) ──
-        self.model_client = None     # STEP 4: her llama client (split out of run_ai_response)
         self.indexer = None          # STEP 3: nova_lancedb memory indexer
         self._daemon_task = None     # STEP 5: the autonomy daemon, moved onto the bus
 
@@ -80,6 +85,65 @@ class NovaRuntime:
                 f.write(json.dumps(payload, ensure_ascii=False) + "\n")
         except Exception:
             pass
+
+    # ── STEP 3: memory indexing + proprioception (body-owned; a face just reads/relays) ──
+
+    def start_indexer(self) -> bool:
+        """Bring up her semantic-memory indexer (nova_lancedb). Owned by the runtime so
+        memory indexing survives with no chat server attached. None-safe if unavailable."""
+        try:
+            from nova_lancedb.indexer import get_indexer
+            self.indexer = get_indexer()
+            self.indexer.start()
+            return True
+        except Exception as e:
+            self.indexer = None
+            print(f"[nova_runtime] memory indexer unavailable: {e}")
+            return False
+
+    def stop_indexer(self) -> None:
+        if self.indexer:
+            try:
+                self.indexer.stop()
+            except Exception:
+                pass
+
+    def index_message(self, content: str, author: str, session_id) -> None:
+        """Index one message into semantic memory; no-op if the indexer isn't up."""
+        if self.indexer:
+            try:
+                self.indexer.add_message(content, author, session_id)
+            except Exception:
+                pass
+
+    def read_system_metrics(self) -> dict:
+        """Proprioception — CPU / RAM / VRAM. Best-effort: a missing tool degrades to a
+        partial dict rather than raising. Relocated from the chat server's _bg_sys_metrics;
+        a face polls this and decides whether to display it."""
+        m: dict = {}
+        try:
+            import psutil
+            m["cpu_pct"] = round(psutil.cpu_percent(interval=None), 1)
+            vm = psutil.virtual_memory()
+            m["ram_gb"] = round(vm.used / (1024 ** 3), 1)
+            m["ram_total"] = round(vm.total / (1024 ** 3), 1)
+        except Exception:
+            pass
+        try:
+            import subprocess
+            r = subprocess.run(
+                ["nvidia-smi", "--query-gpu=memory.used,memory.total",
+                 "--format=csv,noheader,nounits"],
+                capture_output=True, text=True, timeout=3)
+            if r.returncode == 0:
+                parts = r.stdout.strip().split(",")
+                if len(parts) == 2:
+                    used_mb, total_mb = int(parts[0].strip()), int(parts[1].strip())
+                    m["vram"] = f"{used_mb // 1024}/{total_mb // 1024} GB"
+                    m["vram_pct"] = round(used_mb / total_mb * 100, 1)
+        except Exception:
+            pass
+        return m
 
     # ── lifecycle ──
 
