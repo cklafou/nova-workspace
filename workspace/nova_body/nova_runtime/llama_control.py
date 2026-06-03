@@ -42,8 +42,13 @@ class LlamaControl:
             return False
 
     def _kill_port(self) -> None:
+        # Kill whatever holds the port AND any llama-server by name. The port-only kill
+        # (Get-NetTCPConnection -> Stop-Process by OwningProcess) can miss the real process
+        # on some setups — the restart live-test (2026-06-01) caught it not killing llama —
+        # so we also stop it by name. Belt-and-suspenders, and what KoELS self-restart relies on.
         ps = (f"Get-NetTCPConnection -LocalPort {self.port} -ErrorAction SilentlyContinue | "
-              "ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }")
+              "ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; "
+              "Stop-Process -Name llama-server -Force -ErrorAction SilentlyContinue")
         try:
             self._run(["powershell", "-Command", ps], capture_output=True, text=True, timeout=10)
         except Exception:
