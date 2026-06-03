@@ -52,10 +52,14 @@
         {
           "ts": "2026-06-03T11:27:01",
           "note": "Want me to actually test whether nova_config is being used anywhere in production or are we good closing this?"
+        },
+        {
+          "ts": "2026-06-03T23:51:19",
+          "note": "filled section #10 Known Gaps with 6 concrete items instead of empty checkmarks; next step is runtime verification of those gaps during active use"
         }
       ],
       "created": "2026-05-27T22:40:41",
-      "updated": "2026-06-03T11:27:01"
+      "updated": "2026-06-03T23:51:19"
     }
   }
 }
