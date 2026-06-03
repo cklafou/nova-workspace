@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-05-31 18:17:45_
+_Last updated: 2026-06-03 23:50:52_
 
 ---
 
@@ -668,3 +668,17 @@ pathology. The fix lives in `nova_cortex/executive.py` decision logic and should
 was left as-is, with that block as the override.
 
 *Originally built incrementally as part of the architecture-review task; consolidated 2026-05-31.*
+
+### Current Known Gaps (2026-06-03):
+
+1. **nova_config usage unclear** - The config loader is imported by scaffolded modules but the live path doesn't appear to read it in production. Needs verification against actual runtime imports.
+
+2. **Journal tool vs direct writes confusion** - Section 5 describes using `nova_memory.journal.append()` for JOURNAL.md, but the actual tool system uses a dedicated journal_note/journal tool pair that Nova calls directly via exec. The description may be conflating the old architecture with current implementation.
+
+3. **Touch sense integration depth unknown** - While touch_state.json is documented and feeds into Reflect phase, it's unclear how deeply Cole actually perceives this data or if he's even aware of what gets logged there during sessions.
+
+4. **Memory search coverage uncertain** - The memory_search tool claims to embed "every past message" but the actual scope (chat history depth, journal entries included, image metadata) isn't clearly defined in one place.
+
+5. **Autonomy wake triggers ambiguous** - Documentation says environment changes OR Cole speaking trigger wakes when active, but doesn't specify what counts as an "environment change" or if there's a threshold/deduplication mechanism to avoid excessive waking on minor events.
+
+6. **Tool call error handling not documented** - When Nova fires a tool and it fails (file missing, command returns error), the recovery protocol isn't standardized in this doc beyond general status updates.
