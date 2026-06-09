@@ -50,7 +50,8 @@ class LlamaControl:
               "ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; "
               "Stop-Process -Name llama-server -Force -ErrorAction SilentlyContinue")
         try:
-            self._run(["powershell", "-Command", ps], capture_output=True, text=True, timeout=10)
+            self._run(["powershell", "-Command", ps], capture_output=True, text=True,
+                      encoding="utf-8", errors="replace", timeout=10)
         except Exception:
             pass
 

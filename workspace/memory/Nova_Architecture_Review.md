@@ -682,3 +682,23 @@ was left as-is, with that block as the override.
 5. **Autonomy wake triggers ambiguous** - Documentation says environment changes OR Cole speaking trigger wakes when active, but doesn't specify what counts as an "environment change" or if there's a threshold/deduplication mechanism to avoid excessive waking on minor events.
 
 6. **Tool call error handling not documented** - When Nova fires a tool and it fails (file missing, command returns error), the recovery protocol isn't standardized in this doc beyond general status updates.
+
+7. **list_dir** - List files and directories in a given path
+8. **create_task** - Add tracked task to board with title, notes, priority level (1-5)
+9. **task_progress** - Log concrete progress step on existing task by ID
+10. **complete_task** - Mark task done with result summary
+11. **generate_image** - Render image via local ComfyUI painter; saves to nova_art/ folder; supports "as_nova" flag for self-portraits with locked appearance
+12. **journal_note** - Drop quick timestamped sticky note throughout day (lessons, emotions, corrections); goes to memory/journal_notes/YYYY-MM-DD.md as fragments for end-of-day consolidation
+13. **memory_search** - Semantic recall across full embedded history in LanceDB store; natural-language queries return top matching text blocks from past messages, journal entries, AI responses, images
+
+### Tool Execution Flow:
+Tools are invoked via JSON-formatted output that the system immediately executes and feeds back as [System: Result] blocks. Nova can chain multiple tool calls autonomously without waiting for Cole's input between steps - this is autonomous mode where she plans multi-step tasks, executes each step with tools, verifies results, then proceeds to next step automatically.
+
+### Critical Tool Behaviors:
+- **write_file**: Creates NEW files only; refuses overwrite unless `overwrite: true` flag added (rarely needed)
+- **append_file**: Add content to END of file (creates if missing); primary method for growing living documents section-by-section without losing prior work
+- **replace_file_content** (aka edit_file): Precision editing - replace exact whitespace-matched string inside file; ideal for changing parts without rewriting entire document
+- **generate_image with as_nova**: Auto-applies Nova's locked self-portrait parameters so she comes out consistent every time
+- **journal vs journal_note**: journal is consolidated daily entry (one per calendar date, enforced); journal_note are the sticky notes dropped throughout day that feed into it
+
+---

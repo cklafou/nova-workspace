@@ -159,7 +159,7 @@ class NovaRuntime:
             r = subprocess.run(
                 ["nvidia-smi", "--query-gpu=memory.used,memory.total",
                  "--format=csv,noheader,nounits"],
-                capture_output=True, text=True, timeout=3)
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=3)
             if r.returncode == 0:
                 parts = r.stdout.strip().split(",")
                 if len(parts) == 2:
