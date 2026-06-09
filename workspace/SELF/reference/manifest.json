@@ -1,8 +1,8 @@
 {
-  "generated": "2026-06-03T23:57:49",
+  "generated": "2026-06-10T08:25:18",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
-  "part_count": 23,
-  "described": 23,
+  "part_count": 24,
+  "described": 24,
   "flags": {
     "undescribed": [],
     "dead_part_candidates": [
@@ -25,7 +25,7 @@
       "purpose": "Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads workspace/nova_config.json; falls back to defaults. Import as: from nova_config import cfg.",
       "files": 1,
       "lines": 138,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -47,9 +47,9 @@
       "kind": "body_part",
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).",
-      "files": 8,
-      "lines": 2007,
-      "age_days": 3,
+      "files": 9,
+      "lines": 2106,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -63,7 +63,8 @@
       "referenced_by": [
         "nova_chat",
         "nova_memory",
-        "nova_motor"
+        "nova_motor",
+        "nova_runtime"
       ],
       "launched_by": [],
       "flags": []
@@ -75,7 +76,7 @@
       "purpose": "Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches, schematics), auto-applying her self-LoRA when she draws herself.",
       "files": 2,
       "lines": 328,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -100,7 +101,7 @@
       "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
       "files": 4,
       "lines": 568,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -130,7 +131,7 @@
       "purpose": "Nova's unified log manager — the single logging system shared by all subsystems.",
       "files": 2,
       "lines": 254,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -151,7 +152,7 @@
       "purpose": "Nova's memory — persistent state, journal, goals/status, and daily log summaries.",
       "files": 6,
       "lines": 836,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -176,7 +177,7 @@
       "purpose": "Nova's motor system — executes actions (hands), plans them (motor_cortex), and verifies results.",
       "files": 5,
       "lines": 1182,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [
         "8765"
@@ -205,14 +206,16 @@
       "kind": "body_part",
       "path": "nova_body/nova_runtime",
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
-      "files": 8,
-      "lines": 722,
+      "files": 9,
+      "lines": 1169,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080"
       ],
       "nova_imports": [
+        "nova_chat",
+        "nova_cortex",
         "nova_lancedb",
         "nova_runtime",
         "nova_senses"
@@ -224,7 +227,9 @@
       "referenced_by": [
         "nova_chat"
       ],
-      "launched_by": [],
+      "launched_by": [
+        "start_llama_koels.cmd"
+      ],
       "flags": []
     },
     {
@@ -234,7 +239,7 @@
       "purpose": "Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED (GUI-automation phase, not yet wired): desktop vision (eyes, vision) and UI proprioception.",
       "files": 7,
       "lines": 1548,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -265,7 +270,7 @@
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
       "lines": 445,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -290,7 +295,7 @@
       "purpose": "Launcher — runs nova_start.py to bring up the whole Nova stack (double-click entry point).",
       "files": 1,
       "lines": 19,
-      "age_days": 10,
+      "age_days": 16,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -309,7 +314,7 @@
       "purpose": "Shutdown — kills whatever is listening on Nova's ports (8080/8765) for a clean restart.",
       "files": 1,
       "lines": 37,
-      "age_days": 7,
+      "age_days": 14,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -328,7 +333,7 @@
       "purpose": "Starts llama.cpp serving Qwen 3.5 27B Q8 on :8080 with the dual-GPU tensor split (4090+3090).",
       "files": 1,
       "lines": 44,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [
         "8080"
       ],
@@ -339,8 +344,29 @@
       "third_party": [],
       "referenced_by": [],
       "launched_by": [
-        "nova_start.py"
+        "nova_start.py",
+        "start_llama_koels.cmd"
       ],
+      "flags": []
+    },
+    {
+      "name": "start_llama_koels.cmd",
+      "kind": "launcher",
+      "path": "start_llama_koels.cmd",
+      "purpose": "KoELS-enabled launcher (Step: equip skeleton, LIVE-GATED). Identical to start_llama.cmd",
+      "files": 1,
+      "lines": 50,
+      "age_days": 0,
+      "ports_bind": [
+        "8080"
+      ],
+      "ports_seen": [
+        "8080"
+      ],
+      "nova_imports": [],
+      "third_party": [],
+      "referenced_by": [],
+      "launched_by": [],
       "flags": []
     },
     {
@@ -350,7 +376,7 @@
       "purpose": "Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.",
       "files": 1,
       "lines": 181,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [
         "8765"
@@ -379,7 +405,7 @@
       "purpose": "Persistent audit-review queue — records file-change events (rename/delete/new) for review by audit_scripts/restructure.",
       "files": 1,
       "lines": 288,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -399,7 +425,7 @@
       "purpose": "Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.",
       "files": 1,
       "lines": 760,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -421,7 +447,7 @@
       "purpose": "Generates Nova's Body Manifest — the single derived map of every body part",
       "files": 1,
       "lines": 323,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -444,7 +470,7 @@
       "purpose": "Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.",
       "files": 1,
       "lines": 269,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -464,7 +490,7 @@
       "purpose": "One-time downloader for Nova's vision models into workspace/models/ (for nova_senses).",
       "files": 1,
       "lines": 111,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -485,7 +511,7 @@
       "purpose": "NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.",
       "files": 1,
       "lines": 484,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [
         "8765"
@@ -510,8 +536,8 @@
       "kind": "tool",
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
-      "files": 15,
-      "lines": 6681,
+      "files": 16,
+      "lines": 6645,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -550,7 +576,8 @@
       ],
       "referenced_by": [
         "NovaLauncher.py",
-        "injector.py"
+        "injector.py",
+        "nova_runtime"
       ],
       "launched_by": [
         "StopNova.cmd",
@@ -565,7 +592,7 @@
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.",
       "files": 5,
       "lines": 2087,
-      "age_days": 0,
+      "age_days": 6,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -592,7 +619,7 @@
       "purpose": "Restructure checker — detects stale path references after a directory move and offers interactive fixes.",
       "files": 1,
       "lines": 597,
-      "age_days": 5,
+      "age_days": 11,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
