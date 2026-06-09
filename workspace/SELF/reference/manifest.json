@@ -1,10 +1,12 @@
 {
-  "generated": "2026-06-10T08:41:54",
+  "generated": "2026-06-10T08:42:15",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
-  "part_count": 24,
+  "part_count": 25,
   "described": 24,
   "flags": {
-    "undescribed": [],
+    "undescribed": [
+      "RUN_PLUCK.cmd"
+    ],
     "dead_part_candidates": [
       "nova_memory",
       "nova_motor",
@@ -228,6 +230,7 @@
         "nova_chat"
       ],
       "launched_by": [
+        "RUN_PLUCK.cmd",
         "start_llama_koels.cmd"
       ],
       "flags": []
@@ -308,6 +311,24 @@
       "flags": []
     },
     {
+      "name": "RUN_PLUCK.cmd",
+      "kind": "launcher",
+      "path": "RUN_PLUCK.cmd",
+      "purpose": null,
+      "files": 1,
+      "lines": 26,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [],
+      "third_party": [],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "undescribed"
+      ]
+    },
+    {
       "name": "StopNova.cmd",
       "kind": "launcher",
       "path": "StopNova.cmd",
@@ -323,7 +344,9 @@
       "nova_imports": [],
       "third_party": [],
       "referenced_by": [],
-      "launched_by": [],
+      "launched_by": [
+        "RUN_PLUCK.cmd"
+      ],
       "flags": []
     },
     {
