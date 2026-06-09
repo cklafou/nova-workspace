@@ -1,5 +1,5 @@
 # PROPOSED CHANGE — executive.py "continue, don't restart" fix
-_Last updated: 2026-05-31 18:19:02_
+_Last updated: 2026-06-10 08:27:47_
 _Drafted 2026-05-31 by Opus 4.8. **Proposed, not applied.** Apply + verify when the stack is live._
 _Targets: `nova_body/nova_cortex/executive.py`, `general_tools/nova_chat/tool_router.py`._
 

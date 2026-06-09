@@ -1,4 +1,5 @@
 # Runtime Extraction — Inventory & Proposed Split (directive Steps 1–3)
+_Last updated: 2026-06-10 08:27:47_
 _Cowork Opus, 2026-06-01. **PROPOSAL — no code moved.** Awaiting Cole's approval (directive Step 4). Then the auditor reviews the split cold._
 
 ## The split in one line

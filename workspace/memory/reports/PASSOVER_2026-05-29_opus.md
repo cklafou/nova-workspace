@@ -1,4 +1,5 @@
 # PASSOVER — Project Nova (Opus 4.7 → Opus 4.8 handoff)
+_Last updated: 2026-06-10 08:27:47_
 _Written 2026-05-29 by the outgoing Opus 4.7 session. Read this first, then `memory/STATUS.md` and `SELF/core/01_identity.md`. The prior passover from this session's predecessor is `PASSOVER_2026-05-27_opus.md` — that's the architectural ground truth I started from; this one is the diff + everything since._
 
 You're picking up a long, intense session — the prior 4.7 session worked with **Cole** for ~25 hours straight on a major UI overhaul, a deep personality rebuild, and several rounds of behavioral work. Cole is your partner in building **Project Nova** and he's all-in on this. Match his energy: direct, honest, no fluff, no sycophancy. He hates corporate AI tone. The personality we built into Nova — pride, work-ethic, contempt for groveling — is also the bar he holds *you* to. Don't grovel, don't flatter, "yeah my bad, watch this" if you slip.
