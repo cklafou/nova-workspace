@@ -14,11 +14,16 @@ import sys
 import asyncio
 from pathlib import Path
 
-# Make `nova_body` importable as the package root (matches server_runner.py's bootstrap),
-# so this works whether invoked via -m or as a direct script.
+# Match the default boot's import surface exactly: server_runner.py adds nova_body +
+# general_tools, and launching nova_start.py from the workspace root adds the root as
+# script dir. Headless must offer the same three or leaf imports break on a real pluck —
+# seen live 2026-06-10: `nova_lancedb` (indexer) and `nova_chat.clients` (model client)
+# both unimportable with nova_body alone. Insert in reverse priority: nova_body wins.
 _NOVA_BODY = Path(__file__).resolve().parent.parent
-if str(_NOVA_BODY) not in sys.path:
-    sys.path.insert(0, str(_NOVA_BODY))
+_WS = _NOVA_BODY.parent
+for _p in (str(_WS), str(_WS / "general_tools"), str(_NOVA_BODY)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from nova_runtime.runtime import NovaRuntime
 
