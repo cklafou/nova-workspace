@@ -178,8 +178,10 @@ _rt_guard = ModelGuard(rate_limit=_NOVA_RATE_LIMIT, rate_window=_NOVA_RATE_WINDO
 # STEP 3: the unified runtime body — owns the memory indexer + proprioception (and, from
 # Steps 5–6, the daemon/senses/llama too). For now we use it for the indexer + sys-metrics;
 # llama/guard above stay until the boot host flips to the runtime (Step 6).
-from nova_runtime.runtime import NovaRuntime
-_rt = NovaRuntime()
+from nova_runtime.runtime import get_shared_runtime
+# STEP 6d: attach to the runtime a runtime-primary launcher installed, if any; otherwise this
+# lazily creates its own — byte-identical to the old `_rt = NovaRuntime()` for the default boot.
+_rt = get_shared_runtime()
 
 # ── Autonomous mode + inference params ────────────────────────────────────────
 autonomous_mode:    bool  = False   # OFF by default — Cole enables Autonomous Mode in the UI when ready to let Nova run
@@ -1768,124 +1770,41 @@ async def autonomy_daemon():
     Stage 1 (cheap, no model): env changed OR interval elapsed OR observe-dwell
     OR Cole pending. Stage 2: a model wake-tick where Nova exercises judgment.
     Cole speaking is the highest-priority wake (Priority 0)."""
-    global is_processing
-    # Drive Nova's body-resident executive faculty. The judgment — whether to wake,
-    # and what to do or whether to rest — is entirely hers, in nova_cortex.executive.
-    # This host only provides the clock tick, the model call, and her voice. Autonomy
-    # on/off is body state; the UI button merely flips executive.set_autonomy().
-    from nova_cortex import executive
-    await asyncio.sleep(2)
+    # STEP 6b: the sleep/wake loop now lives in Nova's body (NovaRuntime.run_autonomy). This
+    # host wrapper supplies only the I/O it alone has — chat perception, the model call, the
+    # shared busy flag, and face-state — and lets her body own the cognition. Launched at
+    # startup exactly as before; her loop, our clock + voice. (Step 6c gives it a headless
+    # launcher with runtime-native hooks so it runs with no server at all.)
+    def _get_busy() -> bool:
+        return is_processing
 
-    while True:
-        forced = _force_wake.is_set()                # Cole pressed Wake Up — overrides the gate
-        if not forced and not executive.autonomy_enabled():
-            await asyncio.sleep(2)
-            continue
+    def _set_busy(v: bool) -> None:
+        global is_processing
+        is_processing = v
 
-        await asyncio.sleep(0.5 if forced else 3)    # ASLEEP — cheap poll, no model
-        if _stop_requested.is_set() or is_processing:
-            continue                                 # busy — keep _force_wake set; handle next loop
+    def _face_state() -> dict:
+        agents = [a for a, c in (("Claude", claude_client), ("Gemini", gemini_client))
+                  if c.is_available()]
+        return {"viewers": len(connected_clients), "agents_online": agents,
+                "eyes_streaming": bool(_eyes_running)}
 
-        cole_pending = _has_unread_cole()            # host reads the live transcript
-        # A standing directive's job is to make sure she attends to Cole's word ONCE.
-        # If she has already replied (she's the last speaker, so cole_pending is False)
-        # yet a directive still lingers, it's been handled — release it so a plain
-        # conversational message doesn't keep re-waking her ("directive" loop).
-        if not cole_pending:
-            try:
-                from nova_senses import environment as _env
-                if _env.cole_directive():
-                    _env.consume_cole_directive()
-            except Exception:
-                pass
-        if forced:
-            _force_wake.clear()
-            should, reason = True, "Cole pressed Wake Up"
-        else:
-            should, reason = executive.should_wake(cole_pending)
-        if not should:
-            continue
-        try:
-            if not (await get_status()).get("Nova"):
-                await asyncio.sleep(5)
-                continue
-        except Exception:
-            await asyncio.sleep(5)
-            continue
+    async def _model_available() -> bool:
+        return bool((await get_status()).get("Nova"))
 
-        await _rt.emit("wake", f"Nova woke — {reason}")
+    async def _generate(prompt: str, cole_pending: bool) -> str:
+        return await run_ai_response(
+            "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], prompt,
+            hb_ctx=HeartbeatContext(prompt), cole_pending=cole_pending) or ""
 
-        # ── Two-phase wake: she SITS WITH the moment (reflect) before she may act ──
-        is_processing = True
-        await broadcast({"type": "processing_start"})
-        try:
-            recent = _recent_chat_context()
-            # Populate Touch — what is interacting with her right now — so she can FEEL it
-            # during reflection. The body owns the sense mechanics now (Step 5); the host
-            # supplies only the face-state it alone knows (viewers, eyes, which agents are up).
-            _agents = [a for a, c in (("Claude", claude_client), ("Gemini", gemini_client))
-                       if c.is_available()]
-            _rt.populate_touch(
-                viewers=len(connected_clients), agents_online=_agents,
-                eyes_streaming=bool(_eyes_running),
-                who=("Cole" if cole_pending else "your own rhythm"),
-                what=("reached in and spoke" if cole_pending else f"stirred you ({reason})"),
-            )
-            # Phase 1 — reflect. Always SILENT (cole_pending=False) so it streams to her
-            # thinking pane, never as a chat bubble. This is her forming a genuine view of
-            # the moment — recent conversation, how it feels, what it logically calls for.
-            refl_prompt = executive.build_reflection(
-                cole_pending, reason, recent, executive.last_reflection())
-            reflection = await run_ai_response(
-                "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], refl_prompt,
-                hb_ctx=HeartbeatContext(refl_prompt), cole_pending=False) or ""
-            executive.save_reflection(reflection)
-            await _rt.emit("reflect", "Nova sat with the moment")
-            # Phase 2 — decide, having reflected. Speaks to chat iff Cole is waiting;
-            # otherwise silent. Board actions are OPTIONAL — a wake may end in just
-            # talking, just resting, or just thinking more.
-            dec_prompt = executive.build_decision(reflection, cole_pending, reason, recent)
-            reply = await run_ai_response(
-                "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], dec_prompt,
-                hb_ctx=HeartbeatContext(dec_prompt), cole_pending=cole_pending) or ""
-            outcome = executive.apply_decision(reply, cole_pending=cole_pending)
-            await _rt.emit("autonomy", outcome["summary"])
-
-            # ── Phase 3 — execute. The decision phase only moves the BOARD; it never
-            # does the work. If she holds an open task and this wake is her own rhythm
-            # (not a live reply to Cole) and she didn't choose to rest, she now actually
-            # DOES the next concrete step with her file tools and we log honest progress.
-            # This is what turns "create a task, then work it" into a finished task
-            # instead of one that sits open forever.
-            try:
-                if not cole_pending and (forced or not outcome.get("rested")):
-                    from nova_cortex import tasking as _tasking
-                    exec_id = executive.pick_execution_target()
-                    etask   = _tasking.all_tasks().get(exec_id) if exec_id else None
-                    if etask and etask.get("status") == "open":
-                        await _rt.emit("autonomy", f"working {exec_id}: {etask.get('title','')[:60]}")
-                        ex_prompt = executive.build_execution(etask, recent)
-                        ex_reply = await run_ai_response(
-                            "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], ex_prompt,
-                            hb_ctx=HeartbeatContext(ex_prompt), cole_pending=False) or ""
-                        kind, payload = executive.parse_execution(ex_reply)
-                        if kind == "done":
-                            _tasking.complete(exec_id, payload or "Completed.")
-                            executive.set_active(None)
-                            await _rt.emit("autonomy", f"completed {exec_id}: {payload[:80]}")
-                        elif kind == "progress" and payload.strip():
-                            _tasking.progress(exec_id, payload)
-                            await _rt.emit("autonomy", f"progress {exec_id}: {payload[:80]}")
-            except Exception as _xe:
-                print(f"[autonomy] execution pass error: {_xe}")
-        except asyncio.CancelledError:
-            pass
-        except Exception as _e:
-            print(f"[autonomy] tick error: {_e}")
-        finally:
-            is_processing = False
-            _rt.clear_touch_active()
-            await broadcast({"type": "processing_end"})
+    await _rt.run_autonomy(
+        perceive_cole_pending=_has_unread_cole,
+        recent_context=_recent_chat_context,
+        model_available=_model_available,
+        generate=_generate,
+        is_busy=_get_busy, set_busy=_set_busy,
+        face_state=_face_state,
+        force_wake=_force_wake, stop_requested=_stop_requested,
+    )
 
 
 @app.post("/api/wake")

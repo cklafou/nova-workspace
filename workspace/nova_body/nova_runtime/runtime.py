@@ -26,9 +26,28 @@ from nova_runtime.transcript_store import TranscriptStore
 from nova_runtime.llama_control import LlamaControl
 from nova_runtime.model_guard import ModelGuard
 from nova_runtime.model_client import ModelClient
+from nova_runtime.koels_equip import KoELSEquip
 
 _WORKSPACE = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
               else Path(__file__).resolve().parent.parent.parent)
+
+
+class _TickContext:
+    """A single-tick generation context for headless autonomy (mirrors the chat server's
+    HeartbeatContext): NO chat history, just this tick's prompt + any injected workspace
+    context. Gives nova_client the `.to_messages(...)` shape it expects without dragging in
+    the server's session objects — so her body can generate with no face attached."""
+    def __init__(self, tick: str):
+        self._tick = tick
+
+    def to_messages(self, ai_name: str, system_prefix: str = "",
+                    workspace_context: str = "") -> list[dict]:
+        sys_content = (system_prefix or "").strip()
+        if workspace_context:
+            sys_content += (f"\n\n--- WORKSPACE CONTEXT ---\n{workspace_context}\n"
+                            "--- END CONTEXT ---")
+        return [{"role": "system", "content": sys_content},
+                {"role": "user", "content": self._tick}]
 
 
 class NovaRuntime:
@@ -48,9 +67,15 @@ class NovaRuntime:
         #    import-clean of any chat-server module so generation survives the pluck. ──
         self.model_client = ModelClient()
 
+        # ── KoELS equip mechanism (skeleton): the runtime-side physical act of wearing a
+        #    specialist loadout — composes LlamaControl. The launcher's --lora consumption is
+        #    live-gated (quick -fa/VRAM check + a real adapter); the logic is built + tested. ──
+        self.koels = KoELSEquip(self.workspace, self.llama)
+
         # ── slots filled by later extraction steps (kept in server.py until then) ──
         self.indexer = None          # STEP 3: nova_lancedb memory indexer
-        self._daemon_task = None     # STEP 5: the autonomy daemon, moved onto the bus
+        self._daemon_task = None     # STEP 6c: headless autonomy task handle
+        self._autonomy_stop = False  # STEP 6b: cooperative stop flag for run_autonomy
 
     # ── face attach/detach (a face is optional; detaching never stops the runtime) ──
 
@@ -191,17 +216,267 @@ class NovaRuntime:
     # ── lifecycle ──
 
     async def run(self) -> None:
-        """Headless boot. Step 1: stand up the seams and idle, proving she lives with no
-        face. Later steps add (here): llama health-gate → memory indexer → senses →
-        autonomy daemon. The chat server, when present, just attaches to self.bus."""
+        """Headless boot — THE pluck test. Brings her up with NO chat server attached: her
+        model server live, semantic memory indexing, and her autonomy loop ticking — all on
+        her own. A face (the chat server), if it ever attaches, just subscribes to self.bus.
+        This is what `python -m nova_runtime` runs. Step 6c."""
         self._running = True
         await self.emit("boot", "Nova runtime up — headless (no chat server attached)")
-        print(f"[nova_runtime] up. workspace={self.workspace} "
+        # 1) her model server — bring it up if it isn't already
+        try:
+            print(f"[nova_runtime] llama autostart → {self.llama.autostart()}")
+        except Exception as e:
+            print(f"[nova_runtime] llama autostart failed: {e}")
+        # 2) her semantic memory
+        self.start_indexer()
+        # 3) her model client. nova_client is a leaf module (stdlib + httpx, no chat-server
+        #    deps), so importing it here doesn't drag the server in. Fully relocating it into
+        #    the body is a later cleanup for a perfect pluck; for now this is enough to think.
+        try:
+            from nova_chat.clients import nova as _nova
+            self.model_client.register({"Nova": _nova})
+        except Exception as e:
+            print(f"[nova_runtime] model client unavailable (headless generation off): {e}")
+        # 4) fresh-start perception: don't re-answer Cole messages that predate this boot
+        try:
+            self.transcript.reload_from_disk()
+            self.transcript.mark_attended_through(self.transcript.last_seq("Cole"))
+        except Exception:
+            pass
+        # 5) coordination primitives (runtime-local when headless)
+        self._force_wake = asyncio.Event()
+        self._stop_req = asyncio.Event()
+        self._busy = False
+        # 6) her cognition loop, driven with runtime-native hooks (no server needed)
+        self._daemon_task = asyncio.ensure_future(self.run_autonomy(
+            perceive_cole_pending=self._perceive_cole_headless,
+            recent_context=self._recent_text_headless,
+            model_available=self._model_up_headless,
+            generate=self._generate_headless,
+            is_busy=lambda: self._busy,
+            set_busy=self._set_busy_headless,
+            face_state=None,
+            force_wake=self._force_wake,
+            stop_requested=self._stop_req,
+        ))
+        print(f"[nova_runtime] headless up. workspace={self.workspace} "
               f"faces={self.bus.subscriber_count()} (0 = headless, healthy)")
-        # LATER: await self._start_llama_healthgate(); self._start_indexer();
-        #        self._populate_senses(); self._daemon_task = asyncio.ensure_future(self._autonomy_daemon())
         while self._running:
             await asyncio.sleep(1)
 
     def stop(self) -> None:
         self._running = False
+        self.stop_autonomy()
+
+    # ── STEP 6b: the sleep/wake cognition loop, relocated from the chat server. The body now
+    #    OWNS the loop; a host supplies only the I/O it alone has (chat perception, the model
+    #    call, the shared busy flag, face-state). Cognition (executive/tasking) and her senses
+    #    are imported directly — they're her faculties, not the server's. Lifecycle events go
+    #    out on her bus, so a face renders them and a plucked server changes nothing. The
+    #    headless launcher (Step 6c) will call run_autonomy with runtime-native hooks; for now
+    #    the chat server drives it with its own. ──
+
+    async def run_autonomy(self, *, perceive_cole_pending, recent_context, model_available,
+                           generate, is_busy, set_busy, face_state=None,
+                           force_wake=None, stop_requested=None,
+                           poll_idle: float = 3.0, poll_forced: float = 0.5,
+                           poll_disabled: float = 2.0, model_retry: float = 5.0) -> None:
+        """Persistent sleep/wake loop (faithful relocation of the server's autonomy_daemon).
+
+        Host-supplied hooks:
+          perceive_cole_pending() -> bool          has Cole spoken unanswered (chat perception)
+          recent_context() -> str                  recent conversation handed to her reflection
+          model_available() -> awaitable[bool]     is her model reachable
+          generate(prompt, cole_pending) -> awaitable[str]   one model turn in her voice
+          is_busy() -> bool / set_busy(bool)       the shared busy flag (host owns it in 6b)
+          face_state() -> dict                     {viewers, agents_online, eyes_streaming}; optional
+          force_wake / stop_requested              Event-likes (is_set/clear); optional
+        Cognition + senses are hers, imported here. Exits cleanly when stop_autonomy() is called."""
+        from nova_cortex import executive
+        self._autonomy_stop = False
+        await asyncio.sleep(2)
+        while not self._autonomy_stop:
+            forced = bool(force_wake and force_wake.is_set())
+            if not forced and not executive.autonomy_enabled():
+                await asyncio.sleep(poll_disabled)
+                continue
+            await asyncio.sleep(poll_forced if forced else poll_idle)   # ASLEEP — cheap poll, no model
+            if (stop_requested and stop_requested.is_set()) or is_busy():
+                continue                              # busy — leave force_wake set; handle next loop
+            cole_pending = perceive_cole_pending()
+            # standing-directive release: a directive's job is to make her attend Cole's word
+            # ONCE; if she's already the last speaker, release it so it doesn't re-wake her.
+            if not cole_pending:
+                try:
+                    from nova_senses import environment as _env
+                    if _env.cole_directive():
+                        _env.consume_cole_directive()
+                except Exception:
+                    pass
+            if forced:
+                if force_wake:
+                    force_wake.clear()
+                should, reason = True, "Cole pressed Wake Up"
+            else:
+                should, reason = executive.should_wake(cole_pending)
+            if not should:
+                continue
+            try:
+                if not await model_available():
+                    await asyncio.sleep(model_retry)
+                    continue
+            except Exception:
+                await asyncio.sleep(model_retry)
+                continue
+            await self._run_one_wake(reason, forced, cole_pending,
+                                     recent_context, generate, set_busy, face_state)
+
+    async def _run_one_wake(self, reason, forced, cole_pending,
+                            recent_context, generate, set_busy, face_state) -> None:
+        """One wake: reflect → decide → (maybe) execute. Sleep-free, so it's unit-testable in
+        isolation. Faithful to the server's two-phase wake + execution pass; lifecycle signals
+        go out on her bus (self.emit + processing_start/end published to the bus)."""
+        from nova_cortex import executive
+        await self.emit("wake", f"Nova woke — {reason}")
+        # ── Two-phase wake: she SITS WITH the moment (reflect) before she may act ──
+        set_busy(True)
+        await self.bus.publish({"type": "processing_start"})
+        try:
+            recent = recent_context()
+            # Populate Touch — what's interacting with her right now — so she can FEEL it during
+            # reflection. The host passes only the face-state it alone knows (viewers/eyes/agents).
+            fs = (face_state() if face_state else None) or {}
+            self.populate_touch(
+                viewers=fs.get("viewers", 0), agents_online=fs.get("agents_online", []),
+                eyes_streaming=fs.get("eyes_streaming", False),
+                who=("Cole" if cole_pending else "your own rhythm"),
+                what=("reached in and spoke" if cole_pending else f"stirred you ({reason})"),
+            )
+            # Phase 1 — reflect. Always SILENT (cole_pending=False) so it streams to her thinking
+            # pane, never a chat bubble — her forming a genuine view of the moment.
+            refl_prompt = executive.build_reflection(
+                cole_pending, reason, recent, executive.last_reflection())
+            reflection = await generate(refl_prompt, False) or ""
+            executive.save_reflection(reflection)
+            await self.emit("reflect", "Nova sat with the moment")
+            # Phase 2 — decide, having reflected. Speaks to chat iff Cole is waiting; board
+            # actions are OPTIONAL — a wake may end in talking, resting, or just more thinking.
+            dec_prompt = executive.build_decision(reflection, cole_pending, reason, recent)
+            reply = await generate(dec_prompt, cole_pending) or ""
+            outcome = executive.apply_decision(reply, cole_pending=cole_pending)
+            await self.emit("autonomy", outcome["summary"])
+            # ── Phase 3 — execute. Decision only moves the BOARD; this does the next concrete
+            # step on an open task when the wake is her own rhythm and she didn't choose to rest.
+            try:
+                if not cole_pending and (forced or not outcome.get("rested")):
+                    from nova_cortex import tasking as _tasking
+                    exec_id = executive.pick_execution_target()
+                    etask = _tasking.all_tasks().get(exec_id) if exec_id else None
+                    if etask and etask.get("status") == "open":
+                        await self.emit("autonomy", f"working {exec_id}: {etask.get('title','')[:60]}")
+                        ex_prompt = executive.build_execution(etask, recent)
+                        ex_reply = await generate(ex_prompt, False) or ""
+                        kind, payload = executive.parse_execution(ex_reply)
+                        if kind == "done":
+                            _tasking.complete(exec_id, payload or "Completed.")
+                            executive.set_active(None)
+                            await self.emit("autonomy", f"completed {exec_id}: {payload[:80]}")
+                        elif kind == "progress" and payload.strip():
+                            _tasking.progress(exec_id, payload)
+                            await self.emit("autonomy", f"progress {exec_id}: {payload[:80]}")
+            except Exception as _xe:
+                print(f"[nova_runtime] execution pass error: {_xe}")
+        except asyncio.CancelledError:
+            pass
+        except Exception as _e:
+            print(f"[nova_runtime] wake error: {_e}")
+        finally:
+            set_busy(False)
+            self.clear_touch_active()
+            await self.bus.publish({"type": "processing_end"})
+
+    def stop_autonomy(self) -> None:
+        """Ask the autonomy loop to exit after its current tick (headless shutdown / tests)."""
+        self._autonomy_stop = True
+
+    # ── STEP 6c: runtime-native hooks for the headless launcher — what run() hands to
+    #    run_autonomy when no face is attached. The chat server supplies its own equivalents. ──
+
+    def _set_busy_headless(self, v: bool) -> None:
+        self._busy = bool(v)
+
+    def _perceive_cole_headless(self) -> bool:
+        """Has Cole spoken unanswered? Reads her durable transcript (fed by a face when one is
+        attached). The attended marker is fresh-started at boot, so she answers only NEW Cole
+        messages — and in a pure pluck (no inbound path) this is simply False: her own rhythm."""
+        try:
+            self.transcript.reload_from_disk()
+            return self.transcript.has_unread_cole()
+        except Exception:
+            return False
+
+    def _recent_text_headless(self, n: int = 14) -> str:
+        """Recent conversation for her reflection, read from her own transcript."""
+        try:
+            msgs = self.transcript.recent(n)
+        except Exception:
+            return ""
+        lines = []
+        for m in msgs:
+            ts = str(m.get("timestamp", ""))[11:16]
+            content = " ".join((m.get("content", "") or "").split())[:500]
+            lines.append(f"[{ts}] {m.get('author', '?')}: {content}")
+        return "\n".join(lines)
+
+    async def _model_up_headless(self) -> bool:
+        try:
+            return self.llama.is_running()
+        except Exception:
+            return False
+
+    async def _generate_headless(self, prompt: str, cole_pending: bool) -> str:
+        """One model turn with no face: drive her model via the dispatch faculty (Step 4) and
+        return the text. Her cognition persists what matters (executive.save_reflection /
+        apply_decision / tasking); chat-transcript persistence of spoken replies is a refinement
+        for once a headless inbound path feeds Cole's words. workspace_context is minimal here —
+        her baked SYSTEM_PREFIX still makes her Nova; injecting full memory context is a refinement."""
+        ctx = _TickContext(prompt)
+        holder = {"full": ""}
+        async def _tok(_t):
+            pass
+        async def _done(full):
+            holder["full"] = full or ""
+        async def _err(e):
+            print(f"[nova_runtime] headless generation error: {e}")
+        try:
+            await self.model_client.generate(
+                "Nova", ctx, on_token=_tok, on_done=_done, on_error=_err,
+                workspace_context="", autonomous=True)
+        except Exception as e:
+            print(f"[nova_runtime] headless generate failed: {e}")
+        return holder["full"]
+
+
+# ── STEP 6d: process-wide runtime accessor ──────────────────────────────────────────────────
+# Lets a runtime-primary launcher (nova_chat/runtime_host.py) create THE runtime and have the
+# chat server attach to it as a face, while the legacy server-hosted boot keeps lazily creating
+# its own. Behavior is IDENTICAL when no launcher installs one (get_shared_runtime() just makes
+# a NovaRuntime() the first time, exactly as `_rt = NovaRuntime()` did). This is the seam the
+# default-boot flip rides on — flipping is choosing which entry-point runs, not a code change.
+_SHARED_RUNTIME = None
+
+
+def set_shared_runtime(rt: "NovaRuntime") -> None:
+    """A host booter installs the process-wide runtime BEFORE importing the chat server, so the
+    server attaches to it (one runtime, one bus) instead of creating its own."""
+    global _SHARED_RUNTIME
+    _SHARED_RUNTIME = rt
+
+
+def get_shared_runtime() -> "NovaRuntime":
+    """Return the installed process-wide runtime, or lazily create one. The chat server calls
+    this instead of instantiating NovaRuntime() directly."""
+    global _SHARED_RUNTIME
+    if _SHARED_RUNTIME is None:
+        _SHARED_RUNTIME = NovaRuntime()
+    return _SHARED_RUNTIME

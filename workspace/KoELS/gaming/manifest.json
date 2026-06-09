@@ -1,0 +1,19 @@
+{
+  "name": "gaming",
+  "domain": "competitive game coaching & strategy",
+  "trigger": {
+    "keywords": ["chess", "chess.com", "clash royale", "dbd", "dead by daylight",
+                 "game", "match", "opponent", "deck", "board", "strategy", "coach", "meta"],
+    "intents": ["game_coaching", "strategy_help", "match_review"]
+  },
+  "adapter": "KoELS/gaming/adapter/gaming.gguf",
+  "knowledge_db": "KoELS/gaming/knowledge.lancedb",
+  "oracle": {
+    "name": "stockfish",
+    "applies_to": ["chess", "chess.com"],
+    "how": "Read board to FEN, send over UCI; consult and explain the engine's eval in Nova's voice rather than reasoning from weights. (Chess proves the plumbing; the LoRA's judgment is proven later on oracle-less games like Clash Royale.)"
+  },
+  "fusion_mode": "adapter",
+  "visual": "KoELS/gaming/visual/",
+  "_notes": "Example/first expert. adapter/ + knowledge.lancedb/ are produced by training + the updater and are absent until built; this manifest is the contract the loadout-decision faculty reads now."
+}
