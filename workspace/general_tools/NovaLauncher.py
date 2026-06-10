@@ -100,6 +100,14 @@ def run_nova_chat():
     """Start nova_chat FastAPI server in this thread."""
     try:
         import uvicorn
+        # ── Runtime-primary boot (the Step 6d flip, landed 2026-06-10 after the live pluck
+        # verification). Create THE runtime and install it BEFORE importing the server, so
+        # the server attaches to it as a face (one runtime, one bus) instead of lazily
+        # creating its own. Construction happens in this same thread either way, so boot
+        # behavior is otherwise identical. REVERT = delete the next two lines.
+        from nova_runtime.runtime import NovaRuntime, set_shared_runtime
+        set_shared_runtime(NovaRuntime())
+        log.info("Runtime-primary boot: shared runtime installed before server import (6d flip live).")
         from nova_chat.server import app
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
