@@ -1,5 +1,5 @@
 # STATUS.md — Project Nova Current State
-_Last updated: 2026-05-31 (Opus 4.8 — GPU split synced to 12,28; partnership framing aligned to identity files)_
+_Last updated: 2026-06-10 09:25:17_
 
 _Prior revision 2026-05-25 — reflects the body-relocation + dead-code cleanup. Earlier
 phase history (brain.py "Thoughts cycle", nova_gateway/Discord, nova_qt, OpenClaw) is
