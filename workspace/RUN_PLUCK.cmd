@@ -1,4 +1,6 @@
 @echo off
+REM @nova: Pluck test — boots my runtime headless (no chat server) to prove my faculties
+REM        live in my body. Output tees to logs\pluck_<date>.log. Claude/Cole tool.
 REM @claude 2026-06-10: Step 6c PLUCK TEST — stops the whole stack, then boots Nova
 REM headless (python -m nova_runtime, NO chat server). Output mirrors live here and
 REM appends line-by-line to logs\pluck_2026-06-10.log (UTF8, closed per write so
