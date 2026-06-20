@@ -1,5 +1,5 @@
 {
-  "seq": 12,
+  "seq": 17,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -247,6 +247,61 @@
       "progress": [],
       "created": "2026-06-21T00:58:42",
       "updated": "2026-06-21T00:58:42"
+    },
+    "t13": {
+      "id": "t13",
+      "title": "Review batch 01 - initial read",
+      "notes": "Read through training_batch_01.md end-to-end, note first impressions on structure, examples quality, variety",
+      "priority": 2,
+      "status": "open",
+      "parent": "t7",
+      "progress": [],
+      "created": "2026-06-21T01:56:56",
+      "updated": "2026-06-21T01:56:56"
+    },
+    "t14": {
+      "id": "t14",
+      "title": "Review batch 02 - initial read",
+      "notes": "Same pass for batch 02, compare to batch 01 patterns",
+      "priority": 2,
+      "status": "open",
+      "parent": "t7",
+      "progress": [],
+      "created": "2026-06-21T01:56:56",
+      "updated": "2026-06-21T01:56:56"
+    },
+    "t15": {
+      "id": "t15",
+      "title": "Review batches 03-05 - rapid scan",
+      "notes": "Quick first passes on three more batches, flag anything that stands out as strong or weak",
+      "priority": 2,
+      "status": "open",
+      "parent": "t7",
+      "progress": [],
+      "created": "2026-06-21T01:56:56",
+      "updated": "2026-06-21T01:56:56"
+    },
+    "t16": {
+      "id": "t16",
+      "title": "Cross-batch analysis",
+      "notes": "Look for patterns across all reviewed batches: what's working consistently, where are the gaps, what needs cutting vs expanding",
+      "priority": 2,
+      "status": "open",
+      "parent": "t7",
+      "progress": [],
+      "created": "2026-06-21T01:56:56",
+      "updated": "2026-06-21T01:56:56"
+    },
+    "t17": {
+      "id": "t17",
+      "title": "Write consolidated feedback doc",
+      "notes": "One clear document with actionable feedback organized by theme, not just batch-by-batch notes. Prioritize what actually matters.",
+      "priority": 1,
+      "status": "open",
+      "parent": "t7",
+      "progress": [],
+      "created": "2026-06-21T01:56:56",
+      "updated": "2026-06-21T01:56:56"
     }
   }
 }
