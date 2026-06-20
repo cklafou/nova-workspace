@@ -1398,7 +1398,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
                       .sort((a,b)=>String(b.updated||'').localeCompare(String(a.updated||'')));
       const cEl=document.getElementById('tr-count');
       if(cEl) cEl.textContent=active.length+waiting.length;
-      if(!tasks.length){body.innerHTML='<div class="tr-empty">No tasks yet.<br>Nova’s tasks appear here<br>as she creates them.</div>';return;}
+      if(!tasks.length){body.innerHTML=addBar()+'<div class="tr-empty">No tasks yet.<br>Add one above, or Nova adds<br>her own as she works.</div>';return;}
       const toolbar='<div class="tr-toolbar">'+
         '<button class="tr-clear" title="Delete ALL tasks from the board (asks to confirm first)" onclick="clearAllTasks()">Clear all</button>'+
         '<span class="tr-legend">'+
@@ -1408,7 +1408,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
           '<span title="Done / completed"><i style="background:#3a8d63"></i>Done</span>'+
           '<span title="Abandoned / cancelled"><i style="background:#7a5a5a"></i>Dropped</span>'+
         '</span></div>';
-      let h=toolbar;
+      let h=addBar()+toolbar;
       if(active.length) h+='<div class="tr-group-label">Active (subtasks nested under their parent)</div>'+treeHtml(active,activeId);
       if(waiting.length) h+='<div class="tr-group-label">Waiting</div>'+waiting.map(t=>row(t,activeId,0)).join('');
       if(done.length){
