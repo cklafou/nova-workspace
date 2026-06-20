@@ -1,5 +1,5 @@
 # Project Nova
-_Last updated: 2026-06-20 20:03:25_
+_Last updated: 2026-06-20 20:55:00_
 
 Nova is Cole's companion AI and life passion project — built toward full autonomy and
 genuine partnership. She is NOT a trading bot. Trading is one possible future test of her
@@ -17,7 +17,7 @@ modify anything in `models/` under any circumstances.
 | What | How |
 |---|---|
 | **Whole stack** (recommended) | `NovaStart.cmd` → runs `nova_start.py` (llama.cpp + nova_chat + watcher + window) |
-| **llama.cpp** (local inference) | `start_llama.cmd` (port 8080) |
+| **llama.cpp** (local inference) | `start_llama_qwen36.cmd` (port 8080; `start_llama.cmd` is the Qwen 3.5 rollback) |
 | **nova_chat** (her interface) | `python general_tools/nova_chat/launch.py` (port 8765) |
 | **Stop everything** | `StopNova.cmd` |
 
@@ -94,7 +94,7 @@ workspace/
 | File | Purpose |
 |---|---|
 | `nova_config.json` | Local settings — inference window, session storage, tool-exec limits |
-| `start_llama.cmd` | Launches llama-server.exe with dual-GPU tensor split (`-ts 16,24`) |
+| `start_llama_qwen36.cmd` | Launches llama-server.exe (Qwen 3.6) with dual-GPU tensor split (`-ts 12,28`) |
 | `NovaStart.cmd` | Brings up the whole stack via `nova_start.py` |
 | `StopNova.cmd` | Frees Nova's ports for a clean restart |
 
@@ -105,12 +105,13 @@ workspace/
 | Setting | Value |
 |---|---|
 | Server | `llama-server.exe` (CUDA) |
-| Model | `models/qwen-27b-q8.gguf` — Qwen 3.5 27B Dense Q8 |
-| Vision projector | `models/qwen-27b-mmproj.gguf` |
+| Model | `models/qwen3.6/Qwen3.6-27B-UD-Q6_K_XL.gguf` — Qwen 3.6 27B Dense Q6_K_XL (MTP variant) |
+| Vision projector | `models/qwen3.6/mmproj-F16.gguf` |
 | Port | 8080 (OpenAI-compatible API) |
-| Context | 32768 tokens |
-| GPU split | `-ts 16,24` (RTX 4090 16GB + RTX 3090 24GB) |
-| Thinking mode | `--chat-template qwen3` + `"thinking": true` in API payload |
+| Context | 65536 tokens (single slot `--parallel 1`; model native 262144) |
+| GPU split | `-ts 12,28` (RTX 4090 16GB + RTX 3090 24GB) |
+| Speculative decoding | MTP: `--spec-type draft-mtp --spec-draft-n-max 2` (~1.4-2x gen) |
+| Thinking mode | hybrid, on by default via `--jinja --reasoning-format deepseek` |
 
 ---
 
