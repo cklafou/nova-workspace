@@ -12,10 +12,14 @@
         {
           "ts": "2026-06-20T21:46:56",
           "note": "\"tool\": \"list_dir\","
+        },
+        {
+          "ts": "2026-06-20T21:55:42",
+          "note": "\"path\": \"_admin/training_stuff/nova_lora_datase"
         }
       ],
       "created": "2026-06-20T20:53:01",
-      "updated": "2026-06-20T21:46:56"
+      "updated": "2026-06-20T21:55:42"
     },
     "t2": {
       "id": "t2",
