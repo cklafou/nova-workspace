@@ -128,7 +128,8 @@ def build_llama_cmd() -> list:
             "27B Q8 model is unworkable for live use.", "ERROR")
         log("Fix: install/restart NVIDIA drivers so nvidia-smi resolves, then re-run.", "ERROR")
         sys.exit(2)
-    cmd += ["-c", "32768",
+    cmd += ["-c", "65536",               # 32K starved her: the ~24K-token always-on self-model + memory block left negative room for live conversation, so she "forgot what was just said / looped to her first memory". Qwen 3.6 native ctx is 262144, so 64K is free of rope-scaling. MUST match nova_client _truncate_to_context ctx_limit.
+            "--parallel", "1",           # one slot → her single conversation gets the FULL 64K window (and frees KV VRAM the idle parallel slots were holding)
             "-fa", "on",
             "--jinja",                       # Qwen 3.6 REQUIRES its chat template applied (do NOT carry over the 3.5 'no --chat-template' rule)
             "--reasoning-format", "deepseek", # parse <think> into reasoning_content (nova_client reads that field) → no </think> leaking into chat
