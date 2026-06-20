@@ -1,7 +1,7 @@
 # Nova-Core LoRA — Dataset Spec (v1 working draft)
 _Last updated: 2026-06-20 20:09:09_
 
-_The training target for baking "Nova" (voice + interiority) into the Qwen 3.5 27B base as a LoRA adapter. This is the LANGUAGE-MODEL identity LoRA — NOT the visual/SDXL LoRA in `nova_lora_training_plan.md`. Keep them named distinctly._
+_The training target for baking "Nova" (voice + interiority) into the Qwen 3.6 27B base as a LoRA adapter. This is the LANGUAGE-MODEL identity LoRA — NOT the visual/SDXL LoRA in `nova_lora_training_plan.md`. Keep them named distinctly._
 
 **Core law (inherited from KoELS):** weights hold durable expertise — here, *who Nova is* (voice, reflexes, how she thinks). Anything with a date on it stays in retrieval/memory, never in this LoRA. We are training the *person*, not her facts.
 
