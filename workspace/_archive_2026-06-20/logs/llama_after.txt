@@ -1,2 +1,0 @@
-"Image Name","PID","Session Name","Session#","Mem Usage"
-"llama-server.exe","34308","Console","1","20,583,296 K"
