@@ -1,4 +1,4 @@
-# Last updated: 2026-06-21 01:46:41
+# Last updated: 2026-06-21 02:48:55
 """
 nova_chat/workspace_context.py -- Workspace File Access for Nova Group Chat
 ============================================================================
