@@ -38,7 +38,8 @@ if defined KOELS_LORA echo [KoELS] preloading adapters: %KOELS_LORA%
     --mmproj models\qwen3.6\mmproj-F16.gguf ^
     -ngl 999 ^
     -ts 12,28 ^
-    -c 32768 ^
+    -c 65536 ^
+    --parallel 1 ^
     -fa on ^
     --jinja ^
     --reasoning-format deepseek ^
