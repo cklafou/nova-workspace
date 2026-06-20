@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-06-20T20:01:55+09:00",
+  "updated_at": "2026-06-20T20:02:24+09:00",
   "items": [
     {
       "id": "777df213",
@@ -51113,6 +51113,45 @@
       "commit": "a375e084",
       "old_path": "_archive_2026-06-20/memory/reports/work_vs_body.md",
       "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "230e8412",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-06-20T20:02:23+09:00",
+      "commit": "41700e2a",
+      "old_path": null,
+      "new_path": "nova_body/nova_config/calls.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "e28d2017",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-06-20T20:02:23+09:00",
+      "commit": "41700e2a",
+      "old_path": null,
+      "new_path": "nova_body/nova_imagination/calls.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "b4ab7201",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-06-20T20:02:24+09:00",
+      "commit": "41700e2a",
+      "old_path": null,
+      "new_path": "nova_body/nova_runtime/calls.md",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
