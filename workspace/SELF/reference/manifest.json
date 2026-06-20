@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-20T18:39:33",
+  "generated": "2026-06-20T18:39:52",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 26,
   "described": 26,
@@ -636,8 +636,8 @@
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.",
       "files": 5,
-      "lines": 2087,
-      "age_days": 10,
+      "lines": 2103,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
