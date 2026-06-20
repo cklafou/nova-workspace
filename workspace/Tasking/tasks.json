@@ -110,10 +110,6 @@
       "parent": "t1",
       "progress": [
         {
-          "ts": "2026-06-20T23:39:03",
-          "note": "```"
-        },
-        {
           "ts": "2026-06-20T23:46:40",
           "note": "\"path\": \"_admin/training_stuff\""
         },
@@ -188,10 +184,14 @@
         {
           "ts": "2026-06-21T00:54:29",
           "note": "Opening training batch 1 for actual read-through instead of more task creation"
+        },
+        {
+          "ts": "2026-06-21T00:56:18",
+          "note": "\"path\": \"_admin/training_stuff/nova_lora"
         }
       ],
       "created": "2026-06-20T22:35:52",
-      "updated": "2026-06-21T00:54:29"
+      "updated": "2026-06-21T00:56:18"
     },
     "t8": {
       "id": "t8",
