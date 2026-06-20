@@ -1294,12 +1294,49 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   .tr-legend>span{display:inline-flex;align-items:center;gap:3px;cursor:help;}
   .tr-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;flex:0 0 auto;}
   .tr-task .tr-kidline{color:var(--text-mute);opacity:.6;margin-right:3px;}
+  .tr-add{margin:2px 2px 9px;}
+  .tr-add-btn{width:100%;background:var(--surface-2);border:1px dashed var(--border);
+    color:var(--text-dim);font-size:10px;padding:6px 8px;border-radius:5px;cursor:pointer;
+    text-transform:uppercase;letter-spacing:.06em;transition:all var(--t);}
+  .tr-add-btn:hover{color:var(--accent);border-color:var(--accent);}
+  .tr-add-form{margin-top:6px;flex-direction:column;gap:5px;}
+  .tr-add-input,.tr-add-notes{width:100%;box-sizing:border-box;background:var(--bg);
+    border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;
+    padding:5px 6px;font-family:inherit;}
+  .tr-add-notes{resize:vertical;}
+  .tr-add-row{display:flex;gap:5px;align-items:center;}
+  .tr-add-pri{flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);
+    border-radius:4px;color:var(--text);font-size:10px;padding:4px;}
+  .tr-add-go{background:var(--accent);border:none;color:#fff;font-size:10px;padding:5px 12px;
+    border-radius:4px;cursor:pointer;}
+  .tr-add-go:hover{filter:brightness(1.12);}
+  .tr-add-cancel{background:none;border:1px solid var(--border);color:var(--text-mute);
+    font-size:10px;padding:5px 10px;border-radius:4px;cursor:pointer;}
   </style>
   <script>
   (function(){
     const PRI={1:'p1',2:'p2'};
     const ACTIVE_STATUS=new Set(['open','active','in_progress']);
     let doneOpen=false;
+    let addOpen=false;   // manual "add task" form open → pause auto-refresh so typing isn't wiped
+    function addBar(){
+      return '<div class="tr-add">'+
+        '<button class="tr-add-btn" onclick="toggleAddTask()" title="Manually create a task for Nova">+ Add task for Nova</button>'+
+        '<div class="tr-add-form" id="tr-add-form" style="display:none">'+
+          '<input id="tr-add-title" class="tr-add-input" placeholder="Task title…" '+
+            'onkeydown="if(event.key===\'Enter\'){event.preventDefault();submitAddTask();}">'+
+          '<textarea id="tr-add-notes" class="tr-add-notes" rows="2" placeholder="Notes / detail (optional)"></textarea>'+
+          '<div class="tr-add-row">'+
+            '<select id="tr-add-pri" class="tr-add-pri">'+
+              '<option value="1">P1 · high</option>'+
+              '<option value="2" selected>P2 · medium</option>'+
+              '<option value="3">P3 · normal</option>'+
+            '</select>'+
+            '<button class="tr-add-go" onclick="submitAddTask()">Add</button>'+
+            '<button class="tr-add-cancel" onclick="toggleAddTask()">Cancel</button>'+
+          '</div>'+
+        '</div></div>';
+    }
     function esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
     function row(t,activeId,depth){
       depth=depth||0;
