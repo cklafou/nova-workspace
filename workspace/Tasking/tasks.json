@@ -390,9 +390,14 @@
       "priority": 2,
       "status": "open",
       "parent": "t17",
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-06-21T03:40:46",
+          "note": "\"path\": \"_admin/training_stuff\""
+        }
+      ],
       "created": "2026-06-21T03:40:32",
-      "updated": "2026-06-21T03:40:32"
+      "updated": "2026-06-21T03:40:46"
     },
     "t20": {
       "id": "t20",
