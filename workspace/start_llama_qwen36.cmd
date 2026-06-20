@@ -41,6 +41,7 @@ if defined KOELS_LORA echo [KoELS] preloading adapters: %KOELS_LORA%
     -c 32768 ^
     -fa on ^
     --jinja ^
+    --reasoning-format deepseek ^
     --spec-type draft-mtp ^
     --spec-draft-n-max 2 ^
     --cache-prompt ^

@@ -131,6 +131,7 @@ def build_llama_cmd() -> list:
     cmd += ["-c", "32768",
             "-fa", "on",
             "--jinja",                       # Qwen 3.6 REQUIRES its chat template applied (do NOT carry over the 3.5 'no --chat-template' rule)
+            "--reasoning-format", "deepseek", # parse <think> into reasoning_content (nova_client reads that field) → no </think> leaking into chat
             "--spec-type", "draft-mtp",      # MTP speculative decoding ~1.4-2x; the GGUF carries the nextn head
             "--spec-draft-n-max", "2",       # tunable 1-6; 2 is usually best
             "--cache-prompt",
