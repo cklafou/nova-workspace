@@ -1,5 +1,6 @@
 # Last updated: 2026-06-20 18:50:50
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -13,6 +14,47 @@ def _within_workspace(target: Path) -> bool:
     root = os.path.normcase(str(WORKSPACE_ROOT.resolve()))
     tgt  = os.path.normcase(str(Path(target).resolve()))
     return tgt == root or tgt.startswith(root + os.sep)
+
+
+def _norm_rel(path: str) -> str:
+    """Re-interpret a path as WORKSPACE-RELATIVE, undoing the absolute/Unix forms the
+    model emits. Qwen frequently invents a Linux filesystem — a leading '/', a drive
+    letter, or a '/home/<user>/...' home dir — even though Nova's real filesystem root
+    IS the workspace. We drop a drive anchor, leading separators, an invented
+    'home/<user>/' prefix, and a redundant leading 'Project_Nova/'/'workspace/'. Pure
+    string work; containment is still verified after the join."""
+    raw = (path or "").strip().replace("\\", "/")
+    raw = re.sub(r"^[A-Za-z]:", "", raw)                          # strip 'C:' drive
+    raw = raw.lstrip("/")                                          # absolute → relative
+    raw = re.sub(r"^home/[^/]+/", "", raw)                        # /home/user/x → x
+    raw = re.sub(r"^(?:project_nova/|workspace/)+", "", raw, flags=re.I)
+    return raw
+
+
+def _safe_target(path: str):
+    """Resolve a Nova-supplied path to a real Path INSIDE the workspace, tolerating the
+    absolute/Unix paths the model hallucinates. Returns (Path, None) on success, or
+    (None, error) only when the path GENUINELY escapes (e.g. a '../' break-out) — so a
+    bad path gets a clear, self-correcting hint instead of a scary 'Permission Denied'
+    on her own files.
+    """
+    raw = (path or "").strip()
+    if not raw:
+        return None, "ERROR: no path given. Use a workspace-relative path like memory/STATUS.md."
+    # 1. Honor a path that's already correct (proper relative, or a real absolute path
+    #    that lands inside the workspace).
+    cand = Path(raw)
+    target = (cand if cand.is_absolute() else WORKSPACE_ROOT / cand).resolve()
+    if _within_workspace(target):
+        return target, None
+    # 2. It escaped — almost always because the model emitted an absolute/Unix path.
+    #    Re-read it as workspace-relative and try again.
+    target = (WORKSPACE_ROOT / _norm_rel(raw)).resolve()
+    if _within_workspace(target):
+        return target, None
+    return None, ("ERROR: that path is outside the workspace. Your filesystem root IS the "
+                  "Project_Nova workspace — use a workspace-relative path like "
+                  f"memory/STATUS.md (no leading '/', drive letter, or /home/...). You gave: {path!r}")
 
 
 def run_command(command: str, cwd: str = "") -> str:
@@ -58,11 +100,11 @@ def run_command(command: str, cwd: str = "") -> str:
 
 def read_file(path: str) -> str:
     """Read a file's contents safely."""
-    target = (WORKSPACE_ROOT / path).resolve()
-    if not _within_workspace(target):
-        return "ERROR: Permission Denied. Cannot access files outside the workspace."
+    target, err = _safe_target(path)
+    if err:
+        return err
     if not target.exists():
-        return f"ERROR: File not found at {target}"
+        return f"ERROR: File not found at {path}"
         
     try:
         return target.read_text(encoding="utf-8")
@@ -73,9 +115,9 @@ def write_file(path: str, content: str, overwrite: bool = False) -> str:
     """Create a NEW file. Guarded: refuses to clobber an existing file unless overwrite=True,
     so a living document is never wiped by accident. To GROW a file use append_file; to change
     part of it use replace_file_content (exact-match edit)."""
-    target = (WORKSPACE_ROOT / path).resolve()
-    if not _within_workspace(target):
-        return "ERROR: Permission Denied. Cannot write files outside the workspace."
+    target, err = _safe_target(path)
+    if err:
+        return err
     if target.exists() and not overwrite:
         return (f"ERROR: '{path}' already exists — write_file would OVERWRITE it and lose its "
                 "current contents. To GROW the document use append_file; to change part of it "
@@ -105,9 +147,9 @@ def _md_headings(text: str) -> list:
 def append_file(path: str, content: str) -> str:
     """Append content to the end of a file (creating it if missing). The right tool for
     growing a living document section by section without overwriting what's already there."""
-    target = (WORKSPACE_ROOT / path).resolve()
-    if not _within_workspace(target):
-        return "ERROR: Permission Denied. Cannot write files outside the workspace."
+    target, err = _safe_target(path)
+    if err:
+        return err
     # Idempotency guard: refuse to append a section heading the file already has — this is what
     # stops the "rewrite the whole doc every wake and append it" loop. Defensive: a read hiccup
     # must never block a legitimate write.
@@ -133,9 +175,9 @@ def append_file(path: str, content: str) -> str:
 
 def replace_file_content(path: str, target_content: str, replacement_content: str) -> str:
     """Replace an exact string match inside a file."""
-    target = (WORKSPACE_ROOT / path).resolve()
-    if not _within_workspace(target):
-        return "ERROR: Permission Denied."
+    target, err = _safe_target(path)
+    if err:
+        return err
     if not target.exists():
         return "ERROR: File does not exist."
         
@@ -152,9 +194,9 @@ def replace_file_content(path: str, target_content: str, replacement_content: st
 
 def list_dir(path: str) -> str:
     """List directory contents."""
-    target = (WORKSPACE_ROOT / path).resolve()
-    if not _within_workspace(target):
-        return "ERROR: Permission Denied."
+    target, err = _safe_target(path)
+    if err:
+        return err
     if not target.exists():
         return "ERROR: Directory does not exist."
         

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-20T19:04:24",
+  "generated": "2026-06-20T19:58:41",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 26,
   "described": 26,
@@ -422,7 +422,9 @@
       "lines": 189,
       "age_days": 0,
       "ports_bind": [],
-      "ports_seen": [],
+      "ports_seen": [
+        "8765"
+      ],
       "nova_imports": [
         "nova_chat",
         "nova_runtime"
@@ -581,7 +583,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 16,
-      "lines": 6674,
+      "lines": 6719,
       "age_days": 0,
       "ports_bind": [
         "8765"
