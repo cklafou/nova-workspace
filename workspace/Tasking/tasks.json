@@ -394,10 +394,14 @@
         {
           "ts": "2026-06-21T03:40:46",
           "note": "\"path\": \"_admin/training_stuff\""
+        },
+        {
+          "ts": "2026-06-21T03:42:06",
+          "note": "read spec and batch 1 fully, assessed format/size/organization structure; next: write formal review findings to memory"
         }
       ],
       "created": "2026-06-21T03:40:32",
-      "updated": "2026-06-21T03:40:46"
+      "updated": "2026-06-21T03:42:06"
     },
     "t20": {
       "id": "t20",
