@@ -299,9 +299,14 @@
       "priority": 1,
       "status": "open",
       "parent": "t7",
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-06-21T01:57:17",
+          "note": "\"args\": {\"path\": \"_admin/training_stuff/nova_lora"
+        }
+      ],
       "created": "2026-06-21T01:56:56",
-      "updated": "2026-06-21T01:56:56"
+      "updated": "2026-06-21T01:57:17"
     }
   }
 }
