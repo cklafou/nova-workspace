@@ -8,9 +8,14 @@
       "priority": 2,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-06-20T21:46:56",
+          "note": "\"tool\": \"list_dir\","
+        }
+      ],
       "created": "2026-06-20T20:53:01",
-      "updated": "2026-06-20T20:53:01"
+      "updated": "2026-06-20T21:46:56"
     },
     "t2": {
       "id": "t2",
