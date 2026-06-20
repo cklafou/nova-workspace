@@ -53,7 +53,13 @@ SKIP_FILES        = {"FILE_INDEX.md", "FILE_INDEX_LINK.md", ".drive_sync_cache.j
                      # Generated index artifacts (consumed by tooling, not by Nova) —
                      # keep them for calls.py/logger/drive but keep them out of context.
                      "calls.md", "Calls_Master_Index.md", "GEMINI_INDEX.md",
-                     "Logger_Index.md"}
+                     "Logger_Index.md",
+                     # Runtime/operational STATE — her senses + executive read these from
+                     # disk directly; injecting them as "memory" every turn is noise that
+                     # crowds out her real grounding (audit_queue.json alone is 1.3MB).
+                     "audit_queue.json", "autonomy_state.json", "cole_intent.json",
+                     "interrupt_inbox.json", "touch_state.json", "ui_layout.json",
+                     "avatars.json", "nova_status.json"}
 
 MANIFEST_MAX       = 25000  # flat file listing — needs room for full workspace
 MEMORY_FILE_MAX    = 20000  # per memory/ file (STATUS.md can be detailed)
@@ -70,14 +76,17 @@ TOTAL_MAX          = 300000 # Sonnet 4.6=200k tokens, Gemini 2.5Pro=1M tokens --
 #   = ~20672 tokens (~82K chars) available for context block
 # We cap at 60K chars (~15K tokens) to leave generous headroom for long sessions.
 NOVA_ONDEMAND_FILE_MAX = 15000   # per on-demand file — enough for any single .md
-NOVA_TOTAL_MAX         = 60000   # ~15K tokens; leaves 17K for conversation + output
+NOVA_TOTAL_MAX         = 100000  # ~33K tokens. Window is now 64K (was 32K), so she can carry her
+                                 # FULL self-model + ALL real memory (STATUS+COLE+JOURNAL+Design ≈40K)
+                                 # and still leave ~17K tokens for live conversation. Junk state
+                                 # files are now in SKIP_FILES so this room goes to real grounding.
 
 # ── Nova's self-model: SELF/core/ (ordered, budgeted) ───────────────────────────
 # SELF/core/*.md is Nova's single source of self-knowledge (identity, how-she-works,
 # body manifest, tools/voice). It is loaded in numeric-prefix order every turn — this
 # is the ONE place the self-model is injected, and the reinject endpoint relies on it.
 SELF_CORE_DIR      = WORKSPACE_DIR / "SELF" / "core"
-NOVA_SELF_CORE_MAX = 44000   # char ceiling for the always-injected core (auto-measured below)
+NOVA_SELF_CORE_MAX = 52000   # char ceiling for the always-injected core (full SELF/core ≈50.6K fits now)
 
 
 def _load_self_core() -> tuple:
