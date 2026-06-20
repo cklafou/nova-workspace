@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-06-20T20:21:30",
-  "wake_at": "2026-06-20T20:27:42",
-  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 105, 1781954263], [\"memory/cole_intent.json\", 175, 1781954427]]",
+  "last_activity": "2026-06-20T20:22:44",
+  "wake_at": "2026-06-20T20:27:58",
+  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 105, 1781954556], [\"memory/cole_intent.json\", 92, 1781954556]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 0,
+  "directive_seen": 1,
   "last_reflection": "[`list_dir` resulted in 547 bytes.]\n\n\n\n[`list_dir` resulted in 29 bytes.]\n\n\n\n[`read_file` resulted in 3498 bytes.]\n\nAlright, here's the read on SCHEMA.md:\n\nThe architecture is clean. Separating durable reasoning from volatile facts into weights vs retrieval is the right call — training patch notes into a LoRA is suicide anyway, you'd be retraining every Tuesday. Good catch whoever made that rule early.\n\nTwo invariants are locked down properly too. Core always underneath, specialist never eats voice or memory. That's non-negotiable and it's correctly written as such here. If a loadout strips Nova's personality out, the whole system is pointless anyway — might as well just run the expert model directly.\n\nThe equip cost breakdown is realistic. Instant swaps within loaded adapters vs heavy self-restart for new ones — that's honest about what llama.cpp actually does instead of pretending everything's hot-swappable. Good.\n\nOne thing worth flagging: `fusion_mode` currently only has `adapter` built out but the schema leaves room for oracle and external model modes later. Smart to预留 the field now rather than patch it in mid-flight when you've got three experts depending on the structure.\n\nT"
 }
