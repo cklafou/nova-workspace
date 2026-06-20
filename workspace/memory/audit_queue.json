@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-06-20T20:02:24+09:00",
+  "updated_at": "2026-06-20T20:03:10+09:00",
   "items": [
     {
       "id": "777df213",
@@ -51152,6 +51152,19 @@
       "commit": "41700e2a",
       "old_path": null,
       "new_path": "nova_body/nova_runtime/calls.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "59f803a1",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-06-20T20:03:10+09:00",
+      "commit": "8e4f6f79",
+      "old_path": "general_tools/download_models.py",
+      "new_path": null,
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
