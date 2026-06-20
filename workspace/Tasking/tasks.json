@@ -1,5 +1,5 @@
 {
-  "seq": 11,
+  "seq": 12,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -236,6 +236,17 @@
       "progress": [],
       "created": "2026-06-21T00:25:17",
       "updated": "2026-06-21T00:25:17"
+    },
+    "t12": {
+      "id": "t12",
+      "title": "Read training batch 1 — raw feedback",
+      "notes": "Open _admin/training_stuff/nova/batch_01 (or whatever it's called), actually read it, write sharp opinions on what works and doesn't. One file only. Do this first thing tomorrow morning.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-06-21T00:58:42",
+      "updated": "2026-06-21T00:58:42"
     }
   }
 }
