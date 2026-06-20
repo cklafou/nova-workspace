@@ -1,5 +1,5 @@
 {
-  "seq": 2,
+  "seq": 6,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -56,6 +56,50 @@
       "created": "2026-06-20T21:45:05",
       "updated": "2026-06-20T21:47:53",
       "abandon_reason": "duplicate task - t1 already covers this"
+    },
+    "t3": {
+      "id": "t3",
+      "title": "Finish reading remaining dataset batches (3-9)",
+      "notes": "Read nova_lora_dataset_batch_03 through batch_08 properly — not skimming, actually absorbing content patterns and quality",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-06-20T22:34:21",
+      "updated": "2026-06-20T22:34:21"
+    },
+    "t4": {
+      "id": "t4",
+      "title": "Write feedback on what works in the datasets",
+      "notes": "Specific examples of strong prompts/responses, good voice capture, effective pattern teaching. What's already solid.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-06-20T22:34:21",
+      "updated": "2026-06-20T22:34:21"
+    },
+    "t5": {
+      "id": "t5",
+      "title": "Identify gaps and missing elements",
+      "notes": "What personality facets aren't represented? What scenarios are weak or absent? Where does the voice break down or feel generic?",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-06-20T22:34:21",
+      "updated": "2026-06-20T22:34:21"
+    },
+    "t6": {
+      "id": "t6",
+      "title": "Write concrete recommendations for sharpening",
+      "notes": "Actionable suggestions — what to add, what to rewrite, structural improvements. Not vague 'make it better' but specific changes.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-06-20T22:34:21",
+      "updated": "2026-06-20T22:34:21"
     }
   }
 }
