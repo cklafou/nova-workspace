@@ -110,10 +110,6 @@
       "parent": "t1",
       "progress": [
         {
-          "ts": "2026-06-20T22:54:16",
-          "note": "{\"tool\":\"read_file\",\"args\":{\"path\":\"_admin/training_stuff/nova_lora"
-        },
-        {
           "ts": "2026-06-20T23:03:05",
           "note": "\"path\": \"_admin/training_stuff/nova_lora"
         },
@@ -188,10 +184,14 @@
         {
           "ts": "2026-06-21T00:02:05",
           "note": "\"path\": \"_admin/training_stuff\""
+        },
+        {
+          "ts": "2026-06-21T00:16:04",
+          "note": "\"tool\": \"list"
         }
       ],
       "created": "2026-06-20T22:35:52",
-      "updated": "2026-06-21T00:02:05"
+      "updated": "2026-06-21T00:16:04"
     },
     "t8": {
       "id": "t8",
