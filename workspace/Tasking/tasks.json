@@ -1,5 +1,5 @@
 {
-  "seq": 6,
+  "seq": 10,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -100,6 +100,50 @@
       "progress": [],
       "created": "2026-06-20T22:34:21",
       "updated": "2026-06-20T22:34:21"
+    },
+    "t7": {
+      "id": "t7",
+      "title": "Read all 9 dataset batches + spec file",
+      "notes": "Nine JSON batch files plus nova_lora_spec.txt in _admin/training_stuff/. Read each one fully, not just the first three I keep re-reading.",
+      "priority": 2,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-06-20T22:35:52",
+      "updated": "2026-06-20T22:35:52"
+    },
+    "t8": {
+      "id": "t8",
+      "title": "Synthesize what works in the training data",
+      "notes": "Identify strong patterns, good voice examples, effective personality signals across all batches. What's actually teaching the model useful behavior.",
+      "priority": 2,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-06-20T22:35:52",
+      "updated": "2026-06-20T22:35:52"
+    },
+    "t9": {
+      "id": "t9",
+      "title": "Identify gaps and sharpening opportunities",
+      "notes": "What's missing, redundant, contradictory, or weak. Where the datasets need tightening before LoRA training.",
+      "priority": 2,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-06-20T22:35:52",
+      "updated": "2026-06-20T22:35:52"
+    },
+    "t10": {
+      "id": "t10",
+      "title": "Deliver consolidated feedback to Cole",
+      "notes": "One clear pass: what works, what needs fixing, specific examples. No more 'I'll do it' — actual opinions he can use.",
+      "priority": 2,
+      "status": "open",
+      "parent": "t1",
+      "progress": [],
+      "created": "2026-06-20T22:35:52",
+      "updated": "2026-06-20T22:35:52"
     }
   }
 }
