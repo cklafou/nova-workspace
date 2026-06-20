@@ -283,7 +283,7 @@ async def _fetch_llama_streaming(
 
 def _truncate_to_context(
     messages: list[dict],
-    ctx_limit: int = 32768,
+    ctx_limit: int = 65536,
     max_output: int = MAX_TOKENS_CHAT,
 ) -> list[dict]:
     """
@@ -375,7 +375,7 @@ async def stream_response(
         # Drop oldest conversation turns (keeping system msg intact) until the
         # estimated token count fits within the 32k window.
         tok_budget_out = max_tokens if max_tokens > 0 else MAX_TOKENS_CHAT
-        messages = _truncate_to_context(messages, ctx_limit=32768, max_output=tok_budget_out)
+        messages = _truncate_to_context(messages, ctx_limit=65536, max_output=tok_budget_out)
 
         # Attach images to the last user message if provided
         if images:
