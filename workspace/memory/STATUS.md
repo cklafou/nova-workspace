@@ -1,5 +1,5 @@
 # STATUS.md — Project Nova Current State
-_Last updated: 2026-06-20 20:00:48_
+_Last updated: 2026-06-20 20:55:00_
 
 _Prior revision 2026-05-25 — reflects the body-relocation + dead-code cleanup. Earlier
 phase history (brain.py "Thoughts cycle", nova_gateway/Discord, nova_qt, OpenClaw) is
@@ -16,8 +16,10 @@ test of her autonomy, not her identity or current focus.
 ---
 
 ## Core Architecture (current)
-- **Local model:** `llama.cpp` serves Qwen 3.5 27B Dense Q8 on port **8080** (OpenAI-compatible
-  API), 32K context, dual-GPU tensor split `-ts 12,28`, Qwen3 thinking mode on.
+- **Local model:** `llama.cpp` serves Qwen 3.6 27B Dense Q6_K_XL (+MTP speculative decoding) on
+  port **8080** (OpenAI-compatible API), **64K context** (`-c 65536`, single slot; native ctx is
+  262144), dual-GPU tensor split `-ts 12,28`, hybrid thinking on via `--jinja --reasoning-format
+  deepseek`. Launched by `start_llama_qwen36.cmd` (nova_start.py builds the equivalent).
 - **Her interface:** `nova_chat` (port **8765**) — a web group chat where Cole, Claude,
   Gemini, and Nova collaborate. This is her single voice/ears. (The `nova_qt` desktop app,
   `nova_gateway`/Discord, and OpenClaw are all retired.)
@@ -86,12 +88,13 @@ the GitHub watcher → the desktop app window. `start_llama.cmd` launches llama-
 | Setting | Value |
 |---|---|
 | Server | `llama-server.exe` (CUDA) |
-| Model | `models/qwen-27b-q8.gguf` (Qwen 3.5 27B Dense Q8) |
-| Vision projector | `models/qwen-27b-mmproj.gguf` |
+| Model | `models/qwen3.6/Qwen3.6-27B-UD-Q6_K_XL.gguf` (Qwen 3.6 27B Dense Q6_K_XL, MTP variant) |
+| Vision projector | `models/qwen3.6/mmproj-F16.gguf` |
 | Port | 8080 (OpenAI-compatible) |
-| Context | 32768 tokens |
+| Context | 65536 tokens (single slot, `--parallel 1`; native 262144) |
 | GPU split | `-ts 12,28` (RTX 4090 16GB + RTX 3090 24GB) |
-| Thinking | `--chat-template qwen3`, `"thinking": true` in payload |
+| Speculative | MTP: `--spec-type draft-mtp --spec-draft-n-max 2` (~1.4-2x gen) |
+| Thinking | hybrid, on by default via `--jinja --reasoning-format deepseek` |
 
 ---
 
@@ -101,7 +104,7 @@ the GitHub watcher → the desktop app window. `start_llama.cmd` launches llama-
 | Anthropic | `claude-sonnet-4-6` | nova_chat Claude client |
 | Anthropic | `claude-haiku-4-5` | Vision verification / routine queries |
 | Google | `gemini-2.5-pro` | nova_chat Gemini client |
-| Local | Qwen 3.5 27B Q8 | Nova inference (free, llama.cpp on 8080) |
+| Local | Qwen 3.6 27B Q6_K_XL | Nova inference (free, llama.cpp on 8080) |
 
 Required env vars: `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`.
 
