@@ -648,11 +648,23 @@ def run_pup_cycle():
     return commit_hash
 
 
+# The watcher calls run_manifest_pass after EVERY debounced batch of file changes, and Nova's
+# autonomy writes state files constantly — so without throttling this regenerated + emitted a
+# "manifest refreshed" Live Log line every ~13s (the spam Cole saw) AND its writes fed her
+# change-wake loop. Cap real regens to once / interval, and only EMIT when the manifest actually
+# changed (part count / flags differ) so the Live Logs feed stays quiet when nothing moved.
+_MANIFEST_MIN_INTERVAL_S = 300
+_last_manifest = {"sig": None, "ts": 0.0}
+
+
 def run_manifest_pass():
     """Regenerate Nova's Body Manifest (SELF/) and log a drift summary so her
-    self-model stays in sync with the code. Added 2026-05-24 (Body Manifest)."""
-    import json as _json, subprocess as _sp
+    self-model stays in sync with the code. Throttled + deduped (see note above)."""
+    import json as _json, subprocess as _sp, time as _time
     from datetime import datetime as _dt
+    if _time.time() - _last_manifest["ts"] < _MANIFEST_MIN_INTERVAL_S:
+        return                                   # throttle: at most one regen per interval
+    _last_manifest["ts"] = _time.time()
     bm = WORKSPACE_DIR / "general_tools" / "build_manifest.py"
     if not bm.exists():
         return
@@ -668,13 +680,17 @@ def run_manifest_pass():
         fl = data.get("flags", {})
         und = fl.get("undescribed", [])
         dead = fl.get("dead_part_candidates", [])
+        sig = (data.get("part_count"), tuple(sorted(und)), tuple(sorted(dead)))
+        if sig == _last_manifest["sig"]:
+            return                               # unchanged → don't spam the Live Logs feed
+        _last_manifest["sig"] = sig
         text = (f"Body manifest refreshed: {data.get('part_count')} parts, "
                 f"{len(und)} undescribed, {len(dead)} no-inbound-ref")
         print(f"[manifest] {text}")
         ev_dir = WORKSPACE_DIR / "logs" / "events"
         ev_dir.mkdir(parents=True, exist_ok=True)
         payload = {"type": "nova_event", "event": "manifest", "text": text,
-                   "level": "info" if (und or dead) else "info",
+                   "level": "info",
                    "ts": _dt.now().isoformat(),
                    "undescribed": und, "dead_part_candidates": dead}
         with open(ev_dir / f"events-{_dt.now().strftime('%Y-%m-%d')}.jsonl",
