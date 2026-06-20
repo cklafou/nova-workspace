@@ -189,8 +189,9 @@ async def _fetch_llama_streaming(
         "max_tokens":  max_tokens,
         "temperature": temperature,
         "top_p":       top_p,
-        "min_p":       0.05,           # Qwen3 responds well to min-p sampling
-        "repeat_penalty": 1.15,        # CRITICAL: prevents runaway repetition loops
+        "top_k":       20,             # Qwen 3.6 recommended (was unset → llama default ~40)
+        "min_p":       0.0,            # Qwen 3.6 recommended (was 0.05 for 3.5)
+        "repeat_penalty": 1.15,        # anti-runaway-loop insurance; Qwen 3.6's ideal is 1.0 — lower toward 1.0 if output quality dips
         "stream":      True,
         "cache_prompt": True,          # reuse KV prefix across turns
         # NOTE: chat_template_kwargs was removed — Qwen3's embedded GGUF template

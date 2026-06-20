@@ -60,7 +60,7 @@ class NovaRuntime:
         self._running = False
 
         # ── STEP 2 (done): model-server life-support + model-call guard now live here ──
-        self.llama = LlamaControl(self.workspace)   # health / autostart / stop / restart (+ KoELS equip later)
+        self.llama = LlamaControl(self.workspace, launcher="start_llama_qwen36.cmd")   # Qwen 3.6 + MTP launcher (KoELS --lora hook built in); was start_llama.cmd (3.5)
         self.guard = ModelGuard()                   # rate-limit failsafe + consecutive-llama-error backoff
 
         # ── STEP 4 (done): the model-dispatch faculty — owns WHICH client + HOW it's driven.

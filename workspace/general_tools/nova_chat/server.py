@@ -172,7 +172,7 @@ nova_throttled:  bool = False       # True = Nova is currently muted by failsafe
 from nova_runtime.llama_control import LlamaControl
 from nova_runtime.model_guard import ModelGuard
 _rt_workspace = Path(os.environ.get("NOVA_WORKSPACE") or Path(__file__).resolve().parent.parent.parent)
-_rt_llama = LlamaControl(_rt_workspace)
+_rt_llama = LlamaControl(_rt_workspace, launcher="start_llama_qwen36.cmd")  # Qwen 3.6 + MTP; was start_llama.cmd (3.5)
 _rt_guard = ModelGuard(rate_limit=_NOVA_RATE_LIMIT, rate_window=_NOVA_RATE_WINDOW, error_backoff=_LLAMA_ERROR_BACKOFF)
 
 # STEP 3: the unified runtime body — owns the memory indexer + proprioception (and, from
