@@ -191,7 +191,22 @@ async def _fetch_llama_streaming(
         "top_p":       top_p,
         "top_k":       20,             # Qwen 3.6 recommended (was unset → llama default ~40)
         "min_p":       0.0,            # Qwen 3.6 recommended (was 0.05 for 3.5)
-        "repeat_penalty": 1.15,        # anti-runaway-loop insurance; Qwen 3.6's ideal is 1.0 — lower toward 1.0 if output quality dips
+        # ── Anti-loop stack (replaces the lone repeat_penalty 1.15) ──────────────
+        # The failure we hit: she re-emitted whole sentences she'd said a few messages
+        # back ("four blanks… 'sup slut'… five minutes") because repeat_penalty only
+        # guards a short TOKEN window — it can't see a repeated phrase across the
+        # conversation. DRY penalizes repeated n-gram SEQUENCES over the whole context,
+        # which is the actual cure for verbatim looping/parroting. frequency_penalty
+        # adds gentle per-token pressure. repeat_penalty drops toward Qwen 3.6's ideal
+        # (~1.0) since DRY now does the heavy lifting and high repeat_penalty can itself
+        # distort output.
+        "repeat_penalty":   1.05,
+        "frequency_penalty": 0.4,
+        "presence_penalty":  0.3,
+        "dry_multiplier":    0.8,      # DRY on (0 = off). 0.8 is a solid default.
+        "dry_base":          1.75,
+        "dry_allowed_length": 3,       # repeats up to 3 tokens are fine (names, idioms); 4+ get penalized
+        "dry_penalty_last_n": -1,      # scan the WHOLE context for repeats, not just a window
         "stream":      True,
         "cache_prompt": True,          # reuse KV prefix across turns
         # NOTE: chat_template_kwargs was removed — Qwen3's embedded GGUF template
