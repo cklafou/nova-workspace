@@ -110,10 +110,6 @@
       "parent": "t1",
       "progress": [
         {
-          "ts": "2026-06-21T00:24:21",
-          "note": "\"path\": \"_admin/training_stuff/nova_lora"
-        },
-        {
           "ts": "2026-06-21T00:25:29",
           "note": "\"path\": \"_admin/training_stuff\""
         },
@@ -188,10 +184,14 @@
         {
           "ts": "2026-06-21T01:13:18",
           "note": "{\"tool\":\"read_file\",\"args\":{\"path\":\"_admin/training_stuff/nova_l"
+        },
+        {
+          "ts": "2026-06-21T01:14:54",
+          "note": "Starting with batch 2:"
         }
       ],
       "created": "2026-06-20T22:35:52",
-      "updated": "2026-06-21T01:13:18"
+      "updated": "2026-06-21T01:14:54"
     },
     "t8": {
       "id": "t8",
