@@ -1,5 +1,5 @@
 # WIP Inventory — dead/scaffolded code we can finally build on
-_Last updated: 2026-06-10 08:27:47_
+_Last updated: 2026-06-20 18:17:26_
 _Compiled 2026-05-31 by Opus 4.8. Verified against actual imports + the body manifest, not just the passover._
 
 This is the backlog of code that **exists but isn't wired into the live runtime** — the stuff "planned
