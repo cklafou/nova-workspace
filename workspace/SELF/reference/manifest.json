@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-20T18:50:49",
+  "generated": "2026-06-20T18:53:56",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 26,
   "described": 26,
@@ -27,7 +27,9 @@
       "lines": 138,
       "age_days": 0,
       "ports_bind": [],
-      "ports_seen": [],
+      "ports_seen": [
+        "8080"
+      ],
       "nova_imports": [],
       "third_party": [
         "__future__",
@@ -74,7 +76,7 @@
       "path": "nova_body/nova_imagination",
       "purpose": "Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches, schematics), auto-applying her self-LoRA when she draws herself.",
       "files": 2,
-      "lines": 305,
+      "lines": 328,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -100,7 +102,7 @@
       "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
       "files": 4,
       "lines": 568,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -130,7 +132,7 @@
       "purpose": "Nova's unified log manager — the single logging system shared by all subsystems.",
       "files": 2,
       "lines": 254,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -151,7 +153,7 @@
       "purpose": "Nova's memory — persistent state, journal, goals/status, and daily log summaries.",
       "files": 6,
       "lines": 836,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -176,7 +178,7 @@
       "purpose": "Nova's motor system — executes actions (hands), plans them (motor_cortex), and verifies results.",
       "files": 5,
       "lines": 1182,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8765"
@@ -240,7 +242,7 @@
       "purpose": "Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED (GUI-automation phase, not yet wired): desktop vision (eyes, vision) and UI proprioception.",
       "files": 7,
       "lines": 1548,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -449,7 +451,7 @@
       "purpose": "Persistent audit-review queue — records file-change events (rename/delete/new) for review by audit_scripts/restructure.",
       "files": 1,
       "lines": 288,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -469,7 +471,7 @@
       "purpose": "Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.",
       "files": 1,
       "lines": 760,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -514,7 +516,7 @@
       "purpose": "Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.",
       "files": 1,
       "lines": 269,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -534,7 +536,7 @@
       "purpose": "One-time downloader for Nova's vision models into workspace/models/ (for nova_senses).",
       "files": 1,
       "lines": 111,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -555,7 +557,7 @@
       "purpose": "NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.",
       "files": 1,
       "lines": 484,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8765"
@@ -663,7 +665,7 @@
       "purpose": "Restructure checker — detects stale path references after a directory move and offers interactive fixes.",
       "files": 1,
       "lines": 597,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
