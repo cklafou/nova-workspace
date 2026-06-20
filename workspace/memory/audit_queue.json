@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-06-20T18:17:14+09:00",
+  "updated_at": "2026-06-20T18:17:31+09:00",
   "items": [
     {
       "id": "777df213",
@@ -45537,6 +45537,84 @@
       "old_path": null,
       "new_path": "nova_memory_db/nova_text.lance/data/00110111111110011011111189cefb4c7ba308a7152b37957a.lance",
       "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "507fb614",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-06-20T18:17:31+09:00",
+      "commit": "c47ea57e",
+      "old_path": "memory/reports/WIP_Inventory_2026-05-31.md",
+      "new_path": "_archive_2026-06-20/memory/reports/WIP_Inventory_2026-05-31.md",
+      "confidence": 0.99,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "3f8400fd",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-06-20T18:17:31+09:00",
+      "commit": "c47ea57e",
+      "old_path": "memory/reports/code_md_review_2026-05-27.md",
+      "new_path": "_archive_2026-06-20/memory/reports/code_md_review_2026-05-27.md",
+      "confidence": 0.99,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "98a1090a",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-06-20T18:17:31+09:00",
+      "commit": "c47ea57e",
+      "old_path": "memory/reports/full_review_progress.md",
+      "new_path": "_archive_2026-06-20/memory/reports/full_review_progress.md",
+      "confidence": 0.99,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "65bb5c9c",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-06-20T18:17:31+09:00",
+      "commit": "c47ea57e",
+      "old_path": "memory/reports/runtime_extraction_inventory_2026-06-01.md",
+      "new_path": "_archive_2026-06-20/memory/reports/runtime_extraction_inventory_2026-06-01.md",
+      "confidence": 0.99,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "e577ed50",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-06-20T18:17:31+09:00",
+      "commit": "c47ea57e",
+      "old_path": "memory/reports/work_summary.md",
+      "new_path": "_archive_2026-06-20/memory/reports/work_summary.md",
+      "confidence": 0.87,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "76c8dec9",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-06-20T18:17:31+09:00",
+      "commit": "c47ea57e",
+      "old_path": "memory/reports/work_vs_body.md",
+      "new_path": "_archive_2026-06-20/memory/reports/work_vs_body.md",
+      "confidence": 0.97,
       "resolved_by": null,
       "resolved_at": null,
       "notes": null
