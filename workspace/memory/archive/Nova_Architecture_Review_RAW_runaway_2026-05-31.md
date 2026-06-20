@@ -1,6 +1,6 @@
 # Nova Architecture Review
 _Living document — comprehensive system documentation_
-_Last updated: 2026-06-20 23:08:30_
+_Last updated: 2026-06-21 00:08:47_
 
 ---
 
