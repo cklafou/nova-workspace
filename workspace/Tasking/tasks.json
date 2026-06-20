@@ -144,10 +144,14 @@
         {
           "ts": "2026-06-20T23:28:06",
           "note": "\"path\": \"_admin/training_stuff\""
+        },
+        {
+          "ts": "2026-06-20T23:29:13",
+          "note": "\"path\": \"_admin/training_stuff/nova_l"
         }
       ],
       "created": "2026-06-20T22:35:52",
-      "updated": "2026-06-20T23:28:06"
+      "updated": "2026-06-20T23:29:13"
     },
     "t8": {
       "id": "t8",
