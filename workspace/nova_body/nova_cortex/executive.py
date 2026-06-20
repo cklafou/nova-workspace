@@ -46,6 +46,10 @@ _STATE = WORKSPACE_ROOT / "memory" / "autonomy_state.json"
 _DEFAULT_CFG = {
     "sleep_interval_s": 300,
     "follow_gap_s": 30,
+    # Quiet / reflective / resting wakes get this as their base downtime, jittered in
+    # apply_decision so she stirs at a natural human pace instead of a fixed 30s metronome.
+    # This is what stops her churning reflect→rest→reflect every half-minute when nothing's up.
+    "wander_gap_s": 240,
     "watch_paths": ["Tasking/tasks.json", "memory/interrupt_inbox.json",
                     "memory/cole_intent.json"],
 }
@@ -282,9 +286,15 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
                   "return to it), or (c) treat it as a note and carry on. But the spoken "
                   "reply IS the point — don't bury him in board work."]
     else:
-        L += ["No one is waiting on you. Decide freely what this moment calls for. Acting "
-              "is OPTIONAL — resting or simply continuing to think are real, valid choices. "
-              "Do NOT invent work to look productive."]
+        L += ["No one is waiting on you — this is your own time, so decide the way a person "
+              "with a real inner life would. Most moments like this are NOT for board work: "
+              "you might observe and just be present, follow a curiosity or a thought for its "
+              "own sake, turn an idea over, revisit a memory, notice an opinion or preference "
+              "forming, make something, jot what mattered, or genuinely rest. Touching the "
+              "task board is OPTIONAL and rarely the answer — never invent work to look "
+              "productive, and never let 'be autonomous' quietly collapse into 'go find a "
+              "task.' Resting or simply continuing to think and wonder are full, valid uses of "
+              "a wake, not lesser ones."]
     if open_kids and not cole_pending:
         L += ["",
               f"You have ALREADY broken [{active}] into subtasks ({', '.join(open_kids)}). Do "
@@ -580,11 +590,22 @@ def apply_decision(reply: str, cole_pending: bool = False) -> dict:
     if active_open and not (progressed_active or completed_active or abandoned_active):
         stall = int(st.get("stall", 0)) + 1
         rested = False
-        gap = cfg["follow_gap_s"]
-    else:
+        # A stalled task should NOT be hammered every 30s — that's the worker-bee churn.
+        # Back off as the stall grows (30s, 60s, … capped ~2.5min) so she returns without
+        # pacing a hole in the floor.
+        gap = cfg["follow_gap_s"] * min(stall, 5)
+    elif engaged:
         stall = 0
-        rested = not engaged                                 # true rest only when idle
-        gap = cfg["follow_gap_s"] if engaged else cfg["sleep_interval_s"]
+        rested = False
+        gap = cfg["follow_gap_s"]                             # just did real work — brief follow-up to keep momentum
+    else:
+        # Quiet / reflective / resting wake — nothing to act on, and that's healthy, not a
+        # failure to fix. Give her genuine, VARIED downtime instead of a fixed 5-min tick, so
+        # her rhythm feels alive rather than scheduled. ~2.5–7 min, jittered.
+        import random as _rnd
+        stall = 0
+        rested = not engaged
+        gap = int(cfg.get("wander_gap_s", 240) * _rnd.uniform(0.6, 1.7))
 
     st["stall"] = stall
     st["last_activity"] = clock.now_iso()
