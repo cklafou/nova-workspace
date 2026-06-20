@@ -1,4 +1,4 @@
-# Last updated: 2026-06-10 09:25:34
+# Last updated: 2026-06-20 18:50:49
 """
 nova_imagination/imagination.py — Nova's visual-creation faculty
 ================================================================

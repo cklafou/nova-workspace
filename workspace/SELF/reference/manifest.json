@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-20T18:50:09",
+  "generated": "2026-06-20T18:50:49",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 26,
   "described": 26,
@@ -25,11 +25,9 @@
       "purpose": "Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads workspace/nova_config.json; falls back to defaults. Import as: from nova_config import cfg.",
       "files": 1,
       "lines": 138,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
-      "ports_seen": [
-        "8080"
-      ],
+      "ports_seen": [],
       "nova_imports": [],
       "third_party": [
         "__future__",
@@ -76,8 +74,8 @@
       "path": "nova_body/nova_imagination",
       "purpose": "Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches, schematics), auto-applying her self-LoRA when she draws herself.",
       "files": 2,
-      "lines": 328,
-      "age_days": 10,
+      "lines": 305,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -493,7 +491,7 @@
       "purpose": "Generates Nova's Body Manifest — the single derived map of every body part",
       "files": 1,
       "lines": 323,
-      "age_days": 10,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080",
