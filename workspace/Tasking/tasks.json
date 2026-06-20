@@ -160,10 +160,14 @@
         {
           "ts": "2026-06-20T23:36:00",
           "note": "\"path\": \"_admin/training_stuff\""
+        },
+        {
+          "ts": "2026-06-20T23:37:33",
+          "note": "\"path\": \"_admin/training_stuff/\""
         }
       ],
       "created": "2026-06-20T22:35:52",
-      "updated": "2026-06-20T23:36:00"
+      "updated": "2026-06-20T23:37:33"
     },
     "t8": {
       "id": "t8",
