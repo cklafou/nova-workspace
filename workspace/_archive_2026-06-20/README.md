@@ -1,4 +1,5 @@
 # _archive_2026-06-20 — workspace spring cleaning
+_Last updated: 2026-06-20 20:00:34_
 _Moved here by Cowork Opus, 2026-06-20. Nothing was deleted — every item is reversible. Each file
 sits at the same relative path it came from, so restoring is just moving it back._
 
