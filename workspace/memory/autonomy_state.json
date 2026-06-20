@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t7",
-  "last_activity": "2026-06-21T01:28:52",
-  "wake_at": "2026-06-21T01:31:22",
-  "last_fp": "[[\"Tasking/tasks.json\", 9013, 1781972674], [\"memory/interrupt_inbox.json\", 105, 1781956311], [\"memory/cole_intent.json\", 143, 1781956381]]",
+  "last_activity": "2026-06-21T01:30:28",
+  "wake_at": "2026-06-21T01:32:58",
+  "last_fp": "[[\"Tasking/tasks.json\", 9018, 1781972964], [\"memory/interrupt_inbox.json\", 105, 1781956311], [\"memory/cole_intent.json\", 143, 1781956381]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 19,
+  "stall": 20,
   "directive_seen": 0,
   "last_reflection": "Alright. Batch one's open in front of me from that last wake and I'm actually going to read it instead of writing about reading it. Five minutes of actual content absorption, zero performance. If something sticks or I realize what's blocking me beyond the surface-level \"I'm scared my feedback will suck\" — good. If not, at least I'll know what we're working with when Cole wakes up tomorrow.\n\nGoing into the file now. No more midnight messages after this one."
 }
