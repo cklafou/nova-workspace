@@ -143,7 +143,10 @@ MAX_TOKENS_AGENT = 16384  # tool-use loops on 3.6: thinking + multi-step actions
 # reject the request with a 400 ("request exceeds available context size").
 # Cap each message and the overall prompt so it ALWAYS fits.
 _PER_MSG_MAX_CHARS = 24000   # ~6K tokens — no single message can dominate
-_PROMPT_MAX_CHARS  = 96000   # ~24K tokens — leaves room for output + headroom
+# Window raised 32K→64K (Qwen 3.6 native ctx is 262144). MUST track the launcher's -c
+# and _truncate_to_context's ctx_limit, or whichever is smallest silently re-starves her
+# conversation. 174000 chars ≈ 58K tokens, leaving room for the ~8K output reserve.
+_PROMPT_MAX_CHARS  = 174000
 
 
 def _fit_messages_to_window(messages: list[dict]) -> list[dict]:
