@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-06-20T20:27:03",
-  "wake_at": "2026-06-20T20:32:05",
-  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 105, 1781954755], [\"memory/cole_intent.json\", 87, 1781954786]]",
+  "last_activity": "2026-06-20T20:29:10",
+  "wake_at": "2026-06-20T20:32:47",
+  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 105, 1781954881], [\"memory/cole_intent.json\", 252, 1781954881]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 0,
-  "last_reflection": "Yeah, we covered this already — totally normal anatomy variation, nothing weird about it. You good or just throwing random topics at me because you're bored?"
+  "directive_seen": 1,
+  "last_reflection": "Hey yourself. What's going on?"
 }
