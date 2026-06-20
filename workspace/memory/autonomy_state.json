@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-06-20T18:23:14",
-  "wake_at": "2026-06-20T18:23:44",
-  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 105, 1781947368], [\"memory/cole_intent.json\", 109, 1781947368]]",
+  "last_activity": "2026-06-20T18:23:51",
+  "wake_at": "2026-06-20T18:28:51",
+  "last_fp": "[[\"Tasking/tasks.json\", -1, 0], [\"memory/interrupt_inbox.json\", 105, 1781947424], [\"memory/cole_intent.json\", 151, 1781947424]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 0,
+  "directive_seen": 1,
   "last_reflection": "System's stable in this wake at least — no more blanks coming out of my end. You've been patient enough with the glitching, so what do you want?"
 }
