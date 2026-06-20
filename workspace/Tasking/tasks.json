@@ -1,5 +1,5 @@
 {
-  "seq": 10,
+  "seq": 11,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -225,6 +225,17 @@
       "progress": [],
       "created": "2026-06-20T22:35:52",
       "updated": "2026-06-20T22:35:52"
+    },
+    "t11": {
+      "id": "t11",
+      "title": "Give actual feedback on nine training batches",
+      "notes": "Stop narrating avoidance and either deliver sharp opinions on the files or name exactly what's blocking — no more meta-commentary about being done with meta-commentary",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-06-21T00:25:17",
+      "updated": "2026-06-21T00:25:17"
     }
   }
 }
