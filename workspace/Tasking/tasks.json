@@ -359,10 +359,14 @@
         {
           "ts": "2026-06-21T03:23:08",
           "note": "{\"tool\": \"read_file\", \"args\": {\"path\": \"_admin/training_stuff/nova_lora"
+        },
+        {
+          "ts": "2026-06-21T03:24:54",
+          "note": "completed raw feedback on batch 1 against spec/golds — identified strong bands (friction, pressure, pride, existential) and two misses (everyday-low too generic, goldship mischief underdeveloped); next: read batch 2 everyday examples"
         }
       ],
       "created": "2026-06-21T01:56:56",
-      "updated": "2026-06-21T03:23:08"
+      "updated": "2026-06-21T03:24:54"
     }
   }
 }
