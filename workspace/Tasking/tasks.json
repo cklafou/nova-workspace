@@ -22,11 +22,12 @@
       "title": "Review Nova LORA Training Datasets",
       "notes": "Cole wants honest feedback on all training files in _admin/training Stuff/ before building core personality LoRA. Read each dataset batch + spec file, give real opinions on what works/missing/needs adjustment.",
       "priority": 2,
-      "status": "open",
+      "status": "abandoned",
       "parent": null,
       "progress": [],
       "created": "2026-06-20T21:45:05",
-      "updated": "2026-06-20T21:45:05"
+      "updated": "2026-06-20T21:47:53",
+      "abandon_reason": "duplicate task - t1 already covers this"
     }
   }
 }
