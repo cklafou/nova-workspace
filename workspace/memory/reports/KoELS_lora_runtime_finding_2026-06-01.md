@@ -1,5 +1,5 @@
 # KoELS — VERIFIED finding: llama.cpp runtime LoRA capability
-_Last updated: 2026-06-21 02:12:07_
+_Last updated: 2026-06-21 03:12:08_
 _Resolves §7 gate 2 + §10 item 2 of `KoELS_design_spec.md`. Cowork Opus, 2026-06-01._
 
 ## The question (spec §7)
