@@ -1436,7 +1436,28 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       r.classList.toggle('collapsed');
       b.textContent=r.classList.contains('collapsed')?'⟨':'⟩';
     };
+    window.toggleAddTask=function(){
+      const f=document.getElementById('tr-add-form'); if(!f) return;
+      addOpen=(f.style.display==='none');
+      f.style.display=addOpen?'flex':'none';
+      if(addOpen){const t=document.getElementById('tr-add-title'); if(t) t.focus();}
+    };
+    window.submitAddTask=async function(){
+      const t=document.getElementById('tr-add-title');
+      const n=document.getElementById('tr-add-notes');
+      const p=document.getElementById('tr-add-pri');
+      const title=((t&&t.value)||'').trim();
+      if(!title){ if(t) t.focus(); return; }
+      const payload={title:title, notes:((n&&n.value)||'').trim(), priority:parseInt((p&&p.value)||'3',10)};
+      try{
+        const r=await fetch('/api/queue/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        if(!r.ok){ alert('Could not add task ('+r.status+').'); return; }
+      }catch(_){ alert('Could not add task — is the server up?'); return; }
+      addOpen=false;
+      if(window.refreshBoard) window.refreshBoard();
+    };
     window.refreshBoard=async function(){
+      if(addOpen) return;   // don't wipe the open add-task form while Cole is typing in it
       try{const r=await fetch('/api/queue'); if(!r.ok) return;
         const d=await r.json();
         window._lastBoard={tasks:d.tasks||[],active:d.active||null};
