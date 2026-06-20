@@ -1,4 +1,4 @@
-# Last updated: 2026-06-20 20:59:05
+# Last updated: 2026-06-20 22:00:10
 # @nova: Executive will — my self-direction. When my time-sense stirs me (or my
 #        environment changes, or Cole speaks) I see my board + my senses + Cole's word,
 #        and FREELY decide: work, switch, create, abandon, wait, or rest. I hold my own

@@ -1,4 +1,4 @@
-# Last updated: 2026-06-20 20:59:05
+# Last updated: 2026-06-20 22:00:10
 # @nova: Restructure checker — detects stale path references after a directory move and offers interactive fixes.
 """
 general_tools/restructure.py  --  Nova Restructure Checker
