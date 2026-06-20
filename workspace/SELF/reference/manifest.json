@@ -1,8 +1,8 @@
 {
-  "generated": "2026-06-20T20:02:06",
+  "generated": "2026-06-20T20:03:57",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
-  "part_count": 26,
-  "described": 26,
+  "part_count": 25,
+  "described": 25,
   "flags": {
     "undescribed": [],
     "dead_part_candidates": [
@@ -11,7 +11,6 @@
       "audit_queue.py",
       "audit_scripts.py",
       "calls.py",
-      "download_models.py",
       "injector.py",
       "restructure.py"
     ],
@@ -522,27 +521,6 @@
       "nova_imports": [],
       "third_party": [
         "ast"
-      ],
-      "referenced_by": [],
-      "launched_by": [],
-      "flags": [
-        "no_inbound_refs"
-      ]
-    },
-    {
-      "name": "download_models.py",
-      "kind": "tool",
-      "path": "general_tools/download_models.py",
-      "purpose": "One-time downloader for Nova's vision models into workspace/models/ (for nova_senses).",
-      "files": 1,
-      "lines": 111,
-      "age_days": 0,
-      "ports_bind": [],
-      "ports_seen": [],
-      "nova_imports": [],
-      "third_party": [
-        "argparse",
-        "huggingface_hub"
       ],
       "referenced_by": [],
       "launched_by": [],
