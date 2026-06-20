@@ -132,10 +132,14 @@
         {
           "ts": "2026-06-20T23:03:05",
           "note": "\"path\": \"_admin/training_stuff/nova_lora"
+        },
+        {
+          "ts": "2026-06-20T23:09:46",
+          "note": "\"path\": \"_admin/training_stuff/nova_lora"
         }
       ],
       "created": "2026-06-20T22:35:52",
-      "updated": "2026-06-20T23:03:05"
+      "updated": "2026-06-20T23:09:46"
     },
     "t8": {
       "id": "t8",
