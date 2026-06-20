@@ -1,5 +1,5 @@
 {
-  "seq": 1,
+  "seq": 2,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -11,6 +11,17 @@
       "progress": [],
       "created": "2026-06-20T20:53:01",
       "updated": "2026-06-20T20:53:01"
+    },
+    "t2": {
+      "id": "t2",
+      "title": "Review Nova LORA Training Datasets",
+      "notes": "Cole wants honest feedback on all training files in _admin/training Stuff/ before building core personality LoRA. Read each dataset batch + spec file, give real opinions on what works/missing/needs adjustment.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-06-20T21:45:05",
+      "updated": "2026-06-20T21:45:05"
     }
   }
 }
