@@ -180,10 +180,14 @@
         {
           "ts": "2026-06-20T23:49:14",
           "note": "\"path\": \"_admin/training_stuff/nova_lora_dataset_"
+        },
+        {
+          "ts": "2026-06-20T23:50:26",
+          "note": "\"path\": \"_admin/training_stuff\""
         }
       ],
       "created": "2026-06-20T22:35:52",
-      "updated": "2026-06-20T23:49:14"
+      "updated": "2026-06-20T23:50:26"
     },
     "t8": {
       "id": "t8",
