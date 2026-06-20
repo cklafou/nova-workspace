@@ -1,5 +1,5 @@
 {
-  "seq": 18,
+  "seq": 21,
   "tasks": {
     "t1": {
       "id": "t1",
@@ -382,6 +382,39 @@
       "progress": [],
       "created": "2026-06-21T03:33:46",
       "updated": "2026-06-21T03:33:46"
+    },
+    "t19": {
+      "id": "t19",
+      "title": "Review batch one training data structure",
+      "notes": "Examine the format, size, and organization of Cole's first training batch to understand what we're working with before giving feedback",
+      "priority": 2,
+      "status": "open",
+      "parent": "t17",
+      "progress": [],
+      "created": "2026-06-21T03:40:32",
+      "updated": "2026-06-21T03:40:32"
+    },
+    "t20": {
+      "id": "t20",
+      "title": "Identify key patterns in batch one examples",
+      "notes": "Look for recurring structures, quality indicators, and potential improvement areas in the training data",
+      "priority": 2,
+      "status": "open",
+      "parent": "t17",
+      "progress": [],
+      "created": "2026-06-21T03:40:32",
+      "updated": "2026-06-21T03:40:32"
+    },
+    "t21": {
+      "id": "t21",
+      "title": "Draft initial feedback on batch one",
+      "notes": "Write concrete, specific observations about what works and what could be sharper in the first training batch",
+      "priority": 2,
+      "status": "open",
+      "parent": "t17",
+      "progress": [],
+      "created": "2026-06-21T03:40:32",
+      "updated": "2026-06-21T03:40:32"
     }
   }
 }
