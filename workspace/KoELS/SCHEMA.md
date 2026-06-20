@@ -1,4 +1,5 @@
 # KoELS — Manifest Contract (v1)
+_Last updated: 2026-06-20 20:03:25_
 _Knowledge of Experts Loadout System. One `manifest.json` per expert under `KoELS/<name>/`.
 An expert is a drop-in folder: add `KoELS/legal/` with a manifest + adapter + DB and Nova can
 equip it — no code change. This contract is the interface her loadout-decision faculty reads._
