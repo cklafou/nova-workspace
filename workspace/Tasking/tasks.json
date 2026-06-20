@@ -20,10 +20,14 @@
         {
           "ts": "2026-06-20T22:11:37",
           "note": "{\"tool\": \"list_dir\", \"args\": {\"path\": \"_admin/training_stuff/nova"
+        },
+        {
+          "ts": "2026-06-20T22:13:32",
+          "note": "\"path\": \"_admin/training_stuff/nova_lora_dataset_"
         }
       ],
       "created": "2026-06-20T20:53:01",
-      "updated": "2026-06-20T22:11:37"
+      "updated": "2026-06-20T22:13:32"
     },
     "t2": {
       "id": "t2",
