@@ -39,8 +39,8 @@ else:
     WS = Path(__file__).resolve().parent
 
 LLAMA_EXE   = WS / "llama" / "llama-server.exe"
-MODEL       = WS / "models" / "qwen-27b-q8.gguf"
-MMPROJ      = WS / "models" / "qwen-27b-mmproj.gguf"
+MODEL       = WS / "models" / "qwen3.6" / "Qwen3.6-27B-UD-Q6_K_XL.gguf"   # Qwen 3.6 27B Q6 + MTP (was qwen-27b-q8.gguf, 3.5)
+MMPROJ      = WS / "models" / "qwen3.6" / "mmproj-F16.gguf"
 NOVA_LAUNCH = WS / "general_tools" / "NovaLauncher.py"
 WATCHER     = WS / "general_tools" / "nova_sync" / "watcher.py"
 PROMPT_CACHE = WS / "prompt_cache"
@@ -130,10 +130,22 @@ def build_llama_cmd() -> list:
         sys.exit(2)
     cmd += ["-c", "32768",
             "-fa", "on",
+            "--jinja",                       # Qwen 3.6 REQUIRES its chat template applied (do NOT carry over the 3.5 'no --chat-template' rule)
+            "--spec-type", "draft-mtp",      # MTP speculative decoding ~1.4-2x; the GGUF carries the nextn head
+            "--spec-draft-n-max", "2",       # tunable 1-6; 2 is usually best
             "--cache-prompt",
             "--slot-save-path", str(PROMPT_CACHE),
             "-b", "2048", "-ub", "1024",
             "--port", str(LLAMA_PORT), "--host", "127.0.0.1"]
+    # KoELS: preload a persisted boot --lora set if one exists (koels_lora_args.json = clean arg
+    # list; mirrors start_llama_qwen36.cmd's %KOELS_LORA% hook). Absent = Nova-core only.
+    _lora_json = WS / "memory" / "koels_lora_args.json"
+    if _lora_json.exists():
+        try:
+            import json as _json
+            cmd += _json.loads(_lora_json.read_text(encoding="utf-8")).get("args", [])
+        except Exception:
+            pass
     return cmd
 
 

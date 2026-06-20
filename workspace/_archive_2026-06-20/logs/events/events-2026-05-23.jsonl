@@ -1,0 +1,132 @@
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T14:20:21.844992"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:21:33.499466"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T14:22:06.892013"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T14:22:36.836283"}
+{"type": "nova_event", "event": "sleep", "text": "Nova went back to sleep", "level": "info", "ts": "2026-05-23T14:23:49.939030"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T14:23:53.237356"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:24:57.301166"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T14:25:18.960532"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:26:28.156371"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T14:30:20.910265"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:30:33.901775"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T14:35:20.890584"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:35:34.411634"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T14:40:21.452976"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:40:59.601574"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T14:45:23.189197"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:45:57.878537"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T14:49:13.041274"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:50:23.251276"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T14:50:45.978279"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T14:51:32.448903"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:51:57.701138"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T14:52:00.863261"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:52:24.599875"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T14:54:10.063776"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:55:00.582203"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T14:57:38.315789"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T14:58:07.126337"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T14:59:38.995769"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T14:59:39.519733"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T15:00:09.155008"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T15:00:57.378983"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T15:01:00.563867"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T15:01:30.749946"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T15:08:14.571662"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T15:08:52.663955"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T19:16:01.567163"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T19:21:52.703571"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T19:22:31.097501"}
+{"type": "nova_event", "event": "task", "text": "Clear existing tasks (Cole's standing instruction): Wiped TASK_MM_0513 master.md file to clear Moondream2 task", "level": "info", "ts": "2026-05-23T19:22:58.527284"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:22:58.527284"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T19:23:07.679098"}
+{"type": "nova_event", "event": "task", "text": "TASK_MM_0513: ran download_models.py script which returned HTTP 401 error on moondream-2-bf16.gguf download", "level": "info", "ts": "2026-05-23T19:23:34.443516"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:23:34.444515"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T19:23:43.670250"}
+{"type": "nova_event", "event": "sleep", "text": "Nova went back to sleep", "level": "info", "ts": "2026-05-23T19:24:06.015125"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T19:24:17.254436"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T19:25:40.185514"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T19:26:31.723982"}
+{"type": "nova_event", "event": "task", "text": "TASK_MM_0513: read task master.md file after download_models.py returned HTTP 401 error on moondream-2-bf16.gguf fetch", "level": "info", "ts": "2026-05-23T19:27:14.801115"}
+{"type": "nova_event", "event": "task", "text": "Completed: TASK_MM_0513", "level": "info", "ts": "2026-05-23T19:27:14.815818"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:27:14.815818"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T19:27:23.991605"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:27:40.783196"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T19:27:49.932919"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T19:28:03.947807"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:28:08.666160"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — Cole message", "level": "info", "ts": "2026-05-23T19:28:35.849404"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:29:00.148772"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T19:29:09.312968"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:29:29.978297"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T19:29:39.148608"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:29:49.042545"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T19:29:58.231191"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:30:12.866867"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T19:30:31.056002"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T19:30:52.610280"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:31:14.298865"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — Cole message", "level": "info", "ts": "2026-05-23T19:31:17.508828"}
+{"type": "nova_event", "event": "task", "text": "Queue updated: added P4: Clear Moondream task - delete master.md", "level": "info", "ts": "2026-05-23T19:31:45.736163"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:31:45.746996"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T19:31:54.894060"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T19:33:20.334071"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T19:36:27.337923"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T19:37:50.943350"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T19:40:55.911899"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T19:43:40.954987"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T19:45:08.231117"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:06:53.864800"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:08:46.577254"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T21:09:25.347448"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:09:53.302928"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:10:02.492790"}
+{"type": "nova_event", "event": "task", "text": "Queue updated: added P4: Clear Moondream task - delete master.md", "level": "info", "ts": "2026-05-23T21:10:20.674682"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:10:20.688471"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:10:29.873258"}
+{"type": "nova_event", "event": "task", "text": "**Clear Moondream task - delete master.md** — Cole explicitly said this was supp: Cleared Tasking/Finished/cancelled/Moondream2/master.md contents (deleted artifact)", "level": "info", "ts": "2026-05-23T21:11:00.556632"}
+{"type": "nova_event", "event": "task", "text": "Completed: **Clear Moondream task - delete master.md** — Cole explicitly said this was supp", "level": "info", "ts": "2026-05-23T21:11:00.566072"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:11:00.568103"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:11:09.742527"}
+{"type": "nova_event", "event": "task", "text": "Queue updated: added P4: Process pending audit_queue.json items", "level": "info", "ts": "2026-05-23T21:11:34.309992"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:11:34.321732"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:11:43.507267"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:12:05.709968"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:12:14.914444"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:12:23.153211"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:12:32.310573"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:12:39.996611"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:12:49.156820"}
+{"type": "nova_event", "event": "sleep", "text": "Nova went back to sleep", "level": "info", "ts": "2026-05-23T21:12:58.246447"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:34:05.702508"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:36:13.896628"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:38:21.513578"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:40:43.543466"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:42:34.023573"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:44:34.082835"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:46:19.203764"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:47:02.321058"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:47:52.418977"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — environment change", "level": "info", "ts": "2026-05-23T21:49:37.850223"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:50:17.449272"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:50:26.693697"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:50:47.974272"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:50:57.210438"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:51:16.591030"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:51:25.879560"}
+{"type": "nova_event", "event": "task", "text": "**Process pending audit_queue.json items** — audit_queue.json has 40+ unprocesse: verified first file path (index_backup.html) does not exist on disk — confirmed it needs resolution or removal from queue", "level": "info", "ts": "2026-05-23T21:52:00.694134"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:52:00.699911"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:52:09.944345"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:52:31.627391"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:52:40.805277"}
+{"type": "nova_event", "event": "task", "text": "**Process pending audit_queue.json items** — audit_queue.json has 40+ unprocesse: verified index_backup.html does not exist on disk and added verification note to first queue item", "level": "info", "ts": "2026-05-23T21:53:27.904661"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:53:27.905288"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:53:37.188272"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:53:58.125111"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:54:07.396423"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:54:19.091944"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:54:28.669201"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:54:46.565275"}
+{"type": "nova_event", "event": "wake", "text": "Nova woke — scheduled check", "level": "info", "ts": "2026-05-23T21:54:55.830607"}
+{"type": "nova_event", "event": "cole_message", "text": "Cole sent a message", "level": "info", "ts": "2026-05-23T21:55:06.206613"}
+{"type": "nova_event", "event": "engage", "text": "Nova is engaging — working a task", "level": "info", "ts": "2026-05-23T21:56:18.488768"}
