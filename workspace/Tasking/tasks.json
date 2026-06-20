@@ -28,10 +28,14 @@
         {
           "ts": "2026-06-20T22:25:30",
           "note": "\"path\": \"_admin/training_stuff/nova_lora"
+        },
+        {
+          "ts": "2026-06-20T22:27:13",
+          "note": "\"path\": \"_admin/training_stuff/nova_lora"
         }
       ],
       "created": "2026-06-20T20:53:01",
-      "updated": "2026-06-20T22:25:30"
+      "updated": "2026-06-20T22:27:13"
     },
     "t2": {
       "id": "t2",
