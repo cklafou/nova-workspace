@@ -323,10 +323,14 @@
         {
           "ts": "2026-06-21T02:39:41",
           "note": "\"path\": \"_admin/training_stuff/nova_lora"
+        },
+        {
+          "ts": "2026-06-21T02:50:25",
+          "note": "\"path\": \"_admin/training_stuff/nova_l"
         }
       ],
       "created": "2026-06-21T01:56:56",
-      "updated": "2026-06-21T02:39:41"
+      "updated": "2026-06-21T02:50:25"
     }
   }
 }
