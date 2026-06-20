@@ -563,8 +563,20 @@ def generate_raw(messages: list[dict], max_new_tokens: int = 4096, temperature: 
         "max_tokens": max_new_tokens,
         "temperature": temperature,
         "top_p": top_p,
+        "top_k": 20,
+        "min_p": 0.0,
+        # Same anti-loop stack as the streaming chat path (see stream_response) — DRY
+        # kills verbatim n-gram looping across the whole context; repeat_penalty stays
+        # near Qwen 3.6's ideal 1.0.
+        "repeat_penalty":    1.05,
+        "frequency_penalty": 0.4,
+        "presence_penalty":  0.3,
+        "dry_multiplier":    0.8,
+        "dry_base":          1.75,
+        "dry_allowed_length": 3,
+        "dry_penalty_last_n": -1,
     }
-    
+
     req = urllib.request.Request(
         LLAMA_CPP_URL,
         data=json.dumps(payload).encode("utf-8"),
