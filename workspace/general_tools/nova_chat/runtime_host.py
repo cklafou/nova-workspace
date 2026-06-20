@@ -1,4 +1,4 @@
-# Last updated: 2026-06-21 00:03:25
+# Last updated: 2026-06-21 01:05:32
 # @nova: Runtime-primary boot (Step 6d). Nova's RUNTIME is the owned core; the chat server is
 #        served as an attached face on her bus. This is the flipped boot — the body comes first
 #        and the UI is a window onto it, not the other way round. Swap NovaLauncher / the .cmd
