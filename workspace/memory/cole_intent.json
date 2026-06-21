@@ -1,5 +1,5 @@
 {
-  "text": "Okay. Nova. I just enabled a LORA that gives you a personality. How do you feel?",
-  "ts": "2026-06-21T20:07:47.610325",
-  "consumed": true
+  "text": "I mean, the LORA is enabled and trained on 308 examples. It should be a strong personality. We also deleted the old clashing personality prompts in Identity and similar files.",
+  "ts": "2026-06-21T20:11:04.258688",
+  "consumed": false
 }
