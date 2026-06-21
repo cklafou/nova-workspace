@@ -31,7 +31,7 @@ if not exist "prompt_cache" mkdir "prompt_cache"
 REM ── Nova-core: always-on personality LoRA. Rides in the BASE command so any KoELS ──
 REM ── specialist swap stacks ON TOP of her personality instead of replacing it. ──
 set "NOVA_CORE="
-if exist "models\qwen3.6\nova_core_v2_e2.gguf" set "NOVA_CORE=--lora models\qwen3.6\nova_core_v2_e2.gguf"
+if exist "models\qwen3.6\nova_core_v2_e2.gguf" set "NOVA_CORE=--lora-scaled models\qwen3.6\nova_core_v2_e2.gguf 0.5"
 if defined NOVA_CORE echo [Nova-core] personality adapter: %NOVA_CORE%
 
 REM ── KoELS: read the runtime-written boot --lora set (empty when Nova-core only) ──

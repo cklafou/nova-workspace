@@ -144,8 +144,12 @@ def build_llama_cmd() -> list:
     # file existing so a missing adapter never blocks startup (falls back to bare base model).
     _nova_core = MODEL.parent / "nova_core_v2_e2.gguf"
     if _nova_core.exists():
-        cmd += ["--lora", str(_nova_core)]
-        log(f"Nova-core personality adapter: {_nova_core.name}")
+        # @0.5, NOT 1.0: the epoch-2/r=64 adapter is overfit — at full strength it's a strong
+        # attractor that traps her in a repeating self-referential rut (the looping bug). 0.5
+        # keeps her personality while letting her reason/advance freely. Raise toward 1.0 only
+        # after a less-overfit adapter is trained.
+        cmd += ["--lora-scaled", str(_nova_core), "0.5"]
+        log(f"Nova-core personality adapter: {_nova_core.name} @0.5")
     # KoELS: preload a persisted boot --lora set if one exists (koels_lora_args.json = clean arg
     # list; mirrors start_llama_qwen36.cmd's %KOELS_LORA% hook). Absent = Nova-core only.
     _lora_json = WS / "memory" / "koels_lora_args.json"
