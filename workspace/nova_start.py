@@ -139,6 +139,13 @@ def build_llama_cmd() -> list:
             "--slot-save-path", str(PROMPT_CACHE),
             "-b", "2048", "-ub", "1024",
             "--port", str(LLAMA_PORT), "--host", "127.0.0.1"]
+    # Nova-core: always-on personality LoRA. Rides in the BASE command so any KoELS specialist
+    # swap stacks ON TOP of her personality instead of replacing it. Conditional on the file
+    # existing so a missing adapter never blocks startup (falls back to bare base model).
+    _nova_core = MODEL.parent / "nova_core_epoch2.gguf"
+    if _nova_core.exists():
+        cmd += ["--lora", str(_nova_core)]
+        log(f"Nova-core personality adapter: {_nova_core.name}")
     # KoELS: preload a persisted boot --lora set if one exists (koels_lora_args.json = clean arg
     # list; mirrors start_llama_qwen36.cmd's %KOELS_LORA% hook). Absent = Nova-core only.
     _lora_json = WS / "memory" / "koels_lora_args.json"

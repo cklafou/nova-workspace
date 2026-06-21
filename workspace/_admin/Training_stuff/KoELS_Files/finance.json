@@ -1,0 +1,23 @@
+{
+  "name": "finance",
+  "domain": "Financial analysis and market reasoning.",
+  "triggers": [
+    "stock", "stocks", "market", "markets", "portfolio", "invest", "investing",
+    "investment", "trade", "trading", "finance", "financial", "valuation",
+    "earnings", "ticker", "equity", "dividend", "hedge"
+  ],
+  "trigger_weights": {
+    "stock": 1.5,
+    "stocks": 1.5,
+    "portfolio": 2.0,
+    "investing": 2.0,
+    "valuation": 2.0,
+    "earnings": 1.5,
+    "financial": 1.5
+  },
+  "adapter": "KoELS/finance/adapter/finance.gguf",
+  "knowledge_db": "KoELS/finance/knowledge.lancedb",
+  "fusion_mode": "adapter",
+  "priority": 1.0,
+  "notes": "No oracle: reasoning lives in the adapter (durable analytical method, not survivorship-biased 'what worked' baked into weights), current prices/figures live in knowledge_db via the updater. Treat market specifics as retrieval, never as in-weight fact."
+}

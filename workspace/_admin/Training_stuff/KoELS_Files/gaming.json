@@ -1,0 +1,33 @@
+{
+  "name": "gaming",
+  "domain": "Competitive game coaching and strategy (chess, Clash Royale, DBD, and similar).",
+  "triggers": [
+    "chess", "clash royale", "clash", "royale", "dbd", "dead by daylight",
+    "game", "games", "gaming", "match", "matchup", "meta", "deck", "ladder",
+    "strategy", "opening", "endgame", "tactic", "tactics", "coach", "coaching",
+    "perk", "killer", "elixir", "counter"
+  ],
+  "trigger_weights": {
+    "chess": 2.0,
+    "clash royale": 2.0,
+    "dbd": 2.0,
+    "dead by daylight": 2.0,
+    "gaming": 2.0,
+    "coaching": 1.5,
+    "meta": 1.5,
+    "deck": 1.5,
+    "matchup": 1.5,
+    "elixir": 1.5
+  },
+  "adapter": "KoELS/gaming/adapter/gaming.gguf",
+  "knowledge_db": "KoELS/gaming/knowledge.lancedb",
+  "fusion_mode": "adapter",
+  "oracle": {
+    "kind": "stockfish",
+    "invoke": "stockfish (UCI over stdio)",
+    "notes": "Chess only: consult the engine for position evaluation and best line. Nova explains the engine's output in her voice rather than reasoning the position from weights. Other games have no oracle and rely on the adapter + knowledge_db."
+  },
+  "visual": "KoELS/gaming/visual/gaming_outfit.safetensors",
+  "priority": 1.0,
+  "notes": "Durable strategic reasoning lives in the adapter; volatile per-patch stats/meta live in knowledge_db (updater-maintained, patch-version tagged). Chess additionally consults Stockfish as ground truth."
+}
