@@ -1739,8 +1739,8 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="logs-panel" style="width:500px">
     <h3>LoRA Adapters <button class="close-btn" onclick="closeLora()">✕</button></h3>
     <div style="font-size:11px;color:var(--text-dim);line-height:1.5;margin-bottom:8px">
-      Adapters loaded into llama-server (KoELS). Toggle to equip (scale&nbsp;1.0) or unequip (0.0) live.
-      Adding a <em>new</em> adapter file needs a boot <code>--lora</code> + model restart — runtime toggle only adjusts adapters already loaded at boot.
+      Adapters loaded into llama-server (KoELS). Type a <strong>weight</strong> and hit Set (0&nbsp;=&nbsp;off, 1.0&nbsp;=&nbsp;trained strength, &gt;1&nbsp;=&nbsp;amplified personality), or use the quick On/Off. Changes apply live to her next reply.
+      Adding a <em>new</em> adapter file still needs a boot <code>--lora</code> + model restart — the weight box only adjusts adapters already loaded at boot.
     </div>
     <div id="lora-list" style="max-height:50vh;overflow-y:auto">Loading…</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
@@ -1758,6 +1758,9 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 .lora-toggle{border:none;border-radius:12px;padding:4px 14px;font-size:11px;cursor:pointer;font-weight:600;flex-shrink:0;transition:all var(--t);}
 .lora-toggle.on{background:var(--nova,#a78bfa);color:#fff;}
 .lora-toggle.off{background:var(--bg-mid);color:var(--text-mute);}
+.lora-scale-input{width:58px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 6px;text-align:center;}
+.lora-scale-input:focus{outline:none;border-color:var(--nova,#a78bfa);}
+.lora-scale-input::-webkit-inner-spin-button{opacity:1;}
 </style>
 <style>
 #settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);z-index:1000;align-items:center;justify-content:center;}
