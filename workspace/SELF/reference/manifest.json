@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-21T21:09:13",
+  "generated": "2026-06-22T07:18:12",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 25,
   "described": 25,
@@ -332,7 +332,7 @@
       "purpose": "Shutdown — kills whatever is listening on Nova's ports (8080/8765) for a clean restart.",
       "files": 1,
       "lines": 37,
-      "age_days": 25,
+      "age_days": 26,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -353,7 +353,7 @@
       "purpose": "Starts llama.cpp serving Qwen 3.5 27B Q8 on :8080 with the dual-GPU tensor split (4090+3090).",
       "files": 1,
       "lines": 44,
-      "age_days": 22,
+      "age_days": 23,
       "ports_bind": [
         "8080"
       ],
