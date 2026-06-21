@@ -623,6 +623,35 @@ async def status_endpoint():
     return JSONResponse(status)
 
 
+# ── KoELS / LoRA monitor ──────────────────────────────────────────────────────
+# Proxy llama-server's adapter endpoints so the UI can see and toggle adapters.
+# GET  returns the live adapter list [{id, path, scale, ...}].
+# POST sets scales: body [{"id":0,"scale":1.0}, ...]; scale 0.0 = unequip, >0 = equip.
+# NOTE: only adapters preloaded at boot via --lora can be toggled at runtime;
+# adding a brand-new adapter file still needs a boot --lora + model restart.
+_LLAMA_LORA_URL = "http://127.0.0.1:8080/lora-adapters"
+
+@app.get("/api/lora")
+async def api_lora_get():
+    import requests
+    try:
+        r = requests.get(_LLAMA_LORA_URL, timeout=4)
+        return JSONResponse(r.json())
+    except Exception as e:
+        return JSONResponse({"error": f"llama-server unreachable: {e}"}, status_code=502)
+
+@app.post("/api/lora")
+async def api_lora_set(payload: list = Body(...)):
+    import requests
+    try:
+        requests.post(_LLAMA_LORA_URL, json=payload, timeout=4)
+        # Re-read so the UI reflects the actual applied state, not what we asked for.
+        g = requests.get(_LLAMA_LORA_URL, timeout=4)
+        return JSONResponse(g.json())
+    except Exception as e:
+        return JSONResponse({"error": f"llama-server unreachable: {e}"}, status_code=502)
+
+
 @app.get("/sessions")
 async def list_sessions():
     """List all sessions with metadata."""

@@ -1673,6 +1673,8 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       <span>LLM</span>
     </div>
     <div class="sb-sep"></div>
+    <button class="sb-btn" id="sb-lora-btn" data-tooltip="LoRA adapters — view and equip/unequip Nova's personality + KoELS adapters" onclick="openLora()">◆ LoRA</button>
+    <div class="sb-sep"></div>
     <span id="sb-tokens" data-tooltip="Approximate context tokens used this session (chars ÷ 4)">—</span>
     <div class="sb-sep"></div>
     <button class="sb-btn active" id="panel-toggle-sb" onclick="togglePanel()">◫ Panel</button>
@@ -1731,6 +1733,32 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <div style="display:flex;justify-content:flex-end"><button class="btn btn-cancel" onclick="closeSettings()">Close</button></div>
   </div>
 </div>
+
+<!-- LORA MONITOR -->
+<div id="lora-overlay">
+  <div class="logs-panel" style="width:500px">
+    <h3>LoRA Adapters <button class="close-btn" onclick="closeLora()">✕</button></h3>
+    <div style="font-size:11px;color:var(--text-dim);line-height:1.5;margin-bottom:8px">
+      Adapters loaded into llama-server (KoELS). Toggle to equip (scale&nbsp;1.0) or unequip (0.0) live.
+      Adding a <em>new</em> adapter file needs a boot <code>--lora</code> + model restart — runtime toggle only adjusts adapters already loaded at boot.
+    </div>
+    <div id="lora-list" style="max-height:50vh;overflow-y:auto">Loading…</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+      <button class="btn btn-cancel" onclick="loadLora()">↻ Refresh</button>
+      <button class="btn btn-cancel" onclick="closeLora()">Close</button>
+    </div>
+  </div>
+</div>
+<style>
+#lora-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);z-index:1000;align-items:center;justify-content:center;}
+#lora-overlay.open{display:flex;}
+.lora-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;background:var(--bg-alt);}
+.lora-row .lr-name{font-family:var(--mono);font-size:11.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lora-row .lr-scale{font-size:10px;color:var(--text-mute);margin-top:2px;}
+.lora-toggle{border:none;border-radius:12px;padding:4px 14px;font-size:11px;cursor:pointer;font-weight:600;flex-shrink:0;transition:all var(--t);}
+.lora-toggle.on{background:var(--nova,#a78bfa);color:#fff;}
+.lora-toggle.off{background:var(--bg-mid);color:var(--text-mute);}
+</style>
 <style>
 #settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);z-index:1000;align-items:center;justify-content:center;}
 #settings-overlay.open{display:flex;}
@@ -1853,7 +1881,7 @@ function handle(d) {
     case 'auto_think_start':liveThinkStart('autonomous'); break;
     case 'auto_think_token':liveThinkAppend(d.token); break;
     case 'auto_think_end':  liveThinkEnd(); break;
-    case 'message_end':     finalizeMsg(d.id, d.content); hideTyping(d.author); break;
+    case 'message_end':     finalizeMsg(d.id, d.content, d.author); hideTyping(d.author); break;
     case 'processing_start':setProcessing(true); setNovaStatePill('processing'); break;
     case 'processing_end':  setProcessing(false); updateVigilance({state:'sleeping',reason:'Ready'}); hideQueueBadge(); break;
     case 'stopped':         setProcessing(false); updateVigilance({state:'sleeping',reason:'Stopped'}); hideQueueBadge(); break;
@@ -2276,12 +2304,28 @@ function _cleanChatText(t){
     .replace(/\[System(?: Result| Error)?[^\]]*\]/gi,'')             // system result markers
     .replace(/\n{3,}/g,'\n\n').trim();
 }
-function finalizeMsg(id, finalContent) {
-  const b=streamBufs[id]; if(!b){ _sweepEmptyNova(); return; }
-  b.w.querySelector('.cursor')?.remove();
+function finalizeMsg(id, finalContent, author) {
+  const b=streamBufs[id];
   // Prefer the server's cleaned final content over the raw streamed tokens (which
   // include the tool-call JSON she emits), then strip any residual tool noise.
-  let text = _cleanChatText((typeof finalContent==='string' && finalContent.trim()) ? finalContent : b.text);
+  let text = _cleanChatText((typeof finalContent==='string' && finalContent.trim()) ? finalContent : (b ? b.text : ''));
+  if(!b){
+    // No stream buffer was ever created for this id — the turn streamed only reasoning,
+    // tokens raced, or content arrived solely in message_end. Do NOT drop real content
+    // (that was the blank-until-refresh bug: history kept it, the live bubble lost it).
+    if(text){
+      const existing=document.getElementById(`msg-${id}`);
+      if(existing){
+        const tx=existing.querySelector('.st')||existing.querySelector('.msg-text');
+        if(tx) tx.innerHTML=renderMD(text);
+        existing.querySelector('.cursor')?.remove();
+      } else {
+        appendMsg(author||'Nova', text, id);
+      }
+    }
+    _sweepEmptyNova(); scrollBot(); return;
+  }
+  b.w.querySelector('.cursor')?.remove();
   const hasTool = !!b.w.querySelector('.tool-group');
   if(!text){
     // No real prose this turn. If a tool-group is attached, keep the bubble for it;
@@ -3263,6 +3307,50 @@ function ansiToHtml(text) {
       return '';
     })
     .replace(/\x1b\[[0-9;]*[A-HJKSTfh-l-nsu]/g, ''); // strip cursor/positioning codes
+}
+
+/* ══════════════════════════════════════════════════
+   LORA MONITOR (KoELS adapters)
+══════════════════════════════════════════════════ */
+let _loraState = [];
+function openLora(){ document.getElementById('lora-overlay').classList.add('open'); loadLora(); }
+function closeLora(){ document.getElementById('lora-overlay').classList.remove('open'); }
+async function loadLora(){
+  const box=document.getElementById('lora-list');
+  box.innerHTML='Loading…';
+  try{
+    const r=await fetch('/api/lora');
+    const data=await r.json();
+    if(data && data.error){ box.innerHTML=`<div style="color:var(--red);font-size:11.5px">${esc(data.error)}</div>`; _loraState=[]; return; }
+    if(!Array.isArray(data) || !data.length){
+      box.innerHTML='<div style="color:var(--text-mute);font-size:11.5px">No adapters loaded. Boot llama-server with <code>--lora</code> to add one (Nova-core rides in the base launch command).</div>';
+      _loraState=[]; return;
+    }
+    _loraState=data;
+    box.innerHTML=data.map(a=>{
+      const on=(a.scale||0)>0;
+      const name=String(a.path||('adapter '+a.id)).split(/[\\/]/).pop();
+      return `<div class="lora-row">
+        <div style="min-width:0;flex:1">
+          <div class="lr-name" title="${esc(String(a.path||''))}">${esc(name)}</div>
+          <div class="lr-scale">id ${a.id} · scale ${Number(a.scale??0).toFixed(2)}</div>
+        </div>
+        <button class="lora-toggle ${on?'on':'off'}" onclick="toggleLora(${a.id}, ${on?0:1})">${on?'Equipped ✓':'Off'}</button>
+      </div>`;
+    }).join('');
+  }catch(e){ box.innerHTML=`<div style="color:var(--red);font-size:11.5px">Failed to reach llama-server: ${esc(String(e))}</div>`; _loraState=[]; }
+}
+async function toggleLora(id, scale){
+  // Send the FULL adapter set with only the target changed, so toggling one never
+  // accidentally zeroes the others.
+  const payload=_loraState.map(a=>({id:a.id, scale: a.id===id ? scale : (a.scale||0)}));
+  try{
+    const r=await fetch('/api/lora',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await r.json();
+    if(data && data.error){ toast('LoRA: '+data.error); return; }
+    toast(scale>0?'Adapter equipped':'Adapter unequipped');
+    loadLora();
+  }catch(e){ toast('LoRA toggle failed'); }
 }
 
 /* ══════════════════════════════════════════════════
