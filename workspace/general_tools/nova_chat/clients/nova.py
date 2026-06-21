@@ -210,11 +210,13 @@ async def _fetch_llama_streaming(
         "dry_penalty_last_n": -1,      # scan the WHOLE context for repeats, not just a window
         "stream":      True,
         "cache_prompt": True,          # reuse KV prefix across turns
-        # NOTE: chat_template_kwargs was removed — Qwen3's embedded GGUF template
-        # defaults to enable_thinking=True, so thinking mode works without this field.
-        # Older llama.cpp builds reject unknown parameters with 400; keeping this
-        # out avoids that failure while still getting extended thinking.
+        # Qwen 3.6's GGUF template defaults enable_thinking=True, so the normal path needs no
+        # chat_template_kwargs (and omitting it avoids 400s on older builds). We add the kwarg
+        # ONLY to turn thinking OFF — used by the empty-response retry below, where the <think>
+        # pass ate the whole token budget and left no room for an actual answer.
     }
+    if not enable_thinking:
+        payload["chat_template_kwargs"] = {"enable_thinking": False}
 
     chat_response = ""   # chat content only — what's returned to the caller
     async with httpx.AsyncClient(timeout=600.0) as client:
