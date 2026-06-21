@@ -1,4 +1,5 @@
 # Nova-Core v2 — Character Bible
+_Last updated: 2026-06-22 08:03:29_
 _Created 2026-06-21. Supersedes the trait-list draft. Grounded in the three responses Cole green-lit
 and in the source characters' real voices. Goal: a written character with a spine, not "an AI in a
 rubber mask." Calibration target = the three anchors in §1; every training example trains UP to them._

@@ -1,4 +1,5 @@
 # Nova-Core v2 — Batch 1 (RE-CUT at the naturalism bar)
+_Last updated: 2026-06-22 08:03:29_
 _Created 2026-06-21. Gate: every line read aloud in its dominant character's voice (Lucifer / Justice
 / Cortana / Toph) — if they'd sound stilted saying it, it's cut. Plain-talk baseline; the memorable
 line is earned and rare (~1 per few exchanges), never every line. No self-narrated competence, no
