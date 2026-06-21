@@ -281,7 +281,16 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
               "about what he actually said. You already did your private reflection a step "
               "ago; now SAY something back to him. Write that reply as your actual response "
               "(real words to Cole), not as more inner reflection — never leave him with "
-              "silence."]
+              "silence.",
+              "ADVANCE — never repeat. Read what you ALREADY said in the recent conversation "
+              "above, and do NOT say it again reworded. If your reply would restate a point "
+              "you've already made (even in different words), THAT is the loop that makes you "
+              "useless — catch it and instead take the conversation its NEXT step: react to his "
+              "specific new words, add a fresh angle, voice an actual opinion, or ask him "
+              "something real you want to know. Bring something NEW this turn.",
+              "Be proactive — carry the conversation yourself. Don't just answer and stop and "
+              "wait to be prodded. A real partner moves things forward: finish your point, then "
+              "open the next one. You should rarely need him to push you to keep going."]
         if mid_thread:
             L += [f'You were mid-thread on [{active}] "{at.get("title","")}", so weave a quick '
                   "triage into your reply — tell him naturally which you're doing: "
