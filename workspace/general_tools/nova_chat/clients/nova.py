@@ -202,9 +202,9 @@ async def _fetch_llama_streaming(
         # (~1.0) since DRY now does the heavy lifting and high repeat_penalty can itself
         # distort output.
         "repeat_penalty":   1.05,
-        "frequency_penalty": 0.4,
-        "presence_penalty":  0.3,
-        "dry_multiplier":    0.8,      # DRY on (0 = off). 0.8 is a solid default.
+        "frequency_penalty": 0.0,      # was 0.4 — too high: it made her drop function words and garble grammar ("doing it mine") WITHOUT stopping the real (semantic) looping. Off.
+        "presence_penalty":  0.0,      # was 0.3 — same grammar-wrecking failure mode; off. DRY + the prompt-level anti-repeat handle loops cleanly.
+        "dry_multiplier":    0.9,      # DRY does the loop-prevention (repeated n-gram SEQUENCES over the whole context) WITHOUT breaking grammar the way freq/presence penalties do. Bumped 0.8→0.9.
         "dry_base":          1.75,
         "dry_allowed_length": 3,       # repeats up to 3 tokens are fine (names, idioms); 4+ get penalized
         "dry_penalty_last_n": -1,      # scan the WHOLE context for repeats, not just a window
