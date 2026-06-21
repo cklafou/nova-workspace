@@ -129,7 +129,7 @@ LLAMA_CPP_URL = "http://127.0.0.1:8080/v1/chat/completions"
 # Output token budgets. llama.cpp pre-allocates KV space for prompt+output,
 # so a high limit on limited VRAM hurts. After the eGPU is installed and the
 # model fits 100% in VRAM, both can be raised to 8192 with zero downside.
-MAX_TOKENS_CHAT  = 8192   # raised for Qwen 3.6 hybrid-thinking: the <think> pass consumes output budget BEFORE the answer, so 2048 left nothing for content → empty replies. eGPU is in + model fits VRAM (the "zero downside at 8192" case the note above anticipated).
+MAX_TOKENS_CHAT  = 16384  # Qwen 3.6 hybrid-thinking: the <think> pass eats output budget BEFORE the answer, so a tight budget → thinking fills it → empty reply. 16K lets thinking+answer both fit in one pass for nearly all turns; the empty-response retry (thinking OFF) in stream_response is the hard guarantee for the rest.
 MAX_TOKENS_AGENT = 16384  # tool-use loops on 3.6: thinking + multi-step actions need even more headroom
 
 # ── Context-window safety net ────────────────────────────────────────────────
