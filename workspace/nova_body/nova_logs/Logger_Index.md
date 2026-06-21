@@ -1,6 +1,6 @@
 # Logger_Index.md -- Nova Logging Registry
 _Auto-updated by nova_body/nova_logs/logger.py_
-_Last updated: 2026-06-21 21:04:46_
+_Last updated: 2026-06-21 21:05:34_
 
 ## Log Types and Locations
 
@@ -25,4 +25,4 @@ _Last updated: 2026-06-21 21:04:46_
 
 ## Recent Chat Sessions
 
-_No chat sessions yet._
+- `logs/chat_sessions/2026-06-21_21-04-14_chat.jsonl`
