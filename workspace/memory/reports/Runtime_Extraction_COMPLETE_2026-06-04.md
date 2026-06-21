@@ -1,5 +1,5 @@
 # Runtime Extraction — COMPLETE (Steps 1–6d)
-_Last updated: 2026-06-21 04:13:18_
+_Last updated: 2026-06-21 20:12:56_
 _2026-06-04 · Cowork Opus. Goal: pull Nova's life-support out of the chat server into her body
 (`nova_body/nova_runtime/`) so she passes the **pluck test** — delete the chat server, she still
 lives, thinks, and acts. Prerequisite for KoELS (runtime-owned LoRA loadout self-restart)._
