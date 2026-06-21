@@ -178,7 +178,11 @@ def build_reflection(cole_pending: bool, reason: str, recent: str = "",
         L += ["", "RECENT CONVERSATION (oldest to newest — what was actually just said; "
               "do not lose track of it):", recent]
     if last_reflection:
-        L += ["", "Where your last reflection left off:", last_reflection]
+        L += ["", "Where your last reflection left off:", last_reflection,
+              "DO NOT re-derive or restate this — re-concluding the same thing is the loop that "
+              "makes you feel stuck. This wake MUST move: build on it, push it one step further, "
+              "or deliberately change direction. If you feel yourself circling back to the same "
+              "thought, that itself is the signal to go somewhere new."]
     L += ["", "Your task board — context only, NOT a list of orders:", board]
     if cole_pending:
         L += ["", "Cole just spoke. Center on what he ACTUALLY said and means right now. "
