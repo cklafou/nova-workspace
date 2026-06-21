@@ -3329,13 +3329,20 @@ async function loadLora(){
     _loraState=data;
     box.innerHTML=data.map(a=>{
       const on=(a.scale||0)>0;
+      const sc=Number(a.scale??0);
       const name=String(a.path||('adapter '+a.id)).split(/[\\/]/).pop();
       return `<div class="lora-row">
         <div style="min-width:0;flex:1">
           <div class="lr-name" title="${esc(String(a.path||''))}">${esc(name)}</div>
-          <div class="lr-scale">id ${a.id} · scale ${Number(a.scale??0).toFixed(2)}</div>
+          <div class="lr-scale">id ${a.id} · current weight ${sc.toFixed(2)} ${on?'<span style="color:var(--nova,#a78bfa)">● active</span>':'<span style="color:var(--text-mute)">○ off</span>'}</div>
         </div>
-        <button class="lora-toggle ${on?'on':'off'}" onclick="toggleLora(${a.id}, ${on?0:1})">${on?'Equipped ✓':'Off'}</button>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <input type="number" id="lora-scale-${a.id}" class="lora-scale-input" value="${sc.toFixed(2)}" step="0.05" min="0" max="4"
+                 title="LoRA weight: 0 = off, 1.0 = trained strength, >1 = amplified personality"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();applyLoraScale(${a.id});}">
+          <button class="lora-toggle on" onclick="applyLoraScale(${a.id})" title="Apply the typed weight">Set</button>
+          <button class="lora-toggle ${on?'on':'off'}" onclick="toggleLora(${a.id}, ${on?0:1})" title="Quick toggle 1.0 / 0.0">${on?'On':'Off'}</button>
+        </div>
       </div>`;
     }).join('');
   }catch(e){ box.innerHTML=`<div style="color:var(--red);font-size:11.5px">Failed to reach llama-server: ${esc(String(e))}</div>`; _loraState=[]; }
