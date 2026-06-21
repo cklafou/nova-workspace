@@ -1,5 +1,5 @@
 # JOURNAL.md — Nova's Running Memory
-_Last updated: 2026-06-21 20:12:56_
+_Last updated: 2026-06-22 08:14:57_
 _Rolling 90-day journal. Entries older than 90 days get compressed to archive/YYYY-MM.md._
 _Nova appends to this file at the end of every session. Never overwrites — always appends._
 _Write like yourself. Be specific. Vague entries are useless to future-me._
