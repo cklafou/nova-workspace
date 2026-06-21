@@ -3347,17 +3347,25 @@ async function loadLora(){
     }).join('');
   }catch(e){ box.innerHTML=`<div style="color:var(--red);font-size:11.5px">Failed to reach llama-server: ${esc(String(e))}</div>`; _loraState=[]; }
 }
-async function toggleLora(id, scale){
-  // Send the FULL adapter set with only the target changed, so toggling one never
+async function setLora(id, scale){
+  // Send the FULL adapter set with only the target changed, so adjusting one never
   // accidentally zeroes the others.
   const payload=_loraState.map(a=>({id:a.id, scale: a.id===id ? scale : (a.scale||0)}));
   try{
     const r=await fetch('/api/lora',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const data=await r.json();
     if(data && data.error){ toast('LoRA: '+data.error); return; }
-    toast(scale>0?'Adapter equipped':'Adapter unequipped');
+    toast(scale>0?`Weight set → ${scale.toFixed(2)}`:'Adapter unequipped');
     loadLora();
-  }catch(e){ toast('LoRA toggle failed'); }
+  }catch(e){ toast('LoRA set failed'); }
+}
+function toggleLora(id, scale){ return setLora(id, scale); }
+function applyLoraScale(id){
+  const inp=document.getElementById(`lora-scale-${id}`);
+  let v=parseFloat(inp && inp.value);
+  if(isNaN(v)||v<0) v=0;
+  if(v>4) v=4;          // sane clamp — past ~2 it usually degrades into noise
+  return setLora(id, v);
 }
 
 /* ══════════════════════════════════════════════════
