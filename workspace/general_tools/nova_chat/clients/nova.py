@@ -450,9 +450,27 @@ async def stream_response(
                 await on_error(f"llama.cpp streaming error: {e}")
                 return
 
-            if not full_response:
-                await on_error("Nova returned an empty response")
-                return
+            if not full_response or not full_response.strip():
+                # Empty content = the <think> pass consumed the whole token budget before any
+                # answer (Qwen 3.6 hybrid-thinking failure mode → blank reply). Retry ONCE with
+                # thinking OFF so the FULL budget goes to the actual response. This is the fix
+                # for "Nova posts an empty message": she now always says something.
+                print("[nova] empty content after thinking pass — retrying with thinking OFF")
+                try:
+                    full_response = await _fetch_llama_streaming(
+                        messages, token_handler,
+                        on_think_token=think_handler,
+                        max_tokens=tok_budget,
+                        temperature=temperature,
+                        top_p=top_p,
+                        enable_thinking=False,
+                    )
+                except Exception as e:
+                    await on_error(f"llama.cpp retry error: {e}")
+                    return
+                if not full_response or not full_response.strip():
+                    await on_error("Nova returned an empty response (even with thinking off)")
+                    return
 
             # full_response is now CHAT-ONLY content (thinking was routed to
             # on_think_token via reasoning_content field — never mixed in here).
