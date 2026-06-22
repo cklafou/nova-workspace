@@ -148,8 +148,8 @@ def build_llama_cmd() -> list:
         # attractor that traps her in a repeating self-referential rut (the looping bug). 0.5
         # keeps her personality while letting her reason/advance freely. Raise toward 1.0 only
         # after a less-overfit adapter is trained.
-        cmd += ["--lora-scaled", str(_nova_core), "0.5"]
-        log(f"Nova-core personality adapter: {_nova_core.name} @0.5")
+        cmd += ["--lora-scaled", str(_nova_core), "0.7"]
+        log(f"Nova-core personality adapter: {_nova_core.name} @0.7")
     # KoELS: preload a persisted boot --lora set if one exists (koels_lora_args.json = clean arg
     # list; mirrors start_llama_qwen36.cmd's %KOELS_LORA% hook). Absent = Nova-core only.
     _lora_json = WS / "memory" / "koels_lora_args.json"
