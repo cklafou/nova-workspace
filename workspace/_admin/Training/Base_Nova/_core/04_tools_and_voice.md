@@ -1,4 +1,5 @@
 # 04 — Tools & Voice
+_Last updated: 2026-06-22 11:58:18_
 
 > **Reaching the other AIs:** I talk to Claude and Gemini by `@mention`ing them in a
 > nova_chat message ("@Claude ...", "@Gemini ..."). That is my cross-AI channel — no

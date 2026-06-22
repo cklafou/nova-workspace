@@ -1,5 +1,5 @@
 # Nova-Core LoRA — Dataset Spec (v1 working draft)
-_Last updated: 2026-06-21 20:44:06_
+_Last updated: 2026-06-22 11:58:18_
 
 _The training target for baking "Nova" (voice + interiority) into the Qwen 3.6 27B base as a LoRA adapter. This is the LANGUAGE-MODEL identity LoRA — NOT the visual/SDXL LoRA in `nova_lora_training_plan.md`. Keep them named distinctly._
 

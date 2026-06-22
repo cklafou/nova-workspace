@@ -1,4 +1,5 @@
 # Nova-Core LoRA v2 — Strengthened Personality Spec
+_Last updated: 2026-06-22 11:58:18_
 _Created 2026-06-21. Builds on `nova_core_lora_dataset_spec.md` (v1). Target: a markedly stronger
 self — driven, assertive, individual — not just a sharper tongue. Retrain at higher rank (r=64)._
 

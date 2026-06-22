@@ -1,4 +1,5 @@
 # Nova Base-Model Training Spec (living doc)
+_Last updated: 2026-06-22 11:58:18_
 _Started 2026-06-01 by Cole + Cowork Opus. Goal: finetune the Qwen base into "Nova" — bake **voice + personality**, never lore or facts._
 
 ## The pipeline (non-negotiable)

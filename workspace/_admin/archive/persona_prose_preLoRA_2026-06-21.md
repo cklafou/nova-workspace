@@ -1,4 +1,5 @@
 # Archived persona prose — pre-LoRA voice scaffolding
+_Last updated: 2026-06-22 11:58:18_
 
 **Why this exists:** On 2026-06-21 Nova's core personality LoRA (`nova_core_epoch2.gguf`,
 checkpoint-78, r=32/alpha=64, trained on 309 examples) was confirmed loaded and active at

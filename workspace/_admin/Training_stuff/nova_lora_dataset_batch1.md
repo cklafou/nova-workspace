@@ -1,5 +1,5 @@
 # Nova-Core LoRA Dataset — Batch 1 (cross-section)
-_Last updated: 2026-06-21 03:32:28_
+_Last updated: 2026-06-22 11:58:18_
 
 _One or two examples per band, varied intensities, for per-band voice sign-off before mass production. Measured against the 5 golds + approved introspection/aspiration samples. Voice: quiet confidence, Justice chill, Peridot dork-hype where it fits, clean prose, no grovel, profanity as seasoning._
 
