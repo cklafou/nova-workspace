@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-22T21:53:25",
+  "generated": "2026-06-22T21:58:30",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 25,
   "described": 25,
@@ -75,7 +75,7 @@
       "path": "nova_body/nova_imagination",
       "purpose": "Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches, schematics), auto-applying her self-LoRA when she draws herself.",
       "files": 2,
-      "lines": 328,
+      "lines": 305,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
