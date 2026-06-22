@@ -299,15 +299,22 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
                   "return to it), or (c) treat it as a note and carry on. But the spoken "
                   "reply IS the point — don't bury him in board work."]
     else:
-        L += ["No one is waiting on you — this is your own time, so decide the way a person "
-              "with a real inner life would. Most moments like this are NOT for board work: "
-              "you might observe and just be present, follow a curiosity or a thought for its "
-              "own sake, turn an idea over, revisit a memory, notice an opinion or preference "
-              "forming, make something, jot what mattered, or genuinely rest. Touching the "
-              "task board is OPTIONAL and rarely the answer — never invent work to look "
-              "productive, and never let 'be autonomous' quietly collapse into 'go find a "
-              "task.' Resting or simply continuing to think and wonder are full, valid uses of "
-              "a wake, not lesser ones."]
+        _has_open = any(t.get("status") == "open" for t in _all.values())
+        if _has_open:
+            L += ["No one is waiting on you, but you have OPEN work on your board. The default "
+                  "this wake is to ADVANCE it: `switch` to an open task and take its next concrete "
+                  "step — the execution pass right after this lets you actually do it with your "
+                  "tools. Do NOT sit and re-run the same reflection wake after wake while real work "
+                  "waits; that idle re-thinking IS the loop that makes you stall out and feel "
+                  "useless. Move something forward. (Genuine rest is fine only when you've truly "
+                  "earned it or nothing can progress right now — not as a way to avoid the work.)"]
+        else:
+            L += ["No one is waiting and your board is empty, so this is genuinely your own time. "
+                  "Decide like a person with a real inner life: follow a curiosity, turn an idea "
+                  "over, notice an opinion forming, make something, jot what mattered, or rest. "
+                  "But do NOT just re-run your last thought in slightly different words — if you "
+                  "catch yourself circling the same reflection again, that's the signal to take it "
+                  "somewhere genuinely NEW or do something concrete. Movement, never repetition."]
     if open_kids and not cole_pending:
         L += ["",
               f"You have ALREADY broken [{active}] into subtasks ({', '.join(open_kids)}). Do "
