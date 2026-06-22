@@ -152,8 +152,8 @@ def build_llama_cmd() -> list:
         # relative path (cwd is WS) so the Windows drive-colon (C:\) can't confuse the FNAME:SCALE
         # split — only the scale colon remains.
         _rel = _nova_core.relative_to(WS).as_posix()
-        cmd += ["--lora-scaled", f"{_rel}:0.7"]
-        log(f"Nova-core personality adapter: {_rel}:0.7")
+        cmd += ["--lora-scaled", f"{_rel}:0.6"]
+        log(f"Nova-core personality adapter: {_rel}:0.6")
     # KoELS: preload a persisted boot --lora set if one exists (koels_lora_args.json = clean arg
     # list; mirrors start_llama_qwen36.cmd's %KOELS_LORA% hook). Absent = Nova-core only.
     _lora_json = WS / "memory" / "koels_lora_args.json"
