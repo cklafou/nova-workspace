@@ -1,4 +1,5 @@
 # Nova-Core v2 retrain — clean runbook (the only files you need are in THIS folder)
+_Last updated: 2026-06-22 09:49:11_
 
 This folder (`RETRAIN_v2_UPLOAD/`) contains EXACTLY the two files to put on the pod and nothing else:
 - `nova_core_v2.jsonl`   — the 108-example v2 (with-teeth) dataset

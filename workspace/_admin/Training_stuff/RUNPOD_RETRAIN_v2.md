@@ -1,4 +1,5 @@
 # Nova-Core v2 retrain — RunPod runbook (gotchas pre-solved)
+_Last updated: 2026-06-22 09:49:11_
 
 Same flow that produced v1, with the v2 dataset (r=64). Cole drives the terminal + spend; paste
 outputs back and I'll guide each step.
