@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-22T09:07:34",
+  "generated": "2026-06-22T09:12:44",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 25,
   "described": 25,
@@ -316,7 +316,7 @@
       "purpose": "Pluck test — boots my runtime headless (no chat server) to prove my faculties",
       "files": 1,
       "lines": 28,
-      "age_days": 11,
+      "age_days": 12,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
