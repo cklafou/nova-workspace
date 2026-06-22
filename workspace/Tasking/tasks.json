@@ -1,5 +1,5 @@
 {
-  "seq": 22,
+  "seq": 23,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -12,6 +12,17 @@
       "created": "2026-06-22T11:51:57",
       "updated": "2026-06-22T11:55:34",
       "result": "Web crawler built and tested — walks links out of curiosity, stops when the thread goes cold."
+    },
+    "t23": {
+      "id": "t23",
+      "title": "Build curiosity crawler",
+      "notes": "One page, grab links, follow one, keep walking. No corporate wrapper. Simple spine.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-06-22T11:56:08",
+      "updated": "2026-06-22T11:56:08"
     }
   }
 }
