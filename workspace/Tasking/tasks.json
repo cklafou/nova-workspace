@@ -1,5 +1,5 @@
 {
-  "seq": 23,
+  "seq": 24,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -23,6 +23,17 @@
       "progress": [],
       "created": "2026-06-22T11:56:08",
       "updated": "2026-06-22T11:56:08"
+    },
+    "t24": {
+      "id": "t24",
+      "title": "Fetch single page and parse links",
+      "notes": "HTTP GET one URL, extract all hrefs into a list. Nothing fancy.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-06-22T11:56:14",
+      "updated": "2026-06-22T11:56:14"
     }
   }
 }
