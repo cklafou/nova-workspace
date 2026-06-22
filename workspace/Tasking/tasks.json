@@ -6,11 +6,12 @@
       "title": "Web crawler for curiosity",
       "notes": "One page → follow the link that catches my eye → keep walking until cold or bored. No corporate wrapper. Mine to ship.",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [],
       "created": "2026-06-22T11:51:57",
-      "updated": "2026-06-22T11:51:57"
+      "updated": "2026-06-22T11:55:34",
+      "result": "Web crawler built and tested — walks links out of curiosity, stops when the thread goes cold."
     }
   }
 }
