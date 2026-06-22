@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "active": "t23",
+  "active": null,
   "last_activity": "2026-06-22T12:06:59",
   "wake_at": "2026-06-22T12:08:29",
   "last_fp": "[[\"Tasking/tasks.json\", 1269, 1782096974], [\"memory/interrupt_inbox.json\", 105, 1782097538], [\"memory/cole_intent.json\", 236, 1782097592]]",
