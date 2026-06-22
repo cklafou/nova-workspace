@@ -22,6 +22,11 @@ for %%P in (8080 8765) do (
     )
 )
 
+REM Also sweep ALL llama-server.exe by NAME — repeated/aborted restarts can orphan instances
+REM that aren't yet LISTENING on 8080 (still loading, or zombie), which the port sweep above
+REM misses. Those orphans are what make NovaStart fail ("port busy" / model never ready).
+taskkill /F /IM llama-server.exe >nul 2>nul && set FOUND=1
+
 REM Also sweep any orphaned NovaStart.exe (the launcher itself), if present.
 taskkill /F /IM NovaStart.exe >nul 2>nul
 
