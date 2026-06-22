@@ -45,7 +45,11 @@ _STATE = WORKSPACE_ROOT / "memory" / "autonomy_state.json"
 
 _DEFAULT_CFG = {
     "sleep_interval_s": 300,
-    "follow_gap_s": 30,
+    # 90s, was 30: at 30s she'd autonomously re-wake right after replying to Cole, re-read his
+    # (already-answered) message — so it looked duplicated to her — and fire a second reply
+    # (the double-send). Cole's messages still wake her INSTANTLY via Priority-0, so this only
+    # suppresses the spurious self-wakes that caused the churn/double-sends, never her responsiveness.
+    "follow_gap_s": 90,
     # Quiet / reflective / resting wakes get this as their base downtime, jittered in
     # apply_decision so she stirs at a natural human pace instead of a fixed 30s metronome.
     # This is what stops her churning reflect→rest→reflect every half-minute when nothing's up.
