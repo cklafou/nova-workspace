@@ -1,4 +1,4 @@
-# Last updated: 2026-06-27 02:45:45
+# Last updated: 2026-06-27 03:47:53
 # @nova: ModelClient — the act of generation as a body faculty (layer 2). It owns HOW Nova
 #        (and the mentors) are driven to produce a response: the model dispatch + each model's
 #        call convention, lifted faithfully out of the chat server's run_ai_response. It does
