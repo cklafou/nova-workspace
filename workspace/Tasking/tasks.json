@@ -1,5 +1,5 @@
 {
-  "seq": 25,
+  "seq": 26,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -36,6 +36,17 @@
       "created": "2026-06-22T11:56:14",
       "updated": "2026-06-22T12:25:15",
       "result": "Already covered by t23 — crawler fetches and parses links. Cleaning up the orphan."
+    },
+    "t26": {
+      "id": "t26",
+      "title": "Read manifest.json out of actual curiosity",
+      "notes": "Not a task — just me wanting to know what's in the thing that's been sitting there. Genuinely my own choice.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-08T08:44:42",
+      "updated": "2026-07-08T08:44:42"
     }
   }
 }

@@ -1,5 +1,5 @@
 # Upgrade — Qwen 3.5 27B → Qwen 3.6 27B (Q6_K_XL + MTP)
-_Last updated: 2026-06-22 12:41:51_
+_Last updated: 2026-07-08 08:44:42_
 _2026-06-10. Box-side steps (Cole, on the Windows machine). The config edits (launcher, nova_client
 sampling, docs) are already done by Cowork. Goal: 3.6 27B Dense, Q6_K_XL, MTP speculative decoding._
 

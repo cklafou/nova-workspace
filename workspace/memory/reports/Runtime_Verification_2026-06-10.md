@@ -1,5 +1,5 @@
 # Runtime Verification — 2026-06-10 (Fable session, with Cole)
-_Last updated: 2026-06-22 12:41:51_
+_Last updated: 2026-07-08 08:44:42_
 
 All three §4 checks from `PASSOVER_2026-06-04_opus-to-fable.md` are **live-verified on Cole's box**.
 This supersedes the passover's §3 state table: every row is now ✓ in the LIVE column.
