@@ -28,10 +28,13 @@ echo.
 
 if not exist "prompt_cache" mkdir "prompt_cache"
 
-REM ── Nova-core: always-on personality LoRA. Rides in the BASE command so any KoELS ──
-REM ── specialist swap stacks ON TOP of her personality instead of replacing it. ──
+REM ── Nova-core: personality LoRA. The Nova Chat LoRA menu's "equip" writes memory\active_lora.txt
+REM ── (a ready "--lora-scaled models\...\file.gguf:WEIGHT" line) to pick WHICH adapter boots and at
+REM ── what weight. Absent/empty -> the v2 default below (so boot is unchanged until you pick one).
+REM ── Rides in the BASE command so any KoELS specialist swap stacks ON TOP of her personality. ──
 set "NOVA_CORE="
-if exist "models\qwen3.6\nova_core_v2_e2.gguf" set "NOVA_CORE=--lora-scaled models\qwen3.6\nova_core_v2_e2.gguf:0.6"
+if exist "memory\active_lora.txt" set /p NOVA_CORE=<"memory\active_lora.txt"
+if not defined NOVA_CORE if exist "models\qwen3.6\nova_core_v2_e2.gguf" set "NOVA_CORE=--lora-scaled models\qwen3.6\nova_core_v2_e2.gguf:0.6"
 if defined NOVA_CORE echo [Nova-core] personality adapter: %NOVA_CORE%
 
 REM ── KoELS: read the runtime-written boot --lora set (empty when Nova-core only) ──
