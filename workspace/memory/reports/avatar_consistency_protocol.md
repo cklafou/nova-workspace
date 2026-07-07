@@ -1,6 +1,6 @@
 # Nova Avatar — Consistency Protocol + Proposed Design Locks
 
-_Last updated: 2026-06-22 12:41:51_
+_Last updated: 2026-07-08 08:14:41_
 _Companion to `memory/Nova_Avatar_Design_Bible.md` (the written source of truth) and
 `memory/reports/avatar_pipeline_tools.md` (the tool pipeline)._
 _Status: this doc has two jobs — (A) define HOW to get 100%-consistent generation forever,
