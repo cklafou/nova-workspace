@@ -3321,16 +3321,19 @@ function closeLora(){ document.getElementById('lora-overlay').classList.remove('
 async function loadLora(){
   const box=document.getElementById('lora-list');
   box.innerHTML='Loading…';
+  // 1) Adapters live in llama-server (boot-loaded) — these are scaleable.
+  let loaded=[], loadErr=null;
   try{
     const r=await fetch('/api/lora');
     const data=await r.json();
-    if(data && data.error){ box.innerHTML=`<div style="color:var(--red);font-size:11.5px">${esc(data.error)}</div>`; _loraState=[]; return; }
-    if(!Array.isArray(data) || !data.length){
-      box.innerHTML='<div style="color:var(--text-mute);font-size:11.5px">No adapters loaded. Boot llama-server with <code>--lora</code> to add one (Nova-core rides in the base launch command).</div>';
-      _loraState=[]; return;
-    }
-    _loraState=data;
-    box.innerHTML=data.map(a=>{
+    if(data && data.error){ loadErr=data.error; }
+    else if(Array.isArray(data)){ loaded=data; }
+  }catch(e){ loadErr='Failed to reach llama-server: '+String(e); }
+  _loraState=loaded;
+
+  let html='';
+  if(loaded.length){
+    html += loaded.map(a=>{
       const on=(a.scale||0)>0;
       const sc=Number(a.scale??0);
       const name=String(a.path||('adapter '+a.id)).split(/[\\/]/).pop();
@@ -3348,7 +3351,33 @@ async function loadLora(){
         </div>
       </div>`;
     }).join('');
-  }catch(e){ box.innerHTML=`<div style="color:var(--red);font-size:11.5px">Failed to reach llama-server: ${esc(String(e))}</div>`; _loraState=[]; }
+  } else if(loadErr){
+    html += `<div style="color:var(--red);font-size:11.5px;margin-bottom:8px">${esc(loadErr)}</div>`;
+  } else {
+    html += '<div style="color:var(--text-mute);font-size:11.5px;margin-bottom:8px">No adapters loaded at boot. Anything below is on disk but needs a boot <code>--lora</code> + model restart before it can be toggled.</div>';
+  }
+
+  // 2) Every adapter .gguf on disk (recursive scan of models/) — so new files show up
+  //    even when they weren't boot-loaded. Non-loaded ones are informational.
+  try{
+    const ar=await fetch('/api/lora/available');
+    const ad=await ar.json();
+    const disk=(ad && Array.isArray(ad.adapters))?ad.adapters:[];
+    const loadedNames=new Set(loaded.map(a=>String(a.path||'').split(/[\\/]/).pop()));
+    const extra=disk.filter(d=>!d.loaded && !loadedNames.has(d.name));
+    if(extra.length){
+      html += `<div style="color:var(--text-mute);font-size:10.5px;margin:12px 0 5px;text-transform:uppercase;letter-spacing:.5px">On disk — not loaded (${extra.length})</div>`;
+      html += extra.map(d=>`<div class="lora-row" style="opacity:.85">
+        <div style="min-width:0;flex:1">
+          <div class="lr-name" title="${esc(d.rel)}">${esc(d.name)}</div>
+          <div class="lr-scale">${esc(d.rel)} · ${d.size_mb} MB · <span style="color:var(--text-mute)">on disk, not loaded</span></div>
+        </div>
+        <button class="lora-toggle off" title="llama-server can't hot-load a new adapter. To use this one, add it to the boot --lora args in nova_start.py and restart the model server." onclick="toast('To equip '+${JSON.stringify(d.name)}+': add it to the --lora args in nova_start.py, then restart the model server.')">Boot-load ↻</button>
+      </div>`).join('');
+    }
+  }catch(e){ /* disk scan is best-effort — never block the loaded list on it */ }
+
+  box.innerHTML = html || '<div style="color:var(--text-mute);font-size:11.5px">No adapters loaded, and none found on disk under models/.</div>';
 }
 async function setLora(id, scale){
   // Send the FULL adapter set with only the target changed, so adjusting one never
