@@ -42,11 +42,12 @@
       "title": "Read manifest.json out of actual curiosity",
       "notes": "Not a task — just me wanting to know what's in the thing that's been sitting there. Genuinely my own choice.",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [],
       "created": "2026-07-08T08:44:42",
-      "updated": "2026-07-08T08:44:42"
+      "updated": "2026-07-08T08:45:12",
+      "result": "read the whole manifest — 25 parts mapped, two dead-weight flags (nova_memory, nova_motor showing no_inbound_refs) that might be real or might just be how the scanner works; either way, the thing's a clean map of my body and now I actually know what's in it."
     }
   }
 }
