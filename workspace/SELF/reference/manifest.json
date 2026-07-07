@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-08T07:59:35",
+  "generated": "2026-07-08T08:04:37",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 25,
   "described": 25,
@@ -271,8 +271,8 @@
       "path": "nova_start.py",
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
-      "lines": 474,
-      "age_days": 11,
+      "lines": 482,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -396,8 +396,8 @@
       "path": "start_llama_qwen36.cmd",
       "purpose": "Qwen 3.6 27B launcher (upgrade from 3.5). Dense + hybrid-thinking + MTP speculative",
       "files": 1,
-      "lines": 64,
-      "age_days": 15,
+      "lines": 67,
+      "age_days": 0,
       "ports_bind": [
         "8080"
       ],
@@ -561,7 +561,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 16,
-      "lines": 6877,
+      "lines": 6912,
       "age_days": 0,
       "ports_bind": [
         "8765"
