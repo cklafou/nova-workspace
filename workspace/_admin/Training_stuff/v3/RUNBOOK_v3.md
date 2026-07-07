@@ -1,4 +1,5 @@
 # Nova-Core v3 retrain — runbook
+_Last updated: 2026-07-08 08:56:41_
 _2026-07-06. The v3 fix = corrected config (rank 16 / α32 / 2 epochs / LR 1e-4, max_length 4096) +
 reworked dataset (v2's 108 kept + multi-turn + autonomy-continuation + sustained-wake + register).
 Goal: coherent AND in character at LoRA weight **1.0** — no dilution needed._

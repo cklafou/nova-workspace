@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Last updated: 2026-07-08 08:56:41
 # Nova-Core v3 personality LoRA — corrected config (style adapter, not a brain transplant).
 #
 # WHY v3 (vs v2): v2 was rank 64 / alpha 128 / 4 epochs / LR 2e-4 — far too much capacity + too
