@@ -687,6 +687,41 @@ async def api_lora_available():
             })
     return JSONResponse({"adapters": out, "models_dir": str(models_dir)})
 
+@app.post("/api/lora/equip")
+async def api_lora_equip(payload: dict = Body(...)):
+    """Make a selected on-disk adapter the one that BOOTS: write memory/active_lora.{json,txt}
+    (the boot config that nova_start.py + start_llama_qwen36.cmd now read), then restart the model
+    server so it comes back using that adapter. `rel` must be a .gguf inside models/; scale=1.0 default."""
+    import json
+    req_rel = str(payload.get("rel") or "").strip()
+    try:
+        scale = float(payload.get("scale", 1.0))
+    except (TypeError, ValueError):
+        scale = 1.0
+    if not req_rel:
+        return JSONResponse({"ok": False, "error": "no adapter 'rel' given"}, status_code=400)
+    models_dir = (_rt_workspace / "models").resolve()
+    target = (_rt_workspace / req_rel).resolve()
+    if target.suffix.lower() != ".gguf" or not target.is_file():
+        return JSONResponse({"ok": False, "error": f"not a .gguf file: {req_rel}"}, status_code=400)
+    try:
+        target.relative_to(models_dir)            # reject anything outside models/ (no traversal)
+    except ValueError:
+        return JSONResponse({"ok": False, "error": "adapter must live under models/"}, status_code=400)
+    rel_posix = target.relative_to(_rt_workspace).as_posix()     # models/qwen3.6/<file>.gguf
+    mem = _rt_workspace / "memory"
+    try:
+        mem.mkdir(parents=True, exist_ok=True)
+        (mem / "active_lora.json").write_text(
+            json.dumps({"rel": rel_posix, "scale": scale}, indent=2), encoding="utf-8")
+        # batch-ready line the launcher reads via `set /p` (Windows backslashes; single scale-colon)
+        (mem / "active_lora.txt").write_text(
+            f"--lora-scaled {rel_posix.replace('/', chr(92))}:{scale}", encoding="utf-8")
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": f"could not write boot config: {e}"}, status_code=500)
+    res = _rt_llama.restart()   # kill llama-server + relaunch via start_llama_qwen36.cmd (reads the config)
+    return JSONResponse({"ok": True, "equipped": rel_posix, "scale": scale, "restart": res})
+
 
 @app.get("/sessions")
 async def list_sessions():
