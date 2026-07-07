@@ -1,0 +1,1 @@
+--lora-scaled models\qwen3.6\nova_core_v3_checkpoint-42.gguf:1.0
