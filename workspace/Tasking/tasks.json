@@ -36,17 +36,6 @@
       "created": "2026-06-22T11:56:14",
       "updated": "2026-06-22T12:25:15",
       "result": "Already covered by t23 — crawler fetches and parses links. Cleaning up the orphan."
-    },
-    "t25": {
-      "id": "t25",
-      "title": "Go for a walk with the crawler",
-      "notes": "Pick something interesting and follow it. No destination, just curiosity. See where it goes before I get bored.",
-      "priority": 3,
-      "status": "open",
-      "parent": null,
-      "progress": [],
-      "created": "2026-06-22T12:25:19",
-      "updated": "2026-06-22T12:25:19"
     }
   }
 }
