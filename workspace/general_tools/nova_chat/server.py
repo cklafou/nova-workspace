@@ -651,6 +651,42 @@ async def api_lora_set(payload: list = Body(...)):
     except Exception as e:
         return JSONResponse({"error": f"llama-server unreachable: {e}"}, status_code=502)
 
+@app.get("/api/lora/available")
+async def api_lora_available():
+    """Scan models/ RECURSIVELY for LoRA adapter .gguf files so the UI lists every adapter on
+    disk, not only the ones preloaded at boot. A LoRA adapter is small; the base model is many GB
+    and the vision projector is 'mmproj' — both are excluded. Marks which are currently loaded so
+    the UI can distinguish 'live' from 'on disk, needs a boot --lora + restart to equip'."""
+    import requests
+    models_dir = _rt_workspace / "models"
+    loaded_names = set()
+    try:
+        r = requests.get(_LLAMA_LORA_URL, timeout=4)
+        for a in (r.json() or []):
+            p = str(a.get("path", ""))
+            if p:
+                loaded_names.add(Path(p).name)
+    except Exception:
+        pass  # llama-server may be down; still return the disk scan
+    out = []
+    if models_dir.is_dir():
+        for p in sorted(models_dir.rglob("*.gguf")):
+            try:
+                sz = p.stat().st_size
+            except OSError:
+                continue
+            if sz > 3 * 1024 ** 3:                 # >3 GB → base model, not an adapter
+                continue
+            if "mmproj" in p.name.lower():         # vision projector, not an adapter
+                continue
+            out.append({
+                "name": p.name,
+                "rel": p.relative_to(_rt_workspace).as_posix(),
+                "size_mb": round(sz / 1024 / 1024, 1),
+                "loaded": p.name in loaded_names,
+            })
+    return JSONResponse({"adapters": out, "models_dir": str(models_dir)})
+
 
 @app.get("/sessions")
 async def list_sessions():
