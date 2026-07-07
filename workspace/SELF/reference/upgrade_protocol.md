@@ -91,8 +91,7 @@ general_tools/nova_chat/
 ```
 nova_body/
   nova_cortex/   ← executive.py (autonomy faculty), tasking.py (task board),
-                   nova_status.py, context_builder.py, rules.py, checkin.py,
-                   prefrontal_cortex.py
+                   nova_status.py, context_builder.py, rules.py, checkin.py
   nova_memory/   ← journal.py, log_reader.py, goals.py, state.py, session_store.py
   nova_logs/     ← logger.py — ALL logging goes here
   nova_motor/    ← hands.py (mouse/keyboard), motor_cortex.py, tool_executor.py, verify.py

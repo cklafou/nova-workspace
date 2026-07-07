@@ -398,6 +398,7 @@ async def stream_response(
             _chat_chars    = [0]
             _think_chars   = [0]
             _start_time    = [0.0]
+            _streamed      = []   # every chat token broadcast to the UI this turn (doubling guard)
 
             async def token_handler(token: str):
                 """Chat token handler.
@@ -410,6 +411,7 @@ async def stream_response(
                 if _start_time[0] == 0.0:
                     _start_time[0] = asyncio.get_event_loop().time()
                 full_response    += token
+                _streamed.append(token)
                 _chat_chars[0]   += len(token)
                 await on_token(token)   # ← forward to server WebSocket broadcast
                 if on_progress and _chat_chars[0] % 4 == 0:
@@ -450,11 +452,22 @@ async def stream_response(
                 await on_error(f"llama.cpp streaming error: {e}")
                 return
 
+            # ── Doubling guard (2026-07-02) ─────────────────────────────────────
+            # If the return value is empty but chat tokens WERE streamed to the UI
+            # this turn, the reply already exists on screen — recover it from the
+            # stream buffer instead of falling into the retry, which would generate
+            # and emit a SECOND full reply on top of the one Cole already saw.
+            if (not full_response or not full_response.strip()) and "".join(_streamed).strip():
+                full_response = "".join(_streamed)
+                print(f"[nova] empty return but {_chat_chars[0]} chars were streamed — "
+                      f"recovered from stream buffer, NOT retrying (doubling guard)")
+
             if not full_response or not full_response.strip():
                 # Empty content = the <think> pass consumed the whole token budget before any
                 # answer (Qwen 3.6 hybrid-thinking failure mode → blank reply). Retry ONCE with
                 # thinking OFF so the FULL budget goes to the actual response. This is the fix
                 # for "Nova posts an empty message": she now always says something.
+                # Safe against doubling: we only reach here if NOTHING was streamed above.
                 print("[nova] empty content after thinking pass — retrying with thinking OFF")
                 try:
                     full_response = await _fetch_llama_streaming(

@@ -53,7 +53,7 @@ a specific tool.
 ## Body — `nova_body/` (her faculties)
 | Package | Purpose | Key modules |
 |---|---|---|
-| `nova_cortex` | Executive function: autonomy faculty + task board + status/rules | `executive.py`, `tasking.py`, `nova_status.py`, `context_builder.py`, `rules.py`, `checkin.py`, `prefrontal_cortex.py` |
+| `nova_cortex` | Executive function: autonomy faculty + task board + status/rules | `executive.py`, `tasking.py`, `nova_status.py`, `context_builder.py`, `rules.py`, `checkin.py` |
 | `nova_memory` | _Scaffolded, not yet wired into the running stack (manifest: no inbound refs)._ Intended purpose (per `@nova:` tag): persistent state, journal, goals/status, daily log summaries. Current memory data is written directly to `memory/*.md`. | `journal.py`, `log_reader.py`, `goals.py`, `state.py`, `session_store.py` |
 | `nova_logs` | Unified logging — ALL log writes go here | `logger.py`, `Logger_Index.md` |
 | `nova_motor` | _Scaffolded, not yet wired into the running stack (manifest: no inbound refs)._ Intended purpose (per `@nova:` tag): motor system — execute actions (`hands.py`), plan them (`motor_cortex.py`), verify results. From the GUI-automation phase; current Nova acts via `nova_chat`'s tool router, and `motor_cortex.NovaAutonomy` is superseded by `nova_cortex/executive.py`. | `hands.py`, `motor_cortex.py`, `tool_executor.py`, `verify.py` |

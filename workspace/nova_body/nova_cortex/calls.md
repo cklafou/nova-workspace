@@ -31,11 +31,6 @@ _No external calls._
 
 _No external calls._
 
-## prefrontal_cortex.py
-
-**Third-party dependencies:**
-- `__future__`
-
 ## rules.py
 
 **Third-party dependencies:**

@@ -100,7 +100,6 @@ REQUIRED_MODULES = [
     'nova_logs/logger.py',
     'nova_memory/journal.py',
     'nova_cortex/checkin.py',
-    'nova_cortex/prefrontal_cortex.py',
     'nova_memory/goals.py',
 ]
 

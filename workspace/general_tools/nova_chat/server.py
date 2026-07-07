@@ -860,12 +860,30 @@ async def _run_gemini_response(on_token, on_done, on_error,
         await on_done(full_response)
 
 
+def _trace_gen(event: str, ai_name: str, msg_id: str, source: str, extra: str = "") -> None:
+    """Append one line to logs/generation_trace.jsonl — durable attribution for every
+    generation start/commit/suppression. Added 2026-07-02 while hunting the message-doubling
+    bug: console prints aren't persisted anywhere, so when a duplicate lands there is no
+    record of WHICH path generated it. This is the flight recorder. Never raises."""
+    try:
+        import json as _tj
+        from datetime import datetime as _tdt
+        _tp = Path(WORKSPACE_ROOT) / "logs" / "generation_trace.jsonl"
+        with open(_tp, "a", encoding="utf-8") as _tf:
+            _tf.write(_tj.dumps({"ts": _tdt.now().isoformat(), "event": event,
+                                 "ai": ai_name, "msg_id": msg_id, "source": source,
+                                 "extra": extra}, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
 async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                           latest_message: str = "",
                           images: list = None,
                           hb_ctx=None,
                           cole_pending: bool = True,
-                          auto_log_path=None) -> str:
+                          auto_log_path=None,
+                          source: str = "?") -> str:
     """
     Stream one AI response, broadcast tokens, and return the full response text.
     The return value lets callers (e.g. _run_response_queue) inspect Nova's
@@ -921,6 +939,8 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
     import time as _time
     _gen_start = _time.time()
+    _trace_gen("start", ai_name, msg_id, source,
+               extra=f"hb={_is_hb_tick} cole_pending={cole_pending} silent={_silent_tick}")
     # Silent autonomous ticks use autonomous_start (invisible to chat bubble renderer)
     _start_event = "autonomous_start" if _silent_tick else "message_start"
     await broadcast({"type": _start_event, "author": ai_name, "id": msg_id})
@@ -1055,25 +1075,54 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                     await broadcast({"type": "message_end", "author": ai_name,
                                      "id": msg_id + "_cole", "content": _cole_part})
         elif (full or "").strip():
-            # ── Normal path — add response to chat transcript ────────────────────
-            msg = session_mgr.active.add(ai_name, full)
-            session_mgr.update_meta_from_message(msg)
-            _mirror_to_runtime(ai_name, full)   # STEP 6a: mirror her spoken reply into runtime perception
+            # ── Doubling guard (2026-07-02) ──────────────────────────────────────
+            # Known bug: the same reply intermittently gets committed twice — byte-
+            # identical, ~7-10s apart, two separate add() calls (five dup pairs in
+            # the 06-22 session logs; mirrored twice in the runtime transcript, so
+            # both passed through THIS path). Until generation_trace.jsonl catches
+            # the trigger red-handed, refuse to commit an EXACT repeat of the
+            # immediately-preceding message by the same AI within 120s. A legit
+            # "say that again" always has Cole's message in between, so a
+            # consecutive byte-identical reply is the bug, never intent.
+            _dup_of = None
+            try:
+                _prev = session_mgr.active.messages[-1] if session_mgr.active.messages else None
+                if _prev and _prev.get("author") == ai_name and _prev.get("content") == full:
+                    _age_s = (datetime.now() - datetime.fromisoformat(_prev["timestamp"])).total_seconds()
+                    if 0 <= _age_s < 120:
+                        _dup_of = _prev
+            except Exception as _dg_e:
+                print(f"[dedupe] guard check failed (committing normally): {_dg_e}")
+            if _dup_of is not None:
+                print(f"[dedupe] SUPPRESSED byte-identical {ai_name} reply ({len(full)} chars, "
+                      f"msg_id={msg_id}, source={source}) — duplicate of {_dup_of.get('id')}")
+                _trace_gen("dup_suppressed", ai_name, msg_id, source,
+                           extra=f"dup_of={_dup_of.get('id')} chars={len(full)}")
+                # Close this generation's dangling bubble without committing content
+                # (same pattern as the empty-turn branch below).
+                await broadcast({"type": "message_end", "author": ai_name, "id": msg_id, "content": ""})
+            else:
+                # ── Normal path — add response to chat transcript ────────────────
+                msg = session_mgr.active.add(ai_name, full)
+                _trace_gen("commit", ai_name, msg_id, source,
+                           extra=f"chars={len(full)} session_id={msg['id']}")
+                session_mgr.update_meta_from_message(msg)
+                _mirror_to_runtime(ai_name, full)   # STEP 6a: mirror her spoken reply into runtime perception
 
-            # --- Index for semantic memory ---
-            if memory_indexer:
-                memory_indexer.add_message(full, ai_name, session_mgr.active_id)
+                # --- Index for semantic memory ---
+                if memory_indexer:
+                    memory_indexer.add_message(full, ai_name, session_mgr.active_id)
 
-            await broadcast({"type": "message_end", "author": ai_name, "id": msg_id, "content": full})
-            if ai_name == "Nova":
-                # Refresh her time-sense so "since you last stirred" reflects THIS reply,
-                # not a stale autonomy wake (fixes her thinking minutes passed after a
-                # 3-second-old response). Also re-baselines the change fingerprint.
-                try:
-                    from nova_cortex import executive
-                    executive.note_activity()
-                except Exception:
-                    pass
+                await broadcast({"type": "message_end", "author": ai_name, "id": msg_id, "content": full})
+                if ai_name == "Nova":
+                    # Refresh her time-sense so "since you last stirred" reflects THIS reply,
+                    # not a stale autonomy wake (fixes her thinking minutes passed after a
+                    # 3-second-old response). Also re-baselines the change fingerprint.
+                    try:
+                        from nova_cortex import executive
+                        executive.note_activity()
+                    except Exception:
+                        pass
         else:
             # ── Empty turn — she produced only thinking (or nothing) and no spoken
             # words. Do NOT add this to the transcript: an empty Nova message would make
@@ -1201,7 +1250,8 @@ CLIENT_MAP = {
 
 
 async def _run_response_queue(queue: list, content: str,
-                              images: list = None) -> None:
+                              images: list = None,
+                              source: str = "ws") -> None:
     """
     Execute AI responses SEQUENTIALLY in queue order.
 
@@ -1228,7 +1278,7 @@ async def _run_response_queue(queue: list, content: str,
         client_mod = CLIENT_MAP[ai_name]
         msg_id = str(uuid.uuid4())[:8]
         response_text = await run_ai_response(ai_name, client_mod, msg_id, content,
-                                              images=images)
+                                              images=images, source=source)
 
         # After Nova responds: check if she @mentioned any listeners.
         # If so, run a follow-up round (one level — no further recursion).
@@ -1242,7 +1292,8 @@ async def _run_response_queue(queue: list, content: str,
                     if fu_status.get(fu_name):
                         await run_ai_response(
                             fu_name, CLIENT_MAP[fu_name],
-                            str(uuid.uuid4())[:8], response_text
+                            str(uuid.uuid4())[:8], response_text,
+                            source="followup"
                         )
 
 
@@ -1823,7 +1874,8 @@ async def autonomy_daemon():
     async def _generate(prompt: str, cole_pending: bool) -> str:
         return await run_ai_response(
             "Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8], prompt,
-            hb_ctx=HeartbeatContext(prompt), cole_pending=cole_pending) or ""
+            hb_ctx=HeartbeatContext(prompt), cole_pending=cole_pending,
+            source="daemon") or ""
 
     await _rt.run_autonomy(
         perceive_cole_pending=_has_unread_cole,
@@ -2300,7 +2352,7 @@ async def inject_message(body: dict):
                     """Run listener queue with proper exception handling."""
                     global is_processing
                     try:
-                        await _run_response_queue(_listener_queue, content)
+                        await _run_response_queue(_listener_queue, content, source="inject")
                     except asyncio.CancelledError:
                         pass  # absorb so finally can broadcast processing_end cleanly
                     except Exception as e:
@@ -2745,7 +2797,7 @@ async def websocket_endpoint(ws: WebSocket):
                     async def _queued_run():
                         global is_processing
                         try:
-                            await _run_response_queue(_q, _c, images=_imgs or None)
+                            await _run_response_queue(_q, _c, images=_imgs or None, source="ws")
 
                             # ── Autonomous cognition now lives in autonomy_daemon() ──────
                             # _queued_run only produces the direct response to Cole now;
@@ -2811,7 +2863,8 @@ async def websocket_endpoint(ws: WebSocket):
                                         global is_processing
                                         try:
                                             await _run_response_queue(_qq2, _qc2,
-                                                                       images=_qimgs or None)
+                                                                       images=_qimgs or None,
+                                                                       source="drain")
                                         except asyncio.CancelledError:
                                             pass
                                         except Exception as _de:
