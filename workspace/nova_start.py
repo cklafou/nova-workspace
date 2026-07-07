@@ -139,21 +139,29 @@ def build_llama_cmd() -> list:
             "--slot-save-path", str(PROMPT_CACHE),
             "-b", "2048", "-ub", "1024",
             "--port", str(LLAMA_PORT), "--host", "127.0.0.1"]
-    # Nova-core: always-on personality LoRA (v2 — r=64, strong with-teeth dataset). Rides in the
-    # BASE command so any KoELS specialist swap stacks ON TOP of her personality. Conditional on the
-    # file existing so a missing adapter never blocks startup (falls back to bare base model).
-    _nova_core = MODEL.parent / "nova_core_v2_e2.gguf"
+    # Nova-core: personality LoRA. The Nova Chat LoRA menu's "equip" writes memory/active_lora.json
+    # ({"rel": "models/qwen3.6/<file>.gguf", "scale": W}) to pick WHICH adapter boots and at what
+    # weight; absent/invalid -> the v2 default below (so boot is unchanged until you pick one).
+    # Rides in the BASE command so any KoELS specialist swap stacks ON TOP of her personality.
+    # Conditional on the file existing so a missing adapter never blocks startup (bare base fallback).
+    _sel_rel, _sel_scale = "models/qwen3.6/nova_core_v2_e2.gguf", 0.6
+    _active = WS / "memory" / "active_lora.json"
+    if _active.exists():
+        try:
+            import json as _json
+            _d = _json.loads(_active.read_text(encoding="utf-8"))
+            if _d.get("rel") and (WS / _d["rel"]).exists():
+                _sel_rel, _sel_scale = str(_d["rel"]), float(_d.get("scale", 1.0))
+        except Exception:
+            pass
+    _nova_core = WS / _sel_rel
     if _nova_core.exists():
-        # @0.5, NOT 1.0: the epoch-2/r=64 adapter is overfit — at full strength it's a strong
-        # attractor that traps her in a repeating self-referential rut (the looping bug). 0.5
-        # keeps her personality while letting her reason/advance freely. Raise toward 1.0 only
-        # after a less-overfit adapter is trained.
         # This llama build wants ONE arg in "FNAME:SCALE" form (not two args). Use a workspace-
         # relative path (cwd is WS) so the Windows drive-colon (C:\) can't confuse the FNAME:SCALE
         # split — only the scale colon remains.
         _rel = _nova_core.relative_to(WS).as_posix()
-        cmd += ["--lora-scaled", f"{_rel}:0.6"]
-        log(f"Nova-core personality adapter: {_rel}:0.6")
+        cmd += ["--lora-scaled", f"{_rel}:{_sel_scale}"]
+        log(f"Nova-core personality adapter: {_rel}:{_sel_scale}")
     # KoELS: preload a persisted boot --lora set if one exists (koels_lora_args.json = clean arg
     # list; mirrors start_llama_qwen36.cmd's %KOELS_LORA% hook). Absent = Nova-core only.
     _lora_json = WS / "memory" / "koels_lora_args.json"
