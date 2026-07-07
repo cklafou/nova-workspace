@@ -3379,6 +3379,17 @@ async function loadLora(){
 
   box.innerHTML = html || '<div style="color:var(--text-mute);font-size:11.5px">No adapters loaded, and none found on disk under models/.</div>';
 }
+async function equipLora(rel, name){
+  if(!confirm('Equip '+name+' as the boot adapter at weight 1.0?\n\nThis rewrites the boot config and RESTARTS the model server — she goes offline ~30–60s while it reloads.')) return;
+  toast('Equipping '+name+' — restarting model…');
+  try{
+    const r=await fetch('/api/lora/equip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rel:rel, scale:1.0})});
+    const d=await r.json();
+    if(!d || !d.ok){ toast('Equip failed: '+((d&&d.error)||'unknown')); return; }
+    toast('Equipped '+name+' @1.0 — model reloading (~30–60s), then this list refreshes.');
+    setTimeout(loadLora, 45000);
+  }catch(e){ toast('Equip failed: '+String(e)); }
+}
 async function setLora(id, scale){
   // Send the FULL adapter set with only the target changed, so adjusting one never
   // accidentally zeroes the others.
