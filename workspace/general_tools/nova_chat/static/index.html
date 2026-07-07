@@ -3372,7 +3372,7 @@ async function loadLora(){
           <div class="lr-name" title="${esc(d.rel)}">${esc(d.name)}</div>
           <div class="lr-scale">${esc(d.rel)} · ${d.size_mb} MB · <span style="color:var(--text-mute)">on disk, not loaded</span></div>
         </div>
-        <button class="lora-toggle off" title="llama-server can't hot-load a new adapter. To use this one, add it to the boot --lora args in nova_start.py and restart the model server." onclick="toast('To equip '+${JSON.stringify(d.name)}+': add it to the --lora args in nova_start.py, then restart the model server.')">Boot-load ↻</button>
+        <button class="lora-toggle off" title="llama-server cannot hot-load a new adapter file. To use this one, add it to the boot --lora args in nova_start.py and restart the model server." onclick="toast('To equip: add this adapter to the --lora args in nova_start.py, then restart the model server.')">Boot-load ↻</button>
       </div>`).join('');
     }
   }catch(e){ /* disk scan is best-effort — never block the loaded list on it */ }
