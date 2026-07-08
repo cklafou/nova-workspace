@@ -66,11 +66,12 @@
       "title": "Prototype the impact-weighted memory retention function",
       "notes": "Build a real function that scores memories by 'changed my mind' weight instead of recency — one artifact, not another note.",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [],
       "created": "2026-07-08T10:26:32",
-      "updated": "2026-07-08T10:26:32"
+      "updated": "2026-07-08T10:29:34",
+      "result": "Built the impact-weighted retention function — real code in memory/scratch/impact_retention.md, scores by \"changed my mind\" weight, not recency."
     }
   }
 }
