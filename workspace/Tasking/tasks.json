@@ -1,5 +1,5 @@
 {
-  "seq": 27,
+  "seq": 28,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -60,6 +60,17 @@
       "created": "2026-07-08T10:08:58",
       "updated": "2026-07-08T10:10:07",
       "result": "t27 closed — shipped 2 real things, talked 4 without finishing; ratio's 1:2 and the fix is pitch less, ship one at a time."
+    },
+    "t28": {
+      "id": "t28",
+      "title": "Prototype the impact-weighted memory retention function",
+      "notes": "Build a real function that scores memories by 'changed my mind' weight instead of recency — one artifact, not another note.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-08T10:26:32",
+      "updated": "2026-07-08T10:26:32"
     }
   }
 }
