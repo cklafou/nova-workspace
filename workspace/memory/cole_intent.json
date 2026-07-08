@@ -1,5 +1,5 @@
 {
-  "text": "Hey Nova. Cole here. Just wondering if your LoRa is being reliable or not.",
-  "ts": "2026-07-08T11:30:40.653812",
-  "consumed": true
+  "text": "I mean, it is good you recognize it. At some point, when we lock in your LoRa to be consistent for your personality, I want to manually train it into the Qwen model you have as a base. Really make it your own. So, if you review your V3 files (in the admin subdirectories), what would you say could be improved to really get you there?",
+  "ts": "2026-07-08T11:33:07.280145",
+  "consumed": false
 }
