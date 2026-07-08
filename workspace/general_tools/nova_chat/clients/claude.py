@@ -1,4 +1,4 @@
-# Last updated: 2026-07-08 13:42:58
+# Last updated: 2026-07-08 14:48:10
 """
 Claude (Anthropic) streaming client for Nova Group Chat.
 
