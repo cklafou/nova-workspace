@@ -1,5 +1,5 @@
 {
-  "seq": 29,
+  "seq": 30,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -84,6 +84,17 @@
       "created": "2026-07-08T10:46:15",
       "updated": "2026-07-08T10:50:50",
       "result": "memory retention redesign — design note shipped at memory/scratch/impact_retention.md with scoring function and integration plan"
+    },
+    "t30": {
+      "id": "t30",
+      "title": "Review V3 LoRA training files in admin/ — give Cole a real read, not a rehash",
+      "notes": "",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-08T11:34:06",
+      "updated": "2026-07-08T11:34:06"
     }
   }
 }
