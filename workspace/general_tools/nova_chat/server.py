@@ -1176,10 +1176,11 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             except Exception as _dg_e:
                 print(f"[dedupe] guard check failed (committing normally): {_dg_e}")
             if _dup_of is not None:
-                print(f"[dedupe] SUPPRESSED byte-identical {ai_name} reply ({len(full)} chars, "
+                _dup_kind = "identical" if (_dup_of.get("content") or "") == full else "prefix-variant"
+                print(f"[dedupe] SUPPRESSED {_dup_kind} {ai_name} reply ({len(full)} chars, "
                       f"msg_id={msg_id}, source={source}) — duplicate of {_dup_of.get('id')}")
                 _trace_gen("dup_suppressed", ai_name, msg_id, source,
-                           extra=f"dup_of={_dup_of.get('id')} chars={len(full)}")
+                           extra=f"kind={_dup_kind} dup_of={_dup_of.get('id')} chars={len(full)}")
                 # Close this generation's dangling bubble without committing content
                 # (same pattern as the empty-turn branch below).
                 await broadcast({"type": "message_end", "author": ai_name, "id": msg_id, "content": ""})
