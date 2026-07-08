@@ -1,4 +1,4 @@
-# Last updated: 2026-07-08 08:43:32
+# Last updated: 2026-07-08 09:45:03
 # @nova: Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches, schematics), auto-applying her self-LoRA when she draws herself.
 """
 nova_imagination -- Nova's visual-creation faculty.
