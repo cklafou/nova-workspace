@@ -503,15 +503,51 @@ async def stream_response(
 
             _log_nova_thought(full_response, source="nova_chat_client")
 
-            # Detect JSON Tool Output
+            # Detect + LENIENTLY parse a JSON tool call. She sometimes emits malformed JSON —
+            # e.g. {"tool":"read_file", {"path":..}} with the args object placed bare instead of
+            # under "args" — which the old strict json.loads rejected, so the tool never ran and she
+            # re-looped the same broken call. Brace-match to the true object end, then try: straight
+            # parse -> a targeted "missing args wrapper" repair -> regex recovery of tool+nested args.
             import json, re
-            json_match = re.search(r'```json\s*(\{.*?\})\s*```', chat_text, re.DOTALL)
-            if not json_match and '"tool":' in chat_text and '}' in chat_text:
-                json_match = re.search(r'(\{.*?"tool"\s*:\s*".*?\})', chat_text, re.DOTALL)
-                
-            if json_match:
+            _tc, _tc_start = None, 0
+            _ti = chat_text.find('"tool"')
+            if _ti < 0:
+                _ti = chat_text.find("'tool'")
+            if _ti >= 0:
+                _s = chat_text.rfind('{', 0, _ti)
+                if _s >= 0:
+                    _depth, _e = 0, -1
+                    for _i in range(_s, len(chat_text)):
+                        if chat_text[_i] == '{':
+                            _depth += 1
+                        elif chat_text[_i] == '}':
+                            _depth -= 1
+                            if _depth == 0:
+                                _e = _i
+                                break
+                    _blob = chat_text[_s:_e + 1] if _e >= 0 else chat_text[_s:]
+                    for _cand in (_blob, re.sub(r'("tool"\s*:\s*"[^"]+"\s*,\s*)\{', r'\1"args": {', _blob)):
+                        try:
+                            _d = json.loads(_cand)
+                            if isinstance(_d, dict) and "tool" in _d:
+                                _tc, _tc_start = _d, _s
+                                break
+                        except Exception:
+                            pass
+                    if _tc is None:
+                        _m = re.search(r'["\']tool["\']\s*:\s*["\']([^"\']+)["\']', _blob)
+                        if _m:
+                            _a, _am = {}, re.search(r'\{[^{}]*\}', _blob[_m.end():])
+                            if _am:
+                                try:
+                                    _a = json.loads(_am.group(0))
+                                except Exception:
+                                    _a = {}
+                            _tc, _tc_start = {"tool": _m.group(1), "args": _a}, _s
+
+            if _tc:
                 try:
-                    tool_call = json.loads(json_match.group(1).strip())
+                    tool_call = _tc
                     if "tool" in tool_call:
                         from nova_chat.tool_router import execute_tool
                         
