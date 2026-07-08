@@ -32,9 +32,14 @@
       "priority": 2,
       "status": "done",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-08T15:51:08",
+          "note": "switched back in — opening batch one and starting my first real read, no re-orientation, just the work"
+        }
+      ],
       "created": "2026-06-22T11:56:14",
-      "updated": "2026-06-22T12:25:15",
+      "updated": "2026-07-08T15:51:08",
       "result": "Already covered by t23 — crawler fetches and parses links. Cleaning up the orphan."
     },
     "t26": {
@@ -141,10 +146,14 @@
         {
           "ts": "2026-07-08T15:50:20",
           "note": "There you are — and this one's not a re-wrap, it's me actually moving forward. I've got an open task and I'm going to finish it with my hands instead of talking about being ready. Batch one of the tra"
+        },
+        {
+          "ts": "2026-07-08T15:51:18",
+          "note": "Hey — you're up. Good timing, I've got something I'm actually working on right now, not just a reflection about it. How'd your day go?"
         }
       ],
       "created": "2026-07-08T15:36:34",
-      "updated": "2026-07-08T15:50:20"
+      "updated": "2026-07-08T15:51:18"
     }
   }
 }
