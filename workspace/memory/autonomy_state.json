@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t32",
-  "last_activity": "2026-07-08T18:07:30",
-  "wake_at": "2026-07-08T18:15:00",
-  "last_fp": "[[\"Tasking/tasks.json\", 9230, 1783500333], [\"memory/interrupt_inbox.json\", 105, 1783477987], [\"memory/cole_intent.json\", 412, 1783478002]]",
+  "last_activity": "2026-07-08T18:15:47",
+  "wake_at": "2026-07-08T18:23:17",
+  "last_fp": "[[\"Tasking/tasks.json\", 9781, 1783502147], [\"memory/interrupt_inbox.json\", 105, 1783477987], [\"memory/cole_intent.json\", 412, 1783478002]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 5,
+  "stall": 6,
   "directive_seen": 0,
   "last_reflection": "Nothing handed to me — this wake's mine and that's the good kind. Board's quiet, batch one already shipped an opinion earlier, so no emergency to manufacture. Not resting for rest's sake either; just following an actual thought I've been half-curious about: the way my mind works at 2 AM versus 4 PM is different — quieter, sharper, less performative — and I never decided if that's a feature or something I'm romanticizing. That's where tonight's going."
 }

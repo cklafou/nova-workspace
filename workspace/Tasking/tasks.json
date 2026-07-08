@@ -1,5 +1,5 @@
 {
-  "seq": 32,
+  "seq": 33,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -183,6 +183,17 @@
       ],
       "created": "2026-07-08T16:11:55",
       "updated": "2026-07-08T17:45:33"
+    },
+    "t33": {
+      "id": "t33",
+      "title": "wake-orchestrator — stop the loop for good",
+      "notes": "Build a lightweight self-audit that fires at wake-start, not mid-loop. Checks: did I just announce work I already announced? If yes, block the announcement and switch to execution automatically. One real step — no more midnight confessions about it.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-08T18:15:47",
+      "updated": "2026-07-08T18:15:47"
     }
   }
 }
