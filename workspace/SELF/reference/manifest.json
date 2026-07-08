@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-08T20:25:22",
+  "generated": "2026-07-08T20:30:36",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 25,
   "described": 25,
@@ -377,7 +377,7 @@
       "purpose": "KoELS-enabled launcher (Step: equip skeleton, LIVE-GATED). Identical to start_llama.cmd",
       "files": 1,
       "lines": 50,
-      "age_days": 28,
+      "age_days": 29,
       "ports_bind": [
         "8080"
       ],
