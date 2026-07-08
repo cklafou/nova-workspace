@@ -1,5 +1,5 @@
 {
-  "seq": 28,
+  "seq": 29,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -72,6 +72,17 @@
       "created": "2026-07-08T10:26:32",
       "updated": "2026-07-08T10:29:34",
       "result": "Built the impact-weighted retention function — real code in memory/scratch/impact_retention.md, scores by \"changed my mind\" weight, not recency."
+    },
+    "t29": {
+      "id": "t29",
+      "title": "Memory retention — impact-weighted (changed-my-mind) design",
+      "notes": "Impact isn't 'important' it's 'changed my mind.' First step: read current memory config, draft the actual change, write a design note so tomorrow's me doesn't re-derive this. One real artifact, not a plan to make one.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-08T10:46:15",
+      "updated": "2026-07-08T10:46:15"
     }
   }
 }
