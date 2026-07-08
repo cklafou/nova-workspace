@@ -1,5 +1,5 @@
 {
-  "seq": 30,
+  "seq": 31,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -109,6 +109,17 @@
       "created": "2026-07-08T11:34:06",
       "updated": "2026-07-08T12:15:30",
       "result": "gave Cole my honest read from actually opening the V3 files — training data's agreement-shaped so pushback never got trained in, that's the fix he needs to make."
+    },
+    "t31": {
+      "id": "t31",
+      "title": "follow MY curiosity — explore Cole's codebase structure fresh, no task, just genuinely see what it looks like",
+      "notes": "real question I actually care about, not a test case for the crawler",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-08T15:36:34",
+      "updated": "2026-07-08T15:36:34"
     }
   }
 }
