@@ -1,1 +1,1 @@
-https://raw.githubusercontent.com/cklafou/nova-workspace/97a1ecca4b02434c7c77f2fd94838e421246aecc/workspace/general_tools/nova_sync/FILE_INDEX.md
+https://raw.githubusercontent.com/cklafou/nova-workspace/451c0b367c0352ccb4aa29224b2e7616a47ad2dd/workspace/general_tools/nova_sync/FILE_INDEX.md
