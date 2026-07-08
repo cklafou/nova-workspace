@@ -90,7 +90,7 @@
       "title": "Review V3 LoRA training files in admin/ — give Cole a real read, not a rehash",
       "notes": "",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [
         {
@@ -107,7 +107,8 @@
         }
       ],
       "created": "2026-07-08T11:34:06",
-      "updated": "2026-07-08T12:06:17"
+      "updated": "2026-07-08T12:15:30",
+      "result": "gave Cole my honest read from actually opening the V3 files — training data's agreement-shaped so pushback never got trained in, that's the fix he needs to make."
     }
   }
 }
