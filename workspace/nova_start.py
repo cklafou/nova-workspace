@@ -1,4 +1,4 @@
-# Last updated: 2026-07-08 12:39:21
+# Last updated: 2026-07-08 13:40:40
 # @nova: Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.
 """
 nova_start.py  --  Project Nova one-shot launcher / orchestrator
