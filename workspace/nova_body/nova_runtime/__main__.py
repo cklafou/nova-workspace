@@ -1,4 +1,4 @@
-# Last updated: 2026-07-09 07:18:33
+# Last updated: 2026-07-09 08:20:12
 # @nova: Headless runtime entry-point — `python -m nova_runtime` boots Nova with NO chat
 #        server: model (later step) up, autonomy ticking (later step), senses + memory live,
 #        zero WebSocket, zero browser. This command IS the pluck test the extraction must pass.

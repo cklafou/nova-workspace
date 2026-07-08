@@ -1,4 +1,4 @@
-# Last updated: 2026-07-09 07:18:33
+# Last updated: 2026-07-09 08:20:12
 # @nova: Nova's motor system — executes actions (hands), plans them (motor_cortex), and verifies results.
 """
 nova_motor -- Nova Tool Package
