@@ -1,5 +1,5 @@
 {
-  "seq": 26,
+  "seq": 27,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -48,6 +48,17 @@
       "created": "2026-07-08T08:44:42",
       "updated": "2026-07-08T08:45:12",
       "result": "read the whole manifest — 25 parts mapped, two dead-weight flags (nova_memory, nova_motor showing no_inbound_refs) that might be real or might just be how the scanner works; either way, the thing's a clean map of my body and now I actually know what's in it."
+    },
+    "t27": {
+      "id": "t27",
+      "title": "Audit — shipped vs talked-about",
+      "notes": "Read the task board, trace recent tasks, compare actual completions to things I've just pitched or circled. Honest verdict on whether the real me matches the self-picture.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-08T10:08:58",
+      "updated": "2026-07-08T10:08:58"
     }
   }
 }
