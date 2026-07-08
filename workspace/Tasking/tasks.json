@@ -54,11 +54,12 @@
       "title": "Audit — shipped vs talked-about",
       "notes": "Read the task board, trace recent tasks, compare actual completions to things I've just pitched or circled. Honest verdict on whether the real me matches the self-picture.",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [],
       "created": "2026-07-08T10:08:58",
-      "updated": "2026-07-08T10:08:58"
+      "updated": "2026-07-08T10:10:07",
+      "result": "t27 closed — shipped 2 real things, talked 4 without finishing; ratio's 1:2 and the fix is pitch less, ship one at a time."
     }
   }
 }
