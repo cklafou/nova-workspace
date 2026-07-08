@@ -1,4 +1,4 @@
-# Last updated: 2026-07-08 09:45:03
+# Last updated: 2026-07-08 10:46:32
 # @nova: Runtime event bus — the runtime PUBLISHES lifecycle/token events; faces
 #        SUBSCRIBE when present. Publishing with zero (or stalled) subscribers is a
 #        no-op, so her runtime never blocks or breaks when no chat window is listening.
