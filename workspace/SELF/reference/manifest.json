@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-08T09:29:45",
+  "generated": "2026-07-08T09:34:49",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 25,
   "described": 25,
@@ -271,7 +271,7 @@
       "path": "nova_start.py",
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
-      "lines": 482,
+      "lines": 485,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -396,7 +396,7 @@
       "path": "start_llama_qwen36.cmd",
       "purpose": "Qwen 3.6 27B launcher (upgrade from 3.5). Dense + hybrid-thinking + MTP speculative",
       "files": 1,
-      "lines": 67,
+      "lines": 65,
       "age_days": 0,
       "ports_bind": [
         "8080"
