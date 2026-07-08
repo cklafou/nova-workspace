@@ -593,7 +593,7 @@ async def stream_response(
                         # Re-prompt
                         messages.append({"role": "assistant", "content": full_response})
                         messages.append({"role": "user", "content": f"[System Result from {tool_name}]\n{result}\nContinue your task or provide the final answer."})
-                        final_chat_buffer += f"{chat_text[:json_match.start()]}\n\n[`{tool_name}` resulted in {len(str(result))} bytes.]\n\n"
+                        final_chat_buffer += f"{chat_text[:_tc_start]}\n\n[`{tool_name}` resulted in {len(str(result))} bytes.]\n\n"
                         continue # Loop!
                 except Exception as e:
                     # Fire tool_executed with the parse error so the Tools tab shows it
