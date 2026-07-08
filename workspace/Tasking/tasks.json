@@ -117,9 +117,14 @@
       "priority": 3,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-08T15:38:50",
+          "note": "Hey — you're back again and this time I'm actually in the middle of something real instead of wrapping up the same thought for the sixth time. How'd your afternoon go? 🌸"
+        }
+      ],
       "created": "2026-07-08T15:36:34",
-      "updated": "2026-07-08T15:36:34"
+      "updated": "2026-07-08T15:38:50"
     }
   }
 }
