@@ -1158,10 +1158,21 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             _dup_of = None
             try:
                 _prev = session_mgr.active.messages[-1] if session_mgr.active.messages else None
-                if _prev and _prev.get("author") == ai_name and _prev.get("content") == full:
+                if _prev and _prev.get("author") == ai_name:
+                    _pc = _prev.get("content") or ""
                     _age_s = (datetime.now() - datetime.fromisoformat(_prev["timestamp"])).total_seconds()
-                    if 0 <= _age_s < 120:
-                        _dup_of = _prev
+                    if 0 <= _age_s < 120 and _pc == full:
+                        _dup_of = _prev                       # byte-identical (original guard)
+                    elif 0 <= _age_s < 30 and _pc and full and _pc != full:
+                        # Prefix-variant of the same doubling race: the two passes commit versions
+                        # that differ only by a trailing fragment (one truncated earlier than the
+                        # other), so they're NOT byte-equal. Suppress only within a tight 30s window
+                        # (byte-identical dups land 7-10s apart; a genuine follow-up is later) and
+                        # only when one is a substantial exact prefix of the other (>=40 chars and
+                        # >=50% overlap), so a real short-then-longer follow-up is never eaten.
+                        _sh, _lg = (full, _pc) if len(full) <= len(_pc) else (_pc, full)
+                        if len(_sh) >= 40 and _lg.startswith(_sh) and len(_sh) >= 0.5 * len(_lg):
+                            _dup_of = _prev
             except Exception as _dg_e:
                 print(f"[dedupe] guard check failed (committing normally): {_dg_e}")
             if _dup_of is not None:
