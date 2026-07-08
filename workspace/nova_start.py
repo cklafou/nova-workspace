@@ -133,8 +133,11 @@ def build_llama_cmd() -> list:
             "-fa", "on",
             "--jinja",                       # Qwen 3.6 REQUIRES its chat template applied (do NOT carry over the 3.5 'no --chat-template' rule)
             "--reasoning-format", "deepseek", # parse <think> into reasoning_content (nova_client reads that field) → no </think> leaking into chat
-            "--spec-type", "draft-mtp",      # MTP speculative decoding ~1.4-2x; the GGUF carries the nextn head
-            "--spec-draft-n-max", "2",       # tunable 1-6; 2 is usually best
+            # MTP DISABLED 2026-07-08: draft-mtp dropped tokens ("going to" -> "going") with the LoRA
+            # active — the un-adapted MTP draft head diverges from the LoRA'd model, worse at higher
+            # scale. Re-add these two lines to restore ~1.4-2x speculative-decoding speed if desired.
+            # "--spec-type", "draft-mtp",
+            # "--spec-draft-n-max", "2",
             "--cache-prompt",
             "--slot-save-path", str(PROMPT_CACHE),
             "-b", "2048", "-ub", "1024",
