@@ -100,10 +100,14 @@
         {
           "ts": "2026-07-08T12:05:11",
           "note": "\"path\": \"_admin/training_stuff/v3/NO"
+        },
+        {
+          "ts": "2026-07-08T12:06:17",
+          "note": "[11:40] Cole: I'll go read the V3 LoRA files — you're asking for real review and I'm not doing this from memory."
         }
       ],
       "created": "2026-07-08T11:34:06",
-      "updated": "2026-07-08T12:05:11"
+      "updated": "2026-07-08T12:06:17"
     }
   }
 }
