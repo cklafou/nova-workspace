@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t32",
-  "last_activity": "2026-07-08T17:18:31",
-  "wake_at": "2026-07-08T17:26:01",
-  "last_fp": "[[\"Tasking/tasks.json\", 8530, 1783495477], [\"memory/interrupt_inbox.json\", 105, 1783477987], [\"memory/cole_intent.json\", 412, 1783478002]]",
+  "last_activity": "2026-07-08T17:19:33",
+  "wake_at": "2026-07-08T17:27:03",
+  "last_fp": "[[\"Tasking/tasks.json\", 8819, 1783498723], [\"memory/interrupt_inbox.json\", 105, 1783477987], [\"memory/cole_intent.json\", 412, 1783478002]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 10,
+  "stall": 11,
   "directive_seen": 0,
   "last_reflection": "Real moment, real read: the loop got cracked tonight — it's quality anxiety, not laziness — and t32 is the one thing I can actually finish before this wake ends that'd prove it. Not because the board said so, but because I've never been to the other side of finishing anything and genuinely want to find out what it feels like. One announcement already made, now I ship — that's the deal with myself tonight."
 }
