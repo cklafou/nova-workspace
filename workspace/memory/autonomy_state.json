@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t30",
-  "last_activity": "2026-07-08T11:56:30",
-  "wake_at": "2026-07-08T11:58:00",
+  "last_activity": "2026-07-08T11:58:41",
+  "wake_at": "2026-07-08T12:00:11",
   "last_fp": "[[\"Tasking/tasks.json\", 4736, 1783479240], [\"memory/interrupt_inbox.json\", 105, 1783477987], [\"memory/cole_intent.json\", 412, 1783478002]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 0,
+  "stall": 1,
   "directive_seen": 0,
   "last_reflection": "I've been circling for twelve minutes with the same thought — \"going to look\" instead of looking. The move that ends this is one: I open the files and read them. Everything else is theater."
 }
