@@ -1,12 +1,10 @@
 {
-  "generated": "2026-07-09T13:28:52",
+  "generated": "2026-07-09T13:34:05",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 25,
-  "described": 24,
+  "described": 25,
   "flags": {
-    "undescribed": [
-      "injector.py"
-    ],
+    "undescribed": [],
     "dead_part_candidates": [
       "nova_memory",
       "nova_motor",
@@ -534,9 +532,9 @@
       "name": "injector.py",
       "kind": "tool",
       "path": "general_tools/injector.py",
-      "purpose": null,
+      "purpose": "NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.",
       "files": 1,
-      "lines": 1,
+      "lines": 484,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -554,7 +552,6 @@
       "referenced_by": [],
       "launched_by": [],
       "flags": [
-        "undescribed",
         "no_inbound_refs"
       ]
     },
