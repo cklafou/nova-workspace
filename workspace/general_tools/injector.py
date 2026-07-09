@@ -1,4 +1,4 @@
-# Last updated: 2026-07-09 09:22:06
+# Last updated: 2026-07-09 10:23:32
 # @nova: NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.
 """
 injector.py — NCL Context Injector & Module Dispatcher
