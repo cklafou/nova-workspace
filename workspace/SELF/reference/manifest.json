@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-09T17:45:00",
+  "generated": "2026-07-09T17:50:09",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 25,
   "described": 25,
@@ -297,7 +297,7 @@
       "purpose": "Launcher — runs nova_start.py to bring up the whole Nova stack (double-click entry point).",
       "files": 1,
       "lines": 19,
-      "age_days": 45,
+      "age_days": 46,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
