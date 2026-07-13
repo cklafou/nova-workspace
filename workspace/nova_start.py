@@ -302,16 +302,19 @@ def start_nova() -> subprocess.Popen | None:
         log("Fix: install them into your Python — e.g.  py -3 -m pip install uvicorn fastapi", "ERROR")
         log("If you have several Pythons, install into the one that already has lancedb / "
             "sentence-transformers (that's the one Nova has been running on).", "ERROR")
-        input("Press Enter to exit...")
+        halt("No suitable Python — cannot start Nova.")
         return None
     log(f"Using Python: {' '.join(py)}")
-    creationflags = subprocess.CREATE_NEW_CONSOLE if sys.platform == "win32" else 0
     # NOVA_NO_WINDOW tells NovaLauncher to skip its own window step — we own the
     # app window (Edge/Chrome --app) and the lifecycle from here.
     env = dict(os.environ)
     env["NOVA_NO_WINDOW"] = "1"
+    env["PYTHONUNBUFFERED"] = "1"        # so its output reaches the console live, not in chunks
     proc = subprocess.Popen(py + [str(NOVA_LAUNCH)], cwd=str(WS),
-                            creationflags=creationflags, env=env)
+                            creationflags=_NO_WINDOW, env=env,
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    if HUB:
+        HUB.attach_pipe("nova", proc)
     return proc
 
 
@@ -412,12 +415,20 @@ def start_watcher() -> subprocess.Popen | None:
         log("No suitable Python for the watcher — skipping.", "WARN")
         return None
     log("Starting file watcher (manifest refresh + auto-commit)...")
-    creationflags = 0
+    # No console. CREATE_NEW_PROCESS_GROUP is KEPT — stop_watcher() sends CTRL_BREAK_EVENT to
+    # let it shut down cleanly (otherwise it leaves a stale .git/index.lock).
+    creationflags = _NO_WINDOW
     if sys.platform == "win32":
-        creationflags = subprocess.CREATE_NEW_CONSOLE | subprocess.CREATE_NEW_PROCESS_GROUP
+        creationflags |= subprocess.CREATE_NEW_PROCESS_GROUP
     try:
-        return subprocess.Popen(py + [str(WATCHER)], cwd=str(WS),
-                                creationflags=creationflags)
+        env = dict(os.environ)
+        env["PYTHONUNBUFFERED"] = "1"
+        proc = subprocess.Popen(py + [str(WATCHER)], cwd=str(WS),
+                                creationflags=creationflags, env=env,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if HUB:
+            HUB.attach_pipe("watcher", proc)
+        return proc
     except Exception as e:
         log(f"Could not start watcher: {e}", "WARN")
         return None
