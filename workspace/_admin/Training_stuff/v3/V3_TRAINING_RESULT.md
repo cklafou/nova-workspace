@@ -1,5 +1,5 @@
 # Nova Core v3 — Training Result
-_Last updated: 2026-07-08 17:10:42_
+_Last updated: 2026-07-13 12:57:39_
 
 **Run:** automated check 2026-07-08 (pod time 2026-07-07 ~15:11 UTC)
 **Final status:** ✅ DONE — pipeline.log: `[2026-07-07T15:10:01Z] PIPELINE DONE` (`convert done: ggufs=2`)
