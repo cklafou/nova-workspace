@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-13T20:15:34",
+  "generated": "2026-07-13T20:30:49",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 24,
   "described": 24,
@@ -10,7 +10,6 @@
       "nova_motor",
       "audit_queue.py",
       "audit_scripts.py",
-      "calls.py",
       "injector.py",
       "restructure.py"
     ],
@@ -207,7 +206,7 @@
       "path": "nova_body/nova_runtime",
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
       "files": 9,
-      "lines": 1205,
+      "lines": 1210,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -270,7 +269,7 @@
       "path": "nova_start.py",
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
-      "lines": 575,
+      "lines": 607,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -287,7 +286,8 @@
       ],
       "referenced_by": [],
       "launched_by": [
-        "NovaStart.cmd"
+        "NovaStart.cmd",
+        "StopNova.cmd"
       ],
       "flags": []
     },
@@ -330,10 +330,10 @@
       "name": "StopNova.cmd",
       "kind": "launcher",
       "path": "StopNova.cmd",
-      "purpose": "Shutdown — kills whatever is listening on Nova's ports (8080/8765) for a clean restart.",
+      "purpose": "Shutdown — stops the whole Nova stack cleanly.",
       "files": 1,
-      "lines": 42,
-      "age_days": 21,
+      "lines": 57,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -343,7 +343,8 @@
       "third_party": [],
       "referenced_by": [],
       "launched_by": [
-        "RUN_PLUCK.cmd"
+        "RUN_PLUCK.cmd",
+        "nova_start.py"
       ],
       "flags": []
     },
@@ -395,6 +396,7 @@
       ],
       "referenced_by": [],
       "launched_by": [
+        "StopNova.cmd",
         "nova_start.py",
         "start_llama_qwen36.cmd"
       ],
@@ -480,10 +482,10 @@
         "ast"
       ],
       "referenced_by": [],
-      "launched_by": [],
-      "flags": [
-        "no_inbound_refs"
-      ]
+      "launched_by": [
+        "nova_start.py"
+      ],
+      "flags": []
     },
     {
       "name": "injector.py",
@@ -518,7 +520,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 16,
-      "lines": 6960,
+      "lines": 6967,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -562,7 +564,6 @@
         "nova_runtime"
       ],
       "launched_by": [
-        "StopNova.cmd",
         "nova_start.py"
       ],
       "flags": []
@@ -572,18 +573,21 @@
       "kind": "tool",
       "path": "general_tools/nova_console",
       "purpose": "Nova Console — one window instead of the cmd-window confetti.",
-      "files": 3,
-      "lines": 496,
+      "files": 4,
+      "lines": 645,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
+        "127",
         "8765",
         "8799"
       ],
       "nova_imports": [],
       "third_party": [
+        "",
         "PIL",
         "http",
+        "plainspeak",
         "pystray",
         "socket",
         "tkinter",
@@ -603,7 +607,7 @@
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.",
       "files": 5,
-      "lines": 2103,
+      "lines": 2118,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -620,6 +624,7 @@
       ],
       "referenced_by": [],
       "launched_by": [
+        "StopNova.cmd",
         "nova_start.py"
       ],
       "flags": []
