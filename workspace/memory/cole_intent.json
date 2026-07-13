@@ -1,5 +1,5 @@
 {
   "text": "You misread that file. tasks.json has three tasks still open and in-progress \u2014 the last one was closed yesterday, not July 8th. You got it wrong.",
   "ts": "2026-07-13T12:59:49.849682",
-  "consumed": false
+  "consumed": true
 }
