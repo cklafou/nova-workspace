@@ -7,6 +7,21 @@ from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+# ── No flashing git windows (2026-07-13) ──────────────────────────────────────
+# The watcher is now spawned with CREATE_NO_WINDOW (Nova Console — one window, not five).
+# A console-LESS parent that launches a console app (git, clip) makes Windows allocate a BRAND
+# NEW console for each one — so every auto-commit flashed a cmd window on screen. Patching
+# subprocess.run here (this is our own process, so the patch is contained) forces CREATE_NO_WINDOW
+# on every child, including any git call added later.
+if sys.platform == "win32":
+    _orig_run = subprocess.run
+
+    def _run_no_window(*a, **kw):
+        kw["creationflags"] = kw.get("creationflags", 0) | subprocess.CREATE_NO_WINDOW
+        return _orig_run(*a, **kw)
+
+    subprocess.run = _run_no_window
+
 _ws = Path(__file__).parent.parent.parent
 for _p in [str(_ws / "nova_body"), str(_ws / "general_tools")]:
     if _p not in sys.path:

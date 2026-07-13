@@ -25,6 +25,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
+try:
+    from . import plainspeak
+except ImportError:                    # run as a loose script, not a package
+    import plainspeak
+
 HUB_PORT = 8799
 MAX_LINES = 4000          # per stream ring buffer
 
@@ -34,7 +39,7 @@ class _Stream:
         self.name = name
         self.label = label
         self.order = order
-        self.lines = deque(maxlen=MAX_LINES)   # (seq, ts, text)
+        self.lines = deque(maxlen=MAX_LINES)   # (seq, ts, text, plain)
         self.seq = 0
         self.lock = threading.Lock()
         self.alive = False
@@ -43,15 +48,22 @@ class _Stream:
         text = (text or "").rstrip("\r\n")
         if not text:
             return
+        # Translate ONCE at write time, not per request — the UI polls constantly.
+        # plain() returns None when we have no rule, and the UI then shows the raw line:
+        # we never invent a translation just to have something friendly to display.
+        try:
+            p = plainspeak.plain(text)
+        except Exception:
+            p = None
         with self.lock:
             self.seq += 1
-            self.lines.append((self.seq, datetime.now().strftime("%H:%M:%S"), text))
+            self.lines.append((self.seq, datetime.now().strftime("%H:%M:%S"), text, p))
 
     def since(self, n: int):
         with self.lock:
             return [
-                {"seq": s, "ts": t, "text": x}
-                for (s, t, x) in self.lines if s > n
+                {"seq": s, "ts": t, "text": x, "plain": p}
+                for (s, t, x, p) in self.lines if s > n
             ], self.seq
 
 
@@ -66,6 +78,11 @@ class LogHub:
         # polls GET /api/show-pending and raises itself. This is how the widget can summon the
         # desktop window out of the tray.
         self._show_req = False
+        # Set by POST /api/shutdown (StopNova.cmd). nova_start.py watches this and runs its normal
+        # graceful teardown — which matters because stop_watcher() sends CTRL_BREAK so the watcher
+        # can finish its git push instead of leaving a stale .git/index.lock behind. A blunt
+        # taskkill cannot do that, which is why StopNova asks nicely FIRST.
+        self._shutdown_req = False
 
     # ── stream registry ───────────────────────────────────────────────────────
     def add_stream(self, name: str, label: str) -> _Stream:
@@ -183,6 +200,9 @@ class LogHub:
                 if u.path == "/api/show":
                     hub._show_req = True
                     return self._send({"ok": True})
+                if u.path == "/api/shutdown":
+                    hub._shutdown_req = True
+                    return self._send({"ok": True, "message": "graceful shutdown requested"})
                 return self._send({"error": "not found"}, 404)
 
             def do_GET(self):

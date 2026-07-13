@@ -4023,6 +4023,8 @@ switchPanel('thoughts');
 #novaConsole .nc-btn{background:transparent;border:1px solid #2f2748;color:#a78bfa;border-radius:6px;
   padding:3px 8px;cursor:pointer;font:inherit;font-size:10.5px;}
 #novaConsole .nc-btn:hover{background:#1d1730;}
+#novaConsole .nc-btn.on{background:#2a2140;color:#e6e3f0;border-color:#4a3d75;}
+#novaConsole .nc-dim{color:#6d5f9c;}
 #novaConsole .nc-body{flex:1 1 auto;overflow:auto;padding:6px 9px;white-space:pre-wrap;
   word-break:break-word;line-height:1.5;}
 #novaConsole .nc-ts{color:#6d5f9c;margin-right:7px;}
@@ -4035,6 +4037,7 @@ switchPanel('thoughts');
   <div class="nc-head">
     <span id="ncTabs" style="display:flex;gap:5px;"></span>
     <span class="nc-sp"></span>
+    <button class="nc-btn on" id="ncPlain" title="Translate machine logs into plain English">Plain English</button>
     <button class="nc-btn" id="ncOpen" title="Raise the desktop Nova Console window (from the tray)">⬈ Window</button>
     <button class="nc-btn" id="ncClear" title="Clear this view">Clear</button>
   </div>
@@ -4045,7 +4048,7 @@ switchPanel('thoughts');
   const HUB='http://127.0.0.1:8799';
   const tabsEl=document.getElementById('ncTabs');
   const bodyEl=document.getElementById('ncBody');
-  const state={active:null,since:{},alive:{},first:true};
+  const state={active:null,since:{},alive:{},first:true,rows:{},plain:true};
 
   const get=(p)=>fetch(HUB+p,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
 
@@ -4056,33 +4059,50 @@ switchPanel('thoughts');
       const b=document.createElement('button');
       b.className='nc-tab'+(s.name===state.active?' on':'')+(s.alive?'':' dead');
       b.innerHTML='<span class="nc-dot"></span>'+s.label;
-      b.onclick=()=>{state.active=s.name;bodyEl.innerHTML='';state.since[s.name]=0;paintTabs(streams);pump();};
+      b.onclick=()=>{state.active=s.name;bodyEl.innerHTML='';state.since[s.name]=0;state.rows[s.name]=[];paintTabs(streams);pump();};
       tabsEl.appendChild(b);
     });
   }
 
+  // In Plain mode show the translation when the hub HAS one, and fall back to the raw line
+  // (dimmed) when it doesn't. We never invent a friendly-sounding translation.
+  function draw(l){
+    const body = state.plain ? (l.plain || l.text) : l.text;
+    const untranslated = state.plain && !l.plain;
+    const low = body.toLowerCase();
+    let cls='';
+    if(body.startsWith('✗')||low.includes('[error]')||low.includes('traceback')) cls='nc-err';
+    else if(body.startsWith('⚠')||low.includes('[warn]')||low.includes('warning')) cls='nc-warn';
+    else if(l.text.startsWith('[hub]')||untranslated) cls='nc-dim';
+    const d=document.createElement('div');
+    d.innerHTML='<span class="nc-ts">'+l.ts+'</span><span class="'+cls+'"></span>';
+    d.lastChild.textContent=body;
+    return d;
+  }
+
   function append(lines){
     const atBottom = bodyEl.scrollTop+bodyEl.clientHeight >= bodyEl.scrollHeight-8;
-    lines.forEach(l=>{
-      const d=document.createElement('div');
-      const t=l.text.toLowerCase();
-      let cls='';
-      if(t.includes('[error]')||t.includes('traceback')) cls='nc-err';
-      else if(t.includes('[warn]')||t.includes('warning')) cls='nc-warn';
-      else if(l.text.startsWith('[hub]')) cls='nc-hub';
-      d.innerHTML='<span class="nc-ts">'+l.ts+'</span><span class="'+cls+'"></span>';
-      d.lastChild.textContent=l.text;
-      bodyEl.appendChild(d);
-    });
+    lines.forEach(l=>bodyEl.appendChild(draw(l)));
     while(bodyEl.childElementCount>1200) bodyEl.removeChild(bodyEl.firstChild);
     if(atBottom) bodyEl.scrollTop=bodyEl.scrollHeight;
+  }
+
+  function rerender(){
+    const rows=state.rows[state.active]||[];
+    bodyEl.innerHTML='';
+    rows.forEach(l=>bodyEl.appendChild(draw(l)));
+    bodyEl.scrollTop=bodyEl.scrollHeight;
   }
 
   async function pump(){
     if(!state.active) return;
     const n=state.active;
     const d=await get('/api/log?stream='+n+'&since='+(state.since[n]||0));
-    if(d&&d.lines&&d.lines.length){ append(d.lines); state.since[n]=d.seq; }
+    if(d&&d.lines&&d.lines.length){
+      state.rows[n]=(state.rows[n]||[]).concat(d.lines).slice(-1200);
+      append(d.lines);
+      state.since[n]=d.seq;
+    }
   }
 
   async function tick(){
@@ -4097,8 +4117,18 @@ switchPanel('thoughts');
     await pump();
   }
 
+  const plainBtn=document.getElementById('ncPlain');
+  plainBtn.onclick=()=>{
+    state.plain=!state.plain;
+    plainBtn.textContent = state.plain ? 'Plain English' : 'Raw logs';
+    plainBtn.classList.toggle('on', state.plain);
+    rerender();
+  };
   document.getElementById('ncOpen').onclick=()=>fetch(HUB+'/api/show',{method:'POST'}).catch(()=>{});
-  document.getElementById('ncClear').onclick=()=>{ bodyEl.innerHTML=''; if(state.active) state.since[state.active]=0; };
+  document.getElementById('ncClear').onclick=()=>{
+    bodyEl.innerHTML='';
+    if(state.active){ state.rows[state.active]=[]; state.since[state.active]=0; }
+  };
 
   setInterval(tick,1500);
   tick();

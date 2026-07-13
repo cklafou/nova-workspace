@@ -89,7 +89,16 @@ class ConsoleApp:
                  font=("Segoe UI Semibold", 11)).pack(side="left")
         self.status = tk.Label(hdr, text="connecting to hub…", bg=BG, fg=MUTED,
                                font=("Segoe UI", 9))
-        self.status.pack(side="right")
+        self.status.pack(side="right", padx=(10, 0))
+        # Plain-speak toggle. Defaults ON: the whole point of this window is that you can glance
+        # at it and know what's happening without reading llama.cpp internals.
+        self.plain = True
+        self.plainBtn = tk.Button(hdr, text="Plain English", command=self._toggle_plain,
+                                  bg=TAB_ON, fg=TEXT, activebackground=TAB_ON,
+                                  activeforeground=TEXT, relief="flat", bd=0,
+                                  font=("Segoe UI Semibold", 8), padx=10, pady=3,
+                                  cursor="hand2")
+        self.plainBtn.pack(side="right")
 
         self.tabbar = tk.Frame(self.root, bg=BG)
         self.tabbar.pack(fill="x", padx=12, pady=(8, 0))
@@ -129,7 +138,8 @@ class ConsoleApp:
         txt.tag_configure("warn", foreground="#fbbf24")
         txt.tag_configure("hub", foreground=ACCENT_DIM)
 
-        self.tabs[name] = {"btn": btn, "txt": txt, "sb": sb, "since": 0, "alive": False}
+        self.tabs[name] = {"btn": btn, "txt": txt, "sb": sb, "since": 0,
+                           "alive": False, "rows": []}
         if self.active is None:
             self.select(name)
 
@@ -148,30 +158,53 @@ class ConsoleApp:
     def _clear(self):
         if not self.active:
             return
+        self.tabs[self.active]["rows"] = []
         t = self.tabs[self.active]["txt"]
         t.configure(state="normal")
         t.delete("1.0", "end")
         t.configure(state="disabled")
 
-    def _append(self, name: str, rows):
+    def _toggle_plain(self):
+        self.plain = not self.plain
+        self.plainBtn.configure(text="Plain English" if self.plain else "Raw logs",
+                                bg=TAB_ON if self.plain else TAB_BG,
+                                fg=TEXT if self.plain else MUTED)
+        for name in self.tabs:                 # re-render everything in the new mode
+            t = self.tabs[name]["txt"]
+            t.configure(state="normal")
+            t.delete("1.0", "end")
+            t.configure(state="disabled")
+            self._render(name, self.tabs[name]["rows"])
+
+    def _render(self, name: str, rows):
+        """Draw rows into a tab. In Plain mode, show the translation when we HAVE one and fall
+        back to the raw line when we don't — better an unreadable truth than a confident guess."""
         t = self.tabs[name]["txt"]
         at_bottom = t.yview()[1] > 0.995
         t.configure(state="normal")
         for r in rows:
-            body = r["text"]
+            raw = r["text"]
+            p = r.get("plain")
+            body = (p or raw) if self.plain else raw
+            untranslated = self.plain and not p
             tag = ""
             low = body.lower()
-            if "[error]" in low or "error" in low.split(" ")[:3] or "traceback" in low:
+            if body.startswith("✗") or "[error]" in low or "traceback" in low:
                 tag = "err"
-            elif "[warn]" in low or "warning" in low:
+            elif body.startswith("⚠") or "[warn]" in low or "warning" in low:
                 tag = "warn"
-            elif body.startswith("[hub]"):
-                tag = "hub"
+            elif raw.startswith("[hub]") or untranslated:
+                tag = "hub"            # dimmed: this one had no plain-English rule
             t.insert("end", r["ts"] + "  ", ("ts",))
             t.insert("end", body + "\n", (tag,) if tag else ())
         t.configure(state="disabled")
         if at_bottom:
             t.see("end")            # only autoscroll if the user hasn't scrolled up
+
+    def _append(self, name: str, rows):
+        self.tabs[name]["rows"].extend(rows)
+        del self.tabs[name]["rows"][:-4000]
+        self._render(name, rows)
 
     # ── polling ───────────────────────────────────────────────────────────────
     def _poll_streams(self):

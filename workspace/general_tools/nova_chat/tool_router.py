@@ -1,6 +1,7 @@
 # Last updated: 2026-07-13 20:05:22
 import os
 import re
+import sys
 import subprocess
 from pathlib import Path
 
@@ -78,12 +79,18 @@ def run_command(command: str, cwd: str = "") -> str:
         # Test-Path, ls/cat aliases) work, file reads return output, and we avoid cmd mangling a
         # nested-quoted `powershell -Command "..."` into a blank result. Passed as an arg list so
         # quoting stays clean. NOTE: Windows PowerShell 5.1 has no `&&` — use `;` to chain.
+        # CREATE_NO_WINDOW (2026-07-13): the chat server now runs console-less (Nova Console —
+        # one window, not five). A console-LESS parent spawning a console app makes Windows
+        # allocate a NEW console for it, so EVERY run_command Nova made would flash a PowerShell
+        # window in Cole's face. Output is captured anyway; there is nothing to show.
+        _nw = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
         result = subprocess.run(
             ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
             cwd=working_dir,
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
+            creationflags=_nw,
         )
         
         output = (result.stdout or "") + "\n" + (result.stderr or "")

@@ -53,8 +53,13 @@ class LlamaControl:
               "ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; "
               "Stop-Process -Name llama-server -Force -ErrorAction SilentlyContinue")
         try:
+            # CREATE_NO_WINDOW: the chat server is console-less now, so this PowerShell would
+            # otherwise pop a window on every restart / LoRA equip.
+            kw = {}
+            if sys.platform == "win32" and self._run is subprocess.run:
+                kw["creationflags"] = subprocess.CREATE_NO_WINDOW
             self._run(["powershell", "-Command", ps], capture_output=True, text=True,
-                      encoding="utf-8", errors="replace", timeout=10)
+                      encoding="utf-8", errors="replace", timeout=10, **kw)
         except Exception:
             pass
 

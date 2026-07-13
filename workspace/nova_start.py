@@ -26,10 +26,13 @@ import time
 import socket
 import signal
 import shutil
+import threading
 import subprocess
 import urllib.request
 from datetime import datetime
 from pathlib import Path
+
+_SHUTDOWN = threading.Event()      # set by StopNova.cmd via POST :8799/api/shutdown
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 if getattr(sys, "frozen", False):
@@ -130,7 +133,7 @@ def llama_healthy(timeout: float = 2.0) -> bool:
 # ── GPU detection — choose the tensor split ────────────────────────────────--
 def detect_gpu_count() -> int:
     try:
-        r = subprocess.run(["nvidia-smi", "-L"], capture_output=True,
+        r = subprocess.run(["nvidia-smi", "-L"], creationflags=_NO_WINDOW, capture_output=True,
                            text=True, timeout=8)
         if r.returncode == 0:
             return len([ln for ln in r.stdout.splitlines() if ln.strip().startswith("GPU ")])
@@ -279,7 +282,7 @@ def _pick_python() -> list | None:
         seen.add(key)
         try:
             r = subprocess.run(c + ["-c", "import uvicorn, fastapi"],
-                               capture_output=True, timeout=20)
+                               creationflags=_NO_WINDOW, capture_output=True, timeout=20)
             if r.returncode == 0:
                 return c
         except Exception:
@@ -492,6 +495,29 @@ def start_console() -> subprocess.Popen | None:
         return None
 
 
+def _watch_for_shutdown(procs) -> None:
+    """StopNova.cmd POSTs :8799/api/shutdown. We own the hub object, so just poll the flag.
+
+    Why bother instead of letting StopNova taskkill everything? Because main()'s `finally` block
+    calls stop_watcher(), which sends CTRL_BREAK so the watcher can finish its git push cleanly.
+    A blunt taskkill orphans it mid-commit and leaves a stale .git/index.lock. So: unblock main()
+    by closing the window/process it's waiting on, and let the normal teardown do its job."""
+    def _w():
+        while not _SHUTDOWN.is_set():
+            if HUB and getattr(HUB, "_shutdown_req", False):
+                _SHUTDOWN.set()
+                log("Shutdown requested (StopNova) — tearing down cleanly.")
+                for p in procs:
+                    try:
+                        if p and p.poll() is None:
+                            p.terminate()      # unblocks whichever wait() main is sitting in
+                    except Exception:
+                        pass
+                return
+            time.sleep(0.5)
+    threading.Thread(target=_w, name="shutdown-watch", daemon=True).start()
+
+
 # ── Main ───────────────────────────────────────────────────────────────────--
 def main() -> None:
     console_proc = start_console()
@@ -510,24 +536,30 @@ def main() -> None:
     app_proc = open_app_window()
     watcher_proc = start_watcher()
 
-    banner("Nova is running.  Close the Nova app window to shut everything down.")
+    # StopNova.cmd can now ask for a CLEAN teardown instead of blunt-force killing the watcher.
+    _watch_for_shutdown([app_proc, nova_proc])
+
+    banner("Nova is running.  Close the Nova app window (or run StopNova.cmd) to shut down.")
 
     # Own the lifecycle: block on the app window; clean up when it closes.
     try:
         if app_proc is not None:
             _t0 = time.time()
             app_proc.wait()                 # blocks until the app window closes
-            if time.time() - _t0 < 5:
+            if _SHUTDOWN.is_set():
+                log("Nova app window closed by StopNova.")
+            elif time.time() - _t0 < 5:
                 # The browser process exited almost immediately — it handed the
                 # window off to another instance, so the window is actually still
                 # open. Do NOT shut down; keep Nova alive and wait on the server.
-                log("App window handed off to an existing browser — keeping Nova "
-                    "alive. Close THIS launcher window (or Ctrl+C) to stop Nova.", "WARN")
+                log("App window handed off to an existing browser — keeping Nova alive. "
+                    "Run StopNova.cmd (or use the Console tray) to stop Nova.", "WARN")
                 if nova_proc is not None:
                     nova_proc.wait()
                 else:
-                    while port_open(CHAT_PORT):
-                        time.sleep(5)
+                    # Break on StopNova too — there is no launcher window to Ctrl+C any more.
+                    while port_open(CHAT_PORT) and not _SHUTDOWN.is_set():
+                        time.sleep(2)
             else:
                 log("Nova app window closed.")
         elif nova_proc is not None:
