@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-13 19:12:52
+# Last updated: 2026-07-13 21:22:38
 # Nova-Core v4 personality LoRA — v3's validated config + STANCE training.
 #
 # WHY v4 (vs v3): v3's config was right (coherent AND in-character at weight 1.0 — no dilution),
