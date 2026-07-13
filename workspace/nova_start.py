@@ -234,13 +234,12 @@ def start_llama() -> subprocess.Popen | None:
     log(f"Starting llama-server. Output -> {llama_log.relative_to(WS)}")
     cmd = build_llama_cmd()
 
-    # New console window on Windows so its lifecycle is visible/independent.
-    creationflags = 0
-    if sys.platform == "win32":
-        creationflags = subprocess.CREATE_NEW_CONSOLE
+    # NO console window. Its output already goes to logs/llama/ — the old CREATE_NEW_CONSOLE
+    # popped an EMPTY window for no reason. The hub tails that log file instead (see main()),
+    # which also survives LlamaControl restarting llama out of band on a LoRA equip.
     lf = open(llama_log, "a", encoding="utf-8", errors="replace")
     proc = subprocess.Popen(cmd, cwd=str(WS), stdout=lf, stderr=subprocess.STDOUT,
-                            creationflags=creationflags)
+                            creationflags=_NO_WINDOW)
     return proc
 
 
