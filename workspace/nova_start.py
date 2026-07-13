@@ -74,26 +74,48 @@ CONSOLE_APP = WS / "general_tools" / "nova_console" / "console_app.py"
 _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
 
 
+def _console_python(py: list) -> list:
+    """Swap pythonw.exe -> python.exe for children that SHELL OUT.
+
+    THE BUG THIS FIXES (2026-07-13, third attempt — the first two were wrong):
+    NovaStart.cmd now launches this script with pythonw.exe, so `sys.executable` IS pythonw.exe —
+    and _pick_python()'s first candidate is [sys.executable]. So the watcher ran under pythonw:
+    a GUI binary with NO CONSOLE AT ALL.
+
+    That is why SW_HIDE did nothing. STARTUPINFO.wShowWindow only hides a console that THIS
+    process creates — pythonw never creates one. git then creates its own, using git's defaults,
+    and gets a fresh VISIBLE window on every call. I had been handing the "stay hidden" instruction
+    to a process that was never going to open a window anyway.
+
+    A process that shells out needs a REAL console (hidden) for its children to inherit. pythonw
+    can't have one. python.exe can."""
+    if sys.platform != "win32" or not py:
+        return py
+    out = list(py)
+    head = Path(out[0])
+    if head.name.lower() == "pythonw.exe":
+        cons = head.with_name("python.exe")
+        if cons.exists():
+            out[0] = str(cons)
+    return out
+
+
 def _hidden_console() -> dict:
-    """Popen kwargs giving a child ONE HIDDEN console that all its descendants inherit.
+    """Popen kwargs: give the child ONE REAL BUT HIDDEN console that all its descendants inherit.
 
-    Why not CREATE_NO_WINDOW? Because it means "NO CONSOLE AT ALL", not "no window". A process
-    with no console that spawns a console app makes Windows allocate a BRAND NEW console for it.
-    So CREATE_NO_WINDOW on the watcher silenced the watcher — and then every `git` it ran flashed.
-    Putting CREATE_NO_WINDOW on git in turn silenced git — and then `git push`'s OWN children
-    (git-remote-https, the credential helper) flashed instead. The flashing just walks down the
-    process tree.
+    CREATE_NEW_CONSOLE is REQUIRED here, not optional. Without it, a console-less parent leaves the
+    child's console allocation up to Windows, and wShowWindow doesn't reliably apply to a console
+    the OS auto-allocates. Explicitly creating the console is what makes SW_HIDE mean anything.
 
-    A HIDDEN console fixes it for the whole tree at once: the child gets a real console (so its
-    descendants have one to inherit and never allocate their own), but STARTF_USESHOWWINDOW +
-    SW_HIDE means it is never drawn. Use this for anything that shells out (watcher → git,
-    chat server → Nova's run_command → powershell)."""
+    And NOT CREATE_NO_WINDOW: that means "no console AT ALL", which just pushes the problem down a
+    generation — silence git, and `git push`'s own children (git-remote-https, the credential
+    helper) start flashing instead. Only a real, inherited, hidden console fixes the whole tree."""
     if sys.platform != "win32":
         return {}
     si = subprocess.STARTUPINFO()
     si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
     si.wShowWindow = subprocess.SW_HIDE
-    return {"startupinfo": si}
+    return {"startupinfo": si, "creationflags": subprocess.CREATE_NEW_CONSOLE}
 
 
 def _hub(stream: str, text: str) -> None:
