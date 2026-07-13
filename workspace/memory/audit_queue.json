@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-13T19:22:47+09:00",
+  "updated_at": "2026-07-13T19:27:18+09:00",
   "items": [
     {
       "id": "777df213",
@@ -79830,6 +79830,19 @@
       "commit": "3787c34f",
       "old_path": null,
       "new_path": "general_tools/nova_console/__init__.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "e3619e50",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-13T19:27:17+09:00",
+      "commit": "9d2ee59a",
+      "old_path": null,
+      "new_path": "general_tools/nova_console/README.md",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
