@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-13T19:19:40",
+  "generated": "2026-07-13T19:24:47",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 24,
   "described": 24,
@@ -207,7 +207,7 @@
       "path": "nova_body/nova_runtime",
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
       "files": 9,
-      "lines": 1184,
+      "lines": 1205,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -270,7 +270,7 @@
       "path": "nova_start.py",
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
-      "lines": 532,
+      "lines": 575,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -297,8 +297,8 @@
       "path": "NovaStart.cmd",
       "purpose": "Launcher — runs nova_start.py to bring up the whole Nova stack (double-click entry point).",
       "files": 1,
-      "lines": 19,
-      "age_days": 50,
+      "lines": 33,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -571,9 +571,9 @@
       "name": "nova_console",
       "kind": "tool",
       "path": "general_tools/nova_console",
-      "purpose": "Nova Console — the single window that replaces every popup cmd window.",
-      "files": 2,
-      "lines": 465,
+      "purpose": "Nova Console — one window instead of the cmd-window confetti.",
+      "files": 3,
+      "lines": 496,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
