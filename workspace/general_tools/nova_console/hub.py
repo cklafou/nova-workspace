@@ -170,11 +170,21 @@ class LogHub:
                 self.send_header("Access-Control-Allow-Headers", "*")
                 self.end_headers()
 
+            def do_POST(self):
+                u = urlparse(self.path)
+                if u.path == "/api/show":
+                    hub._show_req = True
+                    return self._send({"ok": True})
+                return self._send({"error": "not found"}, 404)
+
             def do_GET(self):
                 u = urlparse(self.path)
                 q = parse_qs(u.query)
                 if u.path == "/health":
                     return self._send({"ok": True})
+                if u.path == "/api/show-pending":
+                    pending, hub._show_req = hub._show_req, False
+                    return self._send({"show": pending})
                 if u.path == "/api/streams":
                     return self._send({"streams": [
                         {"name": s.name, "label": s.label, "alive": s.alive, "seq": s.seq}

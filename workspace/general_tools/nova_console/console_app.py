@@ -201,7 +201,11 @@ class ConsoleApp:
         if not self._auto_hidden_once and self.tray and _chat_up():
             self._auto_hidden_once = True
             self.hide()
-        self.root.after(3000, self._poll_chat)
+        # The Nova Chat widget's "Open window" button pokes POST /api/show — honour it.
+        d = _get("/api/show-pending", timeout=1.0)
+        if d and d.get("show"):
+            self.show()
+        self.root.after(1500, self._poll_chat)
 
     # ── tray ──────────────────────────────────────────────────────────────────
     def _start_tray(self):
