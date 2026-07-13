@@ -564,6 +564,13 @@ def main() -> None:
     app_proc = open_app_window()
     watcher_proc = start_watcher()
 
+    # Publish our process tree so the console's stray-window janitor can tell "a console Nova
+    # spawned" from "a terminal Cole opened". It only ever hides windows whose ancestry reaches
+    # one of these PIDs — it must never touch a window that isn't ours.
+    if HUB:
+        HUB.pids = [p.pid for p in (llama_proc, nova_proc, watcher_proc, console_proc)
+                    if p is not None] + [os.getpid()]
+
     # StopNova.cmd can now ask for a CLEAN teardown instead of blunt-force killing the watcher.
     _watch_for_shutdown([app_proc, nova_proc])
 

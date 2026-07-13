@@ -83,6 +83,10 @@ class LogHub:
         # can finish its git push instead of leaving a stale .git/index.lock behind. A blunt
         # taskkill cannot do that, which is why StopNova asks nicely FIRST.
         self._shutdown_req = False
+        # PIDs of Nova's process tree roots. The console app's stray-window janitor asks for these
+        # so it can tell "a console owned by Nova" from "Cole's own terminal" — we must never hide
+        # a window that isn't ours.
+        self.pids: list[int] = []
 
     # ── stream registry ───────────────────────────────────────────────────────
     def add_stream(self, name: str, label: str) -> _Stream:
@@ -203,6 +207,16 @@ class LogHub:
                 if u.path == "/api/shutdown":
                     hub._shutdown_req = True
                     return self._send({"ok": True, "message": "graceful shutdown requested"})
+                if u.path == "/api/write":
+                    # The console app's janitor reports stray windows here, so they land in the
+                    # SAME stream set the widget reads. One source of truth, as everywhere else.
+                    try:
+                        n = int(self.headers.get("Content-Length", 0))
+                        d = json.loads(self.rfile.read(n) or b"{}")
+                        hub.write(d.get("stream", "strays"), d.get("text", ""))
+                        return self._send({"ok": True})
+                    except Exception as e:
+                        return self._send({"error": str(e)}, 400)
                 return self._send({"error": "not found"}, 404)
 
             def do_GET(self):
@@ -213,6 +227,8 @@ class LogHub:
                 if u.path == "/api/show-pending":
                     pending, hub._show_req = hub._show_req, False
                     return self._send({"show": pending})
+                if u.path == "/api/pids":
+                    return self._send({"pids": hub.pids})
                 if u.path == "/api/streams":
                     return self._send({"streams": [
                         {"name": s.name, "label": s.label, "alive": s.alive, "seq": s.seq}

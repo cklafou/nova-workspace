@@ -14,12 +14,15 @@
 # Runs as its own process (pythonw, no console of its own) so a GUI hiccup can't take the stack
 # down with it.
 
+import os
 import sys
 import json
 import threading
 import urllib.request
 import tkinter as tk
 from tkinter import ttk
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 HUB = "http://127.0.0.1:8799"
 CHAT_PORT = 8765
@@ -75,6 +78,15 @@ class ConsoleApp:
 
         self._build_chrome()
         self.root.protocol("WM_DELETE_WINDOW", self.hide)
+
+        # Safety net: hide any console window Nova's process tree still manages to pop, and log it
+        # to the "Strays" tab. It CANNOT capture their text (see stray_janitor.py) — it stops the
+        # flashing and tells you what did it. If Strays is busy, something upstream is still wrong.
+        try:
+            from stray_janitor import start as _start_janitor
+            _start_janitor()
+        except Exception as e:
+            print(f"[console] stray janitor unavailable: {e}")
 
         self._start_tray()
         self.root.after(300, self._poll_streams)

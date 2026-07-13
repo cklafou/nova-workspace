@@ -78,6 +78,26 @@ WORKSPACE_ROOT_FILES = {
     "README.md", "TOOLS.md", "COLE.md",
 }
 
+# Files the watcher ITSELF writes (manifest/index/audit passes). They must never trigger it, or it
+# feeds itself in an endless regenerate -> commit -> regenerate loop. Matched as substrings of the
+# filename, so a sibling like FILE_INDEX_LINK.md can't slip through on an exact-name check —
+# which is precisely the bug that produced 204 commits in an hour.
+GENERATED_ARTIFACTS = (
+    "FILE_INDEX",        # FILE_INDEX.md AND FILE_INDEX_LINK.md  <- the loop driver
+    "GEMINI_INDEX",
+    "Logger_Index",
+    "manifest.json",
+    "sessions_index",
+)
+
+
+# Cooldown so stamping doesn't re-trigger stamping. update_timestamp_in_file() WRITES the file,
+# which fires another watchdog event; a second later the clock has moved on, so the new stamp
+# differs, so it writes AGAIN — a slow self-feeding loop that also re-stamps files nobody touched.
+# One stamp per file per 30s is plenty (the point is "roughly when did this change", not a clock).
+_LAST_STAMP: dict[str, float] = {}
+STAMP_COOLDOWN_S = 30
+
 
 def update_timestamp_in_file(path: Path):
     if path.name in EXCLUDE_FROM_TIMESTAMPS:
@@ -85,6 +105,11 @@ def update_timestamp_in_file(path: Path):
     suffix = path.suffix.lower()
     if suffix not in (".py", ".md"):
         return
+    key = str(path)
+    now = time.time()
+    if now - _LAST_STAMP.get(key, 0) < STAMP_COOLDOWN_S:
+        return                      # we stamped this moments ago — that write IS this event
+    _LAST_STAMP[key] = now
     try:
         content = path.read_text(encoding="utf-8")
     except Exception:
@@ -756,7 +781,20 @@ class GitAutoCommit(FileSystemEventHandler):
     def _handle(self, src_path: str):
         if ".git" in src_path or "__pycache__" in src_path:
             return
-        if src_path.endswith(".pyc") or "FILE_INDEX.md" in src_path:
+        if src_path.endswith(".pyc"):
+            return
+        # ── THE AUTO-COMMIT LOOP (fixed 2026-07-13) ──────────────────────────────────────
+        # This line used to read:  if "FILE_INDEX.md" in src_path: return
+        # But "FILE_INDEX.md" is NOT a substring of "FILE_INDEX_LINK.md" — so the LINK file was
+        # never excluded. The watcher regenerated it, saw it change, stamped a fresh
+        # "_Last updated_" into it (it's .md, so the content ALWAYS differs), committed, pushed,
+        # and regenerated again. Forever. Evidence: FILE_INDEX_LINK.md appeared in 60 of the last
+        # 60 commits, 204 commits in one hour. Every lap shelled out to git — which is what was
+        # flashing cmd windows across Cole's screen.
+        #
+        # Any file the watcher GENERATES must be excluded from what the watcher WATCHES, or it
+        # feeds itself. Match on prefix, not on an exact filename.
+        if any(g in Path(src_path).name for g in GENERATED_ARTIFACTS):
             return
         # The Nova app's per-pid Chrome profile (.nova_app_profile_<pid>) lives in the
         # workspace and churns constantly. Ignoring it here stops that churn from

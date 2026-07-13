@@ -89,6 +89,53 @@ commands forever. Now it's two phases:
 2. **Force** — sweep ports 8080/8765/8799, `llama-server.exe`, and any python/pythonw whose
    **command line** matches Nova's scripts (so an unrelated Python of yours is never touched).
 
+## THE ACTUAL CAUSE OF THE FLASHING (found 2026-07-13, after two wrong fixes)
+
+It was never really a *window* problem. It was an **infinite git loop**, and every lap shelled out
+to git.
+
+`watcher.py` tried to avoid feeding itself:
+
+```python
+if src_path.endswith(".pyc") or "FILE_INDEX.md" in src_path:   # <- the bug
+    return
+```
+
+`"FILE_INDEX.md"` is **not a substring of** `"FILE_INDEX_LINK.md"`. So the LINK file — which the
+watcher itself regenerates — was never excluded. It regenerated it, saw it change, stamped a fresh
+`_Last updated_` into it (it's `.md`, so the content *always* differs), committed, pushed, and
+regenerated again. Forever.
+
+**Evidence:** `FILE_INDEX_LINK.md` appeared in **60 of the last 60 commits**; **204 commits in one
+hour**.
+
+Fixed with a `GENERATED_ARTIFACTS` prefix list (`FILE_INDEX`, `GEMINI_INDEX`, `Logger_Index`,
+`manifest.json`, `sessions_index`) — *anything the watcher generates must be excluded from what the
+watcher watches, matched by prefix, never by exact filename.*
+
+A second, slower loop was fixed too: `update_timestamp_in_file()` **writes** the file it just saw
+change, which fires another event, and a second later the new timestamp differs — so it writes
+again. Now rate-limited to one stamp per file per 30s.
+
+> **Note:** the repo has ~200 junk `auto-commit` commits from the loop. Squashing them is your call
+> — I don't rewrite history without being asked.
+
+## Stray-console janitor (the safety net)
+
+`stray_janitor.py` runs inside the console app. It enumerates `ConsoleWindowClass` windows, walks
+the owning process's parent chain, and **hides** any whose ancestry reaches a known Nova PID —
+catching even `git push`'s grandchildren. Each sighting is reported to a single deduped **Strays**
+tab (first sighting, then only at x10/x100/x1000, so a loop can't flood it).
+
+**It cannot capture their text.** Once a process owns a console, its stdout goes to that console's
+buffer; there is no supported way to reach in afterwards and redirect it. Their output is already
+in `logs/` anyway. It stops the flashing and tells you *what* flashed — that's the honest limit.
+
+**It never touches a window that isn't Nova's** — your own terminals are checked by process
+ancestry and left alone.
+
+If the Strays tab is busy, the janitor is papering over a real bug upstream. It's a net, not a fix.
+
 ## Gotcha this fixed along the way
 
 `nova_start.py` and `NovaLauncher.py` both called `input("Press Enter to exit...")` on failure.

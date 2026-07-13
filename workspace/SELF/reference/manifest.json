@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-13T20:45:10",
+  "generated": "2026-07-13T20:59:24",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 24,
   "described": 24,
@@ -269,7 +269,7 @@
       "path": "nova_start.py",
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
-      "lines": 635,
+      "lines": 642,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -573,8 +573,8 @@
       "kind": "tool",
       "path": "general_tools/nova_console",
       "purpose": "Nova Console — one window instead of the cmd-window confetti.",
-      "files": 4,
-      "lines": 645,
+      "files": 5,
+      "lines": 819,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -586,10 +586,12 @@
       "third_party": [
         "",
         "PIL",
+        "ctypes",
         "http",
         "plainspeak",
         "pystray",
         "socket",
+        "stray_janitor",
         "tkinter",
         "urllib"
       ],
@@ -607,7 +609,7 @@
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.",
       "files": 5,
-      "lines": 2117,
+      "lines": 2155,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
