@@ -550,6 +550,15 @@ def main() -> None:
         except Exception:
             pass
         log("Shutdown complete.")
+        # Console viewer last, so the shutdown lines above are actually visible in it.
+        try:
+            if HUB:
+                time.sleep(1.5)
+                HUB.shutdown()
+            if console_proc and console_proc.poll() is None:
+                console_proc.terminate()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
@@ -558,8 +567,8 @@ if __name__ == "__main__":
     except SystemExit:
         raise
     except Exception as e:
+        import traceback
         log(f"Fatal launcher error: {e}", "ERROR")
-        try:
-            input("Press Enter to exit...")
-        except Exception:
-            time.sleep(5)
+        for _ln in traceback.format_exc().splitlines():
+            _hub("launcher", _ln)
+        halt("Launcher crashed — traceback is in the Launcher tab.")
