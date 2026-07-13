@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-13T12:49:24",
+  "generated": "2026-07-13T12:54:43",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 23,
   "described": 23,
@@ -208,7 +208,7 @@
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
       "files": 9,
       "lines": 1184,
-      "age_days": 3,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -517,7 +517,7 @@
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 16,
       "lines": 6960,
-      "age_days": 3,
+      "age_days": 0,
       "ports_bind": [
         "8765"
       ],
