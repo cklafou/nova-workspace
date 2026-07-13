@@ -357,10 +357,10 @@ def start_nova() -> subprocess.Popen | None:
     env = dict(os.environ)
     env["NOVA_NO_WINDOW"] = "1"
     env["PYTHONUNBUFFERED"] = "1"        # so its output reaches the console live, not in chunks
-    # HIDDEN console (not CREATE_NO_WINDOW): Nova's run_command shells out to PowerShell, which can
-    # itself spawn console children. They all inherit this invisible console instead of each
-    # allocating a visible one. stdout is still piped, so the Console shows everything.
-    proc = subprocess.Popen(py + [str(NOVA_LAUNCH)], cwd=str(WS),
+    # python.exe (NOT pythonw) + a real-but-hidden console. The chat server shells out constantly —
+    # Nova's run_command -> PowerShell -> whatever PowerShell spawns. They all inherit this
+    # invisible console instead of each popping a visible one. stdout is still piped to the Console.
+    proc = subprocess.Popen(_console_python(py) + [str(NOVA_LAUNCH)], cwd=str(WS),
                             env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             **_hidden_console())
     if HUB:
@@ -471,14 +471,18 @@ def start_watcher() -> subprocess.Popen | None:
     # the entire git process tree inherits it and nothing is ever drawn. See _hidden_console().
     # CREATE_NEW_PROCESS_GROUP is KEPT — stop_watcher() sends CTRL_BREAK_EVENT so it can finish
     # its git push cleanly instead of leaving a stale .git/index.lock.
-    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
     try:
         env = dict(os.environ)
         env["PYTHONUNBUFFERED"] = "1"
-        proc = subprocess.Popen(py + [str(WATCHER)], cwd=str(WS),
-                                creationflags=creationflags, env=env,
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                **_hidden_console())
+        kw = _hidden_console()
+        # Merge, don't overwrite: the watcher needs CREATE_NEW_PROCESS_GROUP so stop_watcher() can
+        # send CTRL_BREAK and let it finish its git push (otherwise: stale .git/index.lock).
+        if sys.platform == "win32":
+            kw["creationflags"] = kw.get("creationflags", 0) | subprocess.CREATE_NEW_PROCESS_GROUP
+        # python.exe, NOT pythonw: the watcher shells out to git on every commit/push, and git
+        # spawns children of its own. It needs a real (hidden) console for them to inherit.
+        proc = subprocess.Popen(_console_python(py) + [str(WATCHER)], cwd=str(WS),
+                                env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kw)
         if HUB:
             HUB.attach_pipe("watcher", proc)
         return proc
