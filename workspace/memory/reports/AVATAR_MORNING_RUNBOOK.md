@@ -1,5 +1,5 @@
 # Avatar + Image-Gen — Morning Runbook (start here)
-_Last updated: 2026-07-13 12:55:35_
+_Last updated: 2026-07-13 21:19:35_
 
 _Last updated: 2026-05-27, by Opus. Open this first. It's the ordered path from "ComfyUI isn't
 installed" to "Nova draws herself, identically, every time" — and then on to the 3D model. Each
