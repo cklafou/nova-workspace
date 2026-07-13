@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-13T19:24:47",
+  "generated": "2026-07-13T19:29:53",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 24,
   "described": 24,
@@ -375,8 +375,8 @@
       "path": "general_tools/NovaLauncher.py",
       "purpose": "Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.",
       "files": 1,
-      "lines": 189,
-      "age_days": 3,
+      "lines": 190,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8765"
