@@ -15,8 +15,10 @@ decision logic is unit-testable off-Windows; defaults are the real ops.
 """
 
 import os
+import sys
 import subprocess
 import urllib.request
+from datetime import datetime
 from pathlib import Path
 
 
