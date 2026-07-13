@@ -56,11 +56,34 @@ LLAMA_LOGS.mkdir(parents=True, exist_ok=True)
 _STAMP   = datetime.now().strftime("%Y-%m-%d")
 LOG_FILE = LOG_DIR / f"nova_start-{_STAMP}.log"
 
+# ── Nova Console: one window instead of 4+ popup cmd windows ─────────────────
+# Every child is now spawned with CREATE_NO_WINDOW and piped into the hub, which serves the
+# buffers over http://127.0.0.1:8799 for BOTH the console app and the Nova Chat widget.
+sys.path.insert(0, str(WS / "general_tools"))
+try:
+    from nova_console.hub import LogHub, HUB_PORT
+    HUB = LogHub(WS)
+except Exception as _hub_e:                      # never let the viewer break the boot
+    HUB, HUB_PORT = None, 8799
+    print(f"[nova_start] console hub unavailable: {_hub_e}")
+
+CONSOLE_APP = WS / "general_tools" / "nova_console" / "console_app.py"
+_NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+
+
+def _hub(stream: str, text: str) -> None:
+    if HUB:
+        try:
+            HUB.write(stream, text)
+        except Exception:
+            pass
+
 
 # ── Logging helpers ─────────────────────────────────────────────────────────--
 def log(msg: str, level: str = "INFO") -> None:
     line = f"{datetime.now().strftime('%H:%M:%S')} [{level}] {msg}"
-    print(line, flush=True)
+    print(line, flush=True)          # no-op under pythonw; harmless
+    _hub("launcher", f"[{level}] {msg}")
     try:
         with open(LOG_FILE, "a", encoding="utf-8") as f:
             f.write(line + "\n")
@@ -71,6 +94,20 @@ def log(msg: str, level: str = "INFO") -> None:
 def banner(text: str) -> None:
     bar = "=" * 60
     print("\n" + bar + "\n  " + text + "\n" + bar, flush=True)
+    _hub("launcher", "── " + text + " ──")
+
+
+def halt(msg: str) -> None:
+    """Replaces input('Press Enter to exit...'). Under pythonw there is no stdin, so an
+    input() would hang forever with no window to see it in. Surface the error in the console
+    and hold it open so Cole can actually read it."""
+    log(msg, "ERROR")
+    _hub("launcher", "[ERROR] Boot halted. This window stays open — read the tabs above.")
+    try:
+        while True:
+            time.sleep(3600)
+    except KeyboardInterrupt:
+        pass
 
 
 # ── Port / health checks ───────────────────────────────────────────────────--
