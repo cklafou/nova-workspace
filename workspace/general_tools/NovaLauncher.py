@@ -148,11 +148,12 @@ def main():
 
     log.info("Waiting for nova_chat on port %d...", CHAT_PORT)
     if not wait_for_port(CHAT_PORT, timeout=25):
-        log.error("nova_chat didn't start in 25s. Check for errors above.")
-        try:
-            input("Press Enter to exit...")
-        except (RuntimeError, EOFError):
-            time.sleep(5)
+        log.error("nova_chat didn't start in 25s. Check the Nova tab in the Nova Console.")
+        # NO input() here. Since 2026-07-13 this process is spawned with CREATE_NO_WINDOW and its
+        # stdout is piped into the Nova Console — there is no console and no usable stdin, so an
+        # input() would either hang forever invisibly or raise OSError (which the old
+        # `except (RuntimeError, EOFError)` did NOT catch). The error above is already visible in
+        # the console's Nova tab; just exit and let nova_start.py handle the failure.
         return
 
     log.info("Servers ready.")
