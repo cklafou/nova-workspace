@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-13T21:22:56",
+  "generated": "2026-07-13T21:28:09",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 24,
   "described": 24,
@@ -574,7 +574,7 @@
       "path": "general_tools/nova_console",
       "purpose": "Nova Console — one window instead of the cmd-window confetti.",
       "files": 5,
-      "lines": 819,
+      "lines": 820,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
