@@ -1008,6 +1008,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-item" onclick="toggleWidget('sidebar')"><span class="dd-icon">🗂</span><span class="dd-label">Sessions</span><span class="dd-check" id="wchk-sidebar"></span></div>
   <div class="dd-item" onclick="toggleWidget('tasks')"><span class="dd-icon">🗒</span><span class="dd-label">Tasks</span><span class="dd-check" id="wchk-tasks"></span></div>
   <div class="dd-item" onclick="toggleWidget('logs')"><span class="dd-icon">📡</span><span class="dd-label">Live Logs</span><span class="dd-check" id="wchk-logs"></span></div>
+  <div class="dd-item" onclick="toggleWidget('console')"><span class="dd-icon">▤</span><span class="dd-label">Console</span><span class="dd-check" id="wchk-console"></span></div>
   <div class="dd-item" onclick="toggleWidget('thoughts')"><span class="dd-icon">🧠</span><span class="dd-label">Thoughts</span><span class="dd-check" id="wchk-thoughts"></span></div>
   <div class="dd-item" onclick="toggleWidget('tools')"><span class="dd-icon">⚙</span><span class="dd-label">Tools</span><span class="dd-check" id="wchk-tools"></span></div>
   <div class="dd-item" onclick="toggleWidget('monitor')"><span class="dd-icon">📊</span><span class="dd-label">Monitor</span><span class="dd-check" id="wchk-monitor"></span></div>
@@ -4003,6 +4004,107 @@ loadAvatars();
 switchPanel('thoughts');
 </script>
 
+<!-- ── Nova Console widget (2026-07-13) ───────────────────────────────────────
+     Mirrors the desktop Nova Console. Both read the SAME hub API (127.0.0.1:8799), so the
+     widget and the app can never show different data. Replaces the 4+ popup cmd windows that
+     NovaStart used to spawn. -->
+<style>
+#novaConsole{display:flex;flex-direction:column;height:100%;min-height:160px;
+  background:#0b0910;color:#d6d3e0;font-family:Consolas,"Cascadia Mono",monospace;font-size:11.5px;}
+#novaConsole .nc-head{display:flex;align-items:center;gap:6px;padding:6px 8px;
+  background:#12101b;border-bottom:1px solid #241d38;flex:0 0 auto;}
+#novaConsole .nc-tab{background:#171426;border:0;color:#7b7590;padding:4px 10px;border-radius:6px;
+  cursor:pointer;font:inherit;font-weight:600;white-space:nowrap;}
+#novaConsole .nc-tab.on{background:#2a2140;color:#e6e3f0;}
+#novaConsole .nc-tab .nc-dot{display:inline-block;width:6px;height:6px;border-radius:50%;
+  margin-right:5px;background:#4ade80;}
+#novaConsole .nc-tab.dead .nc-dot{background:#5b5570;}
+#novaConsole .nc-sp{flex:1 1 auto;}
+#novaConsole .nc-btn{background:transparent;border:1px solid #2f2748;color:#a78bfa;border-radius:6px;
+  padding:3px 8px;cursor:pointer;font:inherit;font-size:10.5px;}
+#novaConsole .nc-btn:hover{background:#1d1730;}
+#novaConsole .nc-body{flex:1 1 auto;overflow:auto;padding:6px 9px;white-space:pre-wrap;
+  word-break:break-word;line-height:1.5;}
+#novaConsole .nc-ts{color:#6d5f9c;margin-right:7px;}
+#novaConsole .nc-err{color:#f87171;}
+#novaConsole .nc-warn{color:#fbbf24;}
+#novaConsole .nc-hub{color:#6d5f9c;}
+#novaConsole .nc-off{color:#7b7590;font-style:italic;padding:8px 2px;}
+</style>
+<div id="novaConsole">
+  <div class="nc-head">
+    <span id="ncTabs" style="display:flex;gap:5px;"></span>
+    <span class="nc-sp"></span>
+    <button class="nc-btn" id="ncOpen" title="Raise the desktop Nova Console window (from the tray)">⬈ Window</button>
+    <button class="nc-btn" id="ncClear" title="Clear this view">Clear</button>
+  </div>
+  <div class="nc-body" id="ncBody"><div class="nc-off">Connecting to console hub…</div></div>
+</div>
+<script>
+(function(){
+  const HUB='http://127.0.0.1:8799';
+  const tabsEl=document.getElementById('ncTabs');
+  const bodyEl=document.getElementById('ncBody');
+  const state={active:null,since:{},alive:{},first:true};
+
+  const get=(p)=>fetch(HUB+p,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+
+  function paintTabs(streams){
+    tabsEl.innerHTML='';
+    streams.forEach(s=>{
+      state.alive[s.name]=s.alive;
+      const b=document.createElement('button');
+      b.className='nc-tab'+(s.name===state.active?' on':'')+(s.alive?'':' dead');
+      b.innerHTML='<span class="nc-dot"></span>'+s.label;
+      b.onclick=()=>{state.active=s.name;bodyEl.innerHTML='';state.since[s.name]=0;paintTabs(streams);pump();};
+      tabsEl.appendChild(b);
+    });
+  }
+
+  function append(lines){
+    const atBottom = bodyEl.scrollTop+bodyEl.clientHeight >= bodyEl.scrollHeight-8;
+    lines.forEach(l=>{
+      const d=document.createElement('div');
+      const t=l.text.toLowerCase();
+      let cls='';
+      if(t.includes('[error]')||t.includes('traceback')) cls='nc-err';
+      else if(t.includes('[warn]')||t.includes('warning')) cls='nc-warn';
+      else if(l.text.startsWith('[hub]')) cls='nc-hub';
+      d.innerHTML='<span class="nc-ts">'+l.ts+'</span><span class="'+cls+'"></span>';
+      d.lastChild.textContent=l.text;
+      bodyEl.appendChild(d);
+    });
+    while(bodyEl.childElementCount>1200) bodyEl.removeChild(bodyEl.firstChild);
+    if(atBottom) bodyEl.scrollTop=bodyEl.scrollHeight;
+  }
+
+  async function pump(){
+    if(!state.active) return;
+    const n=state.active;
+    const d=await get('/api/log?stream='+n+'&since='+(state.since[n]||0));
+    if(d&&d.lines&&d.lines.length){ append(d.lines); state.since[n]=d.seq; }
+  }
+
+  async function tick(){
+    const s=await get('/api/streams');
+    if(!s){
+      if(state.first) bodyEl.innerHTML='<div class="nc-off">Console hub offline — start Nova via NovaStart.cmd.</div>';
+      return;
+    }
+    if(state.first){ bodyEl.innerHTML=''; state.first=false; }
+    if(!state.active && s.streams.length){ state.active=s.streams[0].name; }
+    paintTabs(s.streams);
+    await pump();
+  }
+
+  document.getElementById('ncOpen').onclick=()=>fetch(HUB+'/api/show',{method:'POST'}).catch(()=>{});
+  document.getElementById('ncClear').onclick=()=>{ bodyEl.innerHTML=''; if(state.active) state.since[state.active]=0; };
+
+  setInterval(tick,1500);
+  tick();
+})();
+</script>
+
 <!-- ── Nova Live Logs panel (added 2026-05-23) ────────────────────────────── -->
 <style>
 #novaLog{position:fixed;right:16px;bottom:16px;width:360px;max-width:calc(100vw - 32px);
@@ -4256,6 +4358,7 @@ switchPanel('thoughts');
   const DEFS={
     tasks:{title:'Tasks',defH:4,make:()=>ce('<div class="tr-body" id="tr-body"></div>'),countId:'tr-count'},
     logs:{title:'Live Logs',defH:5,grab:()=>document.getElementById('novaLog')},
+    console:{title:'Console',defH:5,grab:()=>document.getElementById('novaConsole')},
     thoughts:{title:'Thoughts',defH:5,grab:()=>document.getElementById('panel-thoughts')},
     tools:{title:'Tools',defH:4,grab:()=>document.getElementById('panel-tools')},
     monitor:{title:'Monitor',defH:4,grab:()=>document.getElementById('panel-monitor')},
