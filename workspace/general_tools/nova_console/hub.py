@@ -116,14 +116,13 @@ class LogHub:
         st = self.streams.get(name) or self.add_stream(name, name.title())
 
         def _tail():
-            cur, fh, pos = None, None, 0
+            cur, fh, pos, first = None, None, 0, True
             while not self._stop.is_set():
                 try:
                     directory.mkdir(parents=True, exist_ok=True)
                     files = sorted(directory.glob(pattern), key=lambda p: p.stat().st_mtime)
                     newest = files[-1] if files else None
                     if newest and newest != cur:
-                        # llama restarted into a new log file — follow it.
                         if fh:
                             try:
                                 fh.close()
@@ -131,7 +130,16 @@ class LogHub:
                                 pass
                         cur = newest
                         fh = open(cur, "r", encoding="utf-8", errors="replace")
-                        fh.seek(0, 2)            # start at the end; we want live output
+                        # FIRST attach: skip to the end so we don't dump the whole day's history.
+                        # A LATER switch means llama RESTARTED into a fresh log (LoRA equip / Full
+                        # Restart) — read that one from byte 0, or we'd miss the boot lines that
+                        # were written before we noticed the file. (Caught in test: the restart
+                        # content was silently skipped.)
+                        if first:
+                            fh.seek(0, 2)
+                            first = False
+                        else:
+                            fh.seek(0)
                         pos = fh.tell()
                         st.write(f"[hub] following {cur.name}")
                         st.alive = True
