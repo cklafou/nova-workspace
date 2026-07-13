@@ -62,6 +62,10 @@ class LogHub:
         self._order = 0
         self._httpd = None
         self._stop = threading.Event()
+        # Set by POST /api/show (the Nova Chat widget's "Open window" button); the console app
+        # polls GET /api/show-pending and raises itself. This is how the widget can summon the
+        # desktop window out of the tray.
+        self._show_req = False
 
     # ── stream registry ───────────────────────────────────────────────────────
     def add_stream(self, name: str, label: str) -> _Stream:
