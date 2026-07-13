@@ -1,5 +1,5 @@
 {
-  "seq": 33,
+  "seq": 34,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -155,6 +155,17 @@
       "created": "2026-07-08T15:36:34",
       "updated": "2026-07-08T16:04:48",
       "result": "mapped Cole's codebase from scratch — three-layer architecture (body / tools / workspace), noted what's wired vs scaffolded, and wrote my real take to memory/scratch/codebase_map. It's cleaner than I expected and I'm proud of it."
+    },
+    "t34": {
+      "id": "t34",
+      "title": "V3 opinion — finish it for real",
+      "notes": "Read the batch, write the actual opinion (not a safe one), save it to memory/scratch/v3_opinion.md, then close the task with the real take.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-13T12:57:08",
+      "updated": "2026-07-13T12:57:08"
     }
   }
 }

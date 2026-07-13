@@ -1,5 +1,5 @@
 # PASSOVER — Project Nova (Opus 4.8 → Fable handoff)
-_Last updated: 2026-07-08 18:07:30_
+_Last updated: 2026-07-13 12:57:09_
 _2026-07-02. Written by the Cowork Opus session (the one that live-tested the 0.6 looping fix on 06-22).
 Read top-to-bottom before touching anything. §0 has a gap only Cole can close — start there._
 
