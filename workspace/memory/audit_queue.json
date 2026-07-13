@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-13T21:32:41+09:00",
+  "updated_at": "2026-07-13T21:34:24+09:00",
   "items": [
     {
       "id": "777df213",
@@ -80233,6 +80233,19 @@
       "commit": "9ee8e037",
       "old_path": null,
       "new_path": "_admin/Training_stuff/v5/nova_core_v5_perception.jsonl",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "fe7ad8ff",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-13T21:34:24+09:00",
+      "commit": "2b828fdc",
+      "old_path": null,
+      "new_path": "_admin/Training_stuff/v5/train_nova_lora_v5.py",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
