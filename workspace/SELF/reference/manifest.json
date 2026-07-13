@@ -1,8 +1,8 @@
 {
-  "generated": "2026-07-13T19:14:19",
+  "generated": "2026-07-13T19:19:40",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
-  "part_count": 23,
-  "described": 23,
+  "part_count": 24,
+  "described": 24,
   "flags": {
     "undescribed": [],
     "dead_part_candidates": [
@@ -270,14 +270,16 @@
       "path": "nova_start.py",
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
-      "lines": 485,
-      "age_days": 3,
+      "lines": 532,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080",
         "8765"
       ],
-      "nova_imports": [],
+      "nova_imports": [
+        "nova_console"
+      ],
       "third_party": [
         "signal",
         "socket",
@@ -561,6 +563,36 @@
       ],
       "launched_by": [
         "StopNova.cmd",
+        "nova_start.py"
+      ],
+      "flags": []
+    },
+    {
+      "name": "nova_console",
+      "kind": "tool",
+      "path": "general_tools/nova_console",
+      "purpose": "Nova Console — the single window that replaces every popup cmd window.",
+      "files": 2,
+      "lines": 465,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "8765",
+        "8799"
+      ],
+      "nova_imports": [],
+      "third_party": [
+        "PIL",
+        "http",
+        "pystray",
+        "socket",
+        "tkinter",
+        "urllib"
+      ],
+      "referenced_by": [
+        "nova_start.py"
+      ],
+      "launched_by": [
         "nova_start.py"
       ],
       "flags": []

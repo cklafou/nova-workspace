@@ -458,15 +458,49 @@ def stop_watcher(proc: subprocess.Popen | None) -> None:
             pass
 
 
+# ── Nova Console: bring the viewer up FIRST, before anything can fail ────────
+def start_console() -> subprocess.Popen | None:
+    """Start the hub + the console window. Done before llama/Nova so that if the boot dies
+    early, the failure is VISIBLE (there are no cmd windows to fall back on any more)."""
+    if not HUB:
+        return None
+    HUB.add_stream("launcher", "Launcher")
+    HUB.add_stream("llama",    "llama-server")
+    HUB.add_stream("nova",     "Nova")
+    HUB.add_stream("watcher",  "Watcher")
+    try:
+        HUB.serve(HUB_PORT)
+        # llama is TAILED, not piped: LlamaControl restarts it out of band (LoRA equip /
+        # Full Restart), which would kill a pipe. Tailing the log dir survives that.
+        HUB.tail_file("llama", LLAMA_LOGS, "*.log")
+        log(f"Console hub on http://127.0.0.1:{HUB_PORT}")
+    except Exception as e:
+        log(f"Console hub failed to start: {e}", "WARN")
+        return None
+
+    if not CONSOLE_APP.exists():
+        log("console_app.py missing — running headless (logs still in logs/).", "WARN")
+        return None
+    # pythonw = GUI process with no console of its own.
+    pyw = Path(sys.executable).with_name("pythonw.exe")
+    exe = [str(pyw)] if pyw.exists() else [sys.executable]
+    try:
+        return subprocess.Popen(exe + [str(CONSOLE_APP)], cwd=str(WS),
+                                creationflags=_NO_WINDOW)
+    except Exception as e:
+        log(f"Could not open Nova Console: {e}", "WARN")
+        return None
+
+
 # ── Main ───────────────────────────────────────────────────────────────────--
 def main() -> None:
+    console_proc = start_console()
     banner("PROJECT NOVA  --  one-click launcher")
     log(f"Workspace: {WS}")
 
     llama_proc = start_llama()
     if not wait_for_llama():
-        log("Aborting: model not ready. llama-server console is left open for inspection.", "ERROR")
-        input("Press Enter to exit...")
+        halt("Aborting: model not ready. See the llama-server tab for why.")
         return
 
     nova_proc = start_nova()
