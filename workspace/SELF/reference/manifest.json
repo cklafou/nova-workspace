@@ -1,8 +1,8 @@
 {
-  "generated": "2026-07-13T12:49:07",
+  "generated": "2026-07-13T12:49:24",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
-  "part_count": 25,
-  "described": 25,
+  "part_count": 23,
+  "described": 23,
   "flags": {
     "undescribed": [],
     "dead_part_candidates": [
@@ -229,8 +229,7 @@
         "nova_chat"
       ],
       "launched_by": [
-        "RUN_PLUCK.cmd",
-        "start_llama_koels.cmd"
+        "RUN_PLUCK.cmd"
       ],
       "flags": []
     },
@@ -344,50 +343,6 @@
       "launched_by": [
         "RUN_PLUCK.cmd"
       ],
-      "flags": []
-    },
-    {
-      "name": "start_llama.cmd",
-      "kind": "launcher",
-      "path": "start_llama.cmd",
-      "purpose": "Starts llama.cpp serving Qwen 3.5 27B Q8 on :8080 with the dual-GPU tensor split (4090+3090).",
-      "files": 1,
-      "lines": 44,
-      "age_days": 44,
-      "ports_bind": [
-        "8080"
-      ],
-      "ports_seen": [
-        "8080"
-      ],
-      "nova_imports": [],
-      "third_party": [],
-      "referenced_by": [],
-      "launched_by": [
-        "nova_start.py",
-        "start_llama_koels.cmd",
-        "start_llama_qwen36.cmd"
-      ],
-      "flags": []
-    },
-    {
-      "name": "start_llama_koels.cmd",
-      "kind": "launcher",
-      "path": "start_llama_koels.cmd",
-      "purpose": "KoELS-enabled launcher (Step: equip skeleton, LIVE-GATED). Identical to start_llama.cmd",
-      "files": 1,
-      "lines": 50,
-      "age_days": 33,
-      "ports_bind": [
-        "8080"
-      ],
-      "ports_seen": [
-        "8080"
-      ],
-      "nova_imports": [],
-      "third_party": [],
-      "referenced_by": [],
-      "launched_by": [],
       "flags": []
     },
     {

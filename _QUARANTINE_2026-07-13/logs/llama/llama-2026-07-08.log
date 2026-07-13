@@ -1,0 +1,220 @@
+0.06.923.335 I log_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.06.923.341 I device_info:
+0.08.520.245 I   - CUDA0   : NVIDIA GeForce RTX 4090 Laptop GPU (16375 MiB, 15074 MiB free)
+0.08.595.680 I   - CUDA1   : NVIDIA GeForce RTX 3090 (24575 MiB, 23336 MiB free)
+0.08.595.700 I   - CPU     : 13th Gen Intel(R) Core(TM) i9-13900HX (32505 MiB, 17513 MiB free)
+0.08.595.803 I system_info: n_threads = 24 (n_threads_batch = 24) / 32 | CUDA : ARCHS = 750,800,860,890,900,1200,1210 | USE_GRAPHS = 1 | PEER_MAX_BATCH_SIZE = 128 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX_VNNI = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.08.595.869 I srv          init: running without SSL
+0.08.595.920 I srv          init: using 31 threads for HTTP server
+0.08.596.138 I srv         start: binding port with default address family
+0.08.599.549 I srv  llama_server: loading model
+0.08.599.553 I srv    load_model: loading model 'C:\Users\lafou\Project_Nova\workspace\models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf'
+0.11.673.592 I srv    load_model: [mtmd] estimated worst-case memory usage of mmproj is 1157.64 MiB
+0.12.056.028 I srv    load_model: [spec] estimated memory usage of MTP context is 1172.13 MiB
+0.12.056.045 I common_init_result: fitting params to device memory ...
+0.12.056.046 I common_init_result: (for bugs during this step try to reproduce them with -fit off, or provide --verbose logs if the bug only occurs with -fit on)
+0.00.175.478 I log_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.175.488 I device_info:
+0.00.221.631 I   - CUDA0   : NVIDIA GeForce RTX 4090 Laptop GPU (16375 MiB, 15074 MiB free)
+0.00.294.352 I   - CUDA1   : NVIDIA GeForce RTX 3090 (24575 MiB, 23336 MiB free)
+0.00.294.360 I   - CPU     : 13th Gen Intel(R) Core(TM) i9-13900HX (32505 MiB, 19159 MiB free)
+0.00.294.419 I system_info: n_threads = 24 (n_threads_batch = 24) / 32 | CUDA : ARCHS = 750,800,860,890,900,1200,1210 | USE_GRAPHS = 1 | PEER_MAX_BATCH_SIZE = 128 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX_VNNI = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.00.295.022 I srv          init: running without SSL
+0.00.295.251 I srv          init: using 31 threads for HTTP server
+0.00.295.435 I srv         start: binding port with default address family
+0.00.298.969 I srv  llama_server: loading model
+0.00.298.974 I srv    load_model: loading model 'C:\Users\lafou\Project_Nova\workspace\models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf'
+0.03.265.122 I srv    load_model: [mtmd] estimated worst-case memory usage of mmproj is 1157.64 MiB
+0.03.605.079 I srv    load_model: [spec] estimated memory usage of MTP context is 1172.13 MiB
+0.03.605.106 I common_init_result: fitting params to device memory ...
+0.03.605.106 I common_init_result: (for bugs during this step try to reproduce them with -fit off, or provide --verbose logs if the bug only occurs with -fit on)
+0.42.660.902 W llama_context: n_ctx_seq (65536) < n_ctx_train (262144) -- the full capacity of the model will not be utilized
+0.43.085.001 I common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+0.43.642.652 I srv    load_model: creating MTP draft context against the target model 'C:\Users\lafou\Project_Nova\workspace\models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf'
+0.43.642.706 W llama_context: n_ctx_seq (65536) < n_ctx_train (262144) -- the full capacity of the model will not be utilized
+0.43.669.727 W load_hparams: Qwen-VL models require at minimum 1024 image tokens to function correctly on grounding tasks
+0.43.669.732 W load_hparams: if you encounter problems with accuracy, try adding --image-min-tokens 1024
+0.43.669.733 W load_hparams: more info: https://github.com/ggml-org/llama.cpp/issues/16842
+
+0.47.125.932 I srv    load_model: loaded multimodal model, 'C:\Users\lafou\Project_Nova\workspace\models\qwen3.6\mmproj-F16.gguf'
+0.47.126.252 I srv    load_model: initializing slots, n_slots = 1
+0.47.251.518 I common_context_can_seq_rm: the context supports bounded partial sequence removal
+0.47.816.689 I common_speculative_impl_draft_mtp: adding speculative implementation 'draft-mtp'
+0.47.816.697 I common_speculative_impl_draft_mtp: - n_max=2, n_min=0, p_min=0.00, n_embd=5120, backend_sampling=1
+0.47.816.701 I common_speculative_impl_draft_mtp: - gpu_layers=-1, cache_k=f16, cache_v=f16, ctx_tgt=yes, ctx_dft=yes, devices=[default]
+0.47.879.473 I srv    load_model: speculative decoding context initialized
+0.47.879.477 I slot   load_model: id  0 | task -1 | new slot, n_ctx = 65536
+0.47.879.696 I srv    load_model: prompt cache is enabled, size limit: 8192 MiB
+0.47.879.698 I srv    load_model: use `--cache-ram 0` to disable the prompt cache
+0.47.879.722 I srv    load_model: for more info see https://github.com/ggml-org/llama.cpp/pull/16391
+0.47.879.726 I srv    load_model: context checkpoints enabled, max = 32, min spacing = 256
+0.47.880.386 I srv          init: idle slots will be saved to prompt cache upon starting a new task
+0.47.913.017 I init: chat template, example_format: '<|im_start|>system
+You are a helpful assistant<|im_end|>
+<|im_start|>user
+Hello<|im_end|>
+<|im_start|>assistant
+Hi there<|im_end|>
+<|im_start|>user
+How are you?<|im_end|>
+<|im_start|>assistant
+<think>
+'
+0.47.926.167 I srv          init: init: chat template, thinking = 1
+0.47.927.316 I srv  llama_server: model loaded
+0.47.927.334 I srv  llama_server: server is listening on http://127.0.0.1:8080
+0.47.927.635 I srv  update_slots: all slots are idle
+1.08.227.994 I srv  update_slots: all slots are idle
+1.18.547.547 I srv  update_slots: all slots are idle
+1.19.356.963 I srv  update_slots: all slots are idle
+1.19.544.478 I srv  update_slots: all slots are idle
+1.19.756.769 I srv  update_slots: all slots are idle
+1.21.035.553 I srv  update_slots: all slots are idle
+10.27.279.341 I srv  update_slots: all slots are idle
+10.34.837.005 I srv  update_slots: all slots are idle
+10.35.722.448 I srv  update_slots: all slots are idle
+10.36.649.870 I srv  update_slots: all slots are idle
+0.00.740.047 I log_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.740.055 I device_info:
+0.00.789.747 I   - CUDA0   : NVIDIA GeForce RTX 4090 Laptop GPU (16375 MiB, 15074 MiB free)
+0.00.848.708 I   - CUDA1   : NVIDIA GeForce RTX 3090 (24575 MiB, 23336 MiB free)
+0.00.848.716 I   - CPU     : 13th Gen Intel(R) Core(TM) i9-13900HX (32505 MiB, 21993 MiB free)
+0.00.849.134 I system_info: n_threads = 24 (n_threads_batch = 24) / 32 | CUDA : ARCHS = 750,800,860,890,900,1200,1210 | USE_GRAPHS = 1 | PEER_MAX_BATCH_SIZE = 128 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX_VNNI = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.00.849.824 I srv          init: running without SSL
+0.00.850.546 I srv          init: using 31 threads for HTTP server
+0.00.851.894 I srv         start: binding port with default address family
+0.00.864.742 I srv  llama_server: loading model
+0.00.864.745 I srv    load_model: loading model 'C:\Users\lafou\Project_Nova\workspace\models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf'
+0.04.144.383 I srv    load_model: [mtmd] estimated worst-case memory usage of mmproj is 1157.64 MiB
+0.04.549.667 I srv    load_model: [spec] estimated memory usage of MTP context is 1172.13 MiB
+0.04.549.911 I common_init_result: fitting params to device memory ...
+0.04.549.914 I common_init_result: (for bugs during this step try to reproduce them with -fit off, or provide --verbose logs if the bug only occurs with -fit on)
+0.27.965.302 W llama_context: n_ctx_seq (65536) < n_ctx_train (262144) -- the full capacity of the model will not be utilized
+0.28.315.961 I common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+0.28.942.237 I srv    load_model: creating MTP draft context against the target model 'C:\Users\lafou\Project_Nova\workspace\models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf'
+0.28.942.336 W llama_context: n_ctx_seq (65536) < n_ctx_train (262144) -- the full capacity of the model will not be utilized
+0.28.973.145 W load_hparams: Qwen-VL models require at minimum 1024 image tokens to function correctly on grounding tasks
+0.28.973.150 W load_hparams: if you encounter problems with accuracy, try adding --image-min-tokens 1024
+0.28.973.150 W load_hparams: more info: https://github.com/ggml-org/llama.cpp/issues/16842
+
+0.32.374.807 I srv    load_model: loaded multimodal model, 'C:\Users\lafou\Project_Nova\workspace\models\qwen3.6\mmproj-F16.gguf'
+0.32.375.261 I srv    load_model: initializing slots, n_slots = 1
+0.32.475.065 I common_context_can_seq_rm: the context supports bounded partial sequence removal
+0.33.040.642 I common_speculative_impl_draft_mtp: adding speculative implementation 'draft-mtp'
+0.33.040.661 I common_speculative_impl_draft_mtp: - n_max=2, n_min=0, p_min=0.00, n_embd=5120, backend_sampling=1
+0.33.040.670 I common_speculative_impl_draft_mtp: - gpu_layers=-1, cache_k=f16, cache_v=f16, ctx_tgt=yes, ctx_dft=yes, devices=[default]
+0.33.104.185 I srv    load_model: speculative decoding context initialized
+0.33.104.190 I slot   load_model: id  0 | task -1 | new slot, n_ctx = 65536
+0.33.104.254 I srv    load_model: prompt cache is enabled, size limit: 8192 MiB
+0.33.104.257 I srv    load_model: use `--cache-ram 0` to disable the prompt cache
+0.33.104.259 I srv    load_model: for more info see https://github.com/ggml-org/llama.cpp/pull/16391
+0.33.104.260 I srv    load_model: context checkpoints enabled, max = 32, min spacing = 256
+0.33.105.279 I srv          init: idle slots will be saved to prompt cache upon starting a new task
+0.33.145.267 I init: chat template, example_format: '<|im_start|>system
+You are a helpful assistant<|im_end|>
+<|im_start|>user
+Hello<|im_end|>
+<|im_start|>assistant
+Hi there<|im_end|>
+<|im_start|>user
+How are you?<|im_end|>
+<|im_start|>assistant
+<think>
+'
+0.33.158.780 I srv          init: init: chat template, thinking = 1
+0.33.160.836 I srv  llama_server: model loaded
+0.33.160.854 I srv  llama_server: server is listening on http://127.0.0.1:8080
+0.33.161.559 I srv  update_slots: all slots are idle
+0.50.530.861 I srv  update_slots: all slots are idle
+0.50.544.097 I srv  update_slots: all slots are idle
+1.27.058.394 I srv  update_slots: all slots are idle
+1.27.070.207 I srv  update_slots: all slots are idle
+12.31.273.314 I srv  update_slots: all slots are idle
+12.31.294.206 I srv  update_slots: all slots are idle
+12.33.291.054 I srv  update_slots: all slots are idle
+12.33.294.288 I srv  update_slots: all slots are idle
+12.34.084.947 I srv  update_slots: all slots are idle
+12.34.098.362 I srv  update_slots: all slots are idle
+0.00.724.954 I log_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.724.959 I device_info:
+0.00.777.284 I   - CUDA0   : NVIDIA GeForce RTX 4090 Laptop GPU (16375 MiB, 15074 MiB free)
+0.00.841.357 I   - CUDA1   : NVIDIA GeForce RTX 3090 (24575 MiB, 23336 MiB free)
+0.00.841.374 I   - CPU     : 13th Gen Intel(R) Core(TM) i9-13900HX (32505 MiB, 22574 MiB free)
+0.00.841.901 I system_info: n_threads = 24 (n_threads_batch = 24) / 32 | CUDA : ARCHS = 750,800,860,890,900,1200,1210 | USE_GRAPHS = 1 | PEER_MAX_BATCH_SIZE = 128 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX_VNNI = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.00.843.120 I srv          init: running without SSL
+0.00.843.660 I srv          init: using 31 threads for HTTP server
+0.00.845.140 I srv         start: binding port with default address family
+0.00.855.970 I srv  llama_server: loading model
+0.00.855.976 I srv    load_model: loading model 'C:\Users\lafou\Project_Nova\workspace\models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf'
+0.04.023.207 I srv    load_model: [mtmd] estimated worst-case memory usage of mmproj is 1157.64 MiB
+0.04.387.558 I srv    load_model: [spec] estimated memory usage of MTP context is 1172.13 MiB
+0.04.387.621 I common_init_result: fitting params to device memory ...
+0.04.387.621 I common_init_result: (for bugs during this step try to reproduce them with -fit off, or provide --verbose logs if the bug only occurs with -fit on)
+0.24.257.255 W llama_context: n_ctx_seq (65536) < n_ctx_train (262144) -- the full capacity of the model will not be utilized
+0.24.738.864 I common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+0.25.661.009 I srv    load_model: creating MTP draft context against the target model 'C:\Users\lafou\Project_Nova\workspace\models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf'
+0.25.661.088 W llama_context: n_ctx_seq (65536) < n_ctx_train (262144) -- the full capacity of the model will not be utilized
+0.25.858.423 W load_hparams: Qwen-VL models require at minimum 1024 image tokens to function correctly on grounding tasks
+0.25.858.429 W load_hparams: if you encounter problems with accuracy, try adding --image-min-tokens 1024
+0.25.858.430 W load_hparams: more info: https://github.com/ggml-org/llama.cpp/issues/16842
+
+0.29.800.589 I srv    load_model: loaded multimodal model, 'C:\Users\lafou\Project_Nova\workspace\models\qwen3.6\mmproj-F16.gguf'
+0.29.800.905 I srv    load_model: initializing slots, n_slots = 1
+0.30.200.805 I common_context_can_seq_rm: the context supports bounded partial sequence removal
+0.30.569.453 I common_speculative_impl_draft_mtp: adding speculative implementation 'draft-mtp'
+0.30.569.467 I common_speculative_impl_draft_mtp: - n_max=2, n_min=0, p_min=0.00, n_embd=5120, backend_sampling=1
+0.30.569.474 I common_speculative_impl_draft_mtp: - gpu_layers=-1, cache_k=f16, cache_v=f16, ctx_tgt=yes, ctx_dft=yes, devices=[default]
+0.30.843.743 I srv    load_model: speculative decoding context initialized
+0.30.843.749 I slot   load_model: id  0 | task -1 | new slot, n_ctx = 65536
+0.30.843.880 I srv    load_model: prompt cache is enabled, size limit: 8192 MiB
+0.30.843.884 I srv    load_model: use `--cache-ram 0` to disable the prompt cache
+0.30.843.913 I srv    load_model: for more info see https://github.com/ggml-org/llama.cpp/pull/16391
+0.30.843.917 I srv    load_model: context checkpoints enabled, max = 32, min spacing = 256
+0.30.844.862 I srv          init: idle slots will be saved to prompt cache upon starting a new task
+0.30.903.952 I init: chat template, example_format: '<|im_start|>system
+You are a helpful assistant<|im_end|>
+<|im_start|>user
+Hello<|im_end|>
+<|im_start|>assistant
+Hi there<|im_end|>
+<|im_start|>user
+How are you?<|im_end|>
+<|im_start|>assistant
+<think>
+'
+0.30.934.367 I srv          init: init: chat template, thinking = 1
+0.30.935.282 I srv  llama_server: model loaded
+0.30.935.304 I srv  llama_server: server is listening on http://127.0.0.1:8080
+0.30.936.085 I srv  update_slots: all slots are idle
+0.44.924.255 I srv  update_slots: all slots are idle
+0.44.947.673 I srv  update_slots: all slots are idle
+1.02.083.791 I srv  update_slots: all slots are idle
+1.02.107.725 I srv  update_slots: all slots are idle
+1.03.086.938 I srv  update_slots: all slots are idle
+1.03.091.346 I srv  update_slots: all slots are idle
+1.03.924.664 I srv  update_slots: all slots are idle
+1.03.929.377 I srv  update_slots: all slots are idle
+1.04.321.680 I srv  update_slots: all slots are idle
+1.04.325.102 I srv  update_slots: all slots are idle
+1.05.108.504 I srv  update_slots: all slots are idle
+1.05.112.714 I srv  update_slots: all slots are idle
+1.29.025.975 I srv  update_slots: all slots are idle
+1.29.031.277 I srv  update_slots: all slots are idle
+1.34.011.251 I srv  update_slots: all slots are idle
+1.34.032.637 I srv  update_slots: all slots are idle
+1.34.858.998 I srv  update_slots: all slots are idle
+1.34.862.503 I srv  update_slots: all slots are idle
+1.38.545.476 I srv  update_slots: all slots are idle
+1.38.559.799 I srv  update_slots: all slots are idle
+1.48.189.192 I srv  update_slots: all slots are idle
+1.48.193.964 I srv  update_slots: all slots are idle
+1.54.264.148 I srv  update_slots: all slots are idle
+1.54.276.532 I srv  update_slots: all slots are idle
+2.17.880.852 I srv  update_slots: all slots are idle
+2.17.896.177 I srv  update_slots: all slots are idle
+2.20.368.177 I srv  update_slots: all slots are idle
+2.20.372.379 I srv  update_slots: all slots are idle
+2.21.200.492 I srv  update_slots: all slots are idle
+2.21.222.099 I srv  update_slots: all slots are idle
+2.26.688.060 I srv  update_slots: all slots are idle
+2.26.711.302 I srv  update_slots: all slots are idle

@@ -21,7 +21,7 @@ from pathlib import Path
 
 
 class LlamaControl:
-    def __init__(self, workspace, port: int = 8080, launcher: str = "start_llama.cmd",
+    def __init__(self, workspace, port: int = 8080, launcher: str = "start_llama_qwen36.cmd",
                  startfile=None, runner=None, health=None):
         self.workspace = Path(workspace)
         self.port = port
