@@ -9,10 +9,10 @@
   },
   {
     "session_id": "2026-07-13_21-15-43",
-    "name": "New Session",
+    "name": "List the contents of models/qwen3.6 and ",
     "created": "2026-07-13T21:15:43.820625",
-    "last_active": "2026-07-13T21:15:43.820625",
-    "message_count": 0,
-    "preview": ""
+    "last_active": "2026-07-13T21:16:02.411903",
+    "message_count": 1,
+    "preview": "List the contents of models/qwen3.6 and tell me exactly how "
   }
 ]
