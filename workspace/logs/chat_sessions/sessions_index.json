@@ -1,13 +1,5 @@
 [
   {
-    "session_id": "2026-07-13_19-04-32",
-    "name": "New Session",
-    "created": "2026-07-13T19:04:32.208314",
-    "last_active": "2026-07-13T21:10:40.768323",
-    "message_count": 0,
-    "preview": ""
-  },
-  {
     "session_id": "2026-07-13_21-15-43",
     "name": "List the contents of models/qwen3.6 and ",
     "created": "2026-07-13T21:15:43.820625",
