@@ -22,6 +22,21 @@ from datetime import datetime
 from pathlib import Path
 
 
+def _hidden_si():
+    """STARTUPINFO that hides any console the child creates.
+
+    Deliberately NOT CREATE_NO_WINDOW. That flag means "no console AT ALL", so the child's own
+    children then each allocate a fresh VISIBLE console — which is exactly how killing the
+    watcher's console produced a storm of flashing git windows. Inheriting (or hiding) a console
+    fixes the whole process tree; detaching from one just moves the problem down a generation."""
+    if sys.platform != "win32":
+        return None
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = subprocess.SW_HIDE
+    return si
+
+
 class LlamaControl:
     def __init__(self, workspace, port: int = 8080, launcher: str = "start_llama_qwen36.cmd",
                  startfile=None, runner=None, health=None):
@@ -53,11 +68,11 @@ class LlamaControl:
               "ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; "
               "Stop-Process -Name llama-server -Force -ErrorAction SilentlyContinue")
         try:
-            # CREATE_NO_WINDOW: the chat server is console-less now, so this PowerShell would
-            # otherwise pop a window on every restart / LoRA equip.
+            # Hidden, not console-less. The chat server owns a hidden console; PowerShell inherits
+            # it. CREATE_NO_WINDOW would detach it and make its children pop windows instead.
             kw = {}
             if sys.platform == "win32" and self._run is subprocess.run:
-                kw["creationflags"] = subprocess.CREATE_NO_WINDOW
+                kw["startupinfo"] = _hidden_si()
             self._run(["powershell", "-Command", ps], capture_output=True, text=True,
                       encoding="utf-8", errors="replace", timeout=10, **kw)
         except Exception:
@@ -80,11 +95,14 @@ class LlamaControl:
                 log_dir.mkdir(parents=True, exist_ok=True)
                 stamp = datetime.now().strftime("%Y-%m-%d")
                 lf = open(log_dir / f"llama-{stamp}.log", "a", encoding="utf-8", errors="replace")
+                # Hidden console, NOT CREATE_NO_WINDOW: this cmd spawns llama-server.exe, which is
+                # itself a console app. With no console, llama-server would allocate a visible one
+                # on every LoRA equip. Hiding instead of detaching keeps the whole chain silent.
                 subprocess.Popen(
                     ["cmd", "/c", str(self.launcher_path)],
                     cwd=str(self.workspace),
                     stdout=lf, stderr=subprocess.STDOUT,
-                    creationflags=subprocess.CREATE_NO_WINDOW,
+                    startupinfo=_hidden_si(),
                 )
             elif self._startfile is not None:
                 self._startfile(str(self.launcher_path))

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-13T20:33:44",
+  "generated": "2026-07-13T20:42:42",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 24,
   "described": 24,
@@ -206,7 +206,7 @@
       "path": "nova_body/nova_runtime",
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
       "files": 9,
-      "lines": 1210,
+      "lines": 1228,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -269,7 +269,7 @@
       "path": "nova_start.py",
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
-      "lines": 607,
+      "lines": 635,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -520,7 +520,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 16,
-      "lines": 6967,
+      "lines": 6972,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -607,7 +607,7 @@
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.",
       "files": 5,
-      "lines": 2118,
+      "lines": 2117,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],

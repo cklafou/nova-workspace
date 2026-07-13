@@ -8,19 +8,18 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 # ── No flashing git windows (2026-07-13) ──────────────────────────────────────
-# The watcher is now spawned with CREATE_NO_WINDOW (Nova Console — one window, not five).
-# A console-LESS parent that launches a console app (git, clip) makes Windows allocate a BRAND
-# NEW console for each one — so every auto-commit flashed a cmd window on screen. Patching
-# subprocess.run here (this is our own process, so the patch is contained) forces CREATE_NO_WINDOW
-# on every child, including any git call added later.
-if sys.platform == "win32":
-    _orig_run = subprocess.run
-
-    def _run_no_window(*a, **kw):
-        kw["creationflags"] = kw.get("creationflags", 0) | subprocess.CREATE_NO_WINDOW
-        return _orig_run(*a, **kw)
-
-    subprocess.run = _run_no_window
+# DO NOT put CREATE_NO_WINDOW on the git calls here. That was the first (wrong) fix and it made
+# things worse in a subtle way:
+#
+#   CREATE_NO_WINDOW does not mean "no window" — it means "NO CONSOLE AT ALL".
+#   git itself then stops flashing, but `git push` spawns its OWN children (git-remote-https,
+#   the credential helper). Those inherit no console, so Windows allocates a brand new one for
+#   EACH of them. The flashing just moves down a generation.
+#
+# The fix lives in nova_start.start_watcher(): this process is now given ONE HIDDEN console
+# (CREATE_NEW_CONSOLE + STARTUPINFO SW_HIDE). git — and every descendant git spawns — inherits
+# that invisible console and never allocates a visible one. A shared hidden console beats no
+# console. So: leave subprocess alone here and just let children inherit.
 
 _ws = Path(__file__).parent.parent.parent
 for _p in [str(_ws / "nova_body"), str(_ws / "general_tools")]:

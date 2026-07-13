@@ -74,6 +74,28 @@ CONSOLE_APP = WS / "general_tools" / "nova_console" / "console_app.py"
 _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
 
 
+def _hidden_console() -> dict:
+    """Popen kwargs giving a child ONE HIDDEN console that all its descendants inherit.
+
+    Why not CREATE_NO_WINDOW? Because it means "NO CONSOLE AT ALL", not "no window". A process
+    with no console that spawns a console app makes Windows allocate a BRAND NEW console for it.
+    So CREATE_NO_WINDOW on the watcher silenced the watcher — and then every `git` it ran flashed.
+    Putting CREATE_NO_WINDOW on git in turn silenced git — and then `git push`'s OWN children
+    (git-remote-https, the credential helper) flashed instead. The flashing just walks down the
+    process tree.
+
+    A HIDDEN console fixes it for the whole tree at once: the child gets a real console (so its
+    descendants have one to inherit and never allocate their own), but STARTF_USESHOWWINDOW +
+    SW_HIDE means it is never drawn. Use this for anything that shells out (watcher → git,
+    chat server → Nova's run_command → powershell)."""
+    if sys.platform != "win32":
+        return {}
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = subprocess.SW_HIDE
+    return {"startupinfo": si}
+
+
 def _hub(stream: str, text: str) -> None:
     if HUB:
         try:
@@ -313,9 +335,12 @@ def start_nova() -> subprocess.Popen | None:
     env = dict(os.environ)
     env["NOVA_NO_WINDOW"] = "1"
     env["PYTHONUNBUFFERED"] = "1"        # so its output reaches the console live, not in chunks
+    # HIDDEN console (not CREATE_NO_WINDOW): Nova's run_command shells out to PowerShell, which can
+    # itself spawn console children. They all inherit this invisible console instead of each
+    # allocating a visible one. stdout is still piped, so the Console shows everything.
     proc = subprocess.Popen(py + [str(NOVA_LAUNCH)], cwd=str(WS),
-                            creationflags=_NO_WINDOW, env=env,
-                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                            env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            **_hidden_console())
     if HUB:
         HUB.attach_pipe("nova", proc)
     return proc
@@ -418,17 +443,20 @@ def start_watcher() -> subprocess.Popen | None:
         log("No suitable Python for the watcher — skipping.", "WARN")
         return None
     log("Starting file watcher (manifest refresh + auto-commit)...")
-    # No console. CREATE_NEW_PROCESS_GROUP is KEPT — stop_watcher() sends CTRL_BREAK_EVENT to
-    # let it shut down cleanly (otherwise it leaves a stale .git/index.lock).
-    creationflags = _NO_WINDOW
-    if sys.platform == "win32":
-        creationflags |= subprocess.CREATE_NEW_PROCESS_GROUP
+    # HIDDEN console — NOT CREATE_NO_WINDOW. This is THE fix for the flashing git windows:
+    # the watcher shells out to git constantly (auto-commit/push), and git push spawns its own
+    # children. With no console they each allocate a visible one. With one hidden console here,
+    # the entire git process tree inherits it and nothing is ever drawn. See _hidden_console().
+    # CREATE_NEW_PROCESS_GROUP is KEPT — stop_watcher() sends CTRL_BREAK_EVENT so it can finish
+    # its git push cleanly instead of leaving a stale .git/index.lock.
+    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
     try:
         env = dict(os.environ)
         env["PYTHONUNBUFFERED"] = "1"
         proc = subprocess.Popen(py + [str(WATCHER)], cwd=str(WS),
                                 creationflags=creationflags, env=env,
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                **_hidden_console())
         if HUB:
             HUB.attach_pipe("watcher", proc)
         return proc

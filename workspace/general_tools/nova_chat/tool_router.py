@@ -79,18 +79,23 @@ def run_command(command: str, cwd: str = "") -> str:
         # Test-Path, ls/cat aliases) work, file reads return output, and we avoid cmd mangling a
         # nested-quoted `powershell -Command "..."` into a blank result. Passed as an arg list so
         # quoting stays clean. NOTE: Windows PowerShell 5.1 has no `&&` — use `;` to chain.
-        # CREATE_NO_WINDOW (2026-07-13): the chat server now runs console-less (Nova Console —
-        # one window, not five). A console-LESS parent spawning a console app makes Windows
-        # allocate a NEW console for it, so EVERY run_command Nova made would flash a PowerShell
-        # window in Cole's face. Output is captured anyway; there is nothing to show.
-        _nw = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+        # No visible window (2026-07-13). The chat server is started with a HIDDEN console, so
+        # PowerShell — and anything PowerShell itself spawns (git, node, ...) — inherits it and is
+        # never drawn. Deliberately NOT CREATE_NO_WINDOW: that means "no console at all", which
+        # would detach PowerShell from the hidden console and make ITS children each allocate a
+        # visible one. SW_HIDE is belt-and-braces: if a console ever does get created, hide it.
+        _si = None
+        if sys.platform == "win32":
+            _si = subprocess.STARTUPINFO()
+            _si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            _si.wShowWindow = subprocess.SW_HIDE
         result = subprocess.run(
             ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
             cwd=working_dir,
             capture_output=True,
             text=True,
             timeout=30,
-            creationflags=_nw,
+            startupinfo=_si,
         )
         
         output = (result.stdout or "") + "\n" + (result.stderr or "")
