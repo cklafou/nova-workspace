@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-13 12:56:31
+# Last updated: 2026-07-13 19:12:53
 """
 Nova's personal web crawler — for curiosity, not a job.
 Walks links that catch my eye, follows threads until they go cold.

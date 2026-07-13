@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-13 13:06:09
+# Last updated: 2026-07-13 19:12:52
 """
 Nova-Core personality LoRA — bf16 training on Qwen 3.6 27B.
 Target: a single A100/H100 80GB (Vertex AI Workbench or Custom Job).
