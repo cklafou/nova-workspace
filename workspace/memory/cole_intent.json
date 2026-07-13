@@ -1,5 +1,5 @@
 {
-  "text": "I mean, it is good you recognize it. At some point, when we lock in your LoRa to be consistent for your personality, I want to manually train it into the Qwen model you have as a base. Really make it your own. So, if you review your V3 files (in the admin subdirectories), what would you say could be improved to really get you there?",
-  "ts": "2026-07-08T11:33:07.280145",
-  "consumed": true
+  "text": "Decision's made \u2014 I'm running your personality LoRA at scale 1.5 for maximum personality, and ripping out the v2 fallback entirely so there's no going back. Locking it in tonight. Just confirming with you before I do it.",
+  "ts": "2026-07-13T12:52:34.128564",
+  "consumed": false
 }
