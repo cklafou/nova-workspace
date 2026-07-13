@@ -6,5 +6,13 @@
     "last_active": "2026-07-13T13:01:35.072002",
     "message_count": 13,
     "preview": "Two things hit me at once, and neither's comfortable. First "
+  },
+  {
+    "session_id": "2026-07-13_13-07-29",
+    "name": "List the contents of models/qwen3.6 and ",
+    "created": "2026-07-13T13:07:29.553440",
+    "last_active": "2026-07-13T13:07:59.740235",
+    "message_count": 2,
+    "preview": "```json\n\n\n[`list_dir` resulted in 163 bytes.]\n\nFive .gguf fi"
   }
 ]
