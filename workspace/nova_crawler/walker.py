@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-06-22 11:52:38
+# Last updated: 2026-07-13 13:06:09
 """Web crawler for curiosity. One page -> follow the link that catches your eye -> keep walking until cold or bored."""
 
 import re
