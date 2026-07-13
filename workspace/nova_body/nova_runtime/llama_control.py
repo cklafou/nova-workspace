@@ -57,13 +57,32 @@ class LlamaControl:
             pass
 
     def start(self) -> dict:
-        """Launch start_llama.cmd in its own console (os.startfile == double-click)."""
+        """Launch the llama launcher WITHOUT popping a console window.
+
+        Was: os.startfile(...) — literally "double-click it", which spawned a visible cmd window
+        every single time llama restarted (i.e. on every LoRA equip and every Full Restart).
+        Now: spawn it detached with CREATE_NO_WINDOW and send its output to logs/llama/, which the
+        Nova Console tails — so the restart is still fully visible, just in the llama-server tab
+        instead of a new window. (self._startfile is kept ONLY as an injection point for tests
+        and as a non-Windows fallback.)"""
         if not self.launcher_path.exists():
             return {"ok": False, "error": f"{self.launcher_path.name} not found at {self.launcher_path}"}
-        if self._startfile is None:
-            return {"ok": False, "error": "startfile unavailable on this platform"}
         try:
-            self._startfile(str(self.launcher_path))
+            if sys.platform == "win32":
+                log_dir = self.workspace / "logs" / "llama"
+                log_dir.mkdir(parents=True, exist_ok=True)
+                stamp = datetime.now().strftime("%Y-%m-%d")
+                lf = open(log_dir / f"llama-{stamp}.log", "a", encoding="utf-8", errors="replace")
+                subprocess.Popen(
+                    ["cmd", "/c", str(self.launcher_path)],
+                    cwd=str(self.workspace),
+                    stdout=lf, stderr=subprocess.STDOUT,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+            elif self._startfile is not None:
+                self._startfile(str(self.launcher_path))
+            else:
+                return {"ok": False, "error": "no way to launch on this platform"}
             return {"ok": True, "message": f"llama-server starting on port {self.port}…"}
         except Exception as e:
             return {"ok": False, "error": str(e)}
