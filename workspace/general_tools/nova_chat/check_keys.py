@@ -155,7 +155,7 @@ async def check_llama_server() -> tuple[bool, str]:
             return True, f"llama.cpp server online — models: {model_str}"
         except Exception:
             return True, "llama.cpp server online at http://127.0.0.1:8080"
-    return False, "llama.cpp not running (run start_llama.cmd to bring Nova online)"
+    return False, "llama.cpp not running (run start_llama_qwen36.cmd to bring Nova online)"
 
 
 def print_section(title: str):
@@ -242,7 +242,7 @@ def main():
     if nova_ok:
         ready.append("Nova (llama.cpp local)")
     else:
-        missing.append("Nova -- run start_llama.cmd first")
+        missing.append("Nova -- run start_llama_qwen36.cmd first")
 
     ready.append("Cole (always online)")
 

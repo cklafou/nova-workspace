@@ -1,5 +1,5 @@
 # nova_art/
-_Last updated: 2026-06-22 11:58:18_
+_Last updated: 2026-07-13 12:50:39_
 
 Nova's gallery. Every image she renders through her imagination faculty
 (`nova_body/nova_imagination/`, the `generate_image` tool) lands here in a dated subfolder:
