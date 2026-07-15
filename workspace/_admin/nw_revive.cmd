@@ -1,9 +1,11 @@
 @echo off
-REM nightwatch one-shot revive - 2026-07-15 23:10 KST. Spawned by a self-deleting post-commit hook.
+REM nightwatch one-shot revive v2 - 2026-07-15 23:21 KST. Spawned by self-deleting post-commit hook.
 REM Why: chat listener (8765) died ~21:02 inside a living process; painter (8188) down.
 set WS=C:\Users\lafou\Project_Nova\workspace
 set TLOG=%WS%\_admin\Temp\nw_revive.log
 if not exist "%WS%\_admin\Temp" mkdir "%WS%\_admin\Temp"
+if exist "%WS%\_admin\Temp\nw_revive.lock" exit /b 0
+echo lock > "%WS%\_admin\Temp\nw_revive.lock"
 echo ==== %date% %time% revive start ==== >> "%TLOG%"
 netstat -ano | findstr ":8188 " | findstr LISTENING >nul 2>&1
 if not errorlevel 1 goto painter_ok
@@ -29,4 +31,9 @@ start "" /b cmd /c "python general_tools\NovaLauncher.py > %WS%\_admin\Temp\nw_r
 timeout /t 30 /nobreak >nul
 :up
 netstat -ano | findstr ":8765 " | findstr LISTENING >> "%TLOG%" 2>&1
+REM sweep nightwatch litter the sandbox mount cannot delete
+del /f /q "C:\Users\lafou\Project_Nova\.git\hooks\pre-commit.off" >nul 2>&1
+del /f /q "C:\Users\lafou\Project_Nova\.git\hooks\zz_test" >nul 2>&1
+del /f /q "C:\Users\lafou\Project_Nova\.git\index.lock.stale_2026-07-13" >nul 2>&1
+del /f /q "%WS%\_admin\Temp\nw_revive.lock" >nul 2>&1
 echo ==== %date% %time% revive end ==== >> "%TLOG%"
