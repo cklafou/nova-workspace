@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Last updated: 2026-07-15 23:14:48
 """
 score_style.py — measure a corpus's VOICE, not vibe it.
 

@@ -1,5 +1,5 @@
 # KoELS Finance Specialist — LoRA Dataset Spec (v1 working draft)
-_Last updated: 2026-07-15 17:41:52_
+_Last updated: 2026-07-15 23:14:48_
 
 _The training target for the **finance** KoELS adapter (`KoELS/finance/adapter/finance.gguf`), per
 `finance.json`. A specialist LoRA stacked on Nova-core: it adds **how to reason about markets and

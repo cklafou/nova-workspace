@@ -1,5 +1,5 @@
 # Why these were removed — 2026-07-14
-_Last updated: 2026-07-14 23:03:28_
+_Last updated: 2026-07-15 23:14:48_
 
 TWO competing, DEAD implementations of the same faculty:
   crawler/nova_crawler.py   (105 lines) + walks.json

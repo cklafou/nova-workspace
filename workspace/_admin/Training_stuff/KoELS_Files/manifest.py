@@ -1,4 +1,4 @@
-# Last updated: 2026-07-15 17:13:29
+# Last updated: 2026-07-15 23:14:48
 """KoELS manifest model — the per-expert contract.
 
 PLUCK-SAFE: pure logic. No file I/O, no model, no GPU, no network.

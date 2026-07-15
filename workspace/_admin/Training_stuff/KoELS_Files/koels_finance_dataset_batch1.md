@@ -1,5 +1,5 @@
 # KoELS Finance Specialist — Dataset Batch 1 (cross-section)
-_Last updated: 2026-07-15 17:41:52_
+_Last updated: 2026-07-15 23:14:48_
 
 _28 examples spanning every band, for per-band voice sign-off before mass production. Voice locked:
 clear step-by-step analytical reasoning, method over verdict, frameworks not figures, dated numbers

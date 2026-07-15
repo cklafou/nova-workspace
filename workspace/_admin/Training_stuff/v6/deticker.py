@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Last updated: 2026-07-15 23:14:48
 """
 deticker.py — remove the em-dash tic from v5's prose WITHOUT changing what she says or does.
 

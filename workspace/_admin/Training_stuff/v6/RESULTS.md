@@ -1,4 +1,5 @@
 # v6 build — results, measured
+_Last updated: 2026-07-15 23:14:48_
 
 _Built 2026-07-15 overnight by Claude (Opus) while Cole slept. Everything here is measured by
 `score_style.py`, not asserted. v6 is a DATA-ONLY change from v5 — training config byte-identical._

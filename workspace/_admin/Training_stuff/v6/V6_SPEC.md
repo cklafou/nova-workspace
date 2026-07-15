@@ -1,4 +1,5 @@
 # v6 spec — loosen the voice, close the self-observation gap
+_Last updated: 2026-07-15 23:14:48_
 
 _Written 2026-07-15 by Claude (Opus), while Cole sleeps. Pre-registered: targets fixed BEFORE
 writing rows, so the corpus is held to numbers instead of vibes — same discipline that took
