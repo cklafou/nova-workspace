@@ -1,5 +1,5 @@
 # KoELS Gaming Specialist — Dataset Batch 6 (the meta-skill: learn ANY game, research & record)
-_Last updated: 2026-06-22 11:58:19_
+_Last updated: 2026-07-15 17:42:29_
 
 _~17 examples teaching the actual expert skill: how Nova learns an unfamiliar or current game fast,
 identifies its currencies/win-conditions, pulls and **records** its mechanics and meta for the

@@ -1,4 +1,4 @@
-# Last updated: 2026-07-13 21:33:10
+# Last updated: 2026-07-15 22:42:41
 # @nova: Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.
 """
 NovaLauncher.py  (fixed)
@@ -53,7 +53,9 @@ else:
     _ws_root = _TOOLS.parent
     # Insert in reverse priority order (each insert goes to [0]), so the final
     # sys.path order is: workspace_root, nova_body, general_tools, ...
-    # workspace_root exposes nova_lancedb/; nova_body/ exposes nova_memory/ (session manager).
+    # nova_body/ exposes nova_memory/, nova_cortex/, nova_lancedb/ (her hippocampus — moved into her
+    # body 2026-07-14; it is a faculty, not a workspace-root utility. sys.path is unchanged, so the
+    # import `from nova_lancedb.indexer import ...` still resolves exactly as before).
     # The two packages are now uniquely named — no collision.
     for _p in [str(_ws_root / "general_tools"), str(_ws_root / "nova_body"), str(_ws_root)]:
         if _p not in sys.path:

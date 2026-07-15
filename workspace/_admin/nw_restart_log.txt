@@ -1,0 +1,25 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260715001651
+Username: COLE-PC\lafou
+RunAs User: COLE-PC\lafou
+Configuration Name: 
+Machine: COLE-PC (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\lafou\Project_Nova\workspace\nw_restart.ps1
+Process ID: 38196
+PSVersion: 5.1.26100.8655
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8655
+BuildVersion: 10.0.26100.8655
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\lafou\Project_Nova\workspace\_admin\nw_restart_log.txt
+Port free. Relaunching via NovaStart.cmd
+
+**********************
+Windows PowerShell transcript end
+End time: 20260715001657
+**********************

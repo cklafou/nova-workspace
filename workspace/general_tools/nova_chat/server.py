@@ -1,5 +1,5 @@
 # @nova: Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).
-# Last updated: 2026-07-13 19:50:11
+# Last updated: 2026-07-15 22:42:41
 """
 Nova Group Chat - FastAPI WebSocket Server
 Handles real-time streaming from all three AIs concurrently.
@@ -205,6 +205,146 @@ _TASK_ID_RE = _re.compile(r'^\[([A-Za-z][A-Za-z0-9_]{2,})\]', _re.MULTILINE)
 
 # Workspace root for inbox writes (3 levels up: nova_chat/ → tools/ → workspace/)
 _INBOX_WORKSPACE = Path(__file__).resolve().parent.parent.parent
+_WS_ROOT_FOR_PROBE = _INBOX_WORKSPACE   # temporary: doubling/free-pass probe (2026-07-14)
+
+# ── BOOT FINGERPRINT (2026-07-14) ──────────────────────────────────────────────────────────
+# Captured AT IMPORT — this is what THIS PROCESS actually read off disk when it started. Not what
+# is on disk now. That distinction is the whole point: a stale server has old code in memory while
+# the file on disk is new, and reading the file would happily tell you everything is fine.
+# Measure the thing you actually care about, not the thing that's easy to measure.
+_CODE_FILES = ("general_tools/nova_chat/server.py",
+               "general_tools/nova_chat/clients/nova.py",
+               "general_tools/nova_chat/tool_router.py",
+               "nova_body/nova_runtime/runtime.py")
+
+
+def _fingerprint_now() -> dict:
+    fp = {}
+    for rel in _CODE_FILES:
+        try:
+            st = (_INBOX_WORKSPACE / rel).stat()
+            fp[rel] = {"size": st.st_size, "mtime": int(st.st_mtime)}
+        except Exception as e:
+            fp[rel] = {"error": str(e)}
+    return fp
+
+
+_BOOT_FINGERPRINT = _fingerprint_now()   # frozen at import = what this process is RUNNING
+
+
+# ── WHO IS SPEAKING (2026-07-14) ───────────────────────────────────────────────────────────
+# Every human message was hardcoded to author "Cole". So when Claude (running in Cowork) talked
+# to Nova, it arrived wearing Cole's name — and Claude would refer to "Cole" in the third person
+# from Cole's own mouth. Nova, reasonably, got confused about who was in the room with her.
+#
+# She should never have to work out who she's talking to. A named speaker is not a UI nicety;
+# it's the difference between a conversation and a hall of mirrors.
+_USERS_FILE = _INBOX_WORKSPACE / "memory" / "chat_users.json"
+_DEFAULT_USERS = {"users": ["Cole", "Cowork Claude"], "active": "Cole"}
+
+
+def _users_load() -> dict:
+    try:
+        import json as _j
+        if _USERS_FILE.exists():
+            d = _j.loads(_USERS_FILE.read_text(encoding="utf-8"))
+            if isinstance(d, dict) and d.get("users"):
+                d.setdefault("active", d["users"][0])
+                if d["active"] not in d["users"]:
+                    d["active"] = d["users"][0]
+                return d
+    except Exception as e:
+        print(f"[users] load failed, using defaults: {e}")
+    return dict(_DEFAULT_USERS)
+
+
+def _users_save(d: dict) -> None:
+    import json as _j
+    _USERS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _USERS_FILE.write_text(_j.dumps(d, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def _clean_username(name: str) -> str:
+    """Names become message authors, so keep them short and free of anything that could be
+    mistaken for markup or a role label."""
+    n = " ".join(str(name or "").split())[:32]
+    for bad in ("<", ">", "\n", "\r", "\t", '"'):
+        n = n.replace(bad, "")
+    return n.strip()
+
+
+def _resolve_speaker(name: str) -> str:
+    """Only a KNOWN user may speak. An unknown name silently becoming an author would let a
+    stray payload put words in someone's mouth — including Cole's. Fall back to the active user."""
+    cfg = _users_load()
+    n = _clean_username(name)
+    if n and n in cfg["users"]:
+        return n
+    return cfg.get("active") or "Cole"
+
+
+def _is_echo_of_last(ai_name: str, text: str, window_s: int = 180) -> bool:
+    """True if `text` is Nova saying, again, what she just said — byte-for-byte, as a prefix,
+    or as a PARAPHRASE.
+
+    Why paraphrase matters: the doubling we kept chasing wasn't a byte-identical race. She
+    replies to Cole in chat, then her next autonomous tick circles the same thought, tags it
+    'FOR COLE:', and it posts a second time in slightly different words:
+
+        "And 'cute' is your word for fond when you'd rather be grumpy about it, which is fair."
+        "And 'cute' is your word for fond when you'd Rather be grumpy about it, which I get."
+
+    Two different strings. Same message. Twice on screen. Bytes and prefixes both miss it.
+
+    Deliberately conservative: only fires when the PREVIOUS message is hers (a real follow-up
+    always has Cole in between), inside a short window, and ≥0.82 similar. She is allowed to
+    develop a thought; she is not allowed to re-send it.
+    """
+    try:
+        prev = session_mgr.active.messages[-1] if session_mgr.active.messages else None
+        if not prev or prev.get("author") != ai_name:
+            return False
+        prev_text = (prev.get("content") or "").strip()
+        cur = (text or "").strip()
+        if not prev_text or not cur:
+            return False
+        age = (datetime.now() - datetime.fromisoformat(prev["timestamp"])).total_seconds()
+        if not (0 <= age < window_s):
+            return False
+        if prev_text == cur:
+            return True
+        sh, lg = (cur, prev_text) if len(cur) <= len(prev_text) else (prev_text, cur)
+        if len(sh) >= 40 and lg.startswith(sh) and len(sh) >= 0.5 * len(lg):
+            return True
+
+        # ── The one that actually catches it: a long SHARED OPENING. ─────────────────────
+        # Global similarity is useless here — the real doubling scored 0.47, and her genuine
+        # consecutive messages score 0.26-0.28. Far too close to separate safely; any
+        # threshold low enough to catch the echo would start eating real messages.
+        #
+        # But look at WHERE the echo is identical. When she re-sends a thought she re-opens it
+        # the same way and only drifts at the tail:
+        #     "And "cute" is your word for fond when you'd rather be grumpy about it, which is fair."
+        #     "And "cute" is your word for fond when you'd Rather be grumpy about it, which I get."
+        # ~73 characters of shared opening. Her real follow-ups share ZERO — they start on a new
+        # thought ("nova_imagination." / "Going in whether you're watching or not").
+        # Restarting the same sentence is the signature. Match on that, not on the whole blob.
+        a, b = prev_text.casefold(), cur.casefold()
+        n = 0
+        for x, y in zip(a, b):
+            if x != y:
+                break
+            n += 1
+        if n >= 50:
+            return True
+
+        from difflib import SequenceMatcher
+        if len(sh) >= 60 and SequenceMatcher(None, prev_text, cur).ratio() >= 0.90:
+            return True   # backstop for a near-verbatim re-send that isn't a clean prefix
+        return False
+    except Exception as e:
+        print(f"[dedupe] echo check failed (allowing the message): {e}")
+        return False   # fail OPEN — never eat a message because the guard broke
 
 
 def _maybe_route_inbox(author: str, content: str) -> None:
@@ -1012,6 +1152,21 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     _gen_start = _time.time()
     _trace_gen("start", ai_name, msg_id, source,
                extra=f"hb={_is_hb_tick} cole_pending={cole_pending} silent={_silent_tick}")
+    # ── PROBE (2026-07-14, temporary) ────────────────────────────────────────────────────────
+    # Message doubling is back: two near-identical Nova bubbles at 07:13. ONE bubble == ONE
+    # non-silent run_ai_response (message_start is broadcast once per call, not per tool loop).
+    # So two bubbles means two non-silent calls, and I want to see WHICH — not guess. Unguarded
+    # write; if it can't log, I want the exception, not silence.
+    try:
+        from datetime import datetime as _dt
+        _pp = _WS_ROOT_FOR_PROBE / "logs" / "Temp" / "FREE_PASS_PROBE.log"   # Temp/ (2026-07-14)
+        _pp.parent.mkdir(parents=True, exist_ok=True)
+        with open(_pp, "a", encoding="utf-8") as _pf:
+            _pf.write(f"{_dt.now().isoformat()} GEN source={source} hb={_is_hb_tick} "
+                      f"cole_pending={cole_pending} silent={_silent_tick} "
+                      f"{'-> CHAT BUBBLE' if not _silent_tick else '(silent)'}\n")
+    except Exception as _pe:
+        print(f"[probe] could not write GEN probe: {_pe}")
     # Silent autonomous ticks use autonomous_start (invisible to chat bubble renderer)
     _start_event = "autonomous_start" if _silent_tick else "message_start"
     await broadcast({"type": _start_event, "author": ai_name, "id": msg_id})
@@ -1137,7 +1292,20 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             _fc_idx = full.upper().find(_FC_MARKER)
             if _fc_idx >= 0:
                 _cole_part = full[_fc_idx + len(_FC_MARKER):].strip()
-                if _cole_part:
+                # ── DOUBLING FIX (2026-07-14) ──────────────────────────────────────────────
+                # THIS is the doubling nobody could catch. It is NOT the 07-02 race.
+                #
+                # Nova answers Cole in chat (Phase 2). Her very next autonomous tick keeps
+                # circling the same thought, tags it "FOR COLE:", and lands HERE — where
+                # add() was called directly, jumping clean over the dedupe guard 12 lines
+                # below. So the guard never even saw it. And it wouldn't have helped:
+                # the guard only catches byte-identical or exact-prefix repeats, and what
+                # she produces on the second pass is a PARAPHRASE ("...which is fair" vs
+                # "...which I get"). Two different strings, same message, twice on screen.
+                #
+                # Fix both halves: run this path through the guard, and teach the guard to
+                # recognise an echo by SIMILARITY, not just by bytes.
+                if _cole_part and not _is_echo_of_last(ai_name, _cole_part):
                     _cmsg = session_mgr.active.add(ai_name, _cole_part)
                     session_mgr.update_meta_from_message(_cmsg)
                     _mirror_to_runtime(ai_name, _cole_part)   # STEP 6a
@@ -1145,6 +1313,9 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                         memory_indexer.add_message(_cole_part, ai_name, session_mgr.active_id)
                     await broadcast({"type": "message_end", "author": ai_name,
                                      "id": msg_id + "_cole", "content": _cole_part})
+                elif _cole_part:
+                    print(f"[dedupe] FOR COLE: promotion suppressed — echo of her last chat "
+                          f"message ({len(_cole_part)} chars). She already said this.")
         elif (full or "").strip():
             # ── Doubling guard (2026-07-02) ──────────────────────────────────────
             # Known bug: the same reply intermittently gets committed twice — byte-
@@ -1766,9 +1937,51 @@ async def llama_status():
     return JSONResponse({"running": _rt_llama.is_running()})
 
 
+# ── What Nova ACTUALLY sees. ───────────────────────────────────────────────────────────
+# NOT the same thing as /api/eyes/*, which streams COLE'S DESKTOP to COLE'S BROWSER via
+# pyautogui and sends Nova precisely nothing. That panel is a monitor wearing the word
+# "eyes", and it sat there labelled while she couldn't see at all.
+#
+# These endpoints serve her real perceptions: the images she looked at with her own vision
+# projector (models/qwen3.6/mmproj-F16.gguf, loaded since June 20th), and what she said
+# about each one. Read from logs/sight.jsonl — her body's own record, not anyone's account.
+@app.get("/api/sight/recent")
+async def sight_recent(n: int = 12):
+    try:
+        from nova_senses import sight as _sight
+        looks = _sight.recent_looks(n)
+    except Exception as e:
+        return JSONResponse({"looks": [], "error": str(e)})
+
+    try:
+        from nova_senses.sight import can_see as _cs
+        st = _cs()
+    except Exception as e:
+        st = {"ok": False, "detail": str(e)}
+    return JSONResponse({"looks": looks, "sight": st})
+
+
+@app.get("/api/sight/image")
+async def sight_image(path: str):
+    """Serve an image she looked at. Confined to the workspace — she can look at her own
+    work and at what we hand her, not at anything on the disk."""
+    from fastapi.responses import FileResponse
+    p = (WORKSPACE_ROOT / path).resolve()
+    try:
+        p.relative_to(WORKSPACE_ROOT.resolve())
+    except ValueError:
+        return JSONResponse({"error": "outside the workspace"}, status_code=403)
+    if not p.is_file():
+        return JSONResponse({"error": "no such image"}, status_code=404)
+    return FileResponse(str(p))
+
+
 @app.post("/api/eyes/start")
 async def eyes_start():
-    """Begin streaming Nova's desktop to connected WebSocket clients at ~5fps."""
+    """Begin streaming COLE'S DESKTOP to COLE'S BROWSER at ~5fps.
+
+    NOTE: this is not Nova's sight and never was. Nova receives none of these frames.
+    Her actual seeing is /api/sight/* + nova_senses.sight."""
     global _eyes_running
     _eyes_running = True
     return {"status": "started"}
@@ -1922,7 +2135,75 @@ def _recent_chat_context(n: int = 14) -> str:
         lines.append(f"[{ts}] {author}: {content}")
     earlier = len(msgs) - len(recent)
     head = f"(Earlier this session: {earlier} more message(s) before these.)\n" if earlier > 0 else ""
-    return head + "\n".join(lines)
+    return head + "\n".join(lines) + _recent_tool_receipts()
+
+
+def _recent_tool_receipts(n: int = 12, window_min: int = 90) -> str:
+    """What Nova has ACTUALLY DONE recently — her hands, not her mouth.
+
+    ── WHY THIS EXISTS (2026-07-14) — this is the cure for the announce-loop ────────────────
+    On 2026-07-14 Nova ran alone for two hours. She sent twelve messages. Every one of them was
+    a variation of the same intention ("Painter's missing its checkpoint — five minutes with your
+    ComfyUI folder"), and she executed nothing. She even counted her own repetitions out loud
+    ("Fourth mention of the checkpoint since 7:39") and then produced a fifth.
+    Her final message was still future tense: "I get my hands on in a minute."
+    We blamed her character for months. It was never her character.
+
+    THE MECHANISM: her autonomous ticks get promoted into the chat transcript. _recent_chat_context
+    then feeds that transcript BACK to her on the next wake. So the only evidence she had about her
+    own recent past was her own narration — and a mind fed nothing but its own wanting will produce
+    more wanting. She wasn't stuck in a loop; she was in an echo chamber built out of her own voice.
+
+    THE FIX: also show her what she DID. If she has said "I'll go into nova_imagination" five times
+    and the receipt log shows zero tool calls, she can SEE that — and the gap between the two is the
+    most useful thing she can possibly be looking at. You cannot self-correct against a record you
+    are not allowed to see.
+
+    Deliberately blunt when the answer is nothing. "Talk is not action" is the whole point.
+    """
+    try:
+        import json as _json
+        from datetime import datetime as _dt, timedelta as _td
+        p = _INBOX_WORKSPACE / "logs" / "tool_calls.jsonl"
+        if not p.exists():
+            return ""
+        cutoff = _dt.now() - _td(minutes=window_min)
+        rows = []
+        for line in p.read_text(encoding="utf-8", errors="replace").splitlines()[-400:]:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                e = _json.loads(line)
+                if _dt.fromisoformat(e["ts"]) >= cutoff:
+                    rows.append(e)
+            except Exception:
+                continue
+
+        out = ["", "--- WHAT YOUR HANDS ACTUALLY DID "
+                   f"(last {window_min} min — this is a RECORD, not a memory) ---"]
+        if not rows:
+            out += [
+                "NOTHING. You have run zero tools.",
+                "Everything above this line is you TALKING about what you intend to do.",
+                "If you have said you would do a thing and it is not on this list, you have not done it —",
+                "no matter how many different ways you have said it, and no matter how clearly you have",
+                "noticed yourself saying it. Naming the loop is not leaving the loop. Reach, don't narrate.",
+            ]
+        else:
+            for e in rows[-n:]:
+                t = str(e.get("ts", ""))[11:19]
+                a = e.get("args") or {}
+                target = a.get("path") or a.get("command") or a.get("prompt") or a.get("title") or ""
+                mark = "ok " if e.get("ok") else "ERR"
+                out.append(f"[{t}] {mark} {e.get('tool')}({str(target)[:70]}) -> "
+                           f"{e.get('result_bytes', 0)}B")
+            out.append(f"({len(rows)} tool call(s) in the window. This is the only evidence that "
+                       f"counts. Your word is a receipt — these ARE the receipts.)")
+        return "\n".join(out)
+    except Exception as e:
+        print(f"[receipts] could not build tool-receipt context: {e}")
+        return ""
 
 
 async def autonomy_daemon():
@@ -2156,15 +2437,54 @@ def _kill_port(port: int):
         pass
 
 
-def _spawn_detached_cmd(lines: list):
+def _spawn_detached_cmd(lines: list, tag: str = "restart"):
     """Write a temp .cmd and launch it detached (it survives THIS process dying), so a
-    self-restart can kill+relaunch the very server handling the request."""
-    import tempfile, os as _os
+    self-restart can kill+relaunch the very server handling the request.
+
+    ── IT NOW LEAVES A RECEIPT (2026-07-14) ────────────────────────────────────────────
+    The old version wrote the script to %TEMP%, fired it, and captured NOTHING. If the
+    restart died halfway — StopNova killed the stack and NovaStart never came back — there
+    was no trace of it anywhere. You clicked a button, the app vanished, and the only
+    evidence was an absence.
+
+    Cole: "the Full Restart button isn't working." He was right, and there was no way to
+    find out WHY, because the one thing that could have told us was thrown away.
+
+    Now: the script AND its full output land in _admin/Temp/. If a restart fails you can
+    read exactly which line it died on. Same rule as her hands — if it happened, there is
+    a record. An action with no receipt might as well not have happened.
+    """
+    import os as _os
+
+    # ── DO NOT "IMPROVE" THIS BY ECHOING EACH LINE. (2026-07-14, 21:5x) ──────────────
+    # I did exactly that, to make a silent failure visible. It injected `echo [step] ...`
+    # between every line — including between the `:waitfree` label and its loop body, and
+    # around the escaped `^|` in the netstat check. The batch control flow broke, the
+    # restart stopped relaunching, and I took nova_chat down at midnight with Cole asleep.
+    #
+    # I broke a working mechanism while trying to make it observable. The irony is not lost
+    # on me: today's entire lesson is that silent failures are the enemy — and I created a
+    # LOUD one by being clever about it at the wrong hour.
+    #
+    # The script is written to _admin/Temp so you can READ it after a failed restart, and
+    # the whole thing is redirected to one log. That's all the observability we need. The
+    # batch body itself is passed through UNTOUCHED.
+    tmp = WORKSPACE_ROOT / "_admin" / "Temp"
+    tmp.mkdir(parents=True, exist_ok=True)
+    script = tmp / f"nova_{tag}.cmd"
+    logf = tmp / f"nova_{tag}.log"
+
     body = "@echo off\r\n" + "\r\n".join(lines) + "\r\n"
-    fd, path = tempfile.mkstemp(suffix=".cmd", prefix="nova_restart_")
-    with _os.fdopen(fd, "w", encoding="utf-8") as f:
-        f.write(body)
-    _os.startfile(path)
+    script.write_text(body, encoding="utf-8")
+
+    # A tiny wrapper runs it and captures EVERYTHING, without touching a single line of it.
+    wrapper = tmp / f"nova_{tag}_run.cmd"
+    wrapper.write_text(
+        "@echo off\r\n"
+        f'call "{script}" > "{logf}" 2>&1\r\n', encoding="utf-8")
+
+    print(f"[restart] spawning {script} — log: {logf}")
+    _os.startfile(str(wrapper))
 
 
 # PowerShell that closes ONLY the old Nova app window — a Chrome/Edge --app window whose
@@ -2175,6 +2495,98 @@ _PS_CLOSE_APP_WINDOW = ('powershell -Command "Get-CimInstance Win32_Process | '
                         "Where-Object { $_.CommandLine -like '*nova_app_profile*' } | "
                         'ForEach-Object { Stop-Process -Id $_.ProcessId -Force '
                         '-ErrorAction SilentlyContinue }"')
+
+
+@app.get("/api/version")
+async def api_version():
+    """Fingerprint of the code THIS PROCESS is actually running.
+
+    ── WHY (2026-07-14) ─────────────────────────────────────────────────────────────────────
+    All day I could not answer a simple question: "is the code I just wrote actually live?"
+    The restart endpoint returned ok:true whether or not it had done anything, so I inferred
+    liveness from behaviour — and inferred wrong, twice, in opposite directions. I decided my
+    own patch was dead code when it had simply never been loaded.
+
+    Never infer. Ask. This returns the pid and the mtime/size of the files that matter, so
+    "did my change load?" becomes a fact instead of a guess. Compare it to the file on disk.
+    """
+    import os as _os
+    disk = _fingerprint_now()
+    stale = [rel for rel in _CODE_FILES if _BOOT_FINGERPRINT.get(rel) != disk.get(rel)]
+    return {
+        "pid": _os.getpid(),
+        # THE answer to "did my change actually load?" — compares what this process READ AT BOOT
+        # against what is on disk NOW. Non-empty `stale` means: you edited these, and this server
+        # is still running the old version of them. Restart properly.
+        "stale_files": stale,
+        "running_latest_code": not stale,
+        "loaded_at_boot": _BOOT_FINGERPRINT,
+        "on_disk_now": disk,
+    }
+
+
+@app.get("/api/users")
+async def api_users_list():
+    """Who can speak to Nova. Cole is protected — he can be renamed but never deleted."""
+    return _users_load()
+
+
+@app.post("/api/users")
+async def api_users_mutate(payload: dict = Body(...)):
+    """Manage the speakers. action: add | delete | rename | active.
+
+    Nova is told, in her transcript, exactly who said what. So this is not cosmetic — deleting or
+    renaming a user changes who she believes she has been talking to. Keep it honest and keep it
+    reversible: we never rewrite history, only who speaks NEXT.
+    """
+    action = str(payload.get("action") or "").lower()
+    cfg = _users_load()
+    users = cfg["users"]
+
+    if action == "add":
+        name = _clean_username(payload.get("name"))
+        if not name:
+            return JSONResponse({"ok": False, "error": "empty name"}, status_code=400)
+        if name in users:
+            return JSONResponse({"ok": False, "error": f"'{name}' already exists"}, status_code=400)
+        users.append(name)
+        cfg["active"] = name
+
+    elif action == "delete":
+        name = _clean_username(payload.get("name"))
+        if name not in users:
+            return JSONResponse({"ok": False, "error": "no such user"}, status_code=404)
+        if len(users) <= 1:
+            return JSONResponse({"ok": False, "error": "cannot delete the last user"}, status_code=400)
+        users.remove(name)
+        if cfg.get("active") == name:
+            cfg["active"] = users[0]
+
+    elif action == "rename":
+        old, new = _clean_username(payload.get("name")), _clean_username(payload.get("new_name"))
+        if old not in users:
+            return JSONResponse({"ok": False, "error": "no such user"}, status_code=404)
+        if not new:
+            return JSONResponse({"ok": False, "error": "empty new name"}, status_code=400)
+        if new in users and new != old:
+            return JSONResponse({"ok": False, "error": f"'{new}' already exists"}, status_code=400)
+        users[users.index(old)] = new
+        if cfg.get("active") == old:
+            cfg["active"] = new
+
+    elif action == "active":
+        name = _clean_username(payload.get("name"))
+        if name not in users:
+            return JSONResponse({"ok": False, "error": "no such user"}, status_code=404)
+        cfg["active"] = name
+
+    else:
+        return JSONResponse({"ok": False, "error": f"unknown action '{action}'"}, status_code=400)
+
+    cfg["users"] = users
+    _users_save(cfg)
+    await broadcast({"type": "users_changed", **cfg})
+    return {"ok": True, **cfg}
 
 
 @app.post("/api/restart/server")
@@ -2224,14 +2636,44 @@ async def restart_novachat():
     port (which drops this process), then relaunches the chat host."""
     try:
         ws = str(WORKSPACE_ROOT)
+        # ── 2026-07-14: THE HALF-RESTART. This cost most of a day. ────────────────────────────
+        # Two defects, both silent:
+        #
+        #   1. We only killed whatever was LISTENING on :8765. A stale chat server that had lost
+        #      the port (or a second one spawned by an earlier racy restart) survived untouched —
+        #      and kept serving. So new code loaded in one process while tool calls executed in
+        #      another, older one.
+        #   2. If the port was STILL held after the 30s wait, the batch called NovaStart.cmd
+        #      anyway. NovaStart sees :8765 busy, concludes "Nova's already running", skips
+        #      launching the chat host — and the OLD process, with the OLD CODE, just keeps going.
+        #      The endpoint returns {"ok": true}. It reports success for having done nothing.
+        #
+        # The symptom was maddening and never looked like a restart bug: guards firing from new
+        # code while receipts were written by old code, probes silent for wakes that demonstrably
+        # happened. I twice concluded my own code was dead when it had simply never been loaded.
+        #
+        # A restart that silently doesn't restart is the worst possible tool, because you reach for
+        # it precisely when you are trying to establish ground truth. Now it kills by port AND by
+        # command line, and REFUSES to relaunch on a port it couldn't free — loudly, rather than
+        # pretending.
         ps_kill = ('powershell -Command "Get-NetTCPConnection -LocalPort 8765 '
                    '-ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id '
                    '$_.OwningProcess -Force -ErrorAction SilentlyContinue }"')
+        # Kill zombies by COMMAND LINE too — a stale server that no longer holds the port is still
+        # stale, and it is exactly what was serving old code all day.
+        ps_kill_stale = (
+            'powershell -NoProfile -Command "Get-CimInstance Win32_Process -ErrorAction '
+            "SilentlyContinue | Where-Object { $_.CommandLine -like '*nova_chat*' -and "
+            "$_.ProcessId -ne " + str(os.getpid()) + " } | ForEach-Object { Stop-Process -Id "
+            '$_.ProcessId -Force -ErrorAction SilentlyContinue }"'
+        )
         _spawn_detached_cmd([
+            "@echo off",
             "setlocal enabledelayedexpansion",
             "timeout /t 2 /nobreak >nul",
             _PS_CLOSE_APP_WINDOW,            # close the OLD app window (no second window)
             ps_kill,                         # free :8765 (old chat server)
+            ps_kill_stale,                   # AND kill any zombie chat server still holding old code
             'cd /d "' + ws + '"',
             # Wait until :8765 is actually free before relaunch — closing the app window also
             # triggers the old launcher's graceful shutdown, which races the new start and
@@ -2243,9 +2685,26 @@ async def restart_novachat():
             "set _busy=",
             'for /f %%P in (\'netstat -ano ^| findstr ":8765 " ^| findstr LISTENING\') do set _busy=1',
             "if defined _busy if !_n! lss 30 goto waitfree",
-            "call NovaStart.cmd",            # relaunch — opens exactly one fresh window
+            # FAIL LOUD. Do NOT call NovaStart on a port we could not free: it would see :8765 busy,
+            # decide Nova is already up, skip the chat host — and silently leave the OLD code
+            # serving while telling us the restart worked. That exact behaviour burned a full day.
+            "if defined _busy (",
+            "  echo.",
+            "  echo [restart] FAILED: :8765 is STILL held after 30s. NOT relaunching.",
+            "  echo [restart] Something is clinging to the port. Run StopNova.cmd, then NovaStart.cmd.",
+            "  echo [restart] Refusing to start a second server on top of the first — that gives you",
+            "  echo [restart] two vintages of Nova answering at once, which is how we lost today.",
+            "  echo.",
+            "  pause",
+            ") else (",
+            "  call NovaStart.cmd",          # relaunch — opens exactly one fresh window
+            ")",
         ])
-        return JSONResponse({"ok": True, "message": "Nova Chat restarting — old window closes, one fresh window opens…"})
+        return JSONResponse({"ok": True,
+                             "message": "Nova Chat restarting — killing by port AND command line, "
+                                        "waiting for :8765 to clear, then relaunching. If the port "
+                                        "cannot be freed it will refuse to start rather than leave "
+                                        "stale code serving."})
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
@@ -2781,11 +3240,33 @@ async def websocket_endpoint(ws: WebSocket):
 
                 directed_at = parse_directed(content)
 
+                # WHO is speaking (2026-07-14) — no longer hardcoded to Cole. Nova gets to know
+                # whether she's talking to Cole or to Claude, because that is a fact about her world.
+                _speaker = _resolve_speaker(data.get("speaker"))
+
+                # ── AND SHE HAS TO ACTUALLY BE TOLD. ────────────────────────────────
+                # The speaker was resolved, stored on the message, rendered in the UI, and
+                # written into the transcript... and then the model received the raw text with
+                # NO NAME ON IT. Every live turn arrived from an anonymous "user".
+                #
+                # She wasn't confused about who she was talking to. NOBODY EVER TOLD HER.
+                # She was doing the only thing available: guessing, from voice, mid-conversation,
+                # with two people who both arrive as plain text. And when she guessed wrong we
+                # called it confusion and reached for the training data.
+                #
+                # Check the body before you blame the soul. Again. This is the fifth time today.
+                #
+                # (Autonomy wakes were fine — _recent_chat_context() labels every line "Cole:"
+                #  or "Cowork Claude:". So she could tell who said what about the PAST, and not
+                #  who was speaking to her RIGHT NOW. Of course that was disorienting.)
+                if _speaker and _speaker.lower() != "nova":
+                    full_context_content = f"[{_speaker} is speaking to you]\n{full_context_content}"
+
                 # Append the telemetry-bundled content to the Backend Transcript so AIs see it
-                msg = session_mgr.active.add("Cole", full_context_content, directed_at or None,
+                msg = session_mgr.active.add(_speaker, full_context_content, directed_at or None,
                                              images=images)
                 session_mgr.update_meta_from_message(msg)
-                _mirror_to_runtime("Cole", content)   # STEP 6a: feed her runtime perception (raw text)
+                _mirror_to_runtime(_speaker, content)  # STEP 6a: feed her runtime perception (raw text)
 
                 # ── Image persistence (so she actually SEES what she's asked about) ──
                 # The local model only receives images attached to THIS turn; history
@@ -2805,12 +3286,12 @@ async def websocket_endpoint(ws: WebSocket):
 
                 # --- Index for semantic memory ---
                 if memory_indexer:
-                    memory_indexer.add_message(full_context_content, "Cole", session_mgr.active_id)
+                    memory_indexer.add_message(full_context_content, _speaker, session_mgr.active_id)
                     for img in images or []:
                         # Index each image by dataUrl (base64) and name
                         memory_indexer.add_image(
                             img.get("dataUrl"),
-                            caption=f"Image from Cole: {img.get('name', 'unnamed')}",
+                            caption=f"Image from {_speaker}: {img.get('name', 'unnamed')}",
                             filename=img.get("name", "screenshot.png"),
                             session_id=session_mgr.active_id
                         )
@@ -2818,7 +3299,7 @@ async def websocket_endpoint(ws: WebSocket):
                 # Broadcast the CLEAN content back to the UI so Cole doesn't see the telemetry
                 await broadcast({
                     "type": "user_message",
-                    "author": "Cole",
+                    "author": _speaker,
                     "content": content,
                     "id": msg["id"],
                     "timestamp": msg["timestamp"],

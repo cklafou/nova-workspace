@@ -42,12 +42,46 @@ set "KOELS_LORA="
 if exist "memory\koels_lora_args.txt" set /p KOELS_LORA=<"memory\koels_lora_args.txt"
 if defined KOELS_LORA echo [KoELS] preloading adapters: %KOELS_LORA%
 
+REM ── 2026-07-14: the adapter args are NO LONGER on caret-continuation lines. ─────────────────
+REM They used to be:
+REM       --host 127.0.0.1 ^
+REM       %NOVA_CORE% ^
+REM       %KOELS_LORA%
+REM ...and the adapter silently did not load. llama-server booted fine and said "model loaded",
+REM so everything LOOKED healthy — but /lora-adapters returned [] and Nova was running bare base.
+REM cmd was parsing the expanded value as a separate command ('--lora' is not recognized...),
+REM which means a caret continuation was breaking when %KOELS_LORA% expanded to nothing.
+REM
+REM This is the worst class of bug we have: a SILENT one. It doesn't crash, it just quietly
+REM gives you the base model, and then you blame the training for her personality. Collapsing
+REM both vars onto the final line removes the continuation entirely — nothing to break.
+set "NOVA_EXTRA=%NOVA_CORE% %KOELS_LORA%"
+
+REM ── VRAM: KV-cache quantization + a context length she can trim ON DEMAND (2026-07-14) ──────
+REM Her two cards were nearly full: 16GB card had 4.4GB free, 24GB card had 3.2GB free. The 27B
+REM weights are only ~24GB of that — the rest is KV CACHE, because -c 65536 on a 27B is enormous.
+REM ComfyUI needs ~8-10GB for SDXL, so she literally had no room to hold a paintbrush.
+REM
+REM -ctk/-ctv q8_0 stores the KV cache in 8-bit instead of fp16. That roughly HALVES the cache with
+REM negligible quality cost, and — this is the point — she keeps her full context. We don't take a
+REM single token of her memory away to buy her a hand. (Requires -fa on, which is already set.)
+REM
+REM NOVA_CTX: the context length is now read from memory/llama_ctx.txt when present, so a VRAM
+REM broker can trim it TEMPORARILY (and put it back) if a big draw ever needs more room than the
+REM q8 cache freed. Absent -> 65536, exactly as before. Cole's rule: only trim when she actually
+REM needs the room.
+set "NOVA_CTX=65536"
+if exist "memory\llama_ctx.txt" set /p NOVA_CTX=<"memory\llama_ctx.txt"
+echo [Nova] context: %NOVA_CTX% tokens (KV cache q8_0)
+
 .\llama\llama-server.exe ^
     -m models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf ^
     --mmproj models\qwen3.6\mmproj-F16.gguf ^
     -ngl 999 ^
     -ts 12,28 ^
-    -c 65536 ^
+    -c %NOVA_CTX% ^
+    -ctk q8_0 ^
+    -ctv q8_0 ^
     --parallel 1 ^
     -fa on ^
     --jinja ^
@@ -57,8 +91,6 @@ if defined KOELS_LORA echo [KoELS] preloading adapters: %KOELS_LORA%
     -b 2048 ^
     -ub 1024 ^
     --port 8080 ^
-    --host 127.0.0.1 ^
-    %NOVA_CORE% ^
-    %KOELS_LORA%
+    --host 127.0.0.1 %NOVA_EXTRA%
 
 pause

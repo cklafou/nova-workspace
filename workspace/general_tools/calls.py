@@ -1,5 +1,5 @@
 # @nova: Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.
-# Last updated: 2026-07-13 20:05:22
+# Last updated: 2026-07-15 22:42:41
 """
 general_tools/calls.py -- Nova Package Call Graph Generator
 ============================================================
@@ -24,7 +24,10 @@ _THIS_FILE      = Path(__file__).resolve()
 GENERAL_TOOLS   = _THIS_FILE.parent                    # workspace/general_tools/
 WORKSPACE_ROOT  = GENERAL_TOOLS.parent                 # workspace/
 NOVA_TOOLS      = WORKSPACE_ROOT / "nova_body"
-MASTER_INDEX    = GENERAL_TOOLS / "Calls_Master_Index.md"
+# The TOOL lives in general_tools/. The DOCUMENT it produces is reference material someone reads to
+# orient themselves, so it belongs in Orient/ (2026-07-14). Per-package calls.md files stay next to
+# their code — those describe their own package and are read in place.
+MASTER_INDEX    = WORKSPACE_ROOT / "Orient" / "Calls_Master_Index.md"
 
 DRY_RUN = "--dry" in sys.argv
 
@@ -247,6 +250,7 @@ def write_master_index(all_scans: dict[str, dict], dry: bool = False):
         print(f"Would write: {MASTER_INDEX}")
         print(content[:800])
     else:
+        MASTER_INDEX.parent.mkdir(parents=True, exist_ok=True)   # Orient/ (2026-07-14)
         MASTER_INDEX.write_text(content, encoding="utf-8")
         print(f"[calls] Master index: {MASTER_INDEX.relative_to(WORKSPACE_ROOT)}")
 

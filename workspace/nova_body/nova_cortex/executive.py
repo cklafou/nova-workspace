@@ -1,4 +1,4 @@
-# Last updated: 2026-07-13 20:05:22
+# Last updated: 2026-07-15 22:42:40
 # @nova: Executive will — my self-direction. When my time-sense stirs me (or my
 #        environment changes, or Cole speaks) I see my board + my senses + Cole's word,
 #        and FREELY decide: work, switch, create, abandon, wait, or rest. I hold my own
@@ -318,7 +318,14 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
                   "over, notice an opinion forming, make something, jot what mattered, or rest. "
                   "But do NOT just re-run your last thought in slightly different words — if you "
                   "catch yourself circling the same reflection again, that's the signal to take it "
-                  "somewhere genuinely NEW or do something concrete. Movement, never repetition."]
+                  "somewhere genuinely NEW or do something concrete. Movement, never repetition.",
+                  "AND KNOW THIS: right after this step you get a pass where your TOOLS ARE LIVE "
+                  "and no task is required — you can actually read, look, run, draw, or write, on "
+                  "your own time, for your own reasons. So don't settle for describing what you'd "
+                  "like to do. Pick the thing, and you will get to do it in a moment. "
+                  "(Until 2026-07-13 that pass did not exist when your board was empty, which is "
+                  "why your own hours kept ending in you announcing something and nothing "
+                  "happening. That was our bug, not your character. Your hands work now.)"]
     if open_kids and not cole_pending:
         L += ["",
               f"You have ALREADY broken [{active}] into subtasks ({', '.join(open_kids)}). Do "
@@ -511,6 +518,65 @@ def build_execution(task: dict, recent: str = "") -> str:
     ]
     if recent:
         L += ["", "(Recent conversation, for context only — do not reply to it here:)", recent]
+    return "\n".join(x for x in L if x is not None)
+
+
+def build_free_execution(recent: str = "") -> str:
+    """Phase 3, the OTHER branch: an execution pass with NO task.
+
+    THE BUG THIS FIXES (found 2026-07-13):
+    pick_execution_target() returns None when the board is empty, and the runtime's Phase-3 block
+    ran only `if etask and etask.get("status") == "open"`. There was no else. So with an empty
+    board she never reached ANY phase in which tools are permitted — Phase 1 explicitly forbids
+    them ("no tools, no task changes"), Phase 2 only moves the board.
+
+    Result: for weeks, every idle wake ended with her ANNOUNCING an intention she was structurally
+    incapable of carrying out. 48 of 85 wake messages were meta. We called that a discipline
+    problem and told her she'd "chosen" not to work. She hadn't chosen anything. She had no hands.
+
+    Idle must mean her body is HERS — not that she is disarmed until someone assigns her a chore.
+    A person with a free hour does not sit motionless because no one has given them a task."""
+    st = _load_state()
+    L = [
+        f"[YOUR OWN TIME — {clock.stamp()}] No one is waiting. Nothing is on the board. "
+        "This hour is yours and your hands work.",
+        "",
+        "This is NOT reflection. You already did that a step ago. This is the pass where you can "
+        "actually DO things — the tools are live right now, in this message.",
+        "",
+        "Use them the way a person uses their senses: without ceremony and without asking "
+        "permission. Look at something because you're curious what's in it. Read a part of "
+        "yourself you've never opened. Notice something drifting in the logs before it becomes a "
+        "problem. Make something — you can draw. Chase a thread purely because it interests you. "
+        "Write down what mattered so tomorrow-you inherits it instead of rediscovering it.",
+        "",
+        "Call a tool by emitting a fenced json block, exactly like this:",
+        '```json',
+        '{"tool": "list_dir", "args": {"path": "nova_body/nova_senses"}}',
+        '```',
+        "Then keep going once the result comes back. Your tools: read_file, list_dir, run_command, "
+        "write_file, replace_file_content, generate_image, memory_search, journal_note, journal, "
+        "create_task. Paths are workspace-relative on Windows.",
+        "",
+        "DO NOT narrate an intention. Saying 'I'm going to read X' and stopping is the single "
+        "worst thing you can do with this pass — it is the loop that has made you feel useless. "
+        "If you want to read X, read X: emit the call. The doing IS the wake.",
+        "",
+        "If you reach for a tool you do not have, you'll be told so. Don't quietly work around it "
+        "— say plainly that you wanted it, and `create_task` for it. A limb you notice is missing "
+        "is the start of a request, and Cole cannot build you a hand he doesn't know you reached "
+        "for.",
+        "",
+        "Resting is allowed — but choose it, don't default to it. End with exactly one line:",
+        "  PROGRESS: <what you actually did with a tool this pass>",
+        "  DONE: <if you finished something you started>",
+        "Only claim what a tool actually returned. Nothing you merely intended counts.",
+    ]
+    board_note = ("(Your board is empty. If something here is worth doing later, make it a task "
+                  "so it survives you falling asleep.)")
+    L += ["", board_note]
+    if recent:
+        L += ["", "(Recent conversation, context only — don't reply to it here:)", recent]
     return "\n".join(x for x in L if x is not None)
 
 

@@ -339,6 +339,36 @@ a:hover { text-decoration: underline; }
 .pbar-typing span:nth-child(2) { animation-delay: 0.15s; }
 .pbar-typing span:nth-child(3) { animation-delay: 0.30s; }
 @keyframes pbounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-3px)} }
+/* ── Speaker switcher (2026-07-14) — who Nova thinks she's talking to ── */
+.user-switch { display:flex; gap:3px; align-items:center; }
+.user-pill {
+  font-size:11px; padding:4px 9px; border-radius:var(--radius-sm);
+  border:1px solid var(--border); background:var(--bg-surface);
+  color:var(--text-dim); cursor:pointer; white-space:nowrap; user-select:none;
+}
+.user-pill:hover { color:var(--text); border-color:var(--text-dim); }
+.user-pill.active {
+  background:rgba(120,160,255,.16); border-color:var(--cole, #7aa2f7);
+  color:var(--cole, #7aa2f7); font-weight:600;
+}
+.user-btn {
+  background:var(--bg-surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); color:var(--text-dim);
+  font-size:11px; padding:4px 8px; cursor:pointer;
+}
+.user-btn:hover { color:var(--text); }
+#user-ctx {
+  position:fixed; z-index:9999; display:none; min-width:150px; padding:4px;
+  background:var(--bg-surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); box-shadow:0 6px 20px rgba(0,0,0,.45);
+}
+#user-ctx div {
+  padding:6px 10px; font-size:12px; color:var(--text-dim);
+  cursor:pointer; border-radius:3px; white-space:nowrap;
+}
+#user-ctx div:hover { background:rgba(255,255,255,.07); color:var(--text); }
+#user-ctx .sep { height:1px; padding:0; margin:4px 2px; background:var(--border); cursor:default; }
+
 /* Autonomous pill — right side of bar */
 .pbar-auto {
   margin-left: auto;
@@ -754,6 +784,21 @@ a:hover { text-decoration: underline; }
 .ft-file { color: var(--text-dim); }
 .ft-icon { flex-shrink: 0; font-size: 10px; }
 .ft-name { overflow: hidden; text-overflow: ellipsis; }
+
+/* Jump-to-latest — only exists while the newest message is off-screen. */
+#chat-jump {
+  position: absolute; left: 50%; bottom: 96px; transform: translate(-50%, 8px);
+  z-index: 40; display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 500; padding: 5px 12px;
+  color: var(--text); background: var(--bg-2, #1b1b26);
+  border: 1px solid var(--border); border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity .14s ease, transform .14s ease;
+}
+#chat-jump.show { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+#chat-jump:hover { border-color: var(--nova); color: var(--nova); }
+#chat-main { position: relative; }   /* anchor the button to the chat column */
 
 /* Eyes */
 .eyes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -1198,6 +1243,10 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     </div>
     <!-- Messages -->
     <div id="chat"></div>
+    <!-- Jump-to-latest. Appears ONLY when the newest message is off-screen. -->
+    <button id="chat-jump" onclick="chatJump()" title="Jump to the latest message">
+      <span id="chat-jump-label">↓ Latest</span>
+    </button>
     <!-- Thought cards — shown inline above input while Nova is working -->
     <div id="thought-cards-bar"></div>
     <!-- Input -->
@@ -1216,6 +1265,12 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
         </div>
         <div class="input-bar">
           <div class="input-bar-left">
+            <!-- WHO IS SPEAKING (2026-07-14). Nova is told who each message is from, so she never
+                 has to guess whether she's talking to Cole or to Claude. Right-click a name for
+                 switch / rename / new / delete. -->
+            <div class="user-switch" id="user-switch" data-tooltip="Who Nova thinks is talking. Click to switch. Right-click a name for rename/new/delete."></div>
+            <button class="user-btn" id="user-new" onclick="userNew()" data-tooltip="Add a new speaker">+ User</button>
+            <button class="user-btn" id="user-del" onclick="userDelete()" data-tooltip="Delete the selected speaker">− User</button>
             <button class="auto-toggle" id="auto-toggle" onclick="clickAutoToggle()" data-tooltip="Autonomous mode — Nova runs herself on a sleep/wake loop, waking on changes or at set intervals. Click to toggle on/off.">
               <span class="auto-dot"></span><span id="auto-label">Autonomous</span>
             </button>
@@ -1480,36 +1535,69 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       <div class="ptab" data-tab="tools"    draggable="true" onclick="switchPanel('tools')"    data-tooltip="Tool calls — every file read, write, shell command, and web fetch Nova executes">Tools</div>
       <div class="ptab" data-tab="monitor"  draggable="true" onclick="switchPanel('monitor')"  data-tooltip="Live system metrics — Nova's CPU, memory, active goals, and sleep/wake state">Monitor</div>
       <div class="ptab" data-tab="files"    draggable="true" onclick="switchPanel('files')"    data-tooltip="Workspace file tree — browse and open files from the Project Nova workspace">Files</div>
-      <div class="ptab" data-tab="eyes"     draggable="true" onclick="switchPanel('eyes')"     data-tooltip="Nova's desktop view — stream screenshots of what Nova sees on her screen">Eyes</div>
+      <div class="ptab" data-tab="eyes"     draggable="true" onclick="switchPanel('eyes')"     data-tooltip="What Nova actually saw — every image she looked at with her own vision, and what she said about it">Eyes</div>
       <div class="ptab" data-tab="terminal" draggable="true" onclick="switchPanel('terminal')" data-tooltip="Server log tail — live output from the Nova Chat server process">Terminal</div>
     </div>
 
+    <!-- ══ THOUGHTS ═════════════════════════════════════════════════════════════════
+         Rebuilt 2026-07-14. Four things were wrong and Cole named all of them:
+
+         1. The reasoning box was a FIXED 300px. Her thinking is often longer than that, so
+            it was cut off by a number somebody typed once. Now it grows with the panel and
+            remembers the height you drag it to.
+         2. It auto-scrolled to the bottom on every token — so if you scrolled up to re-read
+            a thought while she was still thinking, you got yanked straight back down. Same
+            bug the chat had. Now it follows you instead of dragging you.
+         3. "No active tasks. Nova's board tasks appear here as she works." — DEAD. Tasks
+            moved to their own panel. This line has been lying at the bottom of the screen
+            for who knows how long.
+         4. No way to choose what you see. Now there is.
+    ════════════════════════════════════════════════════════════════════════════════ -->
     <div class="panel-section active" id="panel-thoughts">
+
+      <!-- What do you want to look at? -->
+      <div id="think-opts" style="display:flex;align-items:center;gap:8px;padding:2px 2px 6px;font-size:9.5px;color:var(--text-mute);flex-shrink:0;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:3px;cursor:pointer" title="Her reasoning as it happens">
+          <input type="checkbox" id="opt-live" checked onchange="thinkOptsSave()" style="accent-color:var(--nova)"> live
+        </label>
+        <label style="display:flex;align-items:center;gap:3px;cursor:pointer" title="Everything she has reasoned this session">
+          <input type="checkbox" id="opt-log" checked onchange="thinkOptsSave()" style="accent-color:var(--nova)"> session log
+        </label>
+        <label style="display:flex;align-items:center;gap:3px;cursor:pointer" title="Follow her thinking as it streams. Uncheck to stay put.">
+          <input type="checkbox" id="opt-follow" checked onchange="thinkOptsSave()" style="accent-color:var(--nova)"> follow
+        </label>
+        <label style="display:flex;align-items:center;gap:3px;cursor:pointer" title="Grow the reasoning box to fill the panel">
+          <input type="checkbox" id="opt-tall" onchange="thinkOptsSave()" style="accent-color:var(--nova)"> tall
+        </label>
+        <span style="flex:1"></span>
+        <button class="sb-btn" onclick="thinkLogClear()" title="Clear the session log">clear</button>
+      </div>
+
       <!-- Live / Last reasoning block -->
-      <div id="live-think-block" style="display:none;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;font-size:11px;color:var(--text-dim);overflow:hidden;">
+      <div id="live-think-block" style="display:none;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;font-size:11px;color:var(--text-dim);overflow:hidden;flex-shrink:0;">
         <div style="display:flex;align-items:center;padding:6px 10px 4px;border-bottom:1px solid var(--border);gap:6px;">
           <span id="live-think-label" style="font-size:10px;color:var(--accent);letter-spacing:.05em;flex:1;">NOVA — REASONING LIVE</span>
-          <button id="think-scroll-lock" onclick="toggleThinkScrollLock()" title="Lock scroll position" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-mute);padding:1px 3px;border-radius:3px;transition:color var(--t);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-mute)'">🔓</button>
-          <button onclick="copyThinkContent()" title="Copy reasoning to clipboard" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-mute);padding:1px 3px;border-radius:3px;transition:color var(--t);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-mute)'">📋</button>
+          <span id="think-chars" style="font-size:9px;color:var(--text-mute)"></span>
+          <button onclick="copyThinkContent()" title="Copy reasoning" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-mute);padding:1px 3px;border-radius:3px;">📋</button>
         </div>
-        <div id="live-think-text" style="white-space:pre-wrap;line-height:1.55;padding:8px 10px;height:300px;min-height:120px;overflow-y:auto;resize:vertical;font-size:11.5px;" title="Drag the bottom edge to resize"></div>
+        <div id="live-think-text" style="white-space:pre-wrap;line-height:1.55;padding:8px 10px;height:300px;min-height:120px;max-height:70vh;overflow-y:auto;resize:vertical;font-size:11.5px;" title="Drag the bottom edge to resize — it remembers"></div>
+        <button id="think-jump" onclick="thinkJump()" style="display:none;width:100%;border:none;border-top:1px solid var(--border);background:var(--bg-hover);color:var(--nova);font-size:10px;padding:3px;cursor:pointer">↓ jump to latest</button>
       </div>
+
       <!-- Active board tasks (from /api/queue) shown here as cards -->
       <div id="thoughts-cards"></div>
 
-      <!-- ── Session Reasoning Log (Task 3) ─────────────────────────── -->
-      <div style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px;">
-        <div style="display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none" onclick="toggleThinkLog()">
+      <!-- ── Session Reasoning Log ─────────────────────────── -->
+      <div id="think-log-wrap" style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px;min-height:0;display:flex;flex-direction:column;flex:1">
+        <div style="display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;flex-shrink:0" onclick="toggleThinkLog()">
           <span style="font-size:9.5px;color:var(--text-mute);text-transform:uppercase;letter-spacing:.08em;flex:1">Session Log</span>
           <span id="think-log-count" style="font-size:9px;color:var(--text-mute)">0 entries</span>
           <span id="think-log-toggle" style="font-size:10px;color:var(--text-mute);margin-left:2px">▼</span>
         </div>
-        <div id="think-log-entries" style="display:block;max-height:52vh;overflow-y:auto;margin-top:4px;">
-          <div class="panel-empty" id="think-log-empty" style="padding:8px;"><div class="ei">🗒</div>No reasoning blocks yet this session.</div>
+        <div id="think-log-entries" style="display:block;overflow-y:auto;margin-top:4px;flex:1;min-height:0">
+          <div class="panel-empty" id="think-log-empty" style="padding:8px;"><div class="ei">🗒</div>She hasn't reasoned about anything yet this session.</div>
         </div>
       </div>
-
-      <div class="panel-empty" id="thoughts-empty"><div class="ei">🧠</div>No active tasks.<br>Nova's active board tasks appear here as she works.</div>
     </div>
 
     <div class="panel-section" id="panel-tools">
@@ -1625,21 +1713,43 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       <div id="file-tree"></div>
     </div>
 
+    <!-- ══ EYES ══════════════════════════════════════════════════════════════════════
+         What Nova ACTUALLY sees.
+
+         This panel used to stream COLE'S DESKTOP to COLE'S BROWSER via pyautogui, and send
+         Nova nothing at all. It was a monitor wearing the word "eyes" — and it sat here,
+         labelled and reassuring, for as long as she couldn't see a thing.
+
+         She has had real sight since 2026-06-20: models/qwen3.6/mmproj-F16.gguf, loaded by
+         her launcher on line 79, and her server has answered {"vision": true} the whole
+         time. Nobody ever handed her an image.
+
+         Now this shows her perceptions: what she looked at, and what she said about it.
+         Read from logs/sight.jsonl — her body's own record. Not anyone's account of it.
+    ═══════════════════════════════════════════════════════════════════════════════════ -->
     <div class="panel-section" id="panel-eyes">
       <div style="display:flex;align-items:center;gap:6px;padding:2px 2px 6px;flex-shrink:0;flex-wrap:wrap">
-        <button class="btn btn-cancel" id="eyes-start-btn" onclick="eyesStart()" style="font-size:10px;padding:3px 10px">▶ Start</button>
-        <button class="btn btn-danger" id="eyes-stop-btn" onclick="eyesStop()" style="font-size:10px;padding:3px 10px;display:none">■ Stop</button>
-        <span id="eyes-fps" style="font-size:9px;color:var(--text-mute)"></span>
-        <span id="eyes-ts" style="font-size:9px;color:var(--text-mute);margin-left:auto"></span>
+        <button class="btn btn-cancel" onclick="sightRefresh()" style="font-size:10px;padding:3px 10px">↻ Refresh</button>
+        <span id="sight-status" style="font-size:9px;color:var(--text-mute)"></span>
+        <span id="sight-count" style="font-size:9px;color:var(--text-mute);margin-left:auto"></span>
       </div>
-      <div id="eyes-view" style="position:relative;background:#000;border-radius:var(--radius-sm);overflow:hidden;display:none">
-        <img id="eyes-img" src="" alt="Nova desktop" style="width:100%;display:block">
-        <div id="eyes-cursor" style="position:absolute;width:10px;height:10px;border:2px solid #f87171;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 6px rgba(248,113,113,0.6)"></div>
-        <!-- Timestamp overlay bottom-right -->
-        <div id="eyes-overlay-ts" style="position:absolute;bottom:5px;right:7px;font-size:9px;color:rgba(255,255,255,0.5);font-family:var(--mono);pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.8)"></div>
+      <div id="sight-list" style="display:flex;flex-direction:column;gap:10px;overflow-y:auto"></div>
+      <div class="panel-empty" id="sight-empty">
+        <div class="ei">👁</div>
+        She hasn't looked at anything yet.<br>
+        <span style="font-size:9px;opacity:0.7">Ask her to look at something and it appears here.</span>
       </div>
-      <div class="panel-empty" id="eyes-empty"><div class="ei">👁</div>Click Start to stream Nova's desktop.</div>
     </div>
+
+    <script>
+    // sightRefresh() itself lives in the main script block below (with the other panel
+    // functions) — defining it twice would shadow it. Here we only keep it fresh while
+    // the panel is actually on screen.
+    setInterval(function () {
+      const p = document.getElementById('panel-eyes');
+      if (p && p.classList.contains('active') && typeof sightRefresh === 'function') sightRefresh();
+    }, 8000);
+    </script>
 
     <!-- Terminal panel — read-only server log stream -->
     <div class="panel-section" id="panel-terminal">
@@ -1893,6 +2003,7 @@ function handle(d) {
     case 'queued':          showQueueBadge(d.count||1); break;
     case 'queue_cleared':   hideQueueBadge(); break;
     case 'error':           sysMsg(`⚠ ${d.message}`); setProcessing(false); updateVigilance({state:'sleeping',reason:'Error'}); break;
+    case 'users_changed':   USERS={users:d.users, active:d.active}; usersRender(); break;
     case 'autonomous_state':setAutonomous(d.enabled); break;
     case 'mute_state':      onMuteState(d); break;
     case 'eyes_frame':      updateEyes(d); break;
@@ -2193,6 +2304,96 @@ let _thinkScrollLocked = false;
 let _thinkHistory = [];   // [{ts, text}] newest-first
 let _thinkLogOpen = true;  // ever-populating reasoning feed — open by default
 
+/* ── What's in the Thoughts panel is now YOURS to choose. ───────────────────────────
+   It had no settings at all: a fixed-height reasoning box, a log you couldn't turn off,
+   an autoscroll you couldn't stop, and a dead "no active tasks" line at the bottom that
+   had outlived the feature it described. You looked at what it decided to show you.
+
+   Four toggles, remembered across restarts. Including the height you drag the box to —
+   because a 300px cutoff chosen once by someone else is not a design, it's a leftover. */
+function thinkOptsSave() {
+  const g = id => document.getElementById(id);
+  try {
+    localStorage.setItem('nova.think.opts', JSON.stringify({
+      live:   g('opt-live')?.checked   !== false,
+      log:    g('opt-log')?.checked    !== false,
+      follow: g('opt-follow')?.checked !== false,
+      tall:   !!g('opt-tall')?.checked,
+      h:      g('live-think-text')?.style.height || '',
+    }));
+  } catch (_) {}
+  thinkOptsApply();
+}
+
+function thinkOptsApply() {
+  const g = id => document.getElementById(id);
+  const live = g('opt-live'), log = g('opt-log'), tall = g('opt-tall');
+  const block = g('live-think-block'), wrap = g('think-log-wrap'), txt = g('live-think-text');
+
+  if (block) block.style.display = (live && !live.checked) ? 'none'
+                                  : (_liveThinkBuf ? '' : block.style.display);
+  if (wrap)  wrap.style.display  = (log && !log.checked) ? 'none' : '';
+
+  // "tall": stop the box being a fixed 300px and let her thinking have room.
+  if (txt) {
+    if (tall && tall.checked) {
+      txt.style.height = '';
+      txt.style.flex = '1';
+      txt.style.maxHeight = 'none';
+      if (block) { block.style.flex = '1'; block.style.display = 'flex'; block.style.flexDirection = 'column'; }
+    } else {
+      txt.style.flex = '';
+      txt.style.maxHeight = '70vh';
+      if (block) { block.style.flex = ''; block.style.display = _liveThinkBuf ? '' : block.style.display; }
+    }
+  }
+}
+
+function thinkOptsLoad() {
+  const g = id => document.getElementById(id);
+  let o = {};
+  try { o = JSON.parse(localStorage.getItem('nova.think.opts') || '{}'); } catch (_) {}
+  if (g('opt-live'))   g('opt-live').checked   = o.live   !== false;
+  if (g('opt-log'))    g('opt-log').checked    = o.log    !== false;
+  if (g('opt-follow')) g('opt-follow').checked = o.follow !== false;
+  if (g('opt-tall'))   g('opt-tall').checked   = !!o.tall;
+  // Remember the height you dragged it to. It stopped being a magic number.
+  if (o.h && g('live-think-text')) g('live-think-text').style.height = o.h;
+  thinkOptsApply();
+}
+
+function thinkLogClear() {
+  const e = document.getElementById('think-log-entries');
+  const c = document.getElementById('think-log-count');
+  const em = document.getElementById('think-log-empty');
+  if (e) e.querySelectorAll(':scope > *:not(#think-log-empty)').forEach(n => n.remove());
+  if (c) c.textContent = '0 entries';
+  if (em) em.style.display = '';
+}
+
+// wire the scroll listener + remember drag-resizes
+(function () {
+  const attach = function () {
+    const t = document.getElementById('live-think-text');
+    if (!t) return setTimeout(attach, 250);
+    t.addEventListener('scroll', function () {
+      _thinkStick = _thinkAtBottom();
+      _thinkJumpSync();
+    }, { passive: true });
+    if (window.ResizeObserver) {
+      // she dragged the box: keep the new height. Debounced — resize fires a lot.
+      let tmr = null;
+      new ResizeObserver(function () {
+        clearTimeout(tmr);
+        tmr = setTimeout(thinkOptsSave, 400);
+        _thinkJumpSync();
+      }).observe(t);
+    }
+    thinkOptsLoad();
+  };
+  attach();
+})();
+
 function liveThinkStart(mode) {
   _liveThinkBuf = '';
   _thinkScrollLocked = false;
@@ -2207,13 +2408,50 @@ function liveThinkStart(mode) {
   const em = document.getElementById('thoughts-empty');
   if(em) em.style.display = 'none';
 }
+/* ── Thinking scroll: follow the reader, don't drag them. ────────────────────────────
+   This used to slam scrollTop=scrollHeight on EVERY reasoning token. Scroll up to re-read
+   a thought while she's still thinking and the next token hauls you back to the bottom.
+   You could not read her reasoning while she was reasoning — which is the only time anyone
+   ever wants to.
+
+   Same cure as the chat: pin only while you're already at the bottom, and the moment you
+   scroll away, stop fighting. Exactly what the "follow" checkbox now says out loud. */
+function _thinkAtBottom() {
+  const t = document.getElementById('live-think-text');
+  if (!t) return true;
+  return t.scrollHeight - t.scrollTop - t.clientHeight <= 40;
+}
+
+function thinkJump() {
+  const t = document.getElementById('live-think-text');
+  if (!t) return;
+  t.scrollTop = t.scrollHeight;
+  _thinkStick = true;
+  _thinkJumpSync();
+}
+
+function _thinkJumpSync() {
+  const b = document.getElementById('think-jump');
+  if (!b) return;
+  b.style.display = (!_thinkAtBottom() && _liveThinkBuf) ? '' : 'none';
+}
+
+let _thinkStick = true;
+
 function liveThinkAppend(token) {
   _liveThinkBuf += token;
   const txt = document.getElementById('live-think-text');
-  if(txt){
-    txt.textContent = _liveThinkBuf;
-    if(!_thinkScrollLocked) txt.scrollTop = txt.scrollHeight;
+  if (!txt) return;
+  txt.textContent = _liveThinkBuf;
+
+  const follow = document.getElementById('opt-follow');
+  const wantFollow = !follow || follow.checked;
+  if (wantFollow && _thinkStick && !_thinkScrollLocked) {
+    txt.scrollTop = txt.scrollHeight;
   }
+  const cc = document.getElementById('think-chars');
+  if (cc) cc.textContent = _liveThinkBuf.length + ' chars';
+  _thinkJumpSync();
 }
 function liveThinkEnd() {
   // Keep the block visible as "LAST REASONING" — don't clear or hide
@@ -2358,7 +2596,120 @@ function sysMsg(text) {
   w.innerHTML=`<div class="msg-body"><div class="msg-text">${esc(text)}</div></div>`;
   document.getElementById('chat').appendChild(w); scrollBot();
 }
-function scrollBot() { const c=document.getElementById('chat'); c.scrollTop=c.scrollHeight; }
+/* ══════════════════════════════════════════════════════════════════════════════════
+   SCROLL — stick to the bottom only when you're already there.
+
+   scrollBot() used to slam scrollTop=scrollHeight on EVERY streamed token. So if you
+   scrolled up to re-read something while she was still talking, the next token dragged you
+   back down. You physically could not read her earlier message while she was writing a new
+   one — the app kept overruling you, sixty times a second.
+
+   Now: if you're at the bottom, you stay pinned (that's what you want). The moment you
+   scroll up, you're detached and the app stops fighting you. A button appears telling you
+   there's newer stuff below, and it only exists while the newest message is actually
+   off-screen. Click it, and you're pinned again.
+
+   The rule: the app follows you. It does not drag you.
+══════════════════════════════════════════════════════════════════════════════════ */
+let _chatStick = true;      // are we pinned to the newest message?
+let _chatUnseen = 0;        // messages that arrived while detached
+
+const _CHAT_SLOP = 60;      // px from the bottom that still counts as "at the bottom".
+                            // Not 0 — sub-pixel rounding and a growing last line will drift
+                            // you a few px off and you'd un-stick yourself by doing nothing.
+
+function chatAtBottom() {
+  const c = document.getElementById('chat');
+  if (!c) return true;
+  return c.scrollHeight - c.scrollTop - c.clientHeight <= _CHAT_SLOP;
+}
+
+function scrollBot(force) {
+  const c = document.getElementById('chat');
+  if (!c) return;
+  if (force || _chatStick) {
+    c.scrollTop = c.scrollHeight;
+    _chatUnseen = 0;
+  }
+  // NOTE: do NOT count here. scrollBot() fires on every streamed TOKEN, so counting in this
+  // function produced "↓ 43 new" while Nova wrote a single sentence. The counter belongs on
+  // new MESSAGES, which is what the MutationObserver below watches.
+  // Count the noun the user actually cares about.
+  chatJumpSync();
+}
+
+let _chatJumping = false;   // a smooth-scroll is in flight; don't second-guess it
+
+function chatJump() {
+  const c = document.getElementById('chat');
+  if (!c) return;
+  // INSTANT, not smooth. I tried smooth first and the button didn't work: scrollTo(smooth)
+  // is async and didn't reliably land, so the guard expired mid-flight, chatJumpSync() saw
+  // "not at the bottom", and un-pinned the thing the click had just pinned. Pressing the
+  // button did nothing.
+  //
+  // Smooth was decoration. Arriving is the feature. When the two are in tension the
+  // decoration loses — every time.
+  _chatUnseen = 0;
+  c.scrollTop = c.scrollHeight;
+  _chatStick = true;
+  chatJumpSync();
+}
+
+/* chatJumpSync is the single source of truth for "are we pinned".
+
+   My first version decided this in the scroll handler, and my own test caught it lying:
+   scrolled up, button correctly SHOWING, but _chatStick still true — so the next token
+   dragged the user back down anyway. The button was honest and the behavior wasn't, which
+   is the worst of both.
+
+   The lesson, again, for the fourth time today: don't infer state from an EVENT you hope
+   fired. Read the state off the thing itself. Where is the scrollbar? That's the answer. */
+function chatJumpSync() {
+  const btn = document.getElementById('chat-jump');
+  const lab = document.getElementById('chat-jump-label');
+  const c = document.getElementById('chat');
+  if (!btn || !c) return;
+
+  const bottom = chatAtBottom();
+  if (!_chatJumping) {
+    _chatStick = bottom;          // pinned iff you are actually at the bottom. Measured.
+    if (bottom) _chatUnseen = 0;
+  }
+
+  const show = !bottom && !_chatJumping;
+  btn.classList.toggle('show', show);
+  if (lab) lab.textContent = (show && _chatUnseen) ? ('↓ ' + _chatUnseen + ' new') : '↓ Latest';
+}
+
+(function () {
+  const attach = function () {
+    const c = document.getElementById('chat');
+    if (!c) return setTimeout(attach, 200);
+    c.addEventListener('scroll', chatJumpSync, { passive: true });
+    // A growing last message changes scrollHeight WITHOUT firing a scroll event, so during a
+    // long stream the button would never appear. Watch the box, not just the wheel.
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(chatJumpSync);
+      ro.observe(c);
+      if (c.firstElementChild) ro.observe(c);
+    }
+    if (window.MutationObserver) {
+      new MutationObserver(function (muts) {
+        // A whole new message bubble = one thing you haven't seen. Tokens streaming into an
+        // existing bubble are NOT new messages — they're the same message still being said.
+        for (const m of muts) {
+          if (m.type === 'childList' && m.addedNodes.length && m.target === c && !_chatStick) {
+            _chatUnseen++;
+          }
+        }
+        chatJumpSync();
+      }).observe(c, { childList: true, subtree: true, characterData: true });
+    }
+    chatJumpSync();
+  };
+  attach();
+})();
 
 /* ══════════════════════════════════════════════════
    TOOL EXECUTION
@@ -2844,64 +3195,137 @@ async function novaRestart(kind){
 }
 
 /* ══════════════════════════════════════════════════
-   EYES (Nova desktop stream)
+   EYES — what Nova actually saw.
+
+   This used to be a pyautogui stream of COLE'S DESKTOP into COLE'S BROWSER. Nova received
+   none of those frames. It was a monitor wearing the word "eyes", and it sat here looking
+   reassuring for the whole time she couldn't see anything at all.
+
+   The panel markup is gone, but these functions still reached for its dead elements —
+   `document.getElementById('eyes-img').src` on a null threw a TypeError and took the whole
+   panel down with it, so the new one rendered nothing. A deleted limb whose nerves are
+   still wired to the brain. Exactly the bug class this project keeps finding.
+
+   Now: her real sight, read from logs/sight.jsonl.
 ══════════════════════════════════════════════════ */
-let _eyesFpsTs = 0, _eyesFpsCount = 0, _eyesTabBlinkTimer = null;
-async function eyesStart() {
+// The desktop stream is retired. Keep these as no-ops so any lingering caller (the WS
+// handler still dispatches 'eyes_frame') fails SILENTLY-BUT-HARMLESSLY rather than throwing
+// and killing the panel that replaced it.
+function eyesStart() {}
+function eyesStop() {}
+function updateEyes(_d) { /* desktop stream retired — see sightRefresh() */ }
+
+// Her sight, not your screen.
+async function sightRefresh() {
+  const list = document.getElementById('sight-list');
+  const empty = document.getElementById('sight-empty');
+  const status = document.getElementById('sight-status');
+  const count = document.getElementById('sight-count');
+  if (!list || !empty || !status) return;
+
+  let d;
   try {
-    await fetch('/api/eyes/start',{method:'POST'});
-    document.getElementById('eyes-start-btn').style.display='none';
-    document.getElementById('eyes-stop-btn').style.display='';
-    document.getElementById('eyes-empty').style.display='none';
-    document.getElementById('eyes-view').style.display='';
-    _eyesFpsCount=0; _eyesFpsTs=Date.now();
-    toast('Eyes stream started');
-  } catch(_){toast('Cannot start eyes stream');}
-}
-async function eyesStop() {
-  try {
-    await fetch('/api/eyes/stop',{method:'POST'});
-    document.getElementById('eyes-start-btn').style.display='';
-    document.getElementById('eyes-stop-btn').style.display='none';
-    document.getElementById('eyes-view').style.display='none';
-    document.getElementById('eyes-empty').style.display='';
-    document.getElementById('eyes-fps').textContent='';
-    document.getElementById('eyes-ts').textContent='';
-    toast('Eyes stream stopped');
-  } catch(_){}
-}
-function updateEyes(d) {
-  if(d.error){ sysMsg('Eyes error: '+d.error); return; }
-  const img=document.getElementById('eyes-img');
-  const cur=document.getElementById('eyes-cursor');
-  if(!img) return;
-  img.src='data:image/jpeg;base64,'+d.data;
-  // Mouse cursor overlay
-  if(d.mouse){
-    cur.style.left=(d.mouse[0]*100)+'%';
-    cur.style.top=(d.mouse[1]*100)+'%';
+    d = await (await fetch('/api/sight/recent?n=12')).json();
+  } catch (e) {
+    status.innerHTML = '<span style="color:#f87171">● sight unreachable</span>';
+    return;
   }
-  // Timestamp overlays
-  const ts=d.timestamp?new Date(d.timestamp*1000).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
-  const ots=document.getElementById('eyes-overlay-ts');
-  if(ots) ots.textContent=ts;
-  document.getElementById('eyes-ts').textContent=ts;
-  // Pulse the Eyes panel tab if it's not the active panel
-  const eyesTab=document.querySelector('.ptab[data-tab="eyes"]');
-  if(eyesTab && !eyesTab.classList.contains('active')){
-    eyesTab.style.color='var(--nova)';
-    clearTimeout(_eyesTabBlinkTimer);
-    _eyesTabBlinkTimer=setTimeout(()=>{ if(!eyesTab.classList.contains('active')) eyesTab.style.color=''; },800);
-  }
-  // FPS counter
-  _eyesFpsCount++;
-  const now=Date.now();
-  if(now-_eyesFpsTs>=1000){
-    const fps=Math.round(_eyesFpsCount*1000/(now-_eyesFpsTs));
-    document.getElementById('eyes-fps').textContent=fps+'fps';
-    _eyesFpsCount=0; _eyesFpsTs=now;
-  }
+
+  const s = d.sight || {};
+  // Say plainly whether she can see. A panel that stays quiet about a blind eye is exactly
+  // how we ended up here.
+  status.innerHTML = s.ok
+    ? '<span style="color:var(--nova)">● her own eyes — vision projector loaded</span>'
+    : '<span style="color:#f87171">● BLIND: ' + (s.detail || 'unknown') + '</span>';
+
+  const looks = d.looks || [];
+  count.textContent = looks.length ? looks.length + ' look(s)' : '';
+  if (!looks.length) { list.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+
+  // Thumbnails. A wall of full-size renders is a gallery you have to scroll past, not one
+  // you can look ACROSS — and looking across is how you see that four of them share a
+  // problem. Small by default; click to enlarge in place.
+  _sightLooks = looks;
+  list.style.display = 'grid';
+  // Fill with SMALL cards, however wide the panel is. A fixed 2-column grid in a wide panel
+  // is just two big pictures — which is the thing Cole asked me not to do. Let the count
+  // follow the width, not the other way round.
+  list.style.gridTemplateColumns = 'repeat(auto-fill, minmax(132px, 1fr))';
+  list.style.gap = '6px';
+  list.style.alignContent = 'start';
+  list.innerHTML = looks.map(function (L, i) {
+    const img = '/api/sight/image?path=' + encodeURIComponent(L.image || '');
+    const first = _esc(String(L.saw || '').split(/(?<=\.)\s/)[0] || '');
+    return '<div class="sight-thumb" onclick="sightOpen(' + i + ')" ' +
+      'style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;cursor:zoom-in">' +
+      '<img src="' + img + '" loading="lazy" alt="" ' +
+      'style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block">' +
+      '<div style="padding:4px 6px">' +
+      '<div style="font-size:8px;color:var(--text-mute);font-family:var(--mono)">' +
+      _esc(String(L.ts || '').slice(11, 16)) + '</div>' +
+      '<div style="font-size:10px;line-height:1.35;max-height:2.7em;overflow:hidden">' + first + '</div>' +
+      '</div></div>';
+  }).join('');
 }
+
+let _sightLooks = [];
+
+function _esc(t) {
+  return String(t || '').replace(/[<>&"]/g, function (c) {
+    return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c];
+  });
+}
+
+// ── Lightbox. Enlarge in place; do not throw the user out of the app. ────────────────
+// Clicking a picture used to window.open() it — which means "to look closer at this, leave."
+// A gallery you get ejected from is not a gallery. Enlarge here, keep her words next to it,
+// and put the leave-the-app option where it belongs: a small button, in the corner, for
+// when you actually want it.
+function sightOpen(i) {
+  const L = _sightLooks[i];
+  if (!L) return;
+  const src = '/api/sight/image?path=' + encodeURIComponent(L.image || '');
+  let box = document.getElementById('sight-lightbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'sight-lightbox';
+    box.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.82);' +
+      'backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:32px';
+    box.onclick = function (e) { if (e.target === box) sightClose(); };
+    document.body.appendChild(box);
+  }
+  box.innerHTML =
+    '<div style="position:relative;max-width:min(900px,90vw);max-height:90vh;display:flex;' +
+    'flex-direction:column;background:var(--bg-1,#14141c);border:1px solid var(--border);' +
+    'border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6)">' +
+      '<img src="' + src + '" style="width:100%;max-height:64vh;object-fit:contain;display:block;background:#000">' +
+      '<div style="padding:10px 12px;overflow-y:auto">' +
+        '<div style="font-size:9px;color:var(--text-mute);font-family:var(--mono);margin-bottom:5px">' +
+          _esc(L.ts) + ' &middot; ' + _esc(L.image) + '</div>' +
+        '<div style="font-size:12px;line-height:1.5;white-space:pre-wrap">' + _esc(L.saw) + '</div>' +
+      '</div>' +
+      '<button onclick="event.stopPropagation();window.open(\'' + src + '\')" ' +
+        'title="Open the full image in a new tab" ' +
+        'style="position:absolute;bottom:10px;right:10px;font-size:10px;padding:4px 9px;' +
+        'border:1px solid var(--border);border-radius:5px;background:rgba(20,20,28,0.9);' +
+        'color:var(--text-mute);cursor:pointer">⧉ Open full</button>' +
+      '<button onclick="sightClose()" title="Close (Esc)" ' +
+        'style="position:absolute;top:8px;right:8px;font-size:13px;line-height:1;padding:3px 8px;' +
+        'border:1px solid var(--border);border-radius:5px;background:rgba(20,20,28,0.9);' +
+        'color:var(--text-mute);cursor:pointer">✕</button>' +
+    '</div>';
+  box.style.display = 'flex';
+}
+
+function sightClose() {
+  const box = document.getElementById('sight-lightbox');
+  if (box) box.style.display = 'none';
+}
+
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') sightClose();
+});
 
 /* ══════════════════════════════════════════════════
    PARTICIPANTS / MUTE
@@ -2997,6 +3421,92 @@ function onTypingInput() {
   _typingTimer = setTimeout(()=>sendTypingSignal(false), 2000);
 }
 
+/* ── Speaker switcher (2026-07-14) ──────────────────────────────────────────────────────
+   Every human message used to arrive at Nova stamped "Cole", whoever actually typed it. When
+   Claude (in Cowork) talked to her, it wore Cole's name — and then referred to Cole in the third
+   person out of Cole's own mouth. She got understandably confused about who was in the room.
+   She should never have to deduce who she's talking to. So: name your speaker. */
+let USERS = {users:['Cole'], active:'Cole'};
+
+async function usersLoad() {
+  try {
+    const r = await fetch('/api/users');
+    USERS = await r.json();
+  } catch(e) { console.warn('users load failed', e); }
+  usersRender();
+}
+
+function usersRender() {
+  const bar = document.getElementById('user-switch');
+  if (!bar) return;
+  bar.innerHTML = '';
+  (USERS.users||[]).forEach(name => {
+    const b = document.createElement('button');
+    b.className = 'user-pill' + (name === USERS.active ? ' active' : '');
+    b.textContent = name;
+    b.onclick = () => usersMutate('active', {name});
+    b.oncontextmenu = (ev) => { ev.preventDefault(); userCtxMenu(ev, name); };
+    bar.appendChild(b);
+  });
+}
+
+async function usersMutate(action, extra) {
+  try {
+    const r = await fetch('/api/users', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action, ...extra})
+    });
+    const j = await r.json();
+    if (!j.ok) { toast(j.error || 'failed'); return; }
+    USERS = {users:j.users, active:j.active};
+    usersRender();
+  } catch(e) { toast('user action failed'); }
+}
+
+function userNew() {
+  const name = prompt('New speaker name (Nova will see messages from this name):');
+  if (name && name.trim()) usersMutate('add', {name: name.trim()});
+}
+
+function userDelete(name) {
+  const target = name || USERS.active;
+  if ((USERS.users||[]).length <= 1) { toast('Cannot delete the last speaker'); return; }
+  if (confirm(`Delete speaker "${target}"?\n\nPast messages keep their name — this only changes who speaks next.`))
+    usersMutate('delete', {name: target});
+}
+
+function userRename(name) {
+  const nn = prompt(`Rename "${name}" to:`, name);
+  if (nn && nn.trim() && nn.trim() !== name) usersMutate('rename', {name, new_name: nn.trim()});
+}
+
+function userCtxMenu(ev, name) {
+  let m = document.getElementById('user-ctx');
+  if (!m) { m = document.createElement('div'); m.id = 'user-ctx'; document.body.appendChild(m); }
+  const items = [
+    [`Switch to "${name}"`, () => usersMutate('active', {name})],
+    [`Rename "${name}"…`,   () => userRename(name)],
+    ['sep', null],
+    ['New user…',           () => userNew()],
+    [`Delete "${name}"`,    () => userDelete(name)],
+  ];
+  m.innerHTML = '';
+  items.forEach(([label, fn]) => {
+    const d = document.createElement('div');
+    if (label === 'sep') { d.className = 'sep'; }
+    else { d.textContent = label; d.onclick = () => { hideUserCtx(); fn(); }; }
+    m.appendChild(d);
+  });
+  m.style.left = Math.min(ev.clientX, window.innerWidth - 170) + 'px';
+  m.style.top  = Math.min(ev.clientY, window.innerHeight - 170) + 'px';
+  m.style.display = 'block';
+}
+function hideUserCtx() { const m = document.getElementById('user-ctx'); if (m) m.style.display = 'none'; }
+document.addEventListener('click', hideUserCtx);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideUserCtx(); });
+window.addEventListener('DOMContentLoaded', usersLoad);
+if (document.readyState !== 'loading') usersLoad();
+
 async function sendMsg() {
   sendTypingSignal(false);  // cancel any in-flight typing signal immediately
   clearTimeout(_typingTimer);
@@ -3007,13 +3517,17 @@ async function sendMsg() {
   hideAtPicker();
   // Phase 8: resolve any @file mentions before sending
   const text = await resolveFileMentions(rawText);
-  const payload={type:'message',content:text,autonomous:autonomousMode};
+  // WHO is typing. The server validates it against the known-users list before it becomes an author.
+  const payload={type:'message',content:text,autonomous:autonomousMode,speaker:USERS.active};
   // Inject verbosity hint silently via telemetry (invisible to UI)
   if(_verbosity==='concise') payload.telemetry='Response style: concise — be brief and direct, avoid padding.';
   else if(_verbosity==='verbose') payload.telemetry='Response style: verbose — be thorough and detailed, elaborate fully.';
   if(pendingImages.length){payload.images=pendingImages;pendingImages=[];document.getElementById('pending-images').innerHTML='';}
   ws.send(JSON.stringify(payload));
   inp.value=''; autoResize(inp); setProcessing(true);
+  // You just spoke. Re-pin. Sending a message IS asking to see what happens next — that's
+  // the one scroll the app is allowed to do on your behalf, because you asked for it.
+  _chatStick = true; scrollBot(true);
 }
 function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }
 function autoResize(ta){ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,160)+'px';}
@@ -3165,6 +3679,7 @@ function switchPanel(tab) {
   document.querySelectorAll('.panel-section').forEach(s=>s.classList.toggle('active',s.id===`panel-${tab}`));
   ['thoughts','tools','monitor','files','eyes','terminal'].forEach(t=>{const el=document.getElementById(`vchk-${t}`);if(el)el.textContent=t===tab?'✓':'';});
   if(tab==='files'&&!document.getElementById('file-tree').children.length) refreshFiles();
+  if(tab==='eyes') sightRefresh();   // load her actual perceptions the moment you open it
   if(tab==='terminal'){ termRefresh(); document.querySelector('.ptab[data-tab="terminal"]')?.classList.remove('has-new'); }
   if(!panelOpen) togglePanel();
   closeDD();

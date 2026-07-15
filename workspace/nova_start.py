@@ -1,4 +1,4 @@
-# Last updated: 2026-07-10 03:40:11
+# Last updated: 2026-07-15 22:42:41
 # @nova: Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.
 """
 nova_start.py  --  Project Nova one-shot launcher / orchestrator
@@ -22,6 +22,8 @@ build_nova_start.cmd).
 
 import os
 import sys
+import json          # _grant_clipboard writes Chrome's Preferences so Cole stops
+                     # re-authorising copy-paste on every single restart (2026-07-14)
 import time
 import socket
 import signal
@@ -378,26 +380,102 @@ _BROWSER_CANDIDATES = [
 ]
 
 
+APP_PROFILE = ".nova_app_profile"      # ONE profile. Stable. Forever.
+
+
+def _kill_stale_app_chrome() -> None:
+    """Kill any leftover Chrome still holding OUR profile — and nothing else.
+
+    This is the job the throwaway profile was doing. A leftover Chrome on the same profile
+    hijacks the --app request and the new process exits instantly, which used to take the
+    launcher down with it. The old fix was to use a brand-new profile every launch, which
+    dodged the collision — and threw away every permission Cole had ever granted.
+
+    Kill the squatter instead of moving house. Matches ONLY command lines containing our
+    profile path, so Cole's real Chrome windows are never touched."""
+    if os.name != "nt":
+        return
+    try:
+        subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "
+             f"'*{APP_PROFILE}*' " + "} | ForEach-Object { Stop-Process -Id $_.ProcessId "
+             "-Force -ErrorAction SilentlyContinue }"],
+            capture_output=True, timeout=15)
+    except Exception:
+        pass
+
+
+def _grant_clipboard(profile: Path, port: int) -> None:
+    """Pre-approve clipboard access for our own origin, in our own profile.
+
+    Cole: "it forces me to allow copy pasting every single time the window restarts."
+    Of course it did — every restart was a NEW BROWSER PROFILE, so Chrome had never met
+    this page before and asked again, forever.
+
+    With a stable profile the grant would persist on its own after one click. But there is
+    no reason to make him click at all: this is his machine, his localhost, his app, asking
+    to read a clipboard he owns. So we write the permission into the profile ourselves.
+    Setting 1 = ALLOW, scoped to exactly http://127.0.0.1:<port>. Nothing else gets it."""
+    try:
+        prefs_dir = profile / "Default"
+        prefs_dir.mkdir(parents=True, exist_ok=True)
+        prefs_file = prefs_dir / "Preferences"
+
+        prefs = {}
+        if prefs_file.is_file():
+            try:
+                prefs = json.loads(prefs_file.read_text(encoding="utf-8"))
+            except Exception:
+                prefs = {}          # corrupt prefs: rebuild rather than crash the launch
+
+        origin = f"http://127.0.0.1:{port},*"
+        allow = {"setting": 1}
+        cs = prefs.setdefault("profile", {}).setdefault("content_settings", {}) \
+                  .setdefault("exceptions", {})
+        for perm in ("clipboard", "clipboard_read_write", "notifications"):
+            cs.setdefault(perm, {})[origin] = dict(allow)
+
+        prefs_file.write_text(json.dumps(prefs), encoding="utf-8")
+    except Exception as e:
+        log(f"Could not pre-grant clipboard permission: {e}", "WARN")
+
+
 def open_app_window():
-    """Open Nova as a standalone, chromeless app window. Uses a FRESH per-launch
-    profile dir so Chrome always starts its own instance — a shared profile lets
-    a leftover Chrome hijack the --app request, making the launched process exit
-    instantly (which used to shut the launcher down early). Returns the Popen."""
+    """Open Nova as a standalone, chromeless app window.
+
+    ── 2026-07-14: ONE profile, kept. ──────────────────────────────────────────────────
+    This used to mint a fresh Chrome profile on every single launch (.nova_app_profile_<pid>)
+    and delete the old ones. That solved a real problem — a leftover Chrome hijacking the
+    --app request — by the crude method of never reusing anything.
+
+    The cost was invisible until Cole named it: every restart was a browser that had never
+    seen this page before. Every permission re-asked. Every setting reset. He had to
+    re-authorise copy-and-paste, forever, because the app kept getting amnesia.
+
+    Now: one stable profile, and we kill the squatter instead of abandoning the house.
+    """
     global _app_profile_dir
     browser = next((p for p in _BROWSER_CANDIDATES if p.exists()), None)
     if not browser:
         log("No Chrome/Edge found for app-window mode. Nova UI is at "
             f"http://127.0.0.1:{CHAT_PORT}", "WARN")
         return None
-    # Best-effort cleanup of stale per-launch profiles from previous runs.
+
+    # Sweep away the old throwaway profiles (.nova_app_profile_1234). Keep OURS.
     try:
-        for old in WS.glob(".nova_app_profile*"):
+        for old in WS.glob(".nova_app_profile_*"):
             shutil.rmtree(old, ignore_errors=True)
     except Exception:
         pass
-    _app_profile_dir = WS / f".nova_app_profile_{os.getpid()}"
+
+    _kill_stale_app_chrome()          # the reason the throwaway profile existed
+
+    _app_profile_dir = WS / APP_PROFILE
     _app_profile_dir.mkdir(parents=True, exist_ok=True)
-    log(f"Opening Nova app window via {browser.name}")
+    _grant_clipboard(_app_profile_dir, CHAT_PORT)
+
+    log(f"Opening Nova app window via {browser.name} (persistent profile)")
     args = [str(browser),
             f"--app=http://127.0.0.1:{CHAT_PORT}",
             f"--user-data-dir={_app_profile_dir}",

@@ -1,4 +1,4 @@
-# Last updated: 2026-07-13 20:05:22
+# Last updated: 2026-07-15 22:42:40
 # @nova: Generates Nova's Body Manifest — the single derived map of every body part
 #        and tool (SELF/core/03_body_manifest.md + SELF/reference/manifest.json).
 """
@@ -189,7 +189,9 @@ def discover() -> list[dict]:
     for f in sorted(GENERAL_TOOLS.glob("*.py")):
         if not _excluded(f):
             single(f, "tool")
-    lance = WORKSPACE_ROOT / "nova_lancedb"
+    # 2026-07-14: moved INTO her body. It is her hippocampus — semantic memory is a faculty, not a
+    # workspace-root utility. Imports are unchanged (nova_body/ is on sys.path), only this path was.
+    lance = WORKSPACE_ROOT / "nova_body" / "nova_lancedb"
     if lance.exists() and _py(lance):
         pkg(lance, "body_part")
     for f in sorted(WORKSPACE_ROOT.glob("*.py")):       # root orchestrators

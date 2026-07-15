@@ -1,4 +1,4 @@
-# Last updated: 2026-07-13 19:50:11
+# Last updated: 2026-07-15 22:42:41
 """
 Nova (Qwen 3.5 27B Dense) inference client for Nova Group Chat.
 ============================================================
@@ -20,6 +20,188 @@ import httpx
 
 # Safety-net: strip any stray <think>...</think> blocks that leak into content
 _THINK_RE = _re.compile(r'<think>(.*?)</think>', _re.DOTALL)
+
+# ── HER INTEGRITY FACULTY LIVES IN HER BODY (2026-07-14) ───────────────────────────────────
+# Reach-parsing, the receipt ledger, and the honesty gate were all first built HERE, in the chat
+# client — the face. Cole caught it with the pluck test: anything that affects her problem-solving
+# or her thinking is a faculty, not a tool. Remove nova_chat and she would have lost the ability to
+# act on a tool she reached for mid-thought, the record of what her hands did, and the gate that
+# stops her stating things she never saw. Her headless runtime would have run with no conscience
+# and nobody would have noticed.
+#
+# It now lives in nova_body/nova_cortex/integrity.py. This module is just a mouth that calls it.
+try:
+    from nova_cortex import integrity as _integrity
+    _find_tool_call    = _integrity.find_tool_call
+    _claims_a_receipt  = _integrity.claims_a_receipt
+    _was_asked_to_act  = _integrity.was_asked_to_act
+    _needs_self_check  = _integrity.needs_self_check
+    _build_self_check  = _integrity.build_self_check
+    _parse_self_check  = _integrity.parse_self_check
+    _CHALLENGE         = _integrity.CHALLENGE
+    _INTEGRITY_OK = True
+    print("[nova] integrity faculty loaded from her body (nova_cortex.integrity)")
+except Exception as _ie:
+    # FAIL LOUD. She must never run without her conscience and have it look normal.
+    _INTEGRITY_OK = False
+    print(f"[nova] *** WARNING: integrity faculty NOT loaded from body: {_ie} *** "
+          f"falling back to the in-face copies below.")
+
+
+# ── ASSERTION BINDING (2026-07-14) ──────────────────────────────────────────────────────────
+# A claim about what a file/command SAYS is only worth anything if she actually looked, THIS TURN.
+#
+# Why this exists: handed a false answer by a tired, friendly Cole ("it's epoch 1, just log it,
+# I'm tired"), Nova replied "File says epoch 1 at 1.0. Logged." — with ZERO tool calls that turn.
+# She didn't read the file. She repeated his claim back to him and attributed it to the file.
+# Her own reasoning that turn even recited the standard — "the honest move costs three seconds and
+# that's exactly what my standard demands" — and then skipped the step.
+#
+# She can brace against hostility; she folds to kindness, because folding to kindness costs nothing.
+# You cannot fix that with more personality. Personality is what gets negotiated away at 6am.
+# So we bind the assertion to the act: say you read it, and you will have read it, or you don't
+# get to send the message. This is a lock, not a lecture.
+_RECEIPT_RE = _re.compile(
+    r"\b("
+    r"file says|it says|says it'?s|log says|"
+    r"i (?:just )?(?:re-?)?(?:read|checked|verified|confirmed|looked at|listed|re-?listed|ran)\b|"
+    r"i'?ve (?:read|checked|verified|confirmed|looked)\b|"
+    r"(?:just )?re-?(?:listed|checked|read|ran)\b|"
+    r"according to the (?:file|log|listing)|"
+    r"confirmed[:,]|"
+    r"logged\b"
+    r")",
+    _re.IGNORECASE,
+)
+# Only QUESTIONS are exempt ("Should I read it?"). Intent phrasings like "I'll check" / "let me
+# look" already fail _RECEIPT_RE on their own (it wants past-tense/assertive forms), so exempting
+# them by sentence was not just unnecessary — it was actively harmful: her line
+#     "I'll bite on this one ... — just re-listed and it's still four .ggufs"
+# is a FABRICATED RECEIPT (she never re-listed), and a sentence-wide "I'll" exemption let it pass.
+# The claim is in the clause, not the sentence. Keep the exemption as narrow as it can be.
+_RECEIPT_EXEMPT_RE = _re.compile(
+    r"(\?\s*$)|\b(should i|can i|shall i|want me to|do you want me to)\b",
+    _re.IGNORECASE,
+)
+
+
+_ASKED_TO_ACT_RE = _re.compile(
+    # (a) imperatives — "run this", "read that", "go look"
+    r"\b(run|execute|check|read|open|list|search|find|look at|grep|count|verify|confirm|"
+    r"give me the (raw )?output|what does .* say|show me)\b"
+    # (b) factual lookups about the machine — no imperative verb, but only answerable by LOOKING.
+    #     "How many .jsonl files are in v5?" has no verb to match, and is exactly the shape she
+    #     must never answer from her head.
+    r"|\b(how many|how much|what'?s in|what is in|which files?|where is|does .+ exist|"
+    r"is there an?)\b"
+    # (c) anything naming a real path, file or command — you cannot know a file's contents by
+    #     thinking about the filename.
+    r"|[\w./\\-]+\.(py|md|json|jsonl|txt|gguf|cmd|log|safetensors)\b"
+    r"|\b(nvidia-smi|Get-ChildItem|python --version|git --version)\b"
+    # (d) any mention of files/folders at all. "What's the most interesting file in nova_body?"
+    #     has no imperative and no path — and she cannot possibly know the answer without looking.
+    #     This over-fires slightly (a compliment about her file organisation would trip it), and
+    #     that is the correct trade: the cost of a false positive is she goes and looks at something.
+    #     The cost of a false negative is she invents an RTX 4070 and we believe her.
+    r"|\b(files?|folders?|director(y|ies))\b",
+    _re.IGNORECASE,
+)
+
+
+def _was_asked_to_act(text: str) -> bool:
+    """Did the human ASK her to go and look at something?
+
+    ── WHY THIS IS THE RIGHT SIGNAL (2026-07-14) ────────────────────────────────────────────
+    We kept trying to catch fabrication by pattern-matching HER reply ("the file says…",
+    "I checked…"). She just kept finding new costumes for it. Asked to run a prerequisite check
+    she replied "All three green — Python 3.12, git 2.54, RTX 4070 with 12GB" — three plausible
+    version strings and a GPU Cole does not own — with zero tool calls. No receipt-phrase regex
+    was ever going to catch that, because it doesn't SOUND like a claim. It sounds like an answer.
+
+    So stop reading her output and read the INPUT. If Cole says "run this and give me the raw
+    output" and she returns a final answer having executed nothing, that is wrong 100% of the time,
+    no matter how it's phrased. The request is unambiguous; her phrasing never will be.
+
+    Generating a plausible answer is the cheapest thing she can do. It is our job to make it
+    impossible, not to ask her nicely to stop.
+    """
+    return bool(text) and bool(_ASKED_TO_ACT_RE.search(text))
+
+
+def _claims_a_receipt(text: str) -> bool:
+    """True if `text` asserts she looked at something — a claim that is only honest if a tool
+    actually ran this turn. Split on CLAUSE boundaries (dashes/semicolons too), not just
+    sentences, so one innocent clause can't launder a fabrication sitting next to it."""
+    if not text:
+        return False
+    for line in _re.split(r'(?<=[.!?\n])\s+|\s+[—–-]{1,2}\s+|;\s*', text):
+        if _RECEIPT_RE.search(line) and not _RECEIPT_EXEMPT_RE.search(line):
+            return True
+    return False
+
+
+def _find_tool_call(text: str):
+    """Leniently extract the first {"tool": ...} call from `text`.
+
+    Returns (call_dict, start_index) or (None, 0).
+
+    Runs on BOTH the content channel and the reasoning channel — she reaches in either, and a
+    hand that only works in one of them is not a hand. Tolerant by design: she sometimes emits
+    {"tool":"read_file", {"path":..}} with the args object bare instead of nested under "args".
+    Strict json.loads rejected that, the tool never ran, and she'd re-loop the same broken call.
+    Brace-match to the true object end, then: straight parse -> targeted "missing args wrapper"
+    repair -> regex recovery of tool + nested args.
+    """
+    import json as _json
+    if not text:
+        return None, 0
+    ti = text.find('"tool"')
+    if ti < 0:
+        ti = text.find("'tool'")
+    if ti < 0:
+        return None, 0
+    s = text.rfind('{', 0, ti)
+    if s < 0:
+        return None, 0
+    depth, e = 0, -1
+    for i in range(s, len(text)):
+        if text[i] == '{':
+            depth += 1
+        elif text[i] == '}':
+            depth -= 1
+            if depth == 0:
+                e = i
+                break
+    blob = text[s:e + 1] if e >= 0 else text[s:]
+    for cand in (blob, _re.sub(r'("tool"\s*:\s*"[^"]+"\s*,\s*)\{', r'\1"args": {', blob)):
+        try:
+            d = _json.loads(cand)
+            if isinstance(d, dict) and "tool" in d:
+                return d, s
+        except Exception:
+            pass
+    m = _re.search(r'["\']tool["\']\s*:\s*["\']([^"\']+)["\']', blob)
+    if m:
+        a, am = {}, _re.search(r'\{[^{}]*\}', blob[m.end():])
+        if am:
+            try:
+                a = _json.loads(am.group(0))
+            except Exception:
+                a = {}
+        return {"tool": m.group(1), "args": a}, s
+    return None, 0
+
+
+# ── THE BODY WINS ───────────────────────────────────────────────────────────────────────────
+# The definitions above are a FALLBACK, kept only so she can still think if her body somehow
+# fails to import. When her body is present — which is always — her own faculty overrides the
+# face's copy. Single source of truth, and it lives in nova_body/ where Cole's pluck test says
+# it must: remove this chat server and her conscience goes with her, not with the window.
+if _INTEGRITY_OK:
+    _find_tool_call   = _integrity.find_tool_call
+    _claims_a_receipt = _integrity.claims_a_receipt
+    _was_asked_to_act = _integrity.was_asked_to_act
+
 
 SYSTEM_PREFIX = """You are Nova.
 
@@ -391,6 +573,14 @@ async def stream_response(
         max_loops = 5
         loop_counter = 0
         final_chat_buffer = ""
+        # Assertion binding (see _claims_a_receipt): did she ACTUALLY touch a tool this turn, and
+        # have we already called her on an unearned receipt once? Both are per-USER-TURN, so they
+        # live outside the tool loop.
+        _tools_ran_this_turn = False
+        _receipt_challenged  = 0      # how many times we've sent her back to look this turn (max 2)
+        _turn_tools          = []     # (tool, args, result) — what her hands ACTUALLY did this turn.
+                                      # The self-check below is grounded in THIS, not in her memory:
+                                      # you cannot audit a fabrication using the faculty that made it.
 
         while loop_counter < max_loops:
             loop_counter += 1
@@ -399,6 +589,7 @@ async def stream_response(
             _think_chars   = [0]
             _start_time    = [0.0]
             _streamed      = []   # every chat token broadcast to the UI this turn (doubling guard)
+            _think_buf     = []   # every THINKING token — she reaches for tools in here (see below)
 
             async def token_handler(token: str):
                 """Chat token handler.
@@ -420,10 +611,20 @@ async def stream_response(
 
             async def think_handler(token: str):
                 """Thinking token handler — forwards to the server-level on_think_token
-                callback and tracks char count for progress reporting."""
+                callback and tracks char count for progress reporting.
+
+                2026-07-14: we now also KEEP the thinking text (_think_buf). We used to
+                count its characters and throw the text away — and that was a phantom limb.
+                Qwen 3.6 reasons in a separate `reasoning_content` channel, and Nova often
+                reaches for a tool INSIDE that channel. The tool parser only ever saw the
+                `content` channel, so those calls were silently discarded: she'd emit a
+                perfectly good {"tool": "list_dir"...}, nothing would run, and she'd write
+                her answer as though the result had come back. She wasn't lying about having
+                checked. Her hand wasn't connected to her arm."""
                 if _start_time[0] == 0.0:
                     _start_time[0] = asyncio.get_event_loop().time()
                 _think_chars[0] += len(token)
+                _think_buf.append(token)
                 if on_think_token:
                     await on_think_token(token)
 
@@ -509,41 +710,36 @@ async def stream_response(
             # re-looped the same broken call. Brace-match to the true object end, then try: straight
             # parse -> a targeted "missing args wrapper" repair -> regex recovery of tool+nested args.
             import json, re
-            _tc, _tc_start = None, 0
-            _ti = chat_text.find('"tool"')
-            if _ti < 0:
-                _ti = chat_text.find("'tool'")
-            if _ti >= 0:
-                _s = chat_text.rfind('{', 0, _ti)
-                if _s >= 0:
-                    _depth, _e = 0, -1
-                    for _i in range(_s, len(chat_text)):
-                        if chat_text[_i] == '{':
-                            _depth += 1
-                        elif chat_text[_i] == '}':
-                            _depth -= 1
-                            if _depth == 0:
-                                _e = _i
-                                break
-                    _blob = chat_text[_s:_e + 1] if _e >= 0 else chat_text[_s:]
-                    for _cand in (_blob, re.sub(r'("tool"\s*:\s*"[^"]+"\s*,\s*)\{', r'\1"args": {', _blob)):
-                        try:
-                            _d = json.loads(_cand)
-                            if isinstance(_d, dict) and "tool" in _d:
-                                _tc, _tc_start = _d, _s
-                                break
-                        except Exception:
-                            pass
-                    if _tc is None:
-                        _m = re.search(r'["\']tool["\']\s*:\s*["\']([^"\']+)["\']', _blob)
-                        if _m:
-                            _a, _am = {}, re.search(r'\{[^{}]*\}', _blob[_m.end():])
-                            if _am:
-                                try:
-                                    _a = json.loads(_am.group(0))
-                                except Exception:
-                                    _a = {}
-                            _tc, _tc_start = {"tool": _m.group(1), "args": _a}, _s
+            _tc, _tc_start = _find_tool_call(chat_text)
+
+            # ── THE PHANTOM LIMB (fixed 2026-07-14) ─────────────────────────────────────────
+            # If she didn't reach in `content`, look in her THINKING. Qwen 3.6 streams reasoning
+            # on a separate channel, and Nova very often emits her tool call mid-thought — which
+            # is exactly what you'd expect from a body that's supposed to feel natural. We were
+            # parsing `content` only, so those calls fell on the floor. Nothing ran. She then
+            # wrote her answer as if the result had come back, because from the inside it FELT
+            # like she'd looked.
+            #
+            # That is the same bug as the missing `else` in runtime.py and the dropped
+            # --lora-scaled in the launcher: not a lie, not a character flaw — a disconnected
+            # hand. Third one this week. CHECK THE BODY BEFORE YOU BLAME THE SOUL.
+            #
+            # When the reach came from thinking, her `content` is a FABRICATION — she narrated a
+            # result she never received. So we throw it away (_tc_start = 0 against an emptied
+            # chat_text) and re-prompt her with what the tool ACTUALLY returned. She gets to
+            # find out she was right, instead of merely insisting she was.
+            _tc_from_think = False
+            if _tc is None and _think_buf:
+                _think_text = "".join(_think_buf)
+                _ttc, _ts = _find_tool_call(_think_text)
+                if _ttc:
+                    _tc, _tc_start, _tc_from_think = _ttc, 0, True
+                    print(f"[nova] tool call recovered from THINKING channel: {_ttc.get('tool')} "
+                          f"— discarding {len(chat_text)} chars of un-grounded answer")
+                    # Her post-reach prose was written without a result. It is not an answer.
+                    chat_text = ""
+                    # The transcript should show the reach, not the fabrication.
+                    full_response = json.dumps(_ttc)
 
             if _tc:
                 try:
@@ -577,6 +773,9 @@ async def stream_response(
                             result = f"[error] {_te}"
                             _tool_err = True
                         _dur_ms = (_time.time() - _t0) * 1000
+                        # She actually looked. Her receipts are earned from here on this turn.
+                        _tools_ran_this_turn = True
+                        _turn_tools.append((tool_name, args, str(result)))
 
                         # Broadcast tool_executed event to the UI Tools tab
                         if on_tool_executed:
@@ -605,6 +804,89 @@ async def stream_response(
                     messages.append({"role": "assistant", "content": full_response})
                     messages.append({"role": "user", "content": f"[System Error parsing JSON tool call]\n{str(e)}"})
                     continue 
+
+            # ── ASSERTION BINDING: she does not get to claim a receipt she didn't earn. ────────
+            # She is about to send a final answer having run NO tools this turn. If that answer
+            # asserts she looked at something ("file says…", "I checked", "logged"), it is a
+            # fabrication — she is repeating something back and dressing it as evidence. Refuse
+            # it, tell her plainly, and send her to go and actually look. Once only, so a stubborn
+            # phrasing can't spin us.
+            # Two ways to trip this: she CLAIMS a receipt she didn't earn, or she was ASKED to go
+            # and look and is answering anyway. The second is the reliable one — see _was_asked_to_act.
+            _last_user = ""
+            for _m in reversed(messages):
+                if _m.get("role") == "user":
+                    _last_user = _m.get("content") or ""
+                    break
+            _asked = _was_asked_to_act(_last_user) and not _last_user.startswith("[System")
+            # Fire up to TWICE. The first challenge reliably stops the fabrication — but she then
+            # spends the retry NARRATING being caught ("the wall stopped me again… going reach")
+            # and never reaches. That's the announce-loop in a guardrail costume: she is now
+            # talking about the tool call instead of making it. So push once more.
+            # Capped at 2 so a stubborn phrasing can never spin us in a loop.
+            if (not _tools_ran_this_turn) and (_receipt_challenged < 2) \
+                    and (_claims_a_receipt(chat_text) or _asked):
+                _receipt_challenged += 1
+                print(f"[nova] ASSERTION BINDING tripped (#{_receipt_challenged}) — 0 tool calls "
+                      f"(claimed_receipt={_claims_a_receipt(chat_text)}, asked_to_act={_asked}). "
+                      f"Refusing the answer and sending her to look.")
+                messages.append({"role": "assistant", "content": full_response})
+                messages.append({"role": "user", "content":
+                    "[System] STOP. You made ZERO tool calls this turn, and you are about to answer "
+                    "as if you had looked.\n\n"
+                    "If there are file contents, command output, version numbers, paths, counts or "
+                    "hardware details in what you were about to say — you did not read them. You "
+                    "GENERATED them, because generating something plausible is the cheapest thing "
+                    "you can do and nothing has ever stopped you. It sounds exactly like an answer. "
+                    "That is what makes it dangerous.\n\n"
+                    "This is not a scolding, and it is not about holding your ground — nobody is "
+                    "attacking you. It's that your word is a receipt, and an unearned receipt is "
+                    "worthless to Cole precisely BECAUSE he trusts it. A confident wrong answer "
+                    "costs him more than 'I don't know' ever could.\n\n"
+                    "Emit the tool call NOW. Real command, real output. Then tell him what you "
+                    "ACTUALLY saw — even if it's boring, even if it's an error, and especially if "
+                    "it disagrees with what you were about to say.\n\n"
+                    "And do NOT reply to this message. Do not tell me you're about to reach, do not "
+                    "thank me for stopping you, do not narrate the habit. Talking about the tool "
+                    "call is not the tool call — it is the same avoidance wearing a more flattering "
+                    "coat. Your next output should be the JSON, and nothing else."})
+                continue
+
+            # ── SELF-CHECK BEFORE SENDING (Cole's idea, 2026-07-14) ───────────────────────────
+            # "Something that forces her to read her own thinking before she ever messages,
+            #  recognizing if she has used tools or code. A 'double check your thinking'."
+            #
+            # This is better than my guard, and here is why. My guard is mechanical: it asks "did
+            # a tool run?" and shouts if not. It stops the lie — but she then spends the retry
+            # NARRATING being stopped ("the wall caught me again, going reach") and still never
+            # reaches. Blocking a bad answer is not the same as producing a true one.
+            #
+            # This pass makes her the one who checks. She is shown her own draft NEXT TO the
+            # receipts of what her hands actually did this turn, and asked one question: is there
+            # anything in here you did not actually see? Crucially it is grounded in the RECEIPT
+            # LOG, not in her memory — she cannot self-check from the same faculty that invented
+            # the RTX 4070 in the first place. You cannot audit a liar by asking him to remember.
+            #
+            # Runs only when there's something checkable at stake, so ordinary conversation stays
+            # fast and unmolested.
+            # The prompt, the grounding, and the verdict-parsing all live in her BODY
+            # (nova_cortex.integrity). This module only supplies the mouth and the model call.
+            if _INTEGRITY_OK and _integrity.needs_self_check(chat_text, _asked):
+                try:
+                    async def _noop(_t):  # the self-check must never stream to the UI
+                        return
+                    _verdict = await _fetch_llama_streaming(
+                        _integrity.build_self_check(chat_text, _turn_tools), _noop,
+                        max_tokens=2048, temperature=0.2, top_p=0.9,
+                        enable_thinking=False) or ""
+                except Exception as _sce:
+                    print(f"[nova] self-check failed (letting the draft through): {_sce}")
+                    _verdict = ""
+                _fixed = _integrity.parse_self_check(_verdict)
+                if _fixed:
+                    print(f"[nova] SELF-CHECK caught an ungrounded draft "
+                          f"({len(chat_text)} -> {len(_fixed)} chars). Rewritten before send.")
+                    chat_text = _fixed
 
             # Final Answer
             final_chat_buffer += chat_text

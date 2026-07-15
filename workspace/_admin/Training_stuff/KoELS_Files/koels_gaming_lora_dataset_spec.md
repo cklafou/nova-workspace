@@ -1,5 +1,5 @@
 # KoELS Gaming Specialist — LoRA Dataset Spec (v1 working draft)
-_Last updated: 2026-06-22 11:58:19_
+_Last updated: 2026-07-15 17:42:29_
 
 _The training target for the **gaming** KoELS adapter (`KoELS/gaming/adapter/gaming.gguf`), per
 `gaming.json`. A specialist LoRA stacked on Nova-core: it adds **how to reason about competitive

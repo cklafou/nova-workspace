@@ -23,3 +23,10 @@ build_exe/
 
 # Cleanup archive (relocated clutter — safe to delete)
 _admin/_archive_2026-05-23/
+
+# Temp folders live beside the thing they belong to. Never tracked. (2026-07-14)
+**/Temp/
+
+# LanceDB store — regenerable data, 1000+ files (2026-07-14)
+nova_memory_db/
+prompt_cache/

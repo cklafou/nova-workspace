@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-13 20:05:22
+# Last updated: 2026-07-15 22:42:41
 # @nova: Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.
 """
 audit_scripts.py — Workspace code health audit
@@ -44,7 +44,7 @@ WORKSPACE_DIR = Path(__file__).resolve().parent.parent
 SCAN_ROOTS = [
     WORKSPACE_DIR / "general_tools",
     WORKSPACE_DIR / "nova_body",
-    WORKSPACE_DIR / "nova_lancedb",   # workspace-root semantic-memory package
+    WORKSPACE_DIR / "nova_body" / "nova_lancedb",   # her hippocampus — moved into her body 2026-07-14
     WORKSPACE_DIR / "_build",
 ]
 # Also scan top-level .py files in workspace root

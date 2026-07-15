@@ -1,5 +1,5 @@
 # KoELS Gaming Specialist — Dataset Batch 1 (cross-section)
-_Last updated: 2026-06-22 11:58:18_
+_Last updated: 2026-07-15 17:41:52_
 
 _28 examples spanning every band, for per-band voice sign-off before mass production. Voice locked:
 clear competent coaching reasoning, method over verdict, frameworks not facts, dated specifics

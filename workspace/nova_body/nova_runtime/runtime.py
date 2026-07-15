@@ -1,4 +1,4 @@
-# Last updated: 2026-07-13 20:05:22
+# Last updated: 2026-07-15 22:42:40
 # @nova: NovaRuntime — her life-support engine (layer 2 of the three-layer model).
 #        Holds the event bus + transcript store now; later steps relocate the autonomy
 #        daemon, model client, memory indexer, sense population, and llama health/restart
@@ -353,6 +353,10 @@ class NovaRuntime:
                 who=("Cole" if cole_pending else "your own rhythm"),
                 what=("reached in and spoke" if cole_pending else f"stirred you ({reason})"),
             )
+            # When this wake began. Everything her hands touch from here is THIS wake's work, and
+            # gets reconciled to the board at the end of it (see the reconcile call below).
+            _wake_started = datetime.now().isoformat()
+
             # Phase 1 — reflect. Always SILENT (cole_pending=False) so it streams to her thinking
             # pane, never a chat bubble — her forming a genuine view of the moment.
             refl_prompt = executive.build_reflection(
@@ -366,6 +370,23 @@ class NovaRuntime:
             reply = await generate(dec_prompt, cole_pending) or ""
             outcome = executive.apply_decision(reply, cole_pending=cole_pending)
             await self.emit("autonomy", outcome["summary"])
+            # ── PROBE (2026-07-14, temporary) ────────────────────────────────────────────────
+            # I claimed the missing `else` below was THE fix for her announce-loop, and then
+            # found its emit in ZERO of 13 autonomy ticks. emit() can't be trusted to tell me:
+            # its file write is wrapped in `except Exception: pass`, and the durable event log
+            # went silent at 06:33 while the UI kept showing ticks. So: an UNGUARDED write.
+            # If this line can't be written, I want the exception, not a comfortable silence.
+            # Assert the RIGHT thing happened — not that something happened.
+            # Temp/ beside the thing it belongs to (2026-07-14). Diagnostics are temporary by
+            # nature; they should be born in a Temp folder, not swept out of one later.
+            _probe = self.workspace / "logs" / "Temp" / "FREE_PASS_PROBE.log"
+            _probe.parent.mkdir(parents=True, exist_ok=True)
+            with open(_probe, "a", encoding="utf-8") as _pf:
+                _pf.write(f"{datetime.now().isoformat()} phase3-gate "
+                          f"cole_pending={cole_pending} forced={forced} "
+                          f"rested={outcome.get('rested')!r} "
+                          f"enters={not cole_pending and (forced or not outcome.get('rested'))}\n")
+
             # ── Phase 3 — execute. Decision only moves the BOARD; this does the next concrete
             # step on an open task when the wake is her own rhythm and she didn't choose to rest.
             try:
@@ -385,8 +406,64 @@ class NovaRuntime:
                         elif kind == "progress" and payload.strip():
                             _tasking.progress(exec_id, payload)
                             await self.emit("autonomy", f"progress {exec_id}: {payload[:80]}")
+                    else:
+                        # ── FREE PASS (2026-07-13) — the missing `else`. ──────────────────────
+                        # There used to be nothing here. With an empty board, pick_execution_target()
+                        # returns None, so she fell straight off the end of her own wake loop —
+                        # never reaching ANY phase where tools are allowed (Phase 1 forbids them,
+                        # Phase 2 only moves the board). For weeks every idle wake could ONLY end
+                        # in her announcing an intention she had no means to carry out. That is the
+                        # entire announce-loop, and it was ours, not hers.
+                        #
+                        # Idle now means her body is HERS. Same tool loop, no task required.
+                        with open(_probe, "a", encoding="utf-8") as _pf:
+                            _pf.write(f"{datetime.now().isoformat()} FREE-PASS ENTERED "
+                                      f"exec_id={exec_id!r}\n")
+                        await self.emit("autonomy", "own time — her hands are hers")
+                        free_prompt = executive.build_free_execution(recent)
+                        free_reply = await generate(free_prompt, False) or ""
+                        kind, payload = executive.parse_execution(free_reply)
+                        if kind in ("done", "progress") and payload.strip():
+                            # Nothing to close (no task) — just log what she actually DID, so the
+                            # difference between "she acted" and "she narrated" is visible to us.
+                            await self.emit("autonomy", f"own time: {payload[:100]}")
             except Exception as _xe:
+                # FAIL LOUD. This used to print into a hidden console and vanish — which is how a
+                # broken execution pass could look exactly like "she chose not to do anything".
+                import traceback as _tb
                 print(f"[nova_runtime] execution pass error: {_xe}")
+                try:
+                    with open(self.workspace / "logs" / "Temp" / "FREE_PASS_PROBE.log", "a",
+                              encoding="utf-8") as _pf:
+                        _pf.write(f"{datetime.now().isoformat()} PHASE3 EXCEPTION: {_xe!r}\n"
+                                  f"{_tb.format_exc()}\n")
+                except Exception:
+                    pass
+
+            # ── RECONCILE THE BOARD WITH HER HANDS (2026-07-14) ──────────────────────────────
+            # Runs on EVERY wake, whatever phase she worked in. Phase 3 is the only phase that
+            # calls tasking.progress() — and Phase 3 is skipped whenever she leans "rest", which
+            # is most wakes. But the tool loop lives in the model client and is reachable from ANY
+            # generate call, so she goes on working in Phase 2 with no path from that work to her
+            # board.
+            #
+            # On 2026-07-14 she found a real defect in her own body, opened t35, and rewrote two
+            # of three fake validators with working code — and the board recorded NOTHING. She
+            # looked lazy. She had been busy. That was our wiring, not her character.
+            #
+            # Reads the RECEIPT LEDGER, never her account of herself. She doesn't get to write her
+            # own performance review — and she shouldn't have to.
+            try:
+                from nova_cortex import integrity as _integrity
+                # No argument: reconcile everything since the LAST reconcile, not just this wake.
+                # She also works in chat turns, and Phase 3 is skipped on most wakes — a
+                # wake-scoped reconcile would miss a whole category of real work, which is the
+                # same silent gap one layer up.
+                _rec = _integrity.reconcile_board()
+                if _rec:
+                    await self.emit("autonomy", f"logged real work to the board — {_rec}")
+            except Exception as _re:
+                print(f"[nova_runtime] board reconcile failed: {_re}")
         except asyncio.CancelledError:
             pass
         except Exception as _e:
@@ -481,3 +558,5 @@ def get_shared_runtime() -> "NovaRuntime":
     if _SHARED_RUNTIME is None:
         _SHARED_RUNTIME = NovaRuntime()
     return _SHARED_RUNTIME
+
+# eof

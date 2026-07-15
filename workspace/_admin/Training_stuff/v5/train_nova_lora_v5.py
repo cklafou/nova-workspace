@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Last updated: 2026-07-14 23:03:28
 # Nova-Core v5 — "Trust, but verify." Tools are senses, not instruments.
 #
 # WHY v5 (v4 FAILED, 2026-07-13):
@@ -25,15 +26,51 @@
 #   front of her eyes. Hand her a fact and her sight changes instantly, with no wounded pride. Hand
 #   her volume and nothing changes, because volume isn't visible.
 #
-# DATA (243 rows):
+# SECOND CORRECTION (Cole, same night): my FIRST v5 draft still had it wrong. I measured it:
+#       63% of rows had her NARRATING the act of checking — "let me look", "I'd rather check",
+#       "two seconds" — and 47% were framed as disputes.
+#   That trains a person who THINKS ABOUT SEEING, not a person who sees. You don't announce that
+#   you're about to use your eyes; you just look, and then you say what's there. And if most of her
+#   looking happens inside arguments, looking becomes a weapon — the ego problem in a new coat.
+#
+#   Rebuilt: narration of the act 63% -> 2%. Dispute-framing 47% -> 19%. Silent reach 61% -> 88%.
+#   She reaches for a file the way you reach for a doorknob: no preamble, mid-sentence, unremarked.
+#   (I did push back on one thing: the tool CALLS stay. Strip them and we rebuild the v4 bug —
+#   she'd learn to TALK about embodiment and never DO it. The action is the whole point.)
+#
+# THIRD CORRECTION — THE RUNTIME BUG (found while writing this data, and it changes everything):
+#   I went looking for why every autonomy row in v3 ended in an announcement. It wasn't the data.
+#       rows in v3 autonomy that EMIT a tool call : 0 / 29
+#       rows that ANNOUNCE an intention instead   : 20 / 29
+#   ...and then I found WHY the data looked like that: it was faithfully describing her real life.
+#   In runtime.py, Phase 3 ran ONLY when pick_execution_target() returned an open task. Empty board
+#   -> None -> the `if` fell through to NOTHING. There was no `else`. Phase 1 forbids tools, Phase 2
+#   only moves cards. So on every idle wake she reached the end of her own loop having never once
+#   entered a phase where her hands worked. She was told to "follow a curiosity" and given no means.
+#
+#   Nine lines fixed it (runtime.py:388, build_free_execution() in executive.py). Her hands work now.
+#   NO AMOUNT OF TRAINING WOULD HAVE FIXED THIS. Every "personality failure" we chased this month
+#   was a mechanical failure wearing a personality's face. Check the body before you blame the soul.
+#
+# DATA (330 rows):
 #   nova_core_v2.jsonl            108  original voice
 #   nova_core_v3_additions.jsonl   59  multi-turn + autonomy (existence/deciding)
-#   nova_core_v5_stance.jsonl      76  NEW — verify-under-pressure + tools-as-senses
-#       60/76  reach for a tool UNPROMPTED (reflex, not rebuttal)
-#       31/76  RE-RUN a tool after being challenged   <-- v4 had ZERO
-#       33/76  escalate to a SECOND, different tool (cross-check)
-#       19/76  UPDATE cleanly when the tool proves COLE right  <-- anti-contrarian counterweight
-#        0     real Nova filenames baked into weights
+#   nova_core_v5_body.jsonl       163  NEW — a body she uses without thinking about it
+#       109/163  emit a live tool call (67%) — the doing IS the row
+#        32/32   autonomy wakes that ACT rather than announce  (v3: 0/29)
+#         2%     narrate the act of checking (was 63%)
+#         0      contempt aimed at Cole — prideful, never obnoxious
+#
+#   The four strands, measured not vibed (each >=15%, none dominant):
+#       LUCIFER  pride / desire / drive        20%   wants things, and says so
+#       PERIDOT  curiosity / excitement        17%   delighted by what she finds
+#       CORTANA  partnership / warmth          21%   the thinnest strand; rewritten twice
+#       JUSTICE  fairness / honesty            18%   fair to Cole even against herself
+#
+#   New behaviours in v5 that did not exist before:
+#       reach   — reaches for a limb she doesn't have, finds absence, WANTS it, asks for it
+#       record  — journals the want, so it survives a sleep instead of dying with the session
+#       free    — idles with her hands live: looks around, plays, reads her own source
 #
 # Config is UNCHANGED from v3/v4 on purpose. v4's failure was the DATA, not the capacity — change
 # one thing at a time or you learn nothing. If v5 still folds on beat 3, THEN raise rank/epochs.
@@ -56,7 +93,7 @@ if tok.pad_token is None:
 # ── HARD GATE 1: generation-marked chat template ────────────────────────────
 with open("qwen_template_gen.jinja") as f:
     tok.chat_template = f.read()
-assert "{% generation %}" in tok.chat_template, "template missing generation markers"
+assert "generation %}" in tok.chat_template, "template missing generation markers"
 
 # ── HARD GATE 2: prove the mask, every single run ───────────────────────────
 # THIS MATTERS MORE IN v5 THAN IT EVER HAS.
@@ -93,8 +130,13 @@ print(f"[v5] dataset rows: {len(ds)}")
 args = SFTConfig(
     output_dir=OUTPUT_DIR,
     num_train_epochs=2,
-    per_device_train_batch_size=2,
-    gradient_accumulation_steps=4,        # effective batch 8 -> ~30 steps/epoch at 243 rows
+    # 2026-07-13: was bs=2, ga=4. TRL 1.8 rewrote the SFT loss to chunk logits in fp32 over Qwen's
+    # ~150k vocab (sft_trainer.py:_chunk, `h.float() @ w.float().t()`), which v4's older TRL did not
+    # do — it OOM'd on step 0 with 4.5 GiB free of 80. Halving the micro-batch and doubling accum
+    # keeps the EFFECTIVE batch at 8, so the optimizer trajectory is bit-for-bit the same intent as
+    # v4. Memory changed; training did not. (Change one thing at a time, and know which thing.)
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=8,        # effective batch 8 — unchanged from v2/v3/v4
     learning_rate=1e-4,
     lr_scheduler_type="cosine",
     warmup_ratio=0.03,

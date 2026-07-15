@@ -1,4 +1,4 @@
-# Last updated: 2026-07-13 20:05:22
+# Last updated: 2026-07-15 22:42:40
 """
 State checking module for Nova's autonomy system.
 Provides functions to verify pre-conditions before taking actions.
@@ -74,13 +74,40 @@ class NovaState:
         return False
 
     def validate_market_hours(self):
-        """Check if market is currently open."""
-        return True  # Placeholder
+        """Check if market is currently open (Mon-Fri 9:30-16:00 ET, no holidays)."""
+        from datetime import datetime, timedelta
+        import zoneinfo
+        now = datetime.now(zoneinfo.ZoneInfo("America/New_York"))
+        # Weekend?
+        if now.weekday() >= 5:
+            return False
+        # Outside regular hours?
+        open_time = now.replace(hour=9, minute=30, second=0, microsecond=0)
+        close_time = open_time + timedelta(hours=6.5)
+        return open_time <= now <= close_time
 
     def validate_account_connection(self):
-        """Check if account is connected and authenticated."""
-        return True  # Placeholder
+        """Check if ThinkOrSwim shows a logged-in account (non-empty username in window title)."""
+        try:
+            for w in self.eyes.list_windows():
+                if 'thinkorswim' not in w['title'].lower():
+                    continue
+                # A logged-in ToS window carries the username after the last dash
+                parts = w['title'].rsplit('-', 1)
+                if len(parts) == 2 and parts[1].strip():
+                    return True
+            return False
+        except Exception:
+            return False
 
     def validate_ui_stability(self):
         """Check if UI elements are stable and where we expect them to be."""
-        return True  # Placeholder
+        import subprocess
+        r = subprocess.run(['powershell', '-Command', 'Get-ChildItem nova_ui -Recurse -File | Measure-Object'], capture_output=True, text=True)
+        if r.returncode != 0:
+            return False  # Can't see the UI folder — something's wrong with my body
+        # Parse the count out of PowerShell's output ("Count: N")
+        count = int(r.stdout.split('Count')[1].split(':')[1]) if 'Count' in r.stdout else 0
+        if count < 3:
+            return False  # UI folder has fewer files than it should — something got eaten
+        return True
