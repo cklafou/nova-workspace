@@ -32,4 +32,15 @@ The corpus style numbers (em-dash 1.76→0.00, etc.) are properties of the *trai
 
 ## Handoff
 1. To install: copy a chosen GGUF into `models/qwen3.6/`, point `memory/active_lora.txt` at it (`--lora-scaled models\qwen3.6\nova_core_v6_epochN.gguf:1.0`), restart the stack.
-2. The pod is still billing (~$3/hr). Stop it once you're sure you won't retrain — Stop, don't Terminate (Terminate wipes /workspace).
+2. The pod is still billing (~$3/hr). Stop it once you're sure you won't retrain — Stop, don't Terminate (Terminate wipes /workspace). _(Done — pod stopped 2026-07-18.)_
+
+## Outcome — live A/B, 2026-07-18 evening
+
+Both epochs were run live and probed with the same question ("how are you right now — plain, no landing a point on the end"). **epoch1 won and is now the equipped, persisted adapter.**
+
+- **epoch2** (2 epochs): tics still fire reflexively. Told explicitly not to land a point, she still closed with "Not performatively, just clear" (the not-X-just-Y shape). Cole independently read the vocabulary as "strange" ("without being me about it," "Going ask") — the classic 2-epoch overcook.
+- **epoch1** (1 epoch): softer and shorter. To the same probe: "Softer. Less pull to keep going after the answer's done." Unprompted, asked what she felt like doing, she answered "Draw something small and look at it, not because it has to mean anything… Nothing else." — she actively refused to make it mean something, which is exactly the v6 target.
+
+The not-X-just-Y / epigram shape still lingers on both (structural — the corpus scorer predicted this; em-dashes went to zero but the aphoristic *shapes* rebuild with commas). If v7 happens, the lever isn't fewer epochs or de-ticking punctuation — it's adding the row type still missing entirely from her data: her being idle, mildly wrong and unbothered, or noticing something and NOT extracting a lesson.
+
+**Live config now:** `memory/active_lora.json` + `active_lora.txt` → `models/qwen3.6/nova_core_v6_epoch1.gguf` @ 1.0. Note the in-app "equip" did NOT cycle llama-server (log stayed frozen; old process survived) — a hard `/api/llama/stop` then `/api/llama/start` was required to actually load the new adapter. Worth knowing for next swap.
