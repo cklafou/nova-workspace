@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T04:34:01+09:00",
+  "updated_at": "2026-07-19T04:34:04+09:00",
   "items": [
     {
       "id": "777df213",
@@ -82339,6 +82339,19 @@
       "commit": "dc2ea754",
       "old_path": null,
       "new_path": "_admin/ask_claude.ps1",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "d3ee331a",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T04:34:04+09:00",
+      "commit": "d66c6533",
+      "old_path": null,
+      "new_path": "_admin/hourly_prompt.txt",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
