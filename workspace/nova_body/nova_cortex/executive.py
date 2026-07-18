@@ -121,6 +121,39 @@ def note_activity() -> None:
     _save_state(s)
 
 
+# ── task continuation (2026-07-18: "she sleeps mid-task") ───────────────────────
+# THE BUG: apply_decision() sets her next nap in PHASE 2, but the actual task step runs in
+# PHASE 3, AFTER it — and Phase-3 progress never passes back through apply_decision. So the
+# instant she made real forward progress she was already scheduled to nap 90s–7min, and a
+# multi-step task advanced one step, slept, one step, slept. From the outside: "she keeps
+# randomly going to sleep during tasks." She wasn't choosing to; the nap was scheduled before
+# the work existed.
+_MAX_CONTINUATIONS = 12   # rapid steps in a row before we force a normal-cadence breather
+
+def schedule_soon(seconds: int = 6) -> None:
+    """Phase 3 made real progress on the active task — come back in a few seconds to take the
+    NEXT step instead of sleeping the gap Phase 2 set before this step existed. A task now runs
+    in near-continuous steps to completion. Cole (Priority 0) still preempts instantly, and the
+    counter caps a runaway: after _MAX_CONTINUATIONS steps without finishing she reverts to
+    normal cadence, so 'progresses forever, never completes' can't spin into a hot loop."""
+    st = _load_state()
+    run = int(st.get("cont_run", 0)) + 1
+    st["cont_run"] = run
+    gap = _DEFAULT_CFG["follow_gap_s"] if run > _MAX_CONTINUATIONS else max(3, int(seconds))
+    st["wake_at"] = clock.future_iso(gap)
+    st["last_activity"] = clock.now_iso()
+    _save_state(st)
+
+
+def reset_continuation() -> None:
+    """End a work burst: task closed, or a wake produced no concrete step. Next burst starts
+    fresh so the runaway cap only ever counts CONSECUTIVE rapid steps."""
+    st = _load_state()
+    if st.get("cont_run"):
+        st["cont_run"] = 0
+        _save_state(st)
+
+
 # ── cheap wake gate (no model) ─────────────────────────────────────────────────
 def should_wake(cole_pending: bool = False) -> tuple:
     """Stage-1 gate (no model). Returns (should_wake: bool, reason: str)."""

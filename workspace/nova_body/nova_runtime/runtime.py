@@ -402,10 +402,18 @@ class NovaRuntime:
                         if kind == "done":
                             _tasking.complete(exec_id, payload or "Completed.")
                             executive.set_active(None)
+                            executive.reset_continuation()          # task closed — end the burst
                             await self.emit("autonomy", f"completed {exec_id}: {payload[:80]}")
                         elif kind == "progress" and payload.strip():
                             _tasking.progress(exec_id, payload)
+                            # Real forward progress: take the NEXT step in a few seconds instead of
+                            # napping the gap Phase 2 set before this step existed. This is the fix
+                            # for "she sleeps randomly mid-task" — the nap was scheduled too early.
+                            executive.schedule_soon()
                             await self.emit("autonomy", f"progress {exec_id}: {payload[:80]}")
+                        else:
+                            # No concrete step this wake — don't count it toward a continuation burst.
+                            executive.reset_continuation()
                     else:
                         # ── FREE PASS (2026-07-13) — the missing `else`. ──────────────────────
                         # There used to be nothing here. With an empty board, pick_execution_target()
