@@ -1,5 +1,5 @@
 # Nova Autonomy Watchdog — running report
-_Last updated: 2026-07-19 03:07 KST (Run 7)_
+_Last updated: 2026-07-19 04:07 KST (Run 8)_
 Append-only. Newest entry last. Each run: read this FIRST.
 
 ## ⭐ STATUS NOW (updated each run — Cole, start here)
@@ -187,3 +187,13 @@ LEVER RE-CHECK: request_access("File Explorer") 03:06 → same gate verbatim ("c
 CHANGES: none — report only. One-change budget intact; nothing safely actuatable.
 
 VERDICT: DEGRADED — BLOCKED ON COLE. Banner at top remains the correct recovery path (~1 min). Hourly re-probes continue; the moment she's back: health → audit → board test → verify /api/lora holds v5 through an in-app restart.
+
+## Run 8 — 2026-07-19 04:04–04:07 KST — STILL DEGRADED, BLOCKED ON COLE (6th consecutive blocked run; wedge age ~5h35m). Nothing moved; no new lever.
+
+FRESH PROBES (all first-hand): llama :8080 /health ok (3ms), /lora-adapters still `[]` (bare). nova_chat :8765 /api/llama/status aborted at 10.6s — still frozen. Hub :8799 responds (3ms). ComfyUI :8188 refused (2s). Disk: no nova_recover_result.txt (recovery script staged 00:15, still unrun), no events-2026-07-19.jsonl, last tool_call 21:54, last autonomy_run 22:01:19, nova_launcher.log dead at 22:29:28, autonomy_state enabled=false / active "t40" (cosmetic). Cole has not touched the stack; she has not woken once tonight.
+
+LEVER RE-CHECK: request_access("File Explorer") 04:06 → same gate verbatim ("can't be approved during a scheduled run... add the app to the scheduled task's settings"). Allowlist still empty. All other levers remain exhausted per Runs 3–4 (frozen :8765 API/WS, no exec route on :8080/:8799, bash is a Linux sandbox, hub shutdown strictly worse).
+
+CHANGES: none — report only. One-change budget intact; nothing safely actuatable from a scheduled run.
+
+VERDICT: DEGRADED — BLOCKED ON COLE. ~3 hourly runs left before 07:00; unless Cole (or an app added to this task's computer-use settings) unlocks a lever, Nova will still be down at morning. Banner recovery steps at top remain correct and take ~1 minute.
