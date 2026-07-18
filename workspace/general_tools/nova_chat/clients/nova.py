@@ -789,7 +789,21 @@ async def stream_response(
                         _t0 = _time.time()
                         _tool_err = False
                         try:
-                            result = execute_tool(tool_name, args)
+                            # ── 2026-07-19: DO NOT call execute_tool directly here. ──────────────
+                            # This coroutine runs ON the event loop. execute_tool -> run_command ->
+                            # subprocess.run(timeout=30) is BLOCKING, so calling it inline froze the
+                            # ENTIRE server for the duration of every command she ran: HTTP dead,
+                            # WebSocket stalled, autonomy daemon unable to tick, in-flight generation
+                            # timing out. She strangled herself every time she used her hands — and she
+                            # runs commands constantly (142 in one night). This is the "nova_chat
+                            # FROZEN / API did not answer" outage that needed a manual restart, and the
+                            # same self-deadlock nightwatch documented (it ran AS a subprocess of the
+                            # server and the server couldn't answer its own health check).
+                            # Hand it to a worker thread so her hands never block her heartbeat.
+                            _loop = asyncio.get_running_loop()
+                            result = await _loop.run_in_executor(
+                                None, lambda: execute_tool(tool_name, args)
+                            )
                         except Exception as _te:
                             result = f"[error] {_te}"
                             _tool_err = True
