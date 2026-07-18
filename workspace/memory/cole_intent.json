@@ -1,5 +1,5 @@
 {
   "text": "Read the conversation log from today. Recontextualize. You are hallucinating.",
   "ts": "2026-07-18T21:02:30.702384",
-  "consumed": false
+  "consumed": true
 }
