@@ -1,4 +1,5 @@
 # Nova Autonomy Watchdog — running report
+_Last updated: 2026-07-18 22:57:34_
 Append-only. Newest entry last. Each run: read this FIRST.
 
 ## Run 1 — 2026-07-18 21:21–21:30 JST (first run of the night)
@@ -56,3 +57,32 @@ OPERATIONAL NOTES:
 VERDICT: FIXED-THIS-RUN x3 (painter agency, directive amnesia, reflection hygiene). Pending at write time: llama back up post-rollback + autonomy re-enabled after it (checked below).
 
 CLOSE-OUT 21:54: Cole's LoRA-equip flow (memory/active_lora.txt → v5_epoch2:1.0, written 21:42) had stopped llama but the relaunch never fired; Nova sat unable to answer his Wake presses ~21:45–21:52. Restored via POST /api/llama/start (boots HIS configured loadout). CONFIRMED: :8080 up, /api/lora = nova_core_v5_epoch2.gguf scale 1.0, autonomy enabled:true, ComfyUI up, wake "directive" firing on new code. Stack fully healthy on v5. LATER RUNS: expected LoRA is now V5_EPOCH2 (Cole's decision, 21:45); v6 was rolled back as "awful" — do not restore it.
+
+## Run 2 — 2026-07-18 22:04–22:55 KST — ⚠️ ENDS DEGRADED, SELF-INFLICTED. COLE: READ THIS FIRST.
+
+TL;DR for Cole: nova_chat (:8765) is FROZEN and I could not unfreeze it from a scheduled run (computer-use needs your approval; the API path is the very thing that's wedged). Nova is effectively DOWN until you do a clean restart. Recovery steps at the bottom. This is my fault — I ran a diagnostic that hung her chat server. I'm sorry.
+
+STATE AT START (pre-existing, NOT caused by me):
+- autonomy_state enabled=FALSE (auto-paused earlier, consistent with the restart-backoff hazard from Run 1). active still "t40" (cosmetic).
+- llama :8080 UP and healthy BUT running BARE — /lora-adapters = [] (NO v5 personality adapter). active_lora.txt and active_lora.json both correctly say nova_core_v5_epoch2.gguf:1.0, so config is right; the boot just didn't apply it.
+- nova_chat :8765 up and serving; hub :8799 up; ComfyUI down (not checked deeply).
+
+ROOT CAUSE of the bare-LoRA (real, recurring, predates me — this is the important finding):
+In-app llama restarts go LlamaControl.start() → `cmd /c start_llama_qwen36.cmd`. On a stop→start, the OLD launcher cmd is orphaned and RESUMES reading the batch file at a stale byte offset, executing comment/line FRAGMENTS as commands. Receipts in logs/llama/llama-2026-07-18.log: boots at lines 7499 / 7625 / 7732 show `[Nova] context: 65536` with NO `Starting Qwen` banner and NO `[Nova-core] personality adapter` line, surrounded by a storm of `'COREKOELS_LORA"' is not recognized`, `'ComfyUI' is not recognized`, `'negligible' is not recognized` (fragments of the .cmd's own REM comments). The `set NOVA_CORE`/`NOVA_EXTRA` block gets skipped → llama boots with no --lora → bare base model. This is a SECOND path of the launcher's "worst class of bug: a SILENT one" already documented in the .cmd header. It fires on the in-app Full-Restart / LoRA-equip flow, NOT on a fresh NovaStart (nova_start.build_llama_cmd builds --lora directly in Python from active_lora.json, bypassing the fragile .cmd) — so a clean NovaStart boots v5 correctly.
+
+FIX APPLIED (ONE change, compiled, kept): nova_body/nova_runtime/llama_control.py `_kill_port()` now kills the launcher cmd (Get-CimInstance cmd.exe whose CommandLine matches start_llama_qwen36.cmd) FIRST, before the port owner and llama-server, so no orphaned launcher survives to resume-and-corrupt. `python -m py_compile` OK on her Windows interpreter. Partial verification: the new _kill_port EXECUTED cleanly once this run (POST /api/llama/stop → survivors empty, no stray cmd/llama). Corruption-PREVENTION is UNVERIFIED because I then wedged the box before a clean retest (below). Low risk, precisely scoped (only kills cmd.exe running the llama launcher). Recommend keeping.
+
+WHAT I BROKE: to inspect the launcher I ran, through nova_chat's /api/terminal/run, `cmd /c "start_llama_qwen36.cmd < nul"`. terminal_run is an `async def` that calls a BLOCKING subprocess.run(timeout=30) ON the event loop; the launched llama-server (a grandchild) inherited terminal_run's stdout pipe, so communicate() never sees EOF and blocks the loop FOREVER. nova_chat's last activity is 22:29:28 (nova log stream frozen at seq 635; /api/llama/status hangs 45s). The whole :8765 server — API, WS autonomous_toggle, and the autonomy daemon — is frozen. LESSON (for later runs): NEVER run a long-lived/foreground process (esp. the llama launcher) through /api/terminal/run; it will wedge her. Use POST /api/llama/{stop,start} for llama.
+
+WHY I COULDN'T SELF-RECOVER: (1) every :8765 endpoint is dead, so /api/restart/novachat, /api/llama/*, and the WS toggle are all unreachable. (2) computer-use (desktop control to taskkill / relaunch) is BLOCKED in a scheduled run — needs Cole to approve. (3) hub :8799 only exposes show/shutdown/pids/streams/log — /api/shutdown would tear down the stack AND exit nova_start (no supervisor relaunches it; NovaStart is one-shot), and nova_start's tracked llama/nova handles are STALE (I'd restarted both out-of-band earlier), so shutdown would kill the hub/watcher and STILL leave the wedged nova_chat + bare llama running — strictly worse and blind. So I deliberately did NOT trigger it. (4) I did NOT hand-edit any state file (HARD RULE 1).
+
+RECOVERY (Cole — ~2 min): easiest is a clean full restart.
+  1. Kill the bare/hung llama that's holding the pipe: `taskkill /F /IM llama-server.exe`
+  2. Kill the frozen chat server (owner of :8765): in a terminal —
+     `for /f "tokens=5" %a in ('netstat -ano ^| findstr :8765') do taskkill /F /PID %a`
+     (or just fully Quit Nova from the Console tray / reboot the machine).
+  3. Double-click NovaStart.cmd. It boots llama with v5 DIRECTLY from active_lora.json (bypasses the buggy .cmd), so confirm the llama-server tab shows `[Nova-core] personality adapter: ...nova_core_v5_epoch2.gguf:1.0` and GET /api/lora lists it (NOT []).
+  4. autonomy_state is enabled=FALSE — flip autonomy ON in the UI (#auto-toggle) after the stack is healthy. Verify wake fires.
+With the llama_control.py fix in place, future in-app Full-Restarts / LoRA-equips should stop stripping the adapter — but please watch the first one and confirm /api/lora stays populated.
+
+VERDICT: DEGRADED (self-inflicted nova_chat wedge; pre-existing bare-LoRA + autonomy-off). Root cause of the recurring bare-LoRA diagnosed and a fix committed but unverified. Needs Cole's manual restart to come back.
