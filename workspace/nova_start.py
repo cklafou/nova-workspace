@@ -471,6 +471,7 @@ def open_app_window():
 
     _kill_stale_app_chrome()          # the reason the throwaway profile existed
 
+    _first_launch = not (WS / APP_PROFILE).exists()   # only force a size the very first time
     _app_profile_dir = WS / APP_PROFILE
     _app_profile_dir.mkdir(parents=True, exist_ok=True)
     _grant_clipboard(_app_profile_dir, CHAT_PORT)
@@ -480,8 +481,13 @@ def open_app_window():
             f"--app=http://127.0.0.1:{CHAT_PORT}",
             f"--user-data-dir={_app_profile_dir}",
             "--no-first-run", "--no-default-browser-check",
-            "--new-window",
-            "--window-size=1500,950"]
+            "--new-window"]
+    # 2026-07-18: only force a window size on the FIRST-EVER launch (no profile yet). Passing
+    # --window-size every time was overriding Cole's manual resize on every restart. With the
+    # profile now persistent (see the shutdown block — no more rmtree), Chrome restores the
+    # size he last left, so his window geometry sticks.
+    if _first_launch:
+        args.append("--window-size=1500,950")
     try:
         return subprocess.Popen(args)
     except Exception as e:
