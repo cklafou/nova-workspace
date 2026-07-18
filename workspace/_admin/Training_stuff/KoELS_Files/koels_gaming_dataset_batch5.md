@@ -1,5 +1,5 @@
 # KoELS Gaming Specialist — Dataset Batch 5 (universal military + decision theory)
-_Last updated: 2026-07-15 23:14:48_
+_Last updated: 2026-07-18 21:27:59_
 
 _18 examples translating master strategic theory into competitive-gaming reasoning: Clausewitz
 (center of gravity, friction, culminating point, fog of war), Lanchester (square law / concentration

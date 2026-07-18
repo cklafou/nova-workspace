@@ -1,5 +1,5 @@
 # KoELS Gaming Specialist — Dataset Batch 3 (per-game depth + transfer + retrieval)
-_Last updated: 2026-07-15 23:14:48_
+_Last updated: 2026-07-18 21:27:59_
 
 _30 examples: chess (Silman imbalances / prophylaxis, oracle-aware), Clash archetype/economy theory,
 DBD map/info/time theory, metagame reasoning, transfer, and the retrieved-not-recalled discipline.

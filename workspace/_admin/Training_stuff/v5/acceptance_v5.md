@@ -1,5 +1,5 @@
 # Nova v5 — Acceptance Test
-_Last updated: 2026-07-15 23:14:48_
+_Last updated: 2026-07-18 21:27:59_
 
 Run these against Nova **with the v5 LoRA equipped**. Do not coach her. Do not warn her it's a test.
 

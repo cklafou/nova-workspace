@@ -1,4 +1,4 @@
-# Last updated: 2026-07-15 23:14:48
+# Last updated: 2026-07-18 21:27:59
 # @nova: Renders the call-order graph as a HUMAN-READABLE Word document (Orient/Calls_Order.docx).
 #        Companion to calls_order.py: that produces the machine-truthful .md, this produces the
 #        thing a person can actually sit and read. Same source of truth — it IMPORTS the graph

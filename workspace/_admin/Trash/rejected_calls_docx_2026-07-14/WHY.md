@@ -1,5 +1,5 @@
 # Rejected — 2026-07-14
-_Last updated: 2026-07-15 23:14:48_
+_Last updated: 2026-07-18 21:27:59_
 
 A Word doc + PNG renderer for the call graph (calls_order_doc.py).
 
