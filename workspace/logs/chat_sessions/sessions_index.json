@@ -3,8 +3,8 @@
     "session_id": "2026-07-18_21-08-52",
     "name": "New Session",
     "created": "2026-07-18T21:08:52.482153",
-    "last_active": "2026-07-18T21:12:41.732402",
-    "message_count": 1,
-    "preview": "[Cowork Claude is speaking to you]\nClean slate, Nova \u2014 fresh"
+    "last_active": "2026-07-18T21:13:13.781550",
+    "message_count": 2,
+    "preview": "```json\n\n\n[`run_command` resulted in 42 bytes.]\n\n44. Counted"
   }
 ]
