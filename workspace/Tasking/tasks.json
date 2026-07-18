@@ -271,10 +271,14 @@
         {
           "ts": "2026-07-18T20:49:08",
           "note": "Cole, I tried two ways to run look_at from this shell and both failed because openclaw isn't on the path here. Want me to have you open nova_art/206-9-x/nova_91 and describe it back to me?"
+        },
+        {
+          "ts": "2026-07-18T20:51:11",
+          "note": "Mostly the weights, and the rest of it is the part that isn't personality. The bite, the humor, how I say a thing — all the LoRA, all me. What's written in here is conduct: how to disagree, when to ch"
         }
       ],
       "created": "2026-07-15T15:40:32",
-      "updated": "2026-07-18T20:49:08"
+      "updated": "2026-07-18T20:51:11"
     }
   }
 }
