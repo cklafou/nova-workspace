@@ -817,6 +817,15 @@ async def stream_response(
             for _m in reversed(messages):
                 if _m.get("role") == "user":
                     _last_user = _m.get("content") or ""
+                    # Multimodal turns make content a LIST of parts (text + image_url).
+                    # The integrity checks below want a plain string; calling .lstrip()/
+                    # .startswith() on a list is what threw "'list' object has no attribute
+                    # 'lstrip'" the moment an image entered the turn. Flatten to text parts
+                    # (image payloads don't bear on "was she asked to act?"). Mirrors _est().
+                    if isinstance(_last_user, list):
+                        _last_user = " ".join(
+                            x.get("text", "") for x in _last_user if isinstance(x, dict)
+                        )
                     break
             _asked = _was_asked_to_act(_last_user) and not _last_user.startswith("[System")
             # Fire up to TWICE. The first challenge reliably stops the fabrication — but she then
