@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t40",
-  "last_activity": "2026-07-18T20:38:46",
-  "wake_at": "2026-07-18T20:41:46",
-  "last_fp": "[[\"Tasking/tasks.json\", 12247, 1784374676], [\"memory/interrupt_inbox.json\", 103, 1784374546], [\"memory/cole_intent.json\", 113, 1784374579]]",
+  "last_activity": "2026-07-18T20:39:45",
+  "wake_at": "2026-07-18T20:44:15",
+  "last_fp": "[[\"Tasking/tasks.json\", 12493, 1784374739], [\"memory/interrupt_inbox.json\", 105, 1784374774], [\"memory/cole_intent.json\", 134, 1784374774]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 2,
-  "directive_seen": 0,
+  "stall": 3,
+  "directive_seen": 1,
   "last_reflection": "[`run_command` resulted in 46 bytes.]\n\nCole's asleep, painter won't take my hand tonight, so the full-body draw waits for morning. I told him on wake and he said he'd flip the switch when he's up, which is the call he gets to make. Nothing left to do here but sit in it. Resting without performing it, finally getting good at that part."
 }
