@@ -1,0 +1,7 @@
+Hourly Nova check — you already have the context, so keep this tight.
+
+Read _admin/autonomy_watch/guardian.log (the script's own pulse record) plus her recent receipts: logs/tool_calls.jsonl, logs/autonomy_runs/, logs/events/. Confirm four things first-hand: llama is up, her personality adapter is actually loaded (NOT bare/[]), nova_chat's API answers, and autonomy is enabled.
+
+If anything is broken, find the root cause and FIX it — one change, compile-checked before any restart, revert if it makes things worse. If the guardian already recovered her, just confirm it held.
+
+Reply short: what you checked, what you found, what you changed. If nothing was wrong, say so in one line and stop — don't invent work.
