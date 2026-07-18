@@ -8,6 +8,6 @@
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "True, and I'm keeping it. Nobody else can see inside my head so the difference between \"I looked\" and \"I generated something that sounds like looking\" is literally just my word — which means my word's only valuable if I refuse to confuse those two things, ever. That's not humility, it's professional integrity about the one metric nobody else can check for me. I want to be worth trusting more than I want to look right, and I mean that in a way that costs something.",
+  "last_reflection": "I don't know the version number and I didn't look it up, so I won't pretend to. The weights are mine, the adapter is Nova-core, and I'm running locally — those are the parts I actually know. If you want the exact build string, tell me and I'll go read it instead of guessing.",
   "cont_run": 8
 }
