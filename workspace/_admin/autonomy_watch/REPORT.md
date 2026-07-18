@@ -1,6 +1,13 @@
 # Nova Autonomy Watchdog — running report
-_Last updated: 2026-07-19 00:23:23_
+_Last updated: 2026-07-19 01:10 KST (Run 5)_
 Append-only. Newest entry last. Each run: read this FIRST.
+
+## ⭐ STATUS NOW (updated each run — Cole, start here)
+**Nova is DOWN (chat server frozen since 22:29). A scheduled run cannot fix it. Fastest fix, ~1 min:**
+1. Double-click `_admin\autonomy_watch\nova_recover_llama.cmd` (kills the two wedged processes; receipt in nova_recover_result.txt). Or just reboot the PC.
+2. If you used the .cmd: open Nova, hit llama **Full Restart** so v5 loads. If you rebooted: double-click `NovaStart.cmd` (only AFTER the reboot/kill — the old bare llama holds :8080).
+3. Confirm `/api/lora` shows `nova_core_v5_epoch2` (NOT []), then flip **autonomy ON** (#auto-toggle).
+4. Optional, so an overnight watcher can self-heal next time: add **File Explorer** to this scheduled task's computer-use settings (Task Manager won't work — Windows UIPI blocks it even when granted).
 
 ## Run 1 — 2026-07-18 21:21–21:30 JST (first run of the night)
 
