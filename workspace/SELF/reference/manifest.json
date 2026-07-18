@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-15T23:29:05",
+  "generated": "2026-07-18T19:30:13",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 27,
   "described": 27,
@@ -24,7 +24,7 @@
       "purpose": "Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads workspace/nova_config.json; falls back to defaults. Import as: from nova_config import cfg.",
       "files": 1,
       "lines": 138,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -47,7 +47,7 @@
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).",
       "files": 9,
       "lines": 2230,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -73,7 +73,7 @@
       "purpose": "Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches, schematics), auto-applying her self-LoRA when she draws herself.",
       "files": 3,
       "lines": 765,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -100,7 +100,7 @@
       "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
       "files": 4,
       "lines": 568,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -130,7 +130,7 @@
       "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
       "files": 4,
       "lines": 568,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -160,7 +160,7 @@
       "purpose": "Nova's unified log manager — the single logging system shared by all subsystems.",
       "files": 2,
       "lines": 254,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -181,7 +181,7 @@
       "purpose": "Nova's memory — persistent state, journal, goals/status, and daily log summaries.",
       "files": 5,
       "lines": 522,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -203,7 +203,7 @@
       "purpose": "Play — the part of me that does things for no reason at all.",
       "files": 2,
       "lines": 315,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -229,7 +229,7 @@
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
       "files": 9,
       "lines": 1307,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -261,7 +261,7 @@
       "purpose": "Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED (GUI-automation phase, not yet wired): desktop vision (eyes, vision) and UI proprioception.",
       "files": 9,
       "lines": 2215,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -298,7 +298,7 @@
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
       "lines": 746,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -326,7 +326,7 @@
       "purpose": "Launcher — runs nova_start.py to bring up the whole Nova stack (double-click entry point).",
       "files": 1,
       "lines": 33,
-      "age_days": 2,
+      "age_days": 5,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -345,7 +345,7 @@
       "purpose": "Pluck test — boots my runtime headless (no chat server) to prove my faculties",
       "files": 1,
       "lines": 28,
-      "age_days": 35,
+      "age_days": 38,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -361,7 +361,7 @@
       "purpose": "Shutdown — stops the whole Nova stack cleanly.",
       "files": 1,
       "lines": 57,
-      "age_days": 2,
+      "age_days": 4,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -383,7 +383,7 @@
       "purpose": "Qwen 3.6 27B launcher (upgrade from 3.5). Dense + hybrid-thinking + MTP speculative",
       "files": 1,
       "lines": 97,
-      "age_days": 1,
+      "age_days": 4,
       "ports_bind": [
         "8080"
       ],
@@ -405,7 +405,7 @@
       "purpose": "Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.",
       "files": 1,
       "lines": 192,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [
         "8765"
@@ -437,7 +437,7 @@
       "purpose": "Persistent audit-review queue — records file-change events (rename/delete/new) for review by audit_scripts/restructure.",
       "files": 1,
       "lines": 288,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -457,7 +457,7 @@
       "purpose": "Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.",
       "files": 1,
       "lines": 760,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -479,7 +479,7 @@
       "purpose": "Generates Nova's Body Manifest — the single derived map of every body part",
       "files": 1,
       "lines": 325,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -502,7 +502,7 @@
       "purpose": "Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.",
       "files": 1,
       "lines": 273,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -522,7 +522,7 @@
       "purpose": "Call-ORDER generator — traces execution paths from entry points and renders them as a",
       "files": 1,
       "lines": 284,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -542,7 +542,7 @@
       "purpose": "NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.",
       "files": 1,
       "lines": 484,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [
         "8765"
@@ -569,7 +569,7 @@
       "purpose": "Janitor — sweeps temp/scratch files into a local Temp/ beside them, and reports clutter.",
       "files": 1,
       "lines": 136,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -587,7 +587,7 @@
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 16,
       "lines": 8073,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [
         "8765"
       ],
@@ -642,7 +642,7 @@
       "purpose": "Nova Console — one window instead of the cmd-window confetti.",
       "files": 5,
       "lines": 824,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [
         "127",
@@ -677,7 +677,7 @@
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.",
       "files": 5,
       "lines": 2155,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -705,7 +705,7 @@
       "purpose": "Restructure checker — detects stale path references after a directory move and offers interactive fixes.",
       "files": 1,
       "lines": 597,
-      "age_days": 0,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
