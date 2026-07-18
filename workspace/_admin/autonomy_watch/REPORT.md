@@ -150,3 +150,20 @@ PREVENTION so a future overnight run CAN self-heal a wedge like this: add **Task
 No AUDIT / ACTIVE TEST this run (daemon frozen → no receipts to audit; create-task routes through the dead :8765). Both resume once she's restarted.
 
 VERDICT: DEGRADED — BLOCKED ON COLE (unchanged since Run 3). No code/state change. New this run: one-double-click recovery script staged; all touched files confirmed compiling; terminal_run root-cause patch written up for a verified daytime fix.
+
+## Run 5 — 2026-07-19 01:04–01:12 KST — STILL DEGRADED, BLOCKED ON COLE (3rd consecutive run; wedge age ~2h40m). Nothing moved; no new lever.
+
+FRESH PROBES (all first-hand this run, not inherited):
+- nova_chat :8765 — still FROZEN: /api/llama/status aborted at 8.9s; hub "nova" stream still seq 635 (last line 22:29:28). Dead: all API, WS toggle, autonomy daemon, create-task path.
+- llama :8080 — UP, /health ok, still BARE: /lora-adapters = `[]`. Its log shows only idle-slot heartbeats since boot (~22:29); the Jul-19 00:18 mtime was Run 4's probes, not activity.
+- hub :8799 — UP (4ms). Watcher ALIVE: stream seq 1260→1283 since Run 4; last auto-commits 00:15/00:23 align exactly with Run 4's own file writes (watcher is change-triggered; silence since = static workspace, not death).
+- ComfyUI :8188 — down (refused). Irrelevant until she's back; generate_image self-heals (Run 1 fix).
+- autonomy_state: enabled=false, unchanged. No events-2026-07-19.jsonl, no tool_calls since 21:54, no autonomy_runs since 22:01 → she has not woken once tonight.
+
+LEVER RE-CHECK: computer-use allowlist EMPTY; request_access("File Explorer") → still "can't be approved during a scheduled run" (verbatim, re-confirmed 01:08). Noted for prevention advice: even a granted Task Manager would be useless (elevated → UIPI blocks input) and terminals grant click-only — **File Explorer** (to double-click the staged .cmd) is the ONE app that makes a headless recovery possible. Banner at top updated accordingly.
+
+CHANGES: none to code or state. Deliberately did NOT ship the terminal_run/asyncio.to_thread patch into the recovery boot path — Run 4's reasoning stands (py_compile can't catch a runtime slip; Cole's recovery restart must load known-good code). Only edit this run: this report (STATUS NOW banner + this entry).
+
+NO AUDIT / ACTIVE TEST possible (daemon frozen, no new receipts, create-task routes through dead :8765). Resumes automatically once Cole restarts her; next run after recovery should do the full health→audit→board-test cycle immediately, incl. verifying /api/lora holds v5 through the in-app restart (first live test of Run 2's _kill_port fix).
+
+VERDICT: DEGRADED — BLOCKED ON COLE. Watchdog can add no further value until he runs the 1-minute recovery; subsequent hourly runs will re-probe and pick up the moment she's back.
