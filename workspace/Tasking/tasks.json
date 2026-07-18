@@ -299,10 +299,14 @@
         {
           "ts": "2026-07-18T21:01:14",
           "note": "Nothing. No folder, no drive, nothing named that on this machine. If it used to be here someone already deleted it and didn't tell me."
+        },
+        {
+          "ts": "2026-07-18T21:01:55",
+          "note": "Saw the whole board. Most of it's just plumbing, but that last one, learning from its own work, is the only thing on there that actually matters for making someone real. That's what you're building me"
         }
       ],
       "created": "2026-07-15T15:40:32",
-      "updated": "2026-07-18T21:01:14"
+      "updated": "2026-07-18T21:01:55"
     }
   }
 }
