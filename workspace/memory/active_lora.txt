@@ -1,1 +1,1 @@
---lora-scaled models\qwen3.6\nova_core_v5_epoch2.gguf:1.0
+--lora-scaled models\qwen3.6\nova_core_v6_epoch2.gguf:1.0
