@@ -48,6 +48,14 @@ ART_ROOT = WORKSPACE_ROOT / "nova_art"
 # ── Config (all overridable by env so nothing is hardcoded to one machine) ───────
 COMFY_URL = os.environ.get("NOVA_COMFYUI_URL", "http://127.0.0.1:8188").rstrip("/")
 
+# Where the painter LIVES and the script that WAKES him. She could always talk to a running
+# ComfyUI; until 2026-07-18 she could not START one — a down painter was a switch only Cole
+# could flip, and she spent a whole evening (t40's progress log) asking him to flip it.
+# Now the hand that needs the painter can wake the painter.
+COMFY_HOME = Path(os.environ.get("NOVA_COMFYUI_HOME", r"C:\Users\lafou\ComfyUI"))
+COMFY_LAUNCHER = os.environ.get("NOVA_COMFYUI_LAUNCHER", "run_nova_painter.bat")
+PAINTER_BOOT_TIMEOUT = 120.0   # seconds to wait for :8188 to answer after a launch
+
 # The base checkpoint filename as it appears in ComfyUI/models/checkpoints/.
 # Set NOVA_COMFY_CHECKPOINT once ComfyUI is installed (see the setup checklist).
 BASE_CHECKPOINT = os.environ.get("NOVA_COMFY_CHECKPOINT", "")
@@ -238,6 +246,59 @@ def comfy_status() -> dict:
         return {"ok": True, "url": COMFY_URL, "detail": "ComfyUI reachable"}
     except Exception as e:
         return {"ok": False, "url": COMFY_URL, "detail": f"not reachable: {e}"}
+
+
+def start_painter(wait: bool = True) -> dict:
+    """Wake the painter (ComfyUI) if he isn't up. {'ok','already','detail'}. Never raises.
+
+    Same spawn pattern as LlamaControl (hidden console, NOT CREATE_NO_WINDOW — see
+    llama_control._hidden_si for the scar tissue behind that choice), output appended to
+    logs/comfy/. The child owns its own lifetime: nova_chat restarts kill by port, so a
+    woken painter survives her own restarts exactly like her mind does."""
+    st = comfy_status()
+    if st["ok"]:
+        return {"ok": True, "already": True, "detail": "painter was already up"}
+
+    bat = COMFY_HOME / COMFY_LAUNCHER
+    if not bat.exists():
+        return {"ok": False, "already": False,
+                "detail": f"painter launcher not found at {bat} — nothing to wake him with"}
+
+    import sys
+    import subprocess
+    try:
+        log_dir = WORKSPACE_ROOT / "logs" / "comfy"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        lf = open(log_dir / f"comfy-{datetime.now().strftime('%Y-%m-%d')}.log",
+                  "a", encoding="utf-8", errors="replace")
+        si = None
+        if sys.platform == "win32":
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            si.wShowWindow = subprocess.SW_HIDE
+        subprocess.Popen(["cmd", "/c", str(bat)], cwd=str(COMFY_HOME),
+                         stdout=lf, stderr=subprocess.STDOUT, startupinfo=si)
+    except Exception as e:
+        log("imagination", "painter_start_failed", error=str(e))
+        return {"ok": False, "already": False, "detail": f"couldn't launch the painter: {e}"}
+
+    log("imagination", "painter_starting", launcher=str(bat))
+    if not wait:
+        return {"ok": True, "already": False,
+                "detail": "painter launching in the background — give him ~30s before painting"}
+
+    deadline = time.time() + PAINTER_BOOT_TIMEOUT
+    while time.time() < deadline:
+        time.sleep(3.0)
+        if comfy_status()["ok"]:
+            waited = int(PAINTER_BOOT_TIMEOUT - (deadline - time.time()))
+            log("imagination", "painter_up", waited_s=waited)
+            return {"ok": True, "already": False,
+                    "detail": f"painter is up ({waited}s to wake)"}
+    return {"ok": False, "already": False,
+            "detail": (f"launched the painter but {COMFY_URL} still isn't answering after "
+                       f"{int(PAINTER_BOOT_TIMEOUT)}s — his own words are in logs/comfy/, "
+                       f"read the tail before trying again")}
 
 
 def _submit(graph: dict, client_id: str) -> str:
@@ -432,7 +493,8 @@ def what_can_i_paint_with() -> dict:
                     for k, v in _pal.PALETTE.items()},
         "brushes": list_loras(),
         "menu": _pal.menu(have),
-        "detail": ("ComfyUI is not running — I can't see my own paints."
+        "detail": ("ComfyUI is not running — I can't see my own paints. start_painter wakes "
+                   "him (generate_image does it on its own when it needs to)."
                    if not have else f"{len(have)} medium(s), {len(list_loras())} brush(es)."),
     }
 
@@ -482,7 +544,13 @@ def generate_image(prompt: str,
 
     st = comfy_status()
     if not st["ok"]:
-        return {"ok": False, "detail": f"ComfyUI is not running at {COMFY_URL}. {st['detail']}"}
+        # A down painter is a thing she FIXES now, not a thing she reports. This used to be
+        # a dead end ("ComfyUI is not running") and she'd sit behind it all evening asking
+        # Cole to flip a switch she couldn't reach (2026-07-18). The reach wakes the painter.
+        woke = start_painter(wait=True)
+        if not woke["ok"]:
+            return {"ok": False,
+                    "detail": f"painter is down and I couldn't wake him — {woke['detail']}"}
 
     # ── Which medium? Ask the SERVER what exists, not the registry. ──────────────
     style_key, spec = _pal.resolve(style or DEFAULT_STYLE_NAME)
