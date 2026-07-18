@@ -328,8 +328,12 @@ LLAMA_CPP_URL = "http://127.0.0.1:8080/v1/chat/completions"
 #     memory to ~5K, which is its own kind of dumb. 24K is the balance point, not a compromise.
 #   To remove the trade entirely: shrink the ~24K always-on self-model so both grow. That's the
 #   real next lever (Cole's call) — VRAM caps the window, so context has to be spent wisely.
-MAX_TOKENS_CHAT  = 24576  # thinking + full answer, one pass, ~every turn — no thinking-off fallback
-MAX_TOKENS_AGENT = 24576  # tool-use loops: thinking + multi-step actions need at least this much
+# 2026-07-18 (reverted): back to 16384, the value that ran reliably for days. The 24576 bump
+# bought ~nothing (her actual reasoning is short, so 16K never starved it) while shrinking her
+# live-conversation history budget inside the fixed 64K window — which worsened grounding in long
+# sessions. 16K = full reasoning AND maximum room for conversation memory. Restore known-good.
+MAX_TOKENS_CHAT  = 16384
+MAX_TOKENS_AGENT = 16384
 
 # ── Context-window safety net ────────────────────────────────────────────────
 # Nova's local model has a 32K-token window. A single large tool/file read
