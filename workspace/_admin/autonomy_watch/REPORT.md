@@ -26,3 +26,31 @@ NOTES FOR NEXT RUNS:
 5. events audit warns "6336 issues" from her self-audit — pre-existing noise, not tonight's problem.
 
 VERDICT: RELIABLE (core autonomy; painter down, Cole-aware — art capability degraded until he flips it on).
+
+## Run 1 addendum — 2026-07-18 21:25–21:50 JST (INTERACTIVE: Cole directed live fixes)
+
+Cole rejected "no change" and directed: perfect her autonomy; she was "dumb" about ComfyUI, hallucinating things he never said, and forgetting her task. Three root causes found, all MECHANICAL, all fixed tonight:
+
+FIX 1 — SHE COULD NOT START HER OWN PAINTER (the "dumb about comfyui" issue).
+No tool existed to start ComfyUI; generate_image dead-ended with "ComfyUI is not running" and her only move was asking Cole ("flip him on" — t40 all evening). Built:
+- imagination.py: start_painter() — spawns C:\Users\lafou\ComfyUI\run_nova_painter.bat (env-overridable NOVA_COMFYUI_HOME/NOVA_COMFYUI_LAUNCHER), hidden-window + logs/comfy/ redirect (mirrors LlamaControl), polls :8188 up to 120s. generate_image now SELF-HEALS: painter down → wake him → paint.
+- tool_router.py: start_painter registered (AVAILABLE_TOOLS, dispatch w/ aliases, list_tools text); "painter isn't running" messages now tell her the switch is HERS.
+VERIFIED: compiled clean; ComfyUI actually woken via her code path at ~21:38 ("ComfyUI reachable"); what_can_i_paint_with through tool_router lists mediums.
+
+FIX 2 — HIS ASKS WERE SILENTLY DISCARDED SECONDS AFTER SHE REPLIED (the amnesia).
+runtime.py's poll loop consumed the standing cole-directive the moment she was last speaker (~seconds after any reply), racing and defeating apply_decision's designed lifecycle (release on task-creation or 3-wake valve). AND no prompt ever showed her the directive text — she was expected to remember asks from a rolling 14-message window. Receipt: cole_intent.json "Nova. Fucking boot the comfyui and draw..." consumed:true with no task ever created.
+- runtime.py: poll-loop consumption REMOVED (lifecycle now owned solely by apply_decision).
+- executive.py: build_reflection + build_decision now SURFACE the standing ask verbatim ("COLE'S STANDING ASK — ... DO it this wake or `create` a task NOW").
+VERIFIED: events now show wake reason "directive" (21:44:13, 21:44:54 — never seen before tonight); directive_seen increments; informational comments release via the 3-wake valve as designed.
+
+FIX 3 — HER SAVED REFLECTION WAS HALF MACHINE DROPPINGS (hallucination feeder).
+save_reflection stored raw generation text incl. tool-loop residue (```json husks, "[`tool` resulted in N bytes.]"), re-read to her every wake as "your last thought" — husk-shaped context that confabulation grows on. Added _strip_tool_residue() in executive.py; save_reflection stores clean prose. VERIFIED: stripper tested against live contaminated state; post-fix reflection stored CLEAN.
+(Second contamination path noted, NOT yet fixed: she sometimes writes transcript-style fake quotes — "[11:40] Cole: ..." — into board progress notes (see t30), which later wakes read back as things Cole said. Candidate next fix: sanitize/attribute progress notes. Model-side confabulation of file paths persists but she self-corrects with receipts.)
+
+OPERATIONAL NOTES:
+- 2x /api/restart/novachat tonight (loads new code, llama+ComfyUI survive). HAZARD LEARNED: restarts can trip the llama error-backoff (server.py ~1452) which AUTO-PAUSES autonomy (enabled→false). It did tonight; re-enabled via the app's own UI toggle (#auto-toggle → "auto-toggle on", state confirmed true). EVERY later run: re-verify enabled after ANY restart.
+- ~21:45 Cole told Nova: "Your v6 LoRa was awful, so we rolled back to v5." At 21:47 llama :8080 was DOWN — Cole mid-rollback. Run 1's "/api/lora should show nova_core_v6_epoch1" expectation is SUPERSEDED: v5 loaded is now CORRECT; do NOT "fix" it back to v6.
+- ComfyUI up since ~21:38 (self-started). If down on later runs, generate_image self-heals now; a start_painter receipt failing repeatedly = read logs/comfy/.
+- autonomy_state "active":"t40" still stale-points at an abandoned task (cosmetic; wakes decide correctly).
+
+VERDICT: FIXED-THIS-RUN x3 (painter agency, directive amnesia, reflection hygiene). Pending at write time: llama back up post-rollback + autonomy re-enabled after it (checked below).
