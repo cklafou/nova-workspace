@@ -86,3 +86,32 @@ RECOVERY (Cole — ~2 min): easiest is a clean full restart.
 With the llama_control.py fix in place, future in-app Full-Restarts / LoRA-equips should stop stripping the adapter — but please watch the first one and confirm /api/lora stays populated.
 
 VERDICT: DEGRADED (self-inflicted nova_chat wedge; pre-existing bare-LoRA + autonomy-off). Root cause of the recurring bare-LoRA diagnosed and a fix committed but unverified. Needs Cole's manual restart to come back.
+
+## Run 3 — 2026-07-18 23:04–23:12 JST — STILL DEGRADED, BLOCKED ON COLE. Nova is DOWN; a scheduled watcher CANNOT revive her. COLE: 30-second fix at the top.
+
+⭐ COLE — FASTEST FIX (do this first): **Reboot the PC, then double-click `NovaStart.cmd`.** A reboot clears every wedged/orphaned process at once; NovaStart then boots llama with your v5 adapter directly from active_lora.json. That's it. (Manual, no-reboot steps are in Run 2's RECOVERY block above if you prefer.) IMPORTANT ORDERING: do NOT double-click NovaStart while the old stack is still up — the bare llama is holding :8080, so a fresh NovaStart would halt on "model not ready." Reboot (or fully kill the old stack) FIRST, then launch.
+
+WHY A WATCHER CAN'T FIX THIS (the important escalation): I confirmed FIRST-HAND this run that computer-use (desktop control to taskkill/relaunch) returns "can't be approved during a scheduled run" — it needs you awake to approve, or the app added to the scheduled task's settings. So every HTTP lever into her is dead (see below) AND the one non-HTTP lever is gated. No overnight run can self-heal a wedged nova_chat. She will stay down until you act. This is not new breakage — it's Run 2's wedge, unchanged.
+
+STATE (verified, identical to where Run 2 left it — nothing moved on its own):
+- nova_chat :8765 — event loop FROZEN. Hub nova-stream stuck at seq 635 across repeated polls; nova_launcher.log last line 22:29:28 and dead since; /api/llama/status times out >8s. All API/WS/autonomy-daemon dead.
+- llama :8080 — UP + healthy but BARE: GET /lora-adapters = [] (no v5 personality). This is the terminal_run-spawned server from ~22:29 that is also the pipe-holder wedging nova_chat.
+- hub :8799 — UP (only show/shutdown/pids/streams/log). ComfyUI :8188 — DOWN. autonomy_state enabled = FALSE, active still "t40" (cosmetic).
+- Last real activity: last wake 22:01:19 ("woke up clean on this new build" — she was briefly alive on v5); last tool_call 21:54; last cole_message 22:01:11. All pre-wedge.
+
+WHY NO HTTP SELF-RECOVERY (re-derived and re-confirmed, not taken on faith):
+- nova_chat's loop is blocked inside subprocess.run()'s post-timeout communicate(), waiting on a stdout pipe the spawned llama-server keeps open. No HTTP handler can run, so /api/restart/novachat, /api/llama/*, and the WS toggle are all unreachable. The 30s timeout can't fire (grandchild holds the pipe) — it's been wedged 40+ min; it will not self-clear.
+- Killing that llama-server would close the pipe and unwedge her — but that's a Windows process kill, and computer-use is gated (above). Bash is a separate Linux sandbox; it cannot touch Windows processes. llama-server has no HTTP shutdown route.
+- Read nova_start.py end-to-end: it is one-shot, NO supervisor/relaunch of dead children (main() blocks on app_proc.wait()); and _bg_llama_autostart fires ONCE at boot, no watchdog loop. So nothing auto-restarts llama or nova_chat.
+- hub /api/shutdown STILL rejected (as Run 2): nova_start's tracked llama/nova handles are stale, so it would tear down the hub+watcher+launcher and EXIT while leaving the wedged nova_chat + bare llama orphaned — strictly worse, and it kills my only observability. Did NOT trigger it.
+
+WHAT I VERIFIED / SECURED THIS RUN (no state-file edits, no restarts, no risky ops, ZERO changes — HARD RULE 4 budget untouched):
+- Run 2's llama_control.py `_kill_port` fix is present, compiles, and is correctly scoped: it kills the launcher cmd.exe (matched by CommandLine LIKE start_llama_qwen36.cmd) FIRST, then the port owner, then llama-server by name — precisely targeting the orphaned-launcher-resume path that was silently stripping --lora. Sound; keep it. Watch /api/lora after your first in-app Full-Restart to confirm it holds.
+- All 6 code files Run 1/2 touched (llama_control, imagination, tool_router, runtime, executive, server) compile clean — no landmine waiting in your restart.
+- active_lora.txt AND active_lora.json both = nova_core_v5_epoch2.gguf : 1.0 (Cole's post-rollback choice). A clean NovaStart boot builds --lora in Python straight from that (bypassing the fragile .cmd), so it will load v5 correctly. Do NOT restore v6 — Cole rolled it back as "awful" (21:45).
+
+No AUDIT / ACTIVE TEST this run: the autonomy daemon is frozen (no new receipts to audit) and the create-task path routes through the dead :8765 API (can't plant a board test). Both resume once she's restarted.
+
+PREVENTION (optional, for next time): if you want an overnight watchdog to be ABLE to recover a wedge like this without you, add the needed app (e.g. Task Manager) to this scheduled task's computer-use settings — that's the only thing that would let a headless run kill+relaunch. Absent that, keep the terminal_run guard in mind: never run a long-lived/foreground process (esp. the llama launcher) through /api/terminal/run — that's what wedged her.
+
+VERDICT: DEGRADED — BLOCKED ON COLE. No change made (nothing safely actuatable from a scheduled run). Stack set up to recover correctly on your restart; the fix that should stop the recurring bare-LoRA is in place and compiles.
