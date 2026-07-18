@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-18T21:54:25+09:00",
+  "updated_at": "2026-07-19T00:15:31+09:00",
   "items": [
     {
       "id": "777df213",
@@ -82261,6 +82261,19 @@
       "commit": "e120d005",
       "old_path": null,
       "new_path": "nova_art/2026-07-18/nova_art_215400_43312.png",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "f21e635e",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T00:15:31+09:00",
+      "commit": "7bb534f4",
+      "old_path": null,
+      "new_path": "_admin/autonomy_watch/nova_recover_llama.cmd",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
