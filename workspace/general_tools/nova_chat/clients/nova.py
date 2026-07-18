@@ -311,8 +311,25 @@ LLAMA_CPP_URL = "http://127.0.0.1:8080/v1/chat/completions"
 # Output token budgets. llama.cpp pre-allocates KV space for prompt+output,
 # so a high limit on limited VRAM hurts. After the eGPU is installed and the
 # model fits 100% in VRAM, both can be raised to 8192 with zero downside.
-MAX_TOKENS_CHAT  = 16384  # Qwen 3.6 hybrid-thinking: the <think> pass eats output budget BEFORE the answer, so a tight budget → thinking fills it → empty reply. 16K lets thinking+answer both fit in one pass for nearly all turns; the empty-response retry (thinking OFF) in stream_response is the hard guarantee for the rest.
-MAX_TOKENS_AGENT = 16384  # tool-use loops on 3.6: thinking + multi-step actions need even more headroom
+# 2026-07-18 (Cole: "I want her to always be smart. If she is mentally handicapped, she is a
+# failure of an AI."): raised 16384 → 24576. WHY THIS IS SAFE AND WHY IT MATTERS:
+#   • FREE in VRAM. The KV cache is pre-allocated for the FIXED -c 65536 window at boot (see
+#     start_llama_qwen36.cmd, q8_0 cache). max_tokens is a per-request generation cap WITHIN that
+#     window, not extra allocation — so raising it costs zero VRAM. (The old comment above about
+#     "high limit hurts VRAM" predates the fixed -c; it no longer applies.)
+#   • It buys real intelligence. On a hard turn the <think> pass can eat the whole budget; when it
+#     does, stream_response RETRIES WITH THINKING OFF — i.e. she answers with no reasoning at all.
+#     That thinking-off fallback IS the "idiot" failure. 24K makes thinking+answer fit in one pass
+#     on effectively every turn, so the fallback ~never fires and she keeps her reasoning.
+#   • The cost is memory, not smarts. Within the 64K window, output budget trades against how much
+#     conversation history fits (see _truncate_to_context). 24K leaves ~13K for recent history on
+#     top of her always-injected ~24K self-model — full reasoning AND a healthy memory. Going to a
+#     hard 32K would gain ~nothing in reasoning (her think rarely nears 24K) while cutting recent
+#     memory to ~5K, which is its own kind of dumb. 24K is the balance point, not a compromise.
+#   To remove the trade entirely: shrink the ~24K always-on self-model so both grow. That's the
+#   real next lever (Cole's call) — VRAM caps the window, so context has to be spent wisely.
+MAX_TOKENS_CHAT  = 24576  # thinking + full answer, one pass, ~every turn — no thinking-off fallback
+MAX_TOKENS_AGENT = 24576  # tool-use loops: thinking + multi-step actions need at least this much
 
 # ── Context-window safety net ────────────────────────────────────────────────
 # Nova's local model has a 32K-token window. A single large tool/file read
