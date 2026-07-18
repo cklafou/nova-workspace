@@ -1657,19 +1657,31 @@ async def terminal_run(body: dict):
     if not cmd:
         return JSONResponse({"error": "no command"}, status_code=400)
 
-    try:
+    # ── 2026-07-19: run the subprocess OFF the event loop. ───────────────────────────
+    # This handler is `async def`, so it executes on the loop. sp.run(timeout=30) is
+    # blocking, and calling it inline froze the WHOLE server for up to 30s per command:
+    # every HTTP request, the WebSocket, and Nova's autonomy daemon all stalled. That is
+    # the "nova_chat FROZEN / API did not answer within 8s" outage — and it's especially
+    # nasty here, because this endpoint is how the watchdog reaches the machine, so the
+    # freeze also destroyed the only remote route to recover her. (Same root cause as the
+    # nightwatch self-deadlock: it ran as a subprocess OF the server, so the server was
+    # too busy running it to answer its own health check.)
+    def _blocking_run():
         if sys.platform == "win32":
-            proc = sp.run(
+            return sp.run(
                 ["powershell", "-NoProfile", "-Command", cmd],
                 capture_output=True, text=True, timeout=30,
                 cwd=str(WORKSPACE_ROOT), encoding="utf-8", errors="replace"
             )
-        else:
-            proc = sp.run(
-                cmd, shell=True, capture_output=True, text=True,
-                timeout=30, cwd=str(WORKSPACE_ROOT),
-                encoding="utf-8", errors="replace"
-            )
+        return sp.run(
+            cmd, shell=True, capture_output=True, text=True,
+            timeout=30, cwd=str(WORKSPACE_ROOT),
+            encoding="utf-8", errors="replace"
+        )
+
+    try:
+        import asyncio as _aio
+        proc = await _aio.get_running_loop().run_in_executor(None, _blocking_run)
         stdout = proc.stdout[-8000:] if proc.stdout else ""
         stderr = proc.stderr[-2000:] if proc.stderr else ""
         return JSONResponse({
