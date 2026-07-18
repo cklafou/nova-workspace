@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-18T21:31:23",
+  "generated": "2026-07-18T21:36:55",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 27,
   "described": 27,
@@ -72,7 +72,7 @@
       "path": "nova_body/nova_imagination",
       "purpose": "Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches, schematics), auto-applying her self-LoRA when she draws herself.",
       "files": 3,
-      "lines": 765,
+      "lines": 833,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -586,7 +586,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 16,
-      "lines": 8099,
+      "lines": 8125,
       "age_days": 0,
       "ports_bind": [
         "8765"
