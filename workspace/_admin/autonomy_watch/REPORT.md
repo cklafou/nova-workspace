@@ -1,5 +1,5 @@
 # Nova Autonomy Watchdog — running report
-_Last updated: 2026-07-18 22:57:34_
+_Last updated: 2026-07-19 00:23:23_
 Append-only. Newest entry last. Each run: read this FIRST.
 
 ## Run 1 — 2026-07-18 21:21–21:30 JST (first run of the night)
@@ -115,3 +115,31 @@ No AUDIT / ACTIVE TEST this run: the autonomy daemon is frozen (no new receipts 
 PREVENTION (optional, for next time): if you want an overnight watchdog to be ABLE to recover a wedge like this without you, add the needed app (e.g. Task Manager) to this scheduled task's computer-use settings — that's the only thing that would let a headless run kill+relaunch. Absent that, keep the terminal_run guard in mind: never run a long-lived/foreground process (esp. the llama launcher) through /api/terminal/run — that's what wedged her.
 
 VERDICT: DEGRADED — BLOCKED ON COLE. No change made (nothing safely actuatable from a scheduled run). Stack set up to recover correctly on your restart; the fix that should stop the recurring bare-LoRA is in place and compiles.
+
+## Run 4 — 2026-07-19 00:04–00:22 KST — STILL DEGRADED, BLOCKED ON COLE (unchanged since Run 3). Two fixes at top; new: 1-double-click recovery pre-staged.
+
+⭐ COLE — FASTEST FIX (either works):
+  • **No-reboot:** double-click `_admin\autonomy_watch\nova_recover_llama.cmd` (I wrote it this run). It kills ONLY the orphaned launcher cmd + the bare llama-server that are wedging nova_chat. :8765 unfreezes within seconds. THEN open Nova and hit the llama **Full Restart** (or Start) so llama reloads your v5 adapter, and flip **autonomy ON** (#auto-toggle). Receipt of what it killed lands in `_admin\autonomy_watch\nova_recover_result.txt`.
+  • **Cleanest:** **reboot the PC, then double-click `NovaStart.cmd`** — clears every wedged process at once and boots llama with v5 straight from active_lora.json. Then flip autonomy ON. (Do NOT double-click NovaStart while the old stack is still up — the bare llama holds :8080 and NovaStart halts on "model not ready." Reboot, or run the recover .cmd, FIRST.)
+
+STATE (fresh receipts this run — identical to Run 3; nothing moved on its own):
+- nova_chat :8765 — FROZEN. Hub "nova" stream stuck at **seq 635, last line 22:29:28** (~1h55m of silence); direct probe timed out >8s. The loop is blocked in terminal_run's `subprocess.run()` post-timeout `communicate()`, which on Windows takes NO timeout and waits forever on a stdout pipe the bare llama-server holds → it will NEVER self-recover.
+- llama :8080 — UP but BARE (`/lora-adapters = []`). This IS the terminal_run-spawned pipe-holder.
+- hub :8799 — UP (runs inside nova_start's process, alive but blocked on app_proc.wait()). watcher — ALIVE (git auto-commits every few min, seq 1260 — the ~00:07-00:11 mass FILE_INDEX/header churn is just its normal manifest regen, NOT a concurrent editor). autonomy_state enabled=FALSE; active "t40" (cosmetic).
+
+WHY A SCHEDULED RUN STILL CAN'T SELF-HEAL (re-derived first-hand, not taken from Run 3):
+- Recovery REQUIRES killing a Windows process (the bare llama-server holding the pipe). Every lever confirmed dead THIS run: (1) computer-use request_access("File Explorer") → **"can't be approved during a scheduled run"** — the real gate (an earlier terminal request only returned the click-mode notice, which misled me for one step). (2) terminals grant click-only (no typing). (3) bash = Linux sandbox, can't touch Windows PIDs. (4) live HTTP is only :8080 (llama — no exec/shutdown route), :8799 (hub — API is show/shutdown/pids/streams/log only, no kill) and the FROZEN :8765. The one endpoint that could taskkill — terminal_run — is the thing that's wedged.
+- hub /api/shutdown re-ruled-out (re-read nova_start.py end-to-end): it flips a flag a daemon thread reads → terminate()s app_proc+nova_proc → main() exits. nova_start's llama handle is stale (bare llama spawned out-of-band), so it would NOT kill the bare llama, WOULD kill hub+watcher, and EXIT nova_start (one-shot, no relaunch) → wedged nova_chat + bare llama orphaned with nothing to revive them, and I lose observability. Strictly worse. Did NOT trigger it.
+
+WHAT I DID THIS RUN (no code or state change; ONE-change budget intact):
+- **Pre-staged `_admin/autonomy_watch/nova_recover_llama.cmd`** — turns Run 2/3's hand-typed taskkill into a scoped double-click. Two standard Stop-Process calls (orphaned launcher cmd FIRST so it can't resume-and-respawn a pipe-re-inheriting server, then llama-server), writes a receipt, touches no data/state files. This is the no-reboot path above.
+- **Compile-checked all 6 files prior runs edited** (llama_control, imagination, tool_router, runtime, executive, server) — ALL OK. No syntax landmine in your reboot. Run 2's `_kill_port` fix (kill launcher cmd first → stops the recurring bare-LoRA on in-app restarts) is present and sound; watch /api/lora after your first in-app Full-Restart to confirm it holds.
+- Verified active_lora.txt/.json both = nova_core_v5_epoch2.gguf:1.0 and the adapter file exists → any clean boot loads v5. Do NOT restore v6 (rolled back "awful" 07-18 21:45).
+
+ROOT CAUSE worth a VERIFIED daytime fix — documented, NOT shipped blind (I can't restart/verify from here and won't push untested code into your recovery boot): `terminal_run` (general_tools/nova_chat/server.py ~L1653) runs a BLOCKING `subprocess.run(timeout=30)` directly ON the asyncio loop; when a launched grandchild keeps the stdout pipe open, the post-timeout communicate() hangs forever and freezes the WHOLE server. Fix to apply+verify awake: move the sp.run into a local `_run_blocking()` and call `proc = await asyncio.to_thread(_run_blocking)`, so a hung command can only stall its own worker thread — Nova stays alive/autonomous. (Follow-up: on TimeoutExpired, tree-kill via CREATE_NEW_PROCESS_GROUP so orphaned grandchildren don't leak.) NOTE: this wedge came from a WATCHER running `cmd /c start_llama_qwen36.cmd` through terminal_run (Run 2's self-inflicted mistake), NOT from Nova's normal autonomy — recurrence risk from her own behavior is low; the guard is for future watchers.
+
+PREVENTION so a future overnight run CAN self-heal a wedge like this: add **Task Manager** (or File Explorer) to THIS scheduled task's computer-use settings — the ONLY thing that would let a headless run kill+relaunch. And never run a long-lived/foreground process (esp. the llama launcher) through /api/terminal/run.
+
+No AUDIT / ACTIVE TEST this run (daemon frozen → no receipts to audit; create-task routes through the dead :8765). Both resume once she's restarted.
+
+VERDICT: DEGRADED — BLOCKED ON COLE (unchanged since Run 3). No code/state change. New this run: one-double-click recovery script staged; all touched files confirmed compiling; terminal_run root-cause patch written up for a verified daytime fix.
