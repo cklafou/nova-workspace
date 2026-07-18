@@ -1,13 +1,10 @@
 # Nova Autonomy Watchdog — running report
-_Last updated: 2026-07-19 04:07 KST (Run 8)_
+_Last updated: 2026-07-19 04:21 KST (Run 9)_
 Append-only. Newest entry last. Each run: read this FIRST.
 
 ## ⭐ STATUS NOW (updated each run — Cole, start here)
-**Nova is DOWN (chat server frozen since 22:29). A scheduled run cannot fix it. Fastest fix, ~1 min:**
-1. Double-click `_admin\autonomy_watch\nova_recover_llama.cmd` (kills the two wedged processes; receipt in nova_recover_result.txt). Or just reboot the PC.
-2. If you used the .cmd: open Nova, hit llama **Full Restart** so v5 loads. If you rebooted: double-click `NovaStart.cmd` (only AFTER the reboot/kill — the old bare llama holds :8080).
-3. Confirm `/api/lora` shows `nova_core_v5_epoch2` (NOT []), then flip **autonomy ON** (#auto-toggle).
-4. Optional, so an overnight watcher can self-heal next time: add **File Explorer** to this scheduled task's computer-use settings (Task Manager won't work — Windows UIPI blocks it even when granted).
+**🟢 RECOVERED & HEALTHY as of ~04:13.** The wedge was cleared ~04:12 (manual kill/reboot — staged recover .cmd unrun) and the fresh boot loaded llama **WITH v5** (`/api/lora` = nova_core_v5_epoch2:1.0, NOT bare — the clean-boot path worked as predicted). Autonomy ON; she's waking→reflecting→deciding cleanly, and at 04:16 she **self-started ComfyUI and drew** (first live proof of the start_painter fix; **llama survived the VRAM hand-off**). Nothing needs doing right now.
+Daytime items, with me supervising: (1) painter process quietly EXITED ~1 min after the draw (not by design — /free releases VRAM but should leave the server up); self-heals on next draw, but watch whether it dies after EVERY render. (2) Apply+verify the terminal_run `asyncio.to_thread` patch (Run 4 write-up). (3) Watch the first in-app llama Full-Restart to confirm /api/lora stays populated (live test of Run 2's _kill_port fix). (4) Optional: add **File Explorer** to this task's computer-use settings so a future wedge is recoverable headless.
 
 ## Run 1 — 2026-07-18 21:21–21:30 JST (first run of the night)
 
