@@ -64,7 +64,19 @@ class LlamaControl:
         # (Get-NetTCPConnection -> Stop-Process by OwningProcess) can miss the real process
         # on some setups — the restart live-test (2026-06-01) caught it not killing llama —
         # so we also stop it by name. Belt-and-suspenders, and what KoELS self-restart relies on.
-        ps = (f"Get-NetTCPConnection -LocalPort {self.port} -ErrorAction SilentlyContinue | "
+        # 2026-07-18 (watchdog): kill the LAUNCHER CMD *FIRST*, before its llama-server child.
+        # cmd.exe re-reads its batch file by byte offset whenever a child returns; an orphaned
+        # launcher cmd resuming after we kill llama-server executes garbled line fragments
+        # (receipt in logs/llama/: 'COREKOELS_LORA"' is not recognized...), loses NOVA_EXTRA,
+        # and relaunches llama-server BARE (no --lora) — and its instance binds :8080 before the
+        # legitimate relaunch, which then dies on the busy port. Net effect: every restart
+        # silently stripped her personality adapter (the launcher's "worst class of bug: a
+        # SILENT one", via a second path). Killing the parent cmd first leaves nothing to
+        # resume when the server dies.
+        ps = ("Get-CimInstance Win32_Process -Filter \"Name='cmd.exe'\" | "
+              f"Where-Object {{ $_.CommandLine -like '*{self.launcher_path.name}*' }} | "
+              "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; "
+              f"Get-NetTCPConnection -LocalPort {self.port} -ErrorAction SilentlyContinue | "
               "ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; "
               "Stop-Process -Name llama-server -Force -ErrorAction SilentlyContinue")
         try:
