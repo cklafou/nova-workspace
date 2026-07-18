@@ -54,3 +54,5 @@ OPERATIONAL NOTES:
 - autonomy_state "active":"t40" still stale-points at an abandoned task (cosmetic; wakes decide correctly).
 
 VERDICT: FIXED-THIS-RUN x3 (painter agency, directive amnesia, reflection hygiene). Pending at write time: llama back up post-rollback + autonomy re-enabled after it (checked below).
+
+CLOSE-OUT 21:54: Cole's LoRA-equip flow (memory/active_lora.txt → v5_epoch2:1.0, written 21:42) had stopped llama but the relaunch never fired; Nova sat unable to answer his Wake presses ~21:45–21:52. Restored via POST /api/llama/start (boots HIS configured loadout). CONFIRMED: :8080 up, /api/lora = nova_core_v5_epoch2.gguf scale 1.0, autonomy enabled:true, ComfyUI up, wake "directive" firing on new code. Stack fully healthy on v5. LATER RUNS: expected LoRA is now V5_EPOCH2 (Cole's decision, 21:45); v6 was rolled back as "awful" — do not restore it.
