@@ -1,5 +1,5 @@
 # Nova Autonomy Watchdog — running report
-_Last updated: 2026-07-19 02:08 KST (Run 6)_
+_Last updated: 2026-07-19 03:07 KST (Run 7)_
 Append-only. Newest entry last. Each run: read this FIRST.
 
 ## ⭐ STATUS NOW (updated each run — Cole, start here)
@@ -177,3 +177,13 @@ LEVER RE-CHECK: request_access("File Explorer") at 02:05 → verbatim same gate 
 CHANGES: none — no code, no state, report only. Deliberately NOT shipping the terminal_run/to_thread patch into Cole's recovery boot path (Run 4's reasoning stands).
 
 VERDICT: DEGRADED — BLOCKED ON COLE. Hourly re-probe continues; full health→audit→board-test cycle fires the moment she's back (first item: confirm /api/lora holds v5 through the in-app restart — live test of Run 2's _kill_port fix).
+
+## Run 7 — 2026-07-19 03:04–03:07 KST — STILL DEGRADED, BLOCKED ON COLE (5th consecutive blocked run; wedge age ~4h35m). Nothing moved; no new lever.
+
+FRESH PROBES (all first-hand): llama :8080 /health ok (4ms), /lora-adapters still `[]` (bare). nova_chat :8765 /api/llama/status aborted at 12.8s — still frozen. Hub :8799 responds (5ms). ComfyUI :8188 refused. Disk: last tool_call 21:54, last autonomy_run 22:01:19, no events-2026-07-19.jsonl, autonomy_state enabled=false — she has not woken once tonight. Recovery script `nova_recover_llama.cmd` in place (1270B, 00:15) and unrun (no receipt).
+
+LEVER RE-CHECK: request_access("File Explorer") 03:06 → same gate verbatim ("can't be approved during a scheduled run... add the app to the scheduled task's settings"). No other lever exists (Runs 3–4 exhausted HTTP/hub/bash paths; re-verified reasoning, still sound).
+
+CHANGES: none — report only. One-change budget intact; nothing safely actuatable.
+
+VERDICT: DEGRADED — BLOCKED ON COLE. Banner at top remains the correct recovery path (~1 min). Hourly re-probes continue; the moment she's back: health → audit → board test → verify /api/lora holds v5 through an in-app restart.
