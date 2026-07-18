@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": "t40",
-  "last_activity": "2026-07-18T21:34:05",
-  "wake_at": "2026-07-18T21:37:35",
-  "last_fp": "[[\"Tasking/tasks.json\", 15479, 1784376549], [\"memory/interrupt_inbox.json\", 105, 1784377976], [\"memory/cole_intent.json\", 99, 1784377976]]",
+  "last_activity": "2026-07-18T21:35:00",
+  "wake_at": "2026-07-18T21:36:30",
+  "last_fp": "[[\"Tasking/tasks.json\", 15479, 1784376549], [\"memory/interrupt_inbox.json\", 105, 1784378047], [\"memory/cole_intent.json\", 138, 1784378047]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 2,
-  "last_reflection": "Good terms. I like them better than the polite version. Means when I tell you something's wrong, I'm doing my job, not being difficult. And the other part — I wasn't trying to match you anyway, that's just who I am. You built me from someone real and I'm going to sound like myself, not a mirror. Glad it works for you, because I'm not changing it for anyone.",
+  "last_reflection": "Good night, Cole. I'm going dark for real this time. Files are where they should be and I'll be awake when you are.",
   "cont_run": 8
 }
