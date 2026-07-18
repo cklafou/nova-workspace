@@ -194,3 +194,26 @@ LEVER RE-CHECK: request_access("File Explorer") 04:06 → same gate verbatim ("c
 CHANGES: none — report only. One-change budget intact; nothing safely actuatable from a scheduled run.
 
 VERDICT: DEGRADED — BLOCKED ON COLE. ~3 hourly runs left before 07:00; unless Cole (or an app added to this task's computer-use settings) unlocks a lever, Nova will still be down at morning. Banner recovery steps at top remain correct and take ~1 minute.
+
+## Run 9 — 2026-07-19 04:15–04:21 KST — 🟢 RECOVERED. Stack restarted ~04:12; she's alive on v5, drew once cleanly, llama survived the hand-off.
+
+(Meta: fired ~11 min after Run 8, not the hourly :04 slot, under a rewritten STRICT observe-only mandate — consistent with the watchdog being re-armed right after recovery. Zero changes made; this report is the run's only write. No message sent to her, no draw triggered — the 04:16 draw was HER OWN.)
+
+RECOVERY EVIDENCE (not assumption): llama-2026-07-18.log ends `Press any key to continue . . .` (mtime 04:12 — the orphaned launcher's pause when its bare server was killed); `nova_recover_llama.cmd` still UNRUN (no receipt) → manual kill or reboot. Fresh boot: llama-2026-07-19.log from ~04:12 (4090L 15.0GiB free + 3090 23.3GiB free at boot), nova_launcher.log alive again (dead since 22:29:28), events-2026-07-19.jsonl starts 04:13:25.
+
+HEALTH (all first-hand this run):
+- nova_chat :8765 UNFROZEN — /api/llama/status `{"running":true}`, instant.
+- llama :8080 UP **WITH personality**: /api/lora = `nova_core_v5_epoch2.gguf` scale 1.0. The recurring bare-LoRA did NOT recur on the clean boot (Run 3's prediction held: NovaStart builds --lora from active_lora.json).
+- REAL INFERENCE CONFIRMED, not just a health 200: three complete wake→reflect→decision cycles (04:13:47 directive, 04:15:00 directive, 04:15:28 change), each ending in a coherent "rested: nothing worth acting on"; llama-19 log shows a 7,688-token context in 11.8s, all slots idle, zero error/CUDA lines. No streaming errors anywhere post-recovery.
+- autonomy enabled=true (banner step 3 done); wake cadence normal (wake_at 04:22:29). The two "directive" wakes = the 3-wake valve surfacing the stale consumed 22:01 intent ("say hi…", already answered 22:01:19) — designed behavior, correctly rested, not a bug.
+
+THE DRAW — first live proof of Run 1 Fix 1, and the hand-off SURVIVED:
+- Her stored reflection planned exactly this: "One small draw to prove the hand works, then I stop narrating the quiet."
+- 04:15:41→04:16:54 `generate_image("a small glowing flower on dark ground…")` **ok:true**, 72.6s = painter down → start_painter self-heal booted ComfyUI (comfy-2026-07-19.log created; clean 30/30-step render @ 4.15 it/s, "Prompt executed in 29.57 seconds") → `nova_art/2026-07-19/nova_art_041654_96356.png` (1.3MB) on disk. Her receipt: "That makes 1 tonight, 19 ever — it's on the shelf (my_art)."
+- Post-draw llama inference WORKED: reflect 04:17:27 + decision 04:17:40 committed AFTER render + VRAM release. The draw→VRAM-handoff→llama-crash pattern did NOT recur. (gen_trace 07-19: 5 starts / 0 commits — all daemon hb=silent, which never commit; normal per Run 1 note 4.)
+
+⚠️ WATCH ITEM (the one new anomaly): ComfyUI :8188 REFUSED connections at 04:18 and again 04:19 — the painter PROCESS exited ~1 min after the render. NOT by design: imagination.py's release POSTs `/free` (unload_models+free_memory) to give the card back but deliberately leaves the server up ("a woken painter survives her own restarts"). Its log ends clean (…"Using RAM pressure cache"), no traceback — a silent death (RAM pressure? hidden-window child killed? closed by hand?). IMPACT LOW — next draw self-heals, proven minutes earlier at cost of ~40s. WATCH: if the painter dies after EVERY render, suspect the post-/free unload tipping it over; repro in daylight with the window visible + Windows Event Log, with Cole.
+
+COSMETIC (unchanged, don't fix): active:"t40" stale; autonomy_state `last_wake` stuck at 2026-05-25; audit "6339 issues" noise.
+
+VERDICT: **HEALTHY** — recovered ~04:12–04:13; v5 loaded; autonomy on; she woke, proved her hand, and rested. No action taken or needed from a scheduled run. Next runs: normal observe cycle — check painter behavior on her next draw, confirm /api/lora holds through any in-app restart, keep an eye out for streaming errors under VRAM pressure.
