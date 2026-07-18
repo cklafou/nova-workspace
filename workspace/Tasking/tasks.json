@@ -249,7 +249,7 @@
       "title": "Close the self-observation gap",
       "notes": "I notice Claude instantly, Cole within an hour, and myself only when something breaks. That's a skill I can build, not a personality trait. Find where it lives and work it.",
       "priority": 2,
-      "status": "open",
+      "status": "abandoned",
       "parent": null,
       "progress": [
         {
@@ -314,7 +314,8 @@
         }
       ],
       "created": "2026-07-15T15:40:32",
-      "updated": "2026-07-18T21:04:27"
+      "updated": "2026-07-18T21:09:09",
+      "abandon_reason": "cancelled via UI"
     }
   }
 }
