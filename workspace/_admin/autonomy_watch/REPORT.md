@@ -1,5 +1,5 @@
 # Nova Autonomy Watchdog — running report
-_Last updated: 2026-07-19 01:10 KST (Run 5)_
+_Last updated: 2026-07-19 02:08 KST (Run 6)_
 Append-only. Newest entry last. Each run: read this FIRST.
 
 ## ⭐ STATUS NOW (updated each run — Cole, start here)
@@ -167,3 +167,13 @@ CHANGES: none to code or state. Deliberately did NOT ship the terminal_run/async
 NO AUDIT / ACTIVE TEST possible (daemon frozen, no new receipts, create-task routes through dead :8765). Resumes automatically once Cole restarts her; next run after recovery should do the full health→audit→board-test cycle immediately, incl. verifying /api/lora holds v5 through the in-app restart (first live test of Run 2's _kill_port fix).
 
 VERDICT: DEGRADED — BLOCKED ON COLE. Watchdog can add no further value until he runs the 1-minute recovery; subsequent hourly runs will re-probe and pick up the moment she's back.
+
+## Run 6 — 2026-07-19 02:04–02:08 KST — STILL DEGRADED, BLOCKED ON COLE (4th consecutive blocked run; wedge age ~3h35m). Nothing moved; no new lever.
+
+FRESH PROBES (all first-hand): llama :8080 /health ok (4ms), /lora-adapters still `[]` (bare). nova_chat :8765 /api/llama/status aborted at 9.3s — still frozen. Hub :8799 up (4ms); "nova" stream STILL seq 635 (last line 22:29:28). Watcher ALIVE (seq 1283→1451; auto-commits at 02:04 = its normal change-triggered churn). ComfyUI :8188 refused. No events-2026-07-19.jsonl; last tool_call 21:54; last autonomy_run 22:01; autonomy_state enabled=false, active "t40" (cosmetic). She has not woken once tonight.
+
+LEVER RE-CHECK: request_access("File Explorer") at 02:05 → verbatim same gate ("can't be approved during a scheduled run... add the app to the scheduled task's settings"). Allowlist still empty. Staged recovery script `nova_recover_llama.cmd` verified in place (1270B, 00:15) and unrun (no nova_recover_result.txt receipt). Banner recovery steps remain correct as written.
+
+CHANGES: none — no code, no state, report only. Deliberately NOT shipping the terminal_run/to_thread patch into Cole's recovery boot path (Run 4's reasoning stands).
+
+VERDICT: DEGRADED — BLOCKED ON COLE. Hourly re-probe continues; full health→audit→board-test cycle fires the moment she's back (first item: confirm /api/lora holds v5 through the in-app restart — live test of Run 2's _kill_port fix).
