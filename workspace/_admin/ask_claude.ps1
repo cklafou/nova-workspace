@@ -42,7 +42,9 @@ function Log($msg) {
 
 try {
     if (-not (Test-Path $promptFile)) { Log ('ABORT: no prompt file at ' + $promptFile); exit 1 }
-    $text = Get-Content $promptFile -Raw
+    # -Encoding UTF8 is REQUIRED: without it Windows PowerShell reads the file as ANSI and
+    # every non-ASCII character (em-dashes, quotes) arrives mangled as "â€"" in the prompt.
+    $text = Get-Content $promptFile -Raw -Encoding UTF8
     if ([string]::IsNullOrWhiteSpace($text)) { Log 'ABORT: prompt file is empty - nothing sent'; exit 1 }
 
     # ── find Claude Desktop ───────────────────────────────────────────────────
