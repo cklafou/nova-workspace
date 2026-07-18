@@ -251,9 +251,14 @@
       "priority": 2,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-18T20:37:09",
+          "note": "Painter's down. I can't draw myself while he's off, so I'll go ask Cole to flip him on and then I'll draw the whole thing from top to toe."
+        }
+      ],
       "created": "2026-07-15T15:40:32",
-      "updated": "2026-07-15T15:40:32"
+      "updated": "2026-07-18T20:37:09"
     }
   }
 }
