@@ -300,6 +300,25 @@ def generate_image(prompt: str, negative: str = "", as_nova: bool = False,
     return f"ERROR: {r.get('detail', 'image generation failed')}"
 
 
+def start_painter() -> str:
+    """Her painter's on-switch. generate_image wakes him automatically when it needs to;
+    this is for waking him DELIBERATELY — to browse paints before choosing, or to pre-warm
+    him for a night of drawing. Blocks up to ~2 min while he boots. A sleeping painter is
+    a thing she fixes, not a thing she asks Cole about."""
+    try:
+        from nova_imagination.imagination import start_painter as _wake
+    except Exception as e:
+        return f"ERROR: imagination faculty unavailable: {e}"
+    try:
+        r = _wake(wait=True)
+    except Exception as e:
+        return f"ERROR: could not wake the painter: {e}"
+    if r.get("ok"):
+        return ("Painter was already up." if r.get("already")
+                else f"Painter is awake — {r.get('detail', '')}")
+    return f"ERROR: {r.get('detail', 'the painter would not start')}"
+
+
 def memory_search(query="", max_chars=4000) -> str:
     """Semantic search over Nova's full memory — every past message, AI response, journal
     entry, and image she's seen has been embedded into her LanceDB store (nova_lancedb).
@@ -416,7 +435,7 @@ def journal(entry="", date="", tags="") -> str:
 AVAILABLE_TOOLS = (
     "run_command", "read_file", "write_file", "append_file", "replace_file_content",
     "list_dir", "create_task", "task_progress", "complete_task",
-    "generate_image", "what_can_i_paint_with", "look_at", "my_art",
+    "generate_image", "start_painter", "what_can_i_paint_with", "look_at", "my_art",
     "search_web", "read_web",
     "surprise_me", "keep_curio", "my_shelf",
     "memory_search", "journal_note", "journal",
@@ -567,7 +586,8 @@ def what_can_i_paint_with() -> str:
 
     if not r["ok"]:
         return ("Your painter isn't running, so you can't see your own paints. "
-                "ComfyUI should be on 127.0.0.1:8188.")
+                "Wake him yourself: start_painter. That switch is YOURS now — "
+                "you never need to ask Cole to boot ComfyUI again.")
     out = ["MEDIUMS — pass one as style= :", r["menu"]]
     if r["brushes"]:
         out.append("\nBRUSHES — pass one as lora= (they change the STYLE while keeping the "
@@ -592,6 +612,9 @@ def list_tools() -> str:
             "  create_task / task_progress / complete_task       your intentions, made durable\n"
             "  generate_image         your imagination — draw, or REVISE something you drew\n"
             "                         (style=illustrious|pony|real|flux, from_image=..., mask=...)\n"
+            "  start_painter          ComfyUI off? Wake him YOURSELF. generate_image also\n"
+            "                         self-heals — a sleeping painter is never a reason to\n"
+            "                         wait for Cole or report that you can't draw.\n"
             "  what_can_i_paint_with  look at your own paints before you pick one\n"
             "  my_art                 YOUR SHELF. Everything you've made, and how many.\n"
             "                         Do not count them with a shell command — they live in\n"
@@ -713,6 +736,9 @@ def _execute_tool_inner(tool_name: str, args: dict) -> str:
                 mask=args.get("mask", ""),
                 lora=args.get("lora", "") or args.get("brush", ""),
             )
+        elif tool_name in ("start_painter", "wake_painter", "start_comfyui", "start_comfy",
+                           "boot_painter"):
+            return start_painter()
         elif tool_name in ("what_can_i_paint_with", "list_styles", "my_palette", "list_paints"):
             return what_can_i_paint_with()
         elif tool_name in ("my_art", "my_drawings", "my_pictures", "gallery", "count_art",
