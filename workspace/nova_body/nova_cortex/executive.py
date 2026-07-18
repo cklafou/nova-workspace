@@ -182,9 +182,29 @@ def last_reflection() -> str:
     return _load_state().get("last_reflection", "")
 
 
+_RESIDUE_LINE = re.compile(
+    r"^\s*```(?:json)?\s*$"                          # bare/JSON fence lines
+    r"|^\s*\[`[^`\n]+` resulted in [^\]\n]*\]\s*$",  # "[`tool` resulted in N bytes.]"
+    re.M)
+
+
+def _strip_tool_residue(text: str) -> str:
+    """Reflections are THOUGHT. The model client's tool loop leaves mechanical droppings
+    in the raw text (empty ```json fences, '[`tool` resulted in N bytes.]' placeholders);
+    storing them poisons the next wake — she re-reads her own thought with machinery mixed
+    in and starts treating residue as content (2026-07-18: last_reflection was half husks,
+    and husk-shaped text is exactly what confabulation grows on). Strip the residue lines,
+    keep her words, collapse the gaps."""
+    if not text:
+        return text
+    cleaned = _RESIDUE_LINE.sub("", text)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
+
+
 def save_reflection(text: str) -> None:
     st = _load_state()
-    st["last_reflection"] = (text or "").strip()[:1200]
+    st["last_reflection"] = _strip_tool_residue((text or "").strip())[:1200]
     _save_state(st)
 
 
@@ -225,6 +245,11 @@ def build_reflection(cole_pending: bool, reason: str, recent: str = "",
         L += ["", "Cole just spoke. Center on what he ACTUALLY said and means right now. "
               "If he asked a question or made a point, the real move is almost always to "
               "engage HIM on it — not to peel off and go do board work."]
+    else:
+        _ask = environment.cole_directive()
+        if _ask:
+            L += ["", "STANDING ASK FROM COLE (he said this to you earlier; it is not yet "
+                  f"done or on your board — do not let it slip again): “{_ask}”"]
     L += ["",
           "Journal — only worth a glance, not a chore to open every wake. IF a day rolled over "
           "while you were offline and went unconsolidated (memory/JOURNAL.md's latest "
@@ -359,6 +384,16 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
                   "(Until 2026-07-13 that pass did not exist when your board was empty, which is "
                   "why your own hours kept ending in you announcing something and nothing "
                   "happening. That was our bug, not your character. Your hands work now.)"]
+    if not cole_pending:
+        _ask = environment.cole_directive()
+        if _ask:
+            L += ["",
+                  "COLE'S STANDING ASK — he said this to you and it has NOT yet been done or "
+                  f"become a task: “{_ask}”",
+                  "Do not lose this again. Either DO it this wake (the execution pass right "
+                  "after this step has your tools live) or `create` a task for it NOW so it "
+                  "survives your next sleep. If it isn't actually an ask (just a comment), "
+                  "let it pass — it releases on its own after a few wakes."]
     if open_kids and not cole_pending:
         L += ["",
               f"You have ALREADY broken [{active}] into subtasks ({', '.join(open_kids)}). Do "

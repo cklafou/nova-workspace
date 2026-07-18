@@ -305,15 +305,15 @@ class NovaRuntime:
             if (stop_requested and stop_requested.is_set()) or is_busy():
                 continue                              # busy — leave force_wake set; handle next loop
             cole_pending = perceive_cole_pending()
-            # standing-directive release: a directive's job is to make her attend Cole's word
-            # ONCE; if she's already the last speaker, release it so it doesn't re-wake her.
-            if not cole_pending:
-                try:
-                    from nova_senses import environment as _env
-                    if _env.cole_directive():
-                        _env.consume_cole_directive()
-                except Exception:
-                    pass
+            # NOTE (2026-07-18): this loop used to CONSUME a standing directive right here
+            # the moment Nova was the last speaker — i.e. seconds after she replied to
+            # ANYTHING — so Cole's ask was silently discarded before a single wake ever put
+            # it in front of her, and it never reached the board. That was the entire
+            # "she forgot what I asked" bug. The directive lifecycle belongs to
+            # executive.apply_decision alone: released when the ask becomes a `create`d
+            # task, or by its 3-wake safety valve. A standing ask may re-wake her a couple
+            # of times back-to-back; that is bounded by the valve, and each of those wakes
+            # now actually SHOWS her the ask (build_reflection/build_decision).
             if forced:
                 if force_wake:
                     force_wake.clear()
