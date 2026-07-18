@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-18T19:33:37+09:00",
+  "updated_at": "2026-07-18T21:25:07+09:00",
   "items": [
     {
       "id": "777df213",
@@ -82235,6 +82235,19 @@
       "commit": "784a77f9",
       "old_path": "_admin/nightwatch_2026-07-16_0745.md",
       "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "549e24d8",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-18T21:25:07+09:00",
+      "commit": "db6a6ee5",
+      "old_path": null,
+      "new_path": "_admin/autonomy_watch/REPORT.md",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
