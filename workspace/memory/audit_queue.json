@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-18T19:30:19+09:00",
+  "updated_at": "2026-07-18T19:33:37+09:00",
   "items": [
     {
       "id": "777df213",
@@ -82209,6 +82209,32 @@
       "commit": "21755bae",
       "old_path": null,
       "new_path": "_admin/nightwatch_2026-07-16_0745.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "0efde9e9",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-07-18T19:33:37+09:00",
+      "commit": "784a77f9",
+      "old_path": "_admin/nightwatch_2026-07-15_2300.md",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "1b881e90",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-07-18T19:33:37+09:00",
+      "commit": "784a77f9",
+      "old_path": "_admin/nightwatch_2026-07-16_0745.md",
+      "new_path": null,
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
