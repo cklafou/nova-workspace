@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-18T20:18:41",
+  "generated": "2026-07-18T20:24:58",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 27,
   "described": 27,
@@ -361,7 +361,7 @@
       "purpose": "Shutdown — stops the whole Nova stack cleanly.",
       "files": 1,
       "lines": 57,
-      "age_days": 4,
+      "age_days": 5,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -586,8 +586,8 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 16,
-      "lines": 8073,
-      "age_days": 2,
+      "lines": 8082,
+      "age_days": 0,
       "ports_bind": [
         "8765"
       ],
