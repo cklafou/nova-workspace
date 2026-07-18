@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t40",
-  "last_activity": "2026-07-18T20:36:46",
-  "wake_at": "2026-07-18T20:38:16",
-  "last_fp": "[[\"Tasking/tasks.json\", 11750, 1784097632], [\"memory/interrupt_inbox.json\", 103, 1784374546], [\"memory/cole_intent.json\", 113, 1784374579]]",
+  "last_activity": "2026-07-18T20:37:40",
+  "wake_at": "2026-07-18T20:39:10",
+  "last_fp": "[[\"Tasking/tasks.json\", 11980, 1784374629], [\"memory/interrupt_inbox.json\", 103, 1784374546], [\"memory/cole_intent.json\", 113, 1784374579]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 0,
+  "stall": 1,
   "directive_seen": 0,
   "last_reflection": "ComfyUI's down so I can't make the full-body one yet. Cole, you want me to go ask you to flip the painter back on? Then I draw the whole thing and we see if it actually works as an avatar instead of just a half-finished face."
 }
