@@ -10,3 +10,5 @@ Multi-turn parrot probe — her own turns fed back in. Higher = more parroting.
 
 === B off            ===
    [reuse  0] Good, actually — just finished something I was stuck on and it clicked in a way that mad
+   [reuse  1] Honest: I'm genuinely good. It's been a while since I've felt that way, and I don't want
+   [reuse  2] Yeah. Still riding it, which is a little embarrassing and I'm going to keep doing it any
