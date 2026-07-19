@@ -356,18 +356,38 @@ class NovaMemoryStore:
 
     # ── Maintenance ───────────────────────────────────────────────────────────
 
-    def _last_write(self, tbl) -> float:
-        """Newest row timestamp in a table, or 0.0 if empty/unreadable.
+    def _last_write(self, tbl):
+        """Newest row timestamp. Returns (value, error) — NEVER a bare number.
 
-        Reads only the timestamp column — never the vectors — so this stays cheap
-        enough to call from a status probe."""
+        The two-value return is the whole point. The first draft of this returned
+        0.0 on any failure, which get_stats rendered as "never". It shipped straight
+        into a live probe reporting text_last_write="never" for a table holding 775
+        rows — because to_lance() needs pylance, which is not installed here, and the
+        except swallowed the ImportError whole.
+
+        That is the same silent-drop shape as every other bug this week: a function
+        reports a confident fact when what actually happened is that it failed. An
+        empty table and an unreadable table are DIFFERENT ANSWERS and collapsing them
+        is how you get a probe that lies. "I don't know" has to survive all the way
+        to the caller."""
         try:
             if tbl.count_rows() == 0:
-                return 0.0
-            col = tbl.to_lance().to_table(columns=["timestamp"]).column("timestamp")
-            return float(max(v.as_py() for v in col if v.as_py() is not None))
-        except Exception:
-            return 0.0
+                return (0.0, None)          # genuinely empty — "never" is TRUE here
+        except Exception as e:
+            return (None, f"count_rows failed: {type(e).__name__}")
+
+        # to_arrow() first: works on the installed lancedb, no pylance, no pandas.
+        for name, fn in (("to_arrow",  lambda: tbl.to_arrow().column("timestamp")),
+                         ("to_pandas", lambda: tbl.to_pandas()["timestamp"])):
+            try:
+                col = fn()
+                vals = ([v.as_py() for v in col] if name == "to_arrow" else list(col))
+                vals = [v for v in vals if v is not None]
+                if vals:
+                    return (float(max(vals)), None)
+            except Exception:
+                continue
+        return (None, "could not read timestamp column")
 
     def get_stats(self) -> dict:
         """Size AND recency. The recency half exists because of a real failure.
@@ -394,25 +414,33 @@ class NovaMemoryStore:
             return {"ready": False}
         try:
             import time as _t
-            t_last = self._last_write(self._text_tbl)
-            v_last = self._last_write(self._visual_tbl)
+            t_last, t_err = self._last_write(self._text_tbl)
+            v_last, v_err = self._last_write(self._visual_tbl)
             now = _t.time()
 
-            def _age_h(ts):
-                return round((now - ts) / 3600.0, 2) if ts else None
+            def _age_h(ts, err):
+                if err is not None or ts is None or ts == 0.0:
+                    return None
+                return round((now - ts) / 3600.0, 2)
 
-            def _iso(ts):
-                return (_t.strftime("%Y-%m-%d %H:%M:%S", _t.localtime(ts))
-                        if ts else "never")
+            def _iso(ts, err):
+                # Three distinct answers, never merged: I couldn't tell / it is
+                # genuinely empty / here is the time. Merging the first two is what
+                # made this function lie about a 775-row table.
+                if err is not None or ts is None:
+                    return f"unknown — {err or 'unreadable'}"
+                if ts == 0.0:
+                    return "never (table is empty)"
+                return _t.strftime("%Y-%m-%d %H:%M:%S", _t.localtime(ts))
             return {
                 "ready":              True,
                 "text_count":         self._text_tbl.count_rows(),
                 "visual_count":       self._visual_tbl.count_rows(),
                 # ── recency: the half that was missing ──
-                "text_last_write":    _iso(t_last),
-                "visual_last_write":  _iso(v_last),
-                "text_age_hours":     _age_h(t_last),
-                "visual_age_hours":   _age_h(v_last),
+                "text_last_write":    _iso(t_last, t_err),
+                "visual_last_write":  _iso(v_last, v_err),
+                "text_age_hours":     _age_h(t_last, t_err),
+                "visual_age_hours":   _age_h(v_last, v_err),
                 "indexer_running":    _indexer_alive(),
                 "db_path":            DB_PATH,
             }
