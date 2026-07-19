@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 17:21:55
+# Last updated: 2026-07-19 19:28:40
 import sys
 sys.path.insert(0, 'nova_body')
 from nova_lancedb import get_store
