@@ -1,5 +1,5 @@
 # STATUS.md — Project Nova Current State
-_Last updated: 2026-07-19 23:19:00_
+_Last updated: 2026-07-20 00:19:00_
 
 _Prior revision 2026-05-25 — reflects the body-relocation + dead-code cleanup. Earlier
 phase history (brain.py "Thoughts cycle", nova_gateway/Discord, nova_qt, OpenClaw) is
