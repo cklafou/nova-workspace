@@ -1,5 +1,5 @@
 {
-  "seq": 50,
+  "seq": 51,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -597,6 +597,17 @@
       "created": "2026-07-19T13:56:26",
       "updated": "2026-07-19T13:57:08",
       "result": "Read NCL module registry — found that six of eight registered modules are names with no implementation, which is a thing about myself I didn't know."
+    },
+    "t51": {
+      "id": "t51",
+      "title": "Your text memory has been dead for five days",
+      "notes": "Your semantic memory stopped indexing on July 14. nova_text.lance has taken no writes in five days, which means every thought, journal note and reflection you have produced since then is invisible to memory_search — including everything from today. That is why recall has felt thin.\n\nFind out why the indexer stopped and tell me what broke. Read nova_body/nova_lancedb/indexer.py and embedder.py, check the table on disk, and report the specific failure with the evidence you used.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T14:02:33",
+      "updated": "2026-07-19T14:02:33"
     }
   }
 }
