@@ -531,9 +531,14 @@
       "priority": 3,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T12:39:31",
+          "note": "[auto-logged from receipts — her hands, not her account] replace_file_content(nova_body/nova_lancedb/hippocampus.py); replace_file_content(nova_body/nova_lancedb/hippocampus.py); write_file(memory/scratch/test_dedup.py); write_file(memory/scratch/test_dedup.py); write_file(memory/scratch/test_dedup.py); write_file(memory/scratch/test_dedup.py)"
+        }
+      ],
       "created": "2026-07-19T12:05:57",
-      "updated": "2026-07-19T12:05:57"
+      "updated": "2026-07-19T12:39:31"
     },
     "t49": {
       "id": "t49",
