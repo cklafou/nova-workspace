@@ -616,6 +616,7 @@ async def stream_response(
         # every claim to a real receipt, and the guardian still watches for genuine loops.
         max_loops = 20
         loop_counter = 0
+        # (see the tool-chain note above — raised from 5 on 2026-07-19)
         final_chat_buffer = ""
         # Assertion binding (see _claims_a_receipt): did she ACTUALLY touch a tool this turn, and
         # have we already called her on an unearned receipt once? Both are per-USER-TURN, so they
