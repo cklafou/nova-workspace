@@ -68,6 +68,33 @@ def _load_state() -> dict:
             base.update(json.loads(_STATE.read_text(encoding="utf-8")))
     except Exception:
         pass
+
+    # ── heal a DEAD focus pointer (2026-07-19) ─────────────────────────────────────
+    # If `active` points at a task that is no longer OPEN — completed or abandoned outside
+    # her own decision loop (Cole closed it, a tool closed it, we cancelled it) — the pointer
+    # used to persist forever, and it quietly cost her a whole wake:
+    #
+    #   09:32 she woke on a board change, was told her active task was t40, spent all four
+    #   tool calls verifying t40 ("...tasks.t40.status" -> "abandoned"), concluded there was
+    #   nothing to act on, and RESTED — while a fresh priority-1 task sat untouched. Resting
+    #   also skips Phase 3, so the real work never ran. She wasn't refusing to work; she was
+    #   faithfully following a dead pointer.
+    #
+    # apply_decision's older self-heal only caught a GHOST (id missing from the board
+    # entirely). An abandoned task still EXISTS, so that check never fired. Heal on
+    # "not open", not merely "not found" — and do it here, in the single place every
+    # consumer reads state from, because several call sites read st["active"] directly
+    # rather than going through active_focus().
+    #
+    # Deliberately does NOT write: _load_state must stay side-effect free (it's called from
+    # inside save paths). The corrected value persists on the next ordinary _save_state.
+    if base.get("active"):
+        try:
+            _t = tasking.all_tasks().get(base["active"])
+            if _t is None or _t.get("status") != "open":
+                base["active"] = None
+        except Exception:
+            pass
     return base
 
 
