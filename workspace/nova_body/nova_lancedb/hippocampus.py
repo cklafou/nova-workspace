@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 12:53:30
+# Last updated: 2026-07-19 13:02:31
 """
 nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
 ==============================================================
@@ -188,7 +188,7 @@ class NovaMemoryStore:
             }
 
             for cid in cluster_ids_to_evict:
-                self._text_tbl.delete(f"id = '{cid}'")
+                self._text_tbl.delete(f'id = "{cid}"' if "'" in cid else f"id = '{cid}'")
             self._text_tbl.add([row])
             self._known_hashes.add(chash)
             return True
