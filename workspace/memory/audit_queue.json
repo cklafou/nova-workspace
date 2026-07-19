@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T21:18:17+09:00",
+  "updated_at": "2026-07-19T21:18:37+09:00",
   "items": [
     {
       "id": "777df213",
@@ -84939,6 +84939,19 @@
       "commit": "94829c74",
       "old_path": null,
       "new_path": "memory/last_ping.json",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "e79dc598",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-07-19T21:18:37+09:00",
+      "commit": "6836b630",
+      "old_path": "_admin/ask_claude.ps1",
+      "new_path": "_admin/Trash/cleanup_2026-07-19/superseded/ask_claude.ps1",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
