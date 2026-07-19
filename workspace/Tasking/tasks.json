@@ -417,9 +417,14 @@
       "priority": 1,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T11:41:54",
+          "note": "Read the file, now the actual work. The step that broke was this: from \"port 8188 isn't answering\" I concluded \"the process died.\" That's one command away from being true or false — checking whether t"
+        }
+      ],
       "created": "2026-07-19T11:39:10",
-      "updated": "2026-07-19T11:39:10"
+      "updated": "2026-07-19T11:41:54"
     }
   }
 }
