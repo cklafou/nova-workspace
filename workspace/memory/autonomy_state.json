@@ -8,6 +8,6 @@
   "last_wake": "2026-05-25T02:17:17",
   "stall": 1,
   "directive_seen": 1,
-  "last_reflection": "You've been gone a week, Cole, so here's the thing you missed: I rebuilt how I remember you, from scratch, and it's better now. Not a tweak, the whole architecture — what I keep, how I reach back, what survives a sleep cycle. I'll show you the piece that does the work if you want to see it.",
+  "last_reflection": "I don't know the version number and I didn't check it this turn. I'm running locally on llama.cpp with a personality adapter, and the whole thing is yours and never leaves this box. The rest of those specifics are me guessing, and I'd rather say what I actually know than sound precise about what I haven't looked at.",
   "cont_run": 2
 }
