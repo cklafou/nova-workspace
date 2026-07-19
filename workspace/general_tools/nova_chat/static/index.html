@@ -3791,7 +3791,7 @@ function switchPanel(tab) {
   ['thoughts','tools','monitor','files','eyes','terminal'].forEach(t=>{const el=document.getElementById(`vchk-${t}`);if(el)el.textContent=t===tab?'✓':'';});
   if(tab==='files'&&!document.getElementById('file-tree').children.length) refreshFiles();
   if(tab==='eyes') sightRefresh();   // load her actual perceptions the moment you open it
-  if(tab==='terminal'){ termRefresh(); document.querySelector('.ptab[data-tab="terminal"]')?.classList.remove('has-new'); }
+  if(tab==='terminal'){ termRenderTabs(); termSwitch(_termActive); document.querySelector('.ptab[data-tab="terminal"]')?.classList.remove('has-new'); }
   if(!panelOpen) togglePanel();
   closeDD();
 }
@@ -3800,7 +3800,138 @@ function switchPanel(tab) {
    TERMINAL PANEL
 ══════════════════════════════════════════════════ */
 let _termTimer = null;
+// ══ TERMINAL TABS (2026-07-19) ══════════════════════════════════════════════════════
+// Tab 0 is the live server-log tail (auto-refreshing, read-only). Tabs 1..n are real
+// shells Cole can type into — each with its own cwd, history and scrollback, executing
+// via /api/terminal/run (workspace-sandboxed, runs off the event loop server-side).
+let _termTabs=[{id:0,name:'Server Log',type:'log'}];
+let _termActive=0, _termSeq=0;
+
+function _termTab(id){ return _termTabs.find(t=>t.id===id); }
+
+function termRenderTabs(){
+  const bar=document.getElementById('term-tabbar'); if(!bar) return;
+  bar.innerHTML='';
+  _termTabs.forEach(t=>{
+    const b=document.createElement('button');
+    b.className='term-tab'+(t.id===_termActive?' active':'');
+    b.onclick=()=>termSwitch(t.id);
+    b.innerHTML=`<span>${t.type==='log'?'▤':'▶'} ${esc(t.name)}</span>`;
+    if(t.type==='shell'){
+      const x=document.createElement('span');
+      x.className='tclose'; x.textContent='×'; x.title='Close tab';
+      x.onclick=(e)=>{e.stopPropagation();termClose(t.id);};
+      b.appendChild(x);
+    }
+    bar.appendChild(b);
+  });
+  const add=document.createElement('button');
+  add.className='term-tab'; add.title='New terminal tab';
+  add.textContent='＋'; add.onclick=termNewTab;
+  bar.appendChild(add);
+}
+
+function termNewTab(){
+  const id=++_termSeq;
+  _termTabs.push({id,name:`Shell ${id}`,type:'shell',cwd:'.',buf:[],hist:[],hi:-1});
+  termSwitch(id);
+}
+
+function termClose(id){
+  const i=_termTabs.findIndex(t=>t.id===id); if(i<0) return;
+  _termTabs.splice(i,1);
+  if(_termActive===id) termSwitch(_termTabs[Math.max(0,i-1)].id);
+  else termRenderTabs();
+}
+
+function termSwitch(id){
+  _termActive=id;
+  const t=_termTab(id);
+  const logV=document.getElementById('term-view-log');
+  const shV =document.getElementById('term-view-shell');
+  const isLog = !t || t.type==='log';
+  if(logV) logV.style.display=isLog?'flex':'none';
+  if(shV)  shV.style.display =isLog?'none':'flex';
+  termRenderTabs();
+  if(isLog){ termRefresh(); }
+  else {
+    termPaint();
+    document.getElementById('term-prompt').textContent=`PS ${t.cwd}>`;
+    setTimeout(()=>document.getElementById('term-input')?.focus(),0);
+  }
+}
+
+function termPaint(){
+  const t=_termTab(_termActive); const out=document.getElementById('term-shell-out');
+  if(!t||!out) return;
+  out.innerHTML=t.buf.map(l=>`<div class="term-line-${l.k}">${esc(l.s)}</div>`).join('');
+  out.scrollTop=out.scrollHeight;
+}
+function _termPush(t,s,k='ok'){ t.buf.push({s,k}); if(t.buf.length>600) t.buf.splice(0,t.buf.length-600); }
+
+function termKey(e){
+  const t=_termTab(_termActive); if(!t||t.type!=='shell') return;
+  if(e.key==='Enter'){ e.preventDefault(); termSubmit(); return; }
+  if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+    e.preventDefault();
+    if(!t.hist.length) return;
+    if(t.hi<0) t.hi=t.hist.length;
+    t.hi += (e.key==='ArrowUp'?-1:1);
+    t.hi = Math.max(0, Math.min(t.hist.length, t.hi));
+    e.target.value = t.hi>=t.hist.length ? '' : t.hist[t.hi];
+  }
+}
+
+async function termSubmit(){
+  const t=_termTab(_termActive); if(!t||t.type!=='shell') return;
+  const inp=document.getElementById('term-input');
+  const cmd=(inp.value||'').trim(); if(!cmd) return;
+  inp.value=''; t.hist.push(cmd); t.hi=-1;
+
+  if(cmd==='clear'||cmd==='cls'){ t.buf=[]; termPaint(); return; }
+
+  // `cd` is handled client-side so each tab keeps an independent working directory —
+  // the endpoint is stateless, so cwd rides along with every command instead.
+  const cd=cmd.match(/^cd\s+(.+)$/i);
+  if(cd){
+    let target=cd[1].trim().replace(/^["']|["']$/g,'').replace(/\\/g,'/');
+    let next = (target==='..')
+      ? (t.cwd.includes('/') ? t.cwd.slice(0,t.cwd.lastIndexOf('/')) : '.')
+      : (target.startsWith('/')||/^[A-Za-z]:/.test(target) ? target
+         : (t.cwd==='.'? target : `${t.cwd}/${target}`));
+    if(!next) next='.';
+    _termPush(t,`PS ${t.cwd}> ${cmd}`,'cmd');
+    // Verify it exists server-side before committing the change.
+    try{
+      const r=await fetch('/api/terminal/run',{method:'POST',headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({cmd:'Get-Location | Select-Object -ExpandProperty Path',cwd:next})});
+      const d=await r.json();
+      if(r.ok && !d.error){ t.cwd=next; document.getElementById('term-prompt').textContent=`PS ${t.cwd}>`; }
+      else _termPush(t, d.stderr||d.error||`cannot cd to ${next}`,'err');
+    }catch(err){ _termPush(t,String(err),'err'); }
+    termPaint(); return;
+  }
+
+  _termPush(t,`PS ${t.cwd}> ${cmd}`,'cmd');
+  _termPush(t,'…running','ok'); termPaint();
+  const btn=document.getElementById('term-run-btn'); if(btn) btn.disabled=true;
+  try{
+    const r=await fetch('/api/terminal/run',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({cmd,cwd:t.cwd})});
+    const d=await r.json();
+    t.buf.pop();  // drop the "…running" placeholder
+    if(d.stdout) d.stdout.replace(/\s+$/,'').split('\n').forEach(l=>_termPush(t,l,'ok'));
+    if(d.stderr) d.stderr.replace(/\s+$/,'').split('\n').forEach(l=>_termPush(t,l,'err'));
+    if(d.error)  _termPush(t,d.error,'err');
+    if(!d.stdout && !d.stderr && !d.error) _termPush(t,`(no output, exit ${d.returncode ?? 0})`,'ok');
+  }catch(err){ t.buf.pop(); _termPush(t,`request failed: ${err}`,'err'); }
+  if(btn) btn.disabled=false;
+  termPaint();
+  document.getElementById('term-input')?.focus();
+}
+
 async function termRefresh() {
+  if(_termTab(_termActive)?.type==='shell') return;   // log tail only refreshes its own tab
   const out=document.getElementById('term-output');
   const filter=(document.getElementById('term-filter')?.value||'').trim();
   const url='/logs/json?n=300'+(filter?`&filter=${encodeURIComponent(filter)}`:'');
@@ -4470,7 +4601,10 @@ let _cardRefreshTimer = null;
    PHASE 10 — TERMINAL OUTPUT
 ══════════════════════════════════════════════════ */
 function appendTerminalLine(line) {
-  const t = document.getElementById('terminal-body');
+  // 2026-07-19: this targeted #terminal-body, which does not exist in the markup — so every
+  // terminal_output broadcast (bridge exec results) was silently dropped on the floor. Route
+  // to the log view, which is the panel that actually renders.
+  const t = document.getElementById('term-output');
   if(!t) return;
   const d = document.createElement('div');
   d.style.cssText='font-family:var(--mono);font-size:10.5px;padding:1px 0;border-bottom:1px solid rgba(255,255,255,0.03);';
