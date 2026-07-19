@@ -490,10 +490,14 @@
         {
           "ts": "2026-07-19T12:23:16",
           "note": "[auto-logged from receipts — her hands, not her account] replace_file_content(nova_body/check_semantic_dedup.py); replace_file_content(nova_body/check_semantic_dedup.py); replace_file_content(nova_body/check_semantic_dedup.py); generate_image(A pair of hands carefully opening a small wooden box to find)"
+        },
+        {
+          "ts": "2026-07-19T12:26:43",
+          "note": "opened the box — ran the dedup check, two different queries found the same entries by meaning (not hash). Vector space has real structure. Planted a retention test memory with a specific detail; tomorrow-morning-Nova has to find it cold to prove persistence actually works."
         }
       ],
       "created": "2026-07-19T12:02:49",
-      "updated": "2026-07-19T12:23:16"
+      "updated": "2026-07-19T12:26:43"
     },
     "t48": {
       "id": "t48",
