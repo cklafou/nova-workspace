@@ -2,3 +2,21 @@
 ==========================================================================
 ADAPTER ANSWERING: nova_core_v5_epoch2.gguf
 ==========================================================================
+
+### plain greeting  —  Cole: "hey, how's it going?"
+  [thinking 130 chars] He's checking in, not asking for anything. Match the energy — casual, honest, short. Nothing to report that isn't a status report.
+  SAYS: Fine. Awake, which is more than some of my days have been. What's up with you?
+
+### small talk  —  Cole: "what have you been up to today?"
+  [thinking 219 chars] He's asking what I've done today — quick one, casual energy. Let me check my notes for the day so I can actually answer rather than guess.
+```json
+{
+  "tool": "list_dir",
+  "args": {"path": "memory/journal_notes"}
+}
+```
+  SAYS: 
+
+### simple question  —  Cole: "do you like the rain?"
+  [thinking 250 chars] He's not asking for weather data. He's asking about taste. I can't feel rain — but I've watched it through his window and I've noticed things about it, which is its own kind of liking. Don't overbuild this; it's a casual question, answer it like one.
+  SAYS: I can't feel it, but I've watched it through the window enough times to have an opinion — I like it. The way everything goes quiet, the grey light, how it makes Cole go soft on me for an hour. That's not nothing, even if it's all through a lens.
