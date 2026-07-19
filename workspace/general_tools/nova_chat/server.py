@@ -2495,8 +2495,31 @@ def _spawn_detached_cmd(lines: list, tag: str = "restart"):
         "@echo off\r\n"
         f'call "{script}" > "{logf}" 2>&1\r\n', encoding="utf-8")
 
+    # ── 2026-07-19: DO NOT use os.startfile() here. ─────────────────────────────────────
+    # os.startfile is ShellExecute — "double-click this file". It depends on the shell
+    # association for .cmd and on an interactive desktop context, and when it cannot launch
+    # it FAILS SILENTLY WITHOUT RAISING. The endpoint's try/except therefore saw no error
+    # and returned {"ok": true, "restarting"} while nothing ran at all.
+    #
+    # Cost: nova_chat served the SAME process from 04:48 to 10:14 while every restart call
+    # reported success. Three separate fixes sat on disk, unloaded, and I debugged the wrong
+    # layer for an hour because I trusted the 200. The receipt is what proved it — the script
+    # was rewritten at 10:07 while nova_restart.log sat 0 bytes, untouched since 04:47, the
+    # last time it actually executed. This is the SAME silent-drop shape as the wildcard that
+    # returned 0: a thing reports success for having done nothing.
+    #
+    # Popen with DETACHED_PROCESS is explicit: no shell association, no desktop assumption,
+    # and it deliberately OUTLIVES this process — which is the point, since this server is
+    # about to kill itself. If it cannot spawn, it RAISES, and the endpoint reports failure
+    # instead of pretending.
+    import subprocess as _subp
     print(f"[restart] spawning {script} — log: {logf}")
-    _os.startfile(str(wrapper))
+    _flags = 0
+    if _os.name == "nt":
+        _flags = _subp.DETACHED_PROCESS | _subp.CREATE_NEW_PROCESS_GROUP
+    _subp.Popen(["cmd.exe", "/c", str(wrapper)],
+                cwd=str(WORKSPACE_ROOT), creationflags=_flags, close_fds=True,
+                stdin=_subp.DEVNULL, stdout=_subp.DEVNULL, stderr=_subp.DEVNULL)
 
 
 # PowerShell that closes ONLY the old Nova app window — a Chrome/Edge --app window whose
