@@ -1,17 +1,16 @@
+# Last updated: 2026-07-19 14:15:15
 import sys, os
 sys.path.insert(0, 'nova_body')
 from nova_lancedb import get_store
 store = get_store()
-# get_stats() only gives counts. Check the actual LanceDB table metadata for last-modified.
 txt = store._text_tbl
 vis = store._visual_tbl
-print('text table version:', txt.latest_version())
-print('visual table version:', vis.latest_version())
-# Check the underlying directory modification times
-import glob
-txt_dir = os.path.dirname(txt.to_lance().uri)
-vis_dir = os.path.dirname(vis.to_lance().uri)
-for name, d in [('text', txt_dir), ('visual', vis_dir)]:
-    mtime = os.path.getmtime(d)
+for name, tbl in [('text', txt), ('visual', vis)]:
+    versions = list(tbl.list_versions())
+    latest = versions[0] if versions else None
     from datetime import datetime
-    print(f'{name} dir mtime: {datetime.fromtimestamp(mtime)}')
+    print(f'{name}: {len(versions)} versions, latest version={latest.version if latest else "none"}')
+    # Check the underlying directory modification times
+    d = os.path.dirname(tbl.to_lance().uri)
+    mtime = os.path.getmtime(d)
+    print(f'  dir mtime: {datetime.fromtimestamp(mtime)}')
