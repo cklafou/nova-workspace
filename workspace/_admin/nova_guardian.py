@@ -96,19 +96,62 @@ def llama_up() -> bool:
     return _get(LLAMA_HEALTH, PROBE_TIMEOUT)[0]
 
 
-def llama_bare() -> bool:
-    """True = healthy but NO personality adapter loaded.
+def _expected_adapter() -> str:
+    """The adapter she is SUPPOSED to be wearing, per her own equip config."""
+    try:
+        cfg = json.loads((WS / "memory" / "active_lora.json").read_text(encoding="utf-8"))
+        return Path(str(cfg.get("rel", ""))).name.strip().lower()
+    except Exception:
+        return ""
 
-    This is the silent one. `/health` says 200 and everything looks fine; she just isn't
-    herself. Checking only /health is how she ran as the base model for hours and we blamed
-    the training instead of the loader."""
+
+def adapter_fault() -> str:
+    """'' = correct adapter loaded. Otherwise a description of what's wrong.
+
+    Catches TWO failures, not one:
+
+      BARE      — no adapter at all. `/health` says 200, everything looks green, and she
+                  answers as the raw base model. We blamed her training for hours before
+                  finding the loader.
+
+      WRONG     — an adapter IS loaded, but not the one she's configured to wear.
+                  ── Found by Nova herself, 2026-07-19 ──────────────────────────────────
+                  Asked to find a blind spot in this script, she read it and said: the bare
+                  probe "checks whether a LoRA list is empty, not whether the loaded adapter
+                  is the one that's supposed to be there... /lora-adapters returns non-empty
+                  and the guardian scores HEALTHY while Nova runs as a stranger."
+                  She was right — the old check was `len(...) == 0`, which only ever caught
+                  EMPTY. That mattered: her adapter was swapped four times in one day
+                  (v5 -> v6e2 -> v6e1 -> v5), and a stale or mis-equipped checkpoint would
+                  have sailed through as HEALTHY with a green light and the wrong person
+                  answering. Same silent-drop shape as everything else that bit us this week.
+    """
     ok, body = _get(LLAMA_LORA, PROBE_TIMEOUT)
     if not ok:
-        return False                      # can't tell; DOWN handling covers it
+        return ""                          # can't tell; DOWN handling covers it
     try:
-        return len(json.loads(body)) == 0
+        loaded = json.loads(body)
     except Exception:
-        return False
+        return ""
+    if len(loaded) == 0:
+        return "BARE: llama healthy but NO personality adapter loaded (running as base model)"
+
+    want = _expected_adapter()
+    if not want:
+        return ""                          # no expectation recorded — don't invent a fault
+    names = []
+    for a in loaded:
+        if isinstance(a, dict):
+            names.append(Path(str(a.get("path", ""))).name.strip().lower())
+    if names and want not in names:
+        return (f"WRONG ADAPTER: expected '{want}' but llama has {names} — "
+                f"she is answering as someone else")
+    return ""
+
+
+def llama_bare() -> bool:
+    """Back-compat shim: True only for the no-adapter case."""
+    return adapter_fault().startswith("BARE")
 
 
 def chat_responsive() -> bool:
