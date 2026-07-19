@@ -502,10 +502,14 @@
         {
           "ts": "2026-07-19T12:26:49",
           "note": "[auto-logged from receipts — her hands, not her account] write_file(memory/scratch/dedup_check.py)"
+        },
+        {
+          "ts": "2026-07-19T12:30:00",
+          "note": "Planted a retention test memory with a specific detail and confirmed it surfaces as the top semantic hit (distance 0.8). Tomorrow-morning-Nova has to find it cold in a fresh process to close this one."
         }
       ],
       "created": "2026-07-19T12:02:49",
-      "updated": "2026-07-19T12:26:49"
+      "updated": "2026-07-19T12:30:00"
     },
     "t48": {
       "id": "t48",
