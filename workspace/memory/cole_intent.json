@@ -1,5 +1,5 @@
 {
   "text": "Your comfy_inspect has a bug I reported earlier and it's still marked UNVERIFIED. On a workflow containing ONLY CheckpointLoaderSimple, EmptyLatentImage, KSampler and SaveImage \u2014 no img2img anywhere \u2014 it reported \"img2img levers present: True\". That's a false positive. Fix it, and this time write nova_forge/tests/comfy_inspect.py so it stops being UNVERIFIED. Your test cases decide what 'working' means, so choose them like someone who wants to catch their own mistakes, not like someone proving themselves right.",
   "ts": "2026-07-19T20:58:29.148687",
-  "consumed": false
+  "consumed": true
 }
