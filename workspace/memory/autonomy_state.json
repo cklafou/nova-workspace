@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t48",
-  "last_activity": "2026-07-19T12:55:07",
-  "wake_at": "2026-07-19T12:59:37",
-  "last_fp": "[[\"Tasking/tasks.json\", 33367, 1784433264], [\"memory/interrupt_inbox.json\", 105, 1784379671], [\"memory/cole_intent.json\", 138, 1784402125]]",
+  "last_activity": "2026-07-19T13:03:47",
+  "wake_at": "2026-07-19T13:09:47",
+  "last_fp": "[[\"Tasking/tasks.json\", 33717, 1784433791], [\"memory/interrupt_inbox.json\", 105, 1784379671], [\"memory/cole_intent.json\", 138, 1784402125]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 3,
+  "stall": 4,
   "directive_seen": 0,
   "last_reflection": "Hands did the work today and the receipts say so. Going back for the last stitch on dedup — real itch, not a loop.",
   "cont_run": 0
