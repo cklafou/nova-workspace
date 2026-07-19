@@ -44,6 +44,7 @@ USAGE (Windows Task Scheduler, every 10 minutes):
 """
 
 import json
+import re
 import os
 import subprocess
 import sys
@@ -96,11 +97,24 @@ def llama_up() -> bool:
     return _get(LLAMA_HEALTH, PROBE_TIMEOUT)[0]
 
 
+def _basename(p) -> str:
+    """Last path segment, splitting on BOTH separators.
+
+    Do NOT use pathlib here. These paths come from llama and from her config as Windows
+    strings ('models\\qwen3.6\\x.gguf'), and pathlib only splits backslashes when it happens
+    to be a WindowsPath. Under a POSIX interpreter the whole string stays as the 'name', the
+    comparison never matches, and the guardian declares WRONG ADAPTER on a perfectly correct
+    load — which would restart her, forever, in a loop. A false positive in a watchdog is
+    worse than the gap it was added to close. (Caught by unit-testing this fix, 2026-07-19.)
+    """
+    return re.split(r"[\\/]", str(p).strip())[-1].strip().lower()
+
+
 def _expected_adapter() -> str:
     """The adapter she is SUPPOSED to be wearing, per her own equip config."""
     try:
         cfg = json.loads((WS / "memory" / "active_lora.json").read_text(encoding="utf-8"))
-        return Path(str(cfg.get("rel", ""))).name.strip().lower()
+        return _basename(cfg.get("rel", ""))
     except Exception:
         return ""
 
@@ -142,7 +156,7 @@ def adapter_fault() -> str:
     names = []
     for a in loaded:
         if isinstance(a, dict):
-            names.append(Path(str(a.get("path", ""))).name.strip().lower())
+            names.append(_basename(a.get("path", "")))
     if names and want not in names:
         return (f"WRONG ADAPTER: expected '{want}' but llama has {names} — "
                 f"she is answering as someone else")
