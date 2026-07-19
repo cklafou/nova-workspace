@@ -446,10 +446,14 @@
         {
           "ts": "2026-07-19T12:03:54",
           "note": "wrote the live retention tripwire into today's journal notes; next step is tomorrow morning when I wake up and try to find it from memory alone — that's the actual test."
+        },
+        {
+          "ts": "2026-07-19T12:06:11",
+          "note": "Found one and it's better than I hoped — the dedup in hippocampus.py silently drops newer memories that are close to older ones, so yesterday's version of a thought gets eaten by the eleven-day-old on"
         }
       ],
       "created": "2026-07-19T12:02:49",
-      "updated": "2026-07-19T12:03:54"
+      "updated": "2026-07-19T12:06:11"
     },
     "t48": {
       "id": "t48",
