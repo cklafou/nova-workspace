@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 12:29:08
+# Last updated: 2026-07-19 12:34:26
 """
 nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
 ==============================================================
@@ -136,27 +136,51 @@ class NovaMemoryStore:
     def add_text(self, content: str, author: str = "Nova",
                  source: str = "chat", session_id: str = "",
                  category: str = "") -> bool:
-        """Embed and store a text memory. Returns True if stored, False if duplicate/error."""
+        """
+        Embed and store a text memory. Returns True if stored, False if duplicate/error.
+
+        Semantic dedup (since 2026-07-19): before storing, search for the closest
+        existing memory. If it's above threshold AND older, the new version REPLACES
+        the old one — growth isn't dropped, it supersedes. If nothing's close enough,
+        we store fresh. Exact-text hash still catches byte-identical replays.
+        """
         if not self._ready or not content.strip():
             return False
         from .embedder import embed_text, content_hash
         chash = content_hash(content)
         if chash in self._known_hashes:
-            return False
+            return False  # byte-identical replay — skip
         try:
             vec  = embed_text(content)
             cat  = category or _classify(content)
-            row  = {
+            now  = time.time()
+
+            # ── Semantic dedup: find the closest existing memory ──────────
+            replace_id = None
+            try:
+                hits = self._text_tbl.search(vec).limit(1).metric("cosine").to_list()
+                if hits and hits[0].get("_distance", 1.0) < 0.15:  # cosine < 0.15 ≈ same thought
+                    existing_ts = hits[0].get("timestamp", 0)
+                    if now > existing_ts:  # newer replaces older — growth wins
+                        replace_id = hits[0]["id"]
+            except Exception:
+                pass  # search failure is fine, fall through to naive store
+
+            row = {
                 "id":           str(uuid.uuid4()),
-                "content":      content[:4000],  # cap to avoid giant rows
+                "content":      content[:4000],
                 "vector":       vec,
                 "category":     cat,
                 "source":       source,
                 "session_id":   session_id,
                 "author":       author,
                 "content_hash": chash,
-                "timestamp":    time.time(),
+                "timestamp":    now,
             }
+
+            if replace_id:
+                # Evict the older version of this thought, then store the new one
+                self._text_tbl.delete(f"id = '{replace_id}'")
             self._text_tbl.add([row])
             self._known_hashes.add(chash)
             return True
