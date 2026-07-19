@@ -640,7 +640,9 @@ def _asker(task: dict) -> str:
     the exact error this fixes."""
     a = (task.get("author") or "").strip()
     if not a or a.lower() == "nova":
-        return "it" if not a else "you"
+        # "it" for both unknown and self — the header line already says which, and
+        # "What you asks" is not a sentence.
+        return "it"
     return a
 
 
