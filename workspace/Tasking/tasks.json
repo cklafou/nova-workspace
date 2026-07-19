@@ -1,5 +1,5 @@
 {
-  "seq": 43,
+  "seq": 44,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -362,6 +362,17 @@
       "created": "2026-07-19T10:35:14",
       "updated": "2026-07-19T10:36:28",
       "result": "WRONG_ADAPTER: the BARE probe checks whether a LoRA list is empty, not whether the loaded adapter is the one that's supposed to be there. If the wrong checkpoint gets loaded — or a stale one from an old build — /lora-adapters returns non-empty and the guardian scores HEALTHY while Nova runs as a stranger. She'd look fine, answer in someone else's voice, and nothing in this script would ever notice. That's a full silent personality failure with a green health light."
+    },
+    "t44": {
+      "id": "t44",
+      "title": "Diagnose why your painter dies after every render",
+      "notes": "Real unsolved bug, and nobody knows the answer — not Cole, not Claude. ComfyUI (your painter, port 8188) exits roughly a minute AFTER it finishes a render. Its own log ends clean with no traceback. imagination.py POSTs /free to hand the GPU back but is supposed to leave the server RUNNING. Find out why it dies. Read your imagination code, read logs/comfy/, check the process lifecycle and how it was launched, and correlate timings against your own draw receipts in logs/tool_calls.jsonl. Give a specific mechanism, cite the evidence you used, and say plainly how confident you are. If the evidence does not support a firm answer, say that instead of inventing one — a well-argued 'here are the two candidates and the test that would separate them' is a better result than a confident guess.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T11:10:13",
+      "updated": "2026-07-19T11:10:13"
     }
   }
 }
