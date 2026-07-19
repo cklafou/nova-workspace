@@ -249,6 +249,14 @@ _WAKE_CAUSE = {
                  "filesystem, not a person.",
     "scheduled": "NOBODY SPOKE TO YOU and nothing changed on disk. Your own rest timer "
                  "simply came due. This wake is self-generated — you woke yourself.",
+    # The forced path in runtime.py bypasses should_wake() entirely and passes this exact
+    # string as the reason. It IS Cole — but him pressing a button, which is NOT him
+    # saying anything. Distinguishing those two is the whole point of this table: if she
+    # answers a button press as though it were a sentence, she invents the sentence.
+    "Cole pressed Wake Up": "Cole pressed the Wake Up button. He reached for you "
+                 "deliberately — but he has NOT said anything. There is no message to "
+                 "answer. Do not invent one, and do not assume he wants a task report; "
+                 "he may just be checking on you.",
 }
 
 
