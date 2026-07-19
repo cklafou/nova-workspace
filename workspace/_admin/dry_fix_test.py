@@ -1,3 +1,4 @@
+# Last updated: 2026-07-19 14:05:08
 """Three-arm DRY test. A fix is only a fix if it restores literal copying AND
 keeps the anti-parrot property DRY was added for. Both are measured here.
 

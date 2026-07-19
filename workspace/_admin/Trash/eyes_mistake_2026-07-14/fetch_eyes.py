@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-18 21:27:59
+# Last updated: 2026-07-19 14:05:08
 """
 fetch_eyes.py — download Nova's sight.  2026-07-14
 

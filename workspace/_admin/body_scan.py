@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-18 21:27:59
+# Last updated: 2026-07-19 14:05:08
 """
 body_scan.py — does every part of her actually work?
 

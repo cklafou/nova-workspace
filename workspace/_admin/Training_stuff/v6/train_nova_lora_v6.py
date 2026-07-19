@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-18 21:27:59
+# Last updated: 2026-07-19 14:05:08
 # Nova-Core v5 — "Trust, but verify." Tools are senses, not instruments.
 #
 # WHY v5 (v4 FAILED, 2026-07-13):

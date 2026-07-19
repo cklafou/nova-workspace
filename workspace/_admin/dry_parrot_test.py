@@ -1,3 +1,4 @@
+# Last updated: 2026-07-19 14:05:08
 """Does DRY still earn its keep?
 
 The bug DRY was added for: she re-emitted whole sentences she'd said a few
