@@ -49,27 +49,46 @@ def _norm_rel(path: str) -> str:
 # the reason a legitimate job fails. Deleting files, editing configs, installing things,
 # touching other projects: all allowed.
 _CATASTROPHIC = [
-    (re.compile(r"\bformat\s+[a-z]:", re.I),                    "formatting a drive"),
-    (re.compile(r"\bdiskpart\b", re.I),                          "diskpart (partition table edits)"),
-    (re.compile(r"\bbcdedit\b", re.I),                           "bcdedit (boot configuration)"),
-    (re.compile(r"\bmkfs\b|\bdd\s+if=.*\bof=/dev/", re.I),       "raw disk overwrite"),
-    # Recursive delete aimed at a drive root or a Windows system tree.
-    (re.compile(r"(remove-item|rm|rd|rmdir|del)\b[^\n|;]*"
-                r"(\b[a-z]:\\?(\s|$|\"|')|\b[a-z]:\\(windows|program files|users)\b|/\s*$)"
-                r"[^\n|;]*(-recurse|/s\b|-r\b)", re.I),          "recursive delete of a drive root or system directory"),
-    (re.compile(r"(-recurse|/s\b)[^\n|;]*\b[a-z]:\\?(\s|$|\"|')", re.I),
-                                                                 "recursive operation on a drive root"),
-    (re.compile(r"\bcipher\s+/w", re.I),                          "secure-wipe free space"),
-    (re.compile(r"vssadmin\s+delete\s+shadows", re.I),            "deleting shadow copies (kills System Restore)"),
+    (re.compile(r"\bformat\s+[a-z]:", re.I),                "formatting a drive"),
+    (re.compile(r"\bdiskpart\b", re.I),                      "diskpart (partition table edits)"),
+    (re.compile(r"\bbcdedit\b", re.I),                       "bcdedit (boot configuration)"),
+    (re.compile(r"\bmkfs\b|\bdd\s+if=.*\bof=/dev/", re.I),   "raw disk overwrite"),
+    (re.compile(r"\bcipher\s+/w", re.I),                     "secure-wipe of free space"),
+    (re.compile(r"vssadmin\s+delete\s+shadows", re.I),       "deleting shadow copies (kills System Restore)"),
 ]
+
+# A destructive verb, and a recursive flag — in EITHER order (`rd /s /q C:\Users` puts the flag
+# first, which an order-dependent regex misses).
+_DESTRUCTIVE_VERB = re.compile(r"\b(remove-item|rmdir|rd|del|erase|rm)\b", re.I)
+_RECURSIVE_FLAG   = re.compile(r"(-recurse\b|/s\b|(?<![\w-])-r\b|-rf\b|-fr\b)", re.I)
+
+# Paths that must be matched WHOLE. `C:\Users` is every profile on the box;
+# `C:\Users\lafou\ComfyUI\temp` is a scratch folder and deleting it is ordinary work. An earlier
+# version matched by prefix and refused the second one — a guard that blocks real jobs gets
+# routed around, which is worse than no guard.
+_PROTECTED_ROOT = re.compile(
+    r"(?:^|[\s\"'=])"                                   # start of a token
+    r"(?:"
+    r"[a-z]:\\?"                                        # C:  or  C:\
+    r"|[a-z]:\\(?:windows|users|program\s+files(?:\s+\(x86\))?|programdata)\\?"
+    r"|/"                                               # unix root
+    r")"
+    r"(?=[\s\"']|$)",                                   # ...and NOTHING after it
+    re.I)
 
 
 def _catastrophic(command: str) -> str:
-    """Returns a reason string if this command would irreversibly wreck the machine, else ''."""
+    """Reason string if this would irreversibly wreck the machine, else ''.
+
+    Deliberately narrow. Deleting her own files, another project's files, or a subfolder deep
+    inside C:\\Users is all ordinary work and passes. What is refused is a recursive delete aimed
+    at a DRIVE ROOT or a whole system tree, plus a handful of disk/boot-level operations."""
     c = command or ""
     for rx, why in _CATASTROPHIC:
         if rx.search(c):
             return why
+    if _DESTRUCTIVE_VERB.search(c) and _RECURSIVE_FLAG.search(c) and _PROTECTED_ROOT.search(c):
+        return "a recursive delete targeting a drive root or an entire system directory"
     return ""
 
 
