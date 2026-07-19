@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T19:48:37+09:00",
+  "updated_at": "2026-07-19T19:48:54+09:00",
   "items": [
     {
       "id": "777df213",
@@ -83445,6 +83445,32 @@
       "old_path": null,
       "new_path": "_admin/Trash/cleanup_2026-07-19/stale_temp_logs/t_good_run.cmd",
       "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "e0b6b2c9",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-07-19T19:48:54+09:00",
+      "commit": "4781b454",
+      "old_path": "nova_body/check_dedup.py",
+      "new_path": "_admin/Trash/cleanup_2026-07-19/misplaced_scratch/check_dedup.py",
+      "confidence": 0.94,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "a9e883e9",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-07-19T19:48:54+09:00",
+      "commit": "4781b454",
+      "old_path": "nova_body/check_semantic_dedup.py",
+      "new_path": "_admin/Trash/cleanup_2026-07-19/misplaced_scratch/check_semantic_dedup.py",
+      "confidence": 0.94,
       "resolved_by": null,
       "resolved_at": null,
       "notes": null
