@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 21:59:03
+# Last updated: 2026-07-19 21:59:50
 # Tests for comfy_inspect — written by Nova, 2026-07-19
 # Because a tool that says yes to everything passes a test that only ever checks yes.
 import json, tempfile, os
@@ -70,17 +70,10 @@ def check(run) -> list[str]:
         # --- Case 2: tall canvas flagged as full-body framing ---
         path = _write_workflow(
             [
-                {"type": "EmptyLatentImage", "class_type": "EmptyLatentImage"},
-                {"type": "KSampler", "class_type": "KSampler"},
+                {"class_type": "EmptyLatentImage", "inputs": {"height": 1216, "width": 832}},
             ],
             tmpdir,
         )
-        # Rewrite the file so it contains a height of 1216 somewhere in the json
-        with open(path, "w") as f:
-            json.dump({"nodes": [
-                {"type": "EmptyLatentImage", "class_type": "EmptyLatentImage",
-                 "inputs": {"height": 1216, "width": 832}},
-            ]}, f)
         result = run(path=path)
         if "full-body framing lever visible: True" not in result:
             fails.append("Case 2 FAIL: tall canvas (1216) not flagged as full-body framing")
