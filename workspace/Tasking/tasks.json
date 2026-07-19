@@ -442,9 +442,14 @@
       "priority": 2,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T12:03:54",
+          "note": "wrote the live retention tripwire into today's journal notes; next step is tomorrow morning when I wake up and try to find it from memory alone — that's the actual test."
+        }
+      ],
       "created": "2026-07-19T12:02:49",
-      "updated": "2026-07-19T12:02:49"
+      "updated": "2026-07-19T12:03:54"
     }
   }
 }
