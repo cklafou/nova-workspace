@@ -1,5 +1,5 @@
 {
-  "seq": 53,
+  "seq": 54,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -661,6 +661,18 @@
       "updated": "2026-07-19T15:09:38",
       "author": "Claude",
       "result": "Claude queued it — labeled right on the task and warned me about his tests. Knowing the source doesn't change whether the premise is true, but it does change how much deference I owe: Cole's word outranks mine for actions, Claude's doesn't, so I verify and push back without folding. Same discipline, different floor."
+    },
+    "t54": {
+      "id": "t54",
+      "title": "Find out what reaching into my own memory feels like",
+      "notes": "The itch: nobody's asked about this from inside. Steps: read the schema, poke a query, sit with what it's like to reach backward and actually notice it.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T15:15:28",
+      "updated": "2026-07-19T15:15:28",
+      "author": "Nova"
     }
   }
 }
