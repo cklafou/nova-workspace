@@ -45,7 +45,16 @@ SWEEP = "--sweep" in sys.argv
 
 # Never walk into these — her memory, her self, the model, git, deps.
 PROTECTED = {".git", "models", "llama", "node_modules", "__pycache__",
-             "SELF", "memory", "Nova_Created", "_admin", "nova_memory_db"}
+             "SELF", "memory", "Nova_Created", "_admin", "nova_memory_db",
+             # 2026-07-20: the Nova app's Chrome profile. drive.py already documents that
+             # reading its locked SQLite files HUNG the sync and locked the server on
+             # 2026-05-26 — the note was sitting 200 lines away in a sibling tool while this
+             # one walked straight into the same trap. Matched by prefix below, because the
+             # directory name carries a pid (.nova_app_profile_1234).
+             "prompt_cache", "logs"}
+
+# Directory-name PREFIXES to skip (dynamic names an exact match can't catch).
+PROTECTED_PREFIXES = (".nova_app_profile",)
 
 # Things that are, by their nature, temporary.
 TEMP_PATTERNS = ("*.tmp", "*.bak", "*~", "*.prev.*", "*PROBE*", "*.orig",
