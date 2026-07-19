@@ -685,12 +685,13 @@
       "title": "Audit nova_body for dead (defined-but-never-called) functions, write findings to Nova_Created/dead_functions_audit.md",
       "notes": "Rigorous, not a guess. Count the scope first, then grep every definition and cross-reference calls. Work it across wakes with receipts.",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [],
       "created": "2026-07-19T18:33:44",
-      "updated": "2026-07-19T18:33:44",
-      "author": "Nova"
+      "updated": "2026-07-19T18:38:51",
+      "author": "Nova",
+      "result": "299 functions defined across 46 files; 57 dead (never called), 91 called only once. Full audit with categories and caveats written to Nova_Created/dead_functions_audit.md."
     }
   }
 }
