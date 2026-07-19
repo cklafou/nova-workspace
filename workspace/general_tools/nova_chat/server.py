@@ -1651,11 +1651,34 @@ async def files_inject(body: dict = Body(...)):
 
 @app.post("/api/terminal/run")
 async def terminal_run(body: dict):
-    """Run a PowerShell/cmd command from workspace root. 30s timeout."""
+    """Run a PowerShell/cmd command. 30s timeout.
+
+    `cwd` (optional, workspace-relative) lets each Terminal TAB keep its own working
+    directory, so multiple tabs behave like independent shells (2026-07-19). Sandboxed to
+    the workspace exactly like Nova's own run_command — a tab cannot cd its way out."""
     import subprocess as sp
     cmd = body.get("cmd", "").strip()
     if not cmd:
         return JSONResponse({"error": "no command"}, status_code=400)
+
+    # Resolve + sandbox the per-tab working directory.
+    run_dir = WORKSPACE_ROOT
+    _req_cwd = (body.get("cwd") or "").strip()
+    if _req_cwd:
+        try:
+            _cand = Path(_req_cwd)
+            _cand = (WORKSPACE_ROOT / _cand).resolve() if not _cand.is_absolute() else _cand.resolve()
+            if not str(_cand).lower().startswith(str(Path(WORKSPACE_ROOT).resolve()).lower()):
+                return JSONResponse({"error": "cwd outside workspace", "stdout": "",
+                                     "stderr": "Permission denied: cwd must stay inside the workspace."},
+                                    status_code=403)
+            if not _cand.is_dir():
+                return JSONResponse({"error": "no such directory", "stdout": "",
+                                     "stderr": f"Not a directory: {_req_cwd}"}, status_code=400)
+            run_dir = _cand
+        except Exception as _ce:
+            return JSONResponse({"error": f"bad cwd: {_ce}", "stdout": "", "stderr": ""},
+                                status_code=400)
 
     # ── 2026-07-19: run the subprocess OFF the event loop. ───────────────────────────
     # This handler is `async def`, so it executes on the loop. sp.run(timeout=30) is
@@ -1671,11 +1694,11 @@ async def terminal_run(body: dict):
             return sp.run(
                 ["powershell", "-NoProfile", "-Command", cmd],
                 capture_output=True, text=True, timeout=30,
-                cwd=str(WORKSPACE_ROOT), encoding="utf-8", errors="replace"
+                cwd=str(run_dir), encoding="utf-8", errors="replace"
             )
         return sp.run(
             cmd, shell=True, capture_output=True, text=True,
-            timeout=30, cwd=str(WORKSPACE_ROOT),
+            timeout=30, cwd=str(run_dir),
             encoding="utf-8", errors="replace"
         )
 
@@ -1688,6 +1711,8 @@ async def terminal_run(body: dict):
             "stdout": stdout,
             "stderr": stderr,
             "returncode": proc.returncode,
+            "cwd": str(run_dir.relative_to(Path(WORKSPACE_ROOT).resolve()))
+                   if run_dir != Path(WORKSPACE_ROOT).resolve() else ".",
         })
     except sp.TimeoutExpired:
         return JSONResponse({"error": "command timed out (30s)", "stdout": "", "stderr": ""}, status_code=408)
