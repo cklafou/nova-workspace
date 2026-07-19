@@ -2545,7 +2545,7 @@ def _spawn_detached_cmd(lines: list, tag: str = "restart"):
     import time as _time
     _mt_before = logf.stat().st_mtime if logf.exists() else 0.0
     receipt = {"tag": tag, "script": str(script), "log": str(logf),
-               "at": _dt.datetime.now().isoformat(timespec="seconds"),
+               "at": datetime.now().isoformat(timespec="seconds"),
                "attempts": [], "child_pid": None, "spawned": False, "verified": False}
 
     _methods = []
@@ -2619,7 +2619,7 @@ def _spawn_detached_cmd(lines: list, tag: str = "restart"):
             "its children.")
     try:
         (tmp / f"nova_{tag}_spawn.json").write_text(
-            _json.dumps(receipt, indent=2), encoding="utf-8")
+            json.dumps(receipt, indent=2), encoding="utf-8")
     except Exception:
         pass
     print(f"[restart] spawn verified={receipt['verified']} "
@@ -2807,7 +2807,7 @@ async def restart_novachat():
             "$_.ProcessId -ne " + str(os.getpid()) + " } | ForEach-Object { Stop-Process -Id "
             '$_.ProcessId -Force -ErrorAction SilentlyContinue }"'
         )
-        _spawn_detached_cmd([
+        _r = _spawn_detached_cmd([
             "@echo off",
             "setlocal enabledelayedexpansion",
             "timeout /t 2 /nobreak >nul",
@@ -2840,11 +2840,31 @@ async def restart_novachat():
             "  call NovaStart.cmd",          # relaunch — opens exactly one fresh window
             ")",
         ])
+        # `ok` now means "the relauncher is PROVEN to be running", not "we called Popen".
+        # This endpoint returned ok:true twice on 2026-07-19 while nothing whatsoever
+        # happened, and Cole had to restart by hand. You reach for a restart precisely
+        # when you are trying to establish ground truth — so it is the last place that
+        # may report an outcome it did not check.
+        if not _r.get("verified"):
+            return JSONResponse({
+                "ok": False,
+                "error": "RESTART DID NOT LAUNCH — nothing was restarted.",
+                "diagnosis": _r.get("diagnosis", ""),
+                "evidence": {"attempts": _r.get("attempts"),
+                             "child_pid": _r.get("child_pid"),
+                             "log_touched": _r.get("log_touched"),
+                             "spawn_receipt": _r.get("log", "").replace(
+                                 "nova_restart.log", "nova_restart_spawn.json")},
+                "do_this": "Run StopNova.cmd then NovaStart.cmd manually.",
+            }, status_code=500)
         return JSONResponse({"ok": True,
-                             "message": "Nova Chat restarting — killing by port AND command line, "
-                                        "waiting for :8765 to clear, then relaunching. If the port "
-                                        "cannot be freed it will refuse to start rather than leave "
-                                        "stale code serving."})
+                             "verified_by": ("child alive" if _r.get("child_alive_after_1.5s")
+                                             else "log file created"),
+                             "child_pid": _r.get("child_pid"),
+                             "message": "Nova Chat restarting — relauncher CONFIRMED running. "
+                                        "Killing by port AND command line, waiting for :8765 to "
+                                        "clear, then relaunching. If the port cannot be freed it "
+                                        "refuses to start rather than leave stale code serving."})
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
