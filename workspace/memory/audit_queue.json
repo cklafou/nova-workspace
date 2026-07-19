@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T19:08:48+09:00",
+  "updated_at": "2026-07-19T19:10:18+09:00",
   "items": [
     {
       "id": "777df213",
@@ -83080,6 +83080,19 @@
       "commit": "5857db46",
       "old_path": null,
       "new_path": "_admin/referent_check.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "f7a98f9d",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T19:10:18+09:00",
+      "commit": "7f51ec45",
+      "old_path": null,
+      "new_path": "memory/reports/PRONOUN_FIX_2026-07-19.md",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
