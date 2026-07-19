@@ -1,5 +1,5 @@
 # ComfyUI Setup Checklist — standing up Nova's painter
-_Last updated: 2026-07-19 21:56:25_
+_Last updated: 2026-07-19 22:59:33_
 
 _Last updated: 2026-05-27, by Opus. For Cole. Pairs with the `nova_imagination` faculty
 (`nova_body/nova_imagination/`) that's already built and waiting for this server to exist._
