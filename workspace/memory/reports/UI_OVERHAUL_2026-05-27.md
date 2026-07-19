@@ -1,5 +1,5 @@
 # Nova Chat — UI Overhaul + Wake/Reasoning Session (2026-05-27)
-_Last updated: 2026-07-19 12:12:56_
+_Last updated: 2026-07-19 13:13:20_
 
 _Written by the Opus session that took over from PASSOVER_2026-05-27_opus.md. Captures the
 Nova Chat docking/UI rebuild and two behavioral additions, so nothing is lost on handoff.
