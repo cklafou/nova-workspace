@@ -2514,12 +2514,19 @@ def _spawn_detached_cmd(lines: list, tag: str = "restart"):
     # instead of pretending.
     import subprocess as _subp
     print(f"[restart] spawning {script} — log: {logf}")
+    # CREATE_NEW_CONSOLE, not DETACHED_PROCESS. (2026-07-19, second pass)
+    # DETACHED_PROCESS gives the child NO console — and this batch is full of `timeout /t N`,
+    # which REQUIRES one ("ERROR: Input redirection is not supported"). So the batch died on
+    # its very first sleep and the log was never even created. It appeared to work once only
+    # because that server had been launched from a console-owning parent; the next server was
+    # itself spawned by a detached batch, inherited no console, and the restart silently did
+    # nothing again — the same lie in a new costume.
+    # A new console also survives this process dying, which is the requirement here.
     _flags = 0
     if _os.name == "nt":
-        _flags = _subp.DETACHED_PROCESS | _subp.CREATE_NEW_PROCESS_GROUP
+        _flags = _subp.CREATE_NEW_CONSOLE
     _subp.Popen(["cmd.exe", "/c", str(wrapper)],
-                cwd=str(WORKSPACE_ROOT), creationflags=_flags, close_fds=True,
-                stdin=_subp.DEVNULL, stdout=_subp.DEVNULL, stderr=_subp.DEVNULL)
+                cwd=str(WORKSPACE_ROOT), creationflags=_flags, close_fds=True)
 
 
 # PowerShell that closes ONLY the old Nova app window — a Chrome/Edge --app window whose
