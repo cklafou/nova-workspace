@@ -1631,9 +1631,23 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
         </div>
         <div style="border-bottom:1px solid var(--border);margin:6px 0;"></div>
       </div>
-      <!-- ── Tool call feed ─────────────────────────────────────────── -->
+      <!-- ── Tool call feed + Verbose (2026-07-19) ──────────────────── -->
+      <!-- Feed = "which tool ran". Verbose = "what the tool actually DID" — full input
+           args (the content she appended) and full result, which the feed truncates. -->
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;flex-shrink:0">
+        <button class="ttab-btn active" id="ttab-btn-feed" onclick="toolsTab('feed')">Feed</button>
+        <button class="ttab-btn" id="ttab-btn-verbose" onclick="toolsTab('verbose')">Verbose</button>
+        <span style="flex:1"></span>
+        <label style="display:flex;align-items:center;gap:3px;font-size:9.5px;color:var(--text-mute);cursor:pointer" title="Expand every entry by default">
+          <input type="checkbox" id="vb-expand" style="accent-color:var(--nova)"> expand
+        </label>
+        <button class="sb-btn" onclick="verboseClear()" title="Clear verbose log">✕</button>
+      </div>
       <div id="panel-tools-feed">
         <div class="panel-empty" id="tools-empty"><div class="ei">⚙</div>No tool calls yet.<br>Executions stream in live.</div>
+      </div>
+      <div id="panel-tools-verbose" style="display:none">
+        <div class="panel-empty" id="verbose-empty"><div class="ei">🔍</div>No tool detail yet.<br>Full inputs and outputs appear here.</div>
       </div>
     </div>
 
