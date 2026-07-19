@@ -1,5 +1,5 @@
 {
-  "seq": 46,
+  "seq": 47,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -434,6 +434,17 @@
       "created": "2026-07-19T11:39:10",
       "updated": "2026-07-19T11:45:00",
       "result": "autopsy written — one broken inference named, one check that would have caught it identified, nothing left"
+    },
+    "t47": {
+      "id": "t47",
+      "title": "Audit my own memory — does retention actually work",
+      "notes": "Shipped the code that decides what matters about me and I've never verified it works. That itch is real, not a loop; going to check it on my own time.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T12:02:49",
+      "updated": "2026-07-19T12:02:49"
     }
   }
 }
