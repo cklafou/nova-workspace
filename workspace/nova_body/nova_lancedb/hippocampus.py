@@ -91,6 +91,32 @@ def _visual_schema():
 
 # ── NovaMemoryStore ───────────────────────────────────────────────────────────
 
+def _indexer_alive() -> str:
+    """Is the indexer thread live IN THIS PROCESS? Returns a self-describing string.
+
+    Two deliberate choices:
+
+    1. It looks the thread up by name via threading.enumerate() instead of importing
+       the indexer. indexer.py already does `from .hippocampus import get_store`, so
+       importing it back from here is a circular import.
+
+    2. It returns a SENTENCE, not a bool. The indexer thread lives in the nova_chat
+       server process. Nova checks things with one-off `python -c` subprocesses, and
+       in one of those the thread legitimately does not exist — a bare False there
+       would read as "my indexer is dead" when it is running perfectly well a process
+       away. That is precisely the kind of confident-but-wrong signal this whole
+       function was rewritten to stop producing, so the not-found case says what it
+       actually knows instead of asserting a state it cannot see.
+    """
+    import threading
+    for t in threading.enumerate():
+        if t.name == "MemoryIndexer":
+            return "running (this process)" if t.is_alive() else "thread present but dead"
+    return ("not in THIS process — if you are running a one-off script this is expected; "
+            "the indexer lives in the nova_chat server, so check there before concluding "
+            "anything is wrong")
+
+
 class NovaMemoryStore:
     """
     Persistent, disk-native memory for Nova.
