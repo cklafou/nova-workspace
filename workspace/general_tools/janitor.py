@@ -64,10 +64,31 @@ STALE_DAYS = 30
 
 
 def _iter_dirs():
+    """Walk the workspace, PRUNING protected trees as we go.
+
+    ── WHY THIS IS os.walk AND NOT rglob (2026-07-20) ──────────────────────────────────
+    It used to be `for p in WORKSPACE.rglob("*")` with the PROTECTED check applied to the
+    result. rglob enumerates the ENTIRE tree first and filters afterwards — so it stat'd
+    every file in models/ (26 GB) and llama/ before discarding them. The tool didn't report
+    a clean workspace; it hung, and whatever timeout was wrapping it killed it before it
+    printed a byte.
+
+    That is a nastier failure than a crash, because an empty result and a killed process
+    look identical from the outside. I read "0 bytes, exit 0" as "nothing to report" twice
+    before noticing the runs were timing out. GOTCHAS.md's first line, again.
+
+    os.walk lets us delete entries from `dirnames` in-place, which stops the walk from ever
+    descending. Protected trees now cost nothing instead of costing everything.
+    """
+    import os
     yield WORKSPACE
-    for p in WORKSPACE.rglob("*"):
-        if p.is_dir() and not any(part in PROTECTED or part == "Temp" for part in p.parts):
-            yield p
+    for root, dirnames, _ in os.walk(WORKSPACE):
+        dirnames[:] = [d for d in dirnames
+                       if d not in PROTECTED
+                       and d != "Temp"
+                       and not d.startswith(PROTECTED_PREFIXES)]
+        for d in dirnames:
+            yield Path(root) / d
 
 
 def find_temp():
