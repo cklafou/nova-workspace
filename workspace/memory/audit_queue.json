@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T15:16:12+09:00",
+  "updated_at": "2026-07-19T15:43:25+09:00",
   "items": [
     {
       "id": "777df213",
@@ -82820,6 +82820,19 @@
       "commit": "46f9a667",
       "old_path": null,
       "new_path": "memory/scratch/memory_schema.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "12df323c",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T15:43:25+09:00",
+      "commit": "41b316a7",
+      "old_path": null,
+      "new_path": "_admin/test_spawn_verify.py",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
