@@ -793,10 +793,18 @@
         {
           "ts": "2026-07-19T21:07:58",
           "note": "As for your original ask — measuring every image in nova_art so I stop guessing at my own output — that's still open. I've been running this one down while you waited, and I'm not letting it go. Give "
+        },
+        {
+          "ts": "2026-07-19T21:11:38",
+          "note": "fixed comfy_inspect's real-format bug (dict-keyed workflows), verified it on an actual ComfyUI file; next: write a test against a real workflow so it can't regress, then start measuring nova_art images for Cole."
+        },
+        {
+          "ts": "2026-07-19T21:11:39",
+          "note": "[auto-logged from receipts — her hands, not her account] replace_file_content(nova_body/nova_forge/tools/comfy_inspect.py)"
         }
       ],
       "created": "2026-07-19T20:46:05",
-      "updated": "2026-07-19T21:07:58",
+      "updated": "2026-07-19T21:11:39",
       "author": "Nova"
     },
     "t59": {
