@@ -1,0 +1,4 @@
+Can she copy 'comfy-2026-07-19.log' out of her own context? (temp=0, greedy)
+
+  repeats | DRY ON (live)                        | DRY OFF (control)
+  --------+--------------------------------------+------------------
