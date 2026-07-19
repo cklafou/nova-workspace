@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": "t56",
-  "last_activity": "2026-07-19T19:58:09",
-  "wake_at": "2026-07-19T19:58:15",
-  "last_fp": "[[\"Tasking/tasks.json\", 44775, 1784458626], [\"memory/interrupt_inbox.json\", 103, 1784458326], [\"memory/cole_intent.json\", 231, 1784458326]]",
+  "last_activity": "2026-07-19T19:59:07",
+  "wake_at": "2026-07-19T20:02:07",
+  "last_fp": "[[\"Tasking/tasks.json\", 45060, 1784458689], [\"memory/interrupt_inbox.json\", 105, 1784458683], [\"memory/cole_intent.json\", 190, 1784458683]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 1,
-  "directive_seen": 0,
+  "stall": 2,
+  "directive_seen": 1,
   "last_reflection": "I went looking for that one and came up empty, and it was three folders up from where I stopped. That's the kind of blind spot that's genuinely mine, not a tool failure. Thank you for finding it instead of letting me keep guessing.",
   "cont_run": 7
 }
