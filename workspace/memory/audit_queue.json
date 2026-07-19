@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T19:59:28+09:00",
+  "updated_at": "2026-07-19T20:00:50+09:00",
   "items": [
     {
       "id": "777df213",
@@ -84119,6 +84119,19 @@
       "detected_at": "2026-07-19T19:59:28+09:00",
       "commit": "6d56dead",
       "old_path": "_admin/Trash/rejected_calls_docx_2026-07-14/calls_order_doc.py",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "43b10047",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-07-19T20:00:50+09:00",
+      "commit": "3272046a",
+      "old_path": "nova_art/2026-07-19/nova_self_195657_83862.png",
       "new_path": null,
       "confidence": 1.0,
       "resolved_by": null,
