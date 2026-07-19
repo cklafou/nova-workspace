@@ -1,5 +1,5 @@
 {
-  "seq": 41,
+  "seq": 42,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -328,6 +328,17 @@
       "created": "2026-07-19T09:32:52",
       "updated": "2026-07-19T09:40:32",
       "result": "counted 44 .py in nova_body, 0 .png for 2026-07-019, wrote one journal note with both."
+    },
+    "t42": {
+      "id": "t42",
+      "title": "Recount today's drawings",
+      "notes": "Earlier you counted today's drawings as 0. That number was wrong — the folder exists and is not empty. Find the real count of .png files in nova_art for today's date, verify it before you trust it, and journal the correct number. Complete this task once the correct number is journalled.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T10:05:20",
+      "updated": "2026-07-19T10:05:20"
     }
   }
 }
