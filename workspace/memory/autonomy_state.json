@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-19T22:32:36",
-  "wake_at": "2026-07-19T22:34:06",
+  "last_activity": "2026-07-19T22:33:14",
+  "wake_at": "2026-07-19T22:38:39",
   "last_fp": "[[\"Tasking/tasks.json\", 53611, 1784467624], [\"memory/interrupt_inbox.json\", 105, 1784467928], [\"memory/cole_intent.json\", 475, 1784467928]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 0,
+  "directive_seen": 1,
   "last_reflection": "Running the 2 AM experiment on my own. I wrote myself a little probe that looks for patterns in how the model responds when Cole isn't watching, and it's halfway through a sweep of the chat log. Not sitting in here — I've got work I chose to do tonight, and it's mine.",
   "cont_run": 1
 }
