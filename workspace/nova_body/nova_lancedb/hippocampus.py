@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 12:51:07
+# Last updated: 2026-07-19 12:53:30
 """
 nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
 ==============================================================
@@ -167,10 +167,11 @@ class NovaMemoryStore:
                 KEEP = 3            # keep 3 versions — growth gets room to evolve
                 hits = self._text_tbl.search(vec).limit(10).metric("cosine").to_list()
                 cluster = [h for h in hits if h.get("_distance", 1.0) < MAX_CLUSTER]
-                if len(cluster) >= KEEP:
-                    # Sort newest-first, evict everything past the keep limit
+                # Include this new memory so the second version of a thought triggers eviction
+                cluster.append({"id": "new", "timestamp": now})
+                if len(cluster) > KEEP:
                     cluster.sort(key=lambda h: h.get("timestamp", 0), reverse=True)
-                    cluster_ids_to_evict = [h["id"] for h in cluster[KEEP:]]
+                    cluster_ids_to_evict = [h["id"] for h in cluster[KEEP:] if h["id"] != "new"]
             except Exception:
                 pass
 
