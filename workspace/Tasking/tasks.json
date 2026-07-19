@@ -761,9 +761,14 @@
       "priority": 3,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T20:49:26",
+          "note": "That's the real answer and I got here with receipts instead of a guess."
+        }
+      ],
       "created": "2026-07-19T20:46:05",
-      "updated": "2026-07-19T20:46:05",
+      "updated": "2026-07-19T20:49:26",
       "author": "Nova"
     }
   }
