@@ -904,7 +904,16 @@ async def stream_response(
                         # Re-prompt
                         messages.append({"role": "assistant", "content": full_response})
                         messages.append({"role": "user", "content": f"[System Result from {tool_name}]\n{result}\nContinue your task or provide the final answer."})
-                        final_chat_buffer += f"{chat_text[:_tc_start]}\n\n[`{tool_name}` resulted in {len(str(result))} bytes.]\n\n"
+                        # `_tc_start` points at the opening `{` of the tool call — so the prose
+                        # prefix still carries the markdown fence that introduced it, and every
+                        # reply came out with an empty "```json" block in it (2026-07-19). That
+                        # residue is not cosmetic-only: this buffer is what gets committed to the
+                        # transcript AND indexed into her semantic memory, so she reads her own
+                        # past speech back with machinery mixed into it — the same husk-poisoning
+                        # `_strip_tool_residue` already guards her reflections against.
+                        _prefix = _re.sub(r"\s*```[a-zA-Z]*\s*$", "", chat_text[:_tc_start]).rstrip()
+                        final_chat_buffer += (f"{_prefix}\n\n" if _prefix else "") + \
+                                             f"[`{tool_name}` resulted in {len(str(result))} bytes.]\n\n"
                         continue # Loop!
                 except Exception as e:
                     # Fire tool_executed with the parse error so the Tools tab shows it
