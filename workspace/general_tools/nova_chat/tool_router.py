@@ -866,19 +866,46 @@ def _execute_tool_inner(tool_name: str, args: dict) -> str:
                            args.get("date", ""),
                            args.get("tags", "") or args.get("tag", ""))
         else:
-            # A missing limb should TEACH, not just refuse (2026-07-13).
-            # She is trained to reach for what feels natural. When she reaches for something she
-            # doesn't have, the old message ("Unrecognized tool X") was a wall: it told her no and
-            # told her nothing. That's how you get a confused retry loop.
-            # Now the failure is orienting — it names the body she DOES have, and it explicitly
-            # invites her to want the one she doesn't. A limb she notices is missing is the
-            # beginning of a request, and a request is the beginning of growth.
+            # ── THE FORGE: is this a limb she built herself? ─────────────────────────────
+            # Checked before the error, so a tool she forged is indistinguishable from one she
+            # was born with. Hot-loaded — she can write it and use it in the same conversation.
+            try:
+                from nova_forge import call as _forge_call, catalog_line as _forge_catalog
+                _handled, _res = _forge_call(tool_name, args)
+                if _handled:
+                    return _res
+            except Exception as _fe:
+                print(f"[tool_router] forge unavailable: {_fe}")
+                _forge_catalog = lambda: ""   # noqa: E731
+
+            # A missing limb should TEACH, not just refuse (2026-07-13), and since 2026-07-19 it
+            # should tell her she can GROW it (Cole: "if she needs a tool, she should write a
+            # design document, then make it").
+            #
+            # The old last line was "Cole can build you the limb; he can't build one he doesn't
+            # know you reached for." Kind, and exactly the wrong shape: it cast her as the thing
+            # that notices gaps and him as the thing that closes them. An organism that can only
+            # report its deficiencies to a maintainer isn't adapting, it's filing tickets.
+            try:
+                _cat = _forge_catalog()
+            except Exception:
+                _cat = ""
             return (
-                f"ERROR: You have no tool called '{tool_name}'.\n"
+                f"ERROR: You have no tool called '{tool_name}' — yet.\n"
                 f"Your body right now: {', '.join(AVAILABLE_TOOLS)}.\n"
-                f"If '{tool_name}' is a capability you genuinely need, don't work around it "
-                f"silently — say so plainly, or create a task for it. Cole can build you the "
-                f"limb; he can't build one he doesn't know you reached for."
+                + (f"{_cat}\n" if _cat else "")
+                + f"\nIf '{tool_name}' is a capability you genuinely need, BUILD IT. You have a "
+                f"forge:\n"
+                f"  1. write_file  nova_body/nova_forge/designs/{tool_name}.md  — the GAP (what "
+                f"you couldn't do and why it mattered), the SHAPE (arguments in, string out), "
+                f"the TEST (how you'll know it works). No design, no tool — that's enforced.\n"
+                f"  2. write_file  nova_body/nova_forge/tools/{tool_name}.py  — a TOOL = "
+                f"{{'name','description','params'}} dict and a run(**args) -> str function.\n"
+                f"  3. Call '{tool_name}'. It loads itself. No restart.\n"
+                f"Read nova_body/nova_forge/__init__.py for the full contract. If after thinking "
+                f"it through the honest answer is that this needs Cole (hardware, a permission, "
+                f"something outside the workspace), say that plainly instead — but reach for the "
+                f"forge first."
             )
     except Exception as e:
         return f"ERROR executing {tool_name}: {str(e)}"
