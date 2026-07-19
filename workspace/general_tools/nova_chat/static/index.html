@@ -3321,14 +3321,20 @@ async function llamaStop() {
 }
 async function novaRestart(kind){
   const ep={server:'/api/restart/server',nova:'/api/restart/nova',novachat:'/api/restart/novachat',full:'/api/restart/full'}[kind];
-  const confirmMsg={
-    server:'Restart the model server (llama.cpp on :8080)? Inference drops for a few seconds while it reloads.',
-    nova:"Reload Nova's mind (reset her cognition + refresh context)? The chat stays up; she wakes fresh.",
-    novachat:'Restart Nova Chat (:8765)? The page will disconnect and reconnect in a few seconds.',
-    full:'FULL restart — StopNova + NovaStart (llama + chat + watcher + window)? Everything bounces.'
-  }[kind];
+  // ── NO CONFIRM DIALOG (2026-07-19, Cole). ─────────────────────────────────────────────
+  // These used to be gated behind confirm(). Two problems, one of them subtle:
+  //   1. Cole clicks Restart because he wants a restart. The second click was pure friction.
+  //   2. confirm() is a BLOCKING modal — it freezes the renderer until a human clicks it. So
+  //      the button was unusable by anything except a human standing at the machine: an
+  //      automated restart just hung until the tab timed out, which is exactly what happened
+  //      when I tried to apply my own changes and sat there waiting on a dialog only Cole
+  //      could see. A restart control that requires a human present is not a restart control.
+  // The action is announced by a toast and is fully reversible by launching again, so there
+  // is nothing here worth guarding with a prompt.
+  const label={server:'Restarting model server…',nova:"Reloading Nova's mind…",
+               novachat:'Restarting Nova Chat…',full:'Full restart — everything bouncing…'}[kind];
   if(!ep) return;
-  if(!confirm(confirmMsg)) { closeDD&&closeDD(); return; }
+  toast(label||'Restarting…');
   try{
     const r=await fetch(ep,{method:'POST'}); const d=await r.json().catch(()=>({}));
     toast(d.message||d.error||(d.ok?'Restarting…':'Restart failed'));
