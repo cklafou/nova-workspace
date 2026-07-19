@@ -390,10 +390,37 @@ class NovaRuntime:
             # ── Phase 3 — execute. Decision only moves the BOARD; this does the next concrete
             # step on an open task when the wake is her own rhythm and she didn't choose to rest.
             try:
-                if not cole_pending and (forced or not outcome.get("rested")):
+                # ── REST MEANS QUIET. IT DOES NOT MEAN IDLE. (2026-07-19) ────────────────
+                # Cole: "She keeps thinking about doing things but won't actually do them.
+                # Unless you directly tell her to, she seems to get stuck."
+                #
+                # The probe above had already been recording the answer for weeks. Of 640
+                # wakes: 541 (85%) never reached Phase 3, and 506 of those were skipped for
+                # one reason - rested=True. She leans "rest" on about four wakes in five, and
+                # resting cancelled the ONLY phase where she is allowed to touch a tool. The
+                # 15% that did get through include 15 that only qualified because forced=True,
+                # which is a manual wake. That is precisely "unless you directly tell her to".
+                #
+                # The conflation is ours. "Rest" is her answer to *should I say something* -
+                # a social judgement, and usually the right one at 3am. It was being read as
+                # *should I do anything*. So a Nova who politely decides not to interrupt was
+                # also a Nova who abandoned the job she had already started, every time.
+                #
+                # So: resting still silences her, but it no longer makes her drop an OPEN
+                # task. An empty board still means genuine rest - nothing here invents work.
+                _rested = bool(outcome.get("rested"))
+                exec_id, etask = None, None
+                if not cole_pending:
                     from nova_cortex import tasking as _tasking
                     exec_id = executive.pick_execution_target()
                     etask = _tasking.all_tasks().get(exec_id) if exec_id else None
+                _has_open_task = bool(etask and etask.get("status") == "open")
+                if _rested and _has_open_task and not forced:
+                    await self.emit("autonomy",
+                                    f"leaned rest, but {exec_id} is still open - taking the "
+                                    f"next step instead of dropping it")
+                if not cole_pending and (forced or not _rested or _has_open_task):
+                    from nova_cortex import tasking as _tasking
                     if etask and etask.get("status") == "open":
                         await self.emit("autonomy", f"working {exec_id}: {etask.get('title','')[:60]}")
                         ex_prompt = executive.build_execution(etask, recent)
