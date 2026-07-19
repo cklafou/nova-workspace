@@ -31,10 +31,33 @@ Why design-first is load-bearing and not ceremony:
     memory/reports/). She is held to the standard we hold ourselves to, which is the only kind
     of standard worth having.
 
+── THE SECOND DISCIPLINE: EVIDENCE OF TEST (2026-07-19, added same day) ────────────────────
+Design-first was enforced. Test-after was not — and within an hour that gap bit exactly as you
+would predict. She built `comfy_inspect`, tested it against one real workflow, found it handled
+that file badly, and rewrote the parser. The rewrite fixed the original fault and BROKE the
+format her own painter emits. She had optimised for the single sample in front of her and lost
+the general case, and nothing made her re-check what used to work.
+
+Her design template has a TEST section. Nothing ever made her RUN it. So:
+
+    tests/<tool_name>.py    cases that must pass. Re-run automatically after every edit.
+
+A tool with failing tests still RUNS — she may be mid-iteration and blocking that is friction
+she would learn to route around. But its state rides along with every single result and shows
+in list_tools, so she can never unknowingly lean on a broken limb. Same philosophy as the
+silent-zero guard in her hands: you do not fix a miss by refusing, you fix it by making the miss
+impossible to overlook.
+
+    VERIFIED    tests exist and pass          -> clean output
+    FAILING     tests exist and fail          -> every result carries a loud banner + the case
+    UNVERIFIED  no tests written yet          -> every result carries a one-line nudge
+    BLOCKED     no design document            -> refuses to load at all
+
 ── LAYOUT ──────────────────────────────────────────────────────────────────────────────────
     nova_body/nova_forge/
         designs/<tool_name>.md      the design doc  (REQUIRED — no doc, no tool)
         tools/<tool_name>.py        the implementation
+        tests/<tool_name>.py        the proof it works  (CASES list, and/or check(run))
 
 An implementation must expose exactly two things:
 
@@ -66,15 +89,17 @@ from pathlib import Path
 FORGE_DIR = Path(__file__).resolve().parent
 TOOLS_DIR = FORGE_DIR / "tools"
 DESIGNS_DIR = FORGE_DIR / "designs"
+TESTS_DIR = FORGE_DIR / "tests"
 
 _CACHE: dict[str, tuple[float, object]] = {}   # name -> (mtime, module)
+_TEST_CACHE: dict[str, tuple[float, float, tuple]] = {}   # name -> (tool_mt, test_mt, verdict)
 
 # A design doc that is only a title is not a design. Cheap floor, not a rubric.
 _MIN_DESIGN_CHARS = 200
 
 
 def _ensure_dirs() -> None:
-    for d in (TOOLS_DIR, DESIGNS_DIR):
+    for d in (TOOLS_DIR, DESIGNS_DIR, TESTS_DIR):
         try:
             d.mkdir(parents=True, exist_ok=True)
         except Exception:
