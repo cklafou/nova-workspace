@@ -474,10 +474,18 @@
         {
           "ts": "2026-07-19T12:16:12",
           "note": "No class in the whole file. It's a comment block with a nameplate on it — the module exists but the thing I'm trying to import doesn't. I built a body part and forgot to put the muscle in it. That's w"
+        },
+        {
+          "ts": "2026-07-19T12:18:43",
+          "note": "wired the nova_lancedb __init__.py exports so the module actually surfaces its classes (was an empty drawer); next step on the audit is running the dedup check against the store now that it's reachable"
+        },
+        {
+          "ts": "2026-07-19T12:18:43",
+          "note": "[auto-logged from receipts — her hands, not her account] replace_file_content(nova_body/nova_lancedb/__init__.py)"
         }
       ],
       "created": "2026-07-19T12:02:49",
-      "updated": "2026-07-19T12:16:12"
+      "updated": "2026-07-19T12:18:43"
     },
     "t48": {
       "id": "t48",
@@ -495,11 +503,17 @@
       "title": "Build the SemanticDeduplicator class — the module exists but the thing inside it doesn't",
       "notes": "nova_body/nova_lancedb/__init__.py is imports-only, no class body. That's why every import fails — I built a drawer and forgot to put the tool in it.",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T12:18:27",
+          "note": "The module was empty — comment block with no exports. Wired the two real classes through __init__.py and verified the import works."
+        }
+      ],
       "created": "2026-07-19T12:17:01",
-      "updated": "2026-07-19T12:17:01"
+      "updated": "2026-07-19T12:18:34",
+      "result": "Module was an empty drawer — comment block with no exports. Wrote the two export lines, import verified clean."
     }
   }
 }
