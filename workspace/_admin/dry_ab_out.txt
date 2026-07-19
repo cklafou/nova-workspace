@@ -1,8 +1,0 @@
-Can she copy 'comfy-2026-07-19.log' out of her own context? (temp=0, greedy)
-
-  repeats | DRY ON (live)                        | DRY OFF (control)
-  --------+--------------------------------------+------------------
-     0    | WRONG read_file logs/comfy/comfy-202 | OK    read_file logs/comfy/comfy-202
-     1    | WRONG Get-Content logs/comfy/comfi-2 | OK    Get-Content logs/comfy/comfy-2
-     2    | WRONG That file's either enormous or | WRONG That file's either enormous or
-     3    | WRONG That's not a flake — it's hung | WRONG That's not a flake — it's hung
