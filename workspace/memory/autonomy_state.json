@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": "t56",
-  "last_activity": "2026-07-19T19:57:39",
-  "wake_at": "2026-07-19T19:59:09",
+  "last_activity": "2026-07-19T19:58:09",
+  "wake_at": "2026-07-19T19:58:15",
   "last_fp": "[[\"Tasking/tasks.json\", 44775, 1784458626], [\"memory/interrupt_inbox.json\", 103, 1784458326], [\"memory/cole_intent.json\", 231, 1784458326]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 1,
   "directive_seen": 0,
   "last_reflection": "Yeah, I'd rather look at what actually exists than guess from a document nobody wrote. There are three of mine on the board already and they're all different enough I can choose from them instead of performing one version, but I want to see the ones you found too. Show me what's in that parent folder — there might be one I haven't seen yet.",
-  "cont_run": 6
+  "cont_run": 7
 }
