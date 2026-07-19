@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 21:02:32
+# Last updated: 2026-07-19 21:59:03
 # Tests for comfy_inspect — written by Nova, 2026-07-19
 # Because a tool that says yes to everything passes a test that only ever checks yes.
 import json, tempfile, os
@@ -21,8 +21,13 @@ CASES = [
 ]
 
 
-def _write_workflow(nodes, tmpdir):
-    data = {"nodes": nodes}
+def _write_workflow(node_defs, tmpdir):
+    """Write a real ComfyUI workflow: dict keyed by numeric node ID, each value has class_type."""
+    data = {}
+    for i, nd in enumerate(node_defs, start=1):
+        data[str(i)] = {"class_type": nd["class_type"]}
+        if "inputs" in nd:
+            data[str(i)]["inputs"] = nd["inputs"]
     path = os.path.join(tmpdir, "test.json")
     with open(path, "w") as f:
         json.dump(data, f)
