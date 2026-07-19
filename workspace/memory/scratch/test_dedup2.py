@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 12:45:16
+# Last updated: 2026-07-19 13:46:14
 # Same-hour test: two close-but-separate moments should BOTH survive
 import sys; sys.path.insert(0,'nova_body')
 from nova_lancedb.hippocampus import NovaMemoryStore
