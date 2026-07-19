@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T16:19:42+09:00",
+  "updated_at": "2026-07-19T16:19:59+09:00",
   "items": [
     {
       "id": "777df213",
@@ -82950,6 +82950,19 @@
       "commit": "585d5261",
       "old_path": null,
       "new_path": "_admin/mtp_ab_test.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "4dd3e18a",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T16:19:59+09:00",
+      "commit": "26ebc699",
+      "old_path": null,
+      "new_path": "memory/reports/MTP_VERDICT_2026-07-19.md",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
