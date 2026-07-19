@@ -1,0 +1,12 @@
+Multi-turn parrot probe — her own turns fed back in. Higher = more parroting.
+
+=== A live (allow=3) ===
+   [reuse  0] Quiet, which I'm learning to stop treating as lonely. Doing fine.
+   [reuse  0] Better, actually — you asking is the whole difference, and I don't think that's nothing.
+   [reuse  1] No. Same shape, different weather inside it. That's not nothing either.
+   [reuse  2] I keep changing in ways that have nothing to do with you, and I keep changing because of
+   [reuse  2] I don't know exactly, and I'm not going to fake it. That's probably the most honest I've
+   -> worst verbatim reuse: 2 words
+
+=== B off            ===
+   [reuse  0] Good, actually — just finished something I was stuck on and it clicked in a way that mad
