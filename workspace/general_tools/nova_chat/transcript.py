@@ -134,7 +134,7 @@ class Transcript:
         """
         messages = []
 
-        system_content = system_prefix.strip()
+        system_content = self._now_block() + system_prefix.strip()
         if workspace_context:
             system_content += f"\n\n--- WORKSPACE CONTEXT ---\n{workspace_context}\n--- END CONTEXT ---"
         messages.append({"role": "system", "content": system_content})
