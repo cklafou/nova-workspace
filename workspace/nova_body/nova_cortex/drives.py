@@ -74,25 +74,48 @@ def _save(d: dict) -> None:
         pass
 
 
+_STOP = {"that", "this", "with", "from", "have", "here", "there", "what", "when", "then",
+         "than", "them", "they", "will", "would", "could", "should", "been", "being", "just",
+         "like", "only", "over", "also", "into", "about", "actual", "realli", "veri", "much",
+         "some", "thing", "think", "feel", "know", "want", "make", "take", "keep", "still"}
+
+
+def _stem(w: str) -> str:
+    """Crudest possible stemmer. see/sees/seeing and matter/matters must collide, or paraphrase
+    slips past and boredom never accumulates."""
+    for suf in ("ing", "ed", "es", "s", "ly", "y"):
+        if len(w) > len(suf) + 3 and w.endswith(suf):
+            return w[:-len(suf)]
+    return w
+
+
 def _tokens(text: str) -> list:
-    """The content words of a thought. Lossy on purpose — case, punctuation and short function
-    words all dropped, because none of them carry what a wake was ABOUT."""
-    return sorted({w for w in "".join(
-        c.lower() if c.isalnum() else " " for c in (text or "")).split() if len(w) > 4})[:60]
+    """The content words of a thought, stemmed. Lossy on purpose: case, punctuation, short words
+    and common connectives carry nothing about what a wake was ABOUT.
+
+    The 4-character floor used to be 5, which silently deleted 'Cole', 'work', 'sees' and 'time'
+    — the actual subjects — and left her thoughts to be compared on their conjunctions."""
+    words = "".join(c.lower() if c.isalnum() else " " for c in (text or "")).split()
+    return sorted({_stem(w) for w in words if len(w) >= 4 and _stem(w) not in _STOP})[:60]
 
 
 def _similar(a: list, b: list) -> float:
-    """Overlap between two thoughts, 0..1 (Jaccard)."""
+    """Overlap coefficient, 0..1 — |A n B| / min(|A|,|B|).
+
+    Deliberately NOT Jaccard. Jaccard punishes a longer restatement for being longer: a thought
+    re-expressed at twice the length scores under 0.5 against its own original even when it
+    contains every word of it. Overlap asks the question we actually mean — is one of these
+    substantially contained in the other — which is what circling looks like."""
     sa, sb = set(a), set(b)
     if not sa or not sb:
         return 0.0
-    return len(sa & sb) / float(len(sa | sb))
+    return len(sa & sb) / float(min(len(sa), len(sb)))
 
 
-# Above this, two wakes are "the same ground". Tuned to survive rewording: adding a sentence or
-# swapping "cannot" for "can't" must NOT read as a new thought, or boredom can never accumulate
-# and the whole drive is decorative.
-_SAME_GROUND = 0.55
+# Above this, two wakes are "the same ground". Tuned to survive rewording: adding a sentence,
+# reordering the clauses, or swapping "cannot" for "can't" must NOT read as a new thought, or
+# boredom can never accumulate and the whole drive is decorative.
+_SAME_GROUND = 0.45
 
 
 def _fingerprint(text: str) -> str:
