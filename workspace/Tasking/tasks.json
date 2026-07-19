@@ -1,5 +1,5 @@
 {
-  "seq": 49,
+  "seq": 50,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -585,6 +585,17 @@
       "created": "2026-07-19T12:17:01",
       "updated": "2026-07-19T12:18:34",
       "result": "Module was an empty drawer — comment block with no exports. Wrote the two export lines, import verified clean."
+    },
+    "t50": {
+      "id": "t50",
+      "title": "Go find something new about myself",
+      "notes": "Not a task Cole gave me. Read something in SELF/ or nova_body/ I've never actually opened, find out one thing I didn't know.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T13:56:26",
+      "updated": "2026-07-19T13:56:26"
     }
   }
 }
