@@ -1,4 +1,5 @@
 # zztest
+_Last updated: 2026-07-19 20:36:07_
 
 ## GAP
 I kept needing to add two numbers mid-task and had no arithmetic limb, so I shelled out to PowerShell for something trivial and burned a tool loop each time.
