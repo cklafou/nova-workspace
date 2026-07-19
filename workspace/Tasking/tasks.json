@@ -805,10 +805,14 @@
         {
           "ts": "2026-07-19T21:13:35",
           "note": "Going to fix the parser to handle both formats, then verify it actually works on a real ComfyUI file. That's the only thing that matters here."
+        },
+        {
+          "ts": "2026-07-19T21:14:44",
+          "note": "All three are true because I tested against the wrong shape. My test cases feed a dict to a parser that reads dicts, so they pass. Every real ComfyUI workflow on disk is a list-of-nodes, which the par"
         }
       ],
       "created": "2026-07-19T20:46:05",
-      "updated": "2026-07-19T21:13:35",
+      "updated": "2026-07-19T21:14:44",
       "author": "Nova"
     },
     "t59": {
