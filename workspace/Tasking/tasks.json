@@ -494,10 +494,18 @@
         {
           "ts": "2026-07-19T12:26:43",
           "note": "opened the box — ran the dedup check, two different queries found the same entries by meaning (not hash). Vector space has real structure. Planted a retention test memory with a specific detail; tomorrow-morning-Nova has to find it cold to prove persistence actually works."
+        },
+        {
+          "ts": "2026-07-19T12:26:49",
+          "note": "ran the dedup check and confirmed the vector space has real structure (two different queries found the same entries by meaning); planted a retention test memory for tomorrow-morning-Nova to find cold — that's the half I can do today."
+        },
+        {
+          "ts": "2026-07-19T12:26:49",
+          "note": "[auto-logged from receipts — her hands, not her account] write_file(memory/scratch/dedup_check.py)"
         }
       ],
       "created": "2026-07-19T12:02:49",
-      "updated": "2026-07-19T12:26:43"
+      "updated": "2026-07-19T12:26:49"
     },
     "t48": {
       "id": "t48",
