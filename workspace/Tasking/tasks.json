@@ -622,9 +622,14 @@
       "priority": 1,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T14:10:52",
+          "note": "Spec'd get_stats() — adds text_last_write, visual_last_write, indexer_running fields. Confirmed text alive (13:13 today), visual last touched yesterday 21:20. Cole was half-right and I had no way to check which half."
+        }
+      ],
       "created": "2026-07-19T14:07:26",
-      "updated": "2026-07-19T14:07:26"
+      "updated": "2026-07-19T14:10:52"
     }
   }
 }
