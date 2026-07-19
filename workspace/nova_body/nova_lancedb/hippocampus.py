@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 12:46:03
+# Last updated: 2026-07-19 12:47:26
 """
 nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
 ==============================================================
@@ -139,10 +139,11 @@ class NovaMemoryStore:
         """
         Embed and store a text memory. Returns True if stored, False if duplicate/error.
 
-        Semantic dedup (since 2026-07-19): before storing, search for the closest
-        existing memory. If it's above threshold AND older, the new version REPLACES
-        the old one — growth isn't dropped, it supersedes. If nothing's close enough,
-        we store fresh. Exact-text hash still catches byte-identical replays.
+        Cluster dedup (since 2026-07-19): before storing, search for the closest
+        existing memory. If it's close enough, find ALL memories in that cluster
+        (cosine < 0.5) and keep only the newest N of them — a single threshold can't
+        tell "same thought evolved" from "same topic different moment", so we stop
+        trying to decide and just keep growth. Exact-text hash still catches replays.
         """
         if not self._ready or not content.strip():
             return False
