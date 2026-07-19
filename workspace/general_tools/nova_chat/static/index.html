@@ -2803,6 +2803,58 @@ function addTool(d) {
     <div id="${detId}" style="display:none;font-size:9.5px;white-space:pre-wrap;padding:4px 5px;background:var(--bg-hover);border-radius:var(--radius-sm);margin-top:3px;max-height:150px;overflow-y:auto;font-family:var(--mono);color:var(--text)">${esc(fullText)}</div>`;
   feed.insertBefore(item,feed.firstChild);
   while(feed.querySelectorAll('.tfi').length>60) feed.removeChild(feed.lastChild);
+  addVerbose(d);
+}
+
+// ── Tools > Verbose (2026-07-19) ────────────────────────────────────────────────────
+// The Feed answers "which tool ran". This answers "what did it actually DO" — the full
+// input args (i.e. the content she appended to a file) and the full result. Cole's ask:
+// "I can't see what she just appended to state.py". That content is in d.input.
+function toolsTab(which){
+  const feed=document.getElementById('panel-tools-feed');
+  const verb=document.getElementById('panel-tools-verbose');
+  const bf=document.getElementById('ttab-btn-feed'), bv=document.getElementById('ttab-btn-verbose');
+  const on = which==='verbose';
+  if(feed) feed.style.display = on?'none':'';
+  if(verb) verb.style.display = on?'':'none';
+  bf?.classList.toggle('active', !on);
+  bv?.classList.toggle('active', on);
+  if(on) document.querySelector('.ptab[data-tab="tools"]')?.classList.remove('has-new');
+}
+function verboseClear(){
+  const v=document.getElementById('panel-tools-verbose');
+  if(!v) return;
+  v.innerHTML='<div class="panel-empty" id="verbose-empty"><div class="ei">🔍</div>No tool detail yet.<br>Full inputs and outputs appear here.</div>';
+}
+function _fmtArgs(input){
+  if(input===undefined||input===null) return '(no arguments)';
+  if(typeof input==='string') return input;
+  try { return JSON.stringify(input,null,2); } catch(e){ return String(input); }
+}
+function addVerbose(d){
+  const v=document.getElementById('panel-tools-verbose');
+  if(!v) return;
+  document.getElementById('verbose-empty')?.remove();
+  const ok=!d.error;
+  const args=_fmtArgs(d.input);
+  const result=(d.error||d.result||'').toString() || '(no output)';
+  const dur=d.duration_ms?`${d.duration_ms}ms`:'';
+  const id=`vb_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+  const open=document.getElementById('vb-expand')?.checked;
+  const item=document.createElement('div');
+  item.className=`vbi ${ok?'':'err'}`;
+  item.innerHTML=
+    `<div class="vbi-head" onclick="const b=document.getElementById('${id}');b.style.display=b.style.display==='none'?'block':'none'">
+       <span>${ok?'✅':'❌'}</span>
+       <span class="vbi-tool">${esc(d.tool||'tool')}</span>
+       <span class="vbi-meta">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}${dur?' · '+esc(dur):''} · ${result.length}b</span>
+     </div>
+     <div id="${id}" style="display:${open?'block':'none'}">
+       <div class="vbi-sec"><div class="vbi-lbl">Input — what she asked the tool to do</div><pre class="vbi-pre">${esc(args)}</pre></div>
+       <div class="vbi-sec"><div class="vbi-lbl">${ok?'Result — what the tool did':'Error'}</div><pre class="vbi-pre ${ok?'':'err'}">${esc(result)}</pre></div>
+     </div>`;
+  v.insertBefore(item, v.firstChild);
+  while(v.querySelectorAll('.vbi').length>80) v.removeChild(v.lastChild);
 }
 
 const _AICONS={write:'💾',exec:'⚡',read:'📄',pause:'⏸',resume:'▶',ncl:'🔗'};
