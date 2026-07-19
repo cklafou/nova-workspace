@@ -2377,12 +2377,16 @@ async def queue_add(body: dict = Body(...)):
     title    = (body.get("title") or "").strip()
     priority = int(body.get("priority", 3))
     notes    = (body.get("notes") or "").strip()
+    # WHO is asking. Defaults to Cole because the UI queue box is his; Claude (and any
+    # other agent) passes its own name so she can tell a request from a test.
+    author   = (body.get("author") or "Cole").strip() or "Cole"
     if not title:
         return JSONResponse({"error": "title required"}, status_code=400)
     try:
         from nova_cortex import tasking
-        tid = tasking.create(title, notes, priority)
-        return JSONResponse({"ok": True, "id": tid, "title": title, "priority": priority})
+        tid = tasking.create(title, notes, priority, author=author)
+        return JSONResponse({"ok": True, "id": tid, "title": title,
+                             "priority": priority, "author": author})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
