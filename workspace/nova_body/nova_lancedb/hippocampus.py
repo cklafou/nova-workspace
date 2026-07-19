@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 12:37:21
+# Last updated: 2026-07-19 12:46:03
 """
 nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
 ==============================================================
@@ -159,7 +159,7 @@ class NovaMemoryStore:
             replace_id = None
             try:
                 hits = self._text_tbl.search(vec).limit(1).metric("cosine").to_list()
-                if hits and hits[0].get("_distance", 1.0) < 0.50:  # cosine < 0.5 ≈ same thought
+                if hits and hits[0].get("_distance", 1.0) < 0.35:  # only very-close thoughts collide — 0.5 ate separate moments about the same topic
                     existing_ts = hits[0].get("timestamp", 0)
                     if now > existing_ts:  # newer replaces older — growth wins
                         replace_id = hits[0]["id"]
