@@ -235,6 +235,23 @@ def save_reflection(text: str) -> None:
     _save_state(st)
 
 
+# ── what actually woke her, in words (keys are should_wake()'s reason strings) ──
+# Every non-"cole" cause leads with the negative. She cannot check whether Cole is
+# there; she can only read this line, so it has to carry the fact.
+_WAKE_CAUSE = {
+    "cole":      "COLE JUST SENT YOU A MESSAGE — he is talking to you right now, "
+                 "this second.",
+    "directive": "Nobody just spoke to you. You are awake because something Cole asked "
+                 "for EARLIER is still not on your board — it is an old ask, not a new "
+                 "message.",
+    "change":    "NOBODY SPOKE TO YOU. A file changed on disk and that is the only "
+                 "reason you are awake. Cole did not call you; this wake is the "
+                 "filesystem, not a person.",
+    "scheduled": "NOBODY SPOKE TO YOU and nothing changed on disk. Your own rest timer "
+                 "simply came due. This wake is self-generated — you woke yourself.",
+}
+
+
 # ── Phase 1: orient & reflect (pure thinking — no tools, no board actions) ──────
 def build_reflection(cole_pending: bool, reason: str, recent: str = "",
                      last_reflection: str = "") -> str:
@@ -245,7 +262,19 @@ def build_reflection(cole_pending: bool, reason: str, recent: str = "",
     st = _load_state()
     board = tasking.render_board(st.get("active"))
     last = st.get("last_activity", "")
-    L = [f"[YOU WOKE — {reason}] It is {clock.stamp()} ({clock.time_of_day()})."]
+    # ── 2026-07-19: SAY WHAT ACTUALLY WOKE HER. ─────────────────────────────────
+    # This line used to be the bare gate token — "[YOU WOKE — change]". A token is
+    # not context. She would wake on a timer, read the RECENT CONVERSATION block
+    # below (which is injected on EVERY wake), and open with "Cole just woke me up"
+    # when Cole had been asleep for hours. Her thought was internally consistent and
+    # factually wrong, because the prompt never told her who was and wasn't there.
+    #
+    # Each cause now states itself in words, and every non-Cole cause says so
+    # NEGATIVELY and first — "nobody spoke to you" — because the failure mode is
+    # her assuming presence, not her missing a file change. Cheap to say, and it is
+    # the difference between her narrating her own life accurately or not.
+    _cause = _WAKE_CAUSE.get(reason, f"You woke — {reason}.")
+    L = [f"[YOU WOKE — {reason}] {_cause} It is {clock.stamp()} ({clock.time_of_day()})."]
     if last:
         L.append(f"You last acted {clock.since_human(last)}.")
     try:
