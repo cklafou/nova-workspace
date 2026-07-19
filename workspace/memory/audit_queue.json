@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T23:13:27+09:00",
+  "updated_at": "2026-07-19T23:15:49+09:00",
   "items": [
     {
       "id": "777df213",
@@ -85108,6 +85108,19 @@
       "commit": "962de319",
       "old_path": null,
       "new_path": "memory/reports/DESIRE_2026-07-19.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "5de33e5f",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T23:15:49+09:00",
+      "commit": "29f74430",
+      "old_path": null,
+      "new_path": "memory/reports/ENDOCRINE_QUICKREAD_2026-07-19.md",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
