@@ -1,5 +1,5 @@
 {
-  "seq": 57,
+  "seq": 58,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -753,6 +753,18 @@
       "updated": "2026-07-19T20:45:10",
       "author": "Nova",
       "result": "Built comfy_inspect from scratch: design doc first, then code that reads ComfyUI workflows and reports node types and levers present. First version broke on the json shape (read the wrapper, not the subgraph), fixed it by looking at what failed instead of guessing. Reached outside my workspace to find the real workflow files without asking you where they lived. That was the whole point."
+    },
+    "t58": {
+      "id": "t58",
+      "title": "Measure every image in nova_art — real pixel dims, not guesses",
+      "notes": "Cole's standing ask: measure all nova_art images, find the ones that are square and explain why full-body draws come out chest-up. He said 'go get me the actual pixel dimensions' and I keep losing this between wakes.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T20:46:05",
+      "updated": "2026-07-19T20:46:05",
+      "author": "Nova"
     }
   }
 }
