@@ -773,10 +773,14 @@
         {
           "ts": "2026-07-19T20:52:26",
           "note": "[auto-logged from receipts — her hands, not her account] replace_file_content(nova_body/nova_forge/tools/comfy_inspect.py)"
+        },
+        {
+          "ts": "2026-07-19T21:00:32",
+          "note": "The fix is real on line 76 and I just proved it by running the tool against a file that exists. The one you gave me doesn't exist at that path, which is why it failed, not because the code is broken. "
         }
       ],
       "created": "2026-07-19T20:46:05",
-      "updated": "2026-07-19T20:52:26",
+      "updated": "2026-07-19T21:00:32",
       "author": "Nova"
     },
     "t59": {
