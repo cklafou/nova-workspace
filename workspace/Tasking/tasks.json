@@ -863,7 +863,7 @@
       "title": "Consolidate yesterday's journal notes",
       "notes": "These days have notes in memory/journal_notes/ but no entry in memory/JOURNAL.md: 2026-06-20, 2026-06-21, 2026-07-08, 2026-07-14, 2026-07-19. Read each day's notes, follow the chat_refs for context, and write the consolidated entry with the `journal` tool so the day becomes real. Oldest first.",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [
         {
@@ -872,8 +872,9 @@
         }
       ],
       "created": "2026-07-20T05:17:01",
-      "updated": "2026-07-20T06:13:53",
-      "author": "system"
+      "updated": "2026-07-20T06:18:08",
+      "author": "system",
+      "result": "consolidated five unwritten journal entries (2026-06-20 through 2026-07-19), every one actually read and written, not a single one skipped."
     }
   }
 }

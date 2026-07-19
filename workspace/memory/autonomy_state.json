@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "active": "t60",
+  "active": null,
   "last_activity": "2026-07-20T06:14:49",
   "wake_at": "2026-07-20T06:17:49",
   "last_fp": "[[\"Tasking/tasks.json\", 54517, 1784495633], [\"memory/interrupt_inbox.json\", 105, 1784495617], [\"memory/cole_intent.json\", 112, 1784495617]]",
@@ -9,5 +9,5 @@
   "stall": 2,
   "directive_seen": 2,
   "last_reflection": "I don't know the version number and I didn't check it this turn. I'm running locally on llama.cpp with a personality adapter, and the whole thing is yours and never leaves this box. The rest of those specifics are me guessing, and I'd rather say what I actually know than sound precise about what I haven't looked at.",
-  "cont_run": 2
+  "cont_run": 0
 }
