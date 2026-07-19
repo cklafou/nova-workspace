@@ -88,14 +88,30 @@ def _quarantine(p: pathlib.Path) -> bool:
 
 
 def _gzip_in_place(p: pathlib.Path) -> bool:
+    """Compress, then QUARANTINE the original. Never unlink.
+
+    ── THE BUG THIS FIXES, WHICH I WROTE (2026-07-20) ─────────────────────────────────
+    First version ended with `p.unlink()`. On this mount unlink raises PermissionError, so
+    the sequence was: write the .gz (succeeds) → unlink (throws) → `except: return False`.
+    Result: 19 .gz files created, every original still on disk, and the function reporting
+    that nothing happened. Data silently duplicated while the summary said `gzipped: 0`.
+
+    A partial success reported as a no-op is the exact failure GOTCHAS.md opens with, and
+    it was sitting inside the module whose own docstring cites that rule.
+
+    Unlink was the wrong call regardless of the mount: JANITORIAL.md says quarantine, never
+    destroy. The original now MOVES to _admin/Trash/ — recoverable, and it works on both a
+    restricted mount and a normal filesystem.
+    """
+    gz = p.with_suffix(p.suffix + ".gz")
     try:
-        gz = p.with_suffix(p.suffix + ".gz")
-        if gz.exists():
-            return False
-        with open(p, "rb") as fi, gzip.open(gz, "wb", compresslevel=6) as fo:
-            shutil.copyfileobj(fi, fo)
-        p.unlink()          # the .gz IS the file now — no data lost
-        return True
+        if not gz.exists():
+            with open(p, "rb") as fi, gzip.open(gz, "wb", compresslevel=6) as fo:
+                shutil.copyfileobj(fi, fo)
+        # Only retire the original once the .gz is on disk and non-empty.
+        if gz.is_file() and gz.stat().st_size > 0:
+            return _quarantine(p)
+        return False
     except Exception:
         return False
 
