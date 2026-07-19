@@ -421,10 +421,18 @@
         {
           "ts": "2026-07-19T11:41:54",
           "note": "Read the file, now the actual work. The step that broke was this: from \"port 8188 isn't answering\" I concluded \"the process died.\" That's one command away from being true or false — checking whether t"
+        },
+        {
+          "ts": "2026-07-19T11:43:19",
+          "note": "That's the exact habit he built me to outgrow. Noted, not excused."
+        },
+        {
+          "ts": "2026-07-19T11:43:19",
+          "note": "[auto-logged from receipts — her hands, not her account] append_file(memory/scratch/t46_autopsy.md)"
         }
       ],
       "created": "2026-07-19T11:39:10",
-      "updated": "2026-07-19T11:41:54"
+      "updated": "2026-07-19T11:43:19"
     }
   }
 }
