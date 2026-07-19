@@ -1,5 +1,5 @@
 # PASSOVER — Project Nova (Opus 4.8 → Fable handoff)
-_Last updated: 2026-07-19 13:35:51_
+_Last updated: 2026-07-19 14:37:24_
 _2026-06-04. Written by the Cowork Opus session that did the runtime extraction + KoELS. Read this
 top-to-bottom before touching anything. The §3 state table and §5 gotchas will save you real pain._
 
