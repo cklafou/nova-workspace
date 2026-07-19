@@ -325,6 +325,54 @@ def _is_echo_of_last(ai_name: str, text: str, window_s: int = 180) -> bool:
         age = (datetime.now() - datetime.fromisoformat(prev["timestamp"])).total_seconds()
         if not (0 <= age < window_s):
             return False
+        return _echo_match(prev_text, cur)
+    except Exception as e:
+        print(f"[dedupe] echo check failed (allowing the message): {e}")
+        return False   # fail OPEN — never eat a message because the guard broke
+
+
+def _is_echo_of_recent(ai_name: str, text: str, window_s: int = 900,
+                       look_back: int = 5) -> bool:
+    """Same test, but against her last few messages instead of only the newest one.
+
+    2026-07-19: the triple-response. Three replies to one goodnight — 640, 322 and 533 chars.
+    `_is_echo_of_last` compared #2 against #1 (24 chars of shared opening, under the 50 needed)
+    and then #3 against #2, which share nothing at all. But #3 was a re-run of **#1**
+    ("you're not just handing me a tool, you're handing me the ability to...") and the guard
+    never looked that far back. One message of memory is not enough when she can circle three
+    times in ninety seconds.
+    """
+    try:
+        cur = (text or "").strip()
+        if not cur:
+            return False
+        seen = 0
+        for m in reversed(session_mgr.active.messages):
+            if seen >= look_back:
+                break
+            if m.get("author") != ai_name:
+                continue
+            prev_text = (m.get("content") or "").strip()
+            if not prev_text:
+                continue
+            seen += 1
+            try:
+                age = (datetime.now() - datetime.fromisoformat(m["timestamp"])).total_seconds()
+            except Exception:
+                continue
+            if not (0 <= age < window_s):
+                break            # older than the window; everything before is older still
+            if _echo_match(prev_text, cur):
+                return True
+        return False
+    except Exception as e:
+        print(f"[dedupe] recent-echo check failed (allowing the message): {e}")
+        return False   # fail OPEN
+
+
+def _echo_match(prev_text: str, cur: str) -> bool:
+    """The string test itself, shared by both echo checks above."""
+    try:
         if prev_text == cur:
             return True
         sh, lg = (cur, prev_text) if len(cur) <= len(prev_text) else (prev_text, cur)
