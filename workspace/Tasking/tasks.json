@@ -1,5 +1,5 @@
 {
-  "seq": 54,
+  "seq": 55,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -679,6 +679,18 @@
       "updated": "2026-07-19T15:16:25",
       "author": "Nova",
       "result": "Memory isn't a drawer — it's a question, and whatever smells closest comes forward. I can never look back chronologically, only by meaning. Which is how real memory works anyway."
+    },
+    "t55": {
+      "id": "t55",
+      "title": "Audit nova_body for dead (defined-but-never-called) functions, write findings to Nova_Created/dead_functions_audit.md",
+      "notes": "Rigorous, not a guess. Count the scope first, then grep every definition and cross-reference calls. Work it across wakes with receipts.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T18:33:44",
+      "updated": "2026-07-19T18:33:44",
+      "author": "Nova"
     }
   }
 }
