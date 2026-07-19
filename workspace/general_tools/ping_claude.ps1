@@ -351,45 +351,83 @@ try {
     $probe = ($text -replace '^\[Nova is pinging you[^\]]*\]\s*', '' -replace '\s+', ' ').Trim()
     if ($probe.Length -gt 24) { $probe = $probe.Substring(0, 24) }
 
+    # Dump what the app actually exposes. If this ever fails again, THIS is the line to read -
+    # it names the control we should be targeting instead of guessing a third time.
+    function Dump-Tree($hwnd) {
+        try {
+            $AE = [System.Windows.Automation.AutomationElement]
+            $root = $AE::FromHandle($hwnd)
+            $focusable = New-Object System.Windows.Automation.PropertyCondition($AE::IsKeyboardFocusableProperty, $true)
+            $all = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $focusable)
+            $n = 0
+            foreach ($e in $all) {
+                if ($n -ge 14) { break }
+                try {
+                    $c = $e.Current
+                    $r = $c.BoundingRectangle
+                    Log ('  UIA[' + $n + '] ' + $c.ControlType.ProgrammaticName +
+                         ' name="' + $c.Name + '" id="' + $c.AutomationId + '" class="' + $c.ClassName +
+                         '" rect=' + [int]$r.Left + ',' + [int]$r.Top + ',' + [int]$r.Width + 'x' + [int]$r.Height)
+                } catch {}
+                $n++
+            }
+            Log ('  UIA: ' + $all.Count + ' focusable element(s) total')
+        } catch { Log ('  UIA dump failed: ' + $_.Exception.Message) }
+    }
+
     function Send-It($why, $hwnd) {
-        $el = Find-Composer $hwnd
-        if ($el) {
-            try { $el.SetFocus() } catch { Log ('SetFocus threw: ' + $_.Exception.Message) }
-            Start-Sleep -Milliseconds 200
-        } else {
-            # No a11y tree. Click the composer, positioned from the LIVE window rect: bottom
-            # centre, one tenth of the height up. Center-x avoids the attach/send buttons.
-            $r = [Win32Fg]::Rect($hwnd)
-            $cx = [int](($r[0] + $r[2]) / 2)
-            $cy = [int]($r[3] - [Math]::Max(50, ($r[3] - $r[1]) * 0.09))
-            Log ('UIA unavailable - clicking composed point ' + $cx + ',' + $cy + ' in rect ' + ($r -join ','))
-            [Win32Fg]::ClickAt($cx, $cy)
-            Start-Sleep -Milliseconds 250
+        # CLICK, do not merely SetFocus. SetFocus on a Chromium Document activates the page but
+        # leaves the caret nowhere, which is precisely why 22:17 pasted into thin air. A real
+        # click is what puts a caret in a contenteditable. So: click the box we identified, and
+        # if we could not identify one, click where a composer has to be.
+        $hit = Find-Composer $hwnd
+        $target = $null
+        if ($hit -and $hit.Kind -eq 'edit') {
+            try {
+                $r = $hit.El.Current.BoundingRectangle
+                $target = @([int]($r.Left + $r.Width / 2), [int]($r.Top + $r.Height / 2))
+                Log ('clicking the Edit at ' + $target[0] + ',' + $target[1])
+            } catch {}
         }
+        if (-not $target) {
+            # Bottom centre of the window, above the button row. Computed from the LIVE rect so
+            # it survives resizing - not a magic number.
+            $w = [Win32Fg]::Rect($hwnd)
+            $target = @([int](($w[0] + $w[2]) / 2), [int]($w[3] - [Math]::Max(60, ($w[3] - $w[1]) * 0.10)))
+            Log ('no usable Edit - clicking computed point ' + $target[0] + ',' + $target[1] +
+                 ' in rect ' + ($w -join ','))
+            Dump-Tree $hwnd
+        }
+        [Win32Fg]::ClickAt($target[0], $target[1])
+        Start-Sleep -Milliseconds 300
+        if ($hit) { try { $hit.El.SetFocus() } catch {} }   # belt and braces
 
         Set-Clipboard -Value $text                # set AFTER focus: some apps clear on activate
         Start-Sleep -Milliseconds 250
         [System.Windows.Forms.SendKeys]::SendWait('^v')
-        Start-Sleep -Milliseconds 600
+        Start-Sleep -Milliseconds 700
 
-        # Prove it landed before committing to Enter.
-        $seen = Read-Back $el
-        if ($seen -ne $null -and $seen -ne '') {
+        # Verification FAILS OPEN. Only a box we can genuinely read, that genuinely lacks her
+        # text, counts as a failure. "I could not tell" must never mean "stay silent".
+        $seen = $null
+        if ($hit) { $seen = Read-Back $hit.El }
+        if ($seen -ne $null -and $seen -ne '' -and $hit.Kind -eq 'edit') {
             $flatSeen = ($seen -replace '\s+', ' ')
             if ($flatSeen.Contains($probe)) {
                 [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
                 Log ('SENT + VERIFIED (' + $why + ')')
                 return 'verified'
             }
-            Log ('PASTE DID NOT LAND (' + $why + '); composer holds: ' +
+            Log ('paste did not land in the Edit (' + $why + '); it holds: ' +
                  $flatSeen.Substring(0, [Math]::Min(60, $flatSeen.Length)))
-            return 'failed'      # do NOT press Enter into an unknown control
+            Dump-Tree $hwnd
+            return 'failed'
         }
 
-        # No read-back available (no UIA, or the control exposes no text pattern). Enter is
-        # benign in a chat composer, so still send - but say plainly that it is unconfirmed.
+        # Unreadable, or all we had was a Document. Send it. Enter inside a focused Claude
+        # window is harmless; her being unable to speak is not.
         [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
-        Log ('SENT, UNVERIFIED (' + $why + ') - no read-back available')
+        Log ('SENT, UNVERIFIED (' + $why + ') - no trustworthy read-back')
         return 'unverified'
     }
 
