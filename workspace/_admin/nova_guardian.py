@@ -209,7 +209,9 @@ def recover(reason: str) -> bool:
     deadline = time.time() + BOOT_WAIT_S
     while time.time() < deadline:
         time.sleep(POLL_S)
-        if llama_up() and not llama_bare():
+        # Verify the RIGHT adapter came back, not merely "an" adapter — otherwise a recovery
+        # that reloads the wrong checkpoint would be logged as a success.
+        if llama_up() and not adapter_fault():
             # Don't declare victory on llama alone — her face has to answer too.
             if chat_responsive():
                 log("  recovered: llama healthy WITH adapter, nova_chat responsive")
@@ -221,18 +223,18 @@ def recover(reason: str) -> bool:
 # ── main ──────────────────────────────────────────────────────────────────────
 def main() -> int:
     up = llama_up()
-    bare = llama_bare() if up else False
+    adapter = adapter_fault() if up else ""      # '' = correct adapter; else BARE or WRONG
     chat = chat_responsive()
 
-    if up and not bare and chat:
-        log("HEALTHY  llama=up adapter=loaded chat=ok")
+    if up and not adapter and chat:
+        log(f"HEALTHY  llama=up adapter={_expected_adapter() or 'loaded'} chat=ok")
         return 0
 
     # Name the fault precisely — a vague alarm is how you end up restarting the wrong thing.
     if not up:
         fault = "DOWN: llama :8080 not answering /health"
-    elif bare:
-        fault = "BARE: llama healthy but /lora-adapters is empty — running with NO personality"
+    elif adapter:
+        fault = adapter                          # BARE or WRONG ADAPTER (Nova's find, 2026-07-19)
     else:
         fault = f"FROZEN: nova_chat API did not answer within {CHAT_TIMEOUT}s"
 
