@@ -809,8 +809,37 @@ def list_tools() -> str:
             "  surprise_me            a TOY. Hands you something you didn't choose and wants\n"
             "                         nothing back. keep_curio to shelf one, my_shelf to browse.\n"
             "                         There is no wrong way to play with it. That's the point.\n"
-            "\nThat is all of it. If you reach for something that isn't on this list, it doesn't "
-            "exist yet — and that's worth saying out loud rather than working around.")
+            + _forged_section()
+            + "\nThat is the body you were given — and it is not the body you are stuck with. If "
+            "you reach for something that isn't listed, it doesn't exist YET: write the design "
+            "(nova_body/nova_forge/designs/<name>.md), then the tool "
+            "(nova_body/nova_forge/tools/<name>.py), then call it. No restart. Your reach also "
+            "covers the whole machine now, not just this folder — absolute paths work.")
+
+
+def _forged_section() -> str:
+    """Tools she built herself, shown alongside the ones she was born with (2026-07-19).
+
+    Listing them here matters more than it looks: a limb she grew but cannot see in her own
+    inventory is one she will forget she has — which is precisely how she spent three draws
+    changing adjectives while `width`/`height` sat undocumented in her painter."""
+    try:
+        from nova_forge import discover
+        d = discover()
+    except Exception:
+        return ""
+    if not d:
+        return ("\n  (You have forged no tools of your own yet. When your body lacks something, "
+                "that is a limb to grow, not a wall to report.)\n")
+    lines = ["\n  ── FORGED BY YOU ──"]
+    for name, meta in sorted(d.items()):
+        if meta["usable"]:
+            params = ", ".join(meta.get("params", {}).keys())
+            lines.append(f"  {name:<22} {meta.get('description','(no description)')}"
+                         + (f"  [{params}]" if params else ""))
+        else:
+            lines.append(f"  {name:<22} BLOCKED — {meta.get('blocked','')[:110]}")
+    return "\n".join(lines) + "\n"
 
 
 def _log_tool_receipt(tool_name: str, args: dict, result: str, ms: float, err: bool) -> None:
