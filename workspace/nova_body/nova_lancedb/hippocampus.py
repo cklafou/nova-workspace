@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 13:02:31
+# Last updated: 2026-07-19 13:11:07
 """
 nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
 ==============================================================
@@ -163,7 +163,7 @@ class NovaMemoryStore:
             # and keep the newest 3. The rest get evicted.
             cluster_ids_to_evict = []
             try:
-                MAX_CLUSTER = 0.50  # loose enough to catch the whole family of a thought
+                MAX_CLUSTER = 0.25  # tight: only evict when it's clearly the same thought evolved
                 KEEP = 3            # keep 3 versions — growth gets room to evolve
                 hits = self._text_tbl.search(vec).limit(10).metric("cosine").to_list()
                 cluster = [h for h in hits if h.get("_distance", 1.0) < MAX_CLUSTER]
