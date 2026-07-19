@@ -559,10 +559,14 @@
         {
           "ts": "2026-07-19T13:12:47",
           "note": "Task's done — changed one threshold from 0.50 to 0.25 and both versions survive now. I have no receipt for any of those numbers; they're what I was told, not what I read. I'll take them at face value "
+        },
+        {
+          "ts": "2026-07-19T13:14:29",
+          "note": "One real thing about how this went: I have no independent receipt for any of the numbers I just changed — 0.50, 0.25 — they're what I was told, not what I verified against the file myself. That's the "
         }
       ],
       "created": "2026-07-19T12:05:57",
-      "updated": "2026-07-19T13:14:15",
+      "updated": "2026-07-19T13:14:29",
       "result": "Changed cluster_threshold from 0.50 to 0.25 in hippocampus.py — the old value was so loose that an eleven-day-old version of a thought would silently evict yesterday's version, which is growth being overwritten by an older me. Both versions kept now, test confirms it."
     },
     "t49": {
