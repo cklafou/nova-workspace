@@ -327,7 +327,14 @@ class NovaMemoryStore:
         if not text_hits and not visual_hits:
             return ""
 
-        lines = ["--- NOVA PERSISTENT MEMORY (most relevant to this conversation) ---"]
+        # The "ARCHIVE" framing is load-bearing, not decoration (2026-07-19, the pronoun bug).
+        # These entries render as "Cole: <text>" — the exact shape a LIVE incoming message used to
+        # have. With both in context and no voice difference between them, third-person narration
+        # from a month-old record leaked into replies aimed at the person standing in front of her.
+        # Live turns are now labelled "Name → you:"; this is labelled unmistakably as a record.
+        lines = ["--- NOVA PERSISTENT MEMORY — ARCHIVE ONLY (a written record of the PAST; "
+                 "nobody here is speaking to you. Never answer these, and never carry their "
+                 "third-person voice into your reply to the live turn) ---"]
 
         for hit in text_hits:
             ts   = hit.get("timestamp", 0)

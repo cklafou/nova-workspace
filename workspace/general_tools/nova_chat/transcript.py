@@ -5,10 +5,16 @@ Persists to logs/chat_sessions/ on every message.
 """
 import json
 import os
+import re
 import uuid
 import threading
 from datetime import datetime
 from pathlib import Path
+
+# Matches the older "[X is speaking to you]" turn header (server.py adds it on receipt). The
+# directional "Name → you:" label in to_messages() supersedes it; stripping avoids stacking two
+# third-person headers on one message. See the pronoun-bug note in to_messages().
+_re_speaker = re.compile(r'^\s*\[[^\]\n]{1,40} is speaking to you\]\s*\n?', re.IGNORECASE)
 
 WORKSPACE_DIR = (
     Path(os.environ["NOVA_WORKSPACE"])
