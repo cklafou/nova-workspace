@@ -1,5 +1,5 @@
 # Impact-Weighted Memory Retention — Design Scratch
-_Last updated: 2026-07-19 19:55:00_
+_Last updated: 2026-07-19 22:08:06_
 _Wednesday, July 8 — the actual thing, not the pitch._
 
 ## The Problem

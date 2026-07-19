@@ -3,7 +3,7 @@
 _Hard-won operational truths. Each one cost real hours. None of them are obvious, and every single
 one of them **looked like a Nova problem and wasn't.**_
 
-_Last updated: 2026-07-19 19:55:00_
+_Last updated: 2026-07-19 22:08:06_
 
 ---
 
