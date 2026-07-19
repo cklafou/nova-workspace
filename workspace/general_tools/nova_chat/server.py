@@ -3565,6 +3565,36 @@ async def websocket_endpoint(ws: WebSocket):
                             if _cole_message_queue:
                                 _queued = _cole_message_queue[-1]
                                 _cole_message_queue.clear()
+                                # ── ALREADY-ANSWERED GUARD — root cause of the doubling bug ──
+                                # (2026-07-19) Cole's message is appended to the transcript the
+                                # instant it arrives, BEFORE it is queued. If the in-flight
+                                # generation built its prompt after that moment, it already SAW
+                                # the message and answered it. Draining then re-answers an
+                                # answered message from a byte-identical prompt — which is
+                                # exactly the duplicate the commit-point guard has been
+                                # catching: all four recorded dup_suppressed events carry
+                                # source="drain". The guard treated the symptom; this removes
+                                # the second generation entirely.
+                                _already, _qid = False, None
+                                try:
+                                    _qid  = (_queued.get("msg") or {}).get("id")
+                                    _msgs = session_mgr.active.messages
+                                    _idx  = next((i for i, m in enumerate(_msgs)
+                                                  if m.get("id") == _qid), None)
+                                    if _idx is not None:
+                                        # An AI speaking after it = it was already answered.
+                                        _already = any(m.get("author") in CLIENT_MAP
+                                                       for m in _msgs[_idx + 1:])
+                                except Exception as _ge:
+                                    print(f"[queue] already-answered check failed "
+                                          f"(delivering normally): {_ge}")
+                                if _already:
+                                    print(f"[queue] queued Cole message {_qid} was already "
+                                          f"answered by the in-flight run — not re-delivering")
+                                    _trace_gen("drain_skipped", "Nova", str(_qid), "drain",
+                                               extra="already answered by in-flight run")
+                                    await broadcast({"type": "queue_cleared"})
+                                    return
                                 print(f"[queue] Delivering {1} queued Cole message")
                                 _qdir  = _queued.get("directed_at") or []
                                 _qstat = await get_status()
