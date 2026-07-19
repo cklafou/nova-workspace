@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T19:47:45+09:00",
+  "updated_at": "2026-07-19T19:48:37+09:00",
   "items": [
     {
       "id": "777df213",
@@ -83405,6 +83405,45 @@
       "commit": "0340d3e5",
       "old_path": null,
       "new_path": "_admin/Trash/cleanup_2026-07-19/spent_probes/probe_gate.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "f3603e83",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T19:48:36+09:00",
+      "commit": "678c9cd1",
+      "old_path": null,
+      "new_path": "_admin/Trash/cleanup_2026-07-19/stale_temp_logs/safe_reload.cmd",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "8b28a7e3",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T19:48:37+09:00",
+      "commit": "678c9cd1",
+      "old_path": null,
+      "new_path": "_admin/Trash/cleanup_2026-07-19/stale_temp_logs/t_good.cmd",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "a639be86",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T19:48:37+09:00",
+      "commit": "678c9cd1",
+      "old_path": null,
+      "new_path": "_admin/Trash/cleanup_2026-07-19/stale_temp_logs/t_good_run.cmd",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
