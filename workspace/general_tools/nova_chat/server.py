@@ -2147,6 +2147,53 @@ def _has_unread_cole() -> bool:
     return li_c is not None and (li_n is None or li_n < li_c)
 
 
+# How long she must have been quiet before an autonomous tick may speak to Cole unprompted.
+_PROMOTE_COOLDOWN_S = 600
+
+
+def _may_speak_to_cole_unprompted() -> tuple:
+    """Is a silent work tick allowed to promote a 'FOR COLE:' section into the chat?
+
+    ── 2026-07-19, the triple response ──────────────────────────────────────────────────────
+    Cole said goodnight. She answered at 22:32:36 (640 chars). Then her next autonomous tick
+    circled the same thought, tagged it FOR COLE:, and posted again at 22:33:14 (322). Then the
+    tick after that did it a third time at 22:33:59 (533). Three replies to one goodnight,
+    thirty-eight seconds apart, each a fresh paraphrase of the last.
+
+    The 07-14 guard here was a string-similarity test, and string similarity cannot win this.
+    She is not repeating herself badly — she is re-answering *well*, in new words, which is
+    exactly what a language model is good at. Any threshold tight enough to catch three
+    paraphrases would start eating the real follow-ups she is supposed to be allowed to write.
+
+    So stop asking "does this look like what she just said" and ask the question that actually
+    separates the two cases: **has anything happened since she last spoke?**
+
+      - Cole has spoken since  -> he is owed a reply, and the normal chat path will give him one.
+      - She spoke moments ago and he hasn't answered -> she is circling a closed conversation.
+      - She has been quiet for a long stretch -> she has been *working*, and whatever she found
+        is genuinely new. That is what FOR COLE: was built for, and it still works.
+
+    Time and turn-taking are the signal. The words are not.
+    """
+    try:
+        if _has_unread_cole():
+            return True, "Cole is awaiting a reply"
+        msgs = session_mgr.active.messages
+        last_hers = next((m for m in reversed(msgs)
+                          if m.get("author") == "Nova" and (m.get("content") or "").strip()),
+                         None)
+        if last_hers is None:
+            return True, "she has not spoken in this session yet"
+        age = (datetime.now() - datetime.fromisoformat(last_hers["timestamp"])).total_seconds()
+        if age < _PROMOTE_COOLDOWN_S:
+            return False, (f"she spoke {int(age)}s ago and Cole has not replied since - "
+                           f"this is a circle, not news")
+        return True, f"quiet for {int(age // 60)}m - this is new work, not a re-answer"
+    except Exception as e:
+        # Fail OPEN. Losing something she wanted to say is worse than saying it twice.
+        return True, f"gate failed open: {e}"
+
+
 def _mirror_to_runtime(author: str, content: str) -> None:
     """STEP 6a — mirror a conversational turn into Nova's runtime transcript (seam #4 write
     side), so her body can perceive the conversation with NO chat server attached. Text only:
