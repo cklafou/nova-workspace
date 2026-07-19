@@ -1,5 +1,5 @@
 {
-  "seq": 40,
+  "seq": 41,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -316,6 +316,17 @@
       "created": "2026-07-15T15:40:32",
       "updated": "2026-07-18T21:09:09",
       "abandon_reason": "cancelled via UI"
+    },
+    "t41": {
+      "id": "t41",
+      "title": "Count two things and journal them",
+      "notes": "Two counts, then one note. (1) How many .py files are under nova_body? (2) How many .png drawings are in nova_art/2026-07-19? Actually run both counts with your tools — do not estimate. Then write ONE journal note that contains both numbers. Complete this task once that note is written.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T09:32:52",
+      "updated": "2026-07-19T09:32:52"
     }
   }
 }
