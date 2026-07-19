@@ -1,1 +1,50 @@
-{"boredom":0,"recent":[],"wants":[]}
+{
+  "boredom": 0,
+  "recent": [
+    [
+      "distance",
+      "eyes",
+      "learn",
+      "resolve"
+    ],
+    [
+      "again",
+      "build",
+      "cannot",
+      "diff",
+      "format",
+      "move",
+      "myself",
+      "proper",
+      "schema",
+      "tool",
+      "under"
+    ],
+    [
+      "build",
+      "diff",
+      "format",
+      "move",
+      "schema",
+      "tool",
+      "under"
+    ]
+  ],
+  "wants": [
+    {
+      "fp": "699b95e49d77",
+      "text": "build a schema-diff tool so formats can't move under me",
+      "since": "2026-07-19T23:06:38.293119",
+      "last_seen": "2026-07-19T23:06:38.325541",
+      "restated": 1
+    },
+    {
+      "fp": "d065cfbd4edf",
+      "text": "learn what my eyes actually resolve at distance",
+      "since": "2026-07-19T23:06:38.366289",
+      "last_seen": "2026-07-19T23:06:38.366302",
+      "restated": 0
+    }
+  ],
+  "last_wake": "2026-07-19T23:06:38.350704"
+}

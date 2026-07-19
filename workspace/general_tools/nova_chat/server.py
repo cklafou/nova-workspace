@@ -2629,17 +2629,50 @@ def _spawn_detached_cmd(lines: list, tag: str = "restart"):
     # batch body itself is passed through UNTOUCHED.
     tmp = WORKSPACE_ROOT / "_admin" / "Temp"
     tmp.mkdir(parents=True, exist_ok=True)
-    script = tmp / f"nova_{tag}.cmd"
-    logf = tmp / f"nova_{tag}.log"
+
+    # ── ONE SET OF FILES PER RESTART (2026-07-19). ──────────────────────────────────────
+    # Cole: "The full restart button fails if it is used after a full restart already
+    # happened."
+    #
+    # These three paths used to be FIXED — nova_restart.cmd / .log / _run.cmd. That is fine
+    # exactly once. The relauncher is a long-lived batch: it waits up to 30s for :8765 to
+    # clear, then calls NovaStart.cmd and stays attached. So on the SECOND restart, cmd.exe
+    # still holds nova_restart.cmd open for reading and the wrapper still holds the .log open
+    # for writing — and Windows, unlike POSIX, refuses to overwrite an open file. write_text
+    # raised a sharing violation, the endpoint returned 500, and the button "just failed"
+    # with no clue that the cause was the PREVIOUS restart still running.
+    #
+    # It also broke the verification independently: `_log_touched` compares the log's mtime
+    # before and after, and a log left over from last time starts out looking fresh.
+    #
+    # Timestamped names fix both. Every restart gets its own script, its own log and its own
+    # receipt, so a restart can never collide with its predecessor and each one's evidence
+    # survives instead of being overwritten by the next attempt.
+    _stamp = datetime.now().strftime("%H%M%S_%f")[:13]
+    script = tmp / f"nova_{tag}_{_stamp}.cmd"
+    logf = tmp / f"nova_{tag}_{_stamp}.log"
 
     body = "@echo off\r\n" + "\r\n".join(lines) + "\r\n"
     script.write_text(body, encoding="utf-8")
 
     # A tiny wrapper runs it and captures EVERYTHING, without touching a single line of it.
-    wrapper = tmp / f"nova_{tag}_run.cmd"
+    wrapper = tmp / f"nova_{tag}_{_stamp}_run.cmd"
     wrapper.write_text(
         "@echo off\r\n"
         f'call "{script}" > "{logf}" 2>&1\r\n', encoding="utf-8")
+
+    # Keep the last 12 of each kind so Temp/ doesn't grow without bound. Best-effort, and
+    # never fatal — a tidy-up failure must not stop a restart.
+    try:
+        for _kind in (f"nova_{tag}_*.cmd", f"nova_{tag}_*.log", f"nova_{tag}_*.json"):
+            _old = sorted(tmp.glob(_kind), key=lambda p: p.stat().st_mtime, reverse=True)[12:]
+            for _p in _old:
+                try:
+                    _p.unlink()
+                except Exception:
+                    pass
+    except Exception:
+        pass
 
     # ── 2026-07-19: DO NOT use os.startfile() here. ─────────────────────────────────────
     # os.startfile is ShellExecute — "double-click this file". It depends on the shell
@@ -2760,7 +2793,7 @@ def _spawn_detached_cmd(lines: list, tag: str = "restart"):
             "by hand, and check whether this process sits in a job object that kills "
             "its children.")
     try:
-        (tmp / f"nova_{tag}_spawn.json").write_text(
+        (tmp / f"nova_{tag}_{_stamp}_spawn.json").write_text(
             json.dumps(receipt, indent=2), encoding="utf-8")
     except Exception:
         pass
