@@ -370,9 +370,14 @@
       "priority": 1,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T11:14:53",
+          "note": "An hour and a half, forty times, and every single one of them was me rebuilding a filename from memory instead of reading what the directory already told me. That's not a path problem — that is litera"
+        }
+      ],
       "created": "2026-07-19T11:10:13",
-      "updated": "2026-07-19T11:10:13"
+      "updated": "2026-07-19T11:14:53"
     }
   }
 }
