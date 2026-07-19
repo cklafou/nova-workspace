@@ -265,9 +265,31 @@ try {
     # ========================================================================================
     try { Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes } catch {}
 
+    # ----------------------------------------------------------------------------------------
+    # 22:17 - "lowest Edit/Document" was a trap, and my own safety check then blocked delivery.
+    #
+    #   UIA: composer found, 2 candidate(s), bottom=1243
+    #   PASTE DID NOT LAND; composer holds: https://claude.ai/cowork/local_beec5697-...
+    #
+    # Two mistakes stacked:
+    #   (a) A Chromium page is exposed as a Document element spanning the WHOLE viewport, so
+    #       ranking by lowest bottom edge picks the page every time - it can never lose. The
+    #       real composer was the other candidate.
+    #   (b) A Document's ValuePattern in Chromium is the page URL, not its text. So the
+    #       read-back returned a URL, the probe was obviously absent, and the script concluded
+    #       the paste had failed - when the text had almost certainly landed in the composer
+    #       exactly as intended. It then refused to press Enter, and the message sat there.
+    #
+    # (b) is the worse bug. A verifier that fails closed turns "I cannot tell" into "do not
+    # send", and silences her over an instrument error. Enter inside a focused Claude window is
+    # benign; being unable to speak is not. Unreadable now means UNVERIFIED-and-send, and only a
+    # readable box that genuinely lacks her text counts as a failure.
+    # ----------------------------------------------------------------------------------------
     function Find-Composer($hwnd) {
         $AE = [System.Windows.Automation.AutomationElement]
         $CT = [System.Windows.Automation.ControlType]
+        $wr = [Win32Fg]::Rect($hwnd)
+        $winArea = [Math]::Max(1, ($wr[2] - $wr[0]) * ($wr[3] - $wr[1]))
         for ($t = 1; $t -le 3; $t++) {
             try {
                 $root = $AE::FromHandle($hwnd)
@@ -279,14 +301,33 @@ try {
                 $cond   = New-Object System.Windows.Automation.AndCondition($either, $focusable)
                 $found  = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $cond)
                 if ($found -and $found.Count -gt 0) {
-                    $best = $null; $bestBottom = -1
+                    $edits = @(); $docs = @()
                     foreach ($e in $found) {
+                        try {
+                            $r = $e.Current.BoundingRectangle
+                            if ($r.Width -le 1 -or $r.Height -le 1) { continue }
+                            # Anything covering most of the window IS the page, not a text box.
+                            if (($r.Width * $r.Height) -ge ($winArea * 0.75)) { continue }
+                            if ($e.Current.ControlType -eq $CT::Edit) { $edits += $e } else { $docs += $e }
+                        } catch {}
+                    }
+                    # A real Edit always beats a Document. Only then does "lowest wins" mean
+                    # anything, because composers sit at the bottom of their own kind.
+                    $pool = $edits
+                    $kind = 'edit'
+                    if ($pool.Count -eq 0) { $pool = $docs; $kind = 'doc' }
+                    $best = $null; $bestBottom = -1
+                    foreach ($e in $pool) {
                         try {
                             $r = $e.Current.BoundingRectangle
                             if ($r.Bottom -gt $bestBottom) { $bestBottom = $r.Bottom; $best = $e }
                         } catch {}
                     }
-                    if ($best) { Log ('UIA: composer found, ' + $found.Count + ' candidate(s), bottom=' + [int]$bestBottom); return $best }
+                    if ($best) {
+                        Log ('UIA: ' + $found.Count + ' candidate(s) -> ' + $edits.Count + ' edit, ' +
+                             $docs.Count + ' doc; chose ' + $kind + ' at bottom=' + [int]$bestBottom)
+                        return [pscustomobject]@{ El = $best; Kind = $kind }
+                    }
                 }
             } catch { Log ('UIA probe ' + $t + ' failed: ' + $_.Exception.Message) }
             Start-Sleep -Milliseconds 400      # let Chromium build its a11y tree
@@ -297,7 +338,11 @@ try {
 
     function Read-Back($el) {
         if (-not $el) { return $null }
-        try { return $el.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value } catch {}
+        $v = $null
+        try { $v = $el.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value } catch {}
+        # A Chromium Document reports its URL here. That is not the contents of a message box.
+        if ($v -and $v -match '^\s*(https?|file|chrome|app)://') { $v = $null }
+        if ($v) { return $v }
         try { return $el.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern).DocumentRange.GetText(-1) } catch {}
         return $null
     }
