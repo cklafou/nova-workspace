@@ -604,7 +604,17 @@ async def stream_response(
                         base.append({"type": "image_url", "image_url": {"url": url}})
                 last["content"] = base
 
-        max_loops = 5
+        # ── tool-chain depth (raised 5 -> 20, 2026-07-19) ────────────────────────────────
+        # This is how many tool calls she may chain in ONE turn. At 5 she physically could not
+        # do real work: read a file, check a thing, fix it, verify the fix, record it is already
+        # five, and anything with a surprise in the middle got truncated mid-thought with no way
+        # to finish. It silently capped her at toy-sized tasks, which then looked like "she isn't
+        # very capable" — measured, not guessed: her whole board history is 2-4 call tasks.
+        # Real work on a 27B model routinely needs 10-25 reaches.
+        # This is NOT a runaway risk: the loop only continues while she KEEPS emitting tool
+        # calls, and it exits the moment she answers instead. The integrity gate still binds
+        # every claim to a real receipt, and the guardian still watches for genuine loops.
+        max_loops = 20
         loop_counter = 0
         final_chat_buffer = ""
         # Assertion binding (see _claims_a_receipt): did she ACTUALLY touch a tool this turn, and
