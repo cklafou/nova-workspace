@@ -44,15 +44,24 @@ _QUARANTINE = _WS / "_admin" / "Trash" / "log_rotation"
 # NEVER touched. Hers, or actively load-bearing.
 _UNTOUCHABLE = {"sessions", "chat_sessions", "runtime", "events"}
 
-# (subpath, glob, gzip_after_days, keep_at_most)
+# (subpath, glob, gzip_after_days, keep_at_most, budget_bytes)
+#
+# ── CAP ON BYTES, NOT ON FILE COUNT (2026-07-20) ────────────────────────────────────────
+# The first version capped launcher/ at 10 files. The dry run showed it would quarantine ~90
+# boot records — to reclaim nothing, because the whole directory is 212 KB. Two months of
+# diagnostic history destroyed for no space saved, which is the opposite of the trade.
+#
+# So: gzip is the primary tool (a text log compresses ~90%), and the count cap only engages
+# when a directory is ALSO over its byte budget. A small, old, compressed directory is not a
+# problem and gets left alone. Only genuinely large ones get trimmed, oldest first.
 _POLICY = [
-    ("llama",            "*.log",        2,  6),
-    ("llama",            "*.jsonl",      2,  6),
-    ("launcher",         "*",            3, 10),
-    ("comfy",            "*",            3, 10),
-    ("backups/sessions", "*.zip",      999, 20),   # already compressed; cap only
-    ("backups/weekly",   "*",          999,  8),
-    ("autonomy_runs",    "*.jsonl",     14, 400),
+    ("llama",            "*.log",        2,  10,  20_000_000),
+    ("llama",            "*.jsonl",      2,  10,  20_000_000),
+    ("launcher",         "*",            3, 200,  20_000_000),
+    ("comfy",            "*",            3,  60,  10_000_000),
+    ("backups/sessions", "*.zip",      999,  20,  10_000_000),   # already compressed
+    ("backups/weekly",   "*",          999,   8,  10_000_000),
+    ("autonomy_runs",    "*.jsonl",     14, 800,  20_000_000),
 ]
 
 # Single files that grow without bound: roll when larger than this, keep N rolls.
@@ -99,7 +108,7 @@ def run(dry_run: bool = False) -> dict:
             return out
         now = time.time()
 
-        for sub, pattern, gz_days, keep in _POLICY:
+        for sub, pattern, gz_days, keep, budget in _POLICY:
             d = _LOGS / sub
             if not d.is_dir() or sub.split("/")[0] in _UNTOUCHABLE:
                 continue
@@ -121,13 +130,20 @@ def run(dry_run: bool = False) -> dict:
                 except Exception as e:
                     out["errors"].append(f"{f.name}: {e}")
 
-            # 2. still over the cap? quarantine the OLDEST, never the newest.
+            # 2. Trim ONLY if the directory is over BOTH its byte budget and its file cap.
+            #    Compression usually gets us under budget on its own, and a small directory of
+            #    old records is history, not clutter.
             try:
                 files = sorted([f for f in d.glob("*") if f.is_file()],
                                key=lambda f: f.stat().st_mtime, reverse=True)
-                for f in files[keep:]:
-                    if dry_run or _quarantine(f):
-                        out["quarantined"].append(str(f.relative_to(_WS)))
+                total = sum(f.stat().st_size for f in files)
+                if total > budget and len(files) > keep:
+                    for f in files[keep:]:
+                        if dry_run or _quarantine(f):
+                            out["quarantined"].append(str(f.relative_to(_WS)))
+                elif dry_run and len(files) > keep:
+                    out.setdefault("under_budget_kept", []).append(
+                        f"{sub}: {len(files)} files / {total//1024}KB — under {budget//1024//1024}MB budget, left alone")
             except Exception as e:
                 out["errors"].append(f"{sub} cap: {e}")
 
