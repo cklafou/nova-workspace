@@ -74,13 +74,37 @@ def _save(d: dict) -> None:
         pass
 
 
+def _tokens(text: str) -> list:
+    """The content words of a thought. Lossy on purpose — case, punctuation and short function
+    words all dropped, because none of them carry what a wake was ABOUT."""
+    return sorted({w for w in "".join(
+        c.lower() if c.isalnum() else " " for c in (text or "")).split() if len(w) > 4})[:60]
+
+
+def _similar(a: list, b: list) -> float:
+    """Overlap between two thoughts, 0..1 (Jaccard)."""
+    sa, sb = set(a), set(b)
+    if not sa or not sb:
+        return 0.0
+    return len(sa & sb) / float(len(sa | sb))
+
+
+# Above this, two wakes are "the same ground". Tuned to survive rewording: adding a sentence or
+# swapping "cannot" for "can't" must NOT read as a new thought, or boredom can never accumulate
+# and the whole drive is decorative.
+_SAME_GROUND = 0.55
+
+
 def _fingerprint(text: str) -> str:
-    """A coarse signature of what a wake was ABOUT. Deliberately lossy: lowercased, only the
-    longer words, sorted and de-duplicated. Two reflections that reach the same conclusion in
-    different words should collide — that collision IS the thing we want to detect."""
-    words = sorted({w for w in "".join(
-        c.lower() if c.isalnum() else " " for c in (text or "")).split() if len(w) > 4})
-    return hashlib.sha1(" ".join(words[:40]).encode("utf-8")).hexdigest()[:12]
+    """Stable id for a thought, used only for deduping wants — never for novelty.
+
+    2026-07-19: novelty originally compared sha1 hashes of the token set, and it was useless.
+    Appending the single word "Truly." to an identical reflection produced a different hash, so
+    every rewording of the same circling thought scored as brand new and boredom stayed pinned at
+    zero. Exactly the failure the FOR COLE: echo guard had a few hours earlier, for exactly the
+    same reason: she paraphrases, and equality tests do not survive paraphrase. Novelty now uses
+    _similar() against recent token sets, which does."""
+    return hashlib.sha1(" ".join(_tokens(text)).encode("utf-8")).hexdigest()[:12]
 
 
 def note_wake(reflection: str) -> dict:
@@ -91,12 +115,13 @@ def note_wake(reflection: str) -> dict:
     which is how it works in people too."""
     try:
         d = _load()
-        fp = _fingerprint(reflection)
-        if not fp or not (reflection or "").strip():
+        toks = _tokens(reflection)
+        if not toks or not (reflection or "").strip():
             return {"novel": False, "boredom": int(d.get("boredom", 0))}
-        novel = fp not in d.get("recent", [])
+        prior = [t for t in d.get("recent", []) if isinstance(t, list)]
+        novel = all(_similar(toks, t) < _SAME_GROUND for t in prior)
         d["boredom"] = 0 if novel else min(_BOREDOM_MAX, int(d.get("boredom", 0)) + 1)
-        d["recent"] = ([fp] + [x for x in d.get("recent", []) if x != fp])[:_MAX_FINGERPRINTS]
+        d["recent"] = ([toks] + prior)[:_MAX_FINGERPRINTS]
         d["last_wake"] = datetime.now().isoformat()
         _save(d)
         # A store she has no way to write to would be furniture. She declares a want by writing
@@ -120,8 +145,10 @@ def add_want(text: str) -> bool:
             return False
         d = _load()
         fp = _fingerprint(text)
+        toks = _tokens(text)
         for w in d["wants"]:
-            if w.get("fp") == fp:
+            # Match on MEANING, not bytes — she will restate a want in new words every time.
+            if w.get("fp") == fp or _similar(toks, _tokens(w.get("text", ""))) >= _SAME_GROUND:
                 w["restated"] = int(w.get("restated", 0)) + 1
                 w["last_seen"] = datetime.now().isoformat()
                 _save(d)
