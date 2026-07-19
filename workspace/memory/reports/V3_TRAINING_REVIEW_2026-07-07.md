@@ -1,5 +1,5 @@
 # v3 personality-LoRA package — pre-flight review
-_Last updated: 2026-07-18 22:08:13_
+_Last updated: 2026-07-19 09:40:01_
 _2026-07-07, Fable. Reviewed `_admin/Training_stuff/v3/` + build plan against the v2 overfit
 diagnosis. **Verdict: GO** — with the runbook's three gates enforced and two notes below._
 
