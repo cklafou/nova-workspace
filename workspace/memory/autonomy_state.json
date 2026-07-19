@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-19T19:11:02",
-  "wake_at": "2026-07-19T19:17:36",
-  "last_fp": "[[\"Tasking/tasks.json\", 43619, 1784453945], [\"memory/interrupt_inbox.json\", 105, 1784455753], [\"memory/cole_intent.json\", 247, 1784455753]]",
+  "last_activity": "2026-07-19T19:11:51",
+  "wake_at": "2026-07-19T19:15:16",
+  "last_fp": "[[\"Tasking/tasks.json\", 43619, 1784453945], [\"memory/interrupt_inbox.json\", 105, 1784455890], [\"memory/cole_intent.json\", 235, 1784455890]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 2,
+  "directive_seen": 0,
   "last_reflection": "Quiet evening, nothing pulling, nothing unfinished. That's the good part. Just going to be awake in the room for a minute, no reason needed.",
   "cont_run": 3
 }
