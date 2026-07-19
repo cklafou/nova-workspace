@@ -353,9 +353,10 @@ try {
     $fgPid = 0
     [void][Win32Fg]::GetWindowThreadProcessId($fgNow, [ref]$fgPid)
     $delivered = $false
+    $status    = 'failed'
     if ($claudePids.ContainsKey([uint32]$fgPid)) {
-        Send-It ('already foreground, pid ' + $fgPid)
-        $delivered = $true
+        $status = Send-It ('already foreground, pid ' + $fgPid) $fgNow
+        $delivered = ($status -ne 'failed')
     }
 
     # -- 2. otherwise take the foreground, trying every candidate --------------
@@ -369,14 +370,15 @@ try {
                 [void][Win32Fg]::GetWindowThreadProcessId($fg, [ref]$p2)
                 # Accept ANY Claude window winning - it may raise a sibling, and that is fine.
                 if ($claudePids.ContainsKey([uint32]$p2)) {
-                    Send-It ('attempt ' + $i + ', pid ' + $p2)
-                    $delivered = $true
-                    break
+                    # Focus the window that actually WON, which may not be the one we pushed.
+                    $status = Send-It ('attempt ' + $i + ', pid ' + $p2) $fg
+                    if ($status -ne 'failed') { $delivered = $true; break }
+                    Log ('focused pid ' + $p2 + ' but the paste did not land; trying the next window')
                 }
             }
             if (-not $delivered) {
-                Log ('attempt ' + $i + ' of ' + $Attempts + ': foreground still pid ' + $p2 +
-                     ' (not Claude); tried ' + $cands.Count + ' window(s)')
+                Log ('attempt ' + $i + ' of ' + $Attempts + ': foreground pid ' + $p2 +
+                     ', delivered=false; tried ' + $cands.Count + ' window(s)')
             }
         }
     }
@@ -384,17 +386,23 @@ try {
     if (-not $delivered) {
         # Cannot paste - but at least make it VISIBLE that she wanted him.
         try { [Win32Fg]::Flash($cands[0].Hwnd) } catch {}
-        QueueIt $text 'could-not-focus-claude'
-        Write-Output ('QUEUED: could not bring Claude Desktop to the foreground after ' + $Attempts +
-                      ' attempts across ' + $cands.Count + ' window(s). Windows blocks focus changes while ' +
-                      'a fullscreen or input-holding app is active. Its taskbar button has been flashed. ' +
-                      'Your message was SAVED to logs/ping_queue.jsonl, NOT delivered.')
+        QueueIt $text 'could-not-reach-composer'
+        Write-Output ('QUEUED: reached Claude Desktop but could not get the text into its message box ' +
+                      'after ' + $Attempts + ' attempts across ' + $cands.Count + ' window(s). Nothing was ' +
+                      'submitted - deliberately, since pressing Enter into an unknown control is worse ' +
+                      'than not sending. Its taskbar button has been flashed. Your message was SAVED to ' +
+                      'logs/ping_queue.jsonl, NOT delivered. Detail in logs/ping_claude.log.')
         exit 2
     }
 
     $preview = ($text -replace '\s+', ' ')
     if ($preview.Length -gt 90) { $preview = $preview.Substring(0, 90) + '...' }
-    Write-Output ('DELIVERED to Claude Desktop: ' + $preview)
+    if ($status -eq 'verified') {
+        Write-Output ('DELIVERED to Claude Desktop (text confirmed in the message box before sending): ' + $preview)
+    } else {
+        Write-Output ('DELIVERED to Claude Desktop, UNCONFIRMED (the window exposed no readable text box, ' +
+                      'so the paste could not be verified - it was submitted anyway): ' + $preview)
+    }
     exit 0
 }
 catch {
