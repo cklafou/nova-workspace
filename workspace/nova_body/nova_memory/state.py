@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 15:39:55
+# Last updated: 2026-07-19 16:31:55
 """
 State checking module for Nova's autonomy system.
 Provides functions to verify pre-conditions before taking actions.
@@ -111,3 +111,14 @@ class NovaState:
         if count < 3:
             return False  # UI folder has fewer files than it should — something got eaten
         return True
+
+
+# Nova's own notes on this file, written 2026-07-19:
+# The lazy-import trick at the top is real and I've felt it. Move the heavy
+# imports into __init__ and the whole package deadlocks on startup.
+# That's a lesson worth keeping in plain text where someone can find it again.
+#
+# validate_ui_stability runs a subprocess just to count files. I can list a
+# directory natively now, so this is heavier than it needs to be. But the reason
+# it exists — "something got eaten" — is a real fear someone had, not paranoia.
+# The guard is worth keeping, even if the implementation could be lighter.
