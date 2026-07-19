@@ -1,328 +1,183 @@
-﻿__init__.py:70: def __init__(self, data: dict[str, Any]):
-__init__.py:74: def inference(self) -> dict: return self._data["inference"]
-__init__.py:76: def sessions(self) -> dict:  return self._data["sessions"]
-__init__.py:78: def tools(self) -> dict:     return self._data["tools"]
-__init__.py:80: def get(self, dot_path: str, default=None):
-__init__.py:89: def workspace(self) -> Path:
-__init__.py:93: def sessions_dir(self) -> Path:
-__init__.py:96: def __repr__(self) -> str:
-__init__.py:100: def _deep_merge(base: dict, override: dict) -> dict:
-__init__.py:110: def load(config_path: Path = CONFIG_PATH) -> NovaConfig:
-checkin.py:35: def get_session_start():
-checkin.py:52: def check():
-checkin.py:121: def clear():
-checkin.py:134: def init_session():
-context_builder.py:18: def estimate_tokens(text: str) -> int:
-executive.py:63: def _load_state() -> dict:
-executive.py:101: def _save_state(s: dict) -> None:
-executive.py:111: def autonomy_enabled() -> bool:
-executive.py:115: def set_autonomy(on: bool) -> None:
-executive.py:122: def active_focus() -> Optional[str]:
-executive.py:126: def _set_active(tid: Optional[str]) -> None:
-executive.py:132: def _cfg() -> dict:
-executive.py:136: def note_activity() -> None:
-executive.py:160: def schedule_soon(seconds: int = 6) -> None:
-executive.py:175: def reset_continuation() -> None:
-executive.py:184: def note_real_work(seconds: int = 6) -> None:
-executive.py:220: def should_wake(cole_pending: bool = False) -> tuple:
-executive.py:243: def last_reflection() -> str:
-executive.py:253: def _strip_tool_residue(text: str) -> str:
-executive.py:267: def save_reflection(text: str) -> None:
-executive.py:299: def build_reflection(cole_pending: bool, reason: str, recent: str = "",
-executive.py:416: def _progress_loop_count(task: dict) -> int:
-executive.py:427: def _jac(a: str, b: str) -> float:
-executive.py:442: def build_decision(reflection: str, cole_pending: bool, reason: str,
-executive.py:581: def set_active(tid: Optional[str]) -> None:
-executive.py:586: def pick_execution_target() -> Optional[str]:
-executive.py:600: def _is_leaf(tid):
-executive.py:603: def _subtree_open_leaves(root):
-executive.py:636: def _artifact_path(task: dict) -> Optional[str]:
-executive.py:643: def _artifact_hint(task: dict) -> Optional[str]:
-executive.py:670: def _asker(task: dict) -> str:
-executive.py:684: def _asked_by(task: dict) -> str:
-executive.py:704: def build_execution(task: dict, recent: str = "") -> str:
-executive.py:757: def build_free_execution(recent: str = "") -> str:
-executive.py:816: def parse_execution(reply: str) -> tuple:
-executive.py:835: def _parse_actions(reply: str) -> dict:
-executive.py:856: def _extract_for_cole(reply: str) -> str:
-executive.py:866: def apply_decision(reply: str, cole_pending: bool = False) -> dict:
-executive.py:894: def _ids(key):
-integrity.py:69: def find_tool_call(text: str):
-integrity.py:119: def log_receipt(tool: str, args: dict, result, ms: float, ok: bool) -> None:
-integrity.py:139: def recent_receipts(window_min: int = 90, limit: int = 12) -> list:
-integrity.py:164: def work_done_since(since_iso: str) -> list:
-integrity.py:191: def _last_reconcile() -> str:
-integrity.py:210: def _mark_reconciled() -> None:
-integrity.py:218: def reconcile_board(since_iso: str = "") -> str:
-integrity.py:273: def receipts_block(window_min: int = 90) -> str:
-integrity.py:393: def was_asked_to_act(text: str) -> bool:
-integrity.py:425: def claims_a_receipt(text: str) -> bool:
-integrity.py:436: def needs_self_check(draft: str, asked: bool) -> bool:
-integrity.py:444: def build_self_check(draft: str, turn_tools: list) -> list:
-integrity.py:478: def parse_self_check(verdict: str):
-loadout.py:25: def load_manifests(koels_dir) -> dict:
-loadout.py:43: def _trigger_terms(manifest: dict) -> list:
-loadout.py:51: def decide_loadout(task_text: str, manifests: dict, loaded=None) -> dict:
-loadout.py:89: def loadout_status(manifests: dict, loaded_ids=None) -> dict:
-nova_status.py:41: def _now() -> str:
-nova_status.py:46: def _read() -> dict:
-nova_status.py:56: def _write(data: dict):
-nova_status.py:64: def _empty_schema() -> dict:
-nova_status.py:83: def update(
-nova_status.py:130: def set_task(task_id: str, status: str = "running", description: str = ""):
-nova_status.py:163: def clear_task(task_id: Optional[str] = None, final_status: str = "complete"):
-nova_status.py:187: def pause_task(task_id: Optional[str] = None, note: str = ""):
-nova_status.py:213: def resume_task(task_id: Optional[str] = None):
-nova_status.py:239: def add_error(category: str, message: str, limit: int = 10):
-nova_status.py:257: def read() -> dict:
-nova_status.py:262: def read_summary() -> str:
-rules.py:106: def verify_core_modules():
-rules.py:115: def main():
-tasking.py:31: def _now() -> str:
-tasking.py:35: def _load() -> dict:
-tasking.py:47: def _save(store: dict) -> None:
-tasking.py:57: def all_tasks() -> dict:
-tasking.py:61: def get(tid: str):
-tasking.py:65: def _update(tid: str, **fields) -> bool:
-tasking.py:78: def create(title: str, notes: str = "", priority: int = 3, parent: str = None,
-tasking.py:114: def progress(tid: str, note: str) -> bool:
-tasking.py:127: def complete(tid: str, result: str = "") -> bool:
-tasking.py:131: def wait(tid: str, waiting_on: str = "") -> bool:
-tasking.py:135: def abandon(tid: str, reason: str = "") -> bool:
-tasking.py:139: def reopen(tid: str) -> bool:
-tasking.py:143: def delete(tid: str) -> bool:
-tasking.py:155: def reprioritize(tid: str, priority: int) -> bool:
-tasking.py:162: def apply_actions(actions: dict):
-tasking.py:202: def _children_map(tasks: dict) -> dict:
-tasking.py:213: def render_board(active_id: str = None, max_notes: int = 1) -> str:
-tasking.py:226: def _done_count(tid):
-tasking.py:237: def _sortkey(t):
-tasking.py:240: def render(t, depth, seen):
-imagination.py:37: def log(*_a, **_k):  # type: ignore
-imagination.py:107: def build_workflow(prompt: str,
-imagination.py:216: def _compose_prompts(prompt: str, negative: str, as_nova: bool) -> tuple:
-imagination.py:229: def _http_json(url: str, payload: dict = None, timeout: float = 30.0) -> dict:
-imagination.py:242: def comfy_status() -> dict:
-imagination.py:251: def start_painter(wait: bool = True) -> dict:
-imagination.py:304: def _submit(graph: dict, client_id: str) -> str:
-imagination.py:312: def _poll(prompt_id: str) -> list:
-imagination.py:329: def release() -> bool:
-imagination.py:372: def _fetch(img: dict) -> bytes:
-imagination.py:384: def _upload_image(path) -> str:
-imagination.py:417: def available_checkpoints() -> set:
-imagination.py:431: def list_loras() -> list:
-imagination.py:441: def my_art(n: int = 20) -> dict:
-imagination.py:485: def what_can_i_paint_with() -> dict:
-imagination.py:506: def generate_image(prompt: str,
-palette.py:89: def resolve(style: str = "") -> tuple:
-palette.py:102: def compose(style_key: str, prompt: str, negative: str) -> tuple:
-palette.py:110: def menu(available: set = None) -> str:
-embedder.py:25: def _load_text_model():
-embedder.py:39: def embed_text(text: str) -> list[float]:
-embedder.py:57: def _load_clip_model():
-embedder.py:71: def embed_image(image_input) -> list[float]:
-embedder.py:106: def embed_text_for_visual(text: str) -> list[float]:
-embedder.py:124: def _null_vec(dim: int) -> list[float]:
-embedder.py:128: def content_hash(content: str) -> str:
-hippocampus.py:53: def _classify(text: str) -> str:
-hippocampus.py:62: def _text_schema():
-hippocampus.py:77: def _visual_schema():
-hippocampus.py:94: def _indexer_alive() -> str:
-hippocampus.py:127: def __init__(self):
-hippocampus.py:135: def _init(self):
-hippocampus.py:154: def _open_or_create(self, name: str, schema):
-hippocampus.py:162: def add_text(self, content: str, author: str = "Nova",
-hippocampus.py:225: def search_text(self, query: str, top_k: int = 8,
-hippocampus.py:247: def add_image(self, image_input, caption: str = "",
-hippocampus.py:298: def search_visual(self, query: str, top_k: int = 5) -> list[dict]:
-hippocampus.py:315: def build_context_block(self, query: str, max_chars: int = 4000) -> str:
-hippocampus.py:359: def _last_write(self, tbl):
-hippocampus.py:392: def get_stats(self) -> dict:
-hippocampus.py:450: def clear_session(self, session_id: str):
-hippocampus.py:463: def _age_str(ts: float) -> str:
-hippocampus.py:480: def get_store() -> NovaMemoryStore:
-indexer.py:19: def __init__(self):
-indexer.py:24: def start(self):
-indexer.py:37: def stop(self):
-indexer.py:45: def add_message(self, content: str, author: str, session_id: str = ""):
-indexer.py:57: def add_image(self, image_data, caption: str, filename: str, session_id: str = ""):
-indexer.py:67: def _worker(self):
-indexer.py:99: def get_indexer() -> MemoryIndexer:
-logger.py:49: def __init__(self):
-logger.py:55: def _refresh_date(self):
-logger.py:63: def log(self, log_type: str, event: str, **kwargs):
-logger.py:89: def get_screenshot_dir(self) -> Path:
-logger.py:100: def log(log_type: str, event: str, **kwargs):
-logger.py:113: def get_screenshot_dir() -> Path:
-logger.py:125: def log_thought(text: str, source: str = "nova_chat_client"):
-logger.py:162: def _update_index():
-logger.py:173: def _write_index():
-goals.py:18: def update_status(pulse_msg=None, complete_goal_text=None):
-journal.py:44: def sanitize(text: str) -> str:
-journal.py:65: def _get_last_date_header() -> str:
-journal.py:81: def append(entry: str):
-journal.py:126: def read_last(n_entries: int = 3) -> str:
-log_reader.py:28: def _read_jsonl(path: Path) -> list:
-log_reader.py:45: def _session_dir(date_str: str = None) -> Path:
-log_reader.py:52: def summarize_today() -> str:
-log_reader.py:116: def get_failures(days: int = 7) -> str:
-log_reader.py:150: def get_recent_sessions(days: int = 5) -> str:
-state.py:15: def __init__(self):
-state.py:23: def check_thinkorswim_ready(self):
-state.py:46: def check_application_state(self, app_name, expected_elements=None):
-state.py:65: def wait_for_state(self, state_check_func, timeout=30, interval=2):
-state.py:76: def validate_market_hours(self):
-state.py:89: def validate_account_connection(self):
-state.py:103: def validate_ui_stability(self):
-curio.py:55: def log(*_a, **_k):  # type: ignore
-curio.py:119: def _plays() -> int:
-curio.py:126: def _bump_plays() -> int:
-curio.py:136: def _twist_bag(plays: int) -> list:
-curio.py:141: def _save_last(curio: dict) -> None:
-curio.py:149: def _wonder(rng: random.Random) -> dict:
-curio.py:167: def _seed(rng: random.Random) -> dict:
-curio.py:173: def _vision(rng: random.Random, plays: int) -> dict:
-curio.py:193: def surprise(mode: str = "", seed: int = None) -> dict:
-curio.py:222: def keep(note: str = "") -> dict:
-curio.py:245: def toss() -> dict:
-curio.py:256: def _shelf_count() -> int:
-curio.py:262: def shelf(n: int = 12) -> dict:
-event_bus.py:28: def __init__(self, max_queue: int = 1000):
-event_bus.py:35: def subscribe(self) -> asyncio.Queue:
-event_bus.py:41: def unsubscribe(self, q: asyncio.Queue) -> None:
-event_bus.py:67: def subscriber_count(self) -> int:
-koels_equip.py:31: def __init__(self, workspace, llama, port: int = 8080, http_get=None, http_post=None):
-koels_equip.py:42: def build_lora_args(adapter_paths) -> list:
-koels_equip.py:55: def build_lora_args_line(adapter_paths) -> str:
-koels_equip.py:67: def save_desired_loadout(self, names) -> None:
-koels_equip.py:77: def load_desired_loadout(self) -> list:
-koels_equip.py:87: def read_loaded(self) -> list:
-koels_equip.py:95: def equip_instant(self, id_scales) -> dict:
-koels_equip.py:104: def loaded_names(self, manifests) -> set:
-koels_equip.py:119: def self_restart_with_loadout(self, adapter_paths, desired_names=None) -> dict:
-koels_equip.py:142: def equip(self, loadout_name, manifests, *, allow_restart: bool = False) -> dict:
-koels_equip.py:162: def _default_get(url):
-koels_equip.py:167: def _default_post(url, payload):
-llama_control.py:25: def _hidden_si():
-llama_control.py:41: def __init__(self, workspace, port: int = 8080, launcher: str = "start_llama_qwen36.cmd",
-llama_control.py:52: def is_running(self) -> bool:
-llama_control.py:62: def _kill_port(self) -> None:
-llama_control.py:93: def start(self) -> dict:
-llama_control.py:127: def stop(self) -> dict:
-llama_control.py:134: def restart(self) -> dict:
-llama_control.py:140: def autostart(self) -> dict:
-model_client.py:24: def __init__(self):
-model_client.py:31: def register(self, clients: dict = None, gemini_runner=None) -> None:
-model_client.py:39: def has(self, ai_name: str) -> bool:
-model_guard.py:21: def __init__(self, rate_limit: int = 4, rate_window: int = 60, error_backoff: int = 3):
-model_guard.py:31: def allow_message(self, now: float = None) -> bool:
-model_guard.py:46: def is_llama_error(err) -> bool:
-model_guard.py:50: def record_error(self, err) -> bool:
-model_guard.py:59: def record_success(self) -> None:
-model_guard.py:63: def reset(self) -> None:
-runtime.py:41: def __init__(self, tick: str):
-runtime.py:44: def to_messages(self, ai_name: str, system_prefix: str = "",
-runtime.py:55: def __init__(self, workspace=None, transcript_path=None):
-runtime.py:83: def attach_face(self) -> asyncio.Queue:
-runtime.py:87: def detach_face(self, q: asyncio.Queue) -> None:
-runtime.py:92: def cole_pending(self) -> bool:
-runtime.py:117: def start_indexer(self) -> bool:
-runtime.py:130: def stop_indexer(self) -> None:
-runtime.py:137: def index_message(self, content: str, author: str, session_id) -> None:
-runtime.py:145: def read_system_metrics(self) -> dict:
-runtime.py:180: def surfaces_from_layout(self) -> list:
-runtime.py:193: def populate_touch(self, *, viewers: int = 0, agents_online: list = None,
-runtime.py:209: def clear_touch_active(self) -> None:
-runtime.py:268: def stop(self) -> None:
-runtime.py:491: def stop_autonomy(self) -> None:
-runtime.py:498: def _set_busy_headless(self, v: bool) -> None:
-runtime.py:501: def _perceive_cole_headless(self) -> bool:
-runtime.py:511: def _recent_text_headless(self, n: int = 14) -> str:
-runtime.py:562: def set_shared_runtime(rt: "NovaRuntime") -> None:
-runtime.py:569: def get_shared_runtime() -> "NovaRuntime":
-transcript_store.py:49: def __init__(self, log_path, state_path=None):
-transcript_store.py:63: def _load(self) -> None:
-transcript_store.py:85: def reload_from_disk(self) -> None:
-transcript_store.py:91: def _persist_state(self) -> None:
-transcript_store.py:99: def append(self, author: str, content: str, directed_at=None, images=None) -> dict:
-transcript_store.py:119: def is_substantive(msg: dict, author: str) -> bool:
-transcript_store.py:128: def last_seq(self, author: str) -> int:
-transcript_store.py:135: def latest_seq(self) -> int:
-transcript_store.py:139: def has_unread_cole(self, speaker: str = "Cole") -> bool:
-transcript_store.py:144: def mark_attended_through(self, seq: int) -> None:
-transcript_store.py:153: def recent(self, n: int = 14) -> list[dict]:
-__main__.py:32: def main():
-clock.py:15: def now_iso() -> str:
-clock.py:19: def elapsed_seconds(iso_ts: str) -> float:
-clock.py:27: def interval_elapsed(last_iso: str, interval_s: float) -> bool:
-clock.py:34: def stamp() -> str:
-clock.py:43: def future_iso(seconds: float) -> str:
-clock.py:49: def time_of_day() -> str:
-clock.py:55: def since_human(iso_ts: str) -> str:
-environment.py:24: def fingerprint(watch_paths) -> tuple:
-environment.py:43: def changed(prev_fp, watch_paths) -> bool:
-environment.py:47: def cole_directive() -> str:
-environment.py:59: def record_cole_directive(text: str) -> None:
-environment.py:72: def consume_cole_directive() -> None:
-environment.py:83: def cole_typing() -> bool:
-eyes.py:58: def _load_moondream():
-eyes.py:92: def log(*args, **kwargs): pass
-eyes.py:127: def __init__(self):
-eyes.py:144: def find(
-eyes.py:210: def verify(self, question: str, screenshot=None) -> bool:
-eyes.py:234: def describe(self, prompt=None, screenshot=None) -> str:
-eyes.py:293: def screenshot(self, save: bool = False):
-eyes.py:302: def list_elements(self, window: str, control_type: str = None) -> List[Dict]:
-eyes.py:318: def list_windows(self) -> List[Dict]:
-eyes.py:324: def set_context(self, context: str):
-eyes.py:347: def sanity_check(self, mentor, expected: str = None, force: bool = False) -> bool:
-eyes.py:408: def should_sanity_check(self) -> bool:
-eyes.py:418: def set_sanity_interval(self, interval: int):
-eyes.py:435: def dump_tree(self, window: str, max_depth: int = 3) -> str:
-proprioception.py:38: def log(*args, **kwargs): pass
-proprioception.py:66: def __init__(self):
-proprioception.py:74: def list_windows(self) -> List[Dict]:
-proprioception.py:111: def find_window(self, title_contains: str):
-proprioception.py:145: def find_element(
-proprioception.py:223: def find_element_flexible(
-proprioception.py:294: def list_elements(
-proprioception.py:347: def dump_tree(self, window_title: str, max_depth: int = 3) -> str:
-proprioception.py:377: def _walk_tree(self, element, lines, depth, max_depth):
-sight.py:54: def log(*_a, **_k):  # type: ignore
-sight.py:85: def _shrink(p: Path, mime: str):
-sight.py:105: def _http(url: str, payload=None, timeout: float = 15.0) -> dict:
-sight.py:114: def can_see() -> dict:
-sight.py:134: def _resolve(image: str):
-sight.py:202: def latest_drawing():
-sight.py:211: def look(image: str = "", question: str = "") -> dict:
-sight.py:306: def _remember_looking(path: Path, question: str, saw: str) -> None:
-sight.py:325: def recent_looks(n: int = 12) -> list:
-sight.py:343: def describe(image: str) -> dict:
-sight.py:348: def critique(image: str) -> dict:
-touch.py:44: def _load() -> dict:
-touch.py:56: def snapshot() -> dict:
-touch.py:61: def describe() -> str:
-touch.py:93: def _save(s: dict) -> None:
-touch.py:104: def update(**fields) -> None:
-touch.py:114: def record_pull(who: str, what: str) -> None:
-touch.py:124: def clear() -> None:
-vision.py:86: def __init__(self):
-vision.py:103: def take_screenshot(self, region: Optional[Tuple[int, int, int, int]] = None, save: bool = False):
-vision.py:126: def _shot_to_base64(self, shot) -> str:
-vision.py:134: def _call_claude(self, shot, prompt: str, as_json: bool = False):
-vision.py:197: def locate_ui_element(
-vision.py:239: def verify_ui_state(self, screenshot, question: str) -> bool:
-vision.py:268: def get_screen_dimensions(self) -> Tuple[int, int]:
-vision.py:272: def image_to_screen(self, img_x: int, img_y: int, screenshot) -> Tuple[int, int]:
-vision.py:300: def describe_screen(self, screenshot=None) -> str:
-web.py:56: def log(*_a, **_k):  # type: ignore
-web.py:90: def __init__(self):
-web.py:97: def handle_starttag(self, tag, attrs):
-web.py:105: def handle_endtag(self, tag):
-web.py:111: def handle_data(self, d):
-web.py:119: def text(self):
-web.py:126: def _safe(url: str):
-web.py:150: def read_web(url: str) -> dict:
-web.py:200: def search_web(query: str, n: int = 6) -> dict:
-web.py:234: def _clean(s):
-web.py:268: def _receipt(url: str, title: str, body: str) -> None:
+﻿__init__.py:100 _deep_merge(base: dict, override: dict) -> dict:
+__init__.py:110 load(config_path: Path = CONFIG_PATH) -> NovaConfig:
+checkin.py:35 get_session_start():
+checkin.py:52 check():
+checkin.py:121 clear():
+checkin.py:134 init_session():
+context_builder.py:18 estimate_tokens(text: str) -> int:
+executive.py:63 _load_state() -> dict:
+executive.py:101 _save_state(s: dict) -> None:
+executive.py:111 autonomy_enabled() -> bool:
+executive.py:115 set_autonomy(on: bool) -> None:
+executive.py:122 active_focus() -> Optional[str]:
+executive.py:126 _set_active(tid: Optional[str]) -> None:
+executive.py:132 _cfg() -> dict:
+executive.py:136 note_activity() -> None:
+executive.py:160 schedule_soon(seconds: int = 6) -> None:
+executive.py:175 reset_continuation() -> None:
+executive.py:184 note_real_work(seconds: int = 6) -> None:
+executive.py:220 should_wake(cole_pending: bool = False) -> tuple:
+executive.py:243 last_reflection() -> str:
+executive.py:253 _strip_tool_residue(text: str) -> str:
+executive.py:267 save_reflection(text: str) -> None:
+executive.py:299 build_reflection(cole_pending: bool, reason: str, recent: str = "",
+executive.py:416 _progress_loop_count(task: dict) -> int:
+executive.py:442 build_decision(reflection: str, cole_pending: bool, reason: str,
+executive.py:581 set_active(tid: Optional[str]) -> None:
+executive.py:586 pick_execution_target() -> Optional[str]:
+executive.py:636 _artifact_path(task: dict) -> Optional[str]:
+executive.py:643 _artifact_hint(task: dict) -> Optional[str]:
+executive.py:670 _asker(task: dict) -> str:
+executive.py:684 _asked_by(task: dict) -> str:
+executive.py:704 build_execution(task: dict, recent: str = "") -> str:
+executive.py:757 build_free_execution(recent: str = "") -> str:
+executive.py:816 parse_execution(reply: str) -> tuple:
+executive.py:835 _parse_actions(reply: str) -> dict:
+executive.py:856 _extract_for_cole(reply: str) -> str:
+executive.py:866 apply_decision(reply: str, cole_pending: bool = False) -> dict:
+integrity.py:69 find_tool_call(text: str):
+integrity.py:119 log_receipt(tool: str, args: dict, result, ms: float, ok: bool) -> None:
+integrity.py:139 recent_receipts(window_min: int = 90, limit: int = 12) -> list:
+integrity.py:164 work_done_since(since_iso: str) -> list:
+integrity.py:191 _last_reconcile() -> str:
+integrity.py:210 _mark_reconciled() -> None:
+integrity.py:218 reconcile_board(since_iso: str = "") -> str:
+integrity.py:273 receipts_block(window_min: int = 90) -> str:
+integrity.py:393 was_asked_to_act(text: str) -> bool:
+integrity.py:425 claims_a_receipt(text: str) -> bool:
+integrity.py:436 needs_self_check(draft: str, asked: bool) -> bool:
+integrity.py:444 build_self_check(draft: str, turn_tools: list) -> list:
+integrity.py:478 parse_self_check(verdict: str):
+loadout.py:25 load_manifests(koels_dir) -> dict:
+loadout.py:43 _trigger_terms(manifest: dict) -> list:
+loadout.py:51 decide_loadout(task_text: str, manifests: dict, loaded=None) -> dict:
+loadout.py:89 loadout_status(manifests: dict, loaded_ids=None) -> dict:
+nova_status.py:41 _now() -> str:
+nova_status.py:46 _read() -> dict:
+nova_status.py:56 _write(data: dict):
+nova_status.py:64 _empty_schema() -> dict:
+nova_status.py:83 update(
+nova_status.py:130 set_task(task_id: str, status: str = "running", description: str = ""):
+nova_status.py:163 clear_task(task_id: Optional[str] = None, final_status: str = "complete"):
+nova_status.py:187 pause_task(task_id: Optional[str] = None, note: str = ""):
+nova_status.py:213 resume_task(task_id: Optional[str] = None):
+nova_status.py:239 add_error(category: str, message: str, limit: int = 10):
+nova_status.py:257 read() -> dict:
+nova_status.py:262 read_summary() -> str:
+rules.py:106 verify_core_modules():
+rules.py:115 main():
+tasking.py:31 _now() -> str:
+tasking.py:35 _load() -> dict:
+tasking.py:47 _save(store: dict) -> None:
+tasking.py:57 all_tasks() -> dict:
+tasking.py:61 get(tid: str):
+tasking.py:65 _update(tid: str, **fields) -> bool:
+tasking.py:78 create(title: str, notes: str = "", priority: int = 3, parent: str = None,
+tasking.py:114 progress(tid: str, note: str) -> bool:
+tasking.py:127 complete(tid: str, result: str = "") -> bool:
+tasking.py:131 wait(tid: str, waiting_on: str = "") -> bool:
+tasking.py:135 abandon(tid: str, reason: str = "") -> bool:
+tasking.py:139 reopen(tid: str) -> bool:
+tasking.py:143 delete(tid: str) -> bool:
+tasking.py:155 reprioritize(tid: str, priority: int) -> bool:
+tasking.py:162 apply_actions(actions: dict):
+tasking.py:202 _children_map(tasks: dict) -> dict:
+tasking.py:213 render_board(active_id: str = None, max_notes: int = 1) -> str:
+imagination.py:107 build_workflow(prompt: str,
+imagination.py:216 _compose_prompts(prompt: str, negative: str, as_nova: bool) -> tuple:
+imagination.py:229 _http_json(url: str, payload: dict = None, timeout: float = 30.0) -> dict:
+imagination.py:242 comfy_status() -> dict:
+imagination.py:251 start_painter(wait: bool = True) -> dict:
+imagination.py:304 _submit(graph: dict, client_id: str) -> str:
+imagination.py:312 _poll(prompt_id: str) -> list:
+imagination.py:329 release() -> bool:
+imagination.py:372 _fetch(img: dict) -> bytes:
+imagination.py:384 _upload_image(path) -> str:
+imagination.py:417 available_checkpoints() -> set:
+imagination.py:431 list_loras() -> list:
+imagination.py:441 my_art(n: int = 20) -> dict:
+imagination.py:485 what_can_i_paint_with() -> dict:
+imagination.py:506 generate_image(prompt: str,
+palette.py:89 resolve(style: str = "") -> tuple:
+palette.py:102 compose(style_key: str, prompt: str, negative: str) -> tuple:
+palette.py:110 menu(available: set = None) -> str:
+embedder.py:25 _load_text_model():
+embedder.py:39 embed_text(text: str) -> list[float]:
+embedder.py:57 _load_clip_model():
+embedder.py:71 embed_image(image_input) -> list[float]:
+embedder.py:106 embed_text_for_visual(text: str) -> list[float]:
+embedder.py:124 _null_vec(dim: int) -> list[float]:
+embedder.py:128 content_hash(content: str) -> str:
+hippocampus.py:53 _classify(text: str) -> str:
+hippocampus.py:62 _text_schema():
+hippocampus.py:77 _visual_schema():
+hippocampus.py:94 _indexer_alive() -> str:
+hippocampus.py:463 _age_str(ts: float) -> str:
+hippocampus.py:480 get_store() -> NovaMemoryStore:
+indexer.py:99 get_indexer() -> MemoryIndexer:
+logger.py:100 log(log_type: str, event: str, **kwargs):
+logger.py:113 get_screenshot_dir() -> Path:
+logger.py:125 log_thought(text: str, source: str = "nova_chat_client"):
+logger.py:162 _update_index():
+logger.py:173 _write_index():
+goals.py:18 update_status(pulse_msg=None, complete_goal_text=None):
+journal.py:44 sanitize(text: str) -> str:
+journal.py:65 _get_last_date_header() -> str:
+journal.py:81 append(entry: str):
+journal.py:126 read_last(n_entries: int = 3) -> str:
+log_reader.py:28 _read_jsonl(path: Path) -> list:
+log_reader.py:45 _session_dir(date_str: str = None) -> Path:
+log_reader.py:52 summarize_today() -> str:
+log_reader.py:116 get_failures(days: int = 7) -> str:
+log_reader.py:150 get_recent_sessions(days: int = 5) -> str:
+curio.py:119 _plays() -> int:
+curio.py:126 _bump_plays() -> int:
+curio.py:136 _twist_bag(plays: int) -> list:
+curio.py:141 _save_last(curio: dict) -> None:
+curio.py:149 _wonder(rng: random.Random) -> dict:
+curio.py:167 _seed(rng: random.Random) -> dict:
+curio.py:173 _vision(rng: random.Random, plays: int) -> dict:
+curio.py:193 surprise(mode: str = "", seed: int = None) -> dict:
+curio.py:222 keep(note: str = "") -> dict:
+curio.py:245 toss() -> dict:
+curio.py:256 _shelf_count() -> int:
+curio.py:262 shelf(n: int = 12) -> dict:
+llama_control.py:25 _hidden_si():
+runtime.py:562 set_shared_runtime(rt: "NovaRuntime") -> None:
+runtime.py:569 get_shared_runtime() -> "NovaRuntime":
+__main__.py:32 main():
+clock.py:15 now_iso() -> str:
+clock.py:19 elapsed_seconds(iso_ts: str) -> float:
+clock.py:27 interval_elapsed(last_iso: str, interval_s: float) -> bool:
+clock.py:34 stamp() -> str:
+clock.py:43 future_iso(seconds: float) -> str:
+clock.py:49 time_of_day() -> str:
+clock.py:55 since_human(iso_ts: str) -> str:
+environment.py:24 fingerprint(watch_paths) -> tuple:
+environment.py:43 changed(prev_fp, watch_paths) -> bool:
+environment.py:47 cole_directive() -> str:
+environment.py:59 record_cole_directive(text: str) -> None:
+environment.py:72 consume_cole_directive() -> None:
+environment.py:83 cole_typing() -> bool:
+eyes.py:58 _load_moondream():
+sight.py:85 _shrink(p: Path, mime: str):
+sight.py:105 _http(url: str, payload=None, timeout: float = 15.0) -> dict:
+sight.py:114 can_see() -> dict:
+sight.py:134 _resolve(image: str):
+sight.py:202 latest_drawing():
+sight.py:211 look(image: str = "", question: str = "") -> dict:
+sight.py:306 _remember_looking(path: Path, question: str, saw: str) -> None:
+sight.py:325 recent_looks(n: int = 12) -> list:
+sight.py:343 describe(image: str) -> dict:
+sight.py:348 critique(image: str) -> dict:
+touch.py:44 _load() -> dict:
+touch.py:56 snapshot() -> dict:
+touch.py:61 describe() -> str:
+touch.py:93 _save(s: dict) -> None:
+touch.py:104 update(**fields) -> None:
+touch.py:114 record_pull(who: str, what: str) -> None:
+touch.py:124 clear() -> None:
+web.py:126 _safe(url: str):
+web.py:150 read_web(url: str) -> dict:
+web.py:200 search_web(query: str, n: int = 6) -> dict:
+web.py:268 _receipt(url: str, title: str, body: str) -> None:
