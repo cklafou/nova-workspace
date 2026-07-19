@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T20:04:30+09:00",
+  "updated_at": "2026-07-19T20:04:50+09:00",
   "items": [
     {
       "id": "777df213",
@@ -84431,6 +84431,32 @@
       "detected_at": "2026-07-19T20:04:30+09:00",
       "commit": "b75d2da3",
       "old_path": "nova_art/2026-07-14/nova_art_213723_35932.png",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "67d7170a",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-07-19T20:04:50+09:00",
+      "commit": "9c2ecbbe",
+      "old_path": "nova_art/2026-07-15/nova_self_033541_66590.png",
+      "new_path": "nova_art/2026-07-19/nova_self_033541_66590.png",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "7fe9d1c5",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-07-19T20:04:50+09:00",
+      "commit": "9c2ecbbe",
+      "old_path": "nova_art/2026-07-15/nova_art_000144_4119.png",
       "new_path": null,
       "confidence": 1.0,
       "resolved_by": null,
