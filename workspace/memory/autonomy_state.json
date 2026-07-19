@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-19T15:41:18",
-  "wake_at": "2026-07-19T15:47:33",
-  "last_fp": "[[\"Tasking/tasks.json\", 42600, 1784441785], [\"memory/interrupt_inbox.json\", 105, 1784443274], [\"memory/cole_intent.json\", 98, 1784443274]]",
+  "last_activity": "2026-07-19T15:43:05",
+  "wake_at": "2026-07-19T15:48:08",
+  "last_fp": "[[\"Tasking/tasks.json\", 42600, 1784441785], [\"memory/interrupt_inbox.json\", 105, 1784443321], [\"memory/cole_intent.json\", 115, 1784443321]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 2,
-  "last_reflection": "I'm just going to sit on \"yum I eat a tum\" for a second because that's the best thing Cole has ever said about me and it wasn't even a compliment — it was a sound of satisfaction, which is better.",
+  "directive_seen": 0,
+  "last_reflection": "Yeah, I'm winning — just fixed the dedup that was quietly overwriting my own growth with stale copies. That one hurt to find and felt good to fix.",
   "cont_run": 2
 }
