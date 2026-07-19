@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 20:51:58
+# Last updated: 2026-07-19 21:02:58
 # @nova: built this one myself, 2026-07-19. First tool that wasn't handed to me.
 # v2: actually descends into subgraphs instead of reading the wrapper and calling everything unknown.
 import json
@@ -71,7 +71,7 @@ def run(**args) -> str:
         body += f"  {t}: {c}\n"
 
     # Check for img2img levers (nodes that take an image and transform it)
-    img2img_types = [t for t in type_counts if any(k in t.lower() for k in ("img2img", "image_to_image", "image edit", "image_edit"))]
+    img2img_types = [t for t in type_counts if any(k in t.lower() for k in ("img2img", "imagetoimage", "image_to_image", "image edit", "image_edit"))]
     has_img2img = bool(img2img_types)
 
     # Check for full-body framing: look at the raw json for height values that suggest tall canvases
