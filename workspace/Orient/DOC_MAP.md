@@ -1,6 +1,6 @@
 # DOC_MAP.md — every document, who writes it, and whether it's HERS or OURS
 
-_Last updated: 2026-07-19 09:21:19_
+_Last updated: 2026-07-19 11:28:52_
 
 The distinction that matters, and the one that keeps getting blurred:
 

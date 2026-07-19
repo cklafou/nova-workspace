@@ -770,6 +770,7 @@ async def stream_response(
                         temperature=temperature,
                         top_p=top_p,
                         enable_thinking=False,
+                        literal_safe=_literal_safe,
                     )
                 except Exception as e:
                     await on_error(f"llama.cpp retry error: {e}")
