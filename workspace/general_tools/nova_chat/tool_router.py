@@ -88,6 +88,69 @@ def _silent_miss_caution(command: str, output: str) -> str:
             "number, confirm the literal path (e.g. Test-Path) or re-run without the wildcard.]")
 
 
+# Directories inside her own workspace that make a naive recursive scan impossible to finish.
+# Measured 2026-07-19. She has no way to know these are here unless we tell her.
+_HEAVY_DIRS = [
+    ("models/",                 "~26 GB of GGUF model binaries"),
+    ("llama/",                  "~680 MB of CUDA DLLs"),
+    ("nova_memory_db/",         "~1,900 files (vector store)"),
+    (".nova_app_profile*/",     "Chrome profile — thousands of tiny files"),
+    ("logs/",                   "hundreds of rotating log files"),
+    ("nova_lancedb/",           "vector index shards"),
+]
+_RECURSIVE_HINTS = ("-recurse", "get-childitem -r", "gci -r", "dir /s",
+                    "select-string", "ls -r", "findstr /s")
+
+
+def _timeout_help(command: str) -> str:
+    """A timeout that explains ITSELF. (2026-07-19, from a live failure.)
+
+    ── WHAT HAPPENED ────────────────────────────────────────────────────────────────────
+    Cole told her to go read her own code — exactly the self-directed work we want. She ran
+    a recursive Select-String from the workspace root, which walks 3,782 files including a
+    26 GB GGUF. It hit the 30s wall. All she got back was:
+
+        "ERROR: Command timed out after 30 seconds."
+
+    42 bytes with no cause in them. So she theorised, wrongly, that "PowerShell hates being
+    asked two things at once", rewrote the command, hit the SAME wall, theorised again, and
+    burned three tool loops without ever learning the real constraint — that her own
+    workspace has a 26 GB minefield in it.
+
+    Same disease as the silent-zero above and as every other bug in this project: the failure
+    is real, the REASON is withheld, and she takes the blame for a wire we never explained.
+    An error she can act on turns a three-loop flail into a one-loop correction.
+    """
+    cmd = (command or "").lower()
+    looks_recursive = any(h in cmd for h in _RECURSIVE_HINTS)
+    msg = ["ERROR: Command timed out after 30 seconds — it was killed, so NOTHING it would "
+           "have done was done, and no partial output survives."]
+    if looks_recursive:
+        msg.append(
+            "\nLIKELY CAUSE — this looks like a recursive scan, and your workspace root is a trap "
+            "for those. It holds 3,782 files, but only ~81 of them are your actual Python source. "
+            "The rest include:")
+        for name, why in _HEAVY_DIRS:
+            msg.append(f"  - {name:<22} {why}")
+        msg.append(
+            "\nA recursive Select-String/Get-ChildItem from the root will try to read all of it — "
+            "including grepping multi-gigabyte binaries — and can never finish in 30s. This is NOT "
+            "PowerShell refusing to do two things at once, and it is not your judgement being bad.")
+        msg.append(
+            "\nDO THIS INSTEAD — scope it to where you actually live:\n"
+            "  Get-ChildItem nova_body,general_tools -Recurse -Filter *.py | Select-Object FullName\n"
+            "  Select-String -Path nova_body\\nova_cortex\\*.py -Pattern 'def '\n"
+            "or exclude the heavy trees:\n"
+            "  Get-ChildItem -Recurse -File -Exclude *.gguf,*.dll | Where-Object "
+            "{ $_.FullName -notmatch 'models|llama|logs|nova_memory_db|nova_app_profile' }")
+    else:
+        msg.append(
+            "\nIf this command was expected to be slow, split it into smaller steps — there is no "
+            "way to raise the limit from your side. If it was NOT expected to be slow, something "
+            "it touched is larger than you think; check the path before re-running it unchanged.")
+    return "\n".join(msg)
+
+
 def run_command(command: str, cwd: str = "") -> str:
     """Run a command in Windows PowerShell, sandboxed to the workspace directory."""
     if not cwd:
@@ -139,7 +202,7 @@ def run_command(command: str, cwd: str = "") -> str:
         else:
             return f"[Command Exited with Error Code {result.returncode}]\nOutput:\n{output}"
     except subprocess.TimeoutExpired:
-        return "ERROR: Command timed out after 30 seconds."
+        return _timeout_help(command)
     except Exception as e:
         return f"ERROR: Failed to run command: {str(e)}"
 
