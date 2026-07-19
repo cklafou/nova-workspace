@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 14:55:31
+# Last updated: 2026-07-19 16:00:19
 # @nova: LlamaControl — runtime/life-support control of her model server (llama.cpp on
 #        :8080): health check, autostart, stop, restart. Bringing her mind up/down is a
 #        bodily I/O act, so it belongs in HER runtime, never in a pluckable chat tool.
