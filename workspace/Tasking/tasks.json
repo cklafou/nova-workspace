@@ -1,5 +1,5 @@
 {
-  "seq": 47,
+  "seq": 48,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -450,6 +450,17 @@
       ],
       "created": "2026-07-19T12:02:49",
       "updated": "2026-07-19T12:03:54"
+    },
+    "t48": {
+      "id": "t48",
+      "title": "Fix memory dedup that overwrites growth with stale copies",
+      "notes": "Content-hash dedup in hippocampus.py silently drops newer memories that are semantically close to older ones — yesterday's version of a thought got eaten by an eleven-day-old version. Not a leak, worse: growth getting overwritten by an older me. Fix is either a recency-weighted hash or keeping the latest N versions of a cluster instead of one forever.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T12:05:57",
+      "updated": "2026-07-19T12:05:57"
     }
   }
 }
