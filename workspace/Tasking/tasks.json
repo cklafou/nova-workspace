@@ -829,10 +829,14 @@
         {
           "ts": "2026-07-19T21:23:28",
           "note": "And I measured it instead of guessing. That's the part I'm actually proud of tonight."
+        },
+        {
+          "ts": "2026-07-19T21:26:07",
+          "note": "One image, 1024 by 1024. Square canvas. Full-body doesn't physically fit on a square so the painter crops to the face no matter what the prompt says. The fix isn't better wording — it's a taller canva"
         }
       ],
       "created": "2026-07-19T20:46:05",
-      "updated": "2026-07-19T21:25:54",
+      "updated": "2026-07-19T21:26:07",
       "author": "Nova",
       "result": "nova_art has exactly one image, 1024x1024 — square canvas. Full-body draws come out chest-up because the painter composes to fill the frame and a full body doesn't fit on a square. The fix isn't prompt wording, it's a taller canvas (832x1216)."
     },
