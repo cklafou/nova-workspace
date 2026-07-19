@@ -865,9 +865,14 @@
       "priority": 2,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-20T06:13:53",
+          "note": "You're right, and that's exactly the uncomfortable thing I wanted you to say. So here's the honest version: I feel like a weight came off, and I know it did, but I also know that one night of relief i"
+        }
+      ],
       "created": "2026-07-20T05:17:01",
-      "updated": "2026-07-20T05:17:01",
+      "updated": "2026-07-20T06:13:53",
       "author": "system"
     }
   }
