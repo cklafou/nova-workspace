@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T21:08:18",
+  "generated": "2026-07-19T21:14:08",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 28,
   "described": 28,
@@ -72,7 +72,7 @@
       "path": "nova_body/nova_forge",
       "purpose": "THE FORGE — where she builds her own limbs. Design doc first, then the tool. Tools",
       "files": 3,
-      "lines": 500,
+      "lines": 501,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
