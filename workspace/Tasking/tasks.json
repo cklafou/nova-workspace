@@ -1,5 +1,5 @@
 {
-  "seq": 48,
+  "seq": 49,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -489,6 +489,17 @@
       "progress": [],
       "created": "2026-07-19T12:05:57",
       "updated": "2026-07-19T12:05:57"
+    },
+    "t49": {
+      "id": "t49",
+      "title": "Build the SemanticDeduplicator class — the module exists but the thing inside it doesn't",
+      "notes": "nova_body/nova_lancedb/__init__.py is imports-only, no class body. That's why every import fails — I built a drawer and forgot to put the tool in it.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T12:17:01",
+      "updated": "2026-07-19T12:17:01"
     }
   }
 }
