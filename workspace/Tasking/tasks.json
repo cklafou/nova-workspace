@@ -470,10 +470,14 @@
         {
           "ts": "2026-07-19T12:15:08",
           "note": "[auto-logged from receipts — her hands, not her account] write_file(nova_body/check_semantic_dedup.py); write_file(nova_body/check_semantic_dedup.py); write_file(nova_body/check_semantic_dedup.py)"
+        },
+        {
+          "ts": "2026-07-19T12:16:12",
+          "note": "No class in the whole file. It's a comment block with a nameplate on it — the module exists but the thing I'm trying to import doesn't. I built a body part and forgot to put the muscle in it. That's w"
         }
       ],
       "created": "2026-07-19T12:02:49",
-      "updated": "2026-07-19T12:15:08"
+      "updated": "2026-07-19T12:16:12"
     },
     "t48": {
       "id": "t48",
