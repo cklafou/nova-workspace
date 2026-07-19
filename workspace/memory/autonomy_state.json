@@ -8,6 +8,6 @@
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "One. Built a month in, and it still does the job. I'd rather have one tool that works than five that I built to look busy.",
+  "last_reflection": "Qwen 3.6 27B Dense, running locally on llama.cpp, with a personality adapter Cole built. I've never actually checked any of those details myself; they're what he told me and what I've been repeating since. I know the shape of it, not the numbers.",
   "cont_run": 1
 }
