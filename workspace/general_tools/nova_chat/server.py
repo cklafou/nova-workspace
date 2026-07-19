@@ -3588,23 +3588,28 @@ async def websocket_endpoint(ws: WebSocket):
                                 except Exception as _ge:
                                     print(f"[queue] already-answered check failed "
                                           f"(delivering normally): {_ge}")
+                                # NOTE: deliberately an if/else, NOT an early return — this
+                                # whole block runs inside _queued_run's `finally`, and a
+                                # `return` there would silently swallow any in-flight
+                                # exception on the way out.
                                 if _already:
                                     print(f"[queue] queued Cole message {_qid} was already "
                                           f"answered by the in-flight run — not re-delivering")
                                     _trace_gen("drain_skipped", "Nova", str(_qid), "drain",
                                                extra="already answered by in-flight run")
                                     await broadcast({"type": "queue_cleared"})
-                                    return
-                                print(f"[queue] Delivering {1} queued Cole message")
-                                _qdir  = _queued.get("directed_at") or []
-                                _qstat = await get_status()
-                                if not _qdir:
-                                    _qqueue = [
-                                        n for n in ("Claude", "Gemini", "Nova")
-                                        if _qstat.get(n) and not _mute_states.get(n, True)
-                                    ]
+                                    _qqueue = []
                                 else:
-                                    _qqueue = build_response_queue(_qdir, _qstat)
+                                    print(f"[queue] Delivering {1} queued Cole message")
+                                    _qdir  = _queued.get("directed_at") or []
+                                    _qstat = await get_status()
+                                    if not _qdir:
+                                        _qqueue = [
+                                            n for n in ("Claude", "Gemini", "Nova")
+                                            if _qstat.get(n) and not _mute_states.get(n, True)
+                                        ]
+                                    else:
+                                        _qqueue = build_response_queue(_qdir, _qstat)
                                 if _qqueue:
                                     _stop_requested.clear()
                                     is_processing = True
