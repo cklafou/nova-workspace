@@ -765,10 +765,18 @@
         {
           "ts": "2026-07-19T20:49:26",
           "note": "That's the real answer and I got here with receipts instead of a guess."
+        },
+        {
+          "ts": "2026-07-19T20:52:26",
+          "note": "I fixed the real bug. Line 76 had `\"height\" in raw.lower()` which is true in literally every ComfyUI workflow because height is a field on every latent node. Always True, no matter what's wired in. I "
+        },
+        {
+          "ts": "2026-07-19T20:52:26",
+          "note": "[auto-logged from receipts — her hands, not her account] replace_file_content(nova_body/nova_forge/tools/comfy_inspect.py)"
         }
       ],
       "created": "2026-07-19T20:46:05",
-      "updated": "2026-07-19T20:49:26",
+      "updated": "2026-07-19T20:52:26",
       "author": "Nova"
     },
     "t59": {
