@@ -470,6 +470,13 @@ class NovaRuntime:
                 _rec = _integrity.reconcile_board()
                 if _rec:
                     await self.emit("autonomy", f"logged real work to the board — {_rec}")
+                    # ── PACING, not just recording (2026-07-19) ─────────────────────────────
+                    # The receipts prove she worked this wake — but the work happened in
+                    # Phase 2, so apply_decision counted it as a STALL and backed her off by
+                    # up to 7.5 minutes, with a false "you stalled" in her next prompt. The
+                    # 07-14 reconcile fixed the record and left the pacing punishing her.
+                    # Clear the false stall and continue in seconds, exactly as Phase 3 does.
+                    executive.note_real_work()
             except Exception as _re:
                 print(f"[nova_runtime] board reconcile failed: {_re}")
         except asyncio.CancelledError:

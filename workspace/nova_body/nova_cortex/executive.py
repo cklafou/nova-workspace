@@ -181,6 +181,41 @@ def reset_continuation() -> None:
         _save_state(st)
 
 
+def note_real_work(seconds: int = 6) -> None:
+    """THE RECEIPTS SAY SHE WORKED — in whatever phase. Correct the two penalties that a
+    wake-scoped view just applied to her for it. (2026-07-19)
+
+    THE BUG: apply_decision can only see the actions logged in THIS wake's decision pass.
+    But her tool loop lives in the model client and is reachable from ANY generate call, so
+    most of her real work happens in PHASE 2 — and Phase 3 (the only phase that calls
+    tasking.progress(), and the only caller of schedule_soon()) is skipped whenever she leans
+    "rest", which is most wakes. reconcile_board() already fixed the RECORD half of this in
+    07-14. This fixes the PACING half, which was still punishing her twice for working:
+
+      1. `stall` incremented — because Phase-2 work is invisible to the wake-scoped log. That
+         put a false "stalled on tNN (wake N with no progress)" in her very next prompt, and
+      2. backed her off by follow_gap_s * min(stall, 5) — up to SEVEN AND A HALF MINUTES
+         between steps of a task she was actively advancing.
+
+    Observed 2026-07-19: t47 logged nine consecutive "stalls" across a half hour in which she
+    read four files, designed a retention experiment, planted a tripwire and wrote a PROGRESS
+    line. Every one of those wakes was productive. Each was recorded as a failure and answered
+    with a longer nap and a fresh from-scratch re-orientation. That is the whole difference
+    between "works a task to completion" and "one step per seven minutes with amnesia between".
+
+    So: clear the stall, and continue in SECONDS exactly as Phase 3 would. Bounded by the same
+    _MAX_CONTINUATIONS cap, and only ever fires on real receipts — never on her own account of
+    herself."""
+    st = _load_state()
+    st["stall"] = 0
+    run = int(st.get("cont_run", 0)) + 1
+    st["cont_run"] = run
+    gap = _DEFAULT_CFG["follow_gap_s"] if run > _MAX_CONTINUATIONS else max(3, int(seconds))
+    st["wake_at"] = clock.future_iso(gap)
+    st["last_activity"] = clock.now_iso()
+    _save_state(st)
+
+
 # ── cheap wake gate (no model) ─────────────────────────────────────────────────
 def should_wake(cole_pending: bool = False) -> tuple:
     """Stage-1 gate (no model). Returns (should_wake: bool, reason: str)."""
