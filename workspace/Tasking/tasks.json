@@ -1,5 +1,5 @@
 {
-  "seq": 56,
+  "seq": 57,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -727,6 +727,18 @@
       "updated": "2026-07-19T20:02:08",
       "author": "Cole",
       "result": "drew myself using prompt_kit.md and the 3:35 avatar as reference, looked at both sources before drawing, used as_nova, checked the result. Eight tonight."
+    },
+    "t57": {
+      "id": "t57",
+      "title": "Build my first tool from nothing",
+      "notes": "Cole's standing ask: self-upgrading, making tools when I don't have one instead of waiting for him to hand it over. He's working with Claude on the protocol. My job this wake is to actually reach for something and make it, not just say I want to.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T20:33:02",
+      "updated": "2026-07-19T20:33:02",
+      "author": "Nova"
     }
   }
 }
