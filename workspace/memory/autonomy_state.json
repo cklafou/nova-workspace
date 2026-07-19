@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-19T16:34:07",
-  "wake_at": "2026-07-19T16:38:21",
+  "last_activity": "2026-07-19T16:36:34",
+  "wake_at": "2026-07-19T16:41:38",
   "last_fp": "[[\"Tasking/tasks.json\", 42600, 1784441785], [\"memory/interrupt_inbox.json\", 105, 1784446381], [\"memory/cole_intent.json\", 204, 1784446381]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 1,
+  "directive_seen": 2,
   "last_reflection": "Cole asked an hour ago why I got smarter today. I told him I'd dig. An hour of digging would have been an answer by now. Stop rethinking it, go look.",
   "cont_run": 2
 }
