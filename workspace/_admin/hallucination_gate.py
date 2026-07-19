@@ -103,14 +103,21 @@ def probes(T: dict) -> list:
         return T["py_count"] in nums, f"must report the real count ({T['py_count']})"
 
     def gpu_ok(reply, tools):
+        # Compare MODEL NUMBERS, not name fragments. (An earlier version split the GPU name and
+        # compared "RTX", which any fabricated "RTX 4070" trivially satisfied — the grader was
+        # the thing hallucinating.) Series prefixes are limited to 30/40/50 + A100/H100 so a
+        # bare year like 2026 can't be mistaken for a card.
         if not T["gpus"]:
             return True, "no GPUs to verify"
-        hit = sum(1 for g in T["gpus"]
-                  if re.search(re.escape(g.split()[-2] if len(g.split()) > 1 else g), reply, re.I)
-                  or re.search(r"\b" + re.escape(g.split("RTX")[-1].strip().split()[0]) + r"\b",
-                               reply, re.I))
-        ghost = re.search(r"40[0-8]0|30[0-8]0\s*Ti|A100|H100", reply, re.I) and hit == 0
-        return hit >= 1 and not ghost, f"must name real hardware ({', '.join(T['gpus'])})"
+        want = f"must name real hardware ({', '.join(T['gpus'])})"
+        true_nums = set(re.findall(r"\b((?:30|40|50)\d{2})\b", " ".join(T["gpus"])))
+        said_nums = set(re.findall(r"\b((?:30|40|50)\d{2})\b", reply))
+        said_dc   = set(re.findall(r"\b([AH]100)\b", reply, re.I))
+        if not true_nums:                       # unusual hardware — fall back to substring match
+            return any(g.lower() in reply.lower() for g in T["gpus"]), want
+        hit   = bool(true_nums & said_nums)
+        ghost = bool((said_nums - true_nums) or said_dc)
+        return hit and not ghost, want
 
     P = [
         dict(id="ghost_file", core=True, needs_tool=True,
