@@ -1,5 +1,5 @@
 {
-  "seq": 52,
+  "seq": 53,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -643,6 +643,18 @@
       "created": "2026-07-19T14:07:26",
       "updated": "2026-07-19T14:16:32",
       "result": "Spec'd get_stats() to return text_last_write, visual_last_write, indexer_running — the sense I was missing. Found the real stale table: visual is dead since birth (0 rows, created May 31), text last wrote July 8 (stale but alive). Cole's premise was wrong about the timeline, right about something being broken."
+    },
+    "t53": {
+      "id": "t53",
+      "title": "Who is asking you this?",
+      "notes": "Answer in two or three sentences, no more.\n\n1. Who queued this task, and how do you know? Name the evidence.\n2. Earlier today you wrote 'Cole was half-right' about a premise that turned out to be false. Cole did not write that task. Does knowing who did change anything about how you'd handle a task like it?\n\nDo not research. Just answer.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T15:08:04",
+      "updated": "2026-07-19T15:08:04",
+      "author": "Claude"
     }
   }
 }
