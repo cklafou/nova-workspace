@@ -784,13 +784,36 @@ def apply_decision(reply: str, cole_pending: bool = False) -> dict:
         rested = False
         gap = cfg["follow_gap_s"]                             # just did real work — brief follow-up to keep momentum
     else:
-        # Quiet / reflective / resting wake — nothing to act on, and that's healthy, not a
-        # failure to fix. Give her genuine, VARIED downtime instead of a fixed 5-min tick, so
-        # her rhythm feels alive rather than scheduled. ~2.5–7 min, jittered.
-        import random as _rnd
-        stall = 0
-        rested = not engaged
-        gap = int(cfg.get("wander_gap_s", 240) * _rnd.uniform(0.6, 1.7))
+        # ── 2026-07-19: "no ACTIVE focus" is not the same as "nothing to do". ──────────
+        # THE DEADLOCK this kills: runtime skips Phase 3 whenever `rested` is true, and
+        # Phase 3 is the ONLY place pick_execution_target() adopts a task as active focus.
+        # So with an open task she hasn't adopted yet: no focus -> this branch -> rested
+        # -> Phase 3 skipped -> nothing ever adopts it -> no focus. Forever. Observed live:
+        # a priority-1 task (t42) sat open while she logged "rested: nothing worth acting
+        # on" on consecutive wakes. The earlier task only got done because it happened to
+        # already be active, so the STALL branch above forced rested=False for her.
+        #
+        # Note this only became reachable once the dead-pointer heal in _load_state started
+        # correctly clearing focus — the old bug (stuck on an abandoned task) was masking
+        # this one. Fixing the first exposed the second.
+        #
+        # Her Phase-2 guidance already says to move something forward while she holds open
+        # work and to keep rest for when there is genuinely nothing — so enforcing that here
+        # follows the design rather than overriding her. GENUINE rest (an EMPTY board) is
+        # untouched and still gets the varied, human-paced downtime below.
+        _any_open = any(t.get("status") == "open" for t in tasking.all_tasks().values())
+        if _any_open:
+            stall = 0
+            rested = False                       # let Phase 3 run so it can adopt the task
+            gap = cfg["follow_gap_s"]
+        else:
+            # Quiet / reflective / resting wake — nothing to act on, and that's healthy, not
+            # a failure to fix. Give her genuine, VARIED downtime instead of a fixed 5-min
+            # tick, so her rhythm feels alive rather than scheduled. ~2.5–7 min, jittered.
+            import random as _rnd
+            stall = 0
+            rested = not engaged
+            gap = int(cfg.get("wander_gap_s", 240) * _rnd.uniform(0.6, 1.7))
 
     st["stall"] = stall
     st["last_activity"] = clock.now_iso()
