@@ -2648,6 +2648,36 @@ def _spawn_detached_cmd(lines: list, tag: str = "restart"):
     # Timestamped names fix both. Every restart gets its own script, its own log and its own
     # receipt, so a restart can never collide with its predecessor and each one's evidence
     # survives instead of being overwritten by the next attempt.
+    # ── ONE RESTART AT A TIME (2026-07-19, my own regression, same night). ──────────────
+    # Making the button work twice in a row removed an accident that was protecting us. The
+    # old fixed filenames meant a second restart hit a sharing violation and 500'd — annoying,
+    # but it also made overlapping restarts impossible. With unique names the second attempt
+    # SUCCEEDS, and a relauncher's first act is StopNova.
+    #
+    # Observed 23:07-23:13: my restart brought the stack up at 23:09:10; a second restart
+    # issued at 23:09:22 ran StopNova at 23:09:24 and killed it. Nova was down for four
+    # minutes and the tab sat on chrome-error. The receipts I had just added are the only
+    # reason this was visible at all — two logs, two timestamps, one obvious overlap.
+    #
+    # A relauncher takes ~90s (StopNova, wait for ports, NovaStart, model load). Anything
+    # asked for inside that window is someone pressing the button again because the first
+    # press appeared to do nothing — which is exactly when tearing down a half-built stack
+    # does the most damage. Refuse it, and say why.
+    _lock = tmp / f"nova_{tag}.lock"
+    try:
+        if _lock.exists():
+            _age = _time.time() - _lock.stat().st_mtime
+            if _age < 90:
+                return {"verified": False, "refused": True, "attempts": [],
+                        "diagnosis": (f"A {tag} is ALREADY IN FLIGHT (started {int(_age)}s ago). "
+                                      f"Refused — a second one would run StopNova on a stack that "
+                                      f"is still coming up and leave Nova down. Give it "
+                                      f"{max(1, int(90 - _age))}s more; if it truly failed, the "
+                                      f"log in _admin/Temp/ will say so.")}
+        _lock.write_text(datetime.now().isoformat(), encoding="utf-8")
+    except Exception:
+        pass   # a lock we cannot write must never block a restart
+
     _stamp = datetime.now().strftime("%H%M%S_%f")[:13]
     script = tmp / f"nova_{tag}_{_stamp}.cmd"
     logf = tmp / f"nova_{tag}_{_stamp}.log"
