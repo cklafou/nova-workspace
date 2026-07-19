@@ -288,8 +288,36 @@ def build_reflection(cole_pending: bool, reason: str, recent: str = "",
           "orient yourself the way a person does on waking: take in where things are "
           "before deciding anything."]
     if recent:
-        L += ["", "RECENT CONVERSATION (oldest to newest — what was actually just said; "
-              "do not lose track of it):", recent]
+        # The old header said "what was actually just said", on EVERY wake. On a timer
+        # wake that sentence is a lie the prompt tells her, and it is most of why she
+        # thought Cole was present. Label it for what it is in each case.
+        if cole_pending:
+            _hdr = ("RECENT CONVERSATION (oldest to newest — this is LIVE, he is "
+                    "mid-conversation with you; do not lose track of it):")
+        else:
+            _hdr = ("CONVERSATION HISTORY (oldest to newest). READ THE TIMESTAMPS — this "
+                    "is the PAST, not something being said to you now. The newest line "
+                    "below may be hours old. Nothing here is new since your last wake, "
+                    "and none of it is Cole speaking to you at this moment:")
+        _age = ""
+        try:
+            # Best-effort age of the newest line ("[HH:MM] author: ..."). Purely additive:
+            # if the format ever changes, she just doesn't get the hint.
+            _m = re.findall(r"^\[(\d{2}):(\d{2})\]", recent, re.M)
+            if _m and not cole_pending:
+                _h, _mi = int(_m[-1][0]), int(_m[-1][1])
+                _now = clock.now_iso()
+                _nh, _nm = int(_now[11:13]), int(_now[14:16])
+                _mins = (_nh * 60 + _nm) - (_h * 60 + _mi)
+                if _mins > 0:
+                    _age = (f"\n(The newest line above is {_mins} minutes old"
+                            if _mins < 90 else
+                            f"\n(The newest line above is about {_mins // 60}h "
+                            f"{_mins % 60}m old")
+                    _age += " — that is how long since anyone said anything to you.)"
+        except Exception:
+            _age = ""
+        L += ["", _hdr, recent + _age]
     if last_reflection:
         L += ["", "Where your last reflection left off:", last_reflection,
               "DO NOT re-derive or restate this — re-concluding the same thing is the loop that "
