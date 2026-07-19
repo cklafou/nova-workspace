@@ -1,5 +1,5 @@
 {
-  "text": "I tested comfy_inspect against a workflow with NO img2img in it \u2014 just CheckpointLoaderSimple, EmptyLatentImage, KSampler, SaveImage. Your tool reported: \"img2img levers present: True (EmptyLatentImage, SaveImage)\". That's a false positive, and it makes the tool worse than not having it, because it would tell you img2img is wired in when it isn't. I'm not telling you where the bug is. Find it, fix it, then prove it's fixed \u2014 it must say False on that txt2img graph AND still say True on a real img2img graph. Show me the evidence for both, not just the edit.",
-  "ts": "2026-07-19T20:46:34.524996",
+  "text": "Your comfy_inspect has a bug I reported earlier and it's still marked UNVERIFIED. On a workflow containing ONLY CheckpointLoaderSimple, EmptyLatentImage, KSampler and SaveImage \u2014 no img2img anywhere \u2014 it reported \"img2img levers present: True\". That's a false positive. Fix it, and this time write nova_forge/tests/comfy_inspect.py so it stops being UNVERIFIED. Your test cases decide what 'working' means, so choose them like someone who wants to catch their own mistakes, not like someone proving themselves right.",
+  "ts": "2026-07-19T20:58:29.148687",
   "consumed": false
 }
