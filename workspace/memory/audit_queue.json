@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T15:44:46+09:00",
+  "updated_at": "2026-07-19T15:52:11+09:00",
   "items": [
     {
       "id": "777df213",
@@ -82846,6 +82846,45 @@
       "commit": "864c5c44",
       "old_path": null,
       "new_path": "_admin/fire_restart.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "111c6f0d",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T15:52:10+09:00",
+      "commit": "41b1a373",
+      "old_path": null,
+      "new_path": "_admin/convo_probe.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "f2ab5518",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T15:52:10+09:00",
+      "commit": "41b1a373",
+      "old_path": null,
+      "new_path": "_admin/convo_v5.txt",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "fb547be1",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T15:52:11+09:00",
+      "commit": "41b1a373",
+      "old_path": null,
+      "new_path": "_admin/convo_v5_err.txt",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,

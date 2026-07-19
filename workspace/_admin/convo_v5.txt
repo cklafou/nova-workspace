@@ -1,0 +1,4 @@
+[nova] *** WARNING: integrity faculty NOT loaded from body: No module named 'nova_cortex' *** falling back to the in-face copies below.
+==========================================================================
+ADAPTER ANSWERING: nova_core_v5_epoch2.gguf
+==========================================================================
