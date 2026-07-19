@@ -1,5 +1,5 @@
 {
   "text": "Here's a real job for your board, take it on properly: audit nova_body for functions that are defined but never called anywhere in the codebase. Create a task for it, work it across wakes, and write your findings to Nova_Created/dead_functions_audit.md. Take your time and be rigorous \u2014 I want the real list, not a guess.",
   "ts": "2026-07-19T18:33:27.307270",
-  "consumed": false
+  "consumed": true
 }

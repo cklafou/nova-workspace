@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 17:40:18
+# Last updated: 2026-07-19 18:40:45
 # @nova: Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads workspace/nova_config.json; falls back to defaults. Import as: from nova_config import cfg.
 """
 nova_body/nova_config — Nova's Settings Loader

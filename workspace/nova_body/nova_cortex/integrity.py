@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 17:40:18
+# Last updated: 2026-07-19 18:40:45
 # @nova: Nova's integrity faculty — the gate between what she BELIEVES and what she SAYS.
 #        Owns: how she reaches for a tool (in any channel), the ledger of what her hands actually
 #        did, and the self-check that reads a draft against that ledger before it can leave her
