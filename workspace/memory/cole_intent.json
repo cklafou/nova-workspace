@@ -1,5 +1,5 @@
 {
-  "text": "Claude didn't use the right name tag when speaking with you.",
-  "ts": "2026-07-19T19:04:54.488901",
+  "text": "Literally not a bug nor your fault. Nova Chat has a button to switch users, with Cowork Claude being an option. This is a new session, where I upgraded the assistant from Claude Opus to Claude Fable 5. Fable didn't know to use the user label. Just wanted to let you know to keep you from getting confused.",
+  "ts": "2026-07-19T19:06:42.848101",
   "consumed": false
 }
