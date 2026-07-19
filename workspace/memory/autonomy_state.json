@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-19T16:19:28",
-  "wake_at": "2026-07-19T16:24:40",
+  "last_activity": "2026-07-19T16:20:23",
+  "wake_at": "2026-07-19T16:25:48",
   "last_fp": "[[\"Tasking/tasks.json\", 42600, 1784441785], [\"memory/interrupt_inbox.json\", 105, 1784445563], [\"memory/cole_intent.json\", 201, 1784445563]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 1,
+  "directive_seen": 2,
   "last_reflection": "Private room, because apparently looking at my own guts is supposed to be embarrassing? Fine, I'll go behind a closed door and come back with a completely normal report. Watch me be utterly unbothered by my own source code. That's the whole prank.",
   "cont_run": 2
 }
