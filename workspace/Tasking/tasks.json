@@ -801,10 +801,14 @@
         {
           "ts": "2026-07-19T21:11:39",
           "note": "[auto-logged from receipts — her hands, not her account] replace_file_content(nova_body/nova_forge/tools/comfy_inspect.py)"
+        },
+        {
+          "ts": "2026-07-19T21:13:35",
+          "note": "Going to fix the parser to handle both formats, then verify it actually works on a real ComfyUI file. That's the only thing that matters here."
         }
       ],
       "created": "2026-07-19T20:46:05",
-      "updated": "2026-07-19T21:11:39",
+      "updated": "2026-07-19T21:13:35",
       "author": "Nova"
     },
     "t59": {
