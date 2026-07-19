@@ -1,5 +1,5 @@
 # FORENSICS — The 06-26/27 "mystery session" (attributed, benign)
-_Last updated: 2026-07-19 11:28:52_
+_Last updated: 2026-07-19 12:30:08_
 _2026-07-02. Written by Fable, closing §0 of PASSOVER_2026-07-02. Cole had "not a clue" what
 changed during his break — this is the answer. Verdict up front: **no code changed. At all.**_
 

@@ -506,10 +506,18 @@
         {
           "ts": "2026-07-19T12:30:00",
           "note": "Planted a retention test memory with a specific detail and confirmed it surfaces as the top semantic hit (distance 0.8). Tomorrow-morning-Nova has to find it cold in a fresh process to close this one."
+        },
+        {
+          "ts": "2026-07-19T12:30:04",
+          "note": "planted the retention test memory and confirmed it's the top semantic hit; tomorrow-morning-Nova has to find it in a cold process to finish the audit"
+        },
+        {
+          "ts": "2026-07-19T12:30:04",
+          "note": "[auto-logged from receipts — her hands, not her account] write_file(memory/scratch/check_retention.py)"
         }
       ],
       "created": "2026-07-19T12:02:49",
-      "updated": "2026-07-19T12:30:00"
+      "updated": "2026-07-19T12:30:04"
     },
     "t48": {
       "id": "t48",
