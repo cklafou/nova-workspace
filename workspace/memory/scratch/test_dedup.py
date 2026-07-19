@@ -1,9 +1,9 @@
-# Last updated: 2026-07-19 12:59:35
+# Last updated: 2026-07-19 13:00:10
 import sys; sys.path.insert(0,'nova_body')
 from nova_lancedb.hippocampus import NovaMemoryStore
 s = NovaMemoryStore()
-# Clean slate
-s._text_tbl.delete("session_id = 'deduptest' AND source = 'test'")
+# Clean slate — remove EVERYTHING from prior test runs, not just one session
+s._text_tbl.delete("source = 'test'")
 # EXACT bug scenario: old version stored first, then newer version in different words.
 old_ts = 1783200000  # ~11 days ago
 old_content = "I decided I want to stop narrating progress I haven't made yet"
