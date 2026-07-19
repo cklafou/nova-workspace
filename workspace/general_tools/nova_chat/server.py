@@ -733,11 +733,8 @@ async def nova_message(msg: NovaMessage):
         else:
             await client_mod.stream_response(session_mgr.active, on_token, on_done, on_error)
 
+    # Mentors removed 2026-07-19 — this endpoint no longer recruits paid API responders.
     tasks = []
-    if should_respond("Claude", directed_at) and status.get("Claude"):
-        tasks.append(collect_response("Claude", claude_client))
-    if should_respond("Gemini", directed_at) and status.get("Gemini"):
-        tasks.append(collect_response("Gemini", gemini_client))
 
     if tasks:
         await asyncio.gather(*tasks)
@@ -1526,8 +1523,10 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 # ── Client dispatch map ───────────────────────────────────────────────────────
 # Used by _run_response_queue to look up the right client module by name.
 CLIENT_MAP = {
-    "Claude": claude_client,
-    "Gemini": gemini_client,
+    # Claude and Gemini removed 2026-07-19 (paid APIs). Nova is the only responder this server
+    # can drive. Note the knock-on this deliberately creates: the @mention follow-up round in
+    # _run_response_queue looks up names in CLIENT_MAP, so an "@Claude" in her text now resolves
+    # to nothing and quietly does nothing — no key error, no cost, no crash.
     "Nova":   nova_client,
 }
 
