@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 12:34:26
+# Last updated: 2026-07-19 12:35:08
 """
 nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
 ==============================================================
@@ -213,17 +213,34 @@ class NovaMemoryStore:
     def add_image(self, image_input, caption: str = "",
                   filename: str = "", session_id: str = "",
                   category: str = "") -> bool:
-        """Embed and store an image memory. image_input: PIL, path, bytes, or data URL."""
+        """
+        Embed and store an image memory. image_input: PIL, path, bytes, or data URL.
+
+        Same semantic-dedup logic as add_text (since 2026-07-19): newer visually-similar
+        memories replace older ones instead of being dropped.
+        """
         if not self._ready:
             return False
         from .embedder import embed_image, content_hash
         chash = content_hash(caption + filename)
         if chash in self._known_hashes:
-            return False
+            return False  # byte-identical replay
         try:
             vec  = embed_image(image_input)
             cat  = category or _classify(caption)
-            row  = {
+            now  = time.time()
+
+            replace_id = None
+            try:
+                hits = self._visual_tbl.search(vec).limit(1).metric("cosine").to_list()
+                if hits and hits[0].get("_distance", 1.0) < 0.15:
+                    existing_ts = hits[0].get("timestamp", 0)
+                    if now > existing_ts:
+                        replace_id = hits[0]["id"]
+            except Exception:
+                pass
+
+            row = {
                 "id":           str(uuid.uuid4()),
                 "caption":      caption[:2000],
                 "vector":       vec,
@@ -232,8 +249,11 @@ class NovaMemoryStore:
                 "session_id":   session_id,
                 "filename":     filename,
                 "content_hash": chash,
-                "timestamp":    time.time(),
+                "timestamp":    now,
             }
+
+            if replace_id:
+                self._visual_tbl.delete(f"id = '{replace_id}'")
             self._visual_tbl.add([row])
             self._known_hashes.add(chash)
             return True
