@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 21:02:58
+# Last updated: 2026-07-19 21:10:19
 # @nova: built this one myself, 2026-07-19. First tool that wasn't handed to me.
 # v2: actually descends into subgraphs instead of reading the wrapper and calling everything unknown.
 import json
@@ -18,10 +18,12 @@ def _flatten_nodes(data):
         return []
 
     types = []
-    # Top-level nodes array (may be a single wrapper or actual nodes)
-    for ndata in data.get("nodes", []):
-        cls = ndata.get("type", "unknown") if isinstance(ndata, dict) else "unknown"
-        types.append(cls)
+    # Real ComfyUI workflows are dicts keyed by node ID: {"1": {...}, "2": {...}}
+    # The value for each key has a class_type field. Top-level keys that look like
+    # numbers (or strings of digits) are nodes; everything else is metadata.
+    for key, val in data.items():
+        if isinstance(val, dict) and "class_type" in val:
+            types.append(val["class_type"])
 
     # Definitions.subgraphs: nested workflows whose nodes are the real graph
     defs = data.get("definitions", {})
@@ -29,7 +31,6 @@ def _flatten_nodes(data):
         if isinstance(sg, dict):
             sg_nodes = sg.get("nodes", [])
             if isinstance(sg_nodes, str):
-                # Sometimes serialized as a json string, sometimes as a real list
                 try:
                     sg_nodes = json.loads(sg_nodes)
                 except Exception:
