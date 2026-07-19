@@ -44,6 +44,47 @@ EXCLUDE_SUBPATHS = set([
     "agents/main/sessions",
 ])
 
+# ── PATHS THE AUDIT QUEUE MUST NEVER RECORD (2026-07-20) ────────────────────────────────
+# Cole: "clear her queue completely and look into why that queue exists."
+#
+# memory/audit_queue.json had reached 6,563 items, every one still `pending`, going back to
+# 2026-05-24. **5,306 of them — 81% — were nova_memory_db/**, her LanceDB vector store. That
+# directory rewrites its internal data files every time she remembers something, so each
+# commit produced dozens of "new file" and "deleted file" events. The audit was reviewing a
+# database's storage churn as though each fragment were a rename a human should look at.
+#
+# Why the existing filters missed it: the rest of watcher.py filters what it INDEXES, but
+# _audit_after_commit() reads `git diff --name-status` directly and queued every line raw.
+# The exclusion lists were right there and simply weren't applied on this path.
+#
+# These are directories whose contents are machine-managed. A rename inside them is never
+# something to review; it is the machine working.
+AUDIT_EXCLUDE_PREFIXES = (
+    "nova_memory_db/",      # LanceDB internals — 81% of the old queue
+    "prompt_cache/",
+    "logs/",
+    "models/",
+    ".nova_app_profile/",   # the Nova app window's Chrome profile
+    "_admin/Trash/",
+    "_archive_",            # dated archive folders
+    "_QUARANTINE_",
+)
+
+
+def _audit_should_skip(path: str) -> bool:
+    """True if a git-diff path is machine churn rather than something worth reviewing."""
+    if not path:
+        return True
+    p = path.replace("\\", "/").lstrip("./")
+    if any(p.startswith(pre) for pre in AUDIT_EXCLUDE_PREFIXES):
+        return True
+    parts = p.split("/")
+    if any(seg in EXCLUDE_DIRS for seg in parts):
+        return True
+    if any(p.startswith(sub.rstrip("/") + "/") or p == sub for sub in EXCLUDE_SUBPATHS):
+        return True
+    return False
+
 # Read .aignore dynamically and append to EXCLUDE_SUBPATHS
 try:
     _aignore_file = WATCH_DIR / ".aignore"
@@ -331,6 +372,14 @@ def _detect_and_queue_changes(watch_dir: Path, commit_hash: str) -> None:
                 continue
             parts = line.split("\t")
             status = parts[0]
+
+            # Machine churn never enters the queue. One check, before any branch below, so
+            # every event type (R/D/A) is filtered by the same rule. See
+            # AUDIT_EXCLUDE_PREFIXES — this is what stops nova_memory_db/ from filing 5,306
+            # "reviews" nobody could ever action.
+            _paths = [p.removeprefix("workspace/") for p in parts[1:] if p]
+            if _paths and all(_audit_should_skip(p) for p in _paths):
+                continue
 
             if status.startswith("R"):
                 # R097  old/path.py  new/path.py

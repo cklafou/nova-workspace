@@ -14,8 +14,29 @@ __pycache__/
 .env
 nova_drive_token.json
 
-# Secrets — runtime config holds the Discord token (keep only the tokenless template tracked)
+# ── SECRETS (2026-07-20, Cole) ─────────────────────────────────────────────────────────
+# "Secrets are fine in folders and files. All files with secrets MUST be excluded from
+# file repository uploads though (git and drive currently)."
+#
+# This list is mirrored in general_tools/nova_sync/drive.py (EXCLUDE_FILES +
+# SECRET_SUFFIXES). The two MUST agree — a credential excluded from git but not from Drive
+# has still left the machine. audit_scripts.py::check_secret_exclusions asserts parity, so
+# adding to one without the other is now a HIGH finding rather than a silent leak.
 nova_gateway.json
+client_secrets.json
+memory/.auth_token
+memory/nova_users.json
+
+# Secret-shaped names, anywhere in the tree
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*_token.json
+*_secret.json
+*_secrets.json
+*.credentials.json
 
 # Regenerable artifacts / launcher junk
 .nova_app_profile*/

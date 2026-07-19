@@ -7,6 +7,7 @@ Nova can POST messages via /nova-message endpoint.
 Context exports available via /export endpoint.
 """
 import os
+import secrets
 import json
 import asyncio
 import uuid
@@ -96,6 +97,182 @@ sys.stderr = _TeeStream(sys.stderr)
 memory_indexer = None
 
 app = FastAPI()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+# AUTH — deny by default for anything that is not loopback.  (2026-07-20)
+#
+# Before this, :8765 had 57 endpoints and ZERO authentication. On localhost that was fine and
+# always had been: one user, physical access required. But the phone/watch tunnel is on the
+# roadmap, and the moment this port is reachable from mobile internet those 57 endpoints
+# include arbitrary shell (/api/terminal/run), read and write of any workspace file, screen
+# capture, and the ability to mint new speaker identities. That is not "a chat app with weak
+# auth" — it is remote administration of Cole's machine, with a camera.
+#
+# THREE DECISIONS, each deliberate:
+#
+# 1. MIDDLEWARE, NOT DECORATORS. This wraps every route rather than protecting a chosen list.
+#    A route written next month is protected the day it is written. The audit queue's whole
+#    failure was that safety depended on someone remembering; that is not repeated here.
+#
+# 2. LOOPBACK IS EXEMPT. Nothing changes for Cole at his desk, for the Nova app window, or for
+#    Nova's own calls to herself. Security that adds friction to the owner gets disabled by
+#    the owner.
+#
+# 3. A REMOTE DENY-LIST ON TOP OF THE TOKEN. Even holding a VALID token, a remote caller
+#    cannot reach shell, file-write, lora-equip, eyes or restart. A stolen phone must not be
+#    a shell on the desktop. Talking to Nova from a watch does not require the ability to
+#    reformat the machine.
+#
+# See Orient/SECURITY.md for the threat model. Roles live in nova_cortex/principals.py.
+# NIST CSF: PR.AC-1, PR.AC-3, PR.AC-4, DE.CM-1.  OWASP LLM08 (excessive agency).
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+
+# Paths are resolved LAZILY, not at module level. WORKSPACE_ROOT is defined ~1,600 lines
+# below this point, so touching it here would NameError at import and take the whole server
+# down at boot. Caught by checking every name this block needs against what is actually bound
+# above it — the sort of thing that is invisible on reading and obvious to a script.
+def _ws_root():
+    import pathlib
+    return pathlib.Path(os.environ.get("NOVA_WORKSPACE")
+                        or pathlib.Path(__file__).resolve().parent.parent.parent)
+
+
+def _auth_token_path():
+    return _ws_root() / "memory" / ".auth_token"
+
+
+def _access_log_path():
+    return _ws_root() / "logs" / "access.jsonl"
+
+# Loopback callers are the owner at the machine. Everything else must prove itself.
+_LOCAL_HOSTS = {"127.0.0.1", "::1", "localhost", "::ffff:127.0.0.1"}
+
+# Reachable remotely WITH a token. Everything not here is loopback-only, so the default for a
+# newly added endpoint is the safe one.
+_REMOTE_ALLOWED_PREFIXES = (
+    "/", "/ws", "/static", "/favicon.ico",
+    "/sessions", "/status", "/export",
+    "/api/nova/status", "/api/queue", "/api/version", "/api/users",
+    "/api/avatars", "/api/layout", "/api/llama/status", "/api/logs/list",
+)
+
+# NEVER reachable remotely, token or not. These are the machine, not the conversation.
+_LOOPBACK_ONLY = (
+    "/api/terminal/run", "/api/files/inject", "/api/files/read", "/api/files/tree",
+    "/api/nova/bridge", "/api/lora", "/api/restart", "/api/eyes",
+    "/api/sight", "/api/llama/start", "/api/llama/stop", "/nova-message",
+)
+
+
+# Remotely these are READ-ONLY: GET/HEAD pass, anything that mutates does not.
+# Found by test, 2026-07-20: `/api/queue` was on the allow-list meaning "let the phone SEE
+# her board", but prefix matching also handed over /api/queue/add, /complete, /cancel and
+# /delete — so a remote caller could have wiped her task board. Same shape for /api/users,
+# where POST mints new speaker identities. Reading the board and editing it are different
+# permissions and the allow-list could not express that until now.
+_REMOTE_READONLY = ("/api/queue", "/api/users", "/api/avatars", "/api/layout", "/sessions")
+
+
+def _remote_path_allowed(path: str, method: str = "GET") -> bool:
+    """Is this path on the remote allow-list?
+
+    ── THE BUG THIS EXISTS TO PREVENT (found by its own test, 2026-07-20) ──────────────
+    The first version was a one-line `any(path == p or path.startswith(p.rstrip("/") + "/"))`.
+    `"/"` is on the allow-list (the app root), and `"/".rstrip("/") + "/"` is `"/"`, which
+    every path in existence starts with. So the allow-list matched EVERYTHING, and the
+    middleware was "allow anything not explicitly denied" while its own comment three
+    screens up claimed deny-by-default. A new endpoint would have been remotely reachable
+    the day it was written — the exact failure the design was supposed to rule out.
+
+    `"/"` therefore matches ONLY the exact root. Everything else is a real prefix.
+    """
+    # Path traversal never reaches the allow-list. Starlette normally normalises, but an
+    # allow-list that can be walked past with `..` is not an allow-list. /api/users/../etc
+    # matched the /api/users prefix and passed, before this line existed.
+    if ".." in path or "//" in path:
+        return False
+
+    for p in _REMOTE_ALLOWED_PREFIXES:
+        if p == "/":
+            if path == "/":
+                return True
+            continue
+        if path == p or path.startswith(p.rstrip("/") + "/"):
+            # Matched — but if it's a read-only area, only a read may proceed.
+            if any(path == r or path.startswith(r.rstrip("/") + "/") for r in _REMOTE_READONLY):
+                return method.upper() in ("GET", "HEAD")
+            return True
+    return False
+
+
+def _auth_token() -> str:
+    """The bearer token, created on first use. Gitignored and excluded from Drive."""
+    try:
+        _tp = _auth_token_path()
+        if _tp.exists():
+            t = _tp.read_text(encoding="utf-8").strip()
+            if t:
+                return t
+        import secrets as _secrets
+        t = _secrets.token_urlsafe(32)
+        _tp.parent.mkdir(parents=True, exist_ok=True)
+        _tp.write_text(t, encoding="utf-8")
+        try:
+            os.chmod(_tp, 0o600)
+        except Exception:
+            pass
+        print(f"[auth] generated a new bearer token at {_tp}")
+        return t
+    except Exception as e:
+        print(f"[auth] could not read/create the token ({e}) — remote access will be REFUSED")
+        return ""      # fail CLOSED: no token means nothing remote gets in
+
+
+def _log_access(ip: str, path: str, verdict: str, why: str = "") -> None:
+    """Every remote request, allowed or denied. Right now an intrusion would leave no trace
+    at all — the same silent-drop pattern as every other bug in this project (CSF DE.CM-1)."""
+    try:
+        _lp = _access_log_path()
+        _lp.parent.mkdir(parents=True, exist_ok=True)
+        with open(_lp, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"ts": datetime.now().isoformat(timespec="seconds"),
+                                 "ip": ip, "path": path, "verdict": verdict,
+                                 "why": why}, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
+@app.middleware("http")
+async def _auth_gate(request: Request, call_next):
+    client_ip = (request.client.host if request.client else "") or ""
+    path = request.url.path
+
+    if client_ip in _LOCAL_HOSTS:
+        return await call_next(request)        # the owner, at the machine
+
+    # ── from here down, the caller is REMOTE ──────────────────────────────────────────
+    if any(path.startswith(p) for p in _LOOPBACK_ONLY):
+        _log_access(client_ip, path, "DENIED", "loopback-only endpoint")
+        return JSONResponse({"error": "This endpoint is local-only.",
+                             "detail": "Machine-level operations are not reachable remotely, "
+                                       "with or without a valid token."}, status_code=403)
+
+    expected = _auth_token()
+    supplied = (request.headers.get("authorization", "") or "").removeprefix("Bearer ").strip()
+    if not supplied:
+        supplied = request.query_params.get("token", "").strip()   # for <img>/EventSource
+    if not expected or not secrets.compare_digest(supplied, expected):
+        _log_access(client_ip, path, "DENIED", "bad or missing token")
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    if not _remote_path_allowed(path, request.method):
+        _log_access(client_ip, path, "DENIED", "not on the remote allow-list")
+        return JSONResponse({"error": "Not available remotely."}, status_code=403)
+
+    _log_access(client_ip, path, "ALLOWED")
+    return await call_next(request)
+
 
 @app.on_event("shutdown")
 async def shutdown_event():

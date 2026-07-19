@@ -357,6 +357,16 @@ class NovaRuntime:
             # gets reconciled to the board at the end of it (see the reconcile call below).
             _wake_started = datetime.now().isoformat()
 
+            # ── Standing chores onto the board, BEFORE she reflects (2026-07-20) ──────────
+            # So an unconsolidated day or a backed-up audit queue is visible to her as real
+            # work while she decides, rather than being a line of encouragement in a prompt
+            # she can out-prioritise. Idempotent by title; never raises.
+            try:
+                for _kind, _tid, _detail in executive.ensure_standing_chores():
+                    await self.emit("autonomy", f"queued chore [{_tid}] {_kind}: {_detail}")
+            except Exception:
+                pass
+
             # Phase 1 — reflect. Always SILENT (cole_pending=False) so it streams to her thinking
             # pane, never a chat bubble — her forming a genuine view of the moment.
             refl_prompt = executive.build_reflection(

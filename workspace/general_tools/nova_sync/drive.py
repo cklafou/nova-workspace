@@ -89,7 +89,26 @@ EXCLUDE_FILES    = {
     "nova_drive_token.json",    # OAuth token -- must never leave the local machine
     "client_secrets.json",      # OAuth client secret
     "audit_queue.json",         # large, high-churn runtime queue -- not useful to Gemini
+    # ── SECRETS (2026-07-20, Cole) ────────────────────────────────────────────────────
+    # "Secrets are fine in folders and files. All files with secrets MUST be excluded
+    # from file repository uploads though (git and drive currently)."
+    #
+    # .gitignore already excluded .env and nova_gateway.json; this list did not. Two
+    # exclusion systems that must agree, maintained separately, WILL drift -- and the
+    # failure is silent and one-way: you find out a credential left the machine after it
+    # has already left. audit_scripts.py::check_secret_exclusions now asserts parity
+    # between the two so this can't rot again.
+    ".env",                     # any environment/secret file
+    "nova_gateway.json",        # holds the Discord token
+    ".auth_token",              # tunnel bearer token (see Orient/SECURITY.md)
+    "nova_users.json",          # device identities + their token hashes
 }
+
+# Any file whose NAME ends with one of these is treated as a secret and never uploaded,
+# regardless of where it lives. Belt to EXCLUDE_FILES' braces: a new credential file with
+# an obvious name is protected the day it is created, not the day someone remembers.
+SECRET_SUFFIXES  = (".pem", ".key", ".p12", ".pfx", ".keystore",
+                    "_token.json", "_secret.json", "_secrets.json", ".credentials.json")
 # Directory-name PREFIXES to skip (dynamic names that an exact match can't catch).
 # The Nova app runs a Chrome --app window with a per-pid profile dir
 # (.nova_app_profile_<pid>) created inside the workspace. Its files are locked
@@ -170,6 +189,10 @@ def _scan_local_files():
         if path.suffix.lower() not in INCLUDE_EXTENSIONS:
             continue
         if path.name in EXCLUDE_FILES:
+            continue
+        # Secret-shaped filenames never upload, wherever they live. Checked LAST so it is the
+        # final word before a file becomes eligible — nothing downstream can re-admit it.
+        if path.name.lower().endswith(SECRET_SUFFIXES):
             continue
 
         checksum = _file_checksum(path)

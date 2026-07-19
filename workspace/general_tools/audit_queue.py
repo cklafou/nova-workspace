@@ -91,15 +91,81 @@ def save(data: dict) -> None:
     tmp.replace(QUEUE_PATH)
 
 
+# A pending item older than this is not a review backlog, it is litter. The rename it
+# describes happened weeks ago; nobody is going to act on it now.
+STALE_PENDING_DAYS = 14
+
+
 def _prune(data: dict) -> None:
-    """Remove oldest resolved/dismissed items if queue exceeds MAX_QUEUE_SIZE."""
+    """Enforce MAX_QUEUE_SIZE — for real this time.
+
+    ── WHY THIS WAS REWRITTEN (2026-07-20) ─────────────────────────────────────────────
+    The old version only ever removed items whose status was NOT pending:
+
+        closed = [i for i in items if i["status"] != "pending"]
+        remove_ids = {i["id"] for i in closed[:to_remove]}
+
+    Which means the cap held only while something was resolving items. Nothing ever did —
+    `resolve()` is called from exactly one place (restructure.py --rename) and that script
+    has never been run automatically. So `closed` was always empty, `remove_ids` was always
+    empty, and MAX_QUEUE_SIZE = 500 quietly capped nothing at all. The queue reached 6,563
+    items and 2.6 MB before anyone looked.
+
+    A bounded buffer whose bound depends on a consumer that may not exist is not bounded.
+    So now: closed items go first (they're worthless), then stale pending, then oldest
+    pending — and the cap holds no matter what else in the system is or isn't working.
+
+    Dropping pending items IS lossy, which is why it says so out loud rather than doing it
+    quietly. Silence about discarded data is how you end up trusting a queue that has been
+    throwing things away for a month.
+    """
     items = data["items"]
+
+    # 1. Age out stale pending items regardless of size.
+    if STALE_PENDING_DAYS:
+        try:
+            cutoff = datetime.now(timezone.utc).timestamp() - STALE_PENDING_DAYS * 86400
+            fresh = []
+            aged = 0
+            for i in items:
+                if i.get("status") == "pending":
+                    try:
+                        ts = datetime.fromisoformat(i.get("detected_at", "")).timestamp()
+                        if ts < cutoff:
+                            aged += 1
+                            continue
+                    except Exception:
+                        pass
+                fresh.append(i)
+            if aged:
+                print(f"[audit_queue] aged out {aged} pending item(s) older than "
+                      f"{STALE_PENDING_DAYS} days")
+            items = fresh
+        except Exception:
+            pass
+
     if len(items) <= MAX_QUEUE_SIZE:
+        data["items"] = items
         return
-    closed = [i for i in items if i["status"] != "pending"]
+
+    # 2. Closed items first — they have already served their purpose.
+    closed = [i for i in items if i.get("status") != "pending"]
     closed.sort(key=lambda i: i.get("resolved_at") or i.get("detected_at") or "")
     to_remove = len(items) - MAX_QUEUE_SIZE
     remove_ids = {i["id"] for i in closed[:to_remove]}
+
+    # 3. Still over? Then oldest PENDING go too. This is the line the old code was missing,
+    #    and its absence is the entire bug.
+    still = to_remove - len(remove_ids)
+    if still > 0:
+        pend = [i for i in items if i["id"] not in remove_ids and i.get("status") == "pending"]
+        pend.sort(key=lambda i: i.get("detected_at") or "")
+        dropped = pend[:still]
+        remove_ids |= {i["id"] for i in dropped}
+        print(f"[audit_queue] queue over {MAX_QUEUE_SIZE}; dropping {len(dropped)} oldest "
+              f"PENDING item(s) — unreviewed. Oldest dropped: "
+              f"{dropped[0].get('detected_at','?') if dropped else '-'}")
+
     data["items"] = [i for i in items if i["id"] not in remove_ids]
 
 

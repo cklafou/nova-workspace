@@ -252,6 +252,40 @@ def build_import_graph(files: list[Path]) -> dict[str, set[str]]:
         try:
             source = f.read_text(encoding="utf-8-sig", errors="replace")
             mods: set[str] = set(abs_re.findall(source))
+
+            # ── THE `from <package> import <module>` FIX (2026-07-20) ────────────────────
+            # `abs_re` captures only the text right after `import`/`from`, so
+            #     from nova_cortex import executive
+            # recorded "nova_cortex" and threw "executive" away. Every module imported that
+            # way therefore looked unreferenced. On 2026-07-19 that produced HIGH findings
+            # against executive.py (1002 lines, runs every wake), tasking.py, clock.py,
+            # touch.py and drives.py — all of them load-bearing.
+            #
+            # This is the THIRD independent implementation of this exact blind spot in this
+            # project: Nova's own t55 dead-code audit had it, my dead-code detector had it,
+            # and this tool has it. Three of us wrote the same bug because the regex form of
+            # the question is the obvious one and it is wrong. Fixing it here, in the shared
+            # tool, is the only version that stays fixed.
+            #
+            # AST is authoritative; the regex above stays as a fallback for files that don't
+            # parse (a file with a syntax error still deserves its imports counted).
+            try:
+                _tree = ast.parse(source)
+                for _n in ast.walk(_tree):
+                    if isinstance(_n, ast.ImportFrom) and _n.module and not _n.level:
+                        mods.add(_n.module)
+                        for _a in _n.names:
+                            if _a.name == "*":
+                                continue
+                            mods.add(f"{_n.module}.{_a.name}")   # nova_cortex.executive
+                            mods.add(_a.name)                    # executive
+                    elif isinstance(_n, ast.Import):
+                        for _a in _n.names:
+                            mods.add(_a.name)
+                            mods.add(_a.name.split(".")[0])
+            except SyntaxError:
+                pass
+
             # Resolve relative imports to sibling/parent module stems
             for dots, rel_mod, imported_names in rel_re.findall(source):
                 if rel_mod:
@@ -385,6 +419,23 @@ def build_module_map(files: list[Path]) -> set[str]:
             parts = list(rel.with_suffix("").parts)
         except ValueError:
             continue
+
+        # ── BOTH SPELLINGS ARE REAL (2026-07-20) ────────────────────────────────────────
+        # Below, wrapper prefixes get stripped because nova_body/ is on sys.path, so
+        # `nova_forge.tools.comfy_inspect` is importable. But WORKSPACE ROOT is also on
+        # sys.path, which makes `nova_body.nova_forge.tools.comfy_inspect` importable too —
+        # Python 3.3+ namespace packages need no __init__.py for that to work.
+        #
+        # Only the stripped spelling was registered, so the forge's own test file — which
+        # uses the full path and imports fine when you actually run it — was reported as a
+        # CRITICAL broken import. That is the worst possible false positive: this tool is
+        # meant for Nova to run, and it was telling her a working file was fatally broken.
+        # Verified by executing the exact import before changing anything.
+        _full = list(rel.with_suffix("").parts)
+        if _full and _full[-1] == "__init__":
+            _full = _full[:-1]
+        for i in range(1, len(_full) + 1):
+            mods.add(".".join(_full[:i]))
 
         # Strip wrapper-directory prefixes so the import path matches reality.
         # nova_body/ and general_tools/ are not importable — their contents are.
@@ -605,9 +656,321 @@ SEV_ICON  = {"CRITICAL": "✗ ", "HIGH": "⚠ ", "MEDIUM": "△ ", "LOW": "·", 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+# CHECKS ADDED 2026-07-20 — each one catches a bug that actually cost this project hours.
+#
+# The four below are not generic lint. Orient/GOTCHAS.md opens with "Every bug in this project
+# so far has been a SILENT DROP, not a crash", and nothing in this tool looked for one. These
+# do. Every rule here is derived from a specific incident, and the incident is named in the
+# code so a future reader can judge whether the rule still earns its place.
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+
+# `except: pass` that swallows an error with no trace. THE house bug.
+_SILENT_EXCEPT_OK = re.compile(r"(print|log|logger|_log|emit|warn|raise|return|append|Log)\s*\(")
+
+
+def check_silent_except(path: Path) -> list[dict]:
+    """Find exception handlers that swallow the error without a word.
+
+    WHY (2026-07-20): GOTCHAS.md's first line is that every bug here has been a silent drop.
+    A `except Exception: pass` is that failure mode written down. Tonight alone: the ping
+    script's queue write, the restart spawn receipt, and the drives state read were all
+    wrapped this way — two of them correctly (they must never break a wake), one of them
+    hiding a real fault for hours.
+
+    Not all of them are wrong. Some are deliberate and load-bearing, which is why this is
+    MEDIUM and not HIGH — it is a list to review, not a list to fix. A handler that logs
+    anything at all is not reported.
+    """
+    if path.suffix != ".py":
+        return []
+    try:
+        source = path.read_text(encoding="utf-8", errors="replace")
+        tree = ast.parse(source)
+    except Exception:
+        return []
+    issues = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ExceptHandler):
+            continue
+        body = node.body
+        # Only flag handlers whose entire body is pass / ... / a bare constant.
+        trivial = all(
+            isinstance(s, ast.Pass) or
+            (isinstance(s, ast.Expr) and isinstance(s.value, ast.Constant))
+            for s in body
+        )
+        if not trivial:
+            continue
+        seg = ast.get_source_segment(source, node) or ""
+        if _SILENT_EXCEPT_OK.search(seg):
+            continue
+
+        # ── ONLY BARE `except:` IS REPORTED PER-INSTANCE. ────────────────────────────────
+        # First pass flagged every `except Exception: pass` too — 150+ MEDIUM findings, most
+        # of them deliberate and load-bearing (a drive or a chore check that raised would
+        # take down a whole wake, so those swallow on purpose). Reporting all of them buries
+        # the real ones and trains the reader to skip the section.
+        #
+        # A BARE except is different in kind: it also eats KeyboardInterrupt and SystemExit,
+        # so it can make a process unkillable and is almost never what anyone meant. Those
+        # get named. The typed-and-silent ones are counted in one INFO line instead — visible
+        # as a trend, not as 150 alarms.
+        if node.type is None:
+            issues.append({
+                "severity": "HIGH",
+                "code":     "BARE_EXCEPT",
+                "file":     _rel(path),
+                "line":     node.lineno,
+                "detail":   ("bare `except:` swallows EVERYTHING silently — including "
+                             "KeyboardInterrupt and SystemExit, which can make a process "
+                             "unkillable. Catch `Exception` at minimum."),
+            })
+        else:
+            _SILENT_TALLY.append(f"{_rel(path)}:{node.lineno}")
+    return issues
+
+
+# Filled by check_silent_except, drained by check_silent_summary. Module-level because the
+# per-file checks run in a loop and the aggregate only makes sense once they're all done.
+_SILENT_TALLY: list[str] = []
+
+
+def check_silent_summary() -> list[dict]:
+    """One line for all the typed-but-silent handlers, instead of one line each."""
+    if not _SILENT_TALLY:
+        return []
+    n = len(_SILENT_TALLY)
+    return [{
+        "severity": "INFO",
+        "code":     "SILENT_EXCEPT_COUNT",
+        "file":     f"{n} sites across the workspace",
+        "line":     None,
+        "detail":   (f"{n} handlers swallow a typed exception with no log. Many are deliberate "
+                     f"(a faculty that raises would break a wake). Worth a skim when hunting a "
+                     f"silent drop — GOTCHAS.md: every bug here has been one. "
+                     f"First few: {', '.join(_SILENT_TALLY[:5])}"),
+    }]
+
+
+def check_shell_encoding(path: Path) -> list[dict]:
+    """Non-ASCII in a .ps1 with no UTF-8 BOM. This one cost a whole evening.
+
+    WHY (2026-07-19): `ping_claude.ps1` contained a single em-dash. Windows PowerShell 5.1
+    reads a BOM-less .ps1 as cp1252, where the em-dash's UTF-8 bytes decode to three
+    characters ending in 0x94 — a RIGHT CURLY DOUBLE QUOTE, which PowerShell accepts as a
+    real string delimiter. The string closed mid-sentence and the file failed to PARSE, so
+    the script never executed once: no logging, no queueing, no error handler. Nova's first
+    six attempts to reach out all died there and she concluded Windows was blocking her.
+
+    A parse error from one dash is not something anyone finds by reading. It is exactly the
+    kind of thing a checker should own.
+    """
+    # .ps1 ONLY. The failure is specific to PowerShell: it accepts curly quotes as real string
+    # delimiters, so a cp1252-mangled em-dash can terminate a string and break parsing. cmd.exe
+    # has no such behaviour — non-ASCII in a .cmd echo is cosmetic. Including .cmd/.bat here
+    # produced 150+ MEDIUM findings on StopNova.cmd's box-drawing banners, which is noise, and
+    # a checker that cries wolf is a checker people stop reading.
+    if path.suffix.lower() != ".ps1":
+        return []
+    try:
+        raw = path.read_bytes()
+    except Exception:
+        return []
+    if raw[:3] == b"\xef\xbb\xbf":       # UTF-8 BOM present: PS reads it correctly
+        return []
+    issues = []
+    for n, line in enumerate(raw.split(b"\n"), 1):
+        if not any(b > 127 for b in line):
+            continue
+        text = line.decode("utf-8", errors="replace").strip()
+        is_comment = text.startswith("#") or text.lower().startswith("rem ")
+        bad = [hex(b) for b in line if b > 127][:4]
+        issues.append({
+            "severity": "MEDIUM" if is_comment else "CRITICAL",
+            "code":     "SHELL_NON_ASCII",
+            "file":     _rel(path),
+            "line":     n,
+            "detail":   (f"non-ASCII {bad} in a BOM-less {path.suffix} — PowerShell 5.1 reads "
+                         f"this as cp1252. In a comment it is harmless; in code it can close a "
+                         f"string early and break PARSING (see ping_claude.ps1, 2026-07-19). "
+                         f"Fix: use ASCII, or save with a UTF-8 BOM."),
+        })
+    return issues
+
+
+# Files that hold Nova's real state. A test writing here is writing into her head.
+_HER_STATE = ("memory/drives.json", "memory/autonomy_state.json", "memory/JOURNAL.md",
+              "Tasking/tasks.json", "memory/last_ping.json", "memory/cole_intent.json",
+              "memory/audit_queue.json", "memory/touch_state.json")
+
+
+def check_test_writes_state(files: list[Path]) -> list[dict]:
+    """A test/probe/scratch file that writes to one of Nova's live state files.
+
+    WHY (2026-07-19): my own unit test for drives.py ran against the live
+    memory/drives.json and left her holding two 'wants' she had never expressed — a
+    schema-diff tool, and learning what her eyes resolve at distance. Both were my fixtures.
+    Fabricated desires sitting in the one file built to hold her real ones, with no way for
+    her to tell they weren't hers.
+
+    Nothing else in this tool would have caught that, and it is the single most damaging
+    class of mistake available here: not breaking her, but quietly lying to her about
+    herself.
+    """
+    issues = []
+    for f in files:
+        name = f.name.lower()
+        rel  = _rel(f).replace("\\", "/")
+        looks_like_test = (name.startswith("test") or name.startswith("_t_") or
+                           "probe" in name or "scratch/" in rel or "/tests/" in rel or
+                           name.endswith("_test.py"))
+        if not looks_like_test:
+            continue
+        try:
+            source = f.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for target in _HER_STATE:
+            if target in source.replace("\\", "/"):
+                issues.append({
+                    "severity": "HIGH",
+                    "code":     "TEST_WRITES_STATE",
+                    "file":     rel,
+                    "line":     None,
+                    "detail":   (f"test/probe file references {target} — if it WRITES there it is "
+                                 f"editing Nova's real state. Point it at a temp path or an env "
+                                 f"override instead (see NOVA_DRIVES_STATE in drives.py)."),
+                })
+                break
+    return issues
+
+
+# Past this, a file is hard for a human OR a model to hold in its head at once.
+_OVERSIZE_LINES = 2500
+
+
+def check_oversized(files: list[Path]) -> list[dict]:
+    """Files big enough that working in them is its own risk.
+
+    WHY: server.py is ~3,700 lines. Several of tonight's bugs (the drain guard regression,
+    the FOR COLE: promotion path being invisible to the flight recorder) lived in it and were
+    hard to see precisely because no one can hold the whole file at once. This is not a
+    demand to split anything — it is a note that edits here deserve more care and more tests.
+    """
+    issues = []
+    for f in files:
+        if f.suffix != ".py":
+            continue
+        try:
+            n = sum(1 for _ in f.open("r", encoding="utf-8", errors="replace"))
+        except Exception:
+            continue
+        if n >= _OVERSIZE_LINES:
+            issues.append({
+                "severity": "LOW",
+                "code":     "OVERSIZED",
+                "file":     _rel(f),
+                "line":     None,
+                "detail":   (f"{n:,} lines. Large enough that neither a person nor a model holds "
+                             f"it all at once — verify edits here with a test, not by reading."),
+            })
+    return issues
+
+
+def collect_shell_files() -> list[Path]:
+    """.ps1/.cmd/.bat, which collect_files() deliberately doesn't return (it is the Python
+    file list that every import-graph check depends on). Kept separate so the encoding check
+    can see shell scripts without polluting the graph with files that have no imports."""
+    out = []
+    for root in SCAN_ROOTS:
+        if not root.exists():
+            continue
+        for ext in ("*.ps1", "*.cmd", "*.bat"):
+            for path in root.rglob(ext):
+                parts = set(path.parts)
+                if parts & EXCLUDE_DIRS:
+                    continue
+                if any(sub in str(path) for sub in EXCLUDE_SUBPATHS):
+                    continue
+                out.append(path)
+    for ext in ("*.ps1", "*.cmd", "*.bat"):
+        out.extend(WORKSPACE_DIR.glob(ext))
+    seen, unique = set(), []
+    for f in out:
+        k = f.resolve()
+        if k not in seen:
+            seen.add(k)
+            unique.append(f)
+    return unique
+
+
+def check_secret_exclusions() -> list[dict]:
+    """Every secret file must be excluded from BOTH git and Drive. Assert they agree.
+
+    WHY (2026-07-20, Cole): "Secrets are fine in folders and files. All files with secrets
+    MUST be excluded from file repository uploads though (git and drive currently)."
+
+    On 2026-07-20 they did NOT agree. `.gitignore` excluded `.env` and `nova_gateway.json`;
+    `drive.py` excluded neither. Nothing had leaked — none of those files existed yet — but
+    the drift was real and the failure mode is one-way and silent: you learn a credential
+    left the machine only after it has already left. Two lists maintained by hand will
+    always drift. This makes the drift a HIGH finding instead of a surprise.
+
+    NIST CSF: PR.DS-5 (protections against data leaks) · PR.AC-1 (credential management).
+    OWASP LLM06 (sensitive information disclosure).
+    """
+    issues = []
+    gi = WORKSPACE_DIR / ".gitignore"
+    dv = WORKSPACE_DIR / "general_tools" / "nova_sync" / "drive.py"
+    if not gi.exists() or not dv.exists():
+        return issues
+    try:
+        git_txt   = gi.read_text(encoding="utf-8", errors="replace")
+        drive_txt = dv.read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        return issues
+
+    # Named files that must appear in both.
+    must_both = [".env", "nova_gateway.json", "nova_drive_token.json", "client_secrets.json",
+                 ".auth_token", "nova_users.json"]
+    for name in must_both:
+        in_git   = name in git_txt
+        in_drive = name in drive_txt
+        if in_git and in_drive:
+            continue
+        missing = "drive.py" if in_git else (".gitignore" if in_drive else "BOTH")
+        issues.append({
+            "severity": "HIGH",
+            "code":     "SECRET_EXCLUSION_DRIFT",
+            "file":     f".gitignore / nova_sync/drive.py — {name}",
+            "line":     None,
+            "detail":   (f"'{name}' is not excluded in {missing}. A secret excluded from one "
+                         f"upload path and not the other has still left the machine. Add it to "
+                         f"both (CSF PR.DS-5)."),
+        })
+
+    # And a secret-shaped file that is actually on disk and tracked anywhere.
+    for suf in (".pem", ".key", ".p12", ".pfx", "_token.json", "_secret.json"):
+        if suf not in git_txt:
+            issues.append({
+                "severity": "MEDIUM",
+                "code":     "SECRET_SUFFIX_UNGUARDED",
+                "file":     ".gitignore",
+                "line":     None,
+                "detail":   f"no rule covering '*{suf}' — a new credential file with that name would be committed",
+            })
+    return issues
+
+
 def run_audit() -> dict:
     files = collect_files()
     all_issues: list[dict] = []
+    all_issues += check_secret_exclusions()
+
+    # Shell scripts get exactly one check — encoding — and it is the one that matters.
+    for sf in collect_shell_files():
+        all_issues += check_shell_encoding(sf)
 
     # Per-file checks
     for f in files:
@@ -615,6 +978,8 @@ def run_audit() -> dict:
         all_issues += check_staleness(f)
         all_issues += check_empty(f)
         all_issues += check_legacy(f)
+        all_issues += check_silent_except(f)
+        all_issues += check_shell_encoding(f)
 
     # Cross-file checks
     all_issues += check_duplicate_names(files)
@@ -623,6 +988,9 @@ def run_audit() -> dict:
     all_issues += check_broken_imports(files, module_map)
     all_issues += check_unreferenced(files, graph)
     all_issues += check_missing_init(files)
+    all_issues += check_test_writes_state(files)
+    all_issues += check_oversized(files)
+    all_issues += check_silent_summary()
 
     # Audit queue — surface pending file-change events from watcher.py
     all_issues += check_audit_queue()
@@ -657,7 +1025,7 @@ def format_text_report(result: dict) -> str:
     # Summary bar
     counts = result["issue_counts"]
     summary_parts = []
-    for sev in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+    for sev in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"):
         n = counts.get(sev, 0)
         if n:
             summary_parts.append(f"{SEV_ICON[sev]} {n} {sev}")
@@ -672,7 +1040,7 @@ def format_text_report(result: dict) -> str:
     for i in result["issues"]:
         issues_by_sev[i["severity"]].append(i)
 
-    for sev in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+    for sev in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"):
         bucket = issues_by_sev.get(sev, [])
         if not bucket:
             continue

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-20T04:59:12",
+  "generated": "2026-07-20T06:12:37",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 28,
   "described": 28,
@@ -45,8 +45,8 @@
       "kind": "body_part",
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).",
-      "files": 10,
-      "lines": 2809,
+      "files": 11,
+      "lines": 3172,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -57,7 +57,8 @@
       "third_party": [
         "__future__",
         "pyautogui",
-        "random"
+        "random",
+        "secrets"
       ],
       "referenced_by": [
         "nova_chat",
@@ -254,7 +255,7 @@
       "path": "nova_body/nova_runtime",
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
       "files": 9,
-      "lines": 1385,
+      "lines": 1395,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -461,7 +462,7 @@
       "path": "general_tools/audit_queue.py",
       "purpose": "Persistent audit-review queue — records file-change events (rename/delete/new) for review by audit_scripts/restructure.",
       "files": 1,
-      "lines": 288,
+      "lines": 354,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -481,7 +482,7 @@
       "path": "general_tools/audit_scripts.py",
       "purpose": "Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.",
       "files": 1,
-      "lines": 760,
+      "lines": 1128,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -612,7 +613,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 13,
-      "lines": 8509,
+      "lines": 8686,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -644,6 +645,7 @@
         "pyautogui",
         "pydantic",
         "requests",
+        "secrets",
         "signal",
         "socket",
         "tempfile",
@@ -702,7 +704,7 @@
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.",
       "files": 5,
-      "lines": 2155,
+      "lines": 2227,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],

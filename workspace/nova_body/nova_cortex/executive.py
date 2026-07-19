@@ -270,6 +270,99 @@ def save_reflection(text: str) -> None:
     _save_state(st)
 
 
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# STANDING CHORES → HER BOARD (2026-07-20)
+#
+# Two jobs were quietly not happening, and they failed the same way:
+#
+#   journal consolidation — memory/journal_notes/ had four days of notes that JOURNAL.md
+#       had never absorbed. Her wake prompt DOES mention catching up a rolled-over day, but
+#       as "sometime soon — not necessarily this second", which is soft enough to never win
+#       against anything else on a given wake.
+#   audit queue review   — memory/audit_queue.json reached 6,563 items, 100% pending, over
+#       two months. Its only consumer is a script nobody runs.
+#
+# Both had a producer and no consumer, and both were addressed by *asking nicely* in a
+# prompt. Asking nicely does not survive contact with a wake that has other options.
+#
+# So they become TASKS. That works now specifically because of the 07-19 fix that stopped
+# a "rest" lean from cancelling Phase 3: an open task on the board is now worked even on
+# wakes she would otherwise spend quiet. A chore on the board gets done; a chore in a
+# paragraph does not.
+#
+# Idempotent by title — checked against open tasks before creating, so a wake every 20
+# seconds cannot spawn a hundred copies of "consolidate yesterday".
+# ═══════════════════════════════════════════════════════════════════════════════════════
+
+_CHORE_TITLES = {
+    "journal": "Consolidate yesterday's journal notes",
+    "audit":   "Review pending audit-queue items",
+}
+
+
+def _has_open_task_titled(title: str) -> bool:
+    try:
+        return any(t.get("title") == title and t.get("status") == "open"
+                   for t in tasking.all_tasks().values())
+    except Exception:
+        return True      # fail SAFE: if the board can't be read, don't spawn duplicates
+
+
+def ensure_standing_chores() -> list:
+    """Put unconsolidated days and a backed-up audit queue on the board. Returns what it
+    created (for logging). Never raises — a chore check must not break a wake."""
+    made = []
+
+    # ── 1. A previous day has notes that JOURNAL.md never absorbed ──────────────────────
+    try:
+        notes_dir = WORKSPACE_ROOT / "memory" / "journal_notes"
+        journal = WORKSPACE_ROOT / "memory" / "JOURNAL.md"
+        if notes_dir.is_dir() and journal.exists():
+            today = clock.now_iso()[:10]
+            jtext = journal.read_text(encoding="utf-8", errors="replace")
+            unconsolidated = sorted(
+                p.stem for p in notes_dir.glob("*.md")
+                if re.fullmatch(r"\d{4}-\d{2}-\d{2}", p.stem)
+                and p.stem < today                      # today is still in progress
+                and p.stem not in jtext                 # no entry for that date yet
+            )
+            if unconsolidated and not _has_open_task_titled(_CHORE_TITLES["journal"]):
+                days = ", ".join(unconsolidated[-5:])
+                tid = tasking.create(
+                    title=_CHORE_TITLES["journal"],
+                    notes=(f"These days have notes in memory/journal_notes/ but no entry in "
+                           f"memory/JOURNAL.md: {days}. Read each day's notes, follow the "
+                           f"chat_refs for context, and write the consolidated entry with the "
+                           f"`journal` tool so the day becomes real. Oldest first."),
+                    priority=2, author="system")
+                made.append(("journal", tid, unconsolidated))
+    except Exception:
+        pass
+
+    # ── 2. The audit queue has accumulated enough to be worth a pass ────────────────────
+    try:
+        import json as _json
+        qp = WORKSPACE_ROOT / "memory" / "audit_queue.json"
+        if qp.exists():
+            items = _json.loads(qp.read_text(encoding="utf-8")).get("items", [])
+            pending = [i for i in items if i.get("status") == "pending"]
+            if len(pending) >= 50 and not _has_open_task_titled(_CHORE_TITLES["audit"]):
+                tid = tasking.create(
+                    title=_CHORE_TITLES["audit"],
+                    notes=(f"{len(pending)} pending items in memory/audit_queue.json — file "
+                           f"renames/deletes/new files the watcher recorded so references "
+                           f"could be fixed. Nothing drains this automatically. Work through "
+                           f"them: for a real rename, fix the references and resolve it; for "
+                           f"anything already handled or irrelevant, dismiss it with a reason. "
+                           f"Use audit_queue.resolve()/dismiss() so the count actually drops."),
+                    priority=3, author="system")
+                made.append(("audit", tid, len(pending)))
+    except Exception:
+        pass
+
+    return made
+
+
 # ── what actually woke her, in words (keys are should_wake()'s reason strings) ──
 # Every non-"cole" cause leads with the negative. She cannot check whether Cole is
 # there; she can only read this line, so it has to carry the fact.

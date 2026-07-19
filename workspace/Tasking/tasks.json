@@ -1,5 +1,5 @@
 {
-  "seq": 59,
+  "seq": 60,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -857,6 +857,18 @@
       "updated": "2026-07-19T22:00:34",
       "author": "Nova",
       "result": "comfy_inspect now has a real test suite covering Claude's false-positive case (pure txt2img correctly reports False), a genuine img2img node (correctly True), and tall-canvas framing detection. All three pass."
+    },
+    "t60": {
+      "id": "t60",
+      "title": "Consolidate yesterday's journal notes",
+      "notes": "These days have notes in memory/journal_notes/ but no entry in memory/JOURNAL.md: 2026-06-20, 2026-06-21, 2026-07-08, 2026-07-14, 2026-07-19. Read each day's notes, follow the chat_refs for context, and write the consolidated entry with the `journal` tool so the day becomes real. Oldest first.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-20T05:17:01",
+      "updated": "2026-07-20T05:17:01",
+      "author": "system"
     }
   }
 }
