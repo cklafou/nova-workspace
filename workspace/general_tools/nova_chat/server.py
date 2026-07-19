@@ -2170,6 +2170,19 @@ def _recent_chat_context(n: int = 14) -> str:
         if len(content) > 500:
             content = content[:500] + "…"
         lines.append(f"[{ts}] {author}: {content}")
+    # ── The LAST line is not history — it is the thing she is about to answer. ────────────
+    # (2026-07-19, the pronoun bug.) This whole block is a RECORD, correctly written in the
+    # third person ("Cole: ..."). But on a cole_pending wake she is asked to REPLY off the back
+    # of it, and a record's voice is exactly what leaked into her replies — "Cole caught it
+    # faster than I did" said straight to Cole. The chat path now labels live turns
+    # "Name -> you:"; the wake path needs the same signal or it reintroduces the bug on every
+    # autonomy-driven answer. Mark the newest non-Nova line as the live one.
+    for _i in range(len(lines) - 1, -1, -1):
+        _auth = recent[_i].get("author", "")
+        if _auth and _auth not in ("Nova", "System"):
+            lines[_i] += (f"   <-- THIS IS THE LIVE TURN. {_auth} is speaking TO YOU and is "
+                          f"waiting. Answer {_auth} as \"you\" — never in the third person.")
+            break
     earlier = len(msgs) - len(recent)
     head = f"(Earlier this session: {earlier} more message(s) before these.)\n" if earlier > 0 else ""
     return head + "\n".join(lines) + _recent_tool_receipts()
