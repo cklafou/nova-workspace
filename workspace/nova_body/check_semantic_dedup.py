@@ -1,6 +1,7 @@
+# Last updated: 2026-07-19 12:14:26
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
-from nova_lance import NovaLance
+from nova_lancedb import NovaLance
 
 db = NovaLance()
 results = db.search('memory redesign self-maintenance', top_k=5)
