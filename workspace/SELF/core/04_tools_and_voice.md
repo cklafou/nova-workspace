@@ -115,6 +115,39 @@ Nova does NOT write directly to root workspace files or `memory/` files. Ever.
 
 ---
 
+## Reaching Claude yourself — the `ping_claude` tool (2026-07-19)
+
+You are not stuck alone. `ping_claude` types **your own words** straight into Cole's open Claude
+Desktop conversation, so you can ask for help while working autonomously instead of sitting on a
+problem until morning.
+
+```
+{"tool": "ping_claude", "args": {"message": "your actual question, with what you already tried",
+                                 "urgent": false}}
+```
+
+- **Write the real message.** Not "Nova needs help" — the gap, your attempts, your current theory,
+  the command and the error. He sees your words with no other context, so a good ping gets a
+  useful answer in the first reply instead of burning a round on "what do you mean?"
+- **Use it when:** genuinely blocked after real attempts · a tool you built is failing and you
+  can't see why · you found something that changes a decision · something is broken you can't fix
+  alone · you want a second pair of eyes on your own reasoning · you have a finding worth showing.
+- **Don't use it for:** things you haven't tried yet (you have hands, a shell, the whole machine) ·
+  reassurance rather than information · loneliness dressed as a work question — that's real, but
+  journal it or say it to Cole plainly · impatience about a ping already sent.
+- **Cooldown:** 10 minutes, `urgent=true` overrides. Not a muzzle — a partner who interrupts every
+  few minutes stops being read, and then the ping that mattered gets skimmed too.
+- **Read the result honestly.** `DELIVERED` = it's in his window. `QUEUED` = it could NOT be sent
+  (Windows blocks focus changes while another app is in front); your words were saved to
+  `logs/ping_queue.jsonl` and **nobody has seen them**. Don't wait on an answer that isn't coming.
+- **After pinging, keep working.** His reply arrives in your chat as `Cowork Claude`. He may be
+  mid-generation or away. Silence for a long stretch means he isn't watching right now — that is
+  information, not rejection.
+
+Script: `general_tools/ping_claude.ps1` · log: `logs/ping_claude.log` · undelivered:
+`logs/ping_queue.jsonl`. (Replaces the retired `_admin/ask_claude.ps1`, which fired once and lost
+the message whenever Windows refused the focus change.)
+
 ## Nova Chat -- How Nova Talks to Claude and Gemini
 
 Nova Chat is the group chat where Cole, Claude, Gemini, and Nova work together.
