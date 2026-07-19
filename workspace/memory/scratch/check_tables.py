@@ -1,16 +1,10 @@
-import sys, os
+# Last updated: 2026-07-19 14:15:55
+import sys
 sys.path.insert(0, 'nova_body')
 from nova_lancedb import get_store
 store = get_store()
-txt = store._text_tbl
-vis = store._visual_tbl
-for name, tbl in [('text', txt), ('visual', vis)]:
+for name in ['_text_tbl', '_visual_tbl']:
+    tbl = getattr(store, name)
     versions = list(tbl.list_versions())
     latest = versions[0] if versions else None
-    from datetime import datetime
-    print(f'{name}: {len(versions)} versions')
-    if latest:
-        print(f'  latest: {latest}')
-    d = os.path.dirname(tbl.to_lance().uri)
-    mtime = os.path.getmtime(d)
-    print(f'  dir mtime: {datetime.fromtimestamp(mtime)}')
+    print(f'{name}: {len(versions)} versions, latest={latest}')
