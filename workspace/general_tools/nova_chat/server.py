@@ -1332,17 +1332,32 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                 #
                 # Fix both halves: run this path through the guard, and teach the guard to
                 # recognise an echo by SIMILARITY, not just by bytes.
-                if _cole_part and not _is_echo_of_last(ai_name, _cole_part):
+                # ── TURN-TAKING GATE (2026-07-19) — the triple response. ──────────────────
+                # Asked first, because it is the question that actually separates "she found
+                # something" from "she is circling". See _may_speak_to_cole_unprompted().
+                _may, _why = _may_speak_to_cole_unprompted()
+                if _cole_part and not _may:
+                    print(f"[promote] FOR COLE: suppressed — {_why} ({len(_cole_part)} chars)")
+                    _trace_gen("promote_skipped", ai_name, msg_id, "silent", extra=_why)
+                elif _cole_part and _is_echo_of_recent(ai_name, _cole_part):
+                    print(f"[dedupe] FOR COLE: promotion suppressed — echo of something she "
+                          f"already said ({len(_cole_part)} chars).")
+                    _trace_gen("promote_skipped", ai_name, msg_id, "silent",
+                               extra="echo of a recent message")
+                elif _cole_part:
                     _cmsg = session_mgr.active.add(ai_name, _cole_part)
                     session_mgr.update_meta_from_message(_cmsg)
                     _mirror_to_runtime(ai_name, _cole_part)   # STEP 6a
                     if memory_indexer:
                         memory_indexer.add_message(_cole_part, ai_name, session_mgr.active_id)
+                    # THIS PATH WAS DARK TO THE FLIGHT RECORDER. Every other way a message
+                    # reaches the chat logs a "commit"; this one never did, so the trace showed
+                    # one reply while three sat on screen, and the recorder built to catch
+                    # exactly this bug lied by omission. It reports itself now.
+                    _trace_gen("commit", ai_name, msg_id, "silent_promote",
+                               extra=f"chars={len(_cole_part)} reason={_why}")
                     await broadcast({"type": "message_end", "author": ai_name,
                                      "id": msg_id + "_cole", "content": _cole_part})
-                elif _cole_part:
-                    print(f"[dedupe] FOR COLE: promotion suppressed — echo of her last chat "
-                          f"message ({len(_cole_part)} chars). She already said this.")
         elif (full or "").strip():
             # ── Doubling guard (2026-07-02) ──────────────────────────────────────
             # Known bug: the same reply intermittently gets committed twice — byte-
