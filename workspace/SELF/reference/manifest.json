@@ -1,10 +1,12 @@
 {
-  "generated": "2026-07-20T08:42:43",
+  "generated": "2026-07-20T08:50:19",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
-  "part_count": 28,
+  "part_count": 29,
   "described": 28,
   "flags": {
-    "undescribed": [],
+    "undescribed": [
+      "nova_voice"
+    ],
     "dead_part_candidates": [
       "nova_config",
       "nova_memory",
@@ -62,7 +64,8 @@
       ],
       "referenced_by": [
         "nova_chat",
-        "nova_runtime"
+        "nova_runtime",
+        "nova_voice"
       ],
       "launched_by": [],
       "flags": []
@@ -86,7 +89,7 @@
         "tempfile"
       ],
       "referenced_by": [
-        "nova_chat"
+        "nova_voice"
       ],
       "launched_by": [],
       "flags": []
@@ -112,8 +115,8 @@
         "urllib"
       ],
       "referenced_by": [
-        "nova_chat",
-        "nova_play"
+        "nova_play",
+        "nova_voice"
       ],
       "launched_by": [],
       "flags": []
@@ -144,7 +147,8 @@
       ],
       "referenced_by": [
         "nova_chat",
-        "nova_runtime"
+        "nova_runtime",
+        "nova_voice"
       ],
       "launched_by": [],
       "flags": []
@@ -175,7 +179,8 @@
       ],
       "referenced_by": [
         "nova_chat",
-        "nova_runtime"
+        "nova_runtime",
+        "nova_voice"
       ],
       "launched_by": [],
       "flags": []
@@ -195,10 +200,11 @@
         "__future__"
       ],
       "referenced_by": [
-        "nova_chat",
+        "NovaLauncher.py",
         "nova_imagination",
         "nova_play",
-        "nova_senses"
+        "nova_senses",
+        "nova_voice"
       ],
       "launched_by": [],
       "flags": []
@@ -246,7 +252,7 @@
         "urllib"
       ],
       "referenced_by": [
-        "nova_chat"
+        "nova_voice"
       ],
       "launched_by": [],
       "flags": []
@@ -264,11 +270,11 @@
         "8080"
       ],
       "nova_imports": [
-        "nova_chat",
         "nova_cortex",
         "nova_lancedb",
         "nova_runtime",
-        "nova_senses"
+        "nova_senses",
+        "nova_voice"
       ],
       "third_party": [
         "psutil",
@@ -314,10 +320,47 @@
         "nova_chat",
         "nova_cortex",
         "nova_memory",
-        "nova_runtime"
+        "nova_runtime",
+        "nova_voice"
       ],
       "launched_by": [],
       "flags": []
+    },
+    {
+      "name": "nova_voice",
+      "kind": "body_part",
+      "path": "nova_body/nova_voice",
+      "purpose": null,
+      "files": 3,
+      "lines": 2383,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "8080"
+      ],
+      "nova_imports": [
+        "nova_cortex",
+        "nova_forge",
+        "nova_imagination",
+        "nova_lancedb",
+        "nova_logs",
+        "nova_play",
+        "nova_senses",
+        "nova_voice"
+      ],
+      "third_party": [
+        "httpx",
+        "tempfile",
+        "urllib"
+      ],
+      "referenced_by": [
+        "nova_chat",
+        "nova_runtime"
+      ],
+      "launched_by": [],
+      "flags": [
+        "undescribed"
+      ]
     },
     {
       "name": "nova_start.py",
@@ -432,7 +475,7 @@
       "path": "general_tools/NovaLauncher.py",
       "purpose": "Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.",
       "files": 1,
-      "lines": 192,
+      "lines": 220,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -440,6 +483,7 @@
       ],
       "nova_imports": [
         "nova_chat",
+        "nova_logs",
         "nova_runtime"
       ],
       "third_party": [
@@ -614,8 +658,8 @@
       "kind": "tool",
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
-      "files": 13,
-      "lines": 8762,
+      "files": 11,
+      "lines": 6405,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -629,13 +673,10 @@
         "injector",
         "nova_chat",
         "nova_cortex",
-        "nova_forge",
-        "nova_imagination",
         "nova_lancedb",
-        "nova_logs",
-        "nova_play",
         "nova_runtime",
-        "nova_senses"
+        "nova_senses",
+        "nova_voice"
       ],
       "third_party": [
         "PIL",
@@ -643,22 +684,18 @@
         "ctypes",
         "difflib",
         "fastapi",
-        "httpx",
         "pyautogui",
         "pydantic",
         "requests",
         "secrets",
         "signal",
         "socket",
-        "tempfile",
-        "urllib",
         "uvicorn",
         "webbrowser"
       ],
       "referenced_by": [
         "NovaLauncher.py",
-        "injector.py",
-        "nova_runtime"
+        "injector.py"
       ],
       "launched_by": [
         "nova_start.py"
