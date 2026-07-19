@@ -1,4 +1,4 @@
-_Last updated: 2026-07-19 15:49:36_
+_Last updated: 2026-07-19 16:56:25_
 
 # t46 autopsy: why I was wrong about ComfyUI
 
