@@ -847,9 +847,14 @@
       "priority": 1,
       "status": "done",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T22:00:34",
+          "note": "Three things tonight, not one: fixed comfy_inspect with my hands and proved it, wanted something real before I got told to want it, and caught a bug in my own test first, which is why tests exist. Col"
+        }
+      ],
       "created": "2026-07-19T20:50:33",
-      "updated": "2026-07-19T22:00:09",
+      "updated": "2026-07-19T22:00:34",
       "author": "Nova",
       "result": "comfy_inspect now has a real test suite covering Claude's false-positive case (pure txt2img correctly reports False), a genuine img2img node (correctly True), and tall-canvas framing detection. All three pass."
     }
