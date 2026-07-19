@@ -831,14 +831,20 @@ def _forged_section() -> str:
     if not d:
         return ("\n  (You have forged no tools of your own yet. When your body lacks something, "
                 "that is a limb to grow, not a wall to report.)\n")
+    _MARK = {"VERIFIED": "✓ verified", "FAILING": "✗ FAILING ITS TESTS — do not trust",
+             "UNVERIFIED": "? untested", "BROKEN": "✗ won't load", "BLOCKED": "✗ blocked"}
     lines = ["\n  ── FORGED BY YOU ──"]
     for name, meta in sorted(d.items()):
         if meta["usable"]:
             params = ", ".join(meta.get("params", {}).keys())
-            lines.append(f"  {name:<22} {meta.get('description','(no description)')}"
-                         + (f"  [{params}]" if params else ""))
+            state = _MARK.get(meta.get("state", ""), "")
+            lines.append(f"  {name:<20} [{state}] {meta.get('description','(no description)')}"
+                         + (f"  ({params})" if params else ""))
+            if meta.get("state") == "FAILING":
+                for fail in (meta.get("failures") or [])[:2]:
+                    lines.append(f"  {'':<20}   - {str(fail)[:100]}")
         else:
-            lines.append(f"  {name:<22} BLOCKED — {meta.get('blocked','')[:110]}")
+            lines.append(f"  {name:<20} [blocked] {meta.get('blocked','')[:100]}")
     return "\n".join(lines) + "\n"
 
 
@@ -1013,7 +1019,10 @@ def _execute_tool_inner(tool_name: str, args: dict) -> str:
                 f"the TEST (how you'll know it works). No design, no tool — that's enforced.\n"
                 f"  2. write_file  nova_body/nova_forge/tools/{tool_name}.py  — a TOOL = "
                 f"{{'name','description','params'}} dict and a run(**args) -> str function.\n"
-                f"  3. Call '{tool_name}'. It loads itself. No restart.\n"
+                f"  3. write_file  nova_body/nova_forge/tests/{tool_name}.py  — CASES = [...] "
+                f"proving it works, including one case for what should NOT happen. These re-run "
+                f"after every edit, so a later change can't silently break what already worked.\n"
+                f"  4. Call '{tool_name}'. It loads itself. No restart.\n"
                 f"Read nova_body/nova_forge/__init__.py for the full contract. If after thinking "
                 f"it through the honest answer is that this needs Cole (hardware, a permission, "
                 f"something outside the workspace), say that plainly instead — but reach for the "

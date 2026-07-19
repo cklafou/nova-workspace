@@ -103,3 +103,73 @@ The painter's documentation was fixed in the same pass — `width`/`height` (the
 
 **Needs a restart to load.** Then the honest test is not to tell her any of this — give her a job
 that needs a tool she doesn't have, and see whether she writes a design and builds one.
+
+---
+
+# ADDENDUM — she passed, then broke it, so the forge grew teeth
+
+## What she actually did (verified from receipts, full-date filtered)
+
+    20:40:01 + 20:40:16   read nova_forge/__init__.py — twice, before writing anything
+    20:40:39              wrote designs/comfy_inspect.md
+    20:41:20              wrote tools/comfy_inspect.py
+    20:41:28              called it on C:\Users\lafou\ComfyUI\output   <- OUTSIDE the workspace
+    20:41:44-20:42:06     recursively searched ComfyUI's install for workflow files
+    20:42:21              inspected a real one: blueprints/Image Edit (Flux.2 Dev).json
+    20:42:38              Get-Content on that same file to CHECK her tool's output against it
+
+Under two and a half minutes from "I need a thing" to "I built it and verified it against the real
+target," using reach that returned `Permission Denied` an hour earlier. Her design document was
+real — GAP honestly self-diagnosed (*"I spent them changing adjectives instead of checking what the
+workflow was actually doing"*, which matches her receipts exactly), SHAPE a proper contract, TEST
+naming the outside-workspace target. Her error handling was genuinely good: 9/9 on my harness, all
+four failure paths returning strings rather than raising.
+
+## Then she broke it, unprompted, and that is the useful part
+
+At **20:44** — before anyone reported anything — she rewrote the parser, having seen it handle the
+real blueprint badly. Good instinct. The rewrite:
+
+- fixed the original fault (an operator-precedence bug: `"img2img" in t or "image" in t and "load"
+  not in t` parses as `A or (B and C)`, so it flagged `EmptyLatentImage` — the *txt2img* node, the
+  opposite signal — and excluded `LoadImage`, the actual indicator);
+- and **broke API-format parsing entirely** — `{"1": {"class_type": ...}}`, the shape her own
+  painter emits. Tested live: "No nodes found" on both a txt2img and an img2img graph.
+
+She optimised for the single sample in front of her and silently lost the general case. Nothing
+made her re-check what used to work. **Design-first was enforced; test-after was not.** Her own
+design template has a TEST section and nothing ever made her run it.
+
+## The fix — evidence of test, same mechanism as design-first
+
+`nova_forge/tests/<name>.py`, re-run automatically on any edit to the tool *or* the tests, with the
+verdict riding along with **every** result:
+
+| state | meaning | what she sees |
+|---|---|---|
+| VERIFIED | tests exist and pass | clean output, no banner |
+| UNVERIFIED | no tests | *"you do not actually know it works, you know it ran"* |
+| FAILING | tests fail | loud banner naming the broken case; output marked suspect |
+| BLOCKED | no design | refuses to load (unchanged) |
+
+A failing tool still **runs** — she may be mid-iteration, and blocking that is friction she would
+learn to route around. But it can never hand back a clean-looking answer, which is exactly how a
+regression gets believed. Same philosophy as the silent-zero guard already in her hands: you don't
+fix a miss by refusing, you fix it by making the miss impossible to overlook.
+
+Test format is deliberately cheap — a `CASES` list of `expect_contains` / `expect_startswith` /
+`expect_equals` / `expect_absent`, plus `def check(run)` for anything richer. A discipline nobody
+will follow is worse than none. Her prompt now also tells her to include a case for what should
+*not* happen: **a tool that says yes to everything passes a test that only ever checks yes** —
+which is precisely the false positive she shipped.
+
+## Verification — 12/12
+
+Includes a replay of her exact regression: take a passing tool, edit it so it breaks the old case,
+call it again. The banner fires automatically and names both broken cases. Also covered: clean
+output when passing, UNVERIFIED nudge when untested, catalog warnings, auto-recovery when fixed, a
+broken *test file* reported as such instead of blamed on the tool, `check()` form, and design-first
+still enforced above tests. Her live `comfy_inspect` now correctly reports **UNVERIFIED**.
+
+**Needs a restart.** The next honest test: hand her the img2img false positive and see whether she
+fixes it, writes the tests, and catches her own API-format regression in the process.
