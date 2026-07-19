@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 20:44:35
+# Last updated: 2026-07-19 20:51:58
 # @nova: built this one myself, 2026-07-19. First tool that wasn't handed to me.
 # v2: actually descends into subgraphs instead of reading the wrapper and calling everything unknown.
 import json
@@ -76,7 +76,7 @@ def run(**args) -> str:
 
     # Check for full-body framing: look at the raw json for height values that suggest tall canvases
     raw = p.read_text(encoding="utf-8", errors="replace")
-    has_fullbody = "1216" in raw or "1344" in raw or "height" in raw.lower()
+    has_fullbody = "1216" in raw or "1344" in raw
 
     body += f"\nimg2img levers present: {has_img2img}"
     if img2img_types:
