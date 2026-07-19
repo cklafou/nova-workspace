@@ -151,6 +151,109 @@ def _load(name: str):
     return mod, ""
 
 
+def test_path(name: str) -> Path:
+    return TESTS_DIR / f"{name}.py"
+
+
+def run_tests(name: str) -> tuple[str, list[str]]:
+    """Run a forged tool's tests. Returns (state, failures).
+
+    state: VERIFIED | FAILING | UNVERIFIED | BLOCKED | BROKEN
+
+    Two supported shapes, both deliberately cheap to write — a discipline nobody will follow is
+    worse than none:
+
+        CASES = [
+            {"name": "txt2img shows no img2img",
+             "args": {"path": "..."},
+             "expect_contains": "img2img levers present: False"},
+            {"name": "missing file errors cleanly",
+             "args": {"path": "nope.json"}, "expect_startswith": "ERROR"},
+        ]
+
+        def check(run):        # for anything richer; `run` is the tool's own run(**args)
+            fails = []
+            ...
+            return fails       # empty list == pass
+
+    Cached on the mtimes of BOTH the tool and its tests, so an edit to either re-runs them. That
+    caching is the whole point: it makes "did I break what used to work?" answer itself after
+    every single change, instead of only when someone thinks to ask.
+    """
+    _ensure_dirs()
+    ok_design, _ = has_design(name)
+    if not ok_design:
+        return "BLOCKED", []
+    mod, err = _load(name)
+    if err:
+        return "BROKEN", [err]
+    tp = test_path(name)
+    if not tp.exists():
+        return "UNVERIFIED", []
+    try:
+        tool_mt = (TOOLS_DIR / f"{name}.py").stat().st_mtime
+        test_mt = tp.stat().st_mtime
+    except Exception:
+        tool_mt = test_mt = 0.0
+    cached = _TEST_CACHE.get(name)
+    if cached and cached[0] == tool_mt and cached[1] == test_mt:
+        return cached[2]
+
+    fails: list[str] = []
+    try:
+        spec = importlib.util.spec_from_file_location(f"nova_forge_test_{name}", tp)
+        tmod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(tmod)                     # type: ignore[union-attr]
+    except Exception:
+        verdict = ("FAILING", [f"the TEST file itself failed to import:\n"
+                               f"{traceback.format_exc(limit=3)}"])
+        _TEST_CACHE[name] = (tool_mt, test_mt, verdict)
+        return verdict
+
+    for i, case in enumerate(getattr(tmod, "CASES", []) or [], 1):
+        label = case.get("name", f"case {i}")
+        try:
+            got = str(mod.run(**(case.get("args") or {})))   # type: ignore[union-attr]
+        except Exception as e:
+            fails.append(f"{label}: raised {type(e).__name__}: {e}")
+            continue
+        for key, cond, desc in (
+            ("expect_contains",   lambda g, v: v in g,             "should contain"),
+            ("expect_startswith", lambda g, v: g.startswith(v),    "should start with"),
+            ("expect_equals",     lambda g, v: g == v,             "should equal"),
+            ("expect_absent",     lambda g, v: v not in g,         "should NOT contain"),
+        ):
+            if key in case and not cond(got, case[key]):
+                fails.append(f"{label}: {desc} {case[key]!r} — got {got[:160]!r}")
+
+    if callable(getattr(tmod, "check", None)):
+        try:
+            extra = tmod.check(mod.run) or []              # type: ignore[union-attr]
+            fails.extend(str(x) for x in extra)
+        except Exception:
+            fails.append(f"check() raised:\n{traceback.format_exc(limit=3)}")
+
+    verdict = ("FAILING" if fails else "VERIFIED", fails)
+    _TEST_CACHE[name] = (tool_mt, test_mt, verdict)
+    return verdict
+
+
+def _state_banner(name: str, state: str, fails: list[str]) -> str:
+    """The line(s) that ride along with a tool's output so its trustworthiness is never silent."""
+    if state == "VERIFIED":
+        return ""
+    if state == "UNVERIFIED":
+        return (f"\n\n[UNVERIFIED — '{name}' has no tests. You do not actually know it works, you "
+                f"know it ran. Write nova_forge/tests/{name}.py before you trust this number.]")
+    if state == "FAILING":
+        body = "\n".join(f"    - {f}" for f in fails[:4])
+        return (f"\n\n[!! '{name}' IS FAILING ITS OWN TESTS — treat this output as suspect !!\n"
+                f"{body}\n"
+                f"    You wrote these tests; they are the definition of working you chose. Fix the "
+                f"tool or fix the test, then call it again — they re-run on every edit.]")
+    return ""
+
+
 def discover() -> dict[str, dict]:
     """Every forged tool and its state. Never raises — a broken tool is reported, not fatal."""
     _ensure_dirs()
@@ -162,6 +265,7 @@ def discover() -> dict[str, dict]:
         ok_design, why = has_design(name)
         mod, err = _load(name)
         meta = getattr(mod, "TOOL", {}) if mod else {}
+        state, fails = run_tests(name)
         out[name] = {
             "name": name,
             "description": meta.get("description", ""),
@@ -169,6 +273,8 @@ def discover() -> dict[str, dict]:
             "version": meta.get("version", 1),
             "usable": bool(mod) and ok_design,
             "blocked": ("" if ok_design else why) or err,
+            "state": state,          # VERIFIED | FAILING | UNVERIFIED | BLOCKED | BROKEN
+            "failures": fails,
         }
     return out
 
@@ -201,7 +307,10 @@ def call(name: str, args: dict) -> tuple[bool, str]:
     except Exception:
         return True, (f"ERROR: '{name}' raised while running:\n{traceback.format_exc(limit=4)}\n"
                       f"It's your tool — read nova_forge/tools/{name}.py and fix it.")
-    return True, str(res)
+    # Its trustworthiness travels with its answer. A tool whose tests are failing must never hand
+    # back a clean-looking number — that is precisely how a regression gets believed.
+    state, fails = run_tests(name)
+    return True, str(res) + _state_banner(name, state, fails)
 
 
 def catalog_line() -> str:
@@ -209,11 +318,12 @@ def catalog_line() -> str:
     d = discover()
     if not d:
         return ""
-    usable = [n for n, v in d.items() if v["usable"]]
-    blocked = [n for n, v in d.items() if not v["usable"]]
-    parts = []
-    if usable:
-        parts.append("FORGED (built by you): " + ", ".join(usable))
-    if blocked:
-        parts.append("BLOCKED (needs a design doc): " + ", ".join(blocked))
-    return "\n".join(parts)
+    by = {}
+    for n, v in d.items():
+        by.setdefault(v["state"] if v["usable"] else "BLOCKED", []).append(n)
+    order = [("VERIFIED", "FORGED & VERIFIED (tests pass)"),
+             ("FAILING", "FORGED but FAILING ITS TESTS — do not trust"),
+             ("UNVERIFIED", "FORGED but UNTESTED — you know it ran, not that it works"),
+             ("BROKEN", "FORGED but won't load"),
+             ("BLOCKED", "BLOCKED (needs a design doc)")]
+    return "\n".join(f"{label}: {', '.join(sorted(by[k]))}" for k, label in order if by.get(k))
