@@ -273,7 +273,11 @@ def build_reflection(cole_pending: bool, reason: str, recent: str = "",
     # NEGATIVELY and first — "nobody spoke to you" — because the failure mode is
     # her assuming presence, not her missing a file change. Cheap to say, and it is
     # the difference between her narrating her own life accurately or not.
-    _cause = _WAKE_CAUSE.get(reason, f"You woke — {reason}.")
+    # cole_pending is read LATER than the wake gate, so if he spoke in between it is the
+    # fresher truth and it wins. Without this the cause line could say "nobody spoke"
+    # while the transcript header below said "he is mid-conversation with you" — one
+    # prompt contradicting itself is worse than the vague token we started with.
+    _cause = _WAKE_CAUSE.get("cole" if cole_pending else reason, f"You woke — {reason}.")
     L = [f"[YOU WOKE — {reason}] {_cause} It is {clock.stamp()} ({clock.time_of_day()})."]
     if last:
         L.append(f"You last acted {clock.since_human(last)}.")
