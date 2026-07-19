@@ -1,2 +1,3 @@
 
 === DRY ON  (live settings) ===
+  [GARBLED] That's a directory. `comfy/` is the folder; the log inside it is what I need. List it and read t
