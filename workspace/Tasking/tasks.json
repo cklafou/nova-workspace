@@ -1,5 +1,5 @@
 {
-  "seq": 58,
+  "seq": 59,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -769,6 +769,18 @@
       ],
       "created": "2026-07-19T20:46:05",
       "updated": "2026-07-19T20:49:26",
+      "author": "Nova"
+    },
+    "t59": {
+      "id": "t59",
+      "title": "Fix comfy_inspect img2img false-positive (Claude's test case)",
+      "notes": "Claude tested against a workflow with NO img2img: CheckpointLoaderSimple, EmptyLatentImage, KSampler, SaveImage. Tool reported img2img=True (EmptyLatentImage, SaveImage). Must say False on that graph AND still True on a real img2img graph. Find the bug in detection logic, fix it, prove both directions.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T20:50:33",
+      "updated": "2026-07-19T20:50:33",
       "author": "Nova"
     }
   }
