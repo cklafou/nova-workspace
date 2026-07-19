@@ -234,7 +234,7 @@ class NovaRuntime:
         #    deps), so importing it here doesn't drag the server in. Fully relocating it into
         #    the body is a later cleanup for a perfect pluck; for now this is enough to think.
         try:
-            from nova_chat.clients import nova as _nova
+            from nova_voice import nova as _nova
             self.model_client.register({"Nova": _nova})
         except Exception as e:
             print(f"[nova_runtime] model client unavailable (headless generation off): {e}")

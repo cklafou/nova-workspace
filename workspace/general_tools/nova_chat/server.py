@@ -37,7 +37,7 @@ from nova_chat.workspace_context import WorkspaceContext
 #   • ping_claude — desktop UI automation into an already-open Claude window. Not an API call.
 # The distinction that matters: she can still be TALKED TO by Claude; this server can no longer
 # PAY to talk to Claude.
-import nova_chat.clients.nova as nova_client
+import nova_voice.nova as nova_client
 from nova_chat.nova_bridge import handle_nova_message, parse_actions
 
 # ── In-memory log ring buffer ─────────────────────────────────────────────────

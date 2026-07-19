@@ -1,4 +1,4 @@
-# Last updated: 2026-07-20 04:03:13
+# Last updated: 2026-07-20 08:44:36
 """
 Nova (Qwen 3.5 27B Dense) inference client for Nova Group Chat.
 ============================================================
@@ -949,7 +949,7 @@ async def stream_response(
                 try:
                     tool_call = _tc
                     if "tool" in tool_call:
-                        from nova_chat.tool_router import execute_tool
+                        from nova_voice.tool_router import execute_tool
                         
                         tool_name = tool_call["tool"]
                         # Tolerate the common shape variance where she puts params at the
