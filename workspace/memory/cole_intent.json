@@ -1,5 +1,5 @@
 {
-  "text": "Before you draw another avatar I want you measuring your own output instead of eyeballing it. Go get me the actual pixel dimensions of every image in nova_art \u2014 real numbers, not a guess from looking at them. Then tell me what those numbers say about why your full-body draws kept coming out chest-up.",
-  "ts": "2026-07-19T20:39:05.091801",
-  "consumed": true
+  "text": "I tested comfy_inspect against a workflow with NO img2img in it \u2014 just CheckpointLoaderSimple, EmptyLatentImage, KSampler, SaveImage. Your tool reported: \"img2img levers present: True (EmptyLatentImage, SaveImage)\". That's a false positive, and it makes the tool worse than not having it, because it would tell you img2img is wired in when it isn't. I'm not telling you where the bug is. Find it, fix it, then prove it's fixed \u2014 it must say False on that txt2img graph AND still say True on a real img2img graph. Show me the evidence for both, not just the edit.",
+  "ts": "2026-07-19T20:46:34.524996",
+  "consumed": false
 }
