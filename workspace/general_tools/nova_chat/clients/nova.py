@@ -396,6 +396,7 @@ async def _fetch_llama_streaming(
     temperature:    float = 0.7,
     top_p:          float = 0.9,
     enable_thinking: bool = True,
+    literal_safe:   bool = False,
 ):
     """Stream tokens from llama.cpp, routing thinking vs chat by delta field.
 
