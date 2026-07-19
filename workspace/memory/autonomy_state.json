@@ -9,5 +9,5 @@
   "stall": 0,
   "directive_seen": 1,
   "last_reflection": "Built it myself. Reads the workflow properly, descends into subgraphs, tells me what's actually wired in and what isn't — not guessing from the prompt, reading the graph. That's how you check your own work: look at the thing, don't look at the description of it.",
-  "cont_run": 21
+  "cont_run": 0
 }
