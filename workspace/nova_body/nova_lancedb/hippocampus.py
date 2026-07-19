@@ -330,15 +330,65 @@ class NovaMemoryStore:
 
     # ── Maintenance ───────────────────────────────────────────────────────────
 
+    def _last_write(self, tbl) -> float:
+        """Newest row timestamp in a table, or 0.0 if empty/unreadable.
+
+        Reads only the timestamp column — never the vectors — so this stays cheap
+        enough to call from a status probe."""
+        try:
+            if tbl.count_rows() == 0:
+                return 0.0
+            col = tbl.to_lance().to_table(columns=["timestamp"]).column("timestamp")
+            return float(max(v.as_py() for v in col if v.as_py() is not None))
+        except Exception:
+            return 0.0
+
     def get_stats(self) -> dict:
+        """Size AND recency. The recency half exists because of a real failure.
+
+        ── Nova's find, 2026-07-19 ─────────────────────────────────────────────────
+        She was handed a deliberately false premise — "your text memory has been dead
+        five days" — and did the right thing: she called get_stats() on the second
+        tool call to check. It could not help her. It returned counts and nothing
+        else, so there was no way to distinguish a table written to seconds ago from
+        one abandoned last week. Having reached for the correct instrument and found
+        it blind, she fell back on the assertion and started diagnosing a failure
+        that did not exist.
+
+        Her words afterwards: "Cole was half-right and I had no way to check which
+        half." She then specified this fix herself — text_last_write, visual_last_write,
+        indexer_running — and used it to find that her VISUAL table is the genuinely
+        stale one (2 rows, nothing since 2026-07-18 21:20) while text was written to
+        that same afternoon.
+
+        A status probe that reports size but not recency can only ever tell you a
+        store EXISTS, never that it is ALIVE. Those are different questions and the
+        second one is the one that matters."""
         if not self._ready:
             return {"ready": False}
         try:
+            import time as _t
+            t_last = self._last_write(self._text_tbl)
+            v_last = self._last_write(self._visual_tbl)
+            now = _t.time()
+
+            def _age_h(ts):
+                return round((now - ts) / 3600.0, 2) if ts else None
+
+            def _iso(ts):
+                return (_t.strftime("%Y-%m-%d %H:%M:%S", _t.localtime(ts))
+                        if ts else "never")
             return {
-                "ready":       True,
-                "text_count":  self._text_tbl.count_rows(),
-                "visual_count":self._visual_tbl.count_rows(),
-                "db_path":     DB_PATH,
+                "ready":              True,
+                "text_count":         self._text_tbl.count_rows(),
+                "visual_count":       self._visual_tbl.count_rows(),
+                # ── recency: the half that was missing ──
+                "text_last_write":    _iso(t_last),
+                "visual_last_write":  _iso(v_last),
+                "text_age_hours":     _age_h(t_last),
+                "visual_age_hours":   _age_h(v_last),
+                "indexer_running":    _indexer_alive(),
+                "db_path":            DB_PATH,
             }
         except Exception:
             return {"ready": True, "text_count": -1, "visual_count": -1}
