@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T18:36:05+09:00",
+  "updated_at": "2026-07-19T18:36:26+09:00",
   "items": [
     {
       "id": "777df213",
@@ -83002,6 +83002,19 @@
       "commit": "3354ca62",
       "old_path": null,
       "new_path": "_admin/hallucination_gate.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "5d7aac8a",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T18:36:26+09:00",
+      "commit": "34b3dc2e",
+      "old_path": null,
+      "new_path": "memory/scratch/dead_candidates.txt",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
