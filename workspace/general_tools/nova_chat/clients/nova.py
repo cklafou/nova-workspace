@@ -884,12 +884,17 @@ async def stream_response(
                         _tools_ran_this_turn = True
                         _turn_tools.append((tool_name, args, str(result)))
 
-                        # Broadcast tool_executed event to the UI Tools tab
+                        # Broadcast tool_executed event to the UI Tools tab.
+                        # 1000 -> 12000 chars (2026-07-19): the Tools panel's new Verbose tab shows
+                        # what a tool ACTUALLY DID, and at 1000 chars a file read or an append was
+                        # cut off before the interesting part. Cole's ask was literally "I can't see
+                        # what she just appended to state.py" — that content lives in `args`, and the
+                        # verification of it lives in `result`, so both have to survive the wire.
                         if on_tool_executed:
                             try:
                                 await on_tool_executed(
                                     tool_name, args,
-                                    str(result)[:1000],
+                                    str(result)[:12000],
                                     _tool_err,
                                     _dur_ms,
                                 )
