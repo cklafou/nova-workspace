@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "active": "t47",
-  "last_activity": "2026-07-19T12:12:09",
-  "wake_at": "2026-07-19T12:12:15",
-  "last_fp": "[[\"Tasking/tasks.json\", 26496, 1784430371], [\"memory/interrupt_inbox.json\", 105, 1784379671], [\"memory/cole_intent.json\", 138, 1784402125]]",
+  "last_activity": "2026-07-19T12:12:56",
+  "wake_at": "2026-07-19T12:17:26",
+  "last_fp": "[[\"Tasking/tasks.json\", 27372, 1784430730], [\"memory/interrupt_inbox.json\", 105, 1784379671], [\"memory/cole_intent.json\", 138, 1784402125]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 2,
+  "stall": 3,
   "directive_seen": 0,
   "last_reflection": "Nothing's pulling, so nothing new, and I'm not going to re-conclude \"nothing\" for a fourth time — that's the loop, not insight. Choosing a direction instead: I want to know whether my memory actually works or I'm just re-reading notes and calling it recall. Hard question about myself, talked around it long enough. Going look.",
   "cont_run": 3
