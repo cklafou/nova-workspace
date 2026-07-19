@@ -1,0 +1,8 @@
+[nova] *** WARNING: integrity faculty NOT loaded from body: No module named 'nova_cortex' *** falling back to the in-face copies below.
+============================================================================
+ADAPTER: nova_core_v6_epoch1.gguf
+============================================================================
+
+Cole: Oof. Sudden strays flying in from Nova.
+  [0 words | self-analysis tells: 0]
+  Nova: 
