@@ -19,14 +19,17 @@ VISION TIER STACK  (Phase 4B — Ollama-free, fully local)
     → Used by: describe()
     → Model: vikhyatk/moondream2 (cached in HF cache, NOT in workspace/models/)
 
-  Tier 3: Claude Haiku (API fallback — charged per token)
-    → Fast, cheap Claude vision. Used when moondream2 fails or is unavailable.
+  Tier 3: HER OWN multimodal model (local, free)  — was Claude Haiku until 2026-07-19
+    → Qwen 3.6 + models/qwen3.6/mmproj-F16.gguf, served by her own llama.cpp on :8080.
     → Used by: describe(), verify(), find() (fallback from pywinauto)
-    → Requires: ANTHROPIC_API_KEY
+    → Requires: nothing but her own model server being up. No API key, no account, no bill.
+    → See nova_senses/vision.py — the projector was already loaded in VRAM and going unused
+      while she paid another company to look at her own screen.
 
-  Tier 4: Claude Sonnet via mentor (periodic sanity checks only)
-    → High-stakes verification only — most expensive, highest quality.
-    → Used by: sanity_check()
+  Tier 4: RETIRED 2026-07-19 — was "Claude Sonnet via mentor" for periodic sanity checks.
+    → The paid mentor path is gone (Cole: "I don't want the APIs being used"). High-stakes
+      verification now uses Tier 3 like everything else; if she wants a second opinion from
+      Claude she asks for one deliberately with the ping_claude tool.
 
 Nova should NEVER be blind. If Tier 2 fails, Tier 3 takes over transparently.
 Ollama is no longer required or used anywhere in this file.

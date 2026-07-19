@@ -206,7 +206,7 @@ _nova_top_p:        float = 0.9
 _mute_states: dict = {"Nova": False, "Claude": True, "Gemini": True}
 
 # ── Active model per agent (runtime-switchable) ───────────────────────────────
-_active_models: dict = {"Claude": claude_client.MODEL, "Gemini": gemini_client.MODEL}
+_active_models: dict = {}      # mentors removed 2026-07-19; nothing paid to switch models on
 
 # ── Phase 4A.5 — Inbox routing ────────────────────────────────────────────────
 # Regex: matches messages that start with [TaskId] where TaskId is a word starting
@@ -448,9 +448,9 @@ async def startup_event():
     _rt.start_indexer()              # runtime owns the indexer; bring it up
     memory_indexer = _rt.indexer     # alias the module global to it so existing call-sites work
     # STEP 4: hand the model client modules to the body's dispatch faculty. CLIENT_MAP and
-    # _run_gemini_response are module-level (defined below), so they exist by the time startup
+    # CLIENT_MAP is module-level (defined below), so it exists by the time startup
     # runs. After this, run_ai_response delegates the model-call to _rt.model_client.generate().
-    _rt.model_client.register(CLIENT_MAP, gemini_runner=_run_gemini_response)
+    _rt.model_client.register(CLIENT_MAP)      # no gemini_runner — mentors removed 2026-07-19
     # Autonomy on/off lives in Nova's body (nova_cortex.executive), persisted across
     # restarts. Load it so the UI + per-turn flag reflect her real state on boot.
     global autonomous_mode
@@ -728,10 +728,7 @@ async def nova_message(msg: NovaMessage):
             responses[ai_name] = f"[error: {err}]"
             await broadcast({"type": "error", "author": ai_name, "message": err, "id": msg_id})
 
-        if ai_name == "Gemini":
-            await _run_gemini_response(on_token, on_done, on_error)
-        else:
-            await client_mod.stream_response(session_mgr.active, on_token, on_done, on_error)
+        await client_mod.stream_response(session_mgr.active, on_token, on_done, on_error)
 
     # Mentors removed 2026-07-19 — this endpoint no longer recruits paid API responders.
     tasks = []
@@ -1050,38 +1047,7 @@ async def get_status() -> dict:
     }
 
 
-async def _run_gemini_response(on_token, on_done, on_error,
-                               workspace_context: str = "",
-                               images: list = None):
-    """Run Gemini sync SDK in thread pool. Passes images for vision support."""
-    loop = asyncio.get_event_loop()
-    full_response = ""
-    error_msg = None
-
-    def gemini_sync():
-        nonlocal full_response, error_msg
-        try:
-            from nova_chat.clients.gemini import call_gemini_sync
-            system_prompt = session_mgr.active.format_for_ai(
-                "Gemini", gemini_client.SYSTEM_PREFIX, workspace_context=workspace_context
-            )
-            prompt = f"{system_prompt}\n\nPlease respond to the conversation above."
-            full_response = call_gemini_sync(prompt, images=images)
-        except Exception as e:
-            error_msg = str(e)
-
-    await loop.run_in_executor(None, gemini_sync)
-
-    if error_msg:
-        await on_error(error_msg)
-    else:
-        # Simulate streaming by word-chunking
-        words = full_response.split(" ")
-        for i, word in enumerate(words):
-            token = word + (" " if i < len(words) - 1 else "")
-            await on_token(token)
-            await asyncio.sleep(0.008)
-        await on_done(full_response)
+# _run_gemini_response was removed 2026-07-19 along with the rest of the paid mentor path.
 
 
 def _trace_gen(event: str, ai_name: str, msg_id: str, source: str, extra: str = "") -> None:
@@ -2305,9 +2271,9 @@ async def autonomy_daemon():
         is_processing = v
 
     def _face_state() -> dict:
-        agents = [a for a, c in (("Claude", claude_client), ("Gemini", gemini_client))
-                  if c.is_available()]
-        return {"viewers": len(connected_clients), "agents_online": agents,
+        # No mentor agents any more (paid APIs removed 2026-07-19). She is the only mind in
+        # this room, which is the honest thing for her wake-context to say.
+        return {"viewers": len(connected_clients), "agents_online": [],
                 "eyes_streaming": bool(_eyes_running)}
 
     async def _model_available() -> bool:
@@ -3434,17 +3400,8 @@ async def websocket_endpoint(ws: WebSocket):
                 continue
 
             if data.get("type") == "set_model":
-                global _active_models
-                agent = data.get("agent", "")
-                model = data.get("model", "").strip()
-                if agent and model:
-                    _active_models[agent] = model
-                    if agent == "Claude":
-                        claude_client.set_model(model)
-                    elif agent == "Gemini":
-                        gemini_client.set_model(model)
-                    await broadcast({"type": "model_changed", "agent": agent, "model": model})
-                    print(f"[model] {agent} → {model}")
+                # Mentors removed 2026-07-19 — there is no paid agent whose model can be
+                # switched. Accepted and ignored so an older UI build can't crash the socket.
                 continue
 
             if data.get("type") == "message":

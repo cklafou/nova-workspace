@@ -328,8 +328,9 @@ a:hover { text-decoration: underline; }
 }
 /* Per-agent dot colors when online */
 #pb-nova.online   .pbar-dot { background: var(--nova);   box-shadow: 0 0 8px rgba(167,139,250,0.8), 0 0 18px rgba(167,139,250,0.3); }
-#pb-claude.online .pbar-dot { background: var(--claude); box-shadow: 0 0 7px rgba(232,135,93,0.55); }
-#pb-gemini.online .pbar-dot { background: var(--gemini); box-shadow: 0 0 7px rgba(91,150,240,0.55); }
+/* Claude/Gemini participant-pill styles removed 2026-07-19 — the pills are gone.
+   var(--claude) itself is KEPT: "Cowork Claude" still speaks here and her messages
+   are still rendered in that colour. */
 .pbar-state { font-size: 9px; color: var(--text-mute); letter-spacing: 0.02em; }
 .pbar-pill.muted .pbar-state { color: inherit; }
 /* Typing bounce dots */
@@ -933,8 +934,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 .mdd-item:hover { background: var(--bg-hover); }
 .mdd-item.active { color: var(--text); font-weight: 500; }
 .mdd-item.active .mdd-label::after { content: ' ✓'; font-size: 9px; }
-.mdd-item[data-agent="Claude"].active .mdd-label::after { color: var(--claude); }
-.mdd-item[data-agent="Gemini"].active .mdd-label::after { color: var(--gemini); }
+/* Claude/Gemini model-dropdown accents removed 2026-07-19 with the paid APIs. */
 .mdd-item[data-agent="Nova"].active   .mdd-label::after { color: var(--nova); }
 .mdd-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .mdd-label { flex: 1; }
@@ -1096,18 +1096,9 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <div class="dd-agent-status" id="da-status-nova">Offline</div>
     <button class="dd-mute-btn" id="da-mute-nova" onclick="toggleMute('Nova')">Mute</button>
   </div>
-  <div class="dd-agent-row" id="da-claude">
-    <div class="dd-agent-dot claude offline" id="da-dot-claude"></div>
-    <div class="dd-agent-name">Claude</div>
-    <div class="dd-agent-status" id="da-status-claude">Offline</div>
-    <button class="dd-mute-btn" id="da-mute-claude" onclick="toggleMute('Claude')">Mute</button>
-  </div>
-  <div class="dd-agent-row" id="da-gemini">
-    <div class="dd-agent-dot gemini offline" id="da-dot-gemini"></div>
-    <div class="dd-agent-name">Gemini</div>
-    <div class="dd-agent-status" id="da-status-gemini">Offline</div>
-    <button class="dd-mute-btn" id="da-mute-gemini" onclick="toggleMute('Gemini')">Mute</button>
-  </div>
+  <!-- Claude / Gemini agent rows removed 2026-07-19 — the paid API participants are gone.
+       Nova is the only agent this server can drive. "Cowork Claude" still appears as a
+       SPEAKER in the room, but that's a human-driven session, not a mutable agent. -->
   <div class="dd-sep"></div>
   <div class="dd-item" onclick="clickAutoToggle();closeDD()"><span class="dd-icon" id="auto-dd-icon">○</span><span class="dd-label" id="auto-dd-label">Autonomous: OFF</span></div>
 </div>
@@ -1141,26 +1132,8 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 
 <!-- Model selector dropdown (opens from model pill in tab bar) -->
 <div id="model-dd">
-  <div class="mdd-header">Claude (Anthropic)</div>
-  <div class="mdd-item active" data-agent="Claude" data-model="claude-sonnet-4-6" onclick="selectModel(this)">
-    <div class="mdd-dot" style="background:var(--claude)"></div>
-    <span class="mdd-label">Claude Sonnet 4.6</span><span class="mdd-sub">Fast · balanced</span>
-  </div>
-  <div class="mdd-item" data-agent="Claude" data-model="claude-opus-4-6" onclick="selectModel(this)">
-    <div class="mdd-dot" style="background:var(--claude)"></div>
-    <span class="mdd-label">Claude Opus 4.6</span><span class="mdd-sub">Most capable</span>
-  </div>
-  <div class="mdd-sep"></div>
-  <div class="mdd-header">Gemini (Google)</div>
-  <div class="mdd-item" data-agent="Gemini" data-model="gemini-2.5-flash-preview-05-20" onclick="selectModel(this)">
-    <div class="mdd-dot" style="background:var(--gemini)"></div>
-    <span class="mdd-label">Gemini 2.5 Flash</span><span class="mdd-sub">Fast · efficient</span>
-  </div>
-  <div class="mdd-item active" data-agent="Gemini" data-model="gemini-2.5-pro" onclick="selectModel(this)">
-    <div class="mdd-dot" style="background:var(--gemini)"></div>
-    <span class="mdd-label">Gemini 2.5 Pro</span><span class="mdd-sub">Most capable</span>
-  </div>
-  <div class="mdd-sep"></div>
+  <!-- Claude/Gemini model entries removed 2026-07-19 with the paid APIs. Nova runs on whatever
+       adapter nova_start.py loads, so there is exactly one model in this room now. -->
   <div class="mdd-header">Nova (Local)</div>
   <div class="mdd-item" data-agent="Nova" data-model="nova-local" onclick="selectModel(this)">
     <div class="mdd-dot" id="mdd-nova-dot" style="background:var(--text-mute)"></div>
@@ -1228,9 +1201,9 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <!-- Tab bar -->
     <div id="session-tabs">
       <button class="stab-add" title="New session (Ctrl+T)" onclick="newSession()">＋</button>
-      <button class="model-pill" id="model-pill" onclick="toggleModelDD(event)" data-tooltip="Active AI model — click to switch Claude (Sonnet/Opus) or Gemini (2.5 Flash/Pro)">
-        <div class="mp-dot" id="mp-dot" style="background:var(--claude)"></div>
-        <span id="mp-label">Claude Sonnet</span>
+      <button class="model-pill" id="model-pill" onclick="toggleModelDD(event)" data-tooltip="Nova's model — llama.cpp on :8080. Adapter is set by nova_start.py.">
+        <div class="mp-dot" id="mp-dot" style="background:var(--nova)"></div>
+        <span id="mp-label">Nova (local)</span>
         <span class="mp-chevron">▾</span>
       </button>
     </div>
@@ -1242,18 +1215,8 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
         <div class="pbar-typing" id="pb-typing-nova"><span></span><span></span><span></span></div>
         <span class="pbar-state" id="pb-state-nova">offline</span>
       </button>
-      <button class="pbar-pill" id="pb-claude" onclick="toggleMute('Claude')" title="Claude — click to mute/unmute">
-        <div class="pbar-dot" id="pb-dot-claude"></div>
-        <span>Claude</span>
-        <div class="pbar-typing" id="pb-typing-claude"><span></span><span></span><span></span></div>
-        <span class="pbar-state" id="pb-state-claude">offline</span>
-      </button>
-      <button class="pbar-pill" id="pb-gemini" onclick="toggleMute('Gemini')" title="Gemini — click to mute/unmute">
-        <div class="pbar-dot" id="pb-dot-gemini"></div>
-        <span>Gemini</span>
-        <div class="pbar-typing" id="pb-typing-gemini"><span></span><span></span><span></span></div>
-        <span class="pbar-state" id="pb-state-gemini">offline</span>
-      </button>
+      <!-- Claude / Gemini participant pills removed 2026-07-19 with the paid APIs. -->
+
       <button class="pbar-auto" id="pb-auto" onclick="clickAutoToggle()" data-tooltip="Autonomous mode — Nova runs herself on a sleep/wake loop, waking on changes or at set intervals. Click to pause/resume.">
         <div class="pbar-auto-dot" id="pb-auto-dot"></div>Auto
       </button>
@@ -1975,16 +1938,22 @@ function mergeSessionData(serverSessions) {
   sessions = serverSessions;
 }
 let autonomousMode = true, pendingImages = [], streamBufs = {}, panelOpen = true, sidebarOpen = true;
-let muteState  = {Nova:false,Claude:false,Gemini:false};
-let agentOnline= {Nova:false,Claude:false,Gemini:false};
+// Mentors removed 2026-07-19 — Nova is the only agent this server drives.
+let muteState  = {Nova:false};
+let agentOnline= {Nova:false};
 let _ctxSess   = null, _modalMode = 'delete', _modalCb = null;
 let activePanel = 'thoughts';
 
+// Gemini removed 2026-07-19 with the paid APIs. "Cowork Claude" KEPT and named explicitly —
+// he is not an agent this server pays for, he is a human-driven session that speaks in this
+// room, and his messages still need an avatar and a colour. Unknown authors fall back to a
+// first-initial (see avatarMarkup), but naming him means he renders properly rather than
+// generically. Every entry must carry a `cls` — applyAvatars/buildAvatarSettings iterate this
+// map and read .cls without a guard.
 const AUTHOR = {
-  Nova:   {cls:'nova',   av:'N'},
-  Claude: {cls:'claude', av:'C'},
-  Gemini: {cls:'gemini', av:'G'},
-  Cole:   {cls:'cole',   av:'C'},
+  Nova:            {cls:'nova',   av:'N'},
+  'Cowork Claude': {cls:'claude', av:'C'},
+  Cole:            {cls:'cole',   av:'C'},
 };
 
 /* ══════════════════════════════════════════════════
@@ -3442,9 +3411,10 @@ document.addEventListener('keydown', function (e) {
    PARTICIPANTS / MUTE
 ══════════════════════════════════════════════════ */
 function updateParticipants(parts) {
-  // parts is {Nova: bool, Claude: bool, Gemini: bool}
+  // parts is {Nova: bool}. The server still sends Claude/Gemini as permanently false for
+  // backward compatibility with any cached client; we simply don't iterate them any more.
   if(!parts) return;
-  ['Nova','Claude','Gemini'].forEach(name=>{
+  ['Nova'].forEach(name=>{
     const on = !!parts[name];
     agentOnline[name]=on;
     const k=name.toLowerCase();
@@ -4359,21 +4329,10 @@ function copyCode(btn) {
 /* ══════════════════════════════════════════════════
    PHASE 6 — MODEL SELECTOR
 ══════════════════════════════════════════════════ */
-const MODEL_LABELS = {
-  'claude-sonnet-4-6':              'Claude Sonnet',
-  'claude-opus-4-6':                'Claude Opus',
-  'gemini-2.5-flash-preview-05-20': 'Gemini Flash',
-  'gemini-2.5-pro':                 'Gemini Pro',
-  'nova-local':                     'Nova (local)',
-};
-const MODEL_COLORS = {
-  'claude-sonnet-4-6':              'var(--claude)',
-  'claude-opus-4-6':                'var(--claude)',
-  'gemini-2.5-flash-preview-05-20': 'var(--gemini)',
-  'gemini-2.5-pro':                 'var(--gemini)',
-  'nova-local':                     'var(--nova)',
-};
-let _activeModels = { Claude: 'claude-sonnet-4-6', Gemini: 'gemini-2.5-pro' };
+// Paid-model entries removed 2026-07-19. One model in this room now: hers.
+const MODEL_LABELS = { 'nova-local': 'Nova (local)' };
+const MODEL_COLORS = { 'nova-local': 'var(--nova)' };
+let _activeModels = { Nova: 'nova-local' };
 
 function toggleModelDD(e) {
   e.stopPropagation();
@@ -4396,7 +4355,7 @@ function selectModel(el) {
   document.getElementById('model-dd').classList.remove('open');
 }
 function updateModelPill() {
-  const m = _activeModels['Claude'];
+  const m = _activeModels['Nova'];
   const lbl = document.getElementById('mp-label');
   const dot = document.getElementById('mp-dot');
   if(lbl) lbl.textContent = MODEL_LABELS[m] || m;

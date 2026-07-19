@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T21:24:24",
+  "generated": "2026-07-19T21:40:02",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 28,
   "described": 28,
@@ -286,7 +286,7 @@
       "path": "nova_body/nova_senses",
       "purpose": "Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED (GUI-automation phase, not yet wired): desktop vision (eyes, vision) and UI proprioception.",
       "files": 9,
-      "lines": 2215,
+      "lines": 2232,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -298,7 +298,6 @@
       ],
       "third_party": [
         "PIL",
-        "anthropic",
         "base64",
         "html",
         "pyautogui",
@@ -568,7 +567,7 @@
       "path": "general_tools/injector.py",
       "purpose": "NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.",
       "files": 1,
-      "lines": 484,
+      "lines": 460,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -612,8 +611,8 @@
       "kind": "tool",
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
-      "files": 16,
-      "lines": 8953,
+      "files": 13,
+      "lines": 8303,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -637,12 +636,10 @@
       ],
       "third_party": [
         "PIL",
-        "anthropic",
         "base64",
         "ctypes",
         "difflib",
         "fastapi",
-        "google",
         "httpx",
         "pyautogui",
         "pydantic",

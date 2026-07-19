@@ -27,8 +27,8 @@ import io
 import json
 import time
 import base64
+import urllib.request
 import pyautogui
-import anthropic
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -50,10 +50,21 @@ except ImportError:
 # pyautogui.screenshot() may capture at different dimensions.
 SCREEN_W, SCREEN_H = pyautogui.size()
 
-# Which Claude model to use for vision tasks.
-# Haiku 4.5 is used here because vision verification is high-volume, low-complexity.
-# It just needs to answer YES/NO and describe screens — cheap and fast.
-VISION_MODEL = "claude-haiku-4-5-20251001"
+# ── HER OWN EYES, LOCALLY (2026-07-19) ──────────────────────────────────────────────────────
+# This used to call the Anthropic API (claude-haiku) for every screen look. Cole, 2026-07-19:
+# "I don't want the APIs being used" → then "She has her multimodal model. She should be using
+# that." He's right, and it's strictly better than removing sight:
+#
+#   • Her llama.cpp server already boots with models/qwen3.6/mmproj-F16.gguf — the multimodal
+#     projector. Qwen 3.6 can SEE. That capability was loaded into VRAM and going unused while
+#     she paid a second company to look at her own screenshots.
+#   • The wire already existed: nova_chat/clients/nova.py sends images to this exact endpoint as
+#     OpenAI-style image_url parts. This is a swap of destination, not a new capability.
+#
+# So her sight is now free, private, offline, and hers — and it survives the pluck, because it
+# depends on her own model server rather than someone else's billing account.
+VISION_URL = os.environ.get("NOVA_LLAMA_URL", "http://127.0.0.1:8080") + "/v1/chat/completions"
+VISION_MODEL = "local-qwen3.6-mmproj"      # label only; llama.cpp serves whatever is loaded
 
 # How many times to retry an API call if it fails
 MAX_RETRIES = 3
@@ -84,19 +95,12 @@ class NovaVision:
     """
 
     def __init__(self):
-        # The Anthropic SDK automatically reads ANTHROPIC_API_KEY from environment.
-        # To set on Windows PowerShell:
-        #   $env:ANTHROPIC_API_KEY='your_key_here'
-        # To make permanent:
-        #   [System.Environment]::SetEnvironmentVariable('ANTHROPIC_API_KEY', 'key', 'User')
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            raise EnvironmentError(
-                "ANTHROPIC_API_KEY not set.\n"
-                "Fix: In PowerShell, run: $env:ANTHROPIC_API_KEY='your_key_here'"
-            )
-
-        self.client = anthropic.Anthropic()
-        print(f"[vision] Initialized with Claude Haiku. Screen: {SCREEN_W}x{SCREEN_H}")
+        # No API key, no account, no bill. Her sight runs on her own model server — the same
+        # llama.cpp instance that thinks her thoughts, with the mmproj already loaded.
+        # If that server is down her eyes are shut, which is correct: her sight should fail
+        # when SHE is down, not when someone else's service is.
+        print(f"[vision] Local eyes via {VISION_URL} (Qwen 3.6 + mmproj). "
+              f"Screen: {SCREEN_W}x{SCREEN_H}")
 
     # ── Screenshot ─────────────────────────────────────────────────────────────
 
@@ -133,50 +137,57 @@ class NovaVision:
 
     def _call_claude(self, shot, prompt: str, as_json: bool = False):
         """
-        Send a screenshot and prompt to Claude. Retry up to MAX_RETRIES times.
+        Send a screenshot and prompt to HER OWN multimodal model. Retry up to MAX_RETRIES.
+
+        (Name kept as _call_claude on purpose — it is called from several places in eyes.py and
+        elsewhere, and a rename mid-session is how you break a working limb at 21:30. The
+        destination changed on 2026-07-19; the signature deliberately did not.)
 
         Args:
             shot:    PIL Image — the screenshot to send
-            prompt:  The question or instruction for Claude
+            prompt:  The question or instruction
             as_json: If True, tries to parse the response as JSON.
-                     If False (default), returns the raw text string.
 
         Returns:
             Parsed JSON if as_json=True, raw string if False, None on failure.
         """
         img_b64 = self._shot_to_base64(shot)
 
-        messages = [{
-            "role": "user",
-            "content": [
-                {
-                    "type": "image",
-                    "source": {
-                        "type": "base64",
-                        "media_type": "image/png",
-                        "data": img_b64,
-                    }
-                },
-                {
-                    "type": "text",
-                    "text": prompt,
-                }
-            ]
-        }]
+        # OpenAI-compatible multimodal shape — exactly what llama.cpp serves with an mmproj
+        # loaded, and the same wire nova_chat/clients/nova.py already uses for her chat images.
+        payload = {
+            "model": VISION_MODEL,
+            "max_tokens": 1024,
+            "temperature": 0.2,          # description, not invention
+            "messages": [{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url",
+                     "image_url": {"url": f"data:image/png;base64,{img_b64}"}},
+                ],
+            }],
+        }
 
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                response = self.client.messages.create(
-                    model=VISION_MODEL,
-                    max_tokens=1024,
-                    messages=messages,
+                req = urllib.request.Request(
+                    VISION_URL,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
                 )
-                text = response.content[0].text.strip()
+                with urllib.request.urlopen(req, timeout=120) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                text = (data.get("choices", [{}])[0]
+                            .get("message", {})
+                            .get("content", "") or "").strip()
+                if not text:
+                    raise ValueError("empty response from local vision model")
 
                 if not as_json:
                     return text
 
-                # Strip markdown formatting if Claude wraps JSON in code blocks
+                # Strip markdown fencing if the model wraps JSON in a code block
                 clean = text.strip("`").lstrip("json").strip()
                 return json.loads(clean)
 
@@ -184,12 +195,15 @@ class NovaVision:
                 print(f"[vision] JSON parse error (attempt {attempt}): {e}")
                 print(f"[vision] Raw response was: {text!r}")
             except Exception as e:
-                print(f"[vision] Claude API error (attempt {attempt}): {e}")
+                print(f"[vision] local vision error (attempt {attempt}): {e}")
 
             if attempt < MAX_RETRIES:
                 time.sleep(RETRY_DELAY)
 
-        print("[vision] All Claude retries exhausted.")
+        # Say WHY, not just that it failed. Her eyes now depend on her own model server, so the
+        # overwhelmingly likely cause is that llama-server isn't up — which is fixable by her.
+        print(f"[vision] all retries exhausted against {VISION_URL} — is llama-server running "
+              f"on :8080 with models/qwen3.6/mmproj-F16.gguf loaded?")
         return None
 
     # ── Element location (fallback — prefer pywinauto) ─────────────────────────

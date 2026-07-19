@@ -84,16 +84,24 @@ from typing import Optional
 
 # ── Orchestrator participants ────────────────────────────────────────────────
 
-PARTICIPANTS = ["Claude", "Gemini", "Nova"]
+# ── MENTORS REMOVED 2026-07-19 (Cole: "I don't want the APIs being used") ────────────────
+# Claude and Gemini were paid API participants. Every @Claude, @Gemini, @mentor and @all spent
+# money, and Nova was told in her prompt to escalate to them — so the room had a billable reflex
+# built into it. They are gone from the roster, so a stray "@mentor" in anyone's text now
+# resolves to nobody and costs nothing, instead of erroring or (worse) silently paying.
+#
+# "Cowork Claude" still appears in this room as a SPEAKER — that is a human-driven session, not
+# an API, and it is how she gets reviewed. She also reaches out herself via the ping_claude tool
+# (desktop automation, not a paid call). She can still be talked to; the server can no longer pay.
+PARTICIPANTS = ["Nova"]
 
 # Role aliases — map role name to list of participant names
 ROLES: dict[str, list[str]] = {
-    "mentor": ["Claude", "Gemini"],
-    "all":    ["Claude", "Gemini", "Nova"],
+    "all": ["Nova"],
 }
 
 # Canonical sequential order — listeners always before Nova
-RESPONSE_ORDER = ["Claude", "Gemini", "Nova"]
+RESPONSE_ORDER = ["Nova"]      # mentors removed 2026-07-19
 
 # ── NCL Module Registry ───────────────────────────────────────────────────────
 #

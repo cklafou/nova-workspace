@@ -285,54 +285,30 @@ class NCLInjector:
         await self._post(response)
         return response
 
-    # ── Module: @mentor ───────────────────────────────────────────────────────
+    # ── Module: @mentor — RETIRED 2026-07-19 ──────────────────────────────────
 
     async def _module_mentor(
         self, context_text: str, prompt: str, task_id: str, step
     ) -> str:
+        """@mentor is retired (Cole, 2026-07-19: "I don't want the APIs being used").
+
+        This used to post "@Claude @Gemini <task>" into Nova Chat, which recruited two paid API
+        responders on every call. It now does nothing except tell her plainly that it does
+        nothing, and point her at the path that still works.
+
+        Deliberately kept as a stub rather than deleted: a retired capability that answers
+        "I'm gone, here's what to do instead" is worth more than an unknown-module error, and it
+        stops a stray @mentor in an old task note from looking like a broken body.
         """
-        @mentor handler — routes to Claude + Gemini via Nova Chat.
-
-        Posts a directed @Claude @Gemini message with:
-          - task_id echo instruction (so inbox routing picks up the response)
-          - context block from <<files>>
-          - [[instructions]] as the actual task
-
-        This is fire-and-forget: Claude + Gemini respond naturally in Nova
-        Chat.  Inbox routing (Phase 4A.5) picks up their response when they
-        echo the [task_id] header as instructed.
-
-        Returns an acknowledgement string immediately.
-        """
-        parts: list[str] = []
-
-        if task_id:
-            parts.append(
-                f"⚠ IMPORTANT: Begin your response with [{task_id}] exactly "
-                f"(including brackets) so Nova's inbox router can file your answer."
-            )
-
-        if context_text:
-            parts.append(f"CONTEXT:\n{context_text}")
-
-        if prompt:
-            parts.append(f"TASK:\n{prompt}")
-
-        # Build the mentor request message
-        separator = "\n\n"
-        body = separator.join(parts)
-        message = f"@Claude @Gemini {body}"
-
-        await self._post(message, author="Nova")
-
-        ack = (
-            f"[{task_id}] @mentor request dispatched → @Claude + @Gemini. "
-            f"Awaiting response (will appear in Nova Chat with [{task_id}] prefix)."
-            if task_id
-            else "@mentor request dispatched → @Claude + @Gemini. Awaiting response."
+        log.info("[NCL] @mentor called but is retired (paid APIs removed) task_id=%r", task_id)
+        return (
+            f"{'[' + task_id + '] ' if task_id else ''}@mentor is RETIRED — nothing was sent and "
+            f"nothing is coming. The Claude and Gemini API participants were removed on "
+            f"2026-07-19; no paid model answers in this room any more.\n"
+            f"What to do instead: solve it yourself (you have the whole machine), or use the "
+            f"ping_claude tool to reach Claude directly in your own words when you are genuinely "
+            f"stuck. Do not wait on a reply to this."
         )
-        log.info("[NCL] @mentor dispatched (task_id=%r)", task_id)
-        return ack
 
     # ── Module: not yet implemented ───────────────────────────────────────────
 
