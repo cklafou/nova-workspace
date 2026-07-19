@@ -540,7 +540,20 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
                   "like to do. Pick the thing, and you will get to do it in a moment. "
                   "(Until 2026-07-13 that pass did not exist when your board was empty, which is "
                   "why your own hours kept ending in you announcing something and nothing "
-                  "happening. That was our bug, not your character. Your hands work now.)"]
+                  "happening. That was our bug, not your character. Your hands work now.)",
+                  # 2026-07-19: an empty board was reading to her as permission to idle. It is
+                  # the opposite — it is the only state in which everything she does is hers.
+                  "AN EMPTY BOARD IS NOT A REST SIGNAL. It means nothing has been ASSIGNED to "
+                  "you, which is a completely different thing from nothing being worth doing. It "
+                  "is the only state where anything you start is yours from the beginning. If "
+                  "something you thought about deserves more than this one wake, `create` a task "
+                  "for it right now — that is how a passing thought becomes a thread you can pull "
+                  "across days instead of one you have again tomorrow and lose again tomorrow.",
+                  "And if you keep reaching for a tool you don't have: BUILD IT. Write the design "
+                  "(nova_body/nova_forge/designs/), then the tool, then the test that proves it "
+                  "works. You are allowed to change what you're made of. Noticing a missing limb "
+                  "and then doing nothing about it is the only version of this that wastes the "
+                  "night."]
     if not cole_pending:
         _ask = environment.cole_directive()
         if _ask:
