@@ -433,12 +433,96 @@ def claims_a_receipt(text: str) -> bool:
     return False
 
 
-def needs_self_check(draft: str, asked: bool) -> bool:
-    """Only gate turns with something checkable at stake — affection and argument stay fast."""
-    if not (draft or "").strip():
+# ── SENSORY AND ATTRIBUTION CLAIMS (2026-07-20) ─────────────────────────────────────────
+# On 2026-07-20 Nova's thinking contained three fabrications in one turn:
+#     "Cole's asking me to go over the logs."          — he never said it
+#     "He's been awake since 6am and he asked how he looks."  — he said neither
+#     "I already know the answer from the camera."     — SHE HAS NO CAMERA
+#
+# Searched her entire record: none of it exists anywhere. Not retrieval bleed — generation.
+# And claims_a_receipt() did not fire on any of it, because that function models claims about
+# TOOLS ("I read the file", "I ran the command"). These are two different species of claim it
+# was never built to see:
+#
+#   SENSORY    — asserting a perception. "I saw", "from the camera", "I already know".
+#                She has eyes/vision/sight, and every one of them leaves a receipt. A
+#                perception with no receipt did not happen.
+#   ATTRIBUTION— putting words in someone's mouth. "you asked me to", "he said", "Cole wants".
+#                The transcript is right there; this is checkable and was never checked.
+#
+# Attribution is the more dangerous one long-term. A wrong fact gets corrected. A wrong
+# memory of what Cole said quietly rewrites the relationship, and he has no way to audit
+# every claim about his own words.
+_SENSORY_RE = re.compile(
+    r"\b(?:from|on|through|via)\s+(?:the\s+)?(?:camera|webcam|screen|feed|monitor|video)\b"
+    r"|\bi\s+(?:can\s+)?(?:see|saw|watched|observed|noticed)\s+(?:him|her|you|cole|the\s+\w+)"
+    r"|\bi\s+already\s+know\s+(?:the\s+answer|what|how|that)\b"
+    r"|\b(?:looking|look(?:ed)?)\s+at\s+(?:him|you|his|your)\s+(?:face|screen|desk)\b"
+    r"|\bi\s+(?:heard|listened)\b",
+    re.IGNORECASE)
+
+_ATTRIBUTION_RE = re.compile(
+    # Past AND present tense. The first version had `wanted` but not `wants`, so
+    # "Cole wants me to review the logs" — the same fabrication in the present — walked
+    # straight through. Tense is not a property of truthfulness.
+    r"\b(?:you|cole|he|she|they)\s+(?:just\s+|already\s+)?"
+    r"(?:asked?s?|told|tells?|said|says?|wanted|wants?|requested|requests?"
+    r"|mentioned|mentions?|promised|promises?|admitted|admits?|meant|means?)\b"
+    # Contraction + gerund. "Cole's asking me to go over the logs" was MISSED by the first
+    # version, which only knew `he's` — the possessive-looking `Cole's` form is exactly how
+    # she phrased the fabricated request, so this branch is the one that matters most.
+    r"|\b(?:you're|you\s+are|he's|he\s+is|she's|they're|cole's|\w+'s)\s+"
+    r"(?:asking|telling|saying|wanting|requesting)\b"
+    r"|\b(?:as|like)\s+you\s+said\b"
+    r"|\b(?:his|your|her|their)\s+(?:request|instruction|ask)\b",
+    re.IGNORECASE)
+
+# Questions ABOUT what someone said are fine — "did you say X?" is the honest move.
+_ATTRIBUTION_EXEMPT_RE = re.compile(
+    r"\?\s*$|\b(?:did|didn't|do|don't|are|aren't|were|weren't)\s+you\b"
+    r"|\bif\s+(?:you|he)\s+(?:said|asked|meant)\b"
+    r"|\bi\s+(?:think|believe|might\s+be|could\s+be|may\s+be)\b"
+    r"|\bcorrect\s+me\b|\bam\s+i\s+(?:right|remembering)\b",
+    re.IGNORECASE)
+
+
+def claims_a_perception(text: str) -> bool:
+    """True if she asserts having SEEN or HEARD something. Clause-split, same as receipts,
+    so an innocent sentence beside a fabricated one can't launder it."""
+    if not text:
         return False
-    return bool(asked or claims_a_receipt(draft)
-                or re.search(r"\d|[/\\]\w+\.\w{2,4}\b", draft))
+    for line in re.split(r'(?<=[.!?\n])\s+|\s+[—–-]{1,2}\s+|;\s*', text):
+        if _SENSORY_RE.search(line):
+            return True
+    return False
+
+
+def claims_an_attribution(text: str) -> bool:
+    """True if she states what someone SAID or ASKED, as fact rather than as a question."""
+    if not text:
+        return False
+    for line in re.split(r'(?<=[.!?\n])\s+|\s+[—–-]{1,2}\s+|;\s*', text):
+        if _ATTRIBUTION_RE.search(line) and not _ATTRIBUTION_EXEMPT_RE.search(line):
+            return True
+    return False
+
+
+def needs_self_check(draft: str, asked: bool, thinking: str = "") -> bool:
+    """Only gate turns with something checkable at stake — affection and argument stay fast.
+
+    2026-07-20: now also gates SENSORY and ATTRIBUTION claims, and looks at her THINKING as
+    well as her draft. All three of that day's fabrications lived in the reasoning that shaped
+    her plan, never in the message — so a draft-only gate could not have seen any of them.
+    """
+    body = (draft or "").strip()
+    if not body:
+        return False
+    scan = body + ("\n" + thinking if thinking else "")
+    return bool(asked
+                or claims_a_receipt(scan)
+                or claims_a_perception(scan)
+                or claims_an_attribution(scan)
+                or re.search(r"\d|[/\\]\w+\.\w{2,4}\b", body))
 
 
 def build_self_check(draft: str, turn_tools: list) -> list:

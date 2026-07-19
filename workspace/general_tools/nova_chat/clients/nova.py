@@ -1112,7 +1112,21 @@ async def stream_response(
             # fast and unmolested.
             # The prompt, the grounding, and the verdict-parsing all live in her BODY
             # (nova_cortex.integrity). This module only supplies the mouth and the model call.
-            if _INTEGRITY_OK and _integrity.needs_self_check(chat_text, _asked):
+            # ── HER THINKING IS SCANNED TOO (2026-07-20) ──────────────────────────────────
+            # The gate used to see only the outgoing draft. On 2026-07-20 all three of her
+            # fabrications — "Cole's asking me to go over the logs", "he asked how he looks",
+            # "I already know the answer from the camera" — lived in the REASONING that
+            # shaped her plan, and never appeared in the message. A draft-only gate is blind
+            # to exactly the failure that matters most, because a fabricated premise steers
+            # the whole turn before a single word is written.
+            # _think_buf is populated at line ~788 by the think-token handler; joining it is
+            # the same thing the tool-call scanner already does a few lines above.
+            try:
+                _think_for_check = "".join(_think_buf)
+            except Exception:
+                _think_for_check = ""
+            if _INTEGRITY_OK and _integrity.needs_self_check(chat_text, _asked,
+                                                             thinking=_think_for_check):
                 try:
                     async def _noop(_t):  # the self-check must never stream to the UI
                         return
