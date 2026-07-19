@@ -382,10 +382,15 @@ class NovaRuntime:
             _probe = self.workspace / "logs" / "Temp" / "FREE_PASS_PROBE.log"
             _probe.parent.mkdir(parents=True, exist_ok=True)
             with open(_probe, "a", encoding="utf-8") as _pf:
-                _pf.write(f"{datetime.now().isoformat()} phase3-gate "
+                # NOTE (2026-07-19): this line records her LEAN only. It deliberately no longer
+                # claims to know whether Phase 3 runs — that now also depends on whether she has
+                # an open task, which isn't known until a few lines below. The authoritative
+                # record is the "phase3-enter" line written after the gate. Leaving the old
+                # `enters=` expression here would have quietly under-reported the fix by exactly
+                # the 506 wakes it was meant to recover.
+                _pf.write(f"{datetime.now().isoformat()} phase3-lean "
                           f"cole_pending={cole_pending} forced={forced} "
-                          f"rested={outcome.get('rested')!r} "
-                          f"enters={not cole_pending and (forced or not outcome.get('rested'))}\n")
+                          f"rested={outcome.get('rested')!r}\n")
 
             # ── Phase 3 — execute. Decision only moves the BOARD; this does the next concrete
             # step on an open task when the wake is her own rhythm and she didn't choose to rest.
@@ -415,6 +420,15 @@ class NovaRuntime:
                     exec_id = executive.pick_execution_target()
                     etask = _tasking.all_tasks().get(exec_id) if exec_id else None
                 _has_open_task = bool(etask and etask.get("status") == "open")
+                _enters = (not cole_pending) and (forced or not _rested or _has_open_task)
+                try:
+                    with open(_probe, "a", encoding="utf-8") as _pf2:
+                        _pf2.write(f"{datetime.now().isoformat()} phase3-enter "
+                                   f"cole_pending={cole_pending} forced={forced} "
+                                   f"rested={_rested} open_task={_has_open_task} "
+                                   f"enters={_enters}\n")
+                except Exception:
+                    pass
                 if _rested and _has_open_task and not forced:
                     await self.emit("autonomy",
                                     f"leaned rest, but {exec_id} is still open - taking the "
