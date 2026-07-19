@@ -102,7 +102,10 @@ def run_command(command: str, cwd: str = "") -> str:
         output = output.strip()
         
         if result.returncode == 0:
-            return f"[Command Successfully Executed]\nOutput:\n{output}" if output else "[Command Successfully Executed with no Output]"
+            caution = _silent_miss_caution(command, output)
+            if output:
+                return f"[Command Successfully Executed]\nOutput:\n{output}{caution}"
+            return f"[Command Successfully Executed with no Output]{caution}"
         else:
             return f"[Command Exited with Error Code {result.returncode}]\nOutput:\n{output}"
     except subprocess.TimeoutExpired:
