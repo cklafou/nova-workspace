@@ -261,5 +261,51 @@ def main() -> int:
     return 0 if recover(fault) else 1
 
 
+def daemon(interval_min: float = 10.0, startup_grace_s: float = 300.0) -> int:
+    """Run forever, checking every `interval_min`. Started BY the stack, at boot.
+
+    ── WHY THIS EXISTS (2026-07-19, Cole) ──────────────────────────────────────────
+    The guardian was going to be a Windows scheduled task, which meant Cole pasting
+    two schtasks commands before anything protected her. Cole: "If something needs to
+    be run, like Watchdog, it should be programmed to not require my manual starting.
+    Honestly, Watchdog should start and end on Nova boot, not be a scheduled task."
+    He is right — a safety net nobody remembered to hang is not a safety net.
+
+    ── THE STARTUP GRACE IS NOT OPTIONAL ───────────────────────────────────────────
+    A 27B model takes minutes to load. Without a grace period the guardian's FIRST
+    check lands mid-boot, sees :8080 not answering, calls that DOWN, and restarts the
+    stack that is busy starting — forever. The watchdog would become the outage. So it
+    sits still for `startup_grace_s` before its first probe, and only then starts
+    watching.
+
+    ── WHAT THIS DESIGN DOES *NOT* COVER ───────────────────────────────────────────
+    Being a child of nova_start.py, this dies when nova_start.py dies. It therefore
+    covers the three failures actually seen this week — llama down, wrong/bare adapter,
+    nova_chat frozen — all of which happen while the orchestrator is alive and fine.
+    It does NOT cover the orchestrator itself dying; nothing inside the stack can.
+    That case needs an external trigger and is a deliberate, stated gap, not an
+    oversight."""
+    log(f"guardian daemon up — first check in {startup_grace_s / 60:.0f} min, "
+        f"then every {interval_min:.0f} min (pid {os.getpid()})")
+    try:
+        time.sleep(startup_grace_s)
+        while True:
+            try:
+                main()
+            except Exception as e:
+                # A crashing check must never kill the watchdog — that is the one
+                # process whose job is to still be here after something went wrong.
+                log(f"  !! check raised {type(e).__name__}: {e} — continuing")
+            time.sleep(interval_min * 60.0)
+    except KeyboardInterrupt:
+        # CTRL_BREAK from stop_guardian(): a deliberate shutdown, not a fault.
+        log("guardian daemon stopping (asked to)")
+        return 0
+
+
 if __name__ == "__main__":
+    if "--daemon" in sys.argv:
+        def _f(flag, default):
+            return float(sys.argv[sys.argv.index(flag) + 1]) if flag in sys.argv else default
+        sys.exit(daemon(_f("--interval-min", 10.0), _f("--startup-grace-s", 300.0)))
     sys.exit(main())
