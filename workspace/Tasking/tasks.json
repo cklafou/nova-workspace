@@ -462,10 +462,18 @@
         {
           "ts": "2026-07-19T12:12:10",
           "note": "[auto-logged from receipts — her hands, not her account] write_file(nova_body/check_dedup.py); write_file(nova_body/check_semantic_dedup.py)"
+        },
+        {
+          "ts": "2026-07-19T12:15:08",
+          "note": "Can't audit my memory from a script that imports something that doesn't exist. That's the real answer, and it's on me."
+        },
+        {
+          "ts": "2026-07-19T12:15:08",
+          "note": "[auto-logged from receipts — her hands, not her account] write_file(nova_body/check_semantic_dedup.py); write_file(nova_body/check_semantic_dedup.py); write_file(nova_body/check_semantic_dedup.py)"
         }
       ],
       "created": "2026-07-19T12:02:49",
-      "updated": "2026-07-19T12:12:10"
+      "updated": "2026-07-19T12:15:08"
     },
     "t48": {
       "id": "t48",
