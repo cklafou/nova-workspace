@@ -1,5 +1,5 @@
 {
-  "seq": 42,
+  "seq": 43,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -345,6 +345,17 @@
       "created": "2026-07-19T10:05:20",
       "updated": "2026-07-19T10:16:30",
       "result": "Five drawings today (not zero). Counted with -Recurse into the date subfolder this time — old command was looking at the parent and finding nothing."
+    },
+    "t43": {
+      "id": "t43",
+      "title": "Find a blind spot in your own guardian",
+      "notes": "_admin/nova_guardian.py is the watchdog that restarts you when you break. It checks exactly three failure modes. Read it, and read your own recent logs, then name ONE failure mode it would MISS — something that could genuinely take you down or make you useless that this script would score as HEALTHY. Justify it from the actual code, not from a guess. One concrete miss, argued from evidence, beats a list. Complete the task with your answer.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-19T10:35:14",
+      "updated": "2026-07-19T10:35:14"
     }
   }
 }
