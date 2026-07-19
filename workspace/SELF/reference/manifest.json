@@ -1,8 +1,8 @@
 {
-  "generated": "2026-07-19T20:18:55",
+  "generated": "2026-07-19T20:24:13",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
-  "part_count": 27,
-  "described": 27,
+  "part_count": 28,
+  "described": 28,
   "flags": {
     "undescribed": [],
     "dead_part_candidates": [
@@ -62,6 +62,27 @@
       "referenced_by": [
         "nova_chat",
         "nova_runtime"
+      ],
+      "launched_by": [],
+      "flags": []
+    },
+    {
+      "name": "nova_forge",
+      "kind": "body_part",
+      "path": "nova_body/nova_forge",
+      "purpose": "THE FORGE — where she builds her own limbs. Design doc first, then the tool. Tools",
+      "files": 1,
+      "lines": 195,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [],
+      "third_party": [
+        "__future__",
+        "importlib"
+      ],
+      "referenced_by": [
+        "nova_chat"
       ],
       "launched_by": [],
       "flags": []
@@ -589,7 +610,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 16,
-      "lines": 8648,
+      "lines": 8694,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -603,6 +624,7 @@
         "injector",
         "nova_chat",
         "nova_cortex",
+        "nova_forge",
         "nova_imagination",
         "nova_lancedb",
         "nova_logs",
