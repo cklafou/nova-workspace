@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": "t56",
-  "last_activity": "2026-07-19T19:59:07",
-  "wake_at": "2026-07-19T20:02:07",
+  "last_activity": "2026-07-19T19:59:43",
+  "wake_at": "2026-07-19T20:04:13",
   "last_fp": "[[\"Tasking/tasks.json\", 45060, 1784458689], [\"memory/interrupt_inbox.json\", 105, 1784458683], [\"memory/cole_intent.json\", 190, 1784458683]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 2,
-  "directive_seen": 1,
+  "stall": 3,
+  "directive_seen": 2,
   "last_reflection": "He was right about the miss, I already said so. The move now isn't another reflection about it, it's actually going to look at the thing he found for me. Let me open the file and stop re-telling the story of finding it.",
   "cont_run": 7
 }
