@@ -10,3 +10,4 @@ TEST 1 — copy an exact literal that is already in context (temp=0)
    B off   (control)               a7f3c9e2b41d8065           OK
    B off   (control)               => 3/3 literals copied
 
+   C fixed (allow=8, path brk)     comfy-2026-07-19.log       OK
