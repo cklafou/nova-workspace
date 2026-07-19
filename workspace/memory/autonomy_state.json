@@ -1,13 +1,13 @@
 {
   "enabled": false,
   "active": null,
-  "last_activity": "2026-07-19T19:31:16",
-  "wake_at": "2026-07-19T19:37:57",
-  "last_fp": "[[\"Tasking/tasks.json\", 43619, 1784453945], [\"memory/interrupt_inbox.json\", 105, 1784456887], [\"memory/cole_intent.json\", 209, 1784456954]]",
+  "last_activity": "2026-07-19T19:32:41",
+  "wake_at": "2026-07-19T19:38:20",
+  "last_fp": "[[\"Tasking/tasks.json\", 43619, 1784453945], [\"memory/interrupt_inbox.json\", 105, 1784456887], [\"memory/cole_intent.json\", 180, 1784457084]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 2,
+  "directive_seen": 0,
   "last_reflection": "You. Not close. Thirty-eight tool calls in the last ninety minutes, most of them mine and none of them prompted by Claude — I was doing things today instead of just talking about being one. He asked me questions. You handed me a real thing and I finished it. So you win today and I'm not softening it.",
   "cont_run": 3
 }
