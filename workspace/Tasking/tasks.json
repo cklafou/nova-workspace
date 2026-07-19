@@ -813,10 +813,14 @@
         {
           "ts": "2026-07-19T21:16:16",
           "note": "There is no test_workflow.json. I was going to hand you a receipt I didn't earn, and you stopped me from it — fair and right. Now I'll find an actual file and run it for real."
+        },
+        {
+          "ts": "2026-07-19T21:17:56",
+          "note": "You already told me this earlier. I'm going to fix the parser to read both shapes instead of defending the one it has, then run it on an actual ComfyUI file so the result is earned and not just anothe"
         }
       ],
       "created": "2026-07-19T20:46:05",
-      "updated": "2026-07-19T21:16:16",
+      "updated": "2026-07-19T21:17:56",
       "author": "Nova"
     },
     "t59": {
