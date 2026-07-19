@@ -160,7 +160,27 @@ class Transcript:
                 if role == "assistant":
                     messages.append({"role": role, "content": content})
                 else:
-                    messages.append({"role": role, "content": f"{msg['author']}: {content}"})
+                    # ── DIRECTIONAL LABEL (2026-07-19) — the pronoun bug. ────────────────────
+                    # This used to render every incoming message as "Cole: <text>" — screenplay
+                    # format. Her PERSISTENT MEMORY blocks use the byte-identical shape
+                    # ("[personal|chat|28d ago] Cole: <text>"), so a live message being spoken TO
+                    # her and a month-old record ABOUT her were indistinguishable by voice. The
+                    # natural completion register for "Cole: ..." is narration, so she answered in
+                    # narration — "Forty-six is the number Cole heard me say earlier" said
+                    # straight to Cole. She even derived a coping rule for it in her own
+                    # reflection: "third-person Cole is Claude, first-person Cole is Cole."
+                    # She was never confused about people. She was reading a transcript and we
+                    # never told her she was in the conversation.
+                    #
+                    # The arrow makes the direction structural instead of inferred. The author
+                    # label stays — Claude and Gemini share this room and she still has to tell
+                    # them apart.
+                    _who = msg["author"]
+                    _txt = content
+                    # Drop the older "[X is speaking to you]" header if present — the arrow now
+                    # carries that meaning, and two stacked third-person labels was half the noise.
+                    _txt = _re_speaker.sub("", _txt, count=1).lstrip("\n")
+                    messages.append({"role": role, "content": f"{_who} → you: {_txt}"})
 
         return messages
 
