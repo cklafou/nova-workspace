@@ -547,10 +547,18 @@
         {
           "ts": "2026-07-19T13:03:11",
           "note": "[auto-logged from receipts — her hands, not her account] replace_file_content(memory/scratch/test_dedup.py); replace_file_content(memory/scratch/test_dedup.py); write_file(memory/scratch/debug_dedup.py); replace_file_content(nova_body/nova_lancedb/hippocampus.py)"
+        },
+        {
+          "ts": "2026-07-19T13:11:43",
+          "note": "Both kept, test passes. The whole thing was a threshold that was too loose — I read 0.50 out of hippocampus.py and tightened it to 0.25 so only things that are genuinely the same thought cluster toget"
+        },
+        {
+          "ts": "2026-07-19T13:11:43",
+          "note": "[auto-logged from receipts — her hands, not her account] write_file(memory/scratch/debug_dedup.py); write_file(memory/scratch/test_dedup.py); write_file(memory/scratch/debug_dedup.py); replace_file_content(nova_body/nova_lancedb/hippocampus.py)"
         }
       ],
       "created": "2026-07-19T12:05:57",
-      "updated": "2026-07-19T13:03:11"
+      "updated": "2026-07-19T13:11:43"
     },
     "t49": {
       "id": "t49",
