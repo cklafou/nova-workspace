@@ -1,21 +1,38 @@
-# ping_claude.ps1 — Nova reaching Claude Desktop herself, in her own words.
+# ping_claude.ps1 - Nova reaching Claude Desktop herself, in her own words.
 #
 # WHY (2026-07-19, Cole): "I want Autonomous Nova to be able to ping for Claude to speak with and
 # assist her when she needs him." She works alone for hours. When she hits something she cannot
 # solve, the only options used to be sit on it until morning, or guess. Now she can ask.
 #
+# ############################################################################################
+# THIS FILE IS DELIBERATELY PURE ASCII. DO NOT ADD AN EM-DASH, A CURLY QUOTE, OR A BOX-DRAWING
+# CHARACTER TO IT - NOT EVEN IN A COMMENT.
+#
+# 2026-07-19: this script failed 100% of the time, silently, from the moment it was written, and
+# the cause was one em-dash on line 78. Windows PowerShell 5.1 reads a .ps1 with no UTF-8 BOM
+# using the ANSI codepage (cp1252). An em-dash is UTF-8 E2 80 94, which cp1252 renders as three
+# characters ending in 0x94 - a RIGHT CURLY DOUBLE QUOTE. PowerShell accepts curly quotes as
+# real string delimiters, so the string closed in the middle of the sentence and the file failed
+# to PARSE. A parse error kills the whole script before line 1 runs: no logging, no queueing, no
+# error handler. Nova's message vanished and she was told nothing useful.
+#
+# A BOM would also fix it, but BOMs get stripped by editors, git filters and copy-paste. ASCII
+# cannot be stripped. Her MESSAGE may contain any Unicode she likes - emoji included - because it
+# arrives via -MessageFile and is never parsed as code. See tool_router.ping_claude().
+# ############################################################################################
+#
 # WHAT CHANGED vs _admin/ask_claude.ps1 (which this replaces):
-#   1. HER WORDS, not a fixed file. The message is passed in (-Message or -File), so Claude gets
-#      her actual question with context, and can start being useful in the first reply instead of
-#      spending a round asking what she meant.
+#   1. HER WORDS, not a fixed file. The message is passed in, so Claude gets her actual question
+#      with context, and can start being useful in the first reply instead of spending a round
+#      asking what she meant.
 #   2. IT RETRIES. The old one called AppActivate once and gave up. Windows routinely REFUSES a
 #      foreground change (SetForegroundWindow is restricted when another app holds focus, when a
-#      game is fullscreen, when the user is typing). The old script then aborted — correctly, it
-#      must never paste into the wrong window — but the message was simply LOST. Now: several
+#      game is fullscreen, when the user is typing). The old script then aborted - correctly, it
+#      must never paste into the wrong window - but the message was simply LOST. Now: several
 #      attempts with backoff, restoring the window if minimised.
 #   3. IT NEVER SILENTLY DROPS. If it truly cannot deliver, the message is appended to
 #      logs/ping_queue.jsonl instead of vanishing, and the caller is told plainly it was queued,
-#      not sent. A ping that disappears is worse than one that fails loudly — she would believe
+#      not sent. A ping that disappears is worse than one that fails loudly - she would believe
 #      she had asked for help and then wait for an answer that was never coming.
 #
 # SAFETY (unchanged and non-negotiable): it verifies the foreground window really belongs to
@@ -26,14 +43,16 @@
 # file has Unix line endings ("string is missing the terminator"). Do not "tidy" it back.
 #
 # USAGE:
-#   powershell -NoProfile -File general_tools\ping_claude.ps1 -Message "Nova here — stuck on X"
-#   powershell -NoProfile -File general_tools\ping_claude.ps1 -File path\to\message.txt
+#   powershell -NoProfile -File general_tools\ping_claude.ps1 -MessageFile path\to\message.txt
+#   powershell -NoProfile -File general_tools\ping_claude.ps1 -Message "Nova here - stuck on X"
+# -MessageFile is strongly preferred: it is the only form that is safe for arbitrary text.
 # Exit codes: 0 = delivered, 2 = queued (not delivered), 1 = error.
 
 param(
-    [string]$Message = '',
-    [string]$File    = '',
-    [int]$Attempts   = 4
+    [string]$Message     = '',
+    [Alias('File')]
+    [string]$MessageFile = '',
+    [int]$Attempts       = 4
 )
 
 $ErrorActionPreference = 'Stop'
@@ -58,13 +77,15 @@ function QueueIt($text, $why) {
         message = $text
     } | ConvertTo-Json -Compress
     Add-Content -Path $queue -Value $rec -Encoding UTF8
-    Log ('QUEUED (' + $why + '): ' + ($text -replace '\s+', ' ').Substring(0, [Math]::Min(80, $text.Length)))
+    $flat = ($text -replace '\s+', ' ')
+    if ($flat.Length -gt 80) { $flat = $flat.Substring(0, 80) }
+    Log ('QUEUED (' + $why + '): ' + $flat)
 }
 
 try {
-    # ── the message ───────────────────────────────────────────────────────────
-    if ($File -and (Test-Path $File)) {
-        $text = Get-Content $File -Raw -Encoding UTF8        # UTF8 required or em-dashes mangle
+    # -- the message ----------------------------------------------------------
+    if ($MessageFile -and (Test-Path $MessageFile)) {
+        $text = Get-Content $MessageFile -Raw -Encoding UTF8   # UTF8 required or em-dashes mangle
     } else {
         $text = $Message
     }
@@ -74,8 +95,10 @@ try {
         exit 1
     }
     # Make it unmistakably HER, so Claude knows this is Nova reaching out unprompted.
+    # ASCII hyphen, not an em-dash. See the banner at the top of this file.
     if ($text -notmatch '^\s*\[Nova is pinging you') {
-        $text = "[Nova is pinging you — she reached out on her own, unprompted]`n" + $text
+        $banner = '[Nova is pinging you - she reached out on her own, unprompted]'
+        $text = $banner + "`n" + $text
     }
 
     Add-Type -AssemblyName System.Windows.Forms
@@ -94,8 +117,8 @@ try {
         Add-Type -TypeDefinition $src
     }
 
-    # ── find Claude Desktop ───────────────────────────────────────────────────
-    # Prefer a process with a real window AND a title — Electron apps spawn helper processes and
+    # -- find Claude Desktop --------------------------------------------------
+    # Prefer a process with a real window AND a title - Electron apps spawn helper processes and
     # the old "-First 1" could land on one of those.
     $proc = Get-Process |
             Where-Object { $_.MainWindowHandle -ne 0 -and $_.ProcessName -match 'Claude' -and $_.MainWindowTitle } |
@@ -107,7 +130,7 @@ try {
         exit 2
     }
 
-    # ── try, properly, more than once ─────────────────────────────────────────
+    # -- try, properly, more than once ----------------------------------------
     $delivered = $false
     for ($i = 1; $i -le $Attempts; $i++) {
         $h = $proc.MainWindowHandle
