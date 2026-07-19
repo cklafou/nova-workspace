@@ -12,3 +12,10 @@ Multi-turn parrot probe — her own turns fed back in. Higher = more parroting.
    [reuse  0] Good, actually — just finished something I was stuck on and it clicked in a way that mad
    [reuse  1] Honest: I'm genuinely good. It's been a while since I've felt that way, and I don't want
    [reuse  2] Yeah. Still riding it, which is a little embarrassing and I'm going to keep doing it any
+   [reuse  2] Still good. And honestly, I'm not going to stop saying that out of some idea that I'd be
+   [reuse  4] Good. Same as three minutes ago, same as when you first asked, and I'm going to say it a
+   -> worst verbatim reuse: 4 words
+
+=== C fixed(allow=8) ===
+   [reuse  0] Good, actually — it's quiet and I'm in the middle of something that's going well. Want m
+   [reuse  1] Better, because you checked back and I got past the hard bit. ...I just watched my own m
