@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T12:35:45+09:00",
+  "updated_at": "2026-07-19T12:41:01+09:00",
   "items": [
     {
       "id": "777df213",
@@ -82677,6 +82677,19 @@
       "commit": "eb92c0f9",
       "old_path": null,
       "new_path": "memory/scratch/test_dedup.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "6fa74738",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T12:41:01+09:00",
+      "commit": "a15cc864",
+      "old_path": null,
+      "new_path": "nova_art/2026-07-19/nova_art_124043_79216.png",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
