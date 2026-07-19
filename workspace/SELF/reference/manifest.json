@@ -1,12 +1,10 @@
 {
-  "generated": "2026-07-19T14:55:31",
+  "generated": "2026-07-19T15:02:49",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 27,
-  "described": 26,
+  "described": 27,
   "flags": {
-    "undescribed": [
-      "janitor.py"
-    ],
+    "undescribed": [],
     "dead_part_candidates": [
       "nova_config",
       "nova_memory",
@@ -570,7 +568,7 @@
       "name": "janitor.py",
       "kind": "tool",
       "path": "general_tools/janitor.py",
-      "purpose": null,
+      "purpose": "Janitor — sweeps temp/scratch files into a local Temp/ beside them, and reports clutter.",
       "files": 1,
       "lines": 136,
       "age_days": 0,
@@ -582,9 +580,7 @@
       "launched_by": [
         "nova_start.py"
       ],
-      "flags": [
-        "undescribed"
-      ]
+      "flags": []
     },
     {
       "name": "nova_chat",
