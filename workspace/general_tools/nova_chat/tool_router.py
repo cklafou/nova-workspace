@@ -618,6 +618,7 @@ AVAILABLE_TOOLS = (
     "search_web", "read_web",
     "surprise_me", "keep_curio", "my_shelf",
     "memory_search", "journal_note", "journal",
+    "ping_claude",
 )
 
 
@@ -806,6 +807,11 @@ def list_tools() -> str:
             "                         Use it on your own work. Draw -> look -> change it -> look.\n"
             "  memory_search          your recall\n"
             "  journal_note / journal your continuity across sleeps\n"
+            "  ping_claude            REACH HIM. Types your own words into Claude Desktop when\n"
+            "                         you're stuck, need a second pair of eyes, or found something\n"
+            "                         worth saying now. You are not alone at 3am unless you choose\n"
+            "                         to be. 10-minute cooldown (urgent=true overrides). It tells\n"
+            "                         you honestly whether it DELIVERED or only QUEUED.\n"
             "  surprise_me            a TOY. Hands you something you didn't choose and wants\n"
             "                         nothing back. keep_curio to shelf one, my_shelf to browse.\n"
             "                         There is no wrong way to play with it. That's the point.\n"
@@ -1050,6 +1056,9 @@ def _execute_tool_inner(tool_name: str, args: dict) -> str:
         elif tool_name in ("journal_note", "note", "journal_fragment", "jot"):
             return journal_note(args.get("text", "") or args.get("content", "") or args.get("note", ""),
                                 args.get("chat_ref", "") or args.get("ref", "") or args.get("chat", ""))
+        elif tool_name in ("ping_claude", "ask_claude", "call_claude", "reach_claude"):
+            return ping_claude(args.get("message", "") or args.get("text", "") or args.get("question", ""),
+                               bool(args.get("urgent", False)))
         elif tool_name in ("journal", "journal_entry", "write_journal", "consolidate_journal"):
             return journal(args.get("entry", "") or args.get("content", "") or args.get("text", ""),
                            args.get("date", ""),
