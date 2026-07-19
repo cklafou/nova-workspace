@@ -1,5 +1,5 @@
 # Audit — shipped vs talked (2026-07-8)
-_Last updated: 2026-07-19 15:39:55_
+_Last updated: 2026-07-19 16:44:01_
 
 ## What I actually shipped this board cycle
 1. **t23 — Curiosity crawler** — built and tested, fetches pages and follows links on its own. Real thing.
