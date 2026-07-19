@@ -46,7 +46,7 @@ taskkill /F /IM llama-server.exe >nul 2>nul && set FOUND=1
 REM The invisible pythonw crew: orchestrator, console viewer, watcher, launcher.
 REM Matched on COMMAND LINE so we never touch an unrelated Python you have open.
 powershell -NoProfile -NonInteractive -Command ^
-  "$n=0; Get-CimInstance Win32_Process -Filter \"Name='python.exe' OR Name='pythonw.exe'\" | Where-Object { $_.CommandLine -match 'nova_start\.py|console_app\.py|NovaLauncher\.py|nova_sync[\\/]+watcher\.py' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue; $n++ }; if ($n -gt 0) { Write-Host \"        stopped $n Nova python process(es).\" }" 2>nul
+  "$n=0; Get-CimInstance Win32_Process -Filter \"Name='python.exe' OR Name='pythonw.exe'\" | Where-Object { $_.CommandLine -match 'nova_start\.py|console_app\.py|NovaLauncher\.py|nova_sync[\\/]+watcher\.py|nova_guardian\.py' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue; $n++ }; if ($n -gt 0) { Write-Host \"        stopped $n Nova python process(es).\" }" 2>nul
 
 taskkill /F /IM NovaStart.exe >nul 2>nul
 

@@ -48,6 +48,7 @@ MODEL       = WS / "models" / "qwen3.6" / "Qwen3.6-27B-UD-Q6_K_XL.gguf"   # Qwen
 MMPROJ      = WS / "models" / "qwen3.6" / "mmproj-F16.gguf"
 NOVA_LAUNCH = WS / "general_tools" / "NovaLauncher.py"
 WATCHER     = WS / "general_tools" / "nova_sync" / "watcher.py"
+GUARDIAN    = WS / "_admin" / "nova_guardian.py"
 PROMPT_CACHE = WS / "prompt_cache"
 
 LLAMA_PORT = 8080
@@ -575,6 +576,76 @@ def start_watcher() -> subprocess.Popen | None:
         return None
 
 
+def start_guardian() -> subprocess.Popen | None:
+    """Launch the deterministic watchdog as part of the stack (2026-07-19).
+
+    Cole: "Watchdog should start and end on Nova boot, not be a scheduled task." A
+    safety net that needs a human to hang it is not a safety net — and the schtasks
+    version sat unpasted all day while she ran unprotected.
+
+    Zero tokens, no LLM: it probes llama /health, checks the loaded adapter is the one
+    she is configured to wear, and pings nova_chat. Set NOVA_NO_GUARDIAN=1 to skip.
+
+    Same process-group treatment as the watcher so stop_guardian() can CTRL_BREAK it —
+    which matters more here than it looks: on a deliberate StopNova the guardian must
+    be gone BEFORE the stack comes down, or it will faithfully observe the shutdown,
+    call it an outage, and restart everything Cole just asked to stop."""
+    if os.environ.get("NOVA_NO_GUARDIAN"):
+        log("NOVA_NO_GUARDIAN set — skipping the guardian.")
+        return None
+    if not GUARDIAN.exists():
+        log(f"nova_guardian.py not found at {GUARDIAN} — skipping.", "WARN")
+        return None
+    py = _pick_python()
+    if py is None:
+        log("No suitable Python for the guardian — skipping.", "WARN")
+        return None
+    log("Starting guardian (llama/adapter/chat watchdog, first check in 5 min)...")
+    try:
+        env = dict(os.environ)
+        env["PYTHONUNBUFFERED"] = "1"
+        kw = _hidden_console()
+        if sys.platform == "win32":
+            kw["creationflags"] = kw.get("creationflags", 0) | subprocess.CREATE_NEW_PROCESS_GROUP
+        proc = subprocess.Popen(
+            _console_python(py) + [str(GUARDIAN), "--daemon",
+                                   "--interval-min", "10", "--startup-grace-s", "300"],
+            cwd=str(WS), env=env, stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, **kw)
+        if HUB:
+            HUB.attach_pipe("guardian", proc)
+        return proc
+    except Exception as e:
+        log(f"Could not start guardian: {e}", "WARN")
+        return None
+
+
+def stop_guardian(proc: subprocess.Popen | None) -> None:
+    """Stop the guardian FIRST, before the rest of the teardown.
+
+    Order is the whole point. If the stack goes down while this is still watching, it
+    sees llama vanish, correctly concludes DOWN, and restarts everything — turning a
+    clean shutdown into a fight."""
+    if not proc or proc.poll() is not None:
+        return
+    log("Stopping guardian...")
+    try:
+        if sys.platform == "win32":
+            proc.send_signal(signal.CTRL_BREAK_EVENT)
+            try:
+                proc.wait(timeout=6)
+                return
+            except Exception:
+                pass
+        proc.terminate()
+        proc.wait(timeout=6)
+    except Exception:
+        try:
+            proc.kill()
+        except Exception:
+            pass
+
+
 def stop_watcher(proc: subprocess.Popen | None) -> None:
     """Stop the watcher gracefully so its observer/git push can finish and it does
     not leave a stale .git/index.lock behind."""
@@ -673,6 +744,7 @@ def main() -> None:
 
     app_proc = open_app_window()
     watcher_proc = start_watcher()
+    guardian_proc = start_guardian()
 
     # Publish our process tree so the console's stray-window janitor can tell "a console Nova
     # spawned" from "a terminal Cole opened". It only ever hides windows whose ancestry reaches
@@ -718,6 +790,10 @@ def main() -> None:
     except KeyboardInterrupt:
         log("Interrupted by user.")
     finally:
+        # Guardian FIRST — before anything it watches goes down. Otherwise it observes
+        # our own shutdown, correctly calls it an outage, and restarts the stack Cole
+        # just asked to stop.
+        stop_guardian(guardian_proc)
         stop_watcher(watcher_proc)
         _shutdown_nova(nova_proc)
         stop_llama(llama_proc)
