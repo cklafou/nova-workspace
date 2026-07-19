@@ -26,10 +26,25 @@ WHAT IT DOES
     Also reports tok/s per config, because MTP is not always faster: in #23335 it was SLOWER at
     every setting (10.2 baseline -> 8.8 at n=1 -> 4.3 at n=4).
 
-USAGE (from the workspace root, with Nova STOPPED — StopNova.cmd first; it needs port 8080)
+WHEN TO RUN IT
+    NOT routine. Only after a llama.cpp update, to check whether the upstream bug is fixed.
+    Standing answer until then: keep MTP off.
+
+BUDGET — READ THIS FIRST
+    ~10-15 MINUTES with Nova fully DOWN the whole time. Four llama-server boots at ~40s each
+    (26GB model) plus 16 generations. A short window is not enough — if you stop Nova and
+    restart her a few minutes later, this will not have finished.
+
+USAGE (from the workspace root)
+    StopNova.cmd                                 # REQUIRED — it needs port 8080 to itself
     python _admin/mtp_ab_test.py                 # her adapter at her live scale
     python _admin/mtp_ab_test.py --no-lora       # isolate: is it MTP alone, or MTP+LoRA?
     python _admin/mtp_ab_test.py --n-max 1 2 3 4
+    NovaStart.cmd                                # bring her back up when it's done
+
+OUTPUT
+    Printed to console AND written to _admin/mtp_ab_result_<timestamp>.{txt,json} so the
+    verdict survives the terminal window closing.
 
 EXIT CODE
     0 = every MTP config matched baseline exactly (safe to enable)
@@ -165,21 +180,62 @@ def run_config(label: str, spec_n_max: int | None, use_lora: bool) -> dict | Non
         time.sleep(6)   # let the port and VRAM actually release
 
 
+class Tee:
+    """Everything printed also lands in a file — so the verdict survives the console closing.
+    (2026-07-19: the first run of this script produced no reviewable output for exactly that
+    reason, and there was no way to tell afterwards whether it had even run.)"""
+
+    def __init__(self, path: Path):
+        self.f = open(path, "w", encoding="utf-8")
+        self.stdout = sys.stdout
+
+    def write(self, s):
+        self.stdout.write(s)
+        self.f.write(s)
+        self.f.flush()
+
+    def flush(self):
+        self.stdout.flush()
+        self.f.flush()
+
+    def close(self):
+        self.f.close()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--n-max", nargs="*", type=int, default=[1, 2, 3])
     ap.add_argument("--no-lora", action="store_true")
     args = ap.parse_args()
 
+    stamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+    txt_path = WS / "_admin" / f"mtp_ab_result_{stamp}.txt"
+    json_path = WS / "_admin" / f"mtp_ab_result_{stamp}.json"
+    tee = Tee(txt_path)
+    sys.stdout = tee
+    try:
+        return _run(args, json_path, txt_path)
+    finally:
+        sys.stdout = tee.stdout
+        tee.close()
+        print(f"\nSaved: {txt_path.name} / {json_path.name}  (in _admin/)")
+
+
+def _run(args, json_path: Path, txt_path: Path) -> int:
     if not LLAMA_EXE.exists() or not MODEL.exists():
         print(f"missing binary or model:\n  {LLAMA_EXE}\n  {MODEL}")
         return 1
     try:
         urllib.request.urlopen(f"{BASE_URL}/health", timeout=2)
-        print(f"Something is already serving :{PORT} — run StopNova.cmd first.")
+        print("=" * 68)
+        print(f"  ABORTED — something is already serving :{PORT}.")
+        print("  Run StopNova.cmd first, then re-run this. Nova must stay DOWN for")
+        print("  the whole test (~10-15 min: 4 model loads + 16 generations).")
+        print("=" * 68)
         return 1
     except Exception:
         pass
+    print(f"[budget] ~10-15 minutes, Nova down throughout. Started {time.strftime('%H:%M:%S')}.")
 
     use_lora = not args.no_lora
     sel = active_adapter()
@@ -240,6 +296,25 @@ def main() -> int:
     else:
         print("  The llama.cpp MTP bug (#23302 / #23335) is STILL PRESENT on this build.")
         print("  Keep MTP off in nova_start.py. Re-run this after the next llama.cpp update.")
+
+    # Machine-readable record, so a later session can diff builds without re-running.
+    try:
+        json_path.write_text(json.dumps({
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "adapter": (None if args.no_lora else active_adapter()),
+            "baseline_tok_s": round(base_speed, 2),
+            "all_lossless": all_ok,
+            "configs": [
+                {"n_max": n,
+                 "ran": got is not None,
+                 "diverged_probes": diverged,
+                 "tok_s": (round(sum(got[nm]["tok_s"] for nm, _ in PROBES) / len(PROBES), 2)
+                           if got else None)}
+                for n, got, diverged in results
+            ],
+        }, indent=2), encoding="utf-8")
+    except Exception as e:
+        print(f"  (could not write json record: {e})")
     return 0 if all_ok else 1
 
 
