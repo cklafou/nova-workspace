@@ -1,5 +1,5 @@
 # The pronoun bug — she was reading a transcript, and nobody told her she was in it
-_Last updated: 2026-07-19 20:33:07_
+_Last updated: 2026-07-20 04:31:28_
 _2026-07-19, Fable. Cole: "she uses pronouns or referencing of people completely incorrectly."
 Measured baseline **11.8% of replies**. Root cause found, four fixes shipped, detector built._
 

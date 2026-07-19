@@ -1,5 +1,5 @@
 # KoELS Gaming Specialist — Dataset Batch 4 (chess at master level)
-_Last updated: 2026-07-18 21:27:59_
+_Last updated: 2026-07-20 04:31:28_
 
 _18 examples grounded in master chess theory: Kotov (candidate moves / analysis tree), Nimzowitsch
 (My System — prophylaxis, overprotection, blockade, outpost, pawn-chain base), and Chase-Simon/

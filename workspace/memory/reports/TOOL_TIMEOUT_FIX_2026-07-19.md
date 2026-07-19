@@ -1,5 +1,5 @@
 # Her hands failed silently — the 42-byte error that cost three tool loops
-_Last updated: 2026-07-19 21:46:55_
+_Last updated: 2026-07-20 04:31:28_
 _2026-07-19, Fable. Found live, minutes after the pacing fix went in. Same disease as the
 silent-zero guard: the failure was real, the REASON was withheld, and she took the blame._
 

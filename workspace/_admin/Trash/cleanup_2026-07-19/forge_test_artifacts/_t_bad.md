@@ -1,5 +1,5 @@
 # _t_bad
-_Last updated: 2026-07-19 20:36:08_
+_Last updated: 2026-07-20 04:31:28_
 
 ## GAP
 Deliberately broken tool used to prove the forge contains its own failures instead of propagating them into the router.

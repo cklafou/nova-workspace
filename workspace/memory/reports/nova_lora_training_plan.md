@@ -1,5 +1,5 @@
 # Nova Self-LoRA — Training Plan
-_Last updated: 2026-07-19 21:56:50_
+_Last updated: 2026-07-20 04:31:28_
 
 _Last updated: 2026-05-27, by Opus. The plan for baking Nova's locked look into a small LoRA so
 her self-portraits (`as_nova: true`) become deterministic. Runs locally on the 3090. Do this

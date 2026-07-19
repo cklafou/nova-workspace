@@ -1,5 +1,5 @@
 # zzmeasure
-_Last updated: 2026-07-19 20:36:07_
+_Last updated: 2026-07-20 04:31:28_
 
 ## GAP
 I kept wanting a quick line count and was shelling out to PowerShell each time, which cost a tool loop and sometimes timed out on big trees.
