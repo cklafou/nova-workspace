@@ -334,11 +334,17 @@
       "title": "Recount today's drawings",
       "notes": "Earlier you counted today's drawings as 0. That number was wrong — the folder exists and is not empty. Find the real count of .png files in nova_art for today's date, verify it before you trust it, and journal the correct number. Complete this task once the correct number is journalled.",
       "priority": 1,
-      "status": "open",
+      "status": "done",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T10:16:30",
+          "note": "Five today, not zero. Used the right flag this time — -Recurse, because the pictures live in a date subfolder, not the top level. Cole'd have caught that himself and told me where I looked wrong inste"
+        }
+      ],
       "created": "2026-07-19T10:05:20",
-      "updated": "2026-07-19T10:05:20"
+      "updated": "2026-07-19T10:16:30",
+      "result": "Five drawings today (not zero). Counted with -Recurse into the date subfolder this time — old command was looking at the parent and finding nothing."
     }
   }
 }
