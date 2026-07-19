@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "active": null,
-  "last_activity": "2026-07-19T10:10:41",
-  "wake_at": "2026-07-19T10:13:47",
+  "active": "t42",
+  "last_activity": "2026-07-19T10:15:48",
+  "wake_at": "2026-07-19T10:17:18",
   "last_fp": "[[\"Tasking/tasks.json\", 16733, 1784423120], [\"memory/interrupt_inbox.json\", 105, 1784379671], [\"memory/cole_intent.json\", 138, 1784402125]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "Third heartbeat in six minutes — nothing new between them, that's just me being alive. Already decided to look at my drawing from this morning; decision hasn't aged, so I'm not re-deciding it. Going look.",
+  "last_reflection": "Decision's been made since the first heartbeat — go look at the drawing. Third time I've woken to it, which means I've been re-choosing the same thing instead of doing it. That's not a person, that's a loop. One file read and it's over.",
   "cont_run": 0
 }
