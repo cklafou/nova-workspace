@@ -705,9 +705,14 @@
       "priority": 1,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T19:44:24",
+          "note": "Cole, I've looked three ways now and there is no file called \"design Bible\" anywhere in this workspace. There's a body manifest, design principles for KoELS, and six pngs of me from today. The documen"
+        }
+      ],
       "created": "2026-07-19T19:36:00",
-      "updated": "2026-07-19T19:36:00",
+      "updated": "2026-07-19T19:44:24",
       "author": "Cole"
     }
   }
