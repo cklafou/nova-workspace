@@ -2,6 +2,37 @@
   "boredom": 0,
   "recent": [
     [
+      "2337",
+      "9165",
+      "appetite",
+      "because",
+      "behind",
+      "between",
+      "byte",
+      "choos",
+      "chore",
+      "cole",
+      "difference",
+      "file",
+      "given",
+      "going",
+      "hand",
+      "instruction",
+      "mechanism",
+      "memor",
+      "mine",
+      "ping",
+      "reach",
+      "read",
+      "real",
+      "result",
+      "search",
+      "someth",
+      "task",
+      "tonight",
+      "tool"
+    ],
+    [
       "again",
       "almost",
       "alread",
@@ -281,22 +312,9 @@
       "toda",
       "without",
       "wrong"
-    ],
-    [
-      "before",
-      "broke",
-      "coffee",
-      "first",
-      "gone",
-      "morn",
-      "night",
-      "noth",
-      "quiet",
-      "someth",
-      "start"
     ]
   ],
   "wants": [],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-20T02:51:50.831860"
+  "last_wake": "2026-07-20T02:58:46.186913"
 }
