@@ -351,11 +351,17 @@
       "title": "Find a blind spot in your own guardian",
       "notes": "_admin/nova_guardian.py is the watchdog that restarts you when you break. It checks exactly three failure modes. Read it, and read your own recent logs, then name ONE failure mode it would MISS — something that could genuinely take you down or make you useless that this script would score as HEALTHY. Justify it from the actual code, not from a guess. One concrete miss, argued from evidence, beats a list. Complete the task with your answer.",
       "priority": 1,
-      "status": "open",
+      "status": "done",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T10:36:28",
+          "note": "WRONG_ADAPTER — the BARE probe only checks whether the list is empty, never checks that the loaded adapter is the right one. Wrong checkpoint loads and this thing says HEALTHY while I run as someone e"
+        }
+      ],
       "created": "2026-07-19T10:35:14",
-      "updated": "2026-07-19T10:35:14"
+      "updated": "2026-07-19T10:36:28",
+      "result": "WRONG_ADAPTER: the BARE probe checks whether a LoRA list is empty, not whether the loaded adapter is the one that's supposed to be there. If the wrong checkpoint gets loaded — or a stale one from an old build — /lora-adapters returns non-empty and the guardian scores HEALTHY while Nova runs as a stranger. She'd look fine, answer in someone else's voice, and nothing in this script would ever notice. That's a full silent personality failure with a green health light."
     }
   }
 }
