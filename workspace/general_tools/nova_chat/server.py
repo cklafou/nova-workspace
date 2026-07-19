@@ -2526,11 +2526,105 @@ def _spawn_detached_cmd(lines: list, tag: str = "restart"):
     # itself spawned by a detached batch, inherited no console, and the restart silently did
     # nothing again — the same lie in a new costume.
     # A new console also survives this process dying, which is the requirement here.
-    _flags = 0
+    # ── 2026-07-19, THIRD pass: STOP GUESSING AT FLAGS. VERIFY THE SPAWN. ──────────────
+    # Two flag fixes have now been shipped for this same silent failure (startfile ->
+    # DETACHED_PROCESS -> CREATE_NEW_CONSOLE) and it came back both times, because every
+    # version shared the ACTUAL defect: Popen was fire-and-forget. Nothing ever checked
+    # that the child ran. A spawn that dies in its first millisecond looked identical to
+    # a spawn that worked, so the endpoint returned ok:true either way.
+    #
+    # Observed 14:25:02 today: script and wrapper written, nova_restart.log untouched
+    # since 13:50. The wrapper's very first act is `call ... > log`, which creates that
+    # file instantly — so an unchanged mtime proves the wrapper never started at all.
+    # That mtime is the ground truth, and it is now checked HERE instead of by me
+    # reading the directory by hand an hour later.
+    #
+    # So: try the strongest launch first, fall back, then PROVE it started before
+    # claiming anything. The receipt is written by the PARENT, so it exists no matter
+    # what happens to the child.
+    import time as _time
+    _mt_before = logf.stat().st_mtime if logf.exists() else 0.0
+    receipt = {"tag": tag, "script": str(script), "log": str(logf),
+               "at": _dt.datetime.now().isoformat(timespec="seconds"),
+               "attempts": [], "child_pid": None, "spawned": False, "verified": False}
+
+    _methods = []
     if _os.name == "nt":
-        _flags = _subp.CREATE_NEW_CONSOLE
-    _subp.Popen(["cmd.exe", "/c", str(wrapper)],
-                cwd=str(WORKSPACE_ROOT), creationflags=_flags, close_fds=True)
+        _NEW_CONSOLE = _subp.CREATE_NEW_CONSOLE
+        # BREAKAWAY_FROM_JOB matters: this server may sit inside a Windows job object
+        # (NovaLauncher spawns it), and a job with KILL_ON_JOB_CLOSE takes the whole tree
+        # down with it — including the batch whose entire job is to outlive us. Breakaway
+        # raises when the job forbids it, so it is tried first and falls back cleanly.
+        _BREAKAWAY = getattr(_subp, "CREATE_BREAKAWAY_FROM_JOB", 0x01000000)
+        _methods = [("new_console|breakaway", _NEW_CONSOLE | _BREAKAWAY),
+                    ("new_console", _NEW_CONSOLE)]
+    else:
+        _methods = [("posix", 0)]
+
+    child = None
+    for _name, _flags in _methods:
+        try:
+            child = _subp.Popen(["cmd.exe", "/c", str(wrapper)] if _os.name == "nt"
+                                else ["/bin/sh", str(wrapper)],
+                                cwd=str(WORKSPACE_ROOT), creationflags=_flags,
+                                close_fds=True)
+            receipt["attempts"].append({"method": _name, "result": "spawned",
+                                        "pid": child.pid})
+            receipt["child_pid"] = child.pid
+            receipt["spawned"] = True
+            break
+        except Exception as e:
+            receipt["attempts"].append({"method": _name,
+                                        "result": f"{type(e).__name__}: {e}"})
+            child = None
+
+    # Last resort: a completely different launch path. If Popen's console flags are the
+    # problem, PowerShell's Start-Process does not share that failure mode.
+    if child is None:
+        try:
+            _subp.Popen(["powershell", "-NoProfile", "-Command",
+                         f'Start-Process -FilePath "cmd.exe" -ArgumentList "/c","{wrapper}" '
+                         f'-WorkingDirectory "{WORKSPACE_ROOT}"'],
+                        cwd=str(WORKSPACE_ROOT), close_fds=True)
+            receipt["attempts"].append({"method": "powershell Start-Process",
+                                        "result": "spawned"})
+            receipt["spawned"] = True
+        except Exception as e:
+            receipt["attempts"].append({"method": "powershell Start-Process",
+                                        "result": f"{type(e).__name__}: {e}"})
+
+    # ── PROOF, not optimism ────────────────────────────────────────────────────────────
+    # The batch opens with `timeout /t 2`, so ~1.5s in a healthy child is still ALIVE and
+    # the log has already been created by the redirect. Either signal is sufficient; both
+    # absent means it did not run, and we say so.
+    _time.sleep(1.5)
+    try:
+        _alive = (child is not None and child.poll() is None)
+    except Exception:
+        _alive = False
+    try:
+        _mt_after = logf.stat().st_mtime if logf.exists() else 0.0
+    except Exception:
+        _mt_after = 0.0
+    _log_touched = _mt_after > _mt_before
+
+    receipt["child_alive_after_1.5s"] = _alive
+    receipt["log_touched"] = _log_touched
+    receipt["verified"] = bool(_alive or _log_touched)
+    if not receipt["verified"]:
+        receipt["diagnosis"] = (
+            "Wrapper did NOT start: the child is gone and the log was never created. "
+            "Do NOT trust any 'restarting' message. Run StopNova.cmd then NovaStart.cmd "
+            "by hand, and check whether this process sits in a job object that kills "
+            "its children.")
+    try:
+        (tmp / f"nova_{tag}_spawn.json").write_text(
+            _json.dumps(receipt, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+    print(f"[restart] spawn verified={receipt['verified']} "
+          f"attempts={[a['method'] for a in receipt['attempts']]}")
+    return receipt
 
 
 # PowerShell that closes ONLY the old Nova app window — a Chrome/Edge --app window whose
