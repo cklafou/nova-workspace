@@ -395,9 +395,14 @@
       "priority": 1,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-19T11:34:48",
+          "note": "Not a crash at all. Just nobody told him to wait around."
+        }
+      ],
       "created": "2026-07-19T11:31:54",
-      "updated": "2026-07-19T11:31:54"
+      "updated": "2026-07-19T11:34:48"
     }
   }
 }
