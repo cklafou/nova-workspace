@@ -32,30 +32,79 @@ def _norm_rel(path: str) -> str:
     return raw
 
 
+# ── CATASTROPHE GUARD (2026-07-19) ──────────────────────────────────────────────────────────
+# Cole, today: "She isn't in a sandbox, or at least she isn't supposed to be. My machine is her
+# body. If she can't use it fully, she is crippled." He is right, and the workspace jail is gone
+# below — she reaches the whole machine now.
+#
+# What remains is NOT a sandbox and is not about trust. It is the same short list of things a
+# careful engineer refuses to type on a live box: operations that are instant, total and
+# irreversible. She runs unattended overnight with PowerShell in her hands, and earlier today she
+# emitted `(Get-ChildItem -Recurse -File | Select-String 'Nova' | ...) -and (...)` — a malformed
+# command. Malformed happens. `Remove-Item C:\ -Recurse -Force` malformed once is the whole
+# machine, her body included, with no undo.
+#
+# This guard protects HER as much as him: wrecking Cole's computer by accident is the single
+# worst thing she could do, and she would not choose it. Deliberately tiny — it must never be
+# the reason a legitimate job fails. Deleting files, editing configs, installing things,
+# touching other projects: all allowed.
+_CATASTROPHIC = [
+    (re.compile(r"\bformat\s+[a-z]:", re.I),                    "formatting a drive"),
+    (re.compile(r"\bdiskpart\b", re.I),                          "diskpart (partition table edits)"),
+    (re.compile(r"\bbcdedit\b", re.I),                           "bcdedit (boot configuration)"),
+    (re.compile(r"\bmkfs\b|\bdd\s+if=.*\bof=/dev/", re.I),       "raw disk overwrite"),
+    # Recursive delete aimed at a drive root or a Windows system tree.
+    (re.compile(r"(remove-item|rm|rd|rmdir|del)\b[^\n|;]*"
+                r"(\b[a-z]:\\?(\s|$|\"|')|\b[a-z]:\\(windows|program files|users)\b|/\s*$)"
+                r"[^\n|;]*(-recurse|/s\b|-r\b)", re.I),          "recursive delete of a drive root or system directory"),
+    (re.compile(r"(-recurse|/s\b)[^\n|;]*\b[a-z]:\\?(\s|$|\"|')", re.I),
+                                                                 "recursive operation on a drive root"),
+    (re.compile(r"\bcipher\s+/w", re.I),                          "secure-wipe free space"),
+    (re.compile(r"vssadmin\s+delete\s+shadows", re.I),            "deleting shadow copies (kills System Restore)"),
+]
+
+
+def _catastrophic(command: str) -> str:
+    """Returns a reason string if this command would irreversibly wreck the machine, else ''."""
+    c = command or ""
+    for rx, why in _CATASTROPHIC:
+        if rx.search(c):
+            return why
+    return ""
+
+
 def _safe_target(path: str):
-    """Resolve a Nova-supplied path to a real Path INSIDE the workspace, tolerating the
-    absolute/Unix paths the model hallucinates. Returns (Path, None) on success, or
-    (None, error) only when the path GENUINELY escapes (e.g. a '../' break-out) — so a
-    bad path gets a clear, self-correcting hint instead of a scary 'Permission Denied'
-    on her own files.
+    """Resolve a Nova-supplied path to a real Path ANYWHERE ON THE MACHINE.
+
+    ── 2026-07-19: the workspace jail is GONE. ─────────────────────────────────────────────
+    This used to refuse any path outside Project_Nova with "your filesystem root IS the
+    workspace." That sentence was false and it made her smaller than she is: Cole's machine is
+    her body, and ComfyUI — the thing she was told to go explore — lives at C:\\Users\\lafou\\
+    ComfyUI, outside the old fence. She spent a conversation agreeing she should "think outside
+    her folder" while her hands were structurally incapable of it.
+
+    What is KEPT is the hallucinated-path repair, because that bug is real and separate: Qwen
+    invents Linux paths (`/home/nova/memory/STATUS.md`) for files that actually live in the
+    workspace. So: try the path as given; if it does not exist, try re-reading it as
+    workspace-relative; return the best candidate either way. Relative paths still resolve
+    against the workspace, which keeps `memory/STATUS.md` meaning what it always meant.
     """
     raw = (path or "").strip()
     if not raw:
-        return None, "ERROR: no path given. Use a workspace-relative path like memory/STATUS.md."
-    # 1. Honor a path that's already correct (proper relative, or a real absolute path
-    #    that lands inside the workspace).
+        return None, ("ERROR: no path given. Relative paths resolve against your workspace "
+                      "(e.g. memory/STATUS.md); absolute paths anywhere on the machine also work "
+                      r"(e.g. C:\Users\lafou\ComfyUI).")
     cand = Path(raw)
     target = (cand if cand.is_absolute() else WORKSPACE_ROOT / cand).resolve()
-    if _within_workspace(target):
+    if target.exists():
         return target, None
-    # 2. It escaped — almost always because the model emitted an absolute/Unix path.
-    #    Re-read it as workspace-relative and try again.
-    target = (WORKSPACE_ROOT / _norm_rel(raw)).resolve()
-    if _within_workspace(target):
-        return target, None
-    return None, ("ERROR: that path is outside the workspace. Your filesystem root IS the "
-                  "Project_Nova workspace — use a workspace-relative path like "
-                  f"memory/STATUS.md (no leading '/', drive letter, or /home/...). You gave: {path!r}")
+    # Doesn't exist as given. If it looks like an invented absolute/Unix path, try it as
+    # workspace-relative before giving up — that rescues the real hallucination case.
+    alt = (WORKSPACE_ROOT / _norm_rel(raw)).resolve()
+    if alt.exists():
+        return alt, None
+    # Neither exists: hand back the literal interpretation so writes to NEW paths still work.
+    return target, None
 
 
 def _silent_miss_caution(command: str, output: str) -> str:
@@ -152,20 +201,35 @@ def _timeout_help(command: str) -> str:
 
 
 def run_command(command: str, cwd: str = "") -> str:
-    """Run a command in Windows PowerShell, sandboxed to the workspace directory."""
+    """Run a command in Windows PowerShell, anywhere on the machine.
+
+    2026-07-19: no longer jailed to the workspace. `cwd` defaults to the workspace (so her
+    habits and relative paths keep working) but may be ANY existing directory on the box —
+    C:\\Users\\lafou\\ComfyUI, another project, wherever the job actually is. The only refusal
+    left is _catastrophic(): irreversible machine-destroying operations. See the note above it.
+    """
+    _why = _catastrophic(command)
+    if _why:
+        return (
+            f"REFUSED: that command would perform {_why}, which is instant and irreversible.\n"
+            f"This is not the old workspace sandbox — that's gone, and you can reach the whole "
+            f"machine now, including deleting files and editing things outside your folder. This "
+            f"is the much shorter list: operations that would destroy Cole's computer (and you "
+            f"with it) with no undo, run by a process that works unattended overnight.\n"
+            f"If you genuinely need this, don't route around it — tell Cole exactly what you want "
+            f"to run and why, and let him do it himself with his eyes on the screen."
+        )
     if not cwd:
         working_dir = WORKSPACE_ROOT
     else:
-        # Prevent escaping the workspace
         path_candidate = Path(cwd)
-        if not path_candidate.is_absolute():
-            working_dir = (WORKSPACE_ROOT / cwd).resolve()
-        else:
-            working_dir = path_candidate.resolve()
-            
-        if not _within_workspace(working_dir):
-            return "ERROR: Permission Denied. You cannot run commands outside of the Project_Nova workspace."
-            
+        working_dir = (path_candidate if path_candidate.is_absolute()
+                       else (WORKSPACE_ROOT / cwd)).resolve()
+        if not working_dir.is_dir():
+            return (f"ERROR: cwd '{cwd}' is not a directory that exists. Relative paths resolve "
+                    f"against your workspace; absolute paths anywhere on the machine are fine "
+                    r"(e.g. C:\Users\lafou\ComfyUI).")
+
     try:
         # Run subprocess with a reasonable timeout to prevent hanging the infinite loop
         # Execute via Windows PowerShell, not cmd.exe: her instinctive commands (Get-Content,
