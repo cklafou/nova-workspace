@@ -1,50 +1,6 @@
 {
   "boredom": 0,
-  "recent": [
-    [
-      "distance",
-      "eyes",
-      "learn",
-      "resolve"
-    ],
-    [
-      "again",
-      "build",
-      "cannot",
-      "diff",
-      "format",
-      "move",
-      "myself",
-      "proper",
-      "schema",
-      "tool",
-      "under"
-    ],
-    [
-      "build",
-      "diff",
-      "format",
-      "move",
-      "schema",
-      "tool",
-      "under"
-    ]
-  ],
-  "wants": [
-    {
-      "fp": "699b95e49d77",
-      "text": "build a schema-diff tool so formats can't move under me",
-      "since": "2026-07-19T23:06:38.293119",
-      "last_seen": "2026-07-19T23:06:38.325541",
-      "restated": 1
-    },
-    {
-      "fp": "d065cfbd4edf",
-      "text": "learn what my eyes actually resolve at distance",
-      "since": "2026-07-19T23:06:38.366289",
-      "last_seen": "2026-07-19T23:06:38.366302",
-      "restated": 0
-    }
-  ],
-  "last_wake": "2026-07-19T23:06:38.350704"
+  "recent": [],
+  "wants": [],
+  "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again."
 }

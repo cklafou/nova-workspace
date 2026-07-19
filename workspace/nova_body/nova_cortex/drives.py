@@ -41,12 +41,21 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import pathlib
 from datetime import datetime
 
 _HERE = pathlib.Path(__file__).resolve()
 _WS = _HERE.parent.parent.parent                      # ...\workspace
-_STATE = _WS / "memory" / "drives.json"
+
+# NOVA_DRIVES_STATE exists so a test can never write to her real drives again.
+# 2026-07-19: mine did. The unit test for this module ran against the live path, and she was
+# left holding two wants she had never expressed — "build a schema-diff tool", "learn what my
+# eyes resolve at distance". Both were my fixtures. Nothing else in this file matters if the
+# file can be filled with desires she didn't have; a fabricated want is worse than no want,
+# because she would have had no way to tell it wasn't hers.
+_STATE = pathlib.Path(os.environ.get("NOVA_DRIVES_STATE",
+                                     str(_WS / "memory" / "drives.json")))
 
 _MAX_FINGERPRINTS = 12      # how far back "have I done this before" looks
 _BOREDOM_MAX = 10           # cap, so a long quiet night can't make it meaningless
