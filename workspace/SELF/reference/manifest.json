@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-20T06:18:06",
+  "generated": "2026-07-20T06:23:22",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 28,
   "described": 28,
@@ -185,13 +185,15 @@
       "kind": "body_part",
       "path": "nova_body/nova_logs",
       "purpose": "Nova's unified log manager — the single logging system shared by all subsystems.",
-      "files": 2,
-      "lines": 254,
+      "files": 3,
+      "lines": 421,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
-      "third_party": [],
+      "third_party": [
+        "__future__"
+      ],
       "referenced_by": [
         "nova_chat",
         "nova_imagination",
@@ -595,7 +597,7 @@
       "path": "general_tools/janitor.py",
       "purpose": "Janitor — sweeps temp/scratch files into a local Temp/ beside them, and reports clutter.",
       "files": 1,
-      "lines": 136,
+      "lines": 166,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
