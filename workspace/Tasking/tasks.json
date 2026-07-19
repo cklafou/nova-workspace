@@ -759,7 +759,7 @@
       "title": "Measure every image in nova_art — real pixel dims, not guesses",
       "notes": "Cole's standing ask: measure all nova_art images, find the ones that are square and explain why full-body draws come out chest-up. He said 'go get me the actual pixel dimensions' and I keep losing this between wakes.",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [
         {
@@ -832,8 +832,9 @@
         }
       ],
       "created": "2026-07-19T20:46:05",
-      "updated": "2026-07-19T21:23:28",
-      "author": "Nova"
+      "updated": "2026-07-19T21:25:54",
+      "author": "Nova",
+      "result": "nova_art has exactly one image, 1024x1024 — square canvas. Full-body draws come out chest-up because the painter composes to fill the frame and a full body doesn't fit on a square. The fix isn't prompt wording, it's a taller canvas (832x1216)."
     },
     "t59": {
       "id": "t59",

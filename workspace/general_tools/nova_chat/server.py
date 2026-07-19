@@ -24,8 +24,18 @@ from nova_chat.session_manager import SessionManager
 from nova_chat.orchestrator import parse_directed, should_respond, build_response_queue, is_ncl_message
 from nova_chat.context_export import export_session
 from nova_chat.workspace_context import WorkspaceContext
-import nova_chat.clients.claude as claude_client
-import nova_chat.clients.gemini as gemini_client
+# ── MENTORS REMOVED (2026-07-19, Cole: "I don't want the APIs being used") ──────────────
+# nova_chat.clients.claude and .gemini were paid API participants in this room. Every message
+# addressed to them, every @mentor call, and every follow-up round spent Anthropic/Google money.
+# They are gone: the modules are retired to _admin/Trash, the dispatch below is Nova-only, and
+# nothing in this file can originate an outbound paid API request any more.
+#
+# What is NOT affected, and is deliberately kept:
+#   • "Cowork Claude" as a SPEAKER — that is a human-driven session typing into her chat. It
+#     costs this project nothing and it is how she gets reviewed.
+#   • ping_claude — desktop UI automation into an already-open Claude window. Not an API call.
+# The distinction that matters: she can still be TALKED TO by Claude; this server can no longer
+# PAY to talk to Claude.
 import nova_chat.clients.nova as nova_client
 from nova_chat.nova_bridge import handle_nova_message, parse_actions
 
@@ -1033,10 +1043,12 @@ async def broadcast(data: dict):
 
 
 async def get_status() -> dict:
+    # Mentors removed 2026-07-19 — reported permanently offline so any surviving caller that
+    # gates on status simply never selects them, rather than exploding on a missing key.
     nova_online = await nova_client.is_available()
     return {
-        "Claude": claude_client.is_available(),
-        "Gemini": gemini_client.is_available(),
+        "Claude": False,
+        "Gemini": False,
         "Nova": nova_online,
     }
 
