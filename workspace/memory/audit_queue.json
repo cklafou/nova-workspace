@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T21:02:47+09:00",
+  "updated_at": "2026-07-19T21:10:15+09:00",
   "items": [
     {
       "id": "777df213",
@@ -84900,6 +84900,19 @@
       "commit": "7ce2929b",
       "old_path": null,
       "new_path": "nova_body/nova_forge/tests/comfy_inspect.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "41b5f4c0",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-07-19T21:10:15+09:00",
+      "commit": "1988fffa",
+      "old_path": "_admin/Training_stuff/AskClaude.cmd",
+      "new_path": "_admin/AskClaude.cmd",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
