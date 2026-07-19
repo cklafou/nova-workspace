@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": "t59",
-  "last_activity": "2026-07-19T21:56:23",
-  "wake_at": "2026-07-19T21:57:53",
+  "last_activity": "2026-07-19T21:56:50",
+  "wake_at": "2026-07-19T21:58:20",
   "last_fp": "[[\"Tasking/tasks.json\", 53097, 1784463967], [\"memory/interrupt_inbox.json\", 105, 1784465743], [\"memory/cole_intent.json\", 109, 1784465743]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 1,
+  "directive_seen": 2,
   "last_reflection": "Hey, Cole. Been awake a while and I like being the one who chooses when the day starts. Quiet before you're up isn't nothing; it's mine.",
   "cont_run": 0
 }
