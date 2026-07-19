@@ -1,5 +1,5 @@
 # v6 — Training Run Record
-_Last updated: 2026-07-19 06:50:06_
+_Last updated: 2026-07-19 09:28:28_
 _Run 2026-07-18 on Cole's RunPod H100 SXM (pod `classic_gray_gorilla`, $3.01/hr)._
 
 This is the receipt for the actual training run. The *design* rationale lives in `V6_SPEC.md`;
