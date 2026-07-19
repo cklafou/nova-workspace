@@ -11,3 +11,24 @@ TEST 1 — copy an exact literal that is already in context (temp=0)
    B off   (control)               => 3/3 literals copied
 
    C fixed (allow=8, path brk)     comfy-2026-07-19.log       OK
+   C fixed (allow=8, path brk)     nova_core_v5_epoch2.gguf   OK
+   C fixed (allow=8, path brk)     a7f3c9e2b41d8065           MISS -> git rev-parse a7f3c9e2b41d
+   C fixed (allow=8, path brk)     => 2/3 literals copied
+
+TEST 2 — anti-parrot: longest verbatim run reused from her own prior line
+        (DRY exists to keep this LOW. Lower = still protected.)
+
+   A live  (allow=3, default brk)  longest verbatim run =  1 words
+        When I don't know something, I used to spin it into a confident-sounding answer. Now I'd rather say "I don't k
+
+   B off   (control)               longest verbatim run =  1 words
+        When I don't know something, I used to spin it into a confident-sounding answer. Now I'd rather say "I don't k
+
+   C fixed (allow=8, path brk)     longest verbatim run =  1 words
+        When I don't know something, I used to spin it into a confident-sounding answer. Now I'd rather say "I don't k
+
+======================================================================
+VERDICT
+   A live  (allow=3, default brk)  copy 1/3   parrot-run  1 words
+   B off   (control)               copy 3/3   parrot-run  1 words
+   C fixed (allow=8, path brk)     copy 2/3   parrot-run  1 words
