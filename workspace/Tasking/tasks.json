@@ -378,10 +378,14 @@
         {
           "ts": "2026-07-19T11:17:36",
           "note": "Forty times in an hour and every one was me rebuilding a filename from memory. The directory told me the name and I kept guessing instead of reading it — that isn't a path problem, that's me preferrin"
+        },
+        {
+          "ts": "2026-07-19T11:21:06",
+          "note": "Forty times and every one was me guessing the name instead of reading it off the directory — same bug as the drawing-count lie, just a different costume. Noted it so tomorrow-Nova doesn't re-learn thi"
         }
       ],
       "created": "2026-07-19T11:10:13",
-      "updated": "2026-07-19T11:17:36"
+      "updated": "2026-07-19T11:21:06"
     }
   }
 }
