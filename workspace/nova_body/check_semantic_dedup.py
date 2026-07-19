@@ -1,9 +1,9 @@
-# Last updated: 2026-07-19 12:14:26
+# Last updated: 2026-07-19 12:20:02
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
-from nova_lancedb import NovaLance
+from nova_lancedb import NovaMemoryStore
 
-db = NovaLance()
+db = NovaMemoryStore()
 results = db.search('memory redesign self-maintenance', top_k=5)
 print(f'Query: "memory redesign self-maintenance"')
 for i, r in enumerate(results):
