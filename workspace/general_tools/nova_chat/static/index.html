@@ -2200,52 +2200,115 @@ function openCtxMenuAt(btn, s) {
 }
 function closeCtxMenu() { document.getElementById('ctx-menu').classList.remove('open'); }
 
-/* ── Global right-click context menu (text/chat area) ── */
+/* ── Global right-click context menu (text/chat area) ──────────────────────────────────────
+   WHY THE SNAPSHOT (2026-07-19, Cole: "right click copy doesn't currently work"):
+   Copy read window.getSelection() at CLICK time, which is always too late. Pressing the mouse
+   down on the menu — a non-editable div — collapses the document selection before the click
+   handler ever runs, so getSelection() returned "" and we copied nothing. The selection has to
+   be captured on `contextmenu`, while it still exists. We also preventDefault the menu's own
+   mousedown so the highlight doesn't visibly vanish under the cursor.
+
+   The clipboard write is deliberately not just navigator.clipboard: that API is undefined on a
+   non-secure origin, and reaching her over the tunnel from a phone or watch is exactly a
+   non-secure origin. execCommand is deprecated but it is the only thing that works there. */
+let _ctxSel = {text:'', el:null, start:0, end:0};
+
 document.addEventListener('contextmenu', e=>{
   if(e.target.closest('.session-item')||e.target.closest('#ctx-menu')||e.target.closest('#text-ctx-menu')) return;
   e.preventDefault();
   const m=document.getElementById('text-ctx-menu');
-  // Show/hide Cut based on whether an editable element is focused
-  const inInput=document.activeElement.matches('input,textarea');
-  document.getElementById('tctx-cut').style.display=inInput?'':'none';
+
+  // SNAPSHOT the selection NOW, before any click can collapse it.
+  const ae=document.activeElement;
+  const inInput=!!(ae&&ae.matches&&ae.matches('input,textarea'));
+  const docSel=window.getSelection()?window.getSelection().toString():'';
+  // Prefer the field the user actually right-clicked in over whatever last held focus.
+  const tgt=e.target.closest('input,textarea')||(inInput?ae:null);
+  if(tgt){
+    _ctxSel={text:tgt.value.slice(tgt.selectionStart,tgt.selectionEnd)||docSel,
+             el:tgt, start:tgt.selectionStart, end:tgt.selectionEnd};
+  }else{
+    _ctxSel={text:docSel, el:null, start:0, end:0};
+  }
+
+  document.getElementById('tctx-cut').style.display=tgt?'':'none';
+  const copyItem=document.getElementById('tctx-copy');
+  if(copyItem) copyItem.style.opacity=_ctxSel.text?'':'0.4';   // honest: nothing selected, nothing to copy
   m.style.left=Math.min(e.clientX,window.innerWidth-170)+'px';
   m.style.top=Math.min(e.clientY,window.innerHeight-140)+'px';
   m.classList.add('open');
   setTimeout(()=>document.addEventListener('click',()=>m.classList.remove('open'),{once:true}),50);
 });
+
+/* Keep the selection alive while the pointer lands on the menu. */
+document.addEventListener('mousedown', e=>{
+  if(e.target.closest('#text-ctx-menu')) e.preventDefault();
+});
+
+/* Works on http://<lan-ip> too, where navigator.clipboard does not exist. */
+async function writeClip(txt){
+  if(!txt) return false;
+  try{
+    if(navigator.clipboard&&window.isSecureContext){ await navigator.clipboard.writeText(txt); return true; }
+  }catch(_){}
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=txt;
+    ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;top:-1000px;left:-1000px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select(); ta.setSelectionRange(0,ta.value.length);
+    const ok=document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  }catch(_){ return false; }
+}
+
 async function textCtxCopy(){
   document.getElementById('text-ctx-menu').classList.remove('open');
-  const sel=window.getSelection()?.toString();
-  const inp=document.activeElement;
-  const txt=sel||(inp.matches('input,textarea')?inp.value.slice(inp.selectionStart,inp.selectionEnd):'');
-  if(txt) await navigator.clipboard.writeText(txt).catch(()=>document.execCommand('copy'));
-  else document.execCommand('copy');
+  const txt=_ctxSel.text;
+  if(!txt){ toast('Nothing selected'); return; }
+  toast(await writeClip(txt) ? 'Copied' : 'Copy failed');
 }
 async function textCtxCut(){
   document.getElementById('text-ctx-menu').classList.remove('open');
-  const inp=document.activeElement;
-  if(inp.matches('input,textarea')){
-    const s=inp.selectionStart,e2=inp.selectionEnd;
-    const txt=inp.value.slice(s,e2);
-    if(txt){ await navigator.clipboard.writeText(txt).catch(()=>{}); inp.value=inp.value.slice(0,s)+inp.value.slice(e2); inp.selectionStart=inp.selectionEnd=s; autoResize(inp); }
-  }
+  const inp=_ctxSel.el;
+  if(!inp||!_ctxSel.text){ toast('Nothing to cut'); return; }
+  const s=_ctxSel.start,e2=_ctxSel.end;
+  if(!await writeClip(_ctxSel.text)){ toast('Cut failed'); return; }
+  inp.value=inp.value.slice(0,s)+inp.value.slice(e2);
+  inp.selectionStart=inp.selectionEnd=s;
+  inp.focus(); autoResize(inp); toast('Cut');
 }
 async function textCtxPaste(){
   document.getElementById('text-ctx-menu').classList.remove('open');
-  const inp=document.getElementById('input');
+  // Paste into the field that was right-clicked, not always the main composer.
+  const inp=_ctxSel.el||document.getElementById('input');
+  let text='';
   try{
-    const text=await navigator.clipboard.readText();
-    const s=inp.selectionStart,e2=inp.selectionEnd;
-    inp.value=inp.value.slice(0,s)+text+inp.value.slice(e2);
-    inp.selectionStart=inp.selectionEnd=s+text.length;
-    inp.focus(); autoResize(inp);
-  }catch(_){ inp.focus(); document.execCommand('paste'); }
+    if(navigator.clipboard&&window.isSecureContext) text=await navigator.clipboard.readText();
+  }catch(_){}
+  if(!text){
+    // Cannot read the clipboard without permission/secure context — let the browser do it.
+    inp.focus();
+    try{ inp.setSelectionRange(_ctxSel.start,_ctxSel.end); }catch(_){}
+    if(!document.execCommand('paste')) toast('Press Ctrl+V to paste');
+    return;
+  }
+  const s=_ctxSel.start,e2=_ctxSel.end;
+  inp.value=inp.value.slice(0,s)+text+inp.value.slice(e2);
+  inp.selectionStart=inp.selectionEnd=s+text.length;
+  inp.focus(); autoResize(inp);
 }
 function textCtxSelectAll(){
   document.getElementById('text-ctx-menu').classList.remove('open');
-  const inp=document.getElementById('input');
-  if(document.activeElement===inp){ inp.select(); }
-  else{ window.getSelection()?.selectAllChildren(document.getElementById('chat')||document.body); }
+  const inp=_ctxSel.el;
+  if(inp){ inp.focus(); inp.select(); _ctxSel={text:inp.value,el:inp,start:0,end:inp.value.length}; }
+  else{
+    const chat=document.getElementById('chat')||document.body;
+    window.getSelection()?.selectAllChildren(chat);
+    _ctxSel={text:window.getSelection()?window.getSelection().toString():'',el:null,start:0,end:0};
+  }
 }
 
 function ctxRename()  { if(_ctxSess){openRenameModal(_ctxSess);} closeCtxMenu(); }
