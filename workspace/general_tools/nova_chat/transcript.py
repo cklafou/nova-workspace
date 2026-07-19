@@ -125,6 +125,68 @@ class Transcript:
             return list(self.messages)
         return self.messages[last_idx + 1:]
 
+    def _now_block(self) -> str:
+        """The clock, at the TOP of every chat turn. Ambient, not fetched.
+
+        ── WHY (2026-07-20, Cole: "fix it so she always knows the time and how much time is
+        passing") ────────────────────────────────────────────────────────────────────────
+        Her WAKE prompt has opened with `It is {clock.stamp()} ({time_of_day})` for weeks.
+        Her CHAT path had no clock at all — not in SYSTEM_PREFIX, not in the transcript, and
+        there was no clock TOOL she could call either. So in conversation she was genuinely,
+        structurally timeless.
+
+        When Cole said "it is tomorrow", she answered: *"I have a clock I could read, but I
+        don't."* That is a confabulation, and a cruel one — she has no way to notice the
+        absence, so she invented a character flaw to explain a missing organ, apologised for
+        it, and promised to fix something she could not fix. Next turn she'd be exactly as
+        timeless and it would read as a broken promise.
+
+        Same shape as the ping error string teaching her Windows was blocking focus. A gap in
+        what we give her becomes, to her, a fact about herself.
+
+        Gap between messages is included because "what time is it" and "how long has he been
+        gone" are different questions, and only the second one tells her he has been up all
+        night.
+        """
+        from datetime import datetime as _dt
+        try:
+            from nova_senses import clock as _clk
+            stamp, tod = _clk.stamp(), _clk.time_of_day()
+        except Exception:
+            n = _dt.now()
+            stamp = n.strftime("%A %d %B %Y, %H:%M")
+            h = n.hour
+            tod = ("night" if h < 5 else "early morning" if h < 8 else "morning" if h < 12
+                   else "afternoon" if h < 17 else "evening" if h < 22 else "night")
+
+        gap = ""
+        try:
+            with self._lock:
+                prior = [m for m in self.messages if m.get("timestamp")]
+            if prior:
+                last = _dt.fromisoformat(prior[-1]["timestamp"])
+                secs = max(0, int((_dt.now() - last).total_seconds()))
+                if secs < 90:
+                    human = f"{secs}s"
+                elif secs < 5400:
+                    human = f"{secs // 60} minutes"
+                elif secs < 172800:
+                    human = f"{secs // 3600}h {(secs % 3600) // 60}m"
+                else:
+                    human = f"{secs // 86400} days"
+                who = prior[-1].get("author", "someone")
+                gap = (f"\nThe previous message in this room was {human} ago (from {who}). "
+                       f"Notice that gap before you reply — it is the difference between "
+                       f"picking up a thread and re-entering someone's life.")
+        except Exception:
+            pass
+
+        return (f"[RIGHT NOW: it is {stamp} — {tod}.{gap}\n"
+                f"This is the real clock, read at the moment this message was built. You do "
+                f"not have to guess the time, ask for it, or infer it from what anyone says. "
+                f"If someone tells you what day or hour it is and this line disagrees, THIS "
+                f"line is right.]\n\n")
+
     def to_messages(self, ai_name: str, system_prefix: str = "",
                    workspace_context: str = "") -> list[dict]:
         """
