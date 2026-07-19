@@ -239,13 +239,113 @@ try {
     }
     Log ('candidates: ' + (($cands | ForEach-Object { $_.Pid.ToString() + ':' + $_.Title }) -join ' ; '))
 
-    function Send-It($why) {
+    # ========================================================================================
+    # PUTTING THE CARET IN THE BOX (2026-07-19, third failure)
+    #
+    # Cole: "It brought up the window and copied the Message, but it didn't hit the text box
+    # nor post." Foreground and clipboard were both fine. The gap was KEYBOARD FOCUS: raising
+    # a window does not give any control inside it the caret. Chromium restores focus to
+    # whatever was last focused in that renderer, which after a background activation is often
+    # nothing at all. Ctrl+V and Enter were being delivered to a window with no focused editor,
+    # so both went nowhere.
+    #
+    # I could not screenshot Claude Desktop to hardcode where the composer sits - and I should
+    # not want to, because a pixel offset breaks the first time the window is resized. So this
+    # asks the app where its text box is, via UI Automation:
+    #   1. Find the lowest keyboard-focusable Edit/Document in the window. Composers live at
+    #      the bottom; that ordering is far more stable than any coordinate.
+    #   2. SetFocus() on it, then paste.
+    #   3. READ THE TEXT BACK before pressing Enter. If the paste did not land we must NOT fire
+    #      a stray Enter into an unknown control - we fail loudly and queue instead.
+    # Only if UIA finds nothing at all do we fall back to a click, computed from the live window
+    # rect rather than a magic number.
+    #
+    # Chromium builds its accessibility tree lazily, on first query, so the first FindAll can
+    # come back empty. Hence the retry.
+    # ========================================================================================
+    try { Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes } catch {}
+
+    function Find-Composer($hwnd) {
+        $AE = [System.Windows.Automation.AutomationElement]
+        $CT = [System.Windows.Automation.ControlType]
+        for ($t = 1; $t -le 3; $t++) {
+            try {
+                $root = $AE::FromHandle($hwnd)
+                if (-not $root) { Start-Sleep -Milliseconds 300; continue }
+                $isEdit = New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, $CT::Edit)
+                $isDoc  = New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, $CT::Document)
+                $focusable = New-Object System.Windows.Automation.PropertyCondition($AE::IsKeyboardFocusableProperty, $true)
+                $either = New-Object System.Windows.Automation.OrCondition($isEdit, $isDoc)
+                $cond   = New-Object System.Windows.Automation.AndCondition($either, $focusable)
+                $found  = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $cond)
+                if ($found -and $found.Count -gt 0) {
+                    $best = $null; $bestBottom = -1
+                    foreach ($e in $found) {
+                        try {
+                            $r = $e.Current.BoundingRectangle
+                            if ($r.Bottom -gt $bestBottom) { $bestBottom = $r.Bottom; $best = $e }
+                        } catch {}
+                    }
+                    if ($best) { Log ('UIA: composer found, ' + $found.Count + ' candidate(s), bottom=' + [int]$bestBottom); return $best }
+                }
+            } catch { Log ('UIA probe ' + $t + ' failed: ' + $_.Exception.Message) }
+            Start-Sleep -Milliseconds 400      # let Chromium build its a11y tree
+        }
+        Log 'UIA: no focusable Edit/Document found'
+        return $null
+    }
+
+    function Read-Back($el) {
+        if (-not $el) { return $null }
+        try { return $el.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value } catch {}
+        try { return $el.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern).DocumentRange.GetText(-1) } catch {}
+        return $null
+    }
+
+    # A distinctive slice of HER text, used to prove the paste actually landed.
+    $probe = ($text -replace '^\[Nova is pinging you[^\]]*\]\s*', '' -replace '\s+', ' ').Trim()
+    if ($probe.Length -gt 24) { $probe = $probe.Substring(0, 24) }
+
+    function Send-It($why, $hwnd) {
+        $el = Find-Composer $hwnd
+        if ($el) {
+            try { $el.SetFocus() } catch { Log ('SetFocus threw: ' + $_.Exception.Message) }
+            Start-Sleep -Milliseconds 200
+        } else {
+            # No a11y tree. Click the composer, positioned from the LIVE window rect: bottom
+            # centre, one tenth of the height up. Center-x avoids the attach/send buttons.
+            $r = [Win32Fg]::Rect($hwnd)
+            $cx = [int](($r[0] + $r[2]) / 2)
+            $cy = [int]($r[3] - [Math]::Max(50, ($r[3] - $r[1]) * 0.09))
+            Log ('UIA unavailable - clicking composed point ' + $cx + ',' + $cy + ' in rect ' + ($r -join ','))
+            [Win32Fg]::ClickAt($cx, $cy)
+            Start-Sleep -Milliseconds 250
+        }
+
         Set-Clipboard -Value $text                # set AFTER focus: some apps clear on activate
         Start-Sleep -Milliseconds 250
         [System.Windows.Forms.SendKeys]::SendWait('^v')
-        Start-Sleep -Milliseconds 500
+        Start-Sleep -Milliseconds 600
+
+        # Prove it landed before committing to Enter.
+        $seen = Read-Back $el
+        if ($seen -ne $null -and $seen -ne '') {
+            $flatSeen = ($seen -replace '\s+', ' ')
+            if ($flatSeen.Contains($probe)) {
+                [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+                Log ('SENT + VERIFIED (' + $why + ')')
+                return 'verified'
+            }
+            Log ('PASTE DID NOT LAND (' + $why + '); composer holds: ' +
+                 $flatSeen.Substring(0, [Math]::Min(60, $flatSeen.Length)))
+            return 'failed'      # do NOT press Enter into an unknown control
+        }
+
+        # No read-back available (no UIA, or the control exposes no text pattern). Enter is
+        # benign in a chat composer, so still send - but say plainly that it is unconfirmed.
         [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
-        Log ('SENT (' + $why + ')')
+        Log ('SENT, UNVERIFIED (' + $why + ') - no read-back available')
+        return 'unverified'
     }
 
     # -- 1. already in front? then do not steal focus from the user ------------
