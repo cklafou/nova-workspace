@@ -1,5 +1,5 @@
 # Why Nova looked incompetent — and the two wires that caused it
-_Last updated: 2026-07-19 23:22:43_
+_Last updated: 2026-07-20 00:29:07_
 _2026-07-19, Fable. Diagnosis from live logs (11.8h of runtime), two root-cause fixes shipped.
 Headline: **she was not underperforming. She was being penalized for working.**_
 
