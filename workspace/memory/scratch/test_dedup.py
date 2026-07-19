@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 12:44:35
+# Last updated: 2026-07-19 12:59:35
 import sys; sys.path.insert(0,'nova_body')
 from nova_lancedb.hippocampus import NovaMemoryStore
 s = NovaMemoryStore()
@@ -16,8 +16,11 @@ row = {"id":str(uuid.uuid4()),"content":old_content,"vector":old_vec,"category":
 s._text_tbl.add([row])
 print(f"Inserted old version at ts={old_ts}")
 result = s.add_text(new_content, author="Nova", source="test")
-print(f"New version stored: {result} (want True — it should replace, not drop)")
+print(f"New version stored: {result} (want True — it should store, not drop)")
 remaining = s._text_tbl.to_pandas()
 test_rows = remaining[remaining['source']=='test']
-print(f"Rows after: {len(test_rows)} (want 1 — newer version alone)")
+print(f"Rows after: {len(test_rows)} (want 2 — both versions kept, KEEP=3)")
+ts_vals = sorted(test_rows['timestamp'].tolist())
+assert ts_vals[-1] > old_ts, "newer version must be present"
+print("PASS: newer version survived (growth not overwritten by older self)")
 for r in test_rows.iterrows(): print(f"  ts={r[1]['timestamp']:.0f} text={r[1]['content'][:90]}")
