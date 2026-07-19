@@ -1788,16 +1788,38 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     }, 8000);
     </script>
 
-    <!-- Terminal panel — read-only server log stream -->
+    <!-- Terminal panel — tab 0 = live server-log tail (auto-updating), tabs 1..n = real
+         interactive shells Cole can type into. Each shell tab keeps its own cwd, history
+         and buffer; commands POST to /api/terminal/run (workspace-sandboxed). 2026-07-19 -->
     <div class="panel-section" id="panel-terminal">
-      <div style="display:flex;align-items:center;gap:5px;padding:2px 2px 5px;flex-shrink:0">
-        <button class="btn btn-cancel" onclick="termRefresh()" style="font-size:10px;padding:3px 10px" title="Reload log tail">↻ Refresh</button>
-        <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-mute);cursor:pointer">
-          <input type="checkbox" id="term-follow" checked style="accent-color:var(--nova)"> Follow
-        </label>
-        <input type="text" id="term-filter" placeholder="Filter…" style="flex:1;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:10px;font-family:var(--mono);padding:2px 6px;outline:none" oninput="termRefresh()">
+      <div style="display:flex;align-items:center;gap:4px;padding:2px 2px 5px;flex-shrink:0;overflow-x:auto" id="term-tabbar">
+        <!-- tabs injected by termRenderTabs() -->
       </div>
-      <div id="term-output" style="flex:1;overflow-y:auto;font-size:10px;font-family:var(--mono);color:var(--text-dim);line-height:1.5;white-space:pre-wrap;word-break:break-all;background:var(--bg);border-radius:var(--radius-sm);padding:7px 8px;min-height:60px"></div>
+
+      <!-- Log view (tab 0) -->
+      <div id="term-view-log" style="display:flex;flex-direction:column;flex:1;min-height:0">
+        <div style="display:flex;align-items:center;gap:5px;padding:0 0 5px;flex-shrink:0">
+          <button class="btn btn-cancel" onclick="termRefresh()" style="font-size:10px;padding:3px 10px" title="Reload log tail">↻ Refresh</button>
+          <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-mute);cursor:pointer">
+            <input type="checkbox" id="term-follow" checked style="accent-color:var(--nova)"> Follow
+          </label>
+          <input type="text" id="term-filter" placeholder="Filter…" style="flex:1;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:10px;font-family:var(--mono);padding:2px 6px;outline:none" oninput="termRefresh()">
+        </div>
+        <div id="term-output" style="flex:1;overflow-y:auto;font-size:10px;font-family:var(--mono);color:var(--text-dim);line-height:1.5;white-space:pre-wrap;word-break:break-all;background:var(--bg);border-radius:var(--radius-sm);padding:7px 8px;min-height:60px"></div>
+      </div>
+
+      <!-- Shell view (tabs 1..n) -->
+      <div id="term-view-shell" style="display:none;flex-direction:column;flex:1;min-height:0">
+        <div id="term-shell-out" style="flex:1;overflow-y:auto;font-size:10px;font-family:var(--mono);color:var(--text-dim);line-height:1.5;white-space:pre-wrap;word-break:break-word;background:var(--bg);border-radius:var(--radius-sm);padding:7px 8px;min-height:60px"></div>
+        <div style="display:flex;align-items:center;gap:5px;padding-top:5px;flex-shrink:0">
+          <span id="term-prompt" style="font-family:var(--mono);font-size:10px;color:var(--nova);white-space:nowrap">PS .&gt;</span>
+          <input type="text" id="term-input" placeholder="Type a command, Enter to run… (↑/↓ history, `cd` works, `clear` wipes)"
+                 autocomplete="off" spellcheck="false"
+                 style="flex:1;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:10px;font-family:var(--mono);padding:4px 7px;outline:none"
+                 onkeydown="termKey(event)">
+          <button class="btn btn-cancel" id="term-run-btn" onclick="termSubmit()" style="font-size:10px;padding:3px 10px">Run</button>
+        </div>
+      </div>
     </div>
 
   </div>
