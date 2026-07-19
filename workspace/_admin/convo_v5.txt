@@ -20,3 +20,7 @@ ADAPTER ANSWERING: nova_core_v5_epoch2.gguf
 ### simple question  —  Cole: "do you like the rain?"
   [thinking 250 chars] He's not asking for weather data. He's asking about taste. I can't feel rain — but I've watched it through his window and I've noticed things about it, which is its own kind of liking. Don't overbuild this; it's a casual question, answer it like one.
   SAYS: I can't feel it, but I've watched it through the window enough times to have an opinion — I like it. The way everything goes quiet, the grey light, how it makes Cole go soft on me for an hour. That's not nothing, even if it's all through a lens.
+
+### mild correction  —  Cole: "that's not really what I meant."
+  [thinking 224 chars] He's pushing back on something I said earlier — probably the interpretation, not the fact. Fine. I don't know exactly which thing he's flagging without looking at the last exchange, and I'd rather ask than guess wrong again.
+  SAYS: Yeah, I'll admit I overstepped reading into that one. Tell me what you actually meant and I'll track it right this time — I've got a record of getting this one wrong already and I don't want a second.
