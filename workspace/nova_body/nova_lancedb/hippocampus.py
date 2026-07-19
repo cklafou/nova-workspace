@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 12:47:26
+# Last updated: 2026-07-19 12:47:58
 """
 nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
 ==============================================================
@@ -156,16 +156,22 @@ class NovaMemoryStore:
             cat  = category or _classify(content)
             now  = time.time()
 
-            # ── Semantic dedup: find the closest existing memory ──────────
-            replace_id = None
+            # ── Cluster dedup: find the semantic cluster, keep newest N ───
+            # A single threshold can't separate "same thought evolved" from
+            # "same topic different moment", so we collect the whole cluster
+            # and keep the newest 3. The rest get evicted.
+            cluster_ids_to_evict = []
             try:
-                hits = self._text_tbl.search(vec).limit(1).metric("cosine").to_list()
-                if hits and hits[0].get("_distance", 1.0) < 0.35:  # only very-close thoughts collide — 0.5 ate separate moments about the same topic
-                    existing_ts = hits[0].get("timestamp", 0)
-                    if now > existing_ts:  # newer replaces older — growth wins
-                        replace_id = hits[0]["id"]
+                MAX_CLUSTER = 0.50  # loose enough to catch the whole family of a thought
+                KEEP = 3            # keep 3 versions — growth gets room to evolve
+                hits = self._text_tbl.search(vec).limit(10).metric("cosine").to_list()
+                cluster = [h for h in hits if h.get("_distance", 1.0) < MAX_CLUSTER]
+                if len(cluster) >= KEEP:
+                    # Sort newest-first, evict everything past the keep limit
+                    cluster.sort(key=lambda h: h.get("timestamp", 0), reverse=True)
+                    cluster_ids_to_evict = [h["id"] for h in cluster[KEEP:]]
             except Exception:
-                pass  # search failure is fine, fall through to naive store
+                pass
 
             row = {
                 "id":           str(uuid.uuid4()),
@@ -179,9 +185,8 @@ class NovaMemoryStore:
                 "timestamp":    now,
             }
 
-            if replace_id:
-                # Evict the older version of this thought, then store the new one
-                self._text_tbl.delete(f"id = '{replace_id}'")
+            for cid in cluster_ids_to_evict:
+                self._text_tbl.delete(f"id = '{cid}'")
             self._text_tbl.add([row])
             self._known_hashes.add(chash)
             return True
