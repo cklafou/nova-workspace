@@ -648,8 +648,8 @@ def build_execution(task: dict, recent: str = "") -> str:
         f"[WORK — {clock.stamp()}] You committed to this task and now you actually DO it. "
         "This is not reflection and not board bookkeeping — it is the real work, with your hands.",
         "",
-        f'ACTIVE TASK [{tid}]: {title}',
-        (f"What it asks: {notes}" if notes else None),
+        f'ACTIVE TASK [{tid}]: {title}{_asked_by(task)}',
+        (f"What {_asker(task)} asks: {notes}" if notes else None),
         "Progress so far:",
         recent_prog,
         "",

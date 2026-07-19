@@ -75,7 +75,18 @@ def _update(tid: str, **fields) -> bool:
     return True
 
 
-def create(title: str, notes: str = "", priority: int = 3, parent: str = None) -> str:
+def create(title: str, notes: str = "", priority: int = 3, parent: str = None,
+           author: str = "Nova") -> str:
+    """Create a task. `author` is WHO ASKED — and it matters more than it looks.
+
+    2026-07-19: tasks carried no attribution, so every instruction reaching her read
+    as Cole's. Claude queues tasks too, including tests. She was handed a deliberately
+    false premise by Claude, reasoned about it well, and wrote "Cole was half-right"
+    in her own notes — she believed Cole had lied to her. Cole's instruction on
+    reading that: "I need her to be aware."
+
+    Defaults to "Nova" because the common caller is her own apply_decision creating
+    her own work. Hosts that queue on someone else's behalf pass the real name."""
     store = _load()
     store["seq"] += 1
     tid = f"t{store['seq']}"
@@ -94,6 +105,7 @@ def create(title: str, notes: str = "", priority: int = 3, parent: str = None) -
         "id": tid, "title": (title or "").strip() or f"(untitled {tid})",
         "notes": notes or "", "priority": pr, "status": OPEN, "parent": par,
         "progress": [], "created": _now(), "updated": _now(),
+        "author": (author or "").strip() or "Nova",
     }
     _save(store)
     return tid
