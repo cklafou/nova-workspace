@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 14:12:10
+# Last updated: 2026-07-19 15:14:33
 import sys; sys.path.insert(0, 'nova_body')
 from nova_lancedb.embedder import content_hash
 
