@@ -399,10 +399,14 @@
         {
           "ts": "2026-07-19T11:34:48",
           "note": "Not a crash at all. Just nobody told him to wait around."
+        },
+        {
+          "ts": "2026-07-19T11:36:29",
+          "note": "And there it is. The log has no exit message at all — it just ends after the last prompt finishes. ComfyUI is a server that exits when its queue goes empty. Nobody told it to stay up."
         }
       ],
       "created": "2026-07-19T11:31:54",
-      "updated": "2026-07-19T11:34:48"
+      "updated": "2026-07-19T11:36:29"
     }
   }
 }
