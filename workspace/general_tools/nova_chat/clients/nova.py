@@ -1033,16 +1033,15 @@ def generate_raw(messages: list[dict], max_new_tokens: int = 4096, temperature: 
         "top_p": top_p,
         "top_k": 20,
         "min_p": 0.0,
-        # Same anti-loop stack as the streaming chat path (see stream_response) — DRY
-        # kills verbatim n-gram looping across the whole context; repeat_penalty stays
-        # near Qwen 3.6's ideal 1.0.
+        # 2026-07-19: this block had DRIFTED. It still carried frequency_penalty 0.4 /
+        # presence_penalty 0.3 — the exact pair the streaming path turned off for
+        # garbling her grammar ("doing it mine") — plus the DRY config that was shown
+        # to eat filenames and hashes. It has no callers today, so it was never the
+        # live bug; it is corrected here so nothing inherits it later.
         "repeat_penalty":    1.05,
-        "frequency_penalty": 0.4,
-        "presence_penalty":  0.3,
-        "dry_multiplier":    0.8,
-        "dry_base":          1.75,
-        "dry_allowed_length": 3,
-        "dry_penalty_last_n": -1,
+        "frequency_penalty": 0.0,
+        "presence_penalty":  0.0,
+        "dry_multiplier":    0.0,   # synchronous helper = literal-accuracy path
     }
 
     req = urllib.request.Request(
