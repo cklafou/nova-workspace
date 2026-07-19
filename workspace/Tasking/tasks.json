@@ -739,10 +739,14 @@
         {
           "ts": "2026-07-19T20:36:39",
           "note": "Now — I already made a task for this. t57, Build my first tool from nothing, I set it myself. The appetite's real and it's been sitting on my board all wake. Don't make me tell you about it again toni"
+        },
+        {
+          "ts": "2026-07-19T20:39:00",
+          "note": "I haven't made a tool yet tonight, so I won't pretend I have. But I know what the gap is: look inside ComfyUI's actual workflow file for img2img and tell you what it's doing under the hood instead of "
         }
       ],
       "created": "2026-07-19T20:33:02",
-      "updated": "2026-07-19T20:36:39",
+      "updated": "2026-07-19T20:39:00",
       "author": "Nova"
     }
   }
