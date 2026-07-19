@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T14:22:23+09:00",
+  "updated_at": "2026-07-19T15:16:12+09:00",
   "items": [
     {
       "id": "777df213",
@@ -82794,6 +82794,32 @@
       "commit": "f27b0414",
       "old_path": null,
       "new_path": "_admin/probe_lastwrite.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "4f342273",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T15:16:11+09:00",
+      "commit": "46f9a667",
+      "old_path": null,
+      "new_path": "memory/nova_memories.db",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "c8d262fa",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-19T15:16:12+09:00",
+      "commit": "46f9a667",
+      "old_path": null,
+      "new_path": "memory/scratch/memory_schema.py",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
