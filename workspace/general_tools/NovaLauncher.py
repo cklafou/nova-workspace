@@ -160,6 +160,34 @@ def main():
 
     log.info("Servers ready.")
 
+    # ── LOG RETENTION, ONCE PER BOOT (2026-07-20) ────────────────────────────────────────
+    # Nothing in this project had ever rotated a log: nova_launcher.log reached 5.6 MB across
+    # a full week, logs/llama/ accumulated a file per day, backups/sessions/ hit 30 zips and
+    # climbing. The 07-02 passover even documented a workaround ("grep errors by TODAY's
+    # date") instead of a policy.
+    #
+    # Boot is deliberately the trigger. Both the audit queue and the journal failed as
+    # "someone will run it eventually" — a producer with no consumer — and boot is the one
+    # moment guaranteed to happen. Rotation is idempotent and took 1.7s on a full workspace,
+    # so paying it every start costs nothing.
+    #
+    # It compresses first and QUARANTINES rather than deletes (JANITORIAL.md), and it never
+    # touches logs/sessions, chat_sessions, runtime or events — those are HERS, read by
+    # nova_memory/log_reader.py and her indexer. Wrapped because a retention failure must
+    # never be able to stop her booting.
+    try:
+        from nova_logs import retention as _retention
+        _r = _retention.run()
+        _n = len(_r.get("gzipped", [])) + len(_r.get("rolled", [])) + len(_r.get("quarantined", []))
+        if _n:
+            log.info(f"Log retention: {len(_r.get('gzipped',[]))} compressed, "
+                     f"{len(_r.get('rolled',[]))} rolled, "
+                     f"{len(_r.get('quarantined',[]))} quarantined.")
+        if _r.get("errors"):
+            log.warning(f"Log retention had {len(_r['errors'])} error(s): {_r['errors'][:3]}")
+    except Exception as _e:
+        log.warning(f"Log retention skipped ({_e}) — not fatal, boot continues.")
+
     # ── Launcher-managed window mode ──────────────────────────────────────────
     # When started by NovaStart (nova_start.py), the launcher opens a dedicated
     # Edge/Chrome app window and owns the lifecycle. Here we just keep the
