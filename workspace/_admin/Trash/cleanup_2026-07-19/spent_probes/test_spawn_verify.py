@@ -1,3 +1,4 @@
+# Last updated: 2026-07-19 19:47:30
 """Does the new spawn verifier actually tell a real launch from a dead one?
 
 Mirrors the logic added to _spawn_detached_cmd. Two cases, opposite verdicts:

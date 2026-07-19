@@ -1,3 +1,4 @@
+# Last updated: 2026-07-19 19:47:30
 """Replay the exact beats where she lectured instead of played.
 
 NOT the blind test I ran earlier — that one gave her no context and manufactured a

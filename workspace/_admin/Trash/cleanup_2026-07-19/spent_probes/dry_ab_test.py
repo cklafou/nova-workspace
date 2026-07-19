@@ -1,4 +1,4 @@
-# Last updated: 2026-07-19 14:05:08
+# Last updated: 2026-07-19 19:47:30
 """DRY sampler A/B — can she copy an exact string that is already in her context?
 
 Temperature 0 (greedy) in BOTH arms, so sampling randomness cannot explain any

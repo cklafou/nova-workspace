@@ -1,3 +1,4 @@
+# Last updated: 2026-07-19 19:47:30
 import sys, traceback
 sys.path.insert(0, 'nova_body')
 from nova_lancedb.hippocampus import get_store

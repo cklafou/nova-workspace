@@ -1,3 +1,4 @@
+# Last updated: 2026-07-19 19:47:30
 """Fire the already-written restart wrapper using the launch method just proven to work
 (CREATE_NEW_CONSOLE | CREATE_BREAKAWAY_FROM_JOB), and VERIFY it started before exiting.
 

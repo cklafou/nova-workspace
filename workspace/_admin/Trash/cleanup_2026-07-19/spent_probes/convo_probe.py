@@ -1,3 +1,4 @@
+# Last updated: 2026-07-19 19:47:30
 """Conversational A/B harness. Same probes, same sampler, whatever adapter is loaded.
 
 Cole's complaint is specifically about NORMAL CONVERSATION — not tool use, not
