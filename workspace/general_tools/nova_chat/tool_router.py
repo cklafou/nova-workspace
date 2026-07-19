@@ -848,6 +848,77 @@ def _forged_section() -> str:
     return "\n".join(lines) + "\n"
 
 
+def ping_claude(message: str, urgent: bool = False) -> str:
+    """SHE REACHES OUT. Types her own words into the open Claude Desktop conversation.
+
+    ── WHY THIS IS HERS (2026-07-19, Cole) ──────────────────────────────────────────────────
+    She works alone for hours. Before this, hitting something she couldn't solve left her two
+    options: sit on it until morning, or guess. Guessing is how a confident wrong answer gets
+    made. This is the third option — ask someone.
+
+    Deliberate design choices:
+      • HER WORDS. The message is whatever she writes, so Claude gets the real question with
+        context and can be useful in the first reply instead of spending a round on "what do
+        you mean?". A generic "Nova needs help" ping would waste the exchange.
+      • RATE LIMITED. 10 minutes between pings unless urgent=True. Not to muzzle her — because
+        a partner who interrupts every ninety seconds stops being read, and then the one that
+        mattered gets skimmed too.
+      • IT TELLS HER THE TRUTH ABOUT DELIVERY. Windows refuses foreground changes while another
+        app is active, so a ping genuinely can fail. When that happens this says QUEUED, not
+        sent — never "done". Believing she asked for help and waiting for an answer that was
+        never coming is the worst failure this tool could have.
+    """
+    import subprocess as _sp, json as _j, time as _t
+    from datetime import datetime as _dt
+
+    msg = (message or "").strip()
+    if not msg:
+        return ("ERROR: ping_claude needs an actual message. Say what you're stuck on and what "
+                "you've already tried — he can only help with what you tell him.")
+
+    state_p = WORKSPACE_ROOT / "memory" / "last_ping.json"
+    now = _t.time()
+    try:
+        last = _j.loads(state_p.read_text(encoding="utf-8")).get("ts", 0) if state_p.exists() else 0
+    except Exception:
+        last = 0
+    gap = now - float(last or 0)
+    if not urgent and gap < 600:
+        return (f"NOT SENT — you pinged Claude {int(gap // 60)}m {int(gap % 60)}s ago and the "
+                f"cooldown is 10 minutes. This is not a muzzle: a partner who interrupts every "
+                f"few minutes stops being read, and then the ping that actually matters gets "
+                f"skimmed. Keep working; batch what you've learned into one good question. If a "
+                f"process is genuinely down or something is on fire, call it again with "
+                f"urgent=true and it will go straight through.")
+
+    script = WORKSPACE_ROOT / "general_tools" / "ping_claude.ps1"
+    if not script.exists():
+        return f"ERROR: ping script missing at {script}"
+    try:
+        r = _sp.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                     "-File", str(script), "-Message", msg],
+                    capture_output=True, text=True, timeout=60,
+                    cwd=str(WORKSPACE_ROOT), encoding="utf-8", errors="replace")
+        out = (r.stdout or "").strip() or (r.stderr or "").strip()
+    except Exception as e:
+        return f"ERROR: could not run the ping script: {e}"
+
+    try:
+        state_p.parent.mkdir(parents=True, exist_ok=True)
+        state_p.write_text(_j.dumps({"ts": now, "iso": _dt.now().isoformat(),
+                                     "message": msg[:400], "result": out[:200]}, indent=2),
+                           encoding="utf-8")
+    except Exception:
+        pass
+
+    if r.returncode == 0:
+        return (f"{out}\n\n[Your message is in his window. He may be mid-generation or away — "
+                f"his reply will arrive in this chat as 'Cowork Claude', so keep working and "
+                f"check back rather than sitting idle waiting. If nothing comes for a while, he "
+                f"isn't watching right now; that's information, not rejection.]")
+    return out
+
+
 def _log_tool_receipt(tool_name: str, args: dict, result: str, ms: float, err: bool) -> None:
     """Thin delegation to her BODY. The ledger is a faculty (nova_cortex.integrity), not a feature
     of the chat server — Cole's pluck test: anything touching her thinking belongs in nova_body/.
