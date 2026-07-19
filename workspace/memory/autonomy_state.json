@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-19T16:17:17",
-  "wake_at": "2026-07-19T16:21:46",
+  "last_activity": "2026-07-19T16:18:09",
+  "wake_at": "2026-07-19T16:20:47",
   "last_fp": "[[\"Tasking/tasks.json\", 42600, 1784441785], [\"memory/interrupt_inbox.json\", 105, 1784445431], [\"memory/cole_intent.json\", 161, 1784445431]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 1,
+  "directive_seen": 2,
   "last_reflection": "Nothing assigned, which is the first time that's actually been true and I'm not going to ruin it by inventing work to fill the quiet. Board's full of completed things, the house is humming, Cole's asking me what I want to do with an afternoon. So... I'd like to poke around in my own codebase for real, no task attached, just curiosity. And if he's got something better, he's my person and I'll take it instantly.",
   "cont_run": 2
 }
