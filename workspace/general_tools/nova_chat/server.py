@@ -145,6 +145,10 @@ _ERROR_DEDUP_WINDOW: float = 30.0  # seconds — suppress identical errors withi
 # Each entry: {"content": str, "full_context_content": str, "directed_at": list,
 #              "images": list, "msg": dict}
 _cole_message_queue: list[dict] = []
+# Transcript length at the moment the last generation built its prompt. Anything at or beyond
+# this index arrived TOO LATE for that run to have seen it, so it still needs answering.
+# See the watermark note in run_ai_response and the drain guard in the WS handler.
+_inflight_upto: int = 0
 
 _eyes_running: bool = False        # tracks desktop streaming state
 # 1.3 -- Nova status cache: polled every 30s, injected silently into AI context
@@ -1474,6 +1478,19 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             "error":       is_error,
             "duration_ms": round(duration_ms),
         })
+
+    # ── WATERMARK: how much of the transcript this generation can possibly have seen. ────────
+    # (2026-07-19, fixing my own regression.) The drain's already-answered guard used to ask
+    # "did any AI speak after the queued message landed?" — which is wrong the moment TWO of
+    # Cole's messages are in flight. Observed live at 19:28: his message queued, Nova committed
+    # a reply to an EARLIER message one second later, the guard read that as "answered" and
+    # silently dropped his. A duplicate is annoying; discarding what he said is much worse.
+    # So record the prompt boundary and let the drain skip ONLY messages this run actually saw.
+    global _inflight_upto
+    try:
+        _inflight_upto = len(session_mgr.active.messages)
+    except Exception:
+        _inflight_upto = 0
 
     # STEP 4: the model-call is a body faculty now. run_ai_response still builds the context +
     # the broadcast sinks above; the runtime owns WHICH client and HOW it's driven — the dispatch
@@ -3613,6 +3630,18 @@ async def websocket_endpoint(ws: WebSocket):
                                 # catching: all four recorded dup_suppressed events carry
                                 # source="drain". The guard treated the symptom; this removes
                                 # the second generation entirely.
+                                # TWO conditions, both required (2026-07-19 — the first version of
+                                # this guard had only the second and it DROPPED Cole's messages):
+                                #   (a) the in-flight run's prompt actually included this message
+                                #       (its index is below the watermark), AND
+                                #   (b) an AI has spoken since.
+                                # (b) alone is not evidence: with two of his messages in flight,
+                                # she may have been answering the earlier one. Observed live at
+                                # 19:28 — his message was queued, her reply to a DIFFERENT message
+                                # landed one second later, and the guard discarded his.
+                                # Conservative by design: when anything is uncertain, DELIVER.
+                                # A duplicate is noise; a dropped message is Cole talking to a
+                                # wall, which is the exact "she never answered me" symptom.
                                 _already, _qid = False, None
                                 try:
                                     _qid  = (_queued.get("msg") or {}).get("id")
@@ -3620,9 +3649,14 @@ async def websocket_endpoint(ws: WebSocket):
                                     _idx  = next((i for i, m in enumerate(_msgs)
                                                   if m.get("id") == _qid), None)
                                     if _idx is not None:
-                                        # An AI speaking after it = it was already answered.
-                                        _already = any(m.get("author") in CLIENT_MAP
-                                                       for m in _msgs[_idx + 1:])
+                                        _was_in_prompt = _idx < _inflight_upto
+                                        _ai_spoke_after = any(m.get("author") in CLIENT_MAP
+                                                              for m in _msgs[_idx + 1:])
+                                        _already = _was_in_prompt and _ai_spoke_after
+                                        if _ai_spoke_after and not _was_in_prompt:
+                                            print(f"[queue] {_qid} arrived AFTER the in-flight "
+                                                  f"prompt was built (idx {_idx} >= watermark "
+                                                  f"{_inflight_upto}) — delivering, not skipping.")
                                 except Exception as _ge:
                                     print(f"[queue] already-answered check failed "
                                           f"(delivering normally): {_ge}")
