@@ -724,6 +724,12 @@ async def stream_response(
                     tok_budget = max_tokens if max_tokens > 0 else MAX_TOKENS_CHAT
                 else:
                     tok_budget = MAX_TOKENS_AGENT
+
+                # Loops 2+ are where she must quote TOOL RESULTS back verbatim —
+                # the exact case DRY was destroying (see the sampler block above).
+                # Loop 1 is her talking, so it keeps the conversational sampler.
+                _literal_safe = loop_counter > 1
+
                 full_response = await _fetch_llama_streaming(
                     messages, token_handler,
                     on_think_token=think_handler,
@@ -731,6 +737,7 @@ async def stream_response(
                     temperature=temperature,
                     top_p=top_p,
                     enable_thinking=True,
+                    literal_safe=_literal_safe,
                 )
             except Exception as e:
                 import traceback
