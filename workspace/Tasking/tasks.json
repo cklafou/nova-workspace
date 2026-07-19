@@ -845,12 +845,13 @@
       "title": "Fix comfy_inspect img2img false-positive (Claude's test case)",
       "notes": "Claude tested against a workflow with NO img2img: CheckpointLoaderSimple, EmptyLatentImage, KSampler, SaveImage. Tool reported img2img=True (EmptyLatentImage, SaveImage). Must say False on that graph AND still True on a real img2img graph. Find the bug in detection logic, fix it, prove both directions.",
       "priority": 1,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [],
       "created": "2026-07-19T20:50:33",
-      "updated": "2026-07-19T20:50:33",
-      "author": "Nova"
+      "updated": "2026-07-19T22:00:09",
+      "author": "Nova",
+      "result": "comfy_inspect now has a real test suite covering Claude's false-positive case (pure txt2img correctly reports False), a genuine img2img node (correctly True), and tall-canvas framing detection. All three pass."
     }
   }
 }
