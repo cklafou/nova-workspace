@@ -425,10 +425,45 @@ async def _fetch_llama_streaming(
         "repeat_penalty":   1.05,
         "frequency_penalty": 0.0,      # was 0.4 — too high: it made her drop function words and garble grammar ("doing it mine") WITHOUT stopping the real (semantic) looping. Off.
         "presence_penalty":  0.0,      # was 0.3 — same grammar-wrecking failure mode; off. DRY + the prompt-level anti-repeat handle loops cleanly.
-        "dry_multiplier":    0.9,      # DRY does the loop-prevention (repeated n-gram SEQUENCES over the whole context) WITHOUT breaking grammar the way freq/presence penalties do. Bumped 0.8→0.9.
-        "dry_base":          1.75,
-        "dry_allowed_length": 3,       # repeats up to 3 tokens are fine (names, idioms); 4+ get penalized
-        "dry_penalty_last_n": -1,      # scan the WHOLE context for repeats, not just a window
+        # ── 2026-07-19: DRY WAS EATING HER FILENAMES. ────────────────────────────
+        # Symptom: on any deep tool chain she progressively mangled exact strings —
+        # comfy-2026-07-19.log -> comfy-2026-09-19.log -> com026-07-26.log, and
+        # -Descending -> -Desc -> -D. She then concluded the file did not exist and
+        # journalled that she was "rebuilding filenames from memory instead of
+        # reading" — blaming her own character for a sampler setting.
+        #
+        # Mechanism: DRY penalizes continuing any token sequence already present in
+        # context, growing as dry_base^(match_len - allowed_length). With
+        # allowed_length=3 and last_n=-1 (whole context), a 10-token filename that
+        # appeared in a TOOL RESULT was penalized ~1.75^7 for being copied
+        # correctly. She was structurally forbidden from quoting her own tool output.
+        #
+        # Measured, temperature 0 (greedy — no randomness, only this setting varied):
+        #     copy an exact literal out of context:  DRY on 1/3   DRY off 3/3
+        #     multi-turn parroting (what DRY is FOR): 2 words vs 4 words worst reuse
+        # i.e. it was buying ~2 words of repetition reduction and costing her every
+        # filename, path, and hash. Nowhere near the whole-SENTENCE re-emission it
+        # was added to stop. So: scoped, not deleted.
+        #
+        #   literal_safe=True  (agentic tool loops) -> DRY off. Copying a path
+        #                      exactly is the entire job; prose aesthetics are not.
+        #   literal_safe=False (conversational turn) -> DRY on, but with path/code
+        #                      punctuation as sequence breakers and a longer allowed
+        #                      run, so identifiers survive while sentences don't.
+        # If verbatim parroting ever returns in CHAT, tighten the else-branch only.
+        **({
+            "dry_multiplier": 0.0,
+        } if literal_safe else {
+            "dry_multiplier":    0.9,
+            "dry_base":          1.75,
+            "dry_allowed_length": 8,   # was 3 — 3 tokens cannot hold a filename
+            "dry_penalty_last_n": -1,
+            # Break the match at path/code punctuation so 'logs/comfy/comfy-2026-07-19.log'
+            # is scored as short segments instead of one long penalized run.
+            "dry_sequence_breakers": ["\n", ":", "\"", "*", "/", "\\", ".", "-", "_",
+                                      "=", ",", ";", "(", ")", "[", "]", "{", "}",
+                                      "|", "'", "<", ">", "$", "#", "@"],
+        }),
         "stream":      True,
         "cache_prompt": True,          # reuse KV prefix across turns
         # Qwen 3.6's GGUF template defaults enable_thinking=True, so the normal path needs no
