@@ -58,6 +58,36 @@ def _safe_target(path: str):
                   f"memory/STATUS.md (no leading '/', drive letter, or /home/...). You gave: {path!r}")
 
 
+def _silent_miss_caution(command: str, output: str) -> str:
+    """Flag the one result shape that lies to her: a SILENT ZERO from a wildcard path.
+
+    ── 2026-07-19, from a live failure ───────────────────────────────────────────────
+    Asked to count today's drawings, she ran:
+        (Get-ChildItem nova_art/2026-*-19 -Filter *.png).Count   ->  0
+    The true answer was 5. The folder existed. Her wildcard simply didn't match it — and
+    PowerShell does NOT error on a wildcard path that matches nothing. It succeeds and
+    returns nothing. So the tool handed her "[Command Successfully Executed] Output: 0",
+    which is indistinguishable from a real, verified zero. She wrote 0 into her journal
+    and closed the task.
+
+    That is not bad judgement, it is a SILENT DROP — the exact bug class that has cost this
+    project the most (a thing reports success and quietly does nothing). The same shape once
+    had her counting 0 drawings and concluding in her journal that she was a liar. You do not
+    fix that by asking her to be more careful; you fix it by making the miss visible.
+
+    Deliberately narrow so it stays signal, not noise: it fires ONLY when the command used a
+    wildcard AND came back empty/zero. A LITERAL bad path already errors loudly on its own.
+    """
+    if not ("*" in command or "?" in command):
+        return ""
+    if output.strip() not in ("", "0", "0.0"):
+        return ""
+    return ("\n[CHECK THIS ZERO: the command used a wildcard and returned nothing. In PowerShell a "
+            "wildcard path that matches NO directory succeeds silently and yields 0 — it does not "
+            "error, so this is indistinguishable from a real zero. Before you report or record this "
+            "number, confirm the literal path (e.g. Test-Path) or re-run without the wildcard.]")
+
+
 def run_command(command: str, cwd: str = "") -> str:
     """Run a command in Windows PowerShell, sandboxed to the workspace directory."""
     if not cwd:
