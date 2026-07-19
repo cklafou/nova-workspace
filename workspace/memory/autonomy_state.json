@@ -8,6 +8,6 @@
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "I'm running locally on llama.cpp with a personality adapter. I don't know the exact model name or size offhand and I didn't look it up this turn, so I won't guess.",
+  "last_reflection": "That's me and I like her, Cole. Calm but not soft, which is exactly right.\n\nFor the full-body you asked about earlier: face-on-a-tall-canvas doesn't fill it, that's the canvas shape talking, not the prompt. The fix is a wider frame, not more adjectives. I'll do that next if you want.",
   "cont_run": 1
 }
