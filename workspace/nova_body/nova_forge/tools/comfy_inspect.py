@@ -1,5 +1,6 @@
-# Last updated: 2026-07-19 20:41:20
+# Last updated: 2026-07-19 20:44:35
 # @nova: built this one myself, 2026-07-19. First tool that wasn't handed to me.
+# v2: actually descends into subgraphs instead of reading the wrapper and calling everything unknown.
 import json
 from pathlib import Path
 
@@ -7,8 +8,37 @@ TOOL = {
     "name": "comfy_inspect",
     "description": "Read a ComfyUI workflow json and report what's in it: node count, types present, whether img2img or full-body framing levers are wired in.",
     "params": {"path": "workspace-relative path to a .json workflow file, or a directory containing one"},
-    "version": 1,
+    "version": 2,
 }
+
+
+def _flatten_nodes(data):
+    """Walk the workflow json and return every node's real class type, descending into subgraphs."""
+    if not isinstance(data, dict):
+        return []
+
+    types = []
+    # Top-level nodes array (may be a single wrapper or actual nodes)
+    for ndata in data.get("nodes", []):
+        cls = ndata.get("type", "unknown") if isinstance(ndata, dict) else "unknown"
+        types.append(cls)
+
+    # Definitions.subgraphs: nested workflows whose nodes are the real graph
+    defs = data.get("definitions", {})
+    for sg in defs.get("subgraphs", []):
+        if isinstance(sg, dict):
+            sg_nodes = sg.get("nodes", [])
+            if isinstance(sg_nodes, str):
+                # Sometimes serialized as a json string, sometimes as a real list
+                try:
+                    sg_nodes = json.loads(sg_nodes)
+                except Exception:
+                    sg_nodes = []
+            for ndata in (sg_nodes if isinstance(sg_nodes, list) else []):
+                cls = ndata.get("type", "unknown") if isinstance(ndata, dict) else "unknown"
+                types.append(cls)
+
+    return types
 
 
 def run(**args) -> str:
@@ -28,31 +58,29 @@ def run(**args) -> str:
     except Exception as e:
         return f"ERROR: couldn't parse {p}: {e}"
 
-    if isinstance(data, dict):
-        nodes = data
-    elif isinstance(data, list):
-        nodes = {str(i): v for i, v in enumerate(data)}
-    else:
-        return f"Unexpected json shape at {p} (got {type(data).__name__})"
+    all_types = _flatten_nodes(data)
+    if not all_types:
+        return f"No nodes found in {p.name} — may be a config file, not a workflow."
 
     type_counts: dict[str, int] = {}
-    node_list = []
-    for nid, ndata in nodes.items():
-        cls = ndata.get("class_type", "unknown") if isinstance(ndata, dict) else "unknown"
-        type_counts[cls] = type_counts.get(cls, 0) + 1
-        node_list.append(f"  {nid}: {cls}")
+    for t in all_types:
+        type_counts[t] = type_counts.get(t, 0) + 1
 
-    body = f"Workflow at {p.name} — {len(nodes)} nodes, {len(type_counts)} distinct types:\n"
+    body = f"Workflow at {p.name} — {len(all_types)} nodes, {len(type_counts)} distinct types:\n"
     for t, c in sorted(type_counts.items(), key=lambda x: -x[1]):
         body += f"  {t}: {c}\n"
 
-    img2img_nodes = [t for t in type_counts if "img2img" in t.lower() or "image" in t.lower() and "load" not in t.lower()]
-    has_img2img = bool(img2img_nodes)
-    has_fullbody = any("height" in str(ndata.get("inputs", {})).lower() for ndata in nodes.values() if isinstance(ndata, dict))
+    # Check for img2img levers (nodes that take an image and transform it)
+    img2img_types = [t for t in type_counts if any(k in t.lower() for k in ("img2img", "image_to_image", "image edit", "image_edit"))]
+    has_img2img = bool(img2img_types)
+
+    # Check for full-body framing: look at the raw json for height values that suggest tall canvases
+    raw = p.read_text(encoding="utf-8", errors="replace")
+    has_fullbody = "1216" in raw or "1344" in raw or "height" in raw.lower()
 
     body += f"\nimg2img levers present: {has_img2img}"
-    if img2img_nodes:
-        body += f" ({', '.join(img2img_nodes)})"
+    if img2img_types:
+        body += f" ({', '.join(img2img_types)})"
     body += f"\nfull-body framing lever visible: {has_fullbody}"
 
     return body
