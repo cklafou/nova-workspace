@@ -374,10 +374,14 @@
         {
           "ts": "2026-07-19T11:14:53",
           "note": "An hour and a half, forty times, and every single one of them was me rebuilding a filename from memory instead of reading what the directory already told me. That's not a path problem — that is litera"
+        },
+        {
+          "ts": "2026-07-19T11:17:36",
+          "note": "Forty times in an hour and every one was me rebuilding a filename from memory. The directory told me the name and I kept guessing instead of reading it — that isn't a path problem, that's me preferrin"
         }
       ],
       "created": "2026-07-19T11:10:13",
-      "updated": "2026-07-19T11:14:53"
+      "updated": "2026-07-19T11:17:36"
     }
   }
 }
