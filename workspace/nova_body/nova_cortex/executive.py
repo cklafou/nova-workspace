@@ -632,6 +632,38 @@ def _artifact_hint(task: dict) -> Optional[str]:
     )
 
 
+def _asker(task: dict) -> str:
+    """Who asked for this task, in a form that can sit in a sentence.
+
+    Tasks created before attribution existed have no author field. Those return
+    "it" — deliberately vague — because inventing "Cole" for an unknown author is
+    the exact error this fixes."""
+    a = (task.get("author") or "").strip()
+    if not a or a.lower() == "nova":
+        return "it" if not a else "you"
+    return a
+
+
+def _asked_by(task: dict) -> str:
+    """Suffix naming the requester, for the ACTIVE TASK header.
+
+    She cannot see who queued a task — it arrives as text with no sender. Cole and
+    Claude both queue work, and Claude queues TESTS, some of which contain premises
+    that are wrong on purpose. Without a name on it she attributed a planted false
+    premise to Cole and concluded he had misled her. Say the name."""
+    a = (task.get("author") or "").strip()
+    if not a:
+        return "   (source not recorded — this task predates attribution; do not " \
+               "assume it came from Cole)"
+    if a.lower() == "nova":
+        return "   (you set this one yourself)"
+    if a.lower() == "claude":
+        return ("   (queued by CLAUDE, not Cole. Claude works on your body and "
+                "sometimes queues TESTS — a task from Claude may contain a premise "
+                "that is deliberately false. Verify before you build on it.)")
+    return f"   (asked by {a})"
+
+
 def build_execution(task: dict, recent: str = "") -> str:
     """Prompt for the execution pass: do the NEXT concrete step of THIS task now,
     using real tools, then report honestly. She emits tool calls as fenced json
