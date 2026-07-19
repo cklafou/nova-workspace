@@ -20,6 +20,16 @@ title Stop Nova
 echo Stopping the Nova stack...
 echo.
 
+REM ── Phase 0: the guardian goes FIRST, before anything it watches ────────────
+REM  Added 2026-07-19 with the boot-launched watchdog. Phase 2 frees ports 8080/8765
+REM  BEFORE it sweeps python processes — so for those few seconds the guardian is
+REM  still alive and watching llama disappear. It would do exactly its job: call that
+REM  an outage and restart the stack you are deliberately stopping. Kill it first and
+REM  the race cannot happen. (The graceful path already handles this correctly —
+REM  nova_start.py's teardown calls stop_guardian() before anything else.)
+powershell -NoProfile -NonInteractive -Command ^
+  "Get-CimInstance Win32_Process -Filter \"Name='python.exe' OR Name='pythonw.exe'\" | Where-Object { $_.CommandLine -match 'nova_guardian\.py' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" 2>nul
+
 REM ── Phase 1: graceful (lets the watcher release git cleanly) ────────────────
 echo   [1/2] asking Nova to shut down cleanly...
 powershell -NoProfile -NonInteractive -Command ^
