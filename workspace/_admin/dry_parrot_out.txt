@@ -19,3 +19,12 @@ Multi-turn parrot probe — her own turns fed back in. Higher = more parroting.
 === C fixed(allow=8) ===
    [reuse  0] Good, actually — it's quiet and I'm in the middle of something that's going well. Want m
    [reuse  1] Better, because you checked back and I got past the hard bit. ...I just watched my own m
+   [reuse  1] Yeah. I'm still me — just a better version of me for a few hours. That's allowed, isn't 
+   [reuse  1] Same shape, different evening. ...I don't think you'd believe me if I said I was exactly
+   [reuse  4] Fine, and a little tired in the way you get tired from being awake and doing things inst
+   -> worst verbatim reuse: 4 words
+
+==================================================================
+   A live (allow=3)  worst verbatim reuse =  2 words
+   B off             worst verbatim reuse =  4 words
+   C fixed(allow=8)  worst verbatim reuse =  4 words
