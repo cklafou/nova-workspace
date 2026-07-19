@@ -1,4 +1,4 @@
 {
-  "last_recovery": "2026-07-19T04:30:05.903000",
-  "reason": "FROZEN: nova_chat API did not answer within 8s"
+  "last_recovery": "2026-07-19T11:30:04.384470",
+  "reason": "DOWN: llama :8080 not answering /health"
 }
