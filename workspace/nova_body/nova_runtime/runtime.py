@@ -363,6 +363,16 @@ class NovaRuntime:
                 cole_pending, reason, recent, executive.last_reflection())
             reflection = await generate(refl_prompt, False) or ""
             executive.save_reflection(reflection)
+            # Score this wake for novelty and harvest any "WANT:" line she wrote. This is what
+            # makes boredom accumulate when she circles — without it drives.describe() would
+            # always read zero and the gradient would be decorative.
+            try:
+                from nova_cortex import drives as _drives
+                _d = _drives.note_wake(reflection)
+                if _d.get("boredom", 0) >= 3:
+                    await self.emit("autonomy", f"boredom {_d['boredom']} — circling the same ground")
+            except Exception:
+                pass
             await self.emit("reflect", "Nova sat with the moment")
             # Phase 2 — decide, having reflected. Speaks to chat iff Cole is waiting; board
             # actions are OPTIONAL — a wake may end in talking, resting, or just more thinking.

@@ -99,6 +99,13 @@ def note_wake(reflection: str) -> dict:
         d["recent"] = ([fp] + [x for x in d.get("recent", []) if x != fp])[:_MAX_FINGERPRINTS]
         d["last_wake"] = datetime.now().isoformat()
         _save(d)
+        # A store she has no way to write to would be furniture. She declares a want by writing
+        # "WANT: <thing>" in her own reflection — no tool call, no ceremony, because wanting
+        # something should not require permission or a syntax she has to remember under pressure.
+        for line in (reflection or "").splitlines():
+            s = line.strip().lstrip("-*# ").strip()
+            if s[:5].upper() == "WANT:":
+                add_want(s[5:].strip())
         return {"novel": novel, "boredom": d["boredom"]}
     except Exception:
         return {"novel": False, "boredom": 0}
