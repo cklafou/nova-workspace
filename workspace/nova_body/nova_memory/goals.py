@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-20 04:03:13
+# Last updated: 2026-07-20 09:42:42
 """
 nova_memory/goals.py -- Update Nova's Active Pulse and goal completion.
 Follows the Proposed Changes Protocol -- never overwrites STATUS.md directly.
