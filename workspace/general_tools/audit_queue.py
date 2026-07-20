@@ -41,6 +41,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -210,21 +211,55 @@ _REF_SCAN_SKIP  = ("__pycache__", ".git", "node_modules", "_admin/Trash", "_arch
                    "nova_memory_db", "prompt_cache", "logs", "models", "llama")
 
 
+# A module stem this common is not evidence of anything. "nova" appears in nearly every file
+# in a project called Nova.
+_STEM_STOPWORDS = {"nova", "main", "utils", "util", "test", "tests", "core", "app", "run",
+                   "server", "client", "config", "setup", "index", "base", "common", "tools"}
+
+
+def _stem_pattern(stem: str):
+    """Match a module stem only where it is being USED as a module, never as prose.
+
+    ── WHY NOT A PLAIN SUBSTRING (2026-07-20) ────────────────────────────────────────────────
+    First version searched for the bare stem anywhere in the text. `general_tools/nova_chat/
+    clients/nova.py` reduces to the stem "nova", and the reconciler dutifully reported that it
+    was still referenced by — among everything else — the file doing the reporting. In a
+    project named Nova, "nova" is not a signal.
+
+    Worse than the noise: a reconciler that reports everything as dangling never closes
+    anything, which lands it in precisely the state it was written to fix. The check has to be
+    able to say NO, or it isn't a check.
+
+    So require import-shaped context. A real broken reference looks like `import x`,
+    `from x import`, `x.attr`, or a quoted "x" in a path/registry. Prose saying "we moved x
+    today" does not, and prose is most of what these files contain.
+    """
+    s = re.escape(stem)
+    return re.compile(
+        rf"(?:^|\n)\s*(?:from|import)\s+{s}\b"      # import x / from x import ...
+        rf"|\bimport\s+{s}\b"                        # inline import
+        rf"|\b{s}\s*\."                              # x.attr  (module attribute access)
+        rf"|['\"][^'\"\n]*\b{s}(?:\.py)?['\"]"       # "x" / "pkg/x.py" in a path or registry
+    )
+
+
 def _still_referenced(old_path: str, root: Path) -> Optional[str]:
     """Return the first file that still mentions `old_path`, or None.
 
-    Matches on the path AND on the bare module stem for .py files, because a broken import
-    reads `from nova_chat import server`, never `general_tools/nova_chat/server.py`. Checking
-    only the full path would let every import breakage through — which is the exact failure
-    this queue exists to catch, so getting it wrong here would make the whole thing decorative.
+    Matches on the full path AND — for .py files — on the module stem in import position,
+    because a broken import reads `from nova_chat import server`, never
+    `general_tools/nova_chat/server.py`. Checking only the full path would miss every import
+    breakage, which is the exact failure this queue exists to catch.
     """
     if not old_path:
         return None
-    needles = {old_path.replace("\\", "/")}
+    path_needle = old_path.replace("\\", "/")
     p = Path(old_path)
-    if p.suffix == ".py" and p.stem not in ("__init__", "__main__"):
-        needles.add(p.stem)
-    self_rel = QUEUE_PATH.name
+    stem_re = None
+    if (p.suffix == ".py" and p.stem not in ("__init__", "__main__")
+            and p.stem.lower() not in _STEM_STOPWORDS and len(p.stem) >= 5):
+        stem_re = _stem_pattern(p.stem)
+    self_names = {QUEUE_PATH.name, Path(__file__).name}
 
     for d in _REF_SCAN_DIRS:
         base = root / d
@@ -234,17 +269,16 @@ def _still_referenced(old_path: str, root: Path) -> Optional[str]:
             if not f.is_file() or f.suffix.lower() not in _REF_SCAN_EXTS:
                 continue
             rel = str(f.relative_to(root)).replace("\\", "/")
-            if any(s in rel for s in _REF_SCAN_SKIP) or f.name == self_rel:
+            if any(s in rel for s in _REF_SCAN_SKIP) or f.name in self_names:
                 continue
             try:
                 text = f.read_text(encoding="utf-8", errors="replace")
             except Exception:
                 continue
-            for n in needles:
-                if len(n) < 4:
-                    continue
-                if n in text:
-                    return rel
+            if path_needle in text:
+                return rel
+            if stem_re is not None and stem_re.search(text):
+                return rel
     return None
 
 

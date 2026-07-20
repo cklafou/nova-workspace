@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T00:21:49+09:00",
+  "updated_at": "2026-07-21T00:22:45+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -298,7 +298,7 @@
       "new_path": "memory/archive/2025-07-19_misfiled_note.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: no remaining references to the old path",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -311,7 +311,7 @@
       "new_path": "Orient/Calls_Master_Index.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -324,7 +324,7 @@
       "new_path": "Orient/SECURITY.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -337,7 +337,7 @@
       "new_path": "Orient/TOOLS.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -350,7 +350,7 @@
       "new_path": "general_tools/nova_console/calls.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -363,7 +363,7 @@
       "new_path": "memory/archive/2026-05_superseded_entries.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -376,7 +376,7 @@
       "new_path": "memory/archive/JOURNAL_before_cleanup_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -389,7 +389,7 @@
       "new_path": "memory/reports/AUDIT_QUEUE_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -402,7 +402,7 @@
       "new_path": "memory/reports/AUDIT_TOOL_FIX_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -415,7 +415,7 @@
       "new_path": "memory/reports/CHORES_AND_ADMIN_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -428,7 +428,7 @@
       "new_path": "memory/reports/JOURNAL_AUDIT_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -441,7 +441,7 @@
       "new_path": "nova_body/nova_cortex/principals.py",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -454,7 +454,7 @@
       "new_path": "nova_body/nova_forge/calls.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -467,7 +467,7 @@
       "new_path": "nova_body/nova_lancedb/calls.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -480,7 +480,7 @@
       "new_path": "nova_body/nova_play/calls.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -493,7 +493,7 @@
       "new_path": "nova_body/nova_logs/retention.py",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -506,7 +506,7 @@
       "new_path": "memory/reports/CONFABULATION_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -520,7 +520,7 @@
       "confidence": 0.99,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/audit_queue.py — fix that reference, then this closes itself."
+      "notes": "STILL REFERENCED by general_tools/calls_order.py — fix that reference, then this closes itself."
     },
     {
       "id": "6b4fb2df",
@@ -545,7 +545,7 @@
       "new_path": "nova_body/nova_voice/__init__.py",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:28+09:00",
+      "resolved_at": "2026-07-21T00:22:42+09:00",
       "notes": null
     },
     {
@@ -558,7 +558,7 @@
       "new_path": "Nova_Created/art/2026-07-19/nova_self_033541_66590.png",
       "confidence": 1.0,
       "resolved_by": "reconcile: no remaining references to the old path",
-      "resolved_at": "2026-07-21T00:21:29+09:00",
+      "resolved_at": "2026-07-21T00:22:43+09:00",
       "notes": null
     },
     {
@@ -571,7 +571,7 @@
       "new_path": "Nova_Created/forge/designs/comfy_inspect.md",
       "confidence": 0.96,
       "resolved_by": "reconcile: no remaining references to the old path",
-      "resolved_at": "2026-07-21T00:21:30+09:00",
+      "resolved_at": "2026-07-21T00:22:44+09:00",
       "notes": null
     },
     {
@@ -585,7 +585,7 @@
       "confidence": 0.98,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/audit_scripts.py — fix that reference, then this closes itself."
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "924d0c6e",
@@ -598,7 +598,7 @@
       "confidence": 0.98,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/audit_scripts.py — fix that reference, then this closes itself."
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "906a9bab",
@@ -610,7 +610,7 @@
       "new_path": "Nova_Created/forge/designs/zz_probe.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:30+09:00",
+      "resolved_at": "2026-07-21T00:22:45+09:00",
       "notes": null
     },
     {
@@ -623,72 +623,7 @@
       "new_path": "Nova_Created/forge/tools/zz_probe.py",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:21:30+09:00",
-      "notes": null
-    },
-    {
-      "id": "52ec8c52",
-      "status": "pending",
-      "event_type": "rename",
-      "detected_at": "2026-07-21T00:21:49+09:00",
-      "commit": "1784bb81",
-      "old_path": "Nova_Created/forge/designs/comfy_inspect.md",
-      "new_path": "Nova_Created/forge/body/designs/comfy_inspect.md",
-      "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": null
-    },
-    {
-      "id": "a6dc6cfb",
-      "status": "pending",
-      "event_type": "rename",
-      "detected_at": "2026-07-21T00:21:49+09:00",
-      "commit": "1784bb81",
-      "old_path": "Nova_Created/forge/tests/comfy_inspect.py",
-      "new_path": "Nova_Created/forge/body/tests/comfy_inspect.py",
-      "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": null
-    },
-    {
-      "id": "a527a9f8",
-      "status": "pending",
-      "event_type": "rename",
-      "detected_at": "2026-07-21T00:21:49+09:00",
-      "commit": "1784bb81",
-      "old_path": "Nova_Created/forge/tools/comfy_inspect.py",
-      "new_path": "Nova_Created/forge/body/tools/comfy_inspect.py",
-      "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": null
-    },
-    {
-      "id": "dab8df93",
-      "status": "pending",
-      "event_type": "new",
-      "detected_at": "2026-07-21T00:21:49+09:00",
-      "commit": "1784bb81",
-      "old_path": null,
-      "new_path": "nova_body/nova_cortex/discourse.py",
-      "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": null
-    },
-    {
-      "id": "bae36649",
-      "status": "pending",
-      "event_type": "new",
-      "detected_at": "2026-07-21T00:21:49+09:00",
-      "commit": "1784bb81",
-      "old_path": null,
-      "new_path": "nova_body/tests/test_discourse.py",
-      "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_at": "2026-07-21T00:22:45+09:00",
       "notes": null
     }
   ],
