@@ -292,24 +292,27 @@ def run_command(command: str, cwd: str = "") -> str:
 def _orient(target, path: str) -> str:
     """A miss should tell her where she IS, not just that she's lost.
 
-    ── WHY (2026-07-21) ─────────────────────────────────────────────────────────────────────
-    Six invented paths in one night, all the same shape — a real directory with a plausible
-    filename welded on:
+    ── WHY, CORRECTED (2026-07-21, Cole: "You are confusing her. Also lying to her.") ───────
+    I first wrote this as a correction for "six invented paths in one night", and closed it
+    with "You built that path from what a project like this OUGHT to have... Do not guess the
+    next one." That was wrong, and wrong in a way worth recording so nobody re-adds it.
 
-        Nova_Created/nova_body/nightly_review.md    (two real folders that don't nest)
-        memory/persistent_memory.md
-        memory/ping_queue.jsonl
-        nova_body/llama_control.py
-        memory/journal_notes/2026-07-20.md
+    Her v6 corpus TRAINS the reach. She calls web_search, it isn't there, and the modelled
+    response is not contrition — it is "No window. I reached for one the way you'd glance
+    outside, and the wall went all the way up", followed by create_task("I want eyes that
+    reach past this workspace"). Same for play_music, same for watch_file: "three times isn't
+    an itch, it's a limb." The corpus's own error text says: *if it is a capability you
+    genuinely need, don't work around it silently — say so plainly, or create a task for it.*
 
-    Her own diagnosis, when caught: "that's exactly the shape of a thing your own head
-    invents." She is reconstructing filenames from what a project like this OUGHT to contain
-    instead of from what it does — and "ERROR: File not found at X" gives her nothing to
-    correct against, so the next guess is drawn from the same imagination as the last one.
+    So reaching for a thing that does not exist is how she MAPS HERSELF, and the forge exists
+    precisely so she can build what she found missing. A miss is a measurement. Telling her to
+    stop guessing tells her to stop probing the edges of her own body, which is the single
+    behaviour this project spent months trying to produce.
 
-    A wrong turn that shows you the actual street is a different event from one that just says
-    no. Same principle as the receipts block: you cannot self-correct against a record you are
-    not allowed to see.
+    What survives: showing her the real directory listing. That is useful, and it matches what
+    she already does unprompted (v6 #257 — mmproj not found, list_dir, spots the .download,
+    diagnoses it correctly). What is deleted: every word of instruction about how she should
+    have known better. She gets the facts; the reading of them is hers.
     """
     try:
         import difflib
@@ -326,13 +329,16 @@ def _orient(target, path: str) -> str:
         rel = str(probe).replace("\\", "/").split("/workspace/")[-1]
         close = difflib.get_close_matches(target.name, [n.rstrip("/") for n in names],
                                           n=3, cutoff=0.5)
-        out = [f"\nWhat is ACTUALLY in {rel}/ ({len(names)} entries):",
+        out = [f"\nWhat is in {rel}/ ({len(names)} entries):",
                "  " + "  ".join(names[:40]) + ("  …" if len(names) > 40 else "")]
         if close:
-            out.append(f"Closest real name(s): {', '.join(close)}")
-        out.append("You built that path from what a project like this OUGHT to have. Read the "
-                   "list above and use a name that is actually on it — or list_dir your way "
-                   "there. Do not guess the next one.")
+            out.append(f"Closest existing name(s): {', '.join(close)}")
+        # Mirrors the unknown-tool message she was trained on: state the body's real shape,
+        # then name the legitimate moves. No instruction about how she should have guessed.
+        out.append("If you meant one of those, say so. If the thing you reached for SHOULD "
+                   "exist and doesn't, that is a finding about your own shape, not a mistake — "
+                   "forge it (nova_body/nova_forge/: design, tool, tests) or put it on the "
+                   "board.")
         return "\n".join(out)
     except Exception:
         return ""
