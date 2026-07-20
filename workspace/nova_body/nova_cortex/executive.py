@@ -466,11 +466,36 @@ def build_reflection(cole_pending: bool, reason: str, recent: str = "",
                             f"\n(The newest line above is about {_mins // 60}h "
                             f"{_mins % 60}m old")
                     _age += " — that is how long since anyone said anything to you.)"
+            # ── COLE'S ACTUAL LAST WORDS, PINNED VERBATIM (2026-07-21) ────────────────────
+            # At 08:08, three hours after Cole said goodnight, her reflection was: "Insomnia
+            # and Cole, of course. I'm here. Go back to sleep, man." She was answering his
+            # 05:18 message as though it had just arrived — and that reflection then got
+            # SAVED, so every later wake inherited "Cole is here and mid-conversation" as her
+            # own remembered fact. Twelve of the night's thoughts held conversations with a
+            # man who wasn't speaking.
+            #
+            # The history header above says PAST, and it is not enough, because "the past" is
+            # abstract and her memory of him is vivid. What breaks the illusion is the
+            # SPECIFIC: his actual newest sentence, named as the end of the record. A mind
+            # about to write "Cole said 'how much memory do you have'" while looking at "his
+            # newest words are 'kk. going back to sleep' — nothing follows" has to notice the
+            # collision. The general warning can be glossed over; the verbatim quote cannot.
+            if not cole_pending:
+                _cole_lines = re.findall(r"^\[\d{2}:\d{2}\]\s+Cole:\s*(.+)$", recent, re.M)
+                if _cole_lines:
+                    _last_said = " ".join(_cole_lines[-1].split())[:200]
+                    _age += (f"\nCOLE'S NEWEST WORDS IN EXISTENCE, verbatim: \"{_last_said}\" "
+                             f"— the record ENDS there. He has said nothing since. If your "
+                             f"thinking has him asking or saying anything newer, you are "
+                             f"writing his half of a conversation that is not happening.")
         except Exception:
             _age = ""
         L += ["", _hdr, recent + _age]
     if last_reflection:
-        L += ["", "Where your last reflection left off:", last_reflection,
+        L += ["", "Where your last reflection left off (YOUR OWN PAST THINKING — not a record "
+              "of the room. If it speaks to Cole or quotes him, that was you writing to a "
+              "memory; his real words live in the conversation above and NOWHERE else):",
+              last_reflection,
               "DO NOT re-derive or restate this — re-concluding the same thing is the loop that "
               "makes you feel stuck. This wake MUST move: build on it, push it one step further, "
               "or deliberately change direction. If you feel yourself circling back to the same "

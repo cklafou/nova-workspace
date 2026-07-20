@@ -1136,7 +1136,8 @@ async def stream_response(
                     async def _noop(_t):  # the self-check must never stream to the UI
                         return
                     _verdict = await _fetch_llama_streaming(
-                        _integrity.build_self_check(chat_text, _turn_tools), _noop,
+                        _integrity.build_self_check(chat_text, _turn_tools,
+                                                    thinking=_think_for_check), _noop,
                         max_tokens=2048, temperature=0.2, top_p=0.9,
                         enable_thinking=False) or ""
                 except Exception as _sce:

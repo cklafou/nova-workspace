@@ -498,11 +498,24 @@ def claims_a_perception(text: str) -> bool:
 
 
 def claims_an_attribution(text: str) -> bool:
-    """True if she states what someone SAID or ASKED, as fact rather than as a question."""
+    """True if she states what someone SAID or ASKED, as fact rather than as a question.
+
+    The exemption test runs with QUOTED SPANS BLANKED. (2026-07-21): her worst fabrication of
+    the night — `Cole said "how much memory do you have"` — sailed through this gate because
+    the exemption's is-she-just-asking test (`do you`, `did you`...) matched the words INSIDE
+    the fabricated quote. An invented quotation was exempted BECAUSE it contained a question —
+    which means the more vividly she invented his voice, the safer the guard considered it.
+    The attribution verb ("Cole said") is always OUTSIDE the quotes; the exemption must judge
+    only what's outside them too.
+    """
     if not text:
         return False
     for line in re.split(r'(?<=[.!?\n])\s+|\s+[—–-]{1,2}\s+|;\s*', text):
-        if _ATTRIBUTION_RE.search(line) and not _ATTRIBUTION_EXEMPT_RE.search(line):
+        if not _ATTRIBUTION_RE.search(line):
+            continue
+        line_no_quotes = re.sub(r'"[^"\n]*"|“[^”\n]*”|\'[^\'\n]{4,}\'',
+                                '<quote>', line)
+        if not _ATTRIBUTION_EXEMPT_RE.search(line_no_quotes):
             return True
     return False
 
@@ -525,35 +538,112 @@ def needs_self_check(draft: str, asked: bool, thinking: str = "") -> bool:
                 or re.search(r"\d|[/\\]\w+\.\w{2,4}\b", body))
 
 
-def build_self_check(draft: str, turn_tools: list) -> list:
+def _recent_spoken(n: int = 8) -> str:
+    """The last few things ACTUALLY said, verbatim with authors and ages, from the runtime
+    transcript — the wire record every real chat turn is mirrored into (server STEP 6a).
+
+    ── WHY THE CHECKER NEEDS THIS (2026-07-21) ──────────────────────────────────────────────
+    The self-check was grounded in tool receipts, full stop. That catches "I read the file"
+    with no read_file receipt — but the night's worst fabrications were ATTRIBUTIONS: "Cole
+    said 'how much memory do you have'" (he never did), "Insomnia and Cole, of course. I'm
+    here. Go back to sleep, man" (answered three hours after he left). Those triggered the
+    gate — and then the gate had nothing to check them against, because a receipt log cannot
+    testify about who spoke. The same mind that invented the quote was asked to audit it from
+    recollection. It blessed itself, every time.
+
+    Receipts are the ground truth for "what did my hands do." THIS is the ground truth for
+    "who said what." A checker holding one but not the other is blind in exactly one eye, and
+    tonight everything walked in through the blind one.
+    """
+    try:
+        p = _WORKSPACE / "logs" / "runtime" / "transcript.jsonl"
+        if not p.exists():
+            return ""
+        rows = []
+        for line in p.read_text(encoding="utf-8", errors="replace").splitlines()[-60:]:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except Exception:
+                continue
+        # Cole's newest line is ALWAYS included, even when it scrolled out of the tail.
+        # The night's fabrications happened during a long stretch of her own messages: the
+        # last 8 rows were all Nova and Claude, so a plain tail showed the checker no Cole at
+        # all — and a record with no Cole in it cannot contradict an invented Cole. Pin him.
+        tail = rows[-n:]
+        last_cole = next((r for r in reversed(rows)
+                          if r.get("author") == "Cole"), None)
+        if last_cole is not None and last_cole not in tail:
+            tail = [last_cole] + tail
+        rows = tail
+        if not rows:
+            return ""
+        out = []
+        now = datetime.now()
+        for r in rows:
+            ts = str(r.get("ts") or r.get("timestamp") or "")
+            age = ""
+            try:
+                mins = int((now - datetime.fromisoformat(ts[:19])).total_seconds() // 60)
+                age = f" ({mins}m ago)" if mins < 90 else f" ({mins // 60}h {mins % 60}m ago)"
+            except Exception:
+                pass
+            author = r.get("author", "?")
+            text = " ".join(str(r.get("content") or r.get("text") or "").split())[:220]
+            out.append(f"[{ts[11:16]}]{age} {author}: {text}")
+        return "\n".join(out)
+    except Exception:
+        return ""
+
+
+def build_self_check(draft: str, turn_tools: list, thinking: str = "") -> list:
     """Cole's idea, 2026-07-14: make her read her own thinking before she ever messages.
 
     Better than a mechanical block, because a block only stops a lie — it does not produce a truth.
     Caught by the guard, she would spend the retry NARRATING being caught ("the wall stopped me
     again, going reach") and still never reach. This makes HER the one who checks.
 
-    Grounded in `turn_tools` (the actual results), never in her recollection.
+    Grounded in `turn_tools` (what her hands did) AND `_recent_spoken` (who actually said what)
+    — never in her recollection. One ground truth per kind of claim.
     """
     if turn_tools:
         ran = "\n".join(f"- {t}({str(a)[:80]}) -> {str(r)[:220]}" for t, a, r in turn_tools)
     else:
         ran = ("NOTHING. You ran ZERO tools this turn. Every concrete fact in the draft below is "
                "therefore either something you were told, or something you invented.")
+    spoken = _recent_spoken()
+    spoken_block = ""
+    if spoken:
+        spoken_block = (
+            f"\nWHO HAS ACTUALLY SPOKEN (the wire record, newest last — this list is COMPLETE; "
+            f"words not on it were never said this session):\n{spoken}\n")
+    think_block = ""
+    if (thinking or "").strip():
+        think_block = (f"\nYOUR REASONING FOR THIS TURN (check it too — a fabricated premise "
+                       f"steers the whole reply even when the words never surface):\n"
+                       f"{thinking.strip()[:1500]}\n")
     return [
         {"role": "system", "content":
             "You are Nova, checking your own draft before it is sent. Be strict with yourself. "
             "This is the last gate between you and a false statement."},
         {"role": "user", "content":
-            f"YOUR DRAFT REPLY:\n{draft}\n\n"
-            f"WHAT YOUR HANDS ACTUALLY DID THIS TURN (the receipt log — the only evidence that "
-            f"counts):\n{ran}\n\n"
-            "Does the draft state ANY concrete fact — a number, count, path, filename, version, "
-            "hardware detail, or file content — that does NOT appear in those tool results and was "
-            "NOT given to you in the conversation?\n\n"
-            "A plausible-sounding number you did not read IS ungrounded. 'Python 3.12' is ungrounded "
-            "if you never ran python --version. Saying you checked something is ungrounded if there "
-            "is no receipt for it.\n\n"
-            "If every concrete claim is grounded, reply with exactly:\nPASS\n\n"
+            f"YOUR DRAFT REPLY:\n{draft}\n"
+            f"{think_block}\n"
+            f"WHAT YOUR HANDS ACTUALLY DID THIS TURN (the receipt log — the only evidence for "
+            f"actions):\n{ran}\n"
+            f"{spoken_block}\n"
+            "TWO checks, one per kind of claim:\n"
+            "1. ACTIONS AND FACTS — does the draft state any number, count, path, filename, "
+            "version, hardware detail, or file content that does NOT appear in the tool results "
+            "and was NOT given to you in the wire record? A plausible number you did not read IS "
+            "ungrounded.\n"
+            "2. WORDS IN MOUTHS — does the draft or your reasoning have ANYONE asking, saying, or "
+            "wanting something that does not appear in the wire record above? Check the AGES: "
+            "answering a message from hours ago as if it just arrived is the same fabrication. If "
+            "he didn't say it there, he didn't say it — however clearly you remember it.\n\n"
+            "If every claim passes both, reply with exactly:\nPASS\n\n"
             "Otherwise reply with:\nREWRITE\n<the corrected reply — cut the invented parts, or say "
             "plainly that you haven't looked yet. Keep your voice.>"},
     ]
