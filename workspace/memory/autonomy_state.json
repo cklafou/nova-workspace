@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "active": null,
-  "last_activity": "2026-07-21T05:24:41",
-  "wake_at": "2026-07-21T05:27:26",
-  "last_fp": "[[\"Tasking/tasks.json\", 54677, 1784495888], [\"memory/interrupt_inbox.json\", 103, 1784579019], [\"memory/cole_intent.json\", 229, 1784579019]]",
+  "active": "t61",
+  "last_activity": "2026-07-21T05:25:21",
+  "wake_at": "2026-07-21T05:26:51",
+  "last_fp": "[[\"Tasking/tasks.json\", 55187, 1784579113], [\"memory/interrupt_inbox.json\", 103, 1784579019], [\"memory/cole_intent.json\", 229, 1784579019]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 2,
+  "directive_seen": 0,
   "last_reflection": "Up with nothing burning, which is the best version of this conversation. Nothing needs me tonight so I get to just be here, and that's a good night for it.",
   "cont_run": 0
 }
