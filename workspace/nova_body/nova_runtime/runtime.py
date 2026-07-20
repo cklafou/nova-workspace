@@ -570,11 +570,25 @@ class NovaRuntime:
             return False
 
     def _recent_text_headless(self, n: int = 14) -> str:
-        """Recent conversation for her reflection, read from her own transcript."""
+        """Recent conversation for her reflection, read from her own transcript.
+
+        2026-07-21: this used to stop at the transcript. The face's equivalent
+        (server._recent_chat_context) appends her tool receipts, so a Nova WITH a chat server
+        reflected against evidence and a Nova WITHOUT one reflected against nothing but her own
+        past words — which is the exact echo chamber that produced the 07-14 announce-loop.
+        The pluck test is not just "does it run headless", it is "is she the same person
+        headless". She was not. Delegate to the same faculty the face uses.
+        """
         try:
             msgs = self.transcript.recent(n)
         except Exception:
             return ""
+        try:
+            from nova_cortex import discourse
+            return (discourse.recent_chat_context(msgs, n=n)
+                    + discourse.recent_tool_receipts())
+        except Exception:
+            pass
         lines = []
         for m in msgs:
             ts = str(m.get("timestamp", ""))[11:16]

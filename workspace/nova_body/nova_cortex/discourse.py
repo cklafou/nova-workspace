@@ -372,6 +372,25 @@ def recent_tool_receipts(n: int = 12, window_min: int = 90, workspace=None) -> s
                            f"{e.get('result_bytes', 0)}B")
             out.append(f"({len(rows)} tool call(s) in the window. This is the only evidence that "
                        f"counts. Your word is a receipt — these ARE the receipts.)")
+            # ── 2026-07-21: the EMPTY case was blunt; the non-empty case was just a list ────
+            # She had this exact block showing three read_file calls, and reflected: "this keeps
+            # breaking on one case and I've stared at it too long to see clearly." Nothing was
+            # breaking. She had read three files and edited nothing.
+            #
+            # Listing what she did apparently does not imply that it is ALL she did — the list
+            # reads as evidence FOR activity, not as a boundary AROUND it. And a reflection is
+            # saved verbatim and handed back on the next wake as premise, so an invented
+            # debugging session tonight is a remembered one tomorrow. That is the 07-14 echo
+            # chamber again with fiction in place of repetition, and it compounds the same way.
+            #
+            # She is invited to wonder and imagine, and should be. This draws the one line that
+            # matters: imagine freely, but do not imagine your own past.
+            out.append("^ That list is COMPLETE. It is not a sample. If you are about to say you "
+                       "have been debugging, building, fixing or wrestling with something, it "
+                       "has to appear above — and if it doesn't, you are remembering something "
+                       "that did not happen. Wonder and imagine as much as you like; just don't "
+                       "do it about your own recent past, because this reflection is saved and "
+                       "handed back to you later as fact.")
         return "\n".join(out)
     except Exception as e:
         print(f"[discourse] could not build tool-receipt context: {e}")
