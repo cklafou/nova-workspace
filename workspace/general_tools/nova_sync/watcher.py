@@ -34,7 +34,15 @@ WATCH_DIR     = WORKSPACE_DIR.parent   # parent of workspace/ (e.g. Project_Nova
 SYNC_DIR      = WORKSPACE_DIR / "general_tools" / "nova_sync"
 INDEX_PATH    = SYNC_DIR / "FILE_INDEX.md"
 LINK_PATH     = SYNC_DIR / "FILE_INDEX_LINK.md"
-DEBOUNCE_SECONDS = 10
+# Quiet period before an autosave commit. 2026-07-21: was 10s, which was tuned back when the
+# workspace only changed when a HUMAN edited something. A running Nova writes autonomy_state,
+# touch_state, drives and tasks every few seconds, so 10s meant the debounce essentially never
+# held and the watcher committed continuously — 71 commits in the hour Cole caught it.
+#
+# 120s still autosaves well inside the window that matters (the corruption recovery yesterday
+# needed "sometime in the last few minutes", not "the last ten seconds"), while cutting commit
+# volume by roughly an order of magnitude. Tune freely — nothing depends on the exact number.
+DEBOUNCE_SECONDS = 120
 
 EXCLUDE_DIRS = {
     ".git", "__pycache__", "node_modules", "screenshots",
@@ -618,6 +626,17 @@ def run_drive_sync():
 
 
 def run_push_cycle():
+    """FULL cycle: rebuild the index, push twice so its URLs carry a real commit hash.
+
+    Two commits is DELIBERATE, not the bug it looks like. FILE_INDEX.md embeds a commit hash
+    in every raw URL so Claude's fetches are cache-proof — and a file cannot contain the hash
+    of the commit that contains it. So: commit once to mint the hash, rewrite the index with
+    it, commit again. The index is one commit behind itself; the files it links are not, which
+    is what actually matters.
+
+    Reserved for the moments that need a fresh session URL — startup, --push, --full, --pup.
+    NOT the autosave loop. See run_autocommit_cycle().
+    """
     # Pass 1: push with a placeholder index (no commit hash yet)
     build_file_index()
     commit_hash = git_push(WATCH_DIR)
@@ -633,6 +652,34 @@ def run_push_cycle():
     # same moment Claude's GitHub index does — both at once (Cole's call 2026-05-26).
     run_drive_sync()
     return result
+
+
+def run_autocommit_cycle():
+    """AUTOSAVE: commit what changed. One commit, no index rebuild, no Drive.
+
+    ── WHY THIS EXISTS (2026-07-21, Cole: "Watcher seems to be having issues?") ──────────────
+    71 commits in one hour, in pairs ~25s apart. One of them (23953ea) contained *nothing but*
+    FILE_INDEX.md and FILE_INDEX_LINK.md — the watcher committing solely because it had
+    rewritten its own index.
+
+    The GENERATED_ARTIFACTS guard was working: the index was not re-TRIGGERING the watcher.
+    The loop came from the other side. Nova, once awake, writes autonomy_state.json,
+    touch_state.json, drives.json, tasks.json every few seconds. Each of those legitimately
+    trips the 10s debounce — and the autosave then ran the FULL run_push_cycle(), which
+    regenerates the index and commits TWICE. So every heartbeat of a living Nova cost two
+    commits and a 594-line rewrite of FILE_INDEX.md, because every URL in it carries the
+    commit hash and the hash had just changed.
+
+    The index churn was never the point of the autosave. The autosave exists so that work is
+    never lost — and that value is real: recovering executive.py and tool_router.py from git
+    yesterday is the only reason a day of work survived being null-corrupted. So keep the
+    commits, drop the index.
+
+    A fresh FILE_INDEX matters exactly when someone wants a Claude session URL, which is a
+    thing Cole asks for explicitly. It does not need rebuilding every ten seconds, and doing so
+    made each autosave twice as expensive AND drowned the real diffs in 594 lines of noise.
+    """
+    return git_push(WATCH_DIR)
 
 
 def run_sync_and_backup():
@@ -950,13 +997,11 @@ if __name__ == "__main__":
             ):
                 handler.last_event_time = 0
                 handler.changed_files.clear()
-                loop_hash = run_push_cycle()
+                # AUTOSAVE, not a session push. No index rebuild, one commit. The session URL
+                # is printed on startup and by --push; reprinting a fresh one every few
+                # seconds was noise wrapped around two unnecessary commits.
+                run_autocommit_cycle()
                 run_manifest_pass()
-                if loop_hash:
-                    print(
-                        f"CLAUDE SESSION URL: https://raw.githubusercontent.com/"
-                        f"cklafou/nova-workspace/{loop_hash}/workspace/general_tools/nova_sync/FILE_INDEX.md"
-                    )
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
