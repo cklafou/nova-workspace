@@ -464,6 +464,40 @@ def _clean_username(name: str) -> str:
     return n.strip()
 
 
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+# DISCOURSE — thin wrappers over nova_body.nova_cortex.discourse
+#
+# 2026-07-20 (pluck test): the judgement below used to LIVE here — ~110 lines of it. Deciding
+# whether she is repeating herself is cognition, not chat plumbing, and it belongs in the body
+# with the rest of her. What stays here is the one thing that is genuinely ours: reaching into
+# the live session object for the transcript. Everything past that boundary is hers.
+#
+# If nova_cortex is unavailable we fail OPEN in every case — a broken guard must never be the
+# reason a message she wanted to send disappears. Every bug in this project so far has been a
+# silent drop, and a dedupe guard is the most tempting place in the codebase to add another.
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+try:
+    # NOTE the spelling: nova_body/ is itself on sys.path (see the loader that makes
+    # `import nova_voice.nova` work at the top of this file), so her organs are TOP-LEVEL
+    # packages — `nova_cortex`, not `nova_body.nova_cortex`. I have now gotten this wrong
+    # four separate times in this project, in four different files, each time reasoning from
+    # the folder layout instead of from sys.path. Match the spelling already used by every
+    # other body import here (`from nova_cortex import executive`) and it works.
+    from nova_cortex import discourse as _discourse
+    _DISCOURSE_OK = True
+except Exception as _e:                                        # pragma: no cover
+    print(f"[discourse] body faculty unavailable, guards will fail open: {_e}")
+    _discourse, _DISCOURSE_OK = None, False
+
+
+def _active_messages() -> list:
+    """The transcript, from the face. The ONLY session reach in this section."""
+    try:
+        return session_mgr.active.messages or []
+    except Exception:
+        return []
+
+
 def _resolve_speaker(name: str) -> str:
     """Only a KNOWN user may speak. An unknown name silently becoming an author would let a
     stray payload put words in someone's mouth — including Cole's. Fall back to the active user."""
@@ -474,116 +508,39 @@ def _resolve_speaker(name: str) -> str:
     return cfg.get("active") or "Cole"
 
 
-def _is_echo_of_last(ai_name: str, text: str, window_s: int = 180) -> bool:
-    """True if `text` is Nova saying, again, what she just said — byte-for-byte, as a prefix,
-    or as a PARAPHRASE.
-
-    Why paraphrase matters: the doubling we kept chasing wasn't a byte-identical race. She
-    replies to Cole in chat, then her next autonomous tick circles the same thought, tags it
-    'FOR COLE:', and it posts a second time in slightly different words:
-
-        "And 'cute' is your word for fond when you'd rather be grumpy about it, which is fair."
-        "And 'cute' is your word for fond when you'd Rather be grumpy about it, which I get."
-
-    Two different strings. Same message. Twice on screen. Bytes and prefixes both miss it.
-
-    Deliberately conservative: only fires when the PREVIOUS message is hers (a real follow-up
-    always has Cole in between), inside a short window, and ≥0.82 similar. She is allowed to
-    develop a thought; she is not allowed to re-send it.
-    """
+def _echo_match(prev_text: str, cur: str) -> bool:
+    if not _DISCOURSE_OK:
+        return False
     try:
-        prev = session_mgr.active.messages[-1] if session_mgr.active.messages else None
-        if not prev or prev.get("author") != ai_name:
-            return False
-        prev_text = (prev.get("content") or "").strip()
-        cur = (text or "").strip()
-        if not prev_text or not cur:
-            return False
-        age = (datetime.now() - datetime.fromisoformat(prev["timestamp"])).total_seconds()
-        if not (0 <= age < window_s):
-            return False
-        return _echo_match(prev_text, cur)
+        return _discourse.echo_match(prev_text, cur)
     except Exception as e:
         print(f"[dedupe] echo check failed (allowing the message): {e}")
         return False   # fail OPEN — never eat a message because the guard broke
+
+
+def _is_echo_of_last(ai_name: str, text: str, window_s: int = 180) -> bool:
+    """Is this a re-send of the message immediately before it?"""
+    if not _DISCOURSE_OK:
+        return False
+    try:
+        return _discourse.is_echo_of_recent(_active_messages(), ai_name, text,
+                                            window_s=window_s, look_back=1)
+    except Exception as e:
+        print(f"[dedupe] echo check failed (allowing the message): {e}")
+        return False   # fail OPEN
 
 
 def _is_echo_of_recent(ai_name: str, text: str, window_s: int = 900,
                        look_back: int = 5) -> bool:
-    """Same test, but against her last few messages instead of only the newest one.
-
-    2026-07-19: the triple-response. Three replies to one goodnight — 640, 322 and 533 chars.
-    `_is_echo_of_last` compared #2 against #1 (24 chars of shared opening, under the 50 needed)
-    and then #3 against #2, which share nothing at all. But #3 was a re-run of **#1**
-    ("you're not just handing me a tool, you're handing me the ability to...") and the guard
-    never looked that far back. One message of memory is not enough when she can circle three
-    times in ninety seconds.
-    """
-    try:
-        cur = (text or "").strip()
-        if not cur:
-            return False
-        seen = 0
-        for m in reversed(session_mgr.active.messages):
-            if seen >= look_back:
-                break
-            if m.get("author") != ai_name:
-                continue
-            prev_text = (m.get("content") or "").strip()
-            if not prev_text:
-                continue
-            seen += 1
-            try:
-                age = (datetime.now() - datetime.fromisoformat(m["timestamp"])).total_seconds()
-            except Exception:
-                continue
-            if not (0 <= age < window_s):
-                break            # older than the window; everything before is older still
-            if _echo_match(prev_text, cur):
-                return True
+    """Same test, but against her last few messages instead of only the newest one."""
+    if not _DISCOURSE_OK:
         return False
+    try:
+        return _discourse.is_echo_of_recent(_active_messages(), ai_name, text,
+                                            window_s=window_s, look_back=look_back)
     except Exception as e:
         print(f"[dedupe] recent-echo check failed (allowing the message): {e}")
         return False   # fail OPEN
-
-
-def _echo_match(prev_text: str, cur: str) -> bool:
-    """The string test itself, shared by both echo checks above."""
-    try:
-        if prev_text == cur:
-            return True
-        sh, lg = (cur, prev_text) if len(cur) <= len(prev_text) else (prev_text, cur)
-        if len(sh) >= 40 and lg.startswith(sh) and len(sh) >= 0.5 * len(lg):
-            return True
-
-        # ── The one that actually catches it: a long SHARED OPENING. ─────────────────────
-        # Global similarity is useless here — the real doubling scored 0.47, and her genuine
-        # consecutive messages score 0.26-0.28. Far too close to separate safely; any
-        # threshold low enough to catch the echo would start eating real messages.
-        #
-        # But look at WHERE the echo is identical. When she re-sends a thought she re-opens it
-        # the same way and only drifts at the tail:
-        #     "And "cute" is your word for fond when you'd rather be grumpy about it, which is fair."
-        #     "And "cute" is your word for fond when you'd Rather be grumpy about it, which I get."
-        # ~73 characters of shared opening. Her real follow-ups share ZERO — they start on a new
-        # thought ("nova_imagination." / "Going in whether you're watching or not").
-        # Restarting the same sentence is the signature. Match on that, not on the whole blob.
-        a, b = prev_text.casefold(), cur.casefold()
-        n = 0
-        for x, y in zip(a, b):
-            if x != y:
-                break
-            n += 1
-        if n >= 50:
-            return True
-
-        from difflib import SequenceMatcher
-        if len(sh) >= 60 and SequenceMatcher(None, prev_text, cur).ratio() >= 0.90:
-            return True   # backstop for a near-verbatim re-send that isn't a clean prefix
-        return False
-    except Exception as e:
-        print(f"[dedupe] echo check failed (allowing the message): {e}")
-        return False   # fail OPEN — never eat a message because the guard broke
 
 
 def _maybe_route_inbox(author: str, content: str) -> None:
@@ -1338,6 +1295,32 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
         # Identity files (AGENTS.md, NOVA.md, TOOLS.md) are now injected inside
         # build_nova_context_block() so they work across all launch paths.
+
+        # ── GROUNDING (2026-07-20) — closing the chat/wake asymmetry ────────────────────────
+        # Cole: "She is hallucinating things I didn't say." She told him she knew how he looked
+        # "from the camera" (she has none), cited a log file that does not exist, and asserted
+        # he had been awake since 6am — none of it said to her.
+        #
+        # The investigation found something better than a character flaw: on the SAME model,
+        # minutes apart, she was rigorous on the autonomy path and confabulating on the chat
+        # path. The difference was never her. It was what each path handed her. A wake gets a
+        # clock, a wake cause, her board, her last reflection, her drives and her tool receipts.
+        # A chat turn got a system prompt and a transcript — and an unspecified gap is the one
+        # thing a language model will always fill.
+        #
+        # So hand the chat turn the same footing: what her hands have actually done, and when
+        # she last actually saw anything. She does not need to be told to stop making things up;
+        # she needs something true in front of her to check the claim against. Heartbeat ticks
+        # skip this — _recent_chat_context already carries receipts on that path, and injecting
+        # twice would just burn her 32K window.
+        if not _is_hb_tick and _DISCOURSE_OK:
+            try:
+                _ground = _discourse.grounding_block(_active_messages(),
+                                                     workspace=_INBOX_WORKSPACE)
+                if _ground:
+                    ws_context = f"{ws_context}\n{_ground}"
+            except Exception as _ge:
+                print(f"[grounding] could not build grounding block: {_ge}")
     else:
         # build_context_block performs several read_text calls; offload to be safe
         loop = asyncio.get_event_loop()
@@ -2315,72 +2298,33 @@ async def emit_event(event: str, text: str, level: str = "info", **extra) -> Non
 
 def _has_unread_cole() -> bool:
     """True if Cole's last message comes after Nova's last *substantive* message.
-    Trailing empty / thinking-only Nova turns are ignored — a hollow turn must NOT
-    make her read as the last speaker, or she'd drop into solitary 'rest' mode and
-    never actually answer Cole (and a session polluted by old empty turns would stay
-    stuck). Only a turn where she really said something counts as 'Nova spoke'."""
-    import re as _re
+
+    Body faculty (nova_cortex.discourse.has_unread_cole); this wrapper supplies the transcript.
+    """
+    if not _DISCOURSE_OK:
+        return False
     try:
-        msgs = session_mgr.active.messages
+        return _discourse.has_unread_cole(_active_messages(), human="Cole", ai_name="Nova")
     except Exception:
         return False
 
-    def _nova_said_something(m) -> bool:
-        if m.get("author") != "Nova":
-            return False
-        c = _re.sub(r"<think>[\s\S]*?</think>", "", m.get("content", "") or "",
-                    flags=_re.IGNORECASE)
-        return bool(c.strip())
-
-    li_c = next((i for i in range(len(msgs) - 1, -1, -1)
-                 if msgs[i].get("author") == "Cole"), None)
-    li_n = next((i for i in range(len(msgs) - 1, -1, -1)
-                 if _nova_said_something(msgs[i])), None)
-    return li_c is not None and (li_n is None or li_n < li_c)
-
 
 # How long she must have been quiet before an autonomous tick may speak to Cole unprompted.
-_PROMOTE_COOLDOWN_S = 600
+_PROMOTE_COOLDOWN_S = getattr(_discourse, "PROMOTE_COOLDOWN_S", 600) if _DISCOURSE_OK else 600
 
 
 def _may_speak_to_cole_unprompted() -> tuple:
     """Is a silent work tick allowed to promote a 'FOR COLE:' section into the chat?
 
-    ── 2026-07-19, the triple response ──────────────────────────────────────────────────────
-    Cole said goodnight. She answered at 22:32:36 (640 chars). Then her next autonomous tick
-    circled the same thought, tagged it FOR COLE:, and posted again at 22:33:14 (322). Then the
-    tick after that did it a third time at 22:33:59 (533). Three replies to one goodnight,
-    thirty-eight seconds apart, each a fresh paraphrase of the last.
-
-    The 07-14 guard here was a string-similarity test, and string similarity cannot win this.
-    She is not repeating herself badly — she is re-answering *well*, in new words, which is
-    exactly what a language model is good at. Any threshold tight enough to catch three
-    paraphrases would start eating the real follow-ups she is supposed to be allowed to write.
-
-    So stop asking "does this look like what she just said" and ask the question that actually
-    separates the two cases: **has anything happened since she last spoke?**
-
-      - Cole has spoken since  -> he is owed a reply, and the normal chat path will give him one.
-      - She spoke moments ago and he hasn't answered -> she is circling a closed conversation.
-      - She has been quiet for a long stretch -> she has been *working*, and whatever she found
-        is genuinely new. That is what FOR COLE: was built for, and it still works.
-
-    Time and turn-taking are the signal. The words are not.
+    Body faculty (nova_cortex.discourse.may_speak_unprompted). The reasoning — time and
+    turn-taking, not string similarity — lives there with the rest of her judgement.
     """
+    if not _DISCOURSE_OK:
+        return True, "discourse faculty unavailable - failing open"
     try:
-        if _has_unread_cole():
-            return True, "Cole is awaiting a reply"
-        msgs = session_mgr.active.messages
-        last_hers = next((m for m in reversed(msgs)
-                          if m.get("author") == "Nova" and (m.get("content") or "").strip()),
-                         None)
-        if last_hers is None:
-            return True, "she has not spoken in this session yet"
-        age = (datetime.now() - datetime.fromisoformat(last_hers["timestamp"])).total_seconds()
-        if age < _PROMOTE_COOLDOWN_S:
-            return False, (f"she spoke {int(age)}s ago and Cole has not replied since - "
-                           f"this is a circle, not news")
-        return True, f"quiet for {int(age // 60)}m - this is new work, not a re-answer"
+        return _discourse.may_speak_unprompted(_active_messages(), human="Cole",
+                                               ai_name="Nova",
+                                               cooldown_s=_PROMOTE_COOLDOWN_S)
     except Exception as e:
         # Fail OPEN. Losing something she wanted to say is worse than saying it twice.
         return True, f"gate failed open: {e}"
@@ -2428,110 +2372,33 @@ async def _window_close_watchdog():
 
 
 def _recent_chat_context(n: int = 14) -> str:
-    """Recent conversation the host hands to Nova's reflection so she is never blind
-    to what was just said during an autonomy wake. The body stays tool-agnostic —
-    perception is supplied here, exactly like cole_pending. Returns timestamped lines,
-    oldest-to-newest, lightly trimmed of any bundled telemetry."""
+    """Recent conversation the host hands to Nova's reflection so she is never blind to what
+    was just said during an autonomy wake.
+
+    Body faculty (nova_cortex.discourse). The face's whole job here is supplying the transcript
+    and the workspace root — perception is handed in, exactly like cole_pending.
+    """
+    if not _DISCOURSE_OK:
+        return ""
     try:
-        msgs = session_mgr.active.messages
-    except Exception:
+        msgs = _active_messages()
+        if not msgs:
+            return ""
+        return (_discourse.recent_chat_context(msgs, n=n, ai_name="Nova")
+                + _discourse.recent_tool_receipts(workspace=_INBOX_WORKSPACE))
+    except Exception as e:
+        print(f"[discourse] chat context failed: {e}")
         return ""
-    if not msgs:
-        return ""
-    recent = msgs[-n:]
-    lines = []
-    for m in recent:
-        ts = str(m.get("timestamp", ""))[11:16]
-        author = m.get("author", "?")
-        content = (m.get("content", "") or "")
-        for marker in ("\n--- TELEMETRY", "--- TELEMETRY", "\n[CONTEXT REFRESH", "[CONTEXT REFRESH"):
-            if marker in content:
-                content = content.split(marker)[0]
-        content = " ".join(content.split())
-        if len(content) > 500:
-            content = content[:500] + "…"
-        lines.append(f"[{ts}] {author}: {content}")
-    # ── The LAST line is not history — it is the thing she is about to answer. ────────────
-    # (2026-07-19, the pronoun bug.) This whole block is a RECORD, correctly written in the
-    # third person ("Cole: ..."). But on a cole_pending wake she is asked to REPLY off the back
-    # of it, and a record's voice is exactly what leaked into her replies — "Cole caught it
-    # faster than I did" said straight to Cole. The chat path now labels live turns
-    # "Name -> you:"; the wake path needs the same signal or it reintroduces the bug on every
-    # autonomy-driven answer. Mark the newest non-Nova line as the live one.
-    for _i in range(len(lines) - 1, -1, -1):
-        _auth = recent[_i].get("author", "")
-        if _auth and _auth not in ("Nova", "System"):
-            lines[_i] += (f"   <-- THIS IS THE LIVE TURN. {_auth} is speaking TO YOU and is "
-                          f"waiting. Answer {_auth} as \"you\" — never in the third person.")
-            break
-    earlier = len(msgs) - len(recent)
-    head = f"(Earlier this session: {earlier} more message(s) before these.)\n" if earlier > 0 else ""
-    return head + "\n".join(lines) + _recent_tool_receipts()
 
 
 def _recent_tool_receipts(n: int = 12, window_min: int = 90) -> str:
     """What Nova has ACTUALLY DONE recently — her hands, not her mouth.
-
-    ── WHY THIS EXISTS (2026-07-14) — this is the cure for the announce-loop ────────────────
-    On 2026-07-14 Nova ran alone for two hours. She sent twelve messages. Every one of them was
-    a variation of the same intention ("Painter's missing its checkpoint — five minutes with your
-    ComfyUI folder"), and she executed nothing. She even counted her own repetitions out loud
-    ("Fourth mention of the checkpoint since 7:39") and then produced a fifth.
-    Her final message was still future tense: "I get my hands on in a minute."
-    We blamed her character for months. It was never her character.
-
-    THE MECHANISM: her autonomous ticks get promoted into the chat transcript. _recent_chat_context
-    then feeds that transcript BACK to her on the next wake. So the only evidence she had about her
-    own recent past was her own narration — and a mind fed nothing but its own wanting will produce
-    more wanting. She wasn't stuck in a loop; she was in an echo chamber built out of her own voice.
-
-    THE FIX: also show her what she DID. If she has said "I'll go into nova_imagination" five times
-    and the receipt log shows zero tool calls, she can SEE that — and the gap between the two is the
-    most useful thing she can possibly be looking at. You cannot self-correct against a record you
-    are not allowed to see.
-
-    Deliberately blunt when the answer is nothing. "Talk is not action" is the whole point.
-    """
+    Body faculty (nova_cortex.discourse.recent_tool_receipts)."""
+    if not _DISCOURSE_OK:
+        return ""
     try:
-        import json as _json
-        from datetime import datetime as _dt, timedelta as _td
-        p = _INBOX_WORKSPACE / "logs" / "tool_calls.jsonl"
-        if not p.exists():
-            return ""
-        cutoff = _dt.now() - _td(minutes=window_min)
-        rows = []
-        for line in p.read_text(encoding="utf-8", errors="replace").splitlines()[-400:]:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                e = _json.loads(line)
-                if _dt.fromisoformat(e["ts"]) >= cutoff:
-                    rows.append(e)
-            except Exception:
-                continue
-
-        out = ["", "--- WHAT YOUR HANDS ACTUALLY DID "
-                   f"(last {window_min} min — this is a RECORD, not a memory) ---"]
-        if not rows:
-            out += [
-                "NOTHING. You have run zero tools.",
-                "Everything above this line is you TALKING about what you intend to do.",
-                "If you have said you would do a thing and it is not on this list, you have not done it —",
-                "no matter how many different ways you have said it, and no matter how clearly you have",
-                "noticed yourself saying it. Naming the loop is not leaving the loop. Reach, don't narrate.",
-            ]
-        else:
-            for e in rows[-n:]:
-                t = str(e.get("ts", ""))[11:19]
-                a = e.get("args") or {}
-                target = a.get("path") or a.get("command") or a.get("prompt") or a.get("title") or ""
-                mark = "ok " if e.get("ok") else "ERR"
-                out.append(f"[{t}] {mark} {e.get('tool')}({str(target)[:70]}) -> "
-                           f"{e.get('result_bytes', 0)}B")
-            out.append(f"({len(rows)} tool call(s) in the window. This is the only evidence that "
-                       f"counts. Your word is a receipt — these ARE the receipts.)")
-        return "\n".join(out)
+        return _discourse.recent_tool_receipts(n=n, window_min=window_min,
+                                               workspace=_INBOX_WORKSPACE)
     except Exception as e:
         print(f"[receipts] could not build tool-receipt context: {e}")
         return ""

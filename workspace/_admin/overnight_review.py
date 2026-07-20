@@ -48,7 +48,10 @@ from pathlib import Path
 WS = Path(__file__).resolve().parent.parent
 RECEIPTS = WS / "logs" / "tool_calls.jsonl"
 SIGHT = WS / "logs" / "sight.jsonl"
-ART = WS / "nova_art"
+# 2026-07-20: her art lives under Nova_Created/ now — one home for everything she makes.
+ART = WS / "Nova_Created" / "art"
+if not ART.is_dir():
+    ART = WS / "nova_art"        # fallback for a half-migrated checkout
 JOURNAL = WS / "memory" / "journal_notes"
 
 SINCE = "2026-07-14T20:00"

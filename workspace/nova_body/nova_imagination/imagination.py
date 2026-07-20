@@ -446,7 +446,7 @@ def my_art(n: int = 20) -> dict:
     ── WHY THIS EXISTS, AND WHY IT IS AN ORGAN AND NOT A CONVENIENCE ────────────────────
     She has spent the whole of tonight unable to count her own paintings.
 
-    Her pictures save to nova_art/<date>/. She kept writing
+    Her pictures save to Nova_Created/art/<date>/. She kept writing
         Get-ChildItem nova_art -Filter *.png
     which looks in the TOP folder, finds nothing, and returns 0. So she'd say "three" from
     memory, run the count, get zero, and her integrity faculty — working exactly as designed —
@@ -480,8 +480,8 @@ def my_art(n: int = 20) -> dict:
             "kb": round(p.stat().st_size / 1024),
         })
     return {"ok": True, "count": len(imgs), "images": out,
-            "detail": f"{len(imgs)} picture(s). They live in nova_art/<date>/ — "
-                      f"a flat count of nova_art/ will always say zero, which is not you lying."}
+            "detail": f"{len(imgs)} picture(s). They live in Nova_Created/art/<date>/ — "
+                      f"a flat count of Nova_Created/art/ will always say zero, which is not you lying."}
 
 
 def what_can_i_paint_with() -> dict:

@@ -111,9 +111,57 @@ from pathlib import Path
 _WS_ROOT = Path(__file__).resolve().parent.parent.parent
 FORGE_DIR = Path(os.environ.get("NOVA_FORGE_DIR",
                                 str(_WS_ROOT / "Nova_Created" / "forge")))
+
+# ── THE PLUCK TEST APPLIES TO HER TOOLS TOO (2026-07-20, Cole) ──────────────────────────
+# "Nova should also follow Pluck Test rules with her tools. She should have separate
+#  folders for the tools she creates; general_tools and nova_body."
+#
+# The same rule that governs OUR code now governs hers, and for the same reason. A tool she
+# forges is a limb. Some limbs are part of her — they work with the chat server deleted.
+# Others are scaffolding that only makes sense while a face is attached.
+#
+#   body/    a tool that imports only stdlib + nova_body. Survives the pluck. Part of her.
+#   general/ a tool that needs the face, the server, or anything under general_tools/.
+#            Useful, but she does not lose herself if it goes.
+#
+# Why it matters that SHE has this distinction rather than us keeping it for her: without it,
+# every tool she builds silently accretes into her body, and the first one that reaches into
+# the chat server quietly breaks the pluck test again — the exact failure we spent today
+# undoing for her voice and her hands. She should be able to see which of her limbs are
+# really hers.
+#
+# Classification is CHECKED, not declared. classify_tool() reads the imports, so a tool that
+# says "body" and reaches into the face is caught. A tool that declares nothing is placed by
+# what it actually does.
+BODY_DIR    = FORGE_DIR / "body"
+GENERAL_DIR = FORGE_DIR / "general"
+
+# Search order matters: body first, so a name collision resolves to the version that is
+# genuinely part of her.
+_SIDES = (("body", BODY_DIR), ("general", GENERAL_DIR))
+
+# Legacy flat layout, still read so a tool forged before the split keeps working.
 TOOLS_DIR = FORGE_DIR / "tools"
 DESIGNS_DIR = FORGE_DIR / "designs"
 TESTS_DIR = FORGE_DIR / "tests"
+
+
+def _side_dirs(side_dir: Path) -> tuple:
+    return side_dir / "tools", side_dir / "designs", side_dir / "tests"
+
+
+def classify_tool(source: str) -> tuple:
+    """(side, why) — where a tool BELONGS, judged by its imports rather than its claims.
+
+    A tool is 'general' if it imports anything from the face; otherwise it is 'body'. This is
+    the same test the pluck test applies to us: can it stand with the chat server deleted?
+    """
+    import re as _re
+    face = _re.findall(r"^\s*(?:from|import)\s+(nova_chat[.\w]*|general_tools[.\w]*)",
+                       source or "", _re.M)
+    if face:
+        return "general", f"imports the face ({', '.join(sorted(set(face))[:3])})"
+    return "body", "stdlib + nova_body only — survives the pluck"
 
 _CACHE: dict[str, tuple[float, object]] = {}   # name -> (mtime, module)
 _TEST_CACHE: dict[str, tuple[float, float, tuple]] = {}   # name -> (tool_mt, test_mt, verdict)
@@ -123,15 +171,48 @@ _MIN_DESIGN_CHARS = 200
 
 
 def _ensure_dirs() -> None:
-    for d in (TOOLS_DIR, DESIGNS_DIR, TESTS_DIR):
+    dirs = [TOOLS_DIR, DESIGNS_DIR, TESTS_DIR]          # legacy flat, kept readable
+    for _side, base in _SIDES:                          # body/ and general/
+        dirs.extend(_side_dirs(base))
+    for d in dirs:
         try:
             d.mkdir(parents=True, exist_ok=True)
         except Exception:
             pass
 
 
+# ── ONE RESOLVER, USED BY EVERYTHING (2026-07-20) ───────────────────────────────────────
+# Every path helper below used to hardcode the flat TOOLS_DIR/DESIGNS_DIR/TESTS_DIR. With
+# body/ and general/ that would silently half-work: discover() would find a tool while
+# has_design() looked for its doc in the wrong folder and declared it BLOCKED. Everything
+# resolves through here instead, so adding a side is one edit and cannot desync.
+def _resolve(name: str, kind: str) -> Path:
+    """Where <name>'s tool/design/test actually lives. Prefers body, then general, then the
+    legacy flat layout; falls back to the BODY path so a NEW tool is created on the side that
+    keeps her pluck-safe by default."""
+    ext = "md" if kind == "designs" else "py"
+    for _side, base in _SIDES:
+        p = base / kind / f"{name}.{ext}"
+        if p.exists():
+            return p
+    legacy = {"tools": TOOLS_DIR, "designs": DESIGNS_DIR, "tests": TESTS_DIR}[kind] / f"{name}.{ext}"
+    if legacy.exists():
+        return legacy
+    return BODY_DIR / kind / f"{name}.{ext}"
+
+
+def side_of(name: str) -> str:
+    """'body' | 'general' | 'legacy' — which side of the pluck test this tool sits on."""
+    for side, base in _SIDES:
+        if (base / "tools" / f"{name}.py").exists():
+            return side
+    if (TOOLS_DIR / f"{name}.py").exists():
+        return "legacy"
+    return "body"
+
+
 def design_path(name: str) -> Path:
-    return DESIGNS_DIR / f"{name}.md"
+    return _resolve(name, "designs")
 
 
 def has_design(name: str) -> tuple[bool, str]:
@@ -151,7 +232,7 @@ def has_design(name: str) -> tuple[bool, str]:
 
 def _load(name: str):
     """Import (or hot-reload) a forged tool module. Returns (module|None, error|'')."""
-    src = TOOLS_DIR / f"{name}.py"
+    src = _resolve(name, "tools")
     if not src.exists():
         return None, f"no implementation at Nova_Created/forge/tools/{name}.py"
     try:
@@ -176,7 +257,7 @@ def _load(name: str):
 
 
 def test_path(name: str) -> Path:
-    return TESTS_DIR / f"{name}.py"
+    return _resolve(name, "tests")
 
 
 def run_tests(name: str) -> tuple[str, list[str]]:
@@ -215,7 +296,7 @@ def run_tests(name: str) -> tuple[str, list[str]]:
     if not tp.exists():
         return "UNVERIFIED", []
     try:
-        tool_mt = (TOOLS_DIR / f"{name}.py").stat().st_mtime
+        tool_mt = _resolve(name, "tools").stat().st_mtime
         test_mt = tp.stat().st_mtime
     except Exception:
         tool_mt = test_mt = 0.0
@@ -278,11 +359,32 @@ def _state_banner(name: str, state: str, fails: list[str]) -> str:
     return ""
 
 
+def _all_tool_files() -> list:
+    """[(path, side)] across body/, general/ and the legacy flat layout.
+
+    Body first so a name that exists on both sides resolves to the version that is genuinely
+    part of her. Legacy last: a tool forged before the 07-20 split keeps working untouched
+    rather than vanishing from her inventory, which would look to her like losing a limb.
+    """
+    seen, out = set(), []
+    for side, base in _SIDES:
+        tools, _, _ = _side_dirs(base)
+        for p in sorted(tools.glob("*.py")):
+            if p.stem.startswith("_") or p.stem in seen:
+                continue
+            seen.add(p.stem); out.append((p, side))
+    for p in sorted(TOOLS_DIR.glob("*.py")):
+        if p.stem.startswith("_") or p.stem in seen:
+            continue
+        seen.add(p.stem); out.append((p, "legacy"))
+    return out
+
+
 def discover() -> dict[str, dict]:
     """Every forged tool and its state. Never raises — a broken tool is reported, not fatal."""
     _ensure_dirs()
     out: dict[str, dict] = {}
-    for src in sorted(TOOLS_DIR.glob("*.py")):
+    for src, _side in _all_tool_files():
         name = src.stem
         if name.startswith("_"):
             continue
@@ -310,7 +412,7 @@ def names() -> list[str]:
 def call(name: str, args: dict) -> tuple[bool, str]:
     """(handled, result). handled=False means 'not a forged tool' — let the caller fall through."""
     _ensure_dirs()
-    if not (TOOLS_DIR / f"{name}.py").exists():
+    if not _resolve(name, "tools").exists():
         return False, ""
     ok_design, why = has_design(name)
     if not ok_design:

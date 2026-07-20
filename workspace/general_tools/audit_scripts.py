@@ -339,6 +339,15 @@ def check_unreferenced(files: list[Path], graph: dict[str, set[str]]) -> list[di
         # Skip scripts launched from .cmd/.bat (entry points even if never imported)
         if f.name in _cmd_entries:
             continue
+        # Skip test files. A test is an entry point BY DEFINITION — it exists to be run, and
+        # nothing importing it is the correct state, not a smell. (2026-07-20: this fired on
+        # nova_body/tests/test_discourse.py the moment it was written. An audit that calls a
+        # brand-new passing test suite "unreferenced" is teaching exactly the wrong lesson —
+        # the fix a hurried reader reaches for is deleting the test.)
+        _rel_f = _rel(f)
+        if (f.name.startswith("test_") or f.name.endswith("_test.py")
+                or "/tests/" in _rel_f):
+            continue
         # Skip entry points
         try:
             source = f.read_text(encoding="utf-8", errors="replace")
@@ -650,6 +659,64 @@ def _rel(path: Path) -> str:
         return str(path).replace("\\", "/")
 
 
+def _code_only(source: str) -> str:
+    """Source with comments and DOCSTRINGS blanked out — for checks that must not fire on prose.
+
+    THE PROBLEM THIS SOLVES: a substring check over raw source cannot tell the difference
+    between code that does a dangerous thing and a comment that WARNS about the dangerous
+    thing. In a codebase where the comments are largely incident write-ups, that failure mode
+    is not rare — it is guaranteed, and it punishes exactly the documentation that keeps this
+    project from repeating itself.
+
+    ── WHY *ONLY* COMMENTS AND DOCSTRINGS ───────────────────────────────────────────────────
+    The obvious implementation blanks every STRING token. It is wrong, and quietly so: the
+    thing these checks hunt for IS a string literal —
+
+        p = ws / "memory/drives.json"          # <- the hazard, a STRING token
+        \"\"\"...we once clobbered memory/drives.json...\"\"\"   # <- prose, also a STRING token
+
+    Blank both and the check still runs, still reports zero findings, and looks like it passed.
+    That is the exact silent-drop shape GOTCHAS.md warns about, built into the tool meant to
+    find them. So: comments always, and a string ONLY when it stands alone as a statement,
+    which is what a docstring (or a block-comment string) is. A string being *used* — assigned,
+    passed, compared — is code and stays.
+
+    Blanks rather than deletes so every line number stays correct for reporting. Uses tokenize
+    rather than a regex because the hard cases are nested quotes, escapes, f-strings and
+    triple-quotes — precisely where hand-rolled matchers break. On a tokenize failure we return
+    the raw source: over-reporting beats silently inspecting nothing.
+    """
+    import io
+    import tokenize
+    try:
+        out = []
+        # A docstring is a STRING whose logical line contains nothing else. Track whether
+        # anything real has been emitted since the last statement boundary.
+        at_stmt_start = True
+        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+            ttype, text = tok.type, tok.string
+            if ttype == tokenize.COMMENT:
+                out.append("\n" * text.count("\n"))
+                continue
+            # An f-string is NEVER a docstring — Python does not bind one to __doc__ — so a
+            # bare f-string statement is executable text and must stay visible.
+            _is_fstring = text[:3].lower().lstrip("rbu").startswith("f")
+            if ttype == tokenize.STRING and at_stmt_start and not _is_fstring:
+                out.append("\n" * text.count("\n"))     # docstring / block-comment string
+                continue
+            out.append(text)
+            if ttype in (tokenize.NEWLINE, tokenize.NL, tokenize.INDENT,
+                         tokenize.DEDENT, tokenize.ENCODING):
+                at_stmt_start = True
+            elif ttype == tokenize.OP and text == ";":
+                at_stmt_start = True
+            elif ttype not in (tokenize.ENDMARKER,):
+                at_stmt_start = False
+        return "".join(out)
+    except Exception:
+        return source          # fail LOUD, not silent
+
+
 SEV_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}
 SEV_ICON  = {"CRITICAL": "✗ ", "HIGH": "⚠ ", "MEDIUM": "△ ", "LOW": "·", "INFO": "·"}
 
@@ -831,8 +898,21 @@ def check_test_writes_state(files: list[Path]) -> list[dict]:
             source = f.read_text(encoding="utf-8", errors="replace")
         except Exception:
             continue
+        # Search CODE ONLY, never comments or docstrings.
+        #
+        # 2026-07-20: this check fired on nova_body/tests/test_discourse.py, whose header
+        # explains the drives.json incident in prose and touches nothing. A test that documents
+        # the very mistake this rule exists to prevent got flagged FOR documenting it — which
+        # would teach the next person to stop writing the explanation rather than stop making
+        # the mistake. That is a checker actively making the codebase worse.
+        #
+        # Fifth naive-matcher false positive in this tool. The pattern is always the same:
+        # grep the raw source, and prose that *discusses* a hazard reads identically to code
+        # that *creates* one. Strip to executable text first; it is three lines and it ends the
+        # whole class.
+        code = _code_only(source)
         for target in _HER_STATE:
-            if target in source.replace("\\", "/"):
+            if target in code.replace("\\", "/"):
                 issues.append({
                     "severity": "HIGH",
                     "code":     "TEST_WRITES_STATE",

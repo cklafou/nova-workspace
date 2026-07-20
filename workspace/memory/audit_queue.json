@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-20T14:57:40+09:00",
+  "updated_at": "2026-07-21T00:21:30+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -13,7 +13,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "1e2abd62",
@@ -26,7 +26,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "c2b4ed7a",
@@ -39,7 +39,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "df5fe1cf",
@@ -52,7 +52,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "590a67b9",
@@ -65,7 +65,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "cc5236b8",
@@ -78,7 +78,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "bc9bce94",
@@ -91,7 +91,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "7b652c63",
@@ -104,7 +104,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "54d172f0",
@@ -117,7 +117,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "79b120c8",
@@ -130,7 +130,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "e7764ab8",
@@ -143,7 +143,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "673c6990",
@@ -156,7 +156,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "554a4b3b",
@@ -169,7 +169,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "acaa796d",
@@ -182,7 +182,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "d3ed61cc",
@@ -195,7 +195,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "e23e1b3f",
@@ -208,7 +208,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "f75309c1",
@@ -221,7 +221,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "7017089c",
@@ -234,7 +234,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "8039dd29",
@@ -247,7 +247,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "c604f972",
@@ -260,7 +260,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "7e793b40",
@@ -273,7 +273,7 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "d5275cd6",
@@ -286,227 +286,227 @@
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
     },
     {
       "id": "76086567",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "memory/journal_notes/2025-07-19.md",
       "new_path": "memory/archive/2025-07-19_misfiled_note.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "7f26f0c4",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "Orient/Calls_Master_Index.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "5785fa29",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "Orient/SECURITY.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "a7a8e63e",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "Orient/TOOLS.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "a063db98",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "general_tools/nova_console/calls.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "9a44472d",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "memory/archive/2026-05_superseded_entries.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "077dc7aa",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "memory/archive/JOURNAL_before_cleanup_2026-07-20.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "7a8f07bf",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "memory/reports/AUDIT_QUEUE_2026-07-20.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "bb9d8a4d",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "memory/reports/AUDIT_TOOL_FIX_2026-07-20.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "2437b783",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "memory/reports/CHORES_AND_ADMIN_2026-07-20.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "91d41db3",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "memory/reports/JOURNAL_AUDIT_2026-07-20.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "08436b41",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "nova_body/nova_cortex/principals.py",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "55eac311",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "nova_body/nova_forge/calls.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "d38132c2",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "nova_body/nova_lancedb/calls.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "30a5b63c",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:12:45+09:00",
       "commit": "115b4f87",
       "old_path": null,
       "new_path": "nova_body/nova_play/calls.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "5a51de73",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T06:23:18+09:00",
       "commit": "9b4037ad",
       "old_path": null,
       "new_path": "nova_body/nova_logs/retention.py",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "71b4ec22",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T08:37:28+09:00",
       "commit": "5a51871c",
       "old_path": null,
       "new_path": "memory/reports/CONFABULATION_2026-07-20.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
@@ -520,7 +520,7 @@
       "confidence": 0.99,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/audit_queue.py — fix that reference, then this closes itself."
     },
     {
       "id": "6b4fb2df",
@@ -533,45 +533,45 @@
       "confidence": 0.99,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/calls_order.py — fix that reference, then this closes itself."
     },
     {
       "id": "5f9f33e3",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T08:45:00+09:00",
       "commit": "8196106e",
       "old_path": null,
       "new_path": "nova_body/nova_voice/__init__.py",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:28+09:00",
       "notes": null
     },
     {
       "id": "1e22322c",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T14:55:40+09:00",
       "commit": "a9e26ad2",
       "old_path": "nova_art/2026-07-19/nova_self_033541_66590.png",
       "new_path": "Nova_Created/art/2026-07-19/nova_self_033541_66590.png",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:21:29+09:00",
       "notes": null
     },
     {
       "id": "cc83f24c",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T14:55:40+09:00",
       "commit": "a9e26ad2",
       "old_path": "nova_body/nova_forge/designs/comfy_inspect.md",
       "new_path": "Nova_Created/forge/designs/comfy_inspect.md",
       "confidence": 0.96,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:21:30+09:00",
       "notes": null
     },
     {
@@ -585,7 +585,7 @@
       "confidence": 0.98,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/audit_scripts.py — fix that reference, then this closes itself."
     },
     {
       "id": "924d0c6e",
@@ -598,32 +598,32 @@
       "confidence": 0.98,
       "resolved_by": null,
       "resolved_at": null,
-      "notes": null
+      "notes": "STILL REFERENCED by general_tools/audit_scripts.py — fix that reference, then this closes itself."
     },
     {
       "id": "906a9bab",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T14:57:40+09:00",
       "commit": "b5f3a70a",
       "old_path": null,
       "new_path": "Nova_Created/forge/designs/zz_probe.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:30+09:00",
       "notes": null
     },
     {
       "id": "2df123ff",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-07-20T14:57:40+09:00",
       "commit": "b5f3a70a",
       "old_path": null,
       "new_path": "Nova_Created/forge/tools/zz_probe.py",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T00:21:30+09:00",
       "notes": null
     }
   ],

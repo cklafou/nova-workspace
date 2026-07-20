@@ -169,6 +169,137 @@ def _prune(data: dict) -> None:
     data["items"] = [i for i in items if i["id"] not in remove_ids]
 
 
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+# RECONCILE — the queue closes itself when the work is actually done
+#
+# ── WHY (2026-07-20, Cole: "clear her queue completely and look into WHY that queue exists
+#    and what is needed to be done to fix this problem for the future") ──────────────────────
+#
+# Clearing it was the easy half. The queue refills because of a category error in what it
+# records. It logs FILE OPERATIONS — every rename, every delete, every new file — and marks
+# each one `pending` until a human personally signs it off. Nothing else closes an item;
+# `resolve()` has exactly one caller (restructure.py --rename), which has never run
+# automatically. So the queue only ever grows, and the number in the audit report measures
+# how much work has happened, not how much is left.
+#
+# It hit 6,563 items that way. Today it refilled to 48 within hours of being emptied — and
+# every one of those 48 was a file operation Cole had explicitly ordered that morning. The
+# audit was asking him to confirm that the trash he told me to take out was meant to go out.
+#
+# But look at what the queue is FOR: catching the moment a file moves and leaves a stale
+# reference pointing at where it used to be. That is a real hazard and worth a real alarm.
+# The thing is, it is a hazard about REFERENCES, not about operations:
+#
+#     a rename nothing points at   -> already handled, close it
+#     a rename something points at -> genuinely broken, RAISE IT
+#     a brand-new file             -> cannot dangle anything, never actionable
+#
+# So stop asking "did a human bless this move?" and ask "is anything still pointing at the old
+# path?" That question has an answer the machine can compute, it needs no human in the loop,
+# and it goes false on its own the moment the references get fixed. A queue whose items expire
+# when the underlying problem is solved stays honest by construction. One whose items expire
+# only when a person clicks something becomes 6,563 rows of noise, and then it doesn't matter
+# how good the alarm was, because nobody is reading it.
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+
+# Where a stale reference could actually hurt. Scanning the whole tree (models/, LanceDB,
+# node_modules) would take minutes and find nothing.
+_REF_SCAN_DIRS  = ("general_tools", "nova_body", "Orient", "SELF", "Tasking", "Nova_Created")
+_REF_SCAN_EXTS  = (".py", ".md", ".json", ".ps1", ".cmd", ".bat", ".txt", ".html", ".js")
+_REF_SCAN_SKIP  = ("__pycache__", ".git", "node_modules", "_admin/Trash", "_archive",
+                   "nova_memory_db", "prompt_cache", "logs", "models", "llama")
+
+
+def _still_referenced(old_path: str, root: Path) -> Optional[str]:
+    """Return the first file that still mentions `old_path`, or None.
+
+    Matches on the path AND on the bare module stem for .py files, because a broken import
+    reads `from nova_chat import server`, never `general_tools/nova_chat/server.py`. Checking
+    only the full path would let every import breakage through — which is the exact failure
+    this queue exists to catch, so getting it wrong here would make the whole thing decorative.
+    """
+    if not old_path:
+        return None
+    needles = {old_path.replace("\\", "/")}
+    p = Path(old_path)
+    if p.suffix == ".py" and p.stem not in ("__init__", "__main__"):
+        needles.add(p.stem)
+    self_rel = QUEUE_PATH.name
+
+    for d in _REF_SCAN_DIRS:
+        base = root / d
+        if not base.is_dir():
+            continue
+        for f in base.rglob("*"):
+            if not f.is_file() or f.suffix.lower() not in _REF_SCAN_EXTS:
+                continue
+            rel = str(f.relative_to(root)).replace("\\", "/")
+            if any(s in rel for s in _REF_SCAN_SKIP) or f.name == self_rel:
+                continue
+            try:
+                text = f.read_text(encoding="utf-8", errors="replace")
+            except Exception:
+                continue
+            for n in needles:
+                if len(n) < 4:
+                    continue
+                if n in text:
+                    return rel
+    return None
+
+
+def reconcile(root: Optional[Path] = None, verbose: bool = True) -> dict:
+    """Close every pending item that no longer describes a live problem.
+
+    Returns {"closed_new": n, "closed_clean": n, "still_broken": [...]}.
+    Safe to run repeatedly; it only ever moves items pending -> resolved.
+    """
+    root = Path(root) if root else WORKSPACE_DIR
+    data = load()
+    out = {"closed_new": 0, "closed_clean": 0, "still_broken": []}
+
+    for item in data["items"]:
+        if item.get("status") != "pending":
+            continue
+
+        # A new file cannot leave a dangling reference. There is nothing to review, and
+        # 19 of today's 48 were exactly this.
+        if item.get("event_type") == "new":
+            item.update(status="resolved", resolved_by="reconcile: new file, nothing can dangle",
+                        resolved_at=_now())
+            out["closed_new"] += 1
+            continue
+
+        old = item.get("old_path")
+        if not old:
+            item.update(status="resolved", resolved_by="reconcile: no old path to dangle",
+                        resolved_at=_now())
+            out["closed_clean"] += 1
+            continue
+
+        hit = _still_referenced(old, root)
+        if hit is None:
+            item.update(status="resolved",
+                        resolved_by="reconcile: no remaining references to the old path",
+                        resolved_at=_now())
+            out["closed_clean"] += 1
+        else:
+            # THIS is what the queue was built to find. Keep it pending and say where.
+            item["notes"] = (f"STILL REFERENCED by {hit} — fix that reference, "
+                             f"then this closes itself.")
+            out["still_broken"].append({"id": item["id"], "old_path": old, "referenced_by": hit})
+
+    save(data)
+    if verbose:
+        n = out["closed_new"] + out["closed_clean"]
+        print(f"[audit_queue] reconcile: closed {n} item(s) "
+              f"({out['closed_new']} new-file, {out['closed_clean']} no-longer-referenced); "
+              f"{len(out['still_broken'])} genuinely dangling")
+        for b in out["still_broken"]:
+            print(f"    DANGLING  {b['old_path']}  still referenced by  {b['referenced_by']}")
+    return out
+
+
 # ── Public API ─────────────────────────────────────────────────────────────────
 
 def add_item(

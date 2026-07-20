@@ -42,8 +42,13 @@ CORE_DIR = SELF_DIR / "core"
 REF_DIR = SELF_DIR / "reference"
 DRY_RUN = "--dry" in sys.argv
 
+# 2026-07-20: dropped ".clawhub" (a retired tool, gone from this project) and added the
+# directories that actually cause trouble now — the Chrome app profile whose locked SQLite
+# files have hung two other tools, the LanceDB store, and the model/llama trees.
 EXCLUDE_DIRS = {"__pycache__", ".git", "node_modules", "backups", "screenshots",
-                ".clawhub", "_archive", "_admin"}
+                "_archive", "_admin", "nova_memory_db", "prompt_cache",
+                "models", "llama", "logs"}
+EXCLUDE_DIR_PREFIXES = (".nova_app_profile",)
 KNOWN_PORTS = {"8080", "8765"}
 STALE_DAYS = 90
 TOKEN = "@nova:"

@@ -158,7 +158,12 @@ def main():
     print(f"  reaches  : {len(rec)}  ({sum(1 for r in rec if r.get('ok'))} ok)")
     if tools:
         print(f"  doing    : " + ", ".join(f"{t}×{n}" for t, n in tools.most_common(6)))
-    art = len(list((WS / "nova_art").rglob("*.png"))) if (WS / "nova_art").is_dir() else 0
+    # 2026-07-20: her art moved to Nova_Created/art/ (everything she makes lives under
+    # Nova_Created). Old path kept as a fallback so a half-migrated checkout still counts.
+    _art_dir = WS / "Nova_Created" / "art"
+    if not _art_dir.is_dir():
+        _art_dir = WS / "nova_art"
+    art = len(list(_art_dir.rglob("*.png"))) if _art_dir.is_dir() else 0
     print(f"  pictures : {art}")
 
     if problems:

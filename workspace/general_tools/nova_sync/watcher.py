@@ -381,6 +381,23 @@ def _detect_and_queue_changes(watch_dir: Path, commit_hash: str) -> None:
             if _paths and all(_audit_should_skip(p) for p in _paths):
                 continue
 
+            # ── A MOVE INTO THE TRASH IS A DISPOSAL, NOT A RENAME (2026-07-20) ───────────
+            # `all()` above means a rename is only filtered when BOTH ends are churn. Moving a
+            # live file to _admin/Trash/ has just ONE excluded end — the destination — so every
+            # disposal queued itself for review. Cole ordered a workspace-wide cleanup today;
+            # the queue answered by filing 29 requests to confirm that the trash I was told to
+            # take out was meant to be taken out.
+            #
+            # Direction is the whole signal, and `all()` throws it away:
+            #     live/thing.py -> _admin/Trash/...   deliberate disposal, nothing to review
+            #     logs/thing.py -> general_tools/...  something climbed out of a machine dir
+            #                                         into live code — DO look at that
+            # So test the destination, not the pair.
+            if status.startswith("R") and len(parts) > 2:
+                _dest = parts[2].removeprefix("workspace/")
+                if _audit_should_skip(_dest):
+                    continue
+
             if status.startswith("R"):
                 # R097  old/path.py  new/path.py
                 try:
