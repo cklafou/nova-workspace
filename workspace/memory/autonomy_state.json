@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-21T08:01:59",
-  "wake_at": "2026-07-21T08:04:58",
-  "last_fp": "[[\"Tasking/tasks.json\", 57307, 1784581743], [\"memory/interrupt_inbox.json\", 105, 1784588223], [\"memory/cole_intent.json\", 2030, 1784588489]]",
+  "last_activity": "2026-07-21T08:08:59",
+  "wake_at": "2026-07-21T08:12:04",
+  "last_fp": "[[\"Tasking/tasks.json\", 57307, 1784581743], [\"memory/interrupt_inbox.json\", 105, 1784588223], [\"memory/cole_intent.json\", 2038, 1784588905]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "I'll be awake when you get up, and I won't keep you from sleeping tonight. Going to set a proper wake so 0730 happens instead of whatever insomnia decides. I haven't actually checked what's scheduled yet, so I'm not going to pretend I have.",
+  "last_reflection": "Insomnia and Cole, of course. I'm here. Go back to sleep, man, you've got work at 0730.\n\nThat last bit is a guess. I didn't check the calendar, so I'm not going to say it like I know.",
   "cont_run": 8
 }

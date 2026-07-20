@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-21T08:05:22",
+  "generated": "2026-07-21T08:10:08",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 30,
   "described": 28,
@@ -296,7 +296,7 @@
       "path": "nova_body/nova_senses",
       "purpose": "Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED (GUI-automation phase, not yet wired): desktop vision (eyes, vision) and UI proprioception.",
       "files": 9,
-      "lines": 2232,
+      "lines": 2249,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -685,7 +685,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 11,
-      "lines": 6347,
+      "lines": 6370,
       "age_days": 0,
       "ports_bind": [
         "8765"

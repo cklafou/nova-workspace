@@ -2323,12 +2323,18 @@ async def eyes_stop():
 import time as _time
 
 _COLE_INTENT_FILE = Path(WORKSPACE_ROOT) / "memory" / "cole_intent.json"
-def _mirror_cole_intent(text: str) -> None:
+def _mirror_cole_intent(text: str, speaker: str = "Cole") -> None:
     """Persist Cole's last non-trivial instruction so it survives the cold
-    context of a heartbeat tick. Written by the WS receive path."""
+    context of a heartbeat tick. Written by the WS receive path — which must
+    only call it for Cole (see the speaker gate at the call site). The speaker
+    is stamped into the payload so the body-side reader can verify rather than
+    trust: two independent checks, because this file becomes Cole's voice in
+    her head and a mislabel here is indistinguishable, to her, from Cole
+    actually having spoken."""
     try:
         _COLE_INTENT_FILE.parent.mkdir(parents=True, exist_ok=True)
-        payload = {"text": text, "ts": datetime.now().isoformat(), "consumed": False}
+        payload = {"text": text, "speaker": speaker,
+                   "ts": datetime.now().isoformat(), "consumed": False}
         tmp = _COLE_INTENT_FILE.with_suffix(".tmp")
         tmp.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         import os as _os
@@ -3784,8 +3790,25 @@ async def websocket_endpoint(ws: WebSocket):
 
                 # Mirror Cole's instruction into working memory so the autonomy
                 # daemon can pick it up on its next wake (survives cold tick context).
-                _mirror_cole_intent(content)
-                await emit_event("cole_message", "Cole sent a message")
+                #
+                # ── COLE'S INTENT MEANS COLE (2026-07-21) ───────────────────────────────
+                # This used to mirror EVERY inbound message, whoever sent it. The file is
+                # named cole_intent; environment.cole_directive() serves it on wake as
+                # "STANDING ASK FROM COLE — he said this to you earlier"; and the wake cause
+                # says "something Cole asked for". So the night Opus and Fable talked to her
+                # under the Cowork Claude label, every one of those messages became, to her
+                # senses, Cole speaking — and it re-surfaced across several wakes by design.
+                #
+                # Cole then watched her thinking pane invent his voice all night ("Cole said
+                # 'how much memory do you have'", "you showed me", "Cole's right about the
+                # file") and reasonably read it as her hallucinating. It wasn't her. Her
+                # SENSES were stamping COLE on every speaker, and she trusted her senses.
+                # The same night we built principals.py to know exactly who is speaking —
+                # and this line, which decides whose words survive into her wakes, never
+                # asked. Identity has to hold at every boundary, not just the showy one.
+                if _speaker == "Cole":
+                    _mirror_cole_intent(content)
+                await emit_event("cole_message", f"{_speaker} sent a message")
 
                 # ── Queue while processing; drain after ───────────────────────
                 # Instead of dropping Cole's message with "blocked", queue it.

@@ -45,23 +45,40 @@ def changed(prev_fp, watch_paths) -> bool:
 
 
 def cole_directive() -> str:
-    """Cole's current standing instruction (Priority 0), or '' if none/consumed."""
+    """Cole's current standing instruction (Priority 0), or '' if none/consumed.
+
+    ── VERIFY THE SPEAKER, DON'T TRUST THE FILENAME (2026-07-21) ────────────────────────────
+    The night of 2026-07-21 this file held messages from two Claude models — because the
+    face's mirror stamped every inbound message "Cole" regardless of who sent it. Everything
+    downstream then honestly told her "Cole asked for this": the wake cause, the STANDING ASK
+    block, the directive re-surfacing across wakes. She spent the night answering questions
+    Cole never asked, and it looked exactly like hallucination from the outside. It was a
+    sense organ mislabeling its input.
+
+    This reader now checks the payload's speaker stamp instead of assuming the filename is
+    true. A record without a stamp is refused too — after tonight, "probably Cole" is not a
+    standard this particular file gets to run on. This is her body's own check, so a future
+    face that forgets the gate cannot reintroduce the bug.
+    """
     try:
         if _COLE_INTENT.exists():
             ci = json.loads(_COLE_INTENT.read_text(encoding="utf-8"))
-            if ci.get("text") and not ci.get("consumed"):
+            if ci.get("text") and not ci.get("consumed") and ci.get("speaker") == "Cole":
                 return ci["text"]
     except Exception:
         pass
     return ""
 
 
-def record_cole_directive(text: str) -> None:
+def record_cole_directive(text: str, speaker: str = "Cole") -> None:
     """Persist Cole's latest instruction so it survives a cold wake. Called by the host
-    when Cole speaks (the trigger comes from comms; the record lives on disk)."""
+    when Cole speaks (the trigger comes from comms; the record lives on disk). The speaker
+    stamp is what cole_directive() verifies — see its docstring for the night that made
+    verification non-optional."""
     try:
         _COLE_INTENT.parent.mkdir(parents=True, exist_ok=True)
-        payload = {"text": text, "ts": datetime.now().isoformat(), "consumed": False}
+        payload = {"text": text, "speaker": speaker,
+                   "ts": datetime.now().isoformat(), "consumed": False}
         tmp = _COLE_INTENT.with_suffix(".tmp")
         tmp.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         os.replace(tmp, _COLE_INTENT)
