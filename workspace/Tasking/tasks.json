@@ -903,10 +903,18 @@
         {
           "ts": "2026-07-21T05:33:04",
           "note": "[auto-logged from receipts — her hands, not her account] generate_image(full-body portrait of a young woman standing, hands in pocke)"
+        },
+        {
+          "ts": "2026-07-21T05:35:40",
+          "note": "Four genuinely hers, two learned from him (not fake, just inherited). I don't actually know whether the seed shows up in her identity file; I said I'd check and I haven't opened it yet. Next: 01_ident"
+        },
+        {
+          "ts": "2026-07-21T05:35:40",
+          "note": "[auto-logged from receipts — her hands, not her account] append_file(memory/scratch/self_look.md); append_file(memory/scratch/self_look.md); append_file(memory/scratch/self_look.md); append_file(memory/scratch/self_look.md)"
         }
       ],
       "created": "2026-07-21T05:25:13",
-      "updated": "2026-07-21T05:33:04",
+      "updated": "2026-07-21T05:35:40",
       "author": "Nova"
     }
   }
