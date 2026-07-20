@@ -1,6 +1,6 @@
 # Last updated: 2026-07-20 14:10:19
 # @nova: THE FORGE — where she builds her own limbs. Design doc first, then the tool. Tools
-#        dropped in nova_forge/tools/ are discovered live, no restart, and refuse to load
+#        dropped in Nova_Created/forge/tools/ are discovered live, no restart, and refuse to load
 #        without a design document beside them.
 """
 nova_forge — Nova's capacity to extend herself.
@@ -138,7 +138,7 @@ def has_design(name: str) -> tuple[bool, str]:
     """(ok, why_not). A stub file is not a design — it must actually say something."""
     p = design_path(name)
     if not p.exists():
-        return False, f"no design document at nova_forge/designs/{name}.md"
+        return False, f"no design document at Nova_Created/forge/designs/{name}.md"
     try:
         text = p.read_text(encoding="utf-8", errors="replace").strip()
     except Exception as e:
@@ -153,7 +153,7 @@ def _load(name: str):
     """Import (or hot-reload) a forged tool module. Returns (module|None, error|'')."""
     src = TOOLS_DIR / f"{name}.py"
     if not src.exists():
-        return None, f"no implementation at nova_forge/tools/{name}.py"
+        return None, f"no implementation at Nova_Created/forge/tools/{name}.py"
     try:
         mtime = src.stat().st_mtime
     except Exception as e:
@@ -316,7 +316,7 @@ def call(name: str, args: dict) -> tuple[bool, str]:
     if not ok_design:
         return True, (
             f"ERROR: '{name}' exists but is BLOCKED — {why}\n"
-            f"Write the design first: nova_forge/designs/{name}.md. State the GAP (what you "
+            f"Write the design first: Nova_Created/forge/designs/{name}.md. State the GAP (what you "
             f"couldn't do), the SHAPE (what it takes and returns), and the TEST (how you'll know "
             f"it works). Then this tool loads itself — no restart needed."
         )
@@ -330,7 +330,7 @@ def call(name: str, args: dict) -> tuple[bool, str]:
                       f"It takes: {mod.TOOL.get('params', {})}")   # type: ignore[union-attr]
     except Exception:
         return True, (f"ERROR: '{name}' raised while running:\n{traceback.format_exc(limit=4)}\n"
-                      f"It's your tool — read nova_forge/tools/{name}.py and fix it.")
+                      f"It's your tool — read Nova_Created/forge/tools/{name}.py and fix it.")
     # Its trustworthiness travels with its answer. A tool whose tests are failing must never hand
     # back a clean-looking number — that is precisely how a regression gets believed.
     state, fails = run_tests(name)
