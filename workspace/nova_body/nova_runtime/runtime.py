@@ -1,4 +1,4 @@
-# Last updated: 2026-07-20 11:50:20
+# Last updated: 2026-07-20 13:00:19
 # @nova: NovaRuntime — her life-support engine (layer 2 of the three-layer model).
 #        Holds the event bus + transcript store now; later steps relocate the autonomy
 #        daemon, model client, memory indexer, sense population, and llama health/restart

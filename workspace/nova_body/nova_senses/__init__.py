@@ -1,4 +1,4 @@
-# Last updated: 2026-07-20 11:50:20
+# Last updated: 2026-07-20 13:00:19
 # @nova: Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED (GUI-automation phase, not yet wired): desktop vision (eyes, vision) and UI proprioception.
 """
 nova_senses -- Nova Perception Package
