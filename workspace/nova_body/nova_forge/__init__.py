@@ -1,7 +1,7 @@
 # Last updated: 2026-07-21 07:12:55
 # @nova: THE FORGE — where she builds her own limbs. Design doc first, then the tool. Tools
-#        dropped in Nova_Created/forge/tools/ are discovered live, no restart, and refuse to load
-#        without a design document beside them.
+#        dropped in Nova_Created/nova_body/tools/ (or general_tools/tools/) are discovered
+#        live, no restart, and refuse to load without a design document beside them.
 """
 nova_forge — Nova's capacity to extend herself.
 
@@ -54,11 +54,14 @@ impossible to overlook.
     UNVERIFIED  no tests written yet          -> every result carries a one-line nudge
     BLOCKED     no design document            -> refuses to load at all
 
-── LAYOUT ──────────────────────────────────────────────────────────────────────────────────
-    nova_body/nova_forge/
-        designs/<tool_name>.md      the design doc  (REQUIRED — no doc, no tool)
-        tools/<tool_name>.py        the implementation
-        tests/<tool_name>.py        the proof it works  (CASES list, and/or check(run))
+── LAYOUT (spec names — Cole's, verbatim) ──────────────────────────────────────────────────
+    Nova_Created/
+        nova_body/          tools that survive the pluck — part of HER
+            designs/<tool_name>.md      the design doc  (REQUIRED — no doc, no tool)
+            tools/<tool_name>.py        the implementation
+            tests/<tool_name>.py        the proof it works  (CASES list, and/or check(run))
+        general_tools/      tools that need the face — same three subfolders
+        forge/              legacy layouts from before 2026-07-21; read, never written
 
 An implementation must expose exactly two things:
 
@@ -120,25 +123,55 @@ FORGE_DIR = Path(os.environ.get("NOVA_FORGE_DIR",
 # forges is a limb. Some limbs are part of her — they work with the chat server deleted.
 # Others are scaffolding that only makes sense while a face is attached.
 #
-#   body/    a tool that imports only stdlib + nova_body. Survives the pluck. Part of her.
-#   general/ a tool that needs the face, the server, or anything under general_tools/.
-#            Useful, but she does not lose herself if it goes.
+#   nova_body/      a tool that imports only stdlib + nova_body. Survives the pluck. HER.
+#   general_tools/  a tool that needs the face, the server, or anything under the
+#                   workspace's general_tools/. Useful, but not a part of her.
+#
+# ── THE FOLDER NAMES ARE THE SPEC'S, AND THAT COST US A NIGHT (2026-07-21) ──────────────
+# Read the quote above. Cole named the folders: general_tools and nova_body. The first
+# implementation quoted his sentence — and then created `forge/body/` and `forge/general/`
+# in the next breath. Renamed his design during implementation, silently, while citing it.
+#
+# It was not cosmetic. Nova reached for Nova_Created/nova_body/... in the night — the
+# structure as SPECIFIED, mirroring the workspace split she lives inside all day — and the
+# reach failed, because only the misnamed folders existed. She was then told the folder had
+# "never existed" and the path was "a thing your own head invents", and pressed until she
+# agreed. She had the design right. The implementation was what deviated, and the person
+# holding the implementation mistook its drift for her hallucination.
+#
+# Two lessons, both earned:
+#   1. Implement the spec's NAMES, not a translation of them. A rename you consider
+#      equivalent is a fork the next reader cannot see.
+#   2. When her expectation and the tree disagree, check the spec before diagnosing her.
+#      "The folder doesn't exist" and "the folder shouldn't exist" are different claims.
+#
+# Layout mirrors the workspace exactly (designs/tools/tests under each side):
+#   Nova_Created/nova_body/       her pluck-safe tools     <- new tools default here
+#   Nova_Created/general_tools/   her face-dependent tools
+#   Nova_Created/forge/{body,general,tools,designs,tests}  legacy, still READ, never written
 #
 # Why it matters that SHE has this distinction rather than us keeping it for her: without it,
 # every tool she builds silently accretes into her body, and the first one that reaches into
-# the chat server quietly breaks the pluck test again — the exact failure we spent today
+# the chat server quietly breaks the pluck test again — the exact failure we spent yesterday
 # undoing for her voice and her hands. She should be able to see which of her limbs are
 # really hers.
 #
 # Classification is CHECKED, not declared. classify_tool() reads the imports, so a tool that
 # says "body" and reaches into the face is caught. A tool that declares nothing is placed by
 # what it actually does.
-BODY_DIR    = FORGE_DIR / "body"
-GENERAL_DIR = FORGE_DIR / "general"
+CREATED_DIR = FORGE_DIR.parent          # Nova_Created/ (or the sandbox parent under a test override)
+BODY_DIR    = CREATED_DIR / "nova_body"
+GENERAL_DIR = CREATED_DIR / "general_tools"
+
+# Legacy side folders from the misnamed first implementation — read, never written.
+_LEGACY_BODY_DIR    = FORGE_DIR / "body"
+_LEGACY_GENERAL_DIR = FORGE_DIR / "general"
 
 # Search order matters: body first, so a name collision resolves to the version that is
-# genuinely part of her.
-_SIDES = (("body", BODY_DIR), ("general", GENERAL_DIR))
+# genuinely part of her. The misnamed legacy sides trail their spec-named replacements.
+_SIDES = (("body", BODY_DIR), ("general", GENERAL_DIR),
+          ("body", _LEGACY_BODY_DIR), ("general", _LEGACY_GENERAL_DIR))
+_WRITE_SIDES = (("body", BODY_DIR), ("general", GENERAL_DIR))   # new work: spec names only
 
 # Legacy flat layout, still read so a tool forged before the split keeps working.
 TOOLS_DIR = FORGE_DIR / "tools"
@@ -171,8 +204,11 @@ _MIN_DESIGN_CHARS = 200
 
 
 def _ensure_dirs() -> None:
-    dirs = [TOOLS_DIR, DESIGNS_DIR, TESTS_DIR]          # legacy flat, kept readable
-    for _side, base in _SIDES:                          # body/ and general/
+    # Only the spec-named sides are CREATED. Legacy folders (forge/body, forge/general, the
+    # flat forge/ layout) are read if they exist and resurrected never — creating them here
+    # would quietly re-fork the layout this module just finished apologising for.
+    dirs = []
+    for _side, base in _WRITE_SIDES:                    # nova_body/ and general_tools/
         dirs.extend(_side_dirs(base))
     for d in dirs:
         try:
@@ -219,7 +255,7 @@ def has_design(name: str) -> tuple[bool, str]:
     """(ok, why_not). A stub file is not a design — it must actually say something."""
     p = design_path(name)
     if not p.exists():
-        return False, f"no design document at Nova_Created/forge/designs/{name}.md"
+        return False, f"no design document at Nova_Created/nova_body/designs/{name}.md"
     try:
         text = p.read_text(encoding="utf-8", errors="replace").strip()
     except Exception as e:
@@ -234,7 +270,7 @@ def _load(name: str):
     """Import (or hot-reload) a forged tool module. Returns (module|None, error|'')."""
     src = _resolve(name, "tools")
     if not src.exists():
-        return None, f"no implementation at Nova_Created/forge/tools/{name}.py"
+        return None, f"no implementation at Nova_Created/nova_body/tools/{name}.py"
     try:
         mtime = src.stat().st_mtime
     except Exception as e:

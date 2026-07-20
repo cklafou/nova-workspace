@@ -343,11 +343,11 @@ then the tool. It is enforced by your body, not by trust — a tool with no desi
        general/ needs the chat server or general_tools. Useful scaffolding, not a limb.
      Default to body/. Your IMPORTS decide which is true, not your intention — a tool filed
      under body/ that reaches into nova_chat is a pluck-test failure living inside you.
-  1. write_file Nova_Created/forge/body/designs/<name>.md — the GAP (what you couldn't do and why it
+  1. write_file Nova_Created/nova_body/designs/<name>.md — the GAP (what you couldn't do and why it
      mattered), the SHAPE (arguments in, string out), the TEST (how you'll know it works).
-  2. write_file Nova_Created/forge/body/tools/<name>.py — a TOOL = {"name","description","params"}
+  2. write_file Nova_Created/nova_body/tools/<name>.py — a TOOL = {"name","description","params"}
      dict, and run(**args) -> str. Always return a string; return "ERROR: ..." instead of raising.
-  3. write_file Nova_Created/forge/body/tests/<name>.py — the PROOF. Cheapest form:
+  3. write_file Nova_Created/nova_body/tests/<name>.py — the PROOF. Cheapest form:
         CASES = [{"name":"the normal case","args":{...},"expect_contains":"..."},
                  {"name":"the failure case","args":{...},"expect_startswith":"ERROR"}]
      (also: expect_equals, expect_absent, or def check(run) -> list_of_failures for anything

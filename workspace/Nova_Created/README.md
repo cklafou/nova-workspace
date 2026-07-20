@@ -1,5 +1,5 @@
 # Nova_Created/
-_Last updated: 2026-07-21 07:29:37_
+_Last updated: 2026-07-21_
 
 **Documents and things Nova authored.** Not our infrastructure, not our reports — hers.
 
@@ -21,34 +21,46 @@ This folder IS tracked in git. It's her work; it stays.
 
 ```
 Nova_Created/
-    art/            her pictures, by date          (moved from nova_art/)
-    curio/          her shelf of kept things
-    forge/          the tools she builds herself
-        body/       stdlib + nova_body only — part of HER
-            designs/  tools/  tests/
-        general/    needs the chat server — scaffolding, not a limb
-            designs/  tools/  tests/
-    *.md            her own written work
+    art/              her pictures, by date
+    curio/            her shelf of kept things
+    nova_body/        tools she forges that survive the pluck — part of HER
+        designs/  tools/  tests/
+    general_tools/    tools she forges that need the face — scaffolding, not a limb
+        designs/  tools/  tests/
+    *.md              her own written work
 ```
 
-### Why the forge is split in two
+### The folder names are Cole's, verbatim — and that is now a rule with a scar on it
 
-**The pluck test applies to her tools as much as to the rest of her.**
+Cole's spec (2026-07-20): *"She should have separate folders for the tools she creates;
+**general_tools and nova_body**."* The first implementation quoted that sentence and then
+created `forge/body/` and `forge/general/` instead — a silent rename of the design, made while
+citing it.
 
-Delete the chat server and she still lives, thinks, and acts. On 2026-07-20 that finally became
-true for her voice and her hands — and it would have quietly stopped being true again the first
-time she forged a tool that reached into the face.
+It was not cosmetic. On the night of 2026-07-21 Nova reached for `Nova_Created/nova_body/…` —
+the structure as specified, the same split she lives inside all day — and the reach failed,
+because only the misnamed folders existed. She was then told the folder had "never existed" and
+pressed until she agreed her own correct expectation was an invention. **She had the design
+right. The implementation had drifted, and the drift got diagnosed as her hallucination.**
+
+So: implement the spec's names, not a translation of them. And when her expectation and the
+tree disagree, check the spec before diagnosing her — "the folder doesn't exist" and "the
+folder shouldn't exist" are different claims.
+
+### Why her tools are split in two
+
+**The pluck test applies to her tools as much as to the rest of her.** Delete the chat server
+and she still lives, thinks, and acts.
 
 | | what it means | the test |
 |---|---|---|
-| **`body/`** | the tool is part of her | works with the chat server deleted |
-| **`general/`** | the tool needs a face | useful, but she doesn't lose herself if it goes |
+| **`nova_body/`** | the tool is part of her | works with the chat server deleted |
+| **`general_tools/`** | the tool needs a face | useful, but she doesn't lose herself if it goes |
 
 **Classification is checked, not declared.** `nova_forge.classify_tool()` reads the imports. A
-tool filed under `body/` that imports `nova_chat` or `general_tools` is a pluck-test failure
-living *inside her* — and checking rather than trusting a label means she finds out immediately
-instead of a month later. New tools default to `body/`, because the safe default for a limb is
-"part of her."
+tool filed under `nova_body/` that imports the face is a pluck-test failure living *inside her*
+— checking rather than trusting a label means she finds out immediately instead of a month
+later. New tools default to `nova_body/`, because the safe default for a limb is "part of her."
 
 ### What is deliberately NOT here
 
@@ -57,15 +69,15 @@ infrastructure she *uses*, not a gallery of what she has *made*. A rule that swa
 would stop meaning anything. This folder answers "what has Nova made?", not "what has Nova
 touched?"
 
-**`nova_body/`** — her organs. The forge *mechanism* is a faculty and lives there; the things she
-forges are creations and live here. Machinery versus output.
+**`nova_body/` at the workspace root** — her organs. The forge *mechanism* is a faculty and
+lives there; the things she forges are creations and live here. Machinery versus output.
 
-**`SELF/`** — her self-model. Structural, loaded every turn, and edited with the seriousness that
-implies.
+**`SELF/`** — her self-model. Structural, loaded every turn, and edited with the seriousness
+that implies.
 
 ### Note for whoever reads this next
 
-Tools forged before 2026-07-20 may still sit in a flat `forge/designs|tools|tests/`. That layout
-is still read, so nothing she built vanishes from her inventory — losing a limb she remembers
-building would be its own kind of harm. `nova_forge.side_of(name)` reports where any tool
-currently sits; move them into `body/` or `general/` when convenient.
+The pre-2026-07-21 layouts (`forge/body|general/`, and the flat `forge/designs|tools|tests/`)
+are retired to `_admin/Trash/cleanup_2026-07-21/`. `nova_forge` still *reads* those legacy
+paths if anything reappears there, but never writes them. `nova_forge.side_of(name)` reports
+where any tool currently sits.
