@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 06:12:13
+# Last updated: 2026-07-21 07:12:55
 # @nova: THE FORGE — where she builds her own limbs. Design doc first, then the tool. Tools
 #        dropped in Nova_Created/forge/tools/ are discovered live, no restart, and refuse to load
 #        without a design document beside them.
