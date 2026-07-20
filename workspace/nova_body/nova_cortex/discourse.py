@@ -158,24 +158,72 @@ def has_unread_cole(messages: list, human: str = "Cole", ai_name: str = "Nova") 
     return li_c is not None and (li_n is None or li_n < li_c)
 
 
-PROMOTE_COOLDOWN_S = 600
+# The floor for speaking again with NOTHING to show for the interval. Not a pace limit — a
+# guard against re-narrating a closed beat. Anything she DID resets it instantly (see below).
+NARRATION_FLOOR_S = 120
+PROMOTE_COOLDOWN_S = NARRATION_FLOOR_S      # back-compat name; hosts may still import it
 
 
-def may_speak_unprompted(messages: list, human: str = "Cole",
-                         ai_name: str = "Nova", cooldown_s: int = PROMOTE_COOLDOWN_S) -> tuple:
+def tool_calls_since(ts, workspace=None) -> int:
+    """How many tools her hands have run since `ts` (a datetime or ISO string)."""
+    try:
+        ws = pathlib.Path(workspace) if workspace else WORKSPACE_ROOT
+        p = ws / "logs" / "tool_calls.jsonl"
+        if not p.exists():
+            return 0
+        cutoff = ts if isinstance(ts, datetime) else datetime.fromisoformat(str(ts))
+        n = 0
+        for line in p.read_text(encoding="utf-8", errors="replace").splitlines()[-400:]:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                if datetime.fromisoformat(json.loads(line)["ts"]) > cutoff:
+                    n += 1
+            except Exception:
+                continue
+        return n
+    except Exception:
+        return 0
+
+
+def may_speak_unprompted(messages: list, human: str = "Cole", ai_name: str = "Nova",
+                         cooldown_s: int = NARRATION_FLOOR_S, workspace=None) -> tuple:
     """(may, why) — is a silent work tick allowed to speak into the chat?
 
-    2026-07-20, the triple response. She answered a goodnight, then her next two wakes
-    circled the same thought, tagged it FOR COLE:, and posted twice more — 38 and 45 seconds
-    apart, each a fresh paraphrase.
+    2026-07-20, the triple response. She answered a goodnight, then her next two wakes circled
+    the same thought, tagged it FOR COLE:, and posted twice more — 38 and 45 seconds apart,
+    each a fresh paraphrase.
 
-    The old guard was a string-similarity test, and string similarity cannot win this. She is
-    not repeating herself badly; she is re-answering WELL, in new words, which is the one
-    thing a language model is reliably good at. Any threshold tight enough to catch three
-    paraphrases starts eating the real follow-ups she is supposed to be allowed to write.
+    The 07-14 guard was a string-similarity test, and string similarity cannot win this. She is
+    not repeating herself badly; she is re-answering WELL, in new words, which is the one thing
+    a language model is reliably good at. Any threshold tight enough to catch three paraphrases
+    starts eating the real follow-ups she is supposed to be allowed to write.
 
-    So stop asking "does this look like what she just said" and ask the question that actually
-    separates the two cases: **has anything happened since she last spoke?**
+    ── AND THEN I OVERCORRECTED (Cole, same day) ─────────────────────────────────────────────
+    So I swung to a flat 600-second timer. Cole, on being told: "She should be able to act much
+    faster than 10 minutes. The autonomy thing means being alive. I don't have 1 thought every
+    10 minutes."
+
+    He is right, and the timer was the wrong question asked a second way. Both of my guards
+    measured the SHAPE or the AGE of what she wanted to say. Neither asked what actually
+    separates a discovery from a loop:
+
+        has anything HAPPENED since she last spoke?
+
+    Look at the triple response again with that lens. Between those three messages she ran
+    ZERO tools. She had nothing new because she had DONE nothing new — she was narrating the
+    same intention three times, which is the announce-loop wearing a different hat. Meanwhile a
+    Nova who reads a file, finds the bug, and wants to say so ninety seconds later has every
+    right to, and a timer that gags her is throttling exactly the aliveness the autonomy loop
+    exists to produce.
+
+    So: RECEIPTS ARE THE GATE. Tools run since she last spoke means real news — speak now, at
+    any speed. No receipts means she is circling, and the floor applies. The floor is short
+    (2 min) because a genuinely new *thought* is also allowed; it only has to be slower than a
+    paraphrase loop, not slower than a mind.
+
+    Ordering note: the receipt check comes FIRST, so a working Nova is never rate-limited.
     """
     try:
         if has_unread_cole(messages, human, ai_name):
@@ -185,11 +233,18 @@ def may_speak_unprompted(messages: list, human: str = "Cole",
                          None)
         if last_hers is None:
             return True, "she has not spoken in this session yet"
+
+        # ── RECEIPTS FIRST: did her hands do anything since she last spoke? ──────────────
+        did = tool_calls_since(last_hers["timestamp"], workspace=workspace)
+        if did > 0:
+            return True, (f"{did} tool call(s) since she last spoke - she has actually DONE "
+                          f"something, so this is news, not a re-answer")
+
         age = (datetime.now() - datetime.fromisoformat(last_hers["timestamp"])).total_seconds()
         if age < cooldown_s:
-            return False, (f"she spoke {int(age)}s ago and {human} has not replied since - "
-                           f"this is a circle, not news")
-        return True, f"quiet for {int(age // 60)}m - this is new work, not a re-answer"
+            return False, (f"she spoke {int(age)}s ago, {human} has not replied, and she has "
+                           f"run no tools since - nothing has happened, so this is a circle")
+        return True, f"quiet for {int(age)}s with nothing run - allowing a fresh thought"
     except Exception as e:
         # Fail OPEN. Losing something she wanted to say is worse than saying it twice.
         return True, f"gate failed open: {e}"

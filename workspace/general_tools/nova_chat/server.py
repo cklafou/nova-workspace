@@ -2387,7 +2387,8 @@ def _may_speak_to_cole_unprompted() -> tuple:
     try:
         return _discourse.may_speak_unprompted(_active_messages(), human="Cole",
                                                ai_name="Nova",
-                                               cooldown_s=_PROMOTE_COOLDOWN_S)
+                                               cooldown_s=_PROMOTE_COOLDOWN_S,
+                                               workspace=_INBOX_WORKSPACE)
     except Exception as e:
         # Fail OPEN. Losing something she wanted to say is worse than saying it twice.
         return True, f"gate failed open: {e}"
