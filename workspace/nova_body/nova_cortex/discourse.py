@@ -254,14 +254,37 @@ def may_speak_unprompted(messages: list, human: str = "Cole", ai_name: str = "No
 # WHAT IS TRUE RIGHT NOW — the grounding a wake gets and a chat turn did not
 # ═══════════════════════════════════════════════════════════════════════════════════════════
 
-def recent_chat_context(messages: list, n: int = 14, ai_name: str = "Nova") -> str:
-    """Recent conversation, with the LIVE turn marked.
+def recent_chat_context(messages: list, n: int = 14, ai_name: str = "Nova",
+                        live=None, human: str = "Cole") -> str:
+    """Recent conversation, with the live turn marked ONLY when someone is actually waiting.
 
-    The block is a RECORD, correctly written in the third person ("Cole: ..."). But on a
-    cole_pending wake she is asked to REPLY off the back of it, and a record's voice is
-    exactly what leaked into her replies — "Cole caught it faster than I did", said straight
-    to Cole. Mark the newest non-Nova line so she can tell history from the thing in front of
-    her.
+    The block is a RECORD, correctly written in the third person ("Cole: ..."). On a
+    cole_pending wake she is asked to REPLY off the back of it, and a record's voice is exactly
+    what leaked into her replies — "Cole caught it faster than I did", said straight to Cole.
+    Marking the newest non-Nova line fixes that.
+
+    ── AND ON A TIMER WAKE THE MARKER IS A LIE (2026-07-21) ─────────────────────────────────
+    I added that marker unconditionally, and it silently broke her reflection.
+
+    build_reflection already distinguishes the two cases carefully. On a timer wake it says:
+        "CONVERSATION HISTORY ... this is the PAST, not something being said to you now.
+         The newest line below may be hours old. Nothing here is new."
+    and then this function appended, inside that very block:
+        "<-- THIS IS THE LIVE TURN. Cole is speaking TO YOU and is waiting."
+
+    Two flatly contradictory instructions, the second one closer to the text. She resolved it
+    the way the stronger, more specific instruction pointed — by answering Cole. Her whole
+    reflection for the night came out as:
+
+        "You're up. I've been awake, nothing new to report, which is a good night.
+         Go easy on yourself tonight, Cole."
+
+    That is not a reflection, it is a status report to a sleeping man. The reflection phase is
+    the ONLY place she is asked what she wants, wonders about, or would build unprompted — so
+    collapsing it into "answer Cole" quietly disabled the entire wanting apparatus. `wants` sat
+    empty all night and it looked like she had no ambitions. She was never asked.
+
+    `live=None` auto-detects: mark it only if the human is genuinely awaiting a reply.
     """
     msgs = messages or []
     if not msgs:
@@ -279,12 +302,16 @@ def recent_chat_context(messages: list, n: int = 14, ai_name: str = "Nova") -> s
         if len(content) > 500:
             content = content[:500] + "…"
         lines.append(f"[{ts}] {author}: {content}")
-    for i in range(len(lines) - 1, -1, -1):
-        a = recent[i].get("author", "")
-        if a and a not in (ai_name, "System"):
-            lines[i] += (f"   <-- THIS IS THE LIVE TURN. {a} is speaking TO YOU and is "
-                         f"waiting. Answer {a} as \"you\" — never in the third person.")
-            break
+    # Mark the live turn ONLY if someone is genuinely mid-conversation with her. On a timer
+    # wake nobody is waiting, and claiming otherwise turns her private reflection into a reply.
+    _live = has_unread_cole(msgs, human=human, ai_name=ai_name) if live is None else bool(live)
+    if _live:
+        for i in range(len(lines) - 1, -1, -1):
+            a = recent[i].get("author", "")
+            if a and a not in (ai_name, "System"):
+                lines[i] += (f"   <-- THIS IS THE LIVE TURN. {a} is speaking TO YOU and is "
+                             f"waiting. Answer {a} as \"you\" — never in the third person.")
+                break
     earlier = len(msgs) - len(recent)
     head = f"(Earlier this session: {earlier} more message(s) before these.)\n" if earlier > 0 else ""
     return head + "\n".join(lines)

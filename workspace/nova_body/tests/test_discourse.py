@@ -122,6 +122,23 @@ ck("newest human line is marked live", "THIS IS THE LIVE TURN" in _ctx)
 ck("marked exactly once", _ctx.count("THIS IS THE LIVE TURN"), 1)
 ck("empty transcript -> empty string", d.recent_chat_context([]), "")
 
+# ── 2026-07-21: the marker must NOT appear on a timer wake ────────────────────────────────
+# build_reflection tells her "this is the PAST, nothing here is new" on a timer wake. An
+# unconditional live marker contradicted that inside the same block, and she resolved it by
+# answering Cole — turning her only reflective moment into a status report and leaving `wants`
+# empty all night.
+_answered = [msg("Cole", "night", 400), msg("Nova", "night, sleep well", 300)]
+ck("nobody waiting -> NO live marker",
+   "THIS IS THE LIVE TURN" in d.recent_chat_context(_answered), False)
+ck("Cole still unanswered -> marker present",
+   "THIS IS THE LIVE TURN" in d.recent_chat_context(
+       [msg("Nova", "hi", 400), msg("Cole", "you there?", 30)]))
+ck("live=False forces it off even when he IS waiting",
+   "THIS IS THE LIVE TURN" in d.recent_chat_context(
+       [msg("Nova", "hi", 400), msg("Cole", "you there?", 30)], live=False), False)
+ck("live=True forces it on",
+   "THIS IS THE LIVE TURN" in d.recent_chat_context(_answered, live=True))
+
 # ═══════════════════════════════════════════════════════════════════════════════════════════
 print("\nGROUNDING (2026-07-20) — the three things she invented that day")
 _tmp = pathlib.Path(tempfile.mkdtemp())          # nothing real is touched
