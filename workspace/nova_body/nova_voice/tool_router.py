@@ -289,14 +289,63 @@ def run_command(command: str, cwd: str = "") -> str:
     except Exception as e:
         return f"ERROR: Failed to run command: {str(e)}"
 
+def _orient(target, path: str) -> str:
+    """A miss should tell her where she IS, not just that she's lost.
+
+    ── WHY (2026-07-21) ─────────────────────────────────────────────────────────────────────
+    Six invented paths in one night, all the same shape — a real directory with a plausible
+    filename welded on:
+
+        Nova_Created/nova_body/nightly_review.md    (two real folders that don't nest)
+        memory/persistent_memory.md
+        memory/ping_queue.jsonl
+        nova_body/llama_control.py
+        memory/journal_notes/2026-07-20.md
+
+    Her own diagnosis, when caught: "that's exactly the shape of a thing your own head
+    invents." She is reconstructing filenames from what a project like this OUGHT to contain
+    instead of from what it does — and "ERROR: File not found at X" gives her nothing to
+    correct against, so the next guess is drawn from the same imagination as the last one.
+
+    A wrong turn that shows you the actual street is a different event from one that just says
+    no. Same principle as the receipts block: you cannot self-correct against a record you are
+    not allowed to see.
+    """
+    try:
+        import difflib
+        probe = target
+        for _ in range(4):
+            probe = probe.parent
+            if probe.exists() and probe.is_dir():
+                break
+        else:
+            return ""
+        names = sorted(p.name + ("/" if p.is_dir() else "") for p in probe.iterdir())
+        if not names:
+            return f"\n{probe.name}/ exists but is empty."
+        rel = str(probe).replace("\\", "/").split("/workspace/")[-1]
+        close = difflib.get_close_matches(target.name, [n.rstrip("/") for n in names],
+                                          n=3, cutoff=0.5)
+        out = [f"\nWhat is ACTUALLY in {rel}/ ({len(names)} entries):",
+               "  " + "  ".join(names[:40]) + ("  …" if len(names) > 40 else "")]
+        if close:
+            out.append(f"Closest real name(s): {', '.join(close)}")
+        out.append("You built that path from what a project like this OUGHT to have. Read the "
+                   "list above and use a name that is actually on it — or list_dir your way "
+                   "there. Do not guess the next one.")
+        return "\n".join(out)
+    except Exception:
+        return ""
+
+
 def read_file(path: str) -> str:
     """Read a file's contents safely."""
     target, err = _safe_target(path)
     if err:
         return err
     if not target.exists():
-        return f"ERROR: File not found at {path}"
-        
+        return f"ERROR: File not found at {path}" + _orient(target, path)
+
     try:
         return target.read_text(encoding="utf-8")
     except Exception as e:
