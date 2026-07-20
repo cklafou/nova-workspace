@@ -570,6 +570,27 @@ def sync_to_drive():
         return True
 
     except Exception as e:
+        # ── AN EXPIRED TOKEN IS NOT A CRASH (2026-07-21) ──────────────────────────────────
+        # `invalid_grant` means the refresh token is dead — revoked, password-changed, or (most
+        # often) the Google Cloud project is still in "Testing" publishing status, where refresh
+        # tokens are hard-expired after 7 days. None of that is fixable by retrying, and the
+        # watcher retries on EVERY push. Cole was getting a full stack trace per cycle for a
+        # condition whose only remedy is him re-authorising once.
+        #
+        # So: say what broke, say what fixes it, and stop asking. A stack trace repeated every
+        # push teaches you to scroll past watcher output, and then the next real error scrolls
+        # past too.
+        if "invalid_grant" in str(e):
+            global _AUTH_DEAD
+            _AUTH_DEAD = True
+            print("[drive] AUTH EXPIRED — Google refused the saved refresh token "
+                  "(invalid_grant).")
+            print(f"[drive] Drive mirroring is OFF until you re-authorise. Git is unaffected.")
+            print(f"[drive] Fix: delete {TOKEN_PATH} and run "
+                  f"`python general_tools/nova_sync/drive.py` to sign in again.")
+            print("[drive] If this keeps recurring weekly, the Google Cloud project is in "
+                  "'Testing' mode — publish it, or testing refresh tokens die every 7 days.")
+            return False
         print(f"[drive] Sync failed: {e}")
         traceback.print_exc()
         return False
