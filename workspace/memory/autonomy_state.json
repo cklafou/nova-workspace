@@ -1,9 +1,9 @@
 {
   "enabled": false,
   "active": null,
-  "last_activity": "2026-07-21T05:18:52",
-  "wake_at": "2026-07-21T05:20:22",
-  "last_fp": "[[\"Tasking/tasks.json\", 54677, 1784495888], [\"memory/interrupt_inbox.json\", 105, 1784578718], [\"memory/cole_intent.json\", 337, 1784578718]]",
+  "last_activity": "2026-07-21T05:19:43",
+  "wake_at": "2026-07-21T05:21:13",
+  "last_fp": "[[\"Tasking/tasks.json\", 54677, 1784495888], [\"memory/interrupt_inbox.json\", 105, 1784578771], [\"memory/cole_intent.json\", 93, 1784578771]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
