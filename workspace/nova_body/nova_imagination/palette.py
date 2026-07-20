@@ -1,4 +1,4 @@
-# Last updated: 2026-07-20 14:10:19
+# Last updated: 2026-07-21 06:12:13
 # @nova: Her palette — the mediums she can paint in, and what each one is FOR.
 """
 nova_imagination/palette.py — what Nova can paint with
