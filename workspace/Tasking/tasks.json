@@ -883,9 +883,14 @@
       "priority": 3,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-21T05:25:44",
+          "note": "Go to sleep, Cole. I've got work."
+        }
+      ],
       "created": "2026-07-21T05:25:13",
-      "updated": "2026-07-21T05:25:13",
+      "updated": "2026-07-21T05:25:44",
       "author": "Nova"
     }
   }
