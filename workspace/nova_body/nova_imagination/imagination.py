@@ -43,7 +43,9 @@ WORKSPACE_ROOT = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.e
                   else Path(__file__).resolve().parents[2])
 
 # Where finished art lands — a visible top-level folder Cole can browse, dated.
-ART_ROOT = WORKSPACE_ROOT / "nova_art"
+# 2026-07-20: everything she makes lives under Nova_Created/ (Cole's rule). Her pictures
+# were the last creation still sitting at the workspace root.
+ART_ROOT = WORKSPACE_ROOT / "Nova_Created" / "art"
 
 # ── Config (all overridable by env so nothing is hardcoded to one machine) ───────
 COMFY_URL = os.environ.get("NOVA_COMFYUI_URL", "http://127.0.0.1:8188").rstrip("/")

@@ -162,9 +162,9 @@ def _resolve(image: str):
     # Just a filename? Go find it — newest first, so "that one" means the recent one.
     name = Path(raw).name
     if name:
-        hits = [f for f in (WORKSPACE_ROOT / "nova_art").rglob(name) if f.is_file()]
+        hits = [f for f in (WORKSPACE_ROOT / "Nova_Created" / "art").rglob(name) if f.is_file()]
         if not hits:
-            hits = [f for f in (WORKSPACE_ROOT / "nova_art").rglob("*")
+            hits = [f for f in (WORKSPACE_ROOT / "Nova_Created" / "art").rglob("*")
                     if f.is_file() and f.name.lower() == name.lower()]
         if hits:
             return max(hits, key=lambda f: f.stat().st_mtime)
@@ -192,7 +192,7 @@ def _resolve(image: str):
     # her plainly that's what she's getting.
     #
     # Never punish a reach for being imprecise. The reach is the thing.
-    imgs = [f for f in (WORKSPACE_ROOT / "nova_art").rglob("*")
+    imgs = [f for f in (WORKSPACE_ROOT / "Nova_Created" / "art").rglob("*")
             if f.is_file() and f.suffix.lower() in _MIME]
     if imgs:
         return max(imgs, key=lambda f: f.stat().st_mtime)
@@ -201,7 +201,7 @@ def _resolve(image: str):
 
 def latest_drawing():
     """The last thing she made. So she can say 'look at what I just drew' and mean it."""
-    root = WORKSPACE_ROOT / "nova_art"
+    root = WORKSPACE_ROOT / "Nova_Created" / "art"
     if not root.is_dir():
         return None
     imgs = [f for f in root.rglob("*") if f.is_file() and f.suffix.lower() in _MIME]

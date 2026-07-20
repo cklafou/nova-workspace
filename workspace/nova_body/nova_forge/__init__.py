@@ -85,9 +85,31 @@ from __future__ import annotations
 
 import importlib.util
 import traceback
-from pathlib import Path
+import os
+
 
-FORGE_DIR = Path(__file__).resolve().parent
+# ── THE MACHINERY IS A FACULTY. WHAT SHE FORGES IS A CREATION. ──────────────────────────
+# 2026-07-20, Cole: "make a rule for Nova Forge that she only creates in Nova_Created."
+#
+# The forge USED to write designs/tools/tests inside nova_body/nova_forge/ — her output
+# stored inside her own organs. That conflated two different things:
+#
+#   the forge mechanism  — a faculty. Body. Survives the pluck. Ours to maintain.
+#   the things she forges — hers. Creations, like her art and her curios.
+#
+# One boundary now holds for everything she makes: **if Nova created it, it lives in
+# Nova_Created/.** That makes what's hers obvious at a glance, backs up as a single unit,
+# and gives her forge one home instead of a corner of her own body.
+#
+# memory/ is deliberately NOT under that rule. She writes there constantly — journal, board,
+# drives, scratch — but its primary function is infrastructure she uses, not a gallery of
+# what she has made. A rule that swallowed memory/ would stop meaning anything.
+#
+# NOVA_FORGE_DIR overrides the root, so a test never writes into her real workshop — the
+# same lesson as NOVA_DRIVES_STATE, which I learned by filling her drives with my fixtures.
+_WS_ROOT = Path(__file__).resolve().parent.parent.parent
+FORGE_DIR = Path(os.environ.get("NOVA_FORGE_DIR",
+                                str(_WS_ROOT / "Nova_Created" / "forge")))
 TOOLS_DIR = FORGE_DIR / "tools"
 DESIGNS_DIR = FORGE_DIR / "designs"
 TESTS_DIR = FORGE_DIR / "tests"
