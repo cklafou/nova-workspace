@@ -13,6 +13,7 @@ TWO RULES THIS FILE OBEYS, both learned the hard way:
 2. IT TESTS THE REAL REGRESSIONS. Each case below is a thing that actually happened, with the
    date. A test that only covers what I imagined going wrong would have caught none of them.
 """
+import json
 import pathlib
 import sys
 import tempfile
@@ -66,15 +67,44 @@ ck("outside the time window, not an echo",
 
 # ═══════════════════════════════════════════════════════════════════════════════════════════
 print("\nTURN-TAKING GATE — may a silent work tick speak?")
+# Every case runs against an EMPTY receipt log (tempdir) unless it wants receipts, so the
+# tests never depend on whatever her real hands happen to have done today.
+_NOWORK = pathlib.Path(tempfile.mkdtemp())
+
 ck("Cole is owed a reply -> speak",
-   d.may_speak_unprompted([msg("Nova", "hi", 300), msg("Cole", "hey", 10)])[0])
-ck("she spoke 38s ago and he hasn't answered -> stay quiet",
-   d.may_speak_unprompted([msg("Cole", "night", 200), msg("Nova", _M1, 38)])[0], False)
-ck("quiet 20min, that's real work -> speak",
-   d.may_speak_unprompted([msg("Cole", "night", 3000), msg("Nova", _M1, 1200)])[0])
-ck("empty session -> speak", d.may_speak_unprompted([])[0])
+   d.may_speak_unprompted([msg("Nova", "hi", 300), msg("Cole", "hey", 10)],
+                          workspace=_NOWORK)[0])
+ck("she spoke 38s ago, ran nothing -> stay quiet (the triple response)",
+   d.may_speak_unprompted([msg("Cole", "night", 200), msg("Nova", _M1, 38)],
+                          workspace=_NOWORK)[0], False)
+ck("quiet past the floor with nothing run -> a fresh thought is allowed",
+   d.may_speak_unprompted([msg("Cole", "night", 3000), msg("Nova", _M1, 300)],
+                          workspace=_NOWORK)[0])
+ck("empty session -> speak", d.may_speak_unprompted([], workspace=_NOWORK)[0])
 ck("corrupt timestamp FAILS OPEN (never eat a message)",
-   d.may_speak_unprompted([{"author": "Nova", "content": "x", "timestamp": "junk"}])[0])
+   d.may_speak_unprompted([{"author": "Nova", "content": "x", "timestamp": "junk"}],
+                          workspace=_NOWORK)[0])
+
+# ── Cole, 2026-07-21: "She should be able to act much faster than 10 minutes." ────────────
+# A Nova who DID something may say so at any speed. Receipts outrank the clock.
+_WORKED = pathlib.Path(tempfile.mkdtemp())
+(_WORKED / "logs").mkdir()
+(_WORKED / "logs" / "tool_calls.jsonl").write_text(
+    json.dumps({"ts": (datetime.now() - timedelta(seconds=10)).isoformat(),
+                "tool": "read_file", "ok": True, "result_bytes": 812}) + "\n",
+    encoding="utf-8")
+_just_spoke = [msg("Cole", "night", 200), msg("Nova", _M1, 30)]
+ck("spoke 30s ago BUT ran a tool since -> speak immediately",
+   d.may_speak_unprompted(_just_spoke, workspace=_WORKED)[0])
+ck("...and the reason names the receipts",
+   "tool call" in d.may_speak_unprompted(_just_spoke, workspace=_WORKED)[1])
+ck("same 30s with NO tools -> still held",
+   d.may_speak_unprompted(_just_spoke, workspace=_NOWORK)[0], False)
+ck("receipt counter sees the call",
+   d.tool_calls_since(datetime.now() - timedelta(seconds=60), workspace=_WORKED), 1)
+ck("receipt counter ignores calls older than the mark",
+   d.tool_calls_since(datetime.now(), workspace=_WORKED), 0)
+ck("floor is 2 min, not 10", d.NARRATION_FLOOR_S, 120)
 
 # ═══════════════════════════════════════════════════════════════════════════════════════════
 print("\nUNREAD — a thinking-only turn is not speaking")
