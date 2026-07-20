@@ -1,292 +1,292 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T00:22:45+09:00",
+  "updated_at": "2026-07-21T00:36:09+09:00",
   "items": [
     {
       "id": "57cfa554",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/acceptance_v5.md",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/acceptance_v5.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:22+09:00",
+      "notes": null
     },
     {
       "id": "1e2abd62",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/mk_template.py",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/mk_template.py",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:23+09:00",
+      "notes": null
     },
     {
       "id": "c2b4ed7a",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:24+09:00",
+      "notes": null
     },
     {
       "id": "df5fe1cf",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_body.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_body.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:25+09:00",
+      "notes": null
     },
     {
       "id": "590a67b9",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_bond.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_bond.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:26+09:00",
+      "notes": null
     },
     {
       "id": "cc5236b8",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_bond_b.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_bond_b.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:27+09:00",
+      "notes": null
     },
     {
       "id": "bc9bce94",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_fire.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_fire.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:28+09:00",
+      "notes": null
     },
     {
       "id": "7b652c63",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_natural.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_natural.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:29+09:00",
+      "notes": null
     },
     {
       "id": "54d172f0",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_natural_b.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_natural_b.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:30+09:00",
+      "notes": null
     },
     {
       "id": "79b120c8",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_perception.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_perception.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:32+09:00",
+      "notes": null
     },
     {
       "id": "e7764ab8",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_reach.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_reach.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:33+09:00",
+      "notes": null
     },
     {
       "id": "673c6990",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_record.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_record.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:34+09:00",
+      "notes": null
     },
     {
       "id": "554a4b3b",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_spark.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_spark.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:35+09:00",
+      "notes": null
     },
     {
       "id": "acaa796d",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_spark_b.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_spark_b.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:36+09:00",
+      "notes": null
     },
     {
       "id": "d3ed61cc",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_spark_c.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_spark_c.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:37+09:00",
+      "notes": null
     },
     {
       "id": "e23e1b3f",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_spark_d.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_spark_d.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:38+09:00",
+      "notes": null
     },
     {
       "id": "f75309c1",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_stance.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_stance.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:39+09:00",
+      "notes": null
     },
     {
       "id": "7017089c",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_verify.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_verify.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:40+09:00",
+      "notes": null
     },
     {
       "id": "8039dd29",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_verify_b.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_verify_b.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:41+09:00",
+      "notes": null
     },
     {
       "id": "c604f972",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_verify_c.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_verify_c.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:42+09:00",
+      "notes": null
     },
     {
       "id": "7e793b40",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/nova_core_v5_verify_d.jsonl",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/nova_core_v5_verify_d.jsonl",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:43+09:00",
+      "notes": null
     },
     {
       "id": "d5275cd6",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T06:12:44+09:00",
       "commit": "115b4f87",
       "old_path": "_admin/Training_stuff/v5/train_nova_lora_v5.py",
       "new_path": "_admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/train_nova_lora_v5.py",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:45+09:00",
+      "notes": null
     },
     {
       "id": "76086567",
@@ -298,7 +298,7 @@
       "new_path": "memory/archive/2025-07-19_misfiled_note.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: no remaining references to the old path",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -311,7 +311,7 @@
       "new_path": "Orient/Calls_Master_Index.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -324,7 +324,7 @@
       "new_path": "Orient/SECURITY.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -337,7 +337,7 @@
       "new_path": "Orient/TOOLS.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -350,7 +350,7 @@
       "new_path": "general_tools/nova_console/calls.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -363,7 +363,7 @@
       "new_path": "memory/archive/2026-05_superseded_entries.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -376,7 +376,7 @@
       "new_path": "memory/archive/JOURNAL_before_cleanup_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -389,7 +389,7 @@
       "new_path": "memory/reports/AUDIT_QUEUE_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -402,7 +402,7 @@
       "new_path": "memory/reports/AUDIT_TOOL_FIX_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -415,7 +415,7 @@
       "new_path": "memory/reports/CHORES_AND_ADMIN_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -428,7 +428,7 @@
       "new_path": "memory/reports/JOURNAL_AUDIT_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -441,7 +441,7 @@
       "new_path": "nova_body/nova_cortex/principals.py",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -454,7 +454,7 @@
       "new_path": "nova_body/nova_forge/calls.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -467,7 +467,7 @@
       "new_path": "nova_body/nova_lancedb/calls.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -480,7 +480,7 @@
       "new_path": "nova_body/nova_play/calls.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -493,7 +493,7 @@
       "new_path": "nova_body/nova_logs/retention.py",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
@@ -506,34 +506,34 @@
       "new_path": "memory/reports/CONFABULATION_2026-07-20.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:46+09:00",
       "notes": null
     },
     {
       "id": "e504bd70",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T08:45:00+09:00",
       "commit": "8196106e",
       "old_path": "general_tools/nova_chat/clients/nova.py",
       "new_path": "nova_body/nova_voice/nova.py",
       "confidence": 0.99,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/calls_order.py — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:47+09:00",
+      "notes": null
     },
     {
       "id": "6b4fb2df",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T08:45:00+09:00",
       "commit": "8196106e",
       "old_path": "general_tools/nova_chat/tool_router.py",
       "new_path": "nova_body/nova_voice/tool_router.py",
       "confidence": 0.99,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/calls_order.py — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:48+09:00",
+      "notes": null
     },
     {
       "id": "5f9f33e3",
@@ -545,7 +545,7 @@
       "new_path": "nova_body/nova_voice/__init__.py",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:42+09:00",
+      "resolved_at": "2026-07-21T00:33:48+09:00",
       "notes": null
     },
     {
@@ -558,7 +558,7 @@
       "new_path": "Nova_Created/art/2026-07-19/nova_self_033541_66590.png",
       "confidence": 1.0,
       "resolved_by": "reconcile: no remaining references to the old path",
-      "resolved_at": "2026-07-21T00:22:43+09:00",
+      "resolved_at": "2026-07-21T00:33:49+09:00",
       "notes": null
     },
     {
@@ -571,34 +571,34 @@
       "new_path": "Nova_Created/forge/designs/comfy_inspect.md",
       "confidence": 0.96,
       "resolved_by": "reconcile: no remaining references to the old path",
-      "resolved_at": "2026-07-21T00:22:44+09:00",
+      "resolved_at": "2026-07-21T00:33:50+09:00",
       "notes": null
     },
     {
       "id": "1502ae4d",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T14:55:40+09:00",
       "commit": "a9e26ad2",
       "old_path": "nova_body/nova_forge/tests/comfy_inspect.py",
       "new_path": "Nova_Created/forge/tests/comfy_inspect.py",
       "confidence": 0.98,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:51+09:00",
+      "notes": null
     },
     {
       "id": "924d0c6e",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "rename",
       "detected_at": "2026-07-20T14:55:40+09:00",
       "commit": "a9e26ad2",
       "old_path": "nova_body/nova_forge/tools/comfy_inspect.py",
       "new_path": "Nova_Created/forge/tools/comfy_inspect.py",
       "confidence": 0.98,
-      "resolved_by": null,
-      "resolved_at": null,
-      "notes": "STILL REFERENCED by general_tools/nova_sync/FILE_INDEX.md — fix that reference, then this closes itself."
+      "resolved_by": "reconcile: no remaining references to the old path",
+      "resolved_at": "2026-07-21T00:33:52+09:00",
+      "notes": null
     },
     {
       "id": "906a9bab",
@@ -610,7 +610,7 @@
       "new_path": "Nova_Created/forge/designs/zz_probe.md",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:45+09:00",
+      "resolved_at": "2026-07-21T00:33:52+09:00",
       "notes": null
     },
     {
@@ -623,7 +623,7 @@
       "new_path": "Nova_Created/forge/tools/zz_probe.py",
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-07-21T00:22:45+09:00",
+      "resolved_at": "2026-07-21T00:33:52+09:00",
       "notes": null
     }
   ],

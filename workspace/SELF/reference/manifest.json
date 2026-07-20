@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-21T00:21:42",
+  "generated": "2026-07-21T05:10:11",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 30,
   "described": 28,
@@ -532,13 +532,14 @@
       "path": "general_tools/audit_queue.py",
       "purpose": "Persistent audit-review queue — records file-change events (rename/delete/new) for review by audit_scripts/restructure.",
       "files": 1,
-      "lines": 485,
+      "lines": 650,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
       "third_party": [
-        "__future__"
+        "__future__",
+        "tokenize"
       ],
       "referenced_by": [],
       "launched_by": [],
@@ -560,8 +561,7 @@
         "audit_queue"
       ],
       "third_party": [
-        "ast",
-        "tokenize"
+        "ast"
       ],
       "referenced_by": [],
       "launched_by": [],
@@ -619,7 +619,7 @@
       "path": "general_tools/calls_order.py",
       "purpose": "Call-ORDER generator — traces execution paths from entry points and renders them as a",
       "files": 1,
-      "lines": 284,
+      "lines": 290,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -684,7 +684,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 11,
-      "lines": 6272,
+      "lines": 6346,
       "age_days": 0,
       "ports_bind": [
         "8765"

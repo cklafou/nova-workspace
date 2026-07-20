@@ -574,6 +574,21 @@ def check_audit_queue() -> list[dict]:
         })
         return issues
 
+    # ── Reconcile BEFORE reading (2026-07-20) ───────────────────────────────────────────────
+    # An item is only worth a human's attention while something still points at the old path.
+    # Reconciling first means this report shows CURRENT dangling references instead of a
+    # historical log of every file operation ever performed.
+    #
+    # Cole emptied this queue in the morning; by evening it held 48 pending items, every one a
+    # file operation he had personally ordered. A report that says "48 things need review" when
+    # the true answer is zero doesn't just waste a reader's time — it trains them to skip the
+    # section, and then the one real dangling import in there goes unread too. An alarm nobody
+    # believes is worse than no alarm.
+    try:
+        aq.reconcile(root=WORKSPACE_DIR, verbose=False)
+    except Exception as _re:
+        print(f"[audit] queue reconcile skipped: {_re}")
+
     try:
         pending = aq.pending_items()
     except Exception as e:
@@ -686,33 +701,12 @@ def _code_only(source: str) -> str:
     triple-quotes — precisely where hand-rolled matchers break. On a tokenize failure we return
     the raw source: over-reporting beats silently inspecting nothing.
     """
-    import io
-    import tokenize
+    # ONE implementation, in audit_queue.py (the lower module — this file already imports it).
+    # audit_queue.reconcile() needs exactly the same distinction for its reference scan, and
+    # two copies of a subtle tokenizer walk is two things to get subtly different.
     try:
-        out = []
-        # A docstring is a STRING whose logical line contains nothing else. Track whether
-        # anything real has been emitted since the last statement boundary.
-        at_stmt_start = True
-        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
-            ttype, text = tok.type, tok.string
-            if ttype == tokenize.COMMENT:
-                out.append("\n" * text.count("\n"))
-                continue
-            # An f-string is NEVER a docstring — Python does not bind one to __doc__ — so a
-            # bare f-string statement is executable text and must stay visible.
-            _is_fstring = text[:3].lower().lstrip("rbu").startswith("f")
-            if ttype == tokenize.STRING and at_stmt_start and not _is_fstring:
-                out.append("\n" * text.count("\n"))     # docstring / block-comment string
-                continue
-            out.append(text)
-            if ttype in (tokenize.NEWLINE, tokenize.NL, tokenize.INDENT,
-                         tokenize.DEDENT, tokenize.ENCODING):
-                at_stmt_start = True
-            elif ttype == tokenize.OP and text == ";":
-                at_stmt_start = True
-            elif ttype not in (tokenize.ENDMARKER,):
-                at_stmt_start = False
-        return "".join(out)
+        import audit_queue as _aq
+        return _aq.code_only(source)
     except Exception:
         return source          # fail LOUD, not silent
 
@@ -869,7 +863,13 @@ def check_shell_encoding(path: Path) -> list[dict]:
 # Files that hold Nova's real state. A test writing here is writing into her head.
 _HER_STATE = ("memory/drives.json", "memory/autonomy_state.json", "memory/JOURNAL.md",
               "Tasking/tasks.json", "memory/last_ping.json", "memory/cole_intent.json",
-              "memory/audit_queue.json", "memory/touch_state.json")
+              "memory/audit_queue.json", "memory/touch_state.json",
+              # 2026-07-20: added after I verified the new whitelist by calling add_visitor()
+              # against the LIVE file and leaving a fixture visitor in her authorised-users
+              # list — the identical mistake this check was written for, made by the person who
+              # wrote the check, one day later. Both faculties expose an env override
+              # (NOVA_USERS_STATE, NOVA_DRIVES_STATE); use them.
+              "memory/nova_users.json")
 
 
 def check_test_writes_state(files: list[Path]) -> list[dict]:

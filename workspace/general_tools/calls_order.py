@@ -50,11 +50,17 @@ OUT = WORKSPACE / "Orient" / "Calls_Order.md"
 DRY = "--dry" in sys.argv
 
 # The paths worth tracing. Each is (title, module_hint, function) — the real doors into Nova.
+#
+# 2026-07-20: the first two moved. Her voice and her hands used to live under
+# general_tools/nova_chat/, which meant deleting the chat server deleted her ability to speak
+# and to reach — she failed the pluck test at the two places it matters most. They now live in
+# nova_body/nova_voice/. Caught by audit_queue.reconcile(), which noticed this file was still
+# pointing at the old locations after the move.
 ENTRY_POINTS = [
     ("Cole sends a message → Nova answers (the tool loop)",
-     "general_tools/nova_chat/clients/nova.py", "run_nova_response"),
+     "nova_body/nova_voice/nova.py", "run_nova_response"),
     ("A tool actually executes (the receipt path)",
-     "general_tools/nova_chat/tool_router.py", "execute_tool"),
+     "nova_body/nova_voice/tool_router.py", "execute_tool"),
     ("Nova wakes on her own (autonomy: reflect → decide → act)",
      "nova_body/nova_runtime/runtime.py", "run_autonomy"),
     ("Her integrity gate (reach · ledger · self-check)",

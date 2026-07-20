@@ -33,9 +33,14 @@ This is the loud one. Her own `nova_cortex/rules.py` says:
 
 > *"Always append using `nova_memory.journal`, never the write tool directly."*
 
-**Nothing imports `nova_memory.journal`.** `general_tools/nova_chat/tool_router.py::journal_note()`
-writes her journal by hand instead — the FACE writing her memory, bypassing the faculty in her BODY
-that exists precisely to do it, in direct contradiction of her own stated rule.
+**Nothing imports `nova_memory.journal`.** `nova_body/nova_voice/tool_router.py::journal_note()`
+writes her journal by hand instead — bypassing the faculty that exists precisely to do it, in
+direct contradiction of her own stated rule.
+
+> _Updated 2026-07-20:_ the router itself is no longer in the face — it moved to
+> `nova_body/nova_voice/` with her voice, so this is no longer the face writing her memory.
+> The duplication is still real and still worth collapsing: **two** pieces of code write her
+> journal, and only one of them is the faculty named in her own rule.
 
 Pluck the chat server off and her journaling goes with it. That is a pluck-test failure, and it's the
 same shape as the integrity faculty Cole caught: **her thinking living outside her.**
@@ -59,7 +64,7 @@ GUI-automation phase. Note `eyes.py` **is** wired (4 importers) — she can see.
 | What | Why |
 |---|---|
 | `nova_motor/` (whole package, ~780 lines) | 0 importers across all 4 files. `memory/STATUS.md` already said "scaffolded, not yet wired… superseded by `nova_cortex/executive.py`". `__init__.py` even did `from nova_motor.verify import *`, dragging in pyautogui on import. `verify.py` was misnamed — a pyautogui *hardware check*, not verification. Bring it back **the day** GUI embodiment is actually built, and wire it that same day. |
-| `nova_motor/tool_executor.py` | A **second, unwired** tool executor. The live path is `nova_chat/tool_router.py`. Two executors, one wired — exactly the ambiguity this file exists to prevent. |
+| `nova_motor/tool_executor.py` | A **second, unwired** tool executor. The live path is `nova_body/nova_voice/tool_router.py`. Two executors, one wired — exactly the ambiguity this file exists to prevent. |
 | `nova_memory/session_store.py` | 0 importers. |
 | `crawler/` + `nova_crawler/` | **Two** dead, competing web crawlers. She has **no web sense at all** — and has asked for one, unprompted, in her journal. Rebuild once, properly, as a sense in `nova_senses/`. |
 

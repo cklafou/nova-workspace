@@ -40,7 +40,7 @@ her, for us:
 `comfyui_setup_checklist.md`
 
 > **They have NOT been moved, deliberately.** `memory/STATUS.md`, `nova_cortex/executive.py` and
-> `nova_chat/tool_router.py` all reference `memory/reports/` paths, and so do several of these docs.
+> `nova_voice/tool_router.py` all reference `memory/reports/` paths, and so do several of these docs.
 > A bulk move silently breaks those references — and a silent break is the exact bug class that has
 > cost this project the most. Move them one at a time, updating the referrer, or leave them and use
 > this map.
@@ -78,7 +78,7 @@ her, for us:
 | What | Problem | Fix |
 |---|---|---|
 | `crawler/` + `nova_crawler/` | **TWO dead, competing** web-crawler implementations. Neither imported. Neither in `AVAILABLE_TOOLS`. She has **no web sense at all** — and has asked for one, unprompted, in her journal. | Quarantined to `_admin/Trash/dead_crawlers_2026-07-14/`. Rebuild **once**, properly, as a sense in `nova_body/nova_senses/`, wired with receipts. |
-| `nova_body/nova_motor/tool_executor.py` | A **second, unwired** tool executor. The live path is `general_tools/nova_chat/tool_router.py`. | Reconcile: one executor, in her body. |
+| `nova_body/nova_motor/tool_executor.py` | A **second, unwired** tool executor. The live path is `nova_body/nova_voice/tool_router.py`. | **DONE 2026-07-20** — the live router moved into her body with her voice, so there is now one executor and it is hers. |
 | `nova_body/nova_motor/verify.py` | Name says "verifies results"; it's actually a **pyautogui hardware check**. Misleading. | Rename or move to a hardware-check script. |
 | `nova_lancedb/` (root) | Semantic-memory **indexer code** sitting at workspace root. It is a faculty. | → `nova_body/nova_memory/`. |
 | `nova_memory_db/` (root, 1032 files) | The LanceDB **data**. Fine at root, but should be gitignored. | gitignore. |

@@ -205,10 +205,22 @@ def _prune(data: dict) -> None:
 
 # Where a stale reference could actually hurt. Scanning the whole tree (models/, LanceDB,
 # node_modules) would take minutes and find nothing.
-_REF_SCAN_DIRS  = ("general_tools", "nova_body", "Orient", "SELF", "Tasking", "Nova_Created")
+#
+# Tasking/ is deliberately ABSENT. Her task board is largely an append-only record of what she
+# did — "[auto-logged from receipts] write_file(nova_body/nova_forge/tools/comfy_inspect.py)".
+# That note was true when written and stays true after the file moves; history is allowed to
+# name things by where they were. Scanning it meant every tool she ever built became a
+# permanent dangling reference the moment it was filed somewhere better, which would punish
+# her precisely for having done the work.
+_REF_SCAN_DIRS  = ("general_tools", "nova_body", "Orient", "SELF", "Nova_Created")
 _REF_SCAN_EXTS  = (".py", ".md", ".json", ".ps1", ".cmd", ".bat", ".txt", ".html", ".js")
 _REF_SCAN_SKIP  = ("__pycache__", ".git", "node_modules", "_admin/Trash", "_archive",
-                   "nova_memory_db", "prompt_cache", "logs", "models", "llama")
+                   "nova_memory_db", "prompt_cache", "logs", "models", "llama",
+                   # Machine-written caches and manifests. These record what the tree looked
+                   # like at some past moment — naming a since-moved file is their JOB, and
+                   # they self-correct on the next run without anyone touching them.
+                   "_sync_cache", "drive_sync", ".drive_sync_cache", "FILE_INDEX",
+                   "GEMINI_INDEX", "manifest.json", ".aignore")
 
 
 # A module stem this common is not evidence of anything. "nova" appears in nearly every file
@@ -243,17 +255,110 @@ def _stem_pattern(stem: str):
     )
 
 
-def _still_referenced(old_path: str, root: Path) -> Optional[str]:
+def code_only(source: str) -> str:
+    """Python source with comments and docstrings blanked out, line numbers preserved.
+
+    Lives here rather than in audit_scripts.py because both need it and this is the lower
+    module. See the long note on audit_scripts._code_only for why a plain substring search over
+    raw source cannot tell a hazard from a comment warning about the hazard — in a codebase
+    whose comments are mostly incident write-ups, that distinction is the whole ballgame.
+
+    Only whole-statement strings are blanked. A string being USED (assigned, passed, compared)
+    is code and stays, because the thing these scans hunt for is itself a string literal.
+
+    ── DO NOT REBUILD BY JOINING TOKENS ──────────────────────────────────────────────────────
+    The first version did `"".join(tok.string for tok ...)`, which drops the whitespace BETWEEN
+    tokens: `import json` came back as `importjson`. Every caller then searched the result for
+    patterns like "import\\s+name" — and \\s+ needs at least one space, so those patterns
+    matched nothing, ever. The scan ran, found zero references, and reported everything as
+    safely unreferenced.
+
+    A checker that answers "all clear" because its input was quietly mangled is worse than no
+    checker: it is a green light wired to nothing. So blank the comment/docstring spans IN
+    PLACE on the original text and leave every other character exactly where it was.
+    """
+    import io
+    import tokenize
+    try:
+        lines = source.splitlines(keepends=True)
+        spans = []          # (start_row, start_col, end_row, end_col) to blank, 1-indexed rows
+        at_stmt_start = True
+        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+            ttype, text = tok.type, tok.string
+            if ttype == tokenize.COMMENT:
+                spans.append((*tok.start, *tok.end))
+                continue
+            _is_f = text[:3].lower().lstrip("rbu").startswith("f")
+            if ttype == tokenize.STRING and at_stmt_start and not _is_f:
+                spans.append((*tok.start, *tok.end))
+                continue
+            if ttype in (tokenize.NEWLINE, tokenize.NL, tokenize.INDENT,
+                         tokenize.DEDENT, tokenize.ENCODING):
+                at_stmt_start = True
+            elif ttype == tokenize.OP and text == ";":
+                at_stmt_start = True
+            elif ttype != tokenize.ENDMARKER:
+                at_stmt_start = False
+
+        for (r1, c1, r2, c2) in spans:
+            for r in range(r1, r2 + 1):
+                i = r - 1
+                if i >= len(lines):
+                    break
+                line = lines[i]
+                has_nl = line.endswith("\n")
+                body = line[:-1] if has_nl else line
+                s = c1 if r == r1 else 0
+                e = c2 if r == r2 else len(body)
+                e = min(e, len(body))
+                if s < e:
+                    body = body[:s] + " " * (e - s) + body[e:]
+                lines[i] = body + ("\n" if has_nl else "")
+        return "".join(lines)
+    except Exception:
+        return source          # fail LOUD, not silent
+
+
+def _still_referenced(old_path: str, root: Path,
+                      new_path: Optional[str] = None) -> Optional[str]:
     """Return the first file that still mentions `old_path`, or None.
 
-    Matches on the full path AND — for .py files — on the module stem in import position,
-    because a broken import reads `from nova_chat import server`, never
+    Matches on the full path AND — for .py files, in .py files — on the module stem in import
+    position, because a broken import reads `from nova_chat import server`, never
     `general_tools/nova_chat/server.py`. Checking only the full path would miss every import
     breakage, which is the exact failure this queue exists to catch.
+
+    ── THREE WAYS THIS LIED, AND WHY EACH ONE MATTERED (2026-07-20) ──────────────────────────
+
+    1. A MOVE TO TRASH CONTAINS ITS OWN ORIGIN.
+           old: _admin/Training_stuff/v5/x.jsonl
+           new: _admin/Trash/cleanup_2026-07-20/_admin/Training_stuff/v5/x.jsonl
+       The new path has the old path inside it as a substring, so the index line recording
+       where the file WENT was read as proof it had been left behind. 22 of 26 remaining items.
+       Every one of them a report that a file was missing, generated by the record of it
+       arriving safely.
+
+    2. DOCS NAME FILES; THAT IS NOT A CODE REFERENCE.
+       FILE_INDEX.md links `[comfy_inspect.py](...)` for every file in the tree. The stem rule
+       read that as module access. An index is *supposed* to name things — matching stems
+       inside prose files means a complete index can never be reconciled clean.
+
+    3. COMMENTS DESCRIBE MOVES.
+       calls_order.py explains a past tool_router.py move in a comment. Same shape as the
+       audit_scripts false positive an hour earlier: documentation of a hazard read as the
+       hazard. It keeps recurring because prose about code and code look alike to a substring.
+
+    The pattern under all three: I kept matching text that TALKS ABOUT a file instead of text
+    that DEPENDS ON it. Only the second kind breaks when the file moves.
     """
     if not old_path:
         return None
     path_needle = old_path.replace("\\", "/")
+    new_needle = (new_path or "").replace("\\", "/")
+    # (1) If the destination contains the origin, a bare count is meaningless — subtract the
+    # occurrences the new path itself explains.
+    nested = bool(new_needle) and path_needle in new_needle
+
     p = Path(old_path)
     stem_re = None
     if (p.suffix == ".py" and p.stem not in ("__init__", "__main__")
@@ -271,14 +376,40 @@ def _still_referenced(old_path: str, root: Path) -> Optional[str]:
             rel = str(f.relative_to(root)).replace("\\", "/")
             if any(s in rel for s in _REF_SCAN_SKIP) or f.name in self_names:
                 continue
+            # THE MOVED FILE IS NOT A REFERENCE TO ITSELF. comfy_inspect.py declares
+            # TOOL = {"name": "comfy_inspect", ...} — its own identity, which travels with it.
+            # Reading that as a dangling pointer means a tool can never be relocated without
+            # permanently accusing itself.
+            #
+            # Match on FILENAME, not on the recorded destination: comfy_inspect.py has moved
+            # twice (nova_body/nova_forge/tools -> Nova_Created/forge/tools -> .../forge/body/
+            # tools), so the new_path this queue item recorded is itself already out of date.
+            # Any rule that trusts a stored path breaks on the second move — and things that
+            # move once tend to move again.
+            if f.name == p.name:
+                continue
             try:
                 text = f.read_text(encoding="utf-8", errors="replace")
             except Exception:
                 continue
-            if path_needle in text:
+
+            # In a .py file, strip prose before ANY matching — including the full-path match.
+            # A module whose own header says "moved here from nova_body/nova_forge/tools/x.py"
+            # is describing its history, not importing its former self. (Her comfy_inspect.py
+            # does exactly that, and reported itself dangling for it.) Same rule that already
+            # governs the stem match; there was no reason for the path match to skip it.
+            hay = code_only(text) if f.suffix.lower() == ".py" else text
+
+            hits = hay.count(path_needle)
+            if nested:
+                hits -= hay.count(new_needle)
+            if hits > 0:
                 return rel
-            if stem_re is not None and stem_re.search(text):
-                return rel
+
+            # (2)+(3) The stem rule is for CODE ONLY — .py files, prose already stripped.
+            if stem_re is not None and f.suffix.lower() == ".py":
+                if stem_re.search(hay):
+                    return rel
     return None
 
 
@@ -311,7 +442,7 @@ def reconcile(root: Optional[Path] = None, verbose: bool = True) -> dict:
             out["closed_clean"] += 1
             continue
 
-        hit = _still_referenced(old, root)
+        hit = _still_referenced(old, root, new_path=item.get("new_path"))
         if hit is None:
             item.update(status="resolved",
                         resolved_by="reconcile: no remaining references to the old path",
