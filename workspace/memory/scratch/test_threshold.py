@@ -1,4 +1,4 @@
-# Last updated: 2026-07-20 04:26:34
+# Last updated: 2026-07-21 05:21:43
 # Find the right cosine threshold — where does "same thought" end and "same topic" begin?
 import sys; sys.path.insert(0,'nova_body')
 from nova_lancedb.embedder import embed_text
