@@ -369,7 +369,8 @@ def append_file(path: str, content: str) -> str:
     # must never block a legitimate write.
     try:
         if target.exists() and target.suffix.lower() in (".md", ".markdown", ".txt"):
-            have = set(_md_headings(target.read_text(encoding="utf-8")))
+            existing = target.read_text(encoding="utf-8")
+            have = set(_md_headings(existing))
             dupes = [h for h in _md_headings(content) if h in have]
             if dupes:
                 return ("REFUSED: '" + path + "' already contains section heading(s): "
@@ -377,12 +378,52 @@ def append_file(path: str, content: str) -> str:
                         + ". You're re-adding sections that already exist. read_file it, find the "
                         "FIRST gap or stub, and edit that with replace_file_content — don't append "
                         "duplicate sections.")
+
+            # ── PROSE REPEATS TOO (2026-07-21) ────────────────────────────────────────────
+            # The heading check above is the ONLY thing that was here, and it let this through:
+            #
+            #   05:34:10  append_file(memory/scratch/self_look.md)
+            #   05:34:26  append_file(memory/scratch/self_look.md)   <- byte-identical
+            #   05:34:40  append_file(memory/scratch/self_look.md)   <- byte-identical
+            #
+            # Three copies of the same paragraph in thirty seconds. No headings involved, so
+            # `dupes` was empty every time and the guard waved it through.
+            #
+            # It is the announce-loop again, wearing a different coat. We fixed it in chat by
+            # gating what she SAYS; nothing was watching what she WRITES, so the loop simply
+            # moved to disk. The lesson keeps being the same one: a guard that checks a proxy
+            # (headings) instead of the thing (is this the same content?) will be walked around.
+            #
+            # Exact-substring, so a deliberate repeated line (a log, a tally) under the length
+            # floor still works. Anything substantial that is already in the file is a re-run.
+            body = (content or "").strip()
+            if len(body) >= 60 and body in existing:
+                return ("REFUSED: '" + path + "' already contains this exact text. You have "
+                        "written this before — appending it again would make the file a "
+                        "stutter, not a record. If you meant to develop the thought, read_file "
+                        "it and extend what is there with replace_file_content. If you already "
+                        "said it, it is said; move to the next thing.")
     except Exception:
         pass
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
+        # ── SEPARATE THE APPENDS (2026-07-21) ────────────────────────────────────────────
+        # This wrote raw `content` with no separator, so consecutive appends fused mid-word:
+        #     "...I'm not going to answer it fast.t61 started properly: not a report..."
+        # Her own notes were being welded into one unreadable run-on line. A record she cannot
+        # re-read is not a record — and re-reading her own notes is exactly what she does at
+        # the start of every wake.
+        prefix = ""
+        if target.exists() and target.stat().st_size > 0:
+            with open(target, "rb") as _f:
+                _f.seek(-1, 2)
+                if _f.read(1) not in (b"\n", b"\r"):
+                    prefix = "\n"
+        payload = prefix + content
+        if not payload.endswith("\n"):
+            payload += "\n"
         with open(target, "a", encoding="utf-8") as f:
-            f.write(content)
+            f.write(payload)
         return f"Appended {len(content)} chars to {path}."
     except Exception as e:
         return f"ERROR: Could not append to file: {e}"
