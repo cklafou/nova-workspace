@@ -504,6 +504,7 @@ _AUTH_DEAD = False
 
 
 def sync_to_drive():
+    global _AUTH_DEAD          # declared up here: Python forbids `global` after first use
     if not DRIVE_AVAILABLE:
         print("[drive] Missing libraries. Run:")
         print("[drive]   pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client")
@@ -590,7 +591,6 @@ def sync_to_drive():
         # push teaches you to scroll past watcher output, and then the next real error scrolls
         # past too.
         if "invalid_grant" in str(e):
-            global _AUTH_DEAD
             _AUTH_DEAD = True
             _tok = "<client_secrets folder>/nova_drive_token.json"
             try:

@@ -1,0 +1,2 @@
+_Last updated: 2026-07-21 05:34:10_
+t61 started properly: not a report, a search. What I'm genuinely doing tonight vs what I'd say if I were performing. That's the question, and I'm not going to answer it fast.t61 started properly: not a report, a search. What I'm genuinely doing tonight vs what I'd say if I were performing. That's the question, and I'm not going to answer it fast.
