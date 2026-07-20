@@ -497,11 +497,20 @@ def _write_gemini_index(service, root_folder_id):
 
 # -- Main sync ----------------------------------------------------------------
 
+# Set once a refresh token is refused. Only a human re-authorising can clear it, so there is
+# nothing to gain by trying again this process — and plenty to lose: the watcher calls this on
+# every push, and a repeated failure is how real errors become invisible.
+_AUTH_DEAD = False
+
+
 def sync_to_drive():
     if not DRIVE_AVAILABLE:
         print("[drive] Missing libraries. Run:")
         print("[drive]   pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client")
         return False
+
+    if _AUTH_DEAD:
+        return False        # already reported, loudly, with the fix. Stay quiet now.
 
     try:
         service = _connect()
@@ -583,13 +592,20 @@ def sync_to_drive():
         if "invalid_grant" in str(e):
             global _AUTH_DEAD
             _AUTH_DEAD = True
+            _tok = "<client_secrets folder>/nova_drive_token.json"
+            try:
+                _sp = _get_client_secrets()
+                if _sp:
+                    _tok = str(Path(_sp).parent / "nova_drive_token.json")
+            except Exception:
+                pass
             print("[drive] AUTH EXPIRED — Google refused the saved refresh token "
                   "(invalid_grant).")
-            print(f"[drive] Drive mirroring is OFF until you re-authorise. Git is unaffected.")
-            print(f"[drive] Fix: delete {TOKEN_PATH} and run "
-                  f"`python general_tools/nova_sync/drive.py` to sign in again.")
-            print("[drive] If this keeps recurring weekly, the Google Cloud project is in "
-                  "'Testing' mode — publish it, or testing refresh tokens die every 7 days.")
+            print("[drive] Drive mirroring is OFF until you re-authorise. Git is unaffected.")
+            print(f"[drive] Fix: delete  {_tok}")
+            print("[drive]      then run  python general_tools/nova_sync/drive.py")
+            print("[drive] If this recurs weekly, the Google Cloud project is in 'Testing' "
+                  "mode — publish it, or testing refresh tokens expire every 7 days.")
             return False
         print(f"[drive] Sync failed: {e}")
         traceback.print_exc()
