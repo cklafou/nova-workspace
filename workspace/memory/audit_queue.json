@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T07:43:20+09:00",
+  "updated_at": "2026-07-21T07:59:29+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -700,6 +700,45 @@
       "old_path": null,
       "new_path": "Nova_Created/art/2026-07-21/nova_self_073714_13154.png",
       "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "4b521950",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-07-21T07:59:29+09:00",
+      "commit": "5390bf12",
+      "old_path": "Nova_Created/forge/body/designs/comfy_inspect.md",
+      "new_path": "Nova_Created/nova_body/designs/comfy_inspect.md",
+      "confidence": 0.96,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "4d12b1df",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-07-21T07:59:29+09:00",
+      "commit": "5390bf12",
+      "old_path": "Nova_Created/forge/body/tests/comfy_inspect.py",
+      "new_path": "Nova_Created/nova_body/tests/comfy_inspect.py",
+      "confidence": 0.98,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "0d7e9351",
+      "status": "pending",
+      "event_type": "rename",
+      "detected_at": "2026-07-21T07:59:29+09:00",
+      "commit": "5390bf12",
+      "old_path": "Nova_Created/forge/body/tools/comfy_inspect.py",
+      "new_path": "Nova_Created/nova_body/tools/comfy_inspect.py",
+      "confidence": 0.98,
       "resolved_by": null,
       "resolved_at": null,
       "notes": null
