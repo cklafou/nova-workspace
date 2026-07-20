@@ -87,7 +87,7 @@ import importlib.util
 import traceback
 import os
 from pathlib import Path
-
+
 
 # ── THE MACHINERY IS A FACULTY. WHAT SHE FORGES IS A CREATION. ──────────────────────────
 # 2026-07-20, Cole: "make a rule for Nova Forge that she only creates in Nova_Created."
