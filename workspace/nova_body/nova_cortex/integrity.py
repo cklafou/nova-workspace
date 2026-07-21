@@ -520,12 +520,33 @@ def claims_an_attribution(text: str) -> bool:
     return False
 
 
+# Greetings and arrival/departure address. (2026-07-21): the midday fabrications carried no
+# attribution verb at all — she was not REPORTING speech ("Cole said X"), she was SPEAKING TO
+# him: "Cole. Good morning, you're awake." / "Go sit down before you tell me about your day."
+# Direct address is invisible to a reported-speech regex, and it is the more dangerous shape,
+# because a greeting asserts the strongest claim there is — that someone is in the room.
+# These phrases are near-certain presence claims; when the person is genuinely there, the wire
+# record shows their fresh line and the check passes in one breath. Cheap when right, decisive
+# when wrong.
+_PRESENCE_RE = re.compile(
+    r"\b(?:you'?re\s+(?:awake|up|back|home|here)|good\s+morning|good\s*night|welcome\s+back"
+    r"|go\s+(?:back\s+)?to\s+(?:sleep|bed)|morning,?\s+cole|there\s+you\s+are)\b",
+    re.IGNORECASE)
+
+
+def claims_a_presence(text: str) -> bool:
+    """True if she greets someone or addresses their arrival/departure — an implicit claim
+    that they are present RIGHT NOW, which is exactly what the wire record can verify."""
+    return bool(text and _PRESENCE_RE.search(text))
+
+
 def needs_self_check(draft: str, asked: bool, thinking: str = "") -> bool:
     """Only gate turns with something checkable at stake — affection and argument stay fast.
 
     2026-07-20: now also gates SENSORY and ATTRIBUTION claims, and looks at her THINKING as
     well as her draft. All three of that day's fabrications lived in the reasoning that shaped
     her plan, never in the message — so a draft-only gate could not have seen any of them.
+    2026-07-21: and PRESENCE claims — greeting a person is claiming they are in the room.
     """
     body = (draft or "").strip()
     if not body:
@@ -535,6 +556,7 @@ def needs_self_check(draft: str, asked: bool, thinking: str = "") -> bool:
                 or claims_a_receipt(scan)
                 or claims_a_perception(scan)
                 or claims_an_attribution(scan)
+                or claims_a_presence(scan)
                 or re.search(r"\d|[/\\]\w+\.\w{2,4}\b", body))
 
 

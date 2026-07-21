@@ -2452,6 +2452,18 @@ def _recent_chat_context(n: int = 14) -> str:
         return ""
     try:
         msgs = _active_messages()
+        # ── EMPTY SESSION ≠ EMPTY HISTORY (2026-07-21) ──────────────────────────────────
+        # The 08:52 restart created a fresh session, and this returned "" — so every wake
+        # lost its conversation block, and with it the ages, the PAST header, and the
+        # "COLE'S NEWEST WORDS" anchor built that same morning. Un-anchored, she spent the
+        # midday writing Cole's half again ("Cole. Good morning, you're awake" — to nobody).
+        # Every anti-fabrication defence was wired to a transcript that a restart wipes.
+        # The durable record (runtime transcript, STEP 6a) survives restarts; ground in it.
+        if not msgs:
+            try:
+                msgs = _rt.transcript.recent(n)
+            except Exception:
+                msgs = []
         if not msgs:
             return ""
         return (_discourse.recent_chat_context(msgs, n=n, ai_name="Nova")
