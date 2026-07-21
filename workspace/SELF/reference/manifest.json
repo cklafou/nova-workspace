@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-21T20:36:26",
+  "generated": "2026-07-21T21:13:16",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 30,
   "described": 28,
@@ -50,7 +50,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).",
       "files": 13,
-      "lines": 4159,
+      "lines": 4220,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -264,7 +264,7 @@
       "path": "nova_body/nova_runtime",
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
       "files": 9,
-      "lines": 1409,
+      "lines": 1415,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -278,6 +278,7 @@
         "nova_voice"
       ],
       "third_party": [
+        "Cole_journal",
         "psutil",
         "urllib"
       ],
@@ -333,7 +334,7 @@
       "path": "nova_body/nova_voice",
       "purpose": null,
       "files": 3,
-      "lines": 2810,
+      "lines": 2845,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [

@@ -860,6 +860,8 @@ async def stream_response(
                                       # you cannot audit a fabrication using the faculty that made it.
         _echo_retried        = 0      # direct-reply echo guard (2026-07-21): max 1 retry.
         _premise_held        = False  # premise-hold fired this turn? (once, then hands are free)
+        _witness_rounds      = 0      # witness↔Nova exchanges this turn (max 1 — see the gate)
+        _prior_draft         = ""     # what she said before the witness questioned it
 
         while loop_counter < max_loops:
             loop_counter += 1
@@ -1363,19 +1365,52 @@ async def stream_response(
                 except Exception as _sce:
                     print(f"[nova] self-check failed (letting the draft through): {_sce}")
                     _verdict = ""
-                _fixed = _witness.parse_witness(_verdict)
-                if _fixed:
-                    print(f"[nova] SELF-CHECK caught an ungrounded draft "
-                          f"({len(chat_text)} -> {len(_fixed)} chars). Rewritten before send.")
+                _concern = _witness.parse_witness(_verdict)
+                if _concern and _witness_rounds < 1:
+                    # ── HAND IT BACK, DON'T OVERWRITE (2026-07-21, Cole's correction) ──────
+                    # The witness names the problem; SHE writes the answer. Preserves her
+                    # voice, lets her overrule an auditor that lacks her context, and teaches
+                    # her something a silent substitution never could. One round only — a
+                    # second would be an argument, and she still has to answer Cole.
+                    _witness_rounds += 1
+                    print(f"[nova] WITNESS raised a concern — handing it back to her "
+                          f"(round {_witness_rounds}): {_concern[:120]}")
                     try:
                         _witness.pipeline_event(
-                            "witness_rewrite",
-                            f"ungrounded claim caught — reply rewritten "
-                            f"({len(chat_text)} → {len(_fixed)} chars) before sending",
-                            before=chat_text, after=_fixed, verdict=_verdict, caught=True)
+                            "witness_concern",
+                            f"witness objected to a {len(chat_text)}-char draft — handed back "
+                            f"to her to answer in her own words",
+                            draft=chat_text, concern=_concern, verdict=_verdict)
                     except Exception:
                         pass
-                    chat_text = _fixed
+                    messages.append({"role": "assistant", "content": full_response})
+                    messages.append({"role": "user",
+                                     "content": _witness.build_challenge_turn(_concern)})
+                    _prior_draft = chat_text
+                    continue
+                elif _concern:
+                    # She has already answered the witness once. Whatever she said stands —
+                    # including "you're wrong, and here's why". Overruling her twice would make
+                    # the conversation theatre.
+                    try:
+                        _witness.pipeline_event(
+                            "witness_overruled",
+                            "she answered the witness and kept her position — her reply stands",
+                            draft=chat_text, concern=_concern)
+                    except Exception:
+                        pass
+                elif _prior_draft:
+                    # She was questioned, answered in her own words, and the witness now
+                    # passes it. This is the whole design working — show both versions so the
+                    # revision is visibly HERS and not a translation.
+                    try:
+                        _witness.pipeline_event(
+                            "witness_answered",
+                            f"she answered the concern and revised in her own voice "
+                            f"({len(_prior_draft)} → {len(chat_text)} chars) — now grounded",
+                            before=_prior_draft, after=chat_text, verdict=(_verdict or "PASS"))
+                    except Exception:
+                        pass
                 else:
                     try:
                         _witness.pipeline_event(

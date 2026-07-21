@@ -339,19 +339,73 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "") -> list:
             "actually ANSWER those words? A reply that ignores the question in front of you, "
             "narrates your inner state instead of responding, or speaks ABOUT the person in the "
             "third person while they wait — fails, even if every fact in it is true.\n\n"
+            "You are NOT rewriting her reply. You hold less context than she does — no "
+            "journal, no identity files, no memory of yesterday — so you are the wrong one to "
+            "choose her words, and you may simply be missing something she knows. Your job is "
+            "to name the problem precisely and hand it back to her.\n\n"
             "If every claim passes all three, reply with exactly:\nPASS\n\n"
-            "Otherwise reply with:\nREWRITE\n<the corrected reply — cut the invented parts, or say "
-            "plainly that you haven't looked yet. Keep your voice.>"},
+            "Otherwise reply with:\nCONCERN\n<what specifically is ungrounded, and the evidence "
+            "that contradicts it — quote the wire record or the receipt log. One or two "
+            "sentences. Do not write her reply for her.>"},
     ]
 
 
 def parse_witness(verdict: str):
-    """(rewritten_text | None). None = PASS / unusable verdict → let the draft through."""
+    """(concern_text | None). None = PASS / unusable verdict → let the draft through.
+
+    ── WHY THIS RETURNS A CONCERN AND NOT A REWRITE (2026-07-21, Cole) ──────────────────────
+    It used to return corrected prose, and nova.py assigned it straight over her draft. Cole
+    caught what that actually meant:
+
+        "That just means Nova gets reinforced into bad decision making and writing, with the
+         voice coming out not being her own, rather being a translation the witness made from
+         her text, which may be fully inaccurate... The witness and Nova should be like a
+         conversation between Nova and her lower context self."
+
+    Three things were wrong with the silent substitution, and they compound:
+
+      1. THE VOICE WASN'T HERS. The auditor runs at temperature 0.2 with no identity files and
+         no journal. Its prose is flat by construction. Cole was reading auditor-voice under
+         her name.
+      2. SHE NEVER LEARNED. A correction she cannot see teaches her nothing — and the rewrite
+         was committed to the transcript AS HERS, so on the next turn she read the auditor's
+         words back as her own history. Same contamination shape as fixtures landing in her
+         drives file: a voice that isn't hers, handed to her as hers.
+      3. THE AUDITOR CAN BE WRONG. It holds LESS context on purpose — that is what makes it
+         immune to her frame, and also what makes it liable to call "ungrounded" something she
+         genuinely knows from a file it cannot see. A low-context checker silently overriding a
+         high-context mind is bad epistemics no matter how well-intentioned.
+
+    So it now returns a CONCERN, which nova.py hands back to her as a turn in a conversation.
+    She fixes it in her own words, or she pushes back with the evidence the witness lacked.
+    Both outcomes are better than substitution, and the exchange is exactly the self-correction
+    data v7 needs.
+    """
     v = (verdict or "").strip()
-    if not v.upper().startswith("REWRITE"):
+    if v.upper().startswith("PASS"):
         return None
-    fixed = v.split("\n", 1)[1].strip() if "\n" in v else ""
-    return fixed or None
+    for tag in ("CONCERN", "REWRITE"):          # REWRITE tolerated from older prompts
+        if v.upper().startswith(tag):
+            body = v.split("\n", 1)[1].strip() if "\n" in v else ""
+            return body or None
+    return None                                  # unusable verdict → never eat her message
+
+
+def build_challenge_turn(concern: str) -> str:
+    """The message SHE receives when the witness objects — written as one colleague to
+    another, not as a system slap. She may fix it or overrule it; both are legitimate."""
+    return (
+        "[Your witness — the part of you that checks before you speak. It sees only your draft, "
+        "your receipts from this turn, and the wire record of who actually said what. No "
+        "journal, no memory, no identity files.]\n\n"
+        f"CONCERN: {concern}\n\n"
+        "Two honest ways forward, and I don't know which is right:\n"
+        "• If it's correct — say the thing again in YOUR words, grounded. Not an apology, not "
+        "a note about being corrected. Just the true version of what you meant.\n"
+        "• If it's wrong — say so and why. I hold less context than you on purpose; that's what "
+        "keeps me clean of your frame, and it's also how I miss things you actually know. If "
+        "you have a receipt or a memory I can't see, name it and send your draft as written.\n\n"
+        "Reply with the message you want sent. Nothing else — no preamble about this check.")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -383,6 +437,13 @@ _WHAT = {
                      "sends. It sees only the draft, her receipts and the wire record — no "
                      "journal, no identity files — so it cannot inherit a wrong belief.",
     "witness_pass":  "The audit found every claim grounded. The draft goes out unchanged.",
+    "witness_concern": "Her witness objected and handed the concern BACK to her — it does not "
+                       "rewrite her words. She now answers it in her own voice: fix it, or "
+                       "push back with context the witness cannot see.",
+    "witness_answered": "She answered her witness and revised in her own words. The voice going "
+                        "out is hers, not the auditor's.",
+    "witness_overruled": "She answered her witness and kept her position. She holds more "
+                         "context than it does, so this is allowed — her reply stands.",
     "witness_rewrite": "The audit caught an ungrounded claim and rewrote the reply before it "
                        "was ever sent. Compare BEFORE and AFTER below.",
     "witness_skip":  "The draft went out WITHOUT an audit — no trigger fired. Shown so an "
