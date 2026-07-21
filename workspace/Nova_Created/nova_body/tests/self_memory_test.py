@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 20:50:42
+# Last updated: 2026-07-21 21:52:20
 """self_memory — three faces: sure, unsure, and honestly doesn't know."""
 
 CASES = [

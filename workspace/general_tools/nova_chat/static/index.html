@@ -794,6 +794,30 @@ a:hover { text-decoration: underline; }
   padding: 5px 7px; margin: 0; max-height: 220px; overflow-y: auto; color: var(--text); }
 .pl-pre.del { background: rgba(220,80,80,.08); border-left: 2px solid var(--red); }
 .pl-pre.ins { background: rgba(80,200,120,.08); border-left: 2px solid var(--green); }
+/* Turn-grouped pipeline (2026-07-21) — one turn reads as one story */
+.pl-turn { background: var(--bg-surface); border: 1px solid var(--border); border-left: 3px solid var(--border);
+  border-radius: var(--radius-sm); padding: 6px 8px; margin-bottom: 6px; }
+.pl-turn.ok   { border-left-color: var(--green); }
+.pl-turn.held { border-left-color: var(--yellow); }
+.pl-turn.err  { border-left-color: var(--red); }
+.pl-turn-head { display: flex; align-items: center; gap: 6px; cursor: pointer; flex-wrap: wrap; }
+.pl-badge { font-size: 8.5px; font-weight: 700; letter-spacing: .06em; padding: 2px 7px; border-radius: 9px;
+  background: var(--bg-hover); color: var(--text-dim); white-space: nowrap; }
+.pl-badge.ok   { background: rgba(80,200,120,.16); color: var(--green); }
+.pl-badge.held { background: rgba(230,190,80,.16); color: var(--yellow); }
+.pl-badge.err  { background: rgba(220,80,80,.16); color: var(--red); }
+.pl-flow { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.pl-step { font-size: 9px; color: var(--text-dim); background: var(--bg-hover);
+  border-radius: 3px; padding: 1px 5px; white-space: nowrap; }
+.pl-arrow { color: var(--text-mute); font-size: 9px; }
+.pl-car { color: var(--text-mute); font-size: 9px; }
+.pl-time { color: var(--text-mute); font-size: 9px; }
+.pl-oc { font-size: 10px; color: var(--text-dim); line-height: 1.45; margin-top: 3px; }
+.pl-body { margin-top: 6px; border-top: 1px solid var(--border); padding-top: 6px; }
+.pl-step-block { margin-bottom: 8px; padding-left: 7px; border-left: 2px solid var(--border); }
+.pl-step-head { font-size: 10px; color: var(--text); margin-bottom: 2px; }
+.pl-step-head .pl-t { color: var(--text-mute); font-size: 9px; margin-left: 4px; }
+.pl-detail { font-size: 10px; color: var(--text-dim); line-height: 1.45; margin-bottom: 4px; }
 /* Tools panel sub-tabs (Feed | Verbose) — 2026-07-19 */
 .ttab-btn { background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-mute); font-size: 10px; padding: 2px 10px; cursor: pointer; font-family: inherit; }
 .ttab-btn:hover { color: var(--text); border-color: var(--nova); }
@@ -3113,28 +3137,121 @@ const _PL_META={
 function _plTitle(stage){
   return String(stage||'event').replace(/_/g,' ').replace(/^\w/,c=>c.toUpperCase());
 }
-let _plLastTs='', _plTimer=null;
+let _plTimer=null, _plAll=[], _plOpen={};
 const _PLSTATS={pass:0,concern:0,answered:0,over:0,unres:0,hold:0,err:0};
+
+// ── TURNS, NOT EVENTS (2026-07-21, Cole: "help me understand the process better") ─────────
+// A flat reverse-chron list makes the reader reconstruct the story: four rows that are really
+// one turn — she drafted, it was audited, the witness objected, she answered. Events are
+// atoms; the TURN is the unit a human reasons about. Her body now stamps every gate event
+// with a shared turn id, so this renders one turn as one row: a flow of stages, an outcome
+// badge, and the whole exchange underneath when you open it.
+const _PL_OUTCOME={
+  witness_pass:      {t:'CLEAN',            c:'ok',   d:'Audited and everything checked out.'},
+  witness_answered:  {t:'SHE FIXED IT',     c:'ok',   d:'Her witness objected; she answered and revised in her own words.'},
+  witness_overruled: {t:'SHE OVERRULED',    c:'held', d:'Her witness objected; she disagreed and kept her position. She holds more context than it does.'},
+  witness_unresolved:{t:'STILL DISPUTED',   c:'held', d:'She revised and the witness still objects. Her words shipped anyway — one round only.'},
+  witness_concern:   {t:'IN PROGRESS',      c:'held', d:'The witness has objected and is waiting on her answer.'},
+  witness_skip:      {t:'NOT AUDITED',      c:'',     d:'Sent without an audit — nothing triggered one.'},
+  premise_hold:      {t:'TOOL HELD',        c:'held', d:'A tool was stopped because it rested on something nobody said.'},
+  assertion_challenge:{t:'SENT TO LOOK',    c:'held', d:'She was about to answer without checking; refused and sent to look.'},
+  echo_retry:        {t:'REPEAT CAUGHT',    c:'held', d:'She was about to re-send a message she already sent.'},
+  loop_exhausted:    {t:'RAN OUT OF ROOM',  c:'err',  d:'The turn hit its iteration limit before landing an answer.'},
+  spill_trimmed:     {t:'THINKING CUT',     c:'held', d:'Private deliberation was trimmed out of a message meant for a person.'},
+  gates_online:      {t:'GATES ARMED',      c:'ok',   d:'Her conscience loaded — every guard is active.'},
+  GATES_OFFLINE:     {t:'GATES OFFLINE',    c:'err',  d:'Her conscience FAILED to load. She is running ungated.'},
+  trim_override:     {t:'CONTEXT RESCUED',  c:'err',  d:'Her always-load files nearly consumed the whole window.'},
+  trim:              {t:'CONTEXT TRIMMED',  c:'',     d:'Old turns dropped to fit the window.'},
+};
+function _plTitle(stage){ return String(stage||'event').replace(/_/g,' ').replace(/^\w/,c=>c.toUpperCase()); }
+function _plEsc(v){ return esc(String(v==null?'':v)); }
+
+function _plRenderGroup(g){
+  // g = {turn, events:[...]}  — newest turn first, stages in the order they happened.
+  const evs=g.events;
+  const last=evs[evs.length-1];
+  const oc=_PL_OUTCOME[last.stage]||{t:_plTitle(last.stage),c:'',d:last.what||''};
+  const t0=String(evs[0].ts||'').slice(11,19);
+  const flow=evs.map(e=>{
+    const m=_PL_META[e.stage]||{i:'•',t:_plTitle(e.stage)};
+    return `<span class="pl-step" title="${_plEsc(e.what||e.detail)}">${m.i} ${_plEsc(m.t)}</span>`;
+  }).join('<span class="pl-arrow">›</span>');
+  const id='plg_'+g.turn.replace(/[^a-z0-9]/gi,'');
+  const open=!!_plOpen[g.turn];
+
+  // Facts worth seeing without opening anything.
+  let chips='';
+  const any=(k)=>{ for(const e of evs) if(e[k]!==undefined&&e[k]!==null&&e[k]!=='') return e[k]; return undefined; };
+  const lh=any('last_human_min'), tt=any('tools_this_turn'), tg=any('trigger');
+  if(lh!==undefined&&lh>=0) chips+=`<span class="pl-chip">last human words ${lh}m ago</span>`;
+  if(tt!==undefined) chips+=`<span class="pl-chip">${tt} tool${tt===1?'':'s'} this turn</span>`;
+  if(tg) chips+=`<span class="pl-chip">why audited: ${_plEsc(tg)}</span>`;
+
+  // The exchange, rendered as a conversation rather than field dumps.
+  const sec=(lbl,val,cls)=> val? `<div class="pl-sec"><div class="pl-lbl">${lbl}</div><pre class="pl-pre ${cls||''}">${_plEsc(val)}</pre></div>`:'';
+  let story='';
+  for(const e of evs){
+    const m=_PL_META[e.stage]||{i:'•',t:_plTitle(e.stage)};
+    story+=`<div class="pl-step-block">`+
+      `<div class="pl-step-head">${m.i} <b>${_plEsc(m.t)}</b> <span class="pl-t">${String(e.ts||'').slice(11,19)}</span></div>`+
+      (e.what?`<div class="pl-what">${_plEsc(e.what)}</div>`:'')+
+      `<div class="pl-detail">${_plEsc(e.detail)}</div>`+
+      sec('⚠ The objection — what her witness said', e.concern,'del')+
+      sec('Her reasoning that triggered this', e.premise)+
+      sec('BEFORE — what she was about to send', e.before,'del')+
+      sec('AFTER — what actually went out', e.after,'ins')+
+      sec('The reply', e.draft)+
+      sec('The message she was repeating', e.repeated,'del')+
+      sec('Tool arguments', e.args)+
+      sec("The auditor's verdict", e.verdict)+
+      sec('Error', e.error,'del')+
+    `</div>`;
+  }
+  return `<div class="pl-turn ${oc.c||'ok'}">`+
+    `<div class="pl-turn-head" onclick="plToggle('${g.turn}')">`+
+      `<span class="pl-badge ${oc.c||'ok'}">${_plEsc(oc.t)}</span>`+
+      `<span class="pl-flow">${flow}</span>`+
+      `<span class="pl-car">${open?'▾':'▸'}</span>`+
+      `<span class="pl-time">${t0}</span>`+
+    `</div>`+
+    `<div class="pl-oc">${_plEsc(oc.d)}</div>`+
+    (chips?`<div class="pl-chips">${chips}</div>`:'')+
+    `<div id="${id}" class="pl-body" style="display:${open?'block':'none'}">${story}</div>`+
+  `</div>`;
+}
+window.plToggle=function(turn){
+  _plOpen[turn]=!_plOpen[turn];
+  plRender();
+};
+function plRender(){
+  const feed=document.getElementById('pl-feed'); if(!feed) return;
+  // group by turn id, preserving arrival order inside each turn
+  const groups=[]; const idx={};
+  for(const d of _plAll){
+    const key=d.turn||('_solo_'+d.ts+d.stage);
+    if(idx[key]===undefined){ idx[key]=groups.length; groups.push({turn:key, events:[]}); }
+    groups[idx[key]].events.push(d);
+  }
+  const recent=groups.slice(-60).reverse();
+  feed.innerHTML = recent.length? recent.map(_plRenderGroup).join('')
+    : '<div class="panel-empty"><div class="ei">🛡</div>No gate events yet.</div>';
+}
 async function plPoll(){
   try{
     const r=await fetch('/api/files/read?path=logs/pipeline.jsonl');
-    if(!r.ok){ document.getElementById('pl-now').textContent='no events file yet'; return; }
+    if(!r.ok){ const n=document.getElementById('pl-now'); if(n)n.textContent='no events file yet'; return; }
     const j=await r.json();
-    const lines=(j.content||'').split('\n').filter(x=>x.trim());
-    // Timestamp cursor, not a line-count cursor (2026-07-21). The writer self-trims the file
-    // to stay inside this endpoint's 50K read window, which means the line count can SHRINK.
-    // A slice(_plSeen) cursor freezes forever after a trim; comparing timestamps survives it.
-    const fresh=[];
-    for(const ln of lines){
-      let d; try{ d=JSON.parse(ln); }catch(e){ continue; }
-      if(String(d.ts||'') > _plLastTs) fresh.push(d);
-    }
-    if(!fresh.length) return;
-    _plLastTs = String(fresh[fresh.length-1].ts||_plLastTs);
-    const feed=document.getElementById('pl-feed');
-    document.getElementById('pl-empty')?.remove();
-    for(const d of fresh){
-      const m=_PL_META[d.stage]||{i:'•',t:_plTitle(d.stage),c:''};
+    const rows=[];
+    for(const ln of (j.content||'').split('\n')){ if(!ln.trim()) continue;
+      try{ rows.push(JSON.parse(ln)); }catch(e){} }
+    const changed = rows.length!==_plAll.length ||
+      (rows.length&&_plAll.length&&rows[rows.length-1].ts!==_plAll[_plAll.length-1].ts);
+    if(!changed) return;
+    if(rows.length>_plAll.length && _plAll.length && activePanel!=='pipeline')
+      document.querySelector('.ptab[data-tab="pipeline"]')?.classList.add('has-new');
+    _plAll=rows;
+    for(const k in _PLSTATS)_PLSTATS[k]=0;
+    for(const d of rows){
       if(d.stage==='witness_pass')_PLSTATS.pass++;
       else if(d.stage==='witness_concern')_PLSTATS.concern++;
       else if(d.stage==='witness_answered')_PLSTATS.answered++;
@@ -3142,56 +3259,17 @@ async function plPoll(){
       else if(d.stage==='witness_unresolved')_PLSTATS.unres++;
       else if(d.stage==='premise_hold')_PLSTATS.hold++;
       else if(d.stage==='trim_override'||d.stage==='GATES_OFFLINE'||d.stage==='loop_exhausted')_PLSTATS.err++;
-      // ── EXPANDABLE EVIDENCE (2026-07-21) ────────────────────────────────────────────
-      // Cole: "it needs to be expandable. I don't understand what it is doing." A gate
-      // that reports "no claim triggers" explains nothing. Each card now carries WHAT the
-      // gate protects against (shipped from her body, so it can't drift from the code) and
-      // the actual evidence — the draft, the verdict, the before/after of a rewrite.
-      const sec=(lbl,val,cls)=> val? `<div class="pl-sec"><div class="pl-lbl">${lbl}</div>`+
-        `<pre class="pl-pre ${cls||''}">${esc(String(val))}</pre></div>` : '';
-      let facts='';
-      if(d.last_human_min!==undefined&&d.last_human_min>=0)
-        facts+=`<span class="pl-chip">last human words: ${d.last_human_min}m ago</span>`;
-      if(d.tools_this_turn!==undefined)
-        facts+=`<span class="pl-chip">${d.tools_this_turn} tool${d.tools_this_turn===1?'':'s'} run this turn</span>`;
-      if(d.trigger) facts+=`<span class="pl-chip">trigger: ${esc(d.trigger)}</span>`;
-      if(d.tool) facts+=`<span class="pl-chip">tool: ${esc(d.tool)}</span>`;
-      if(d.claimed_receipt!==undefined)
-        facts+=`<span class="pl-chip">claimed to have looked: ${d.claimed_receipt?'yes':'no'}</span>`;
-      if(d.asked_to_act!==undefined)
-        facts+=`<span class="pl-chip">was asked to act: ${d.asked_to_act?'yes':'no'}</span>`;
-      const body =
-        (d.what?`<div class="pl-what">${esc(d.what)}</div>`:'')+
-        (facts?`<div class="pl-chips">${facts}</div>`:'')+
-        sec('⚠ The objection — what her witness said', d.concern, 'del')+
-        sec('Her reasoning that triggered this', d.premise)+
-        sec('BEFORE — what she was about to send', d.before, 'del')+
-        sec('AFTER — what actually went out', d.after, 'ins')+
-        sec('The reply', d.draft)+
-        sec('The message she was repeating', d.repeated, 'del')+
-        sec('Tool arguments', d.args)+
-        sec("The auditor's verdict", d.verdict)+
-        sec('Error', d.error, 'del');
-      const id=`plx_${Math.random().toString(36).slice(2,8)}`;
-      const item=document.createElement('div');
-      item.className=`tfi ${m.c||'ok'}`;
-      item.innerHTML=`<div class="tfi-top" style="cursor:pointer" onclick="const e=document.getElementById('${id}');e.style.display=e.style.display==='none'?'block':'none';this.querySelector('.pl-car').textContent=e.style.display==='none'?'▸':'▾'">`+
-        `<span class="tfi-icon">${m.i}</span>`+
-        `<span class="tfi-verb">${esc(m.t)}</span>`+
-        `<span class="pl-car" style="color:var(--text-mute);font-size:9px;margin-left:4px">▸</span>`+
-        `<span class="tfi-time">${esc(String(d.ts||'').slice(11,19))}</span></div>`+
-        `<div class="tfi-narr">${esc(d.detail||'')}</div>`+
-        `<div id="${id}" style="display:none">${body}</div>`;
-      feed.insertBefore(item,feed.firstChild);
-      if(activePanel!=='pipeline') document.querySelector('.ptab[data-tab="pipeline"]')?.classList.add('has-new');
     }
-    while(feed.querySelectorAll('.tfi').length>80) feed.removeChild(feed.lastChild);
+    plRender();
     const el=id=>document.getElementById(id);
-    el('pl-pass').textContent=_PLSTATS.pass;   el('pl-concern').textContent=_PLSTATS.concern;
-    el('pl-answered').textContent=_PLSTATS.answered; el('pl-over').textContent=_PLSTATS.over;
-    el('pl-unres').textContent=_PLSTATS.unres; el('pl-hold').textContent=_PLSTATS.hold;
-    el('pl-err').textContent=_PLSTATS.err;
-    el('pl-now').textContent='live · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    el('pl-pass')&&(el('pl-pass').textContent=_PLSTATS.pass);
+    el('pl-concern')&&(el('pl-concern').textContent=_PLSTATS.concern);
+    el('pl-answered')&&(el('pl-answered').textContent=_PLSTATS.answered);
+    el('pl-over')&&(el('pl-over').textContent=_PLSTATS.over);
+    el('pl-unres')&&(el('pl-unres').textContent=_PLSTATS.unres);
+    el('pl-hold')&&(el('pl-hold').textContent=_PLSTATS.hold);
+    el('pl-err')&&(el('pl-err').textContent=_PLSTATS.err);
+    el('pl-now')&&(el('pl-now').textContent='live · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
   }catch(e){ /* polling must never throw */ }
 }
 _plTimer=setInterval(plPoll, 3000); setTimeout(plPoll, 1500);

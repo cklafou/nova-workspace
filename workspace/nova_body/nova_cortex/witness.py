@@ -38,6 +38,7 @@ Integrity keeps what is genuinely hers-vs-her-hands: reach (find_tool_call), the
 
 from __future__ import annotations
 
+import contextvars
 import json
 import os
 import re
@@ -503,6 +504,39 @@ _WHAT = {
 _LONG = {"draft", "before", "after", "verdict", "premise", "repeated", "wire", "args", "error"}
 
 
+_CURRENT_TURN = contextvars.ContextVar("nova_pipeline_turn", default="")
+
+
+def begin_turn() -> str:
+    """Start a new turn and make its id ambient for every gate event that follows.
+
+    Uses a ContextVar, not a module global, and that choice is load-bearing: her autonomy
+    daemon and the chat path are separate asyncio tasks that can both be mid-turn at the same
+    moment. A global would let one turn's id leak into the other's events and silently
+    mis-group the very picture this exists to clarify. Each asyncio task carries its own
+    context, so a ContextVar is correct by construction and needs no call-site plumbing.
+    """
+    tid = new_turn_id()
+    try:
+        _CURRENT_TURN.set(tid)
+    except Exception:
+        pass
+    return tid
+
+
+def new_turn_id() -> str:
+    """A short id shared by every gate event in one generation turn.
+
+    (2026-07-21, Cole: "help me understand the process better".) Individual events are atoms;
+    the unit a human actually reasons about is the TURN — she drafts, the witness engages, it
+    objects, she answers, it resolves. Without a shared id those four events are four rows in
+    a list and the reader has to reconstruct the story. Worse, her autonomy daemon and the
+    chat path can both be mid-turn at once, so time-proximity grouping guesses wrong exactly
+    when the picture matters most. An explicit id makes the grouping a fact rather than an
+    inference."""
+    return datetime.now().strftime("%H%M%S") + "-" + str(abs(hash(datetime.now())) % 997).zfill(3)
+
+
 def pipeline_event(stage: str, detail: str = "", **fields) -> None:
     """Append one gate event, carrying enough evidence to be understood without the code.
 
@@ -510,9 +544,14 @@ def pipeline_event(stage: str, detail: str = "", **fields) -> None:
     """
     try:
         _PIPELINE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            _tid = _CURRENT_TURN.get()
+        except Exception:
+            _tid = ""
         ev = {"ts": datetime.now().isoformat(timespec="seconds"),
               "stage": stage,
               "detail": str(detail)[:300],
+              "turn": _tid,
               "what": _WHAT.get(stage, "")}
         for k, v in fields.items():
             if isinstance(v, (int, float, bool)):

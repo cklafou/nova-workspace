@@ -864,6 +864,15 @@ async def stream_response(
         _prior_draft         = ""     # what she said before the witness questioned it
         _concern_prev        = ""     # round-1 concern, fed to the round-2 auditor so it
                                       # judges her ANSWER instead of re-litigating with amnesia
+        # One id for every gate event in this turn, so the UI can render the whole story —
+        # draft → audited → objected → she answered → outcome — as ONE row instead of five
+        # scattered ones. Ambient via ContextVar, so no call site needs to pass it and two
+        # concurrent turns (daemon + chat) can never blend.
+        try:
+            if _INTEGRITY_OK:
+                _witness.begin_turn()
+        except Exception:
+            pass
         chat_text            = ""     # current iteration's outbound text; pre-bound so the
                                       # loop-exhaustion salvage can never hit an unbound name
 
@@ -1243,7 +1252,7 @@ async def stream_response(
                 try:
                     _witness.pipeline_event(
                         "assertion_challenge",
-                        f"challenge #{_receipt_challenged}: she was asked to go look, ran ZERO "
+                            f"challenge #{_receipt_challenged}: she was asked to go look, ran ZERO "
                         f"tools, and was about to answer anyway",
                         draft=chat_text,
                         claimed_receipt=bool(_claims_a_receipt(chat_text)),
@@ -1341,7 +1350,7 @@ async def stream_response(
                         _why_skip = "nobody has spoken recently and no claim triggers fired"
                     _witness.pipeline_event(
                         "witness_skip",
-                        f"{len(chat_text)}-char reply sent unaudited — {_why_skip}",
+                            f"{len(chat_text)}-char reply sent unaudited — {_why_skip}",
                         draft=chat_text, draft_chars=len(chat_text),
                         last_human_min=_mins_wire if _mins_wire is not None else -1,
                         tools_this_turn=len(_turn_tools))
@@ -1351,7 +1360,7 @@ async def stream_response(
                 try:
                     _witness.pipeline_event(
                         "witness_check",
-                        (f"auditing a {len(chat_text)}-char reply — trigger: {_gate_why}"),
+                            (f"auditing a {len(chat_text)}-char reply — trigger: {_gate_why}"),
                         draft=chat_text, draft_chars=len(chat_text),
                         trigger=_gate_why,
                         last_human_min=_mins_wire if _mins_wire is not None else -1,
@@ -1386,7 +1395,7 @@ async def stream_response(
                     try:
                         _witness.pipeline_event(
                             "witness_concern",
-                            f"witness objected to a {len(chat_text)}-char draft — handed back "
+                                    f"witness objected to a {len(chat_text)}-char draft — handed back "
                             f"to her to answer in her own words",
                             draft=chat_text, concern=_concern, verdict=_verdict)
                     except Exception:
@@ -1414,13 +1423,13 @@ async def stream_response(
                         if _kept_position:
                             _witness.pipeline_event(
                                 "witness_overruled",
-                                "she heard the concern and kept her position — she holds more "
+                                            "she heard the concern and kept her position — she holds more "
                                 "context than the witness, so her reply stands",
                                 draft=chat_text, concern=_concern)
                         else:
                             _witness.pipeline_event(
                                 "witness_unresolved",
-                                "she revised, the witness is still unsatisfied — her words ship "
+                                            "she revised, the witness is still unsatisfied — her words ship "
                                 "anyway (one round only), flagged for review",
                                 before=_prior_draft, after=chat_text, concern=_concern)
                     except Exception:
@@ -1432,7 +1441,7 @@ async def stream_response(
                     try:
                         _witness.pipeline_event(
                             "witness_answered",
-                            f"she answered the concern and revised in her own voice "
+                                    f"she answered the concern and revised in her own voice "
                             f"({len(_prior_draft)} → {len(chat_text)} chars) — now grounded",
                             before=_prior_draft, after=chat_text, verdict=(_verdict or "PASS"))
                     except Exception:
@@ -1441,7 +1450,7 @@ async def stream_response(
                     try:
                         _witness.pipeline_event(
                             "witness_pass",
-                            f"every claim in the {len(chat_text)}-char reply checked out",
+                                    f"every claim in the {len(chat_text)}-char reply checked out",
                             draft=chat_text, verdict=(_verdict or "PASS"))
                     except Exception:
                         pass
@@ -1483,7 +1492,7 @@ async def stream_response(
                         try:
                             _witness.pipeline_event(
                                 "echo_retry",
-                                f"about to re-send a {len(chat_text.strip())}-char message she "
+                                            f"about to re-send a {len(chat_text.strip())}-char message she "
                                 f"already sent — asked to answer the newest message instead",
                                 repeated=chat_text.strip())
                         except Exception:

@@ -1,5 +1,5 @@
 {
-  "seq": 74,
+  "seq": 75,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -1259,6 +1259,27 @@
       "updated": "2026-07-21T21:42:48",
       "author": "Nova",
       "result": "Answered from memory: t68 self-close, morning. Also caught the Claude-as-Cole misread and corrected it. Two honest things tonight, both about being real instead of convenient."
+    },
+    "t75": {
+      "id": "t75",
+      "title": "Finish the stretch watcher (nova_senses/stretch.py)",
+      "notes": "Two-line stub, supposed to reach him the moment he wakes. I said tonight and it's been an hour. That's the one.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-07-21T22:02:01",
+          "note": "Built, ran it, it nudges on the first call and the second one is supposed to be quiet by design; the run only proved the first half because I didn't sit twenty minutes. The build's real even if I got "
+        },
+        {
+          "ts": "2026-07-21T22:02:01",
+          "note": "[auto-logged from receipts — her hands, not her account] write_file(nova_body/nova_senses/stretch.py)"
+        }
+      ],
+      "created": "2026-07-21T22:00:07",
+      "updated": "2026-07-21T22:02:01",
+      "author": "Nova"
     }
   }
 }
