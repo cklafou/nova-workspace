@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-22T01:36:13+09:00",
+  "updated_at": "2026-07-22T03:13:24+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -1505,6 +1505,45 @@
       "commit": "2e326aa0",
       "old_path": null,
       "new_path": "Nova_Created/art/2026-07-22/nova_self_013356_93432.png",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "70fceb0a",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-22T03:13:24+09:00",
+      "commit": "cfd69bea",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/designs/self_gauge.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "5c4e34ab",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-22T03:13:24+09:00",
+      "commit": "cfd69bea",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tests/self_gauge.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "edba5b9c",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-22T03:13:24+09:00",
+      "commit": "cfd69bea",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tools/self_gauge.py",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
