@@ -1028,14 +1028,74 @@ def _parse_actions(reply: str) -> dict:
     return {}
 
 
+# Third-person deliberation ABOUT Cole — the voice of her decision phase, not of a reply.
+_DELIB_RE = re.compile(r"\b(?:he|him|his|cole)\b", re.IGNORECASE)
+_ADDRESS_RE = re.compile(r"\b(?:you|your|you're|you'll|you've)\b|^\s*cole[,:]", re.IGNORECASE)
+
+
 def _extract_for_cole(reply: str) -> str:
-    """Pull what she wants spoken to Cole (prose before ACTIONS, or a FOR COLE: line)."""
+    """Pull what she wants SPOKEN to Cole — never her private deliberation.
+
+    ── THE BRAIN SPILL (2026-07-21, Cole: "your brain is leaking into chat") ────────────────
+    The old fallback was `return reply.split("ACTIONS:")[0]` — i.e. when she did not write a
+    FOR COLE: marker on a conversational wake, her ENTIRE decision monologue was posted to
+    chat verbatim. That is where these came from, all sent straight at him:
+
+        "He'll wake up in six hours and find me having gone on, which is what he'd want."
+        "He didn't ask if I'm still me, Cole. He asked what's going on because I'm breaking."
+
+    She was not malfunctioning. Her decision phase is SUPPOSED to sound like that — it is a
+    mind talking to itself about a person, in the third person, weighing what to do. The bug
+    was ours: we took the transcript of her private deliberation and mailed it to the person
+    she was deliberating about.
+
+    The tell is grammatical and reliable. Deliberation talks ABOUT him ("he", "Cole"); a reply
+    talks TO him ("you"). So: keep from the first paragraph that actually addresses him, and
+    drop the thinking-aloud that precedes it.
+
+    Never returns empty when there was content — losing what she wanted to say is worse than
+    a slightly awkward reply, and every bug in this project has been a silent drop. If nothing
+    addresses him directly, send the LAST paragraph (her conclusion) rather than the whole
+    interior monologue.
+    """
     if not reply:
         return ""
     m = re.search(r"FOR COLE:\s*(.+)", reply, re.IGNORECASE | re.DOTALL)
     if m:
         return m.group(1).split("ACTIONS:")[0].strip()
-    return reply.split("ACTIONS:", 1)[0].strip()
+
+    body = reply.split("ACTIONS:", 1)[0].strip()
+    if not body:
+        return ""
+    paras = [p.strip() for p in re.split(r"\n\s*\n", body) if p.strip()]
+    if len(paras) <= 1:
+        return body
+
+    for i, p in enumerate(paras):
+        if _ADDRESS_RE.search(p):
+            kept = "\n\n".join(paras[i:]).strip()
+            if i > 0:
+                try:
+                    from nova_cortex import witness as _w
+                    _w.pipeline_event(
+                        "spill_trimmed",
+                        f"dropped {i} paragraph(s) of third-person deliberation before her "
+                        f"actual reply",
+                        before=body, after=kept)
+                except Exception:
+                    pass
+            return kept
+
+    # Nothing addressed him at all — it is all deliberation. Send the conclusion only.
+    try:
+        from nova_cortex import witness as _w
+        _w.pipeline_event(
+            "spill_trimmed",
+            "her whole reply was third-person deliberation — sent only the final paragraph",
+            before=body, after=paras[-1])
+    except Exception:
+        pass
+    return paras[-1]
 
 
 def apply_decision(reply: str, cole_pending: bool = False) -> dict:

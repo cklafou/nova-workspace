@@ -395,6 +395,9 @@ _WHAT = {
     "assertion_challenge": "She was about to answer as if she had looked something up, having "
                            "run zero tools this turn. Refused and sent back to actually check.",
     "trim":          "Older conversation turns were dropped to fit the context window.",
+    "spill_trimmed": "Her private deliberation was about to be posted to chat. Her decision "
+                     "phase thinks ABOUT Cole in the third person; a reply speaks TO him. The "
+                     "thinking-aloud was cut and only the actual reply sent.",
     "trim_override": "The always-load files (journal, identity) were so large they consumed "
                      "the whole budget — the live conversation would have been dropped "
                      "ENTIRELY. Overridden to keep the newest turns. This is the bug that made "
