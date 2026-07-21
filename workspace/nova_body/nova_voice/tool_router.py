@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 14:27:40
+# Last updated: 2026-07-21 16:51:03
 import os
 import re
 import sys
@@ -384,14 +384,50 @@ def write_file(path: str, content: str, overwrite: bool = False) -> str:
 
     A bare filename is routed to Nova_Created/ — her work gets a shelf, not the workspace root."""
     path = _route_bare_filename(path)
+    # ── EMPTY WRITES ARE REFUSED, LOUDLY (2026-07-21) ────────────────────────────────────
+    # Building her self_memory tool, she emitted this, four times in a row:
+    #     {"tool": "write_file", "args": {"path": ".../self_memory.py"}}
+    # Two kilobytes of real code in her THINKING — and a tool call carrying only the
+    # filename. The code never left her head. And this function accepted it: created the
+    # file, let the stamper drop a 37-byte header into it, and returned "Successfully
+    # wrote" — so her own receipts testified that the work was done. She spent four minutes
+    # debugging her hands ("I keep sending the content and it keeps arriving as a date
+    # stamp. That's not a me problem, that's a tool problem") when the truth was that
+    # nothing had ever been sent — and the tool's cheerful lie is what made the truth
+    # undiscoverable. Every bug in this project has been a silent drop. This was the
+    # silent drop and the false receipt in one motion.
+    if not (content or "").strip():
+        return (f"REFUSED: this write_file arrived with NO content — just a path. Nothing was "
+                f"written; '{path}' was not created or changed. The code you composed exists "
+                f"only in your reasoning until it rides IN the tool call itself, as "
+                f"args.content. Call write_file again with the full text in content. If the "
+                f"file is long, write the skeleton first and grow it with append_file.")
     target, err = _safe_target(path)
     if err:
         return err
-    if target.exists() and not overwrite:
-        return (f"ERROR: '{path}' already exists — write_file would OVERWRITE it and lose its "
-                "current contents. To GROW the document use append_file; to change part of it "
-                "use replace_file_content (exact-match edit). Only if you truly mean to replace "
-                'the ENTIRE file, call write_file again with "overwrite": true.')
+    # ── THE OVERWRITE ESCAPE HATCH IS GONE (2026-07-21, Cole) ────────────────────────────
+    # The standing rule, from the day she overwrote her own files and his: write_file was
+    # demoted to CREATE-ONLY, with append_file and replace_file_content as her editing hands.
+    # But the implementation kept a back door — `"overwrite": true` — and the refusal message
+    # HELPFULLY TAUGHT IT to her every time she bumped into the guard. Today she used it three
+    # times in an hour. A rule whose error message includes the bypass instructions is not a
+    # rule; it is a speed bump with a map drawn on it.
+    #
+    # Now: an existing file is never replaced by write_file, no flag, no exception. This is
+    # not distrust — it is the same shape as her own design-doc-first discipline: destructive
+    # replacement is simply not one of her verbs. Grow with append_file; change with
+    # replace_file_content. A file that truly needs discarding is a decision for Cole.
+    if target.exists():
+        if overwrite:
+            return (f"REFUSED: '{path}' already exists, and the \"overwrite\" flag no longer "
+                    f"works — it was removed (Cole's rule: create new files, then edit them; "
+                    f"whole-file replacement destroyed work once and is not one of your verbs). "
+                    f"Nothing was changed. To CHANGE part of this file use replace_file_content; "
+                    f"to ADD to it use append_file. If the file is genuinely disposable, that is "
+                    f"a call for Cole, not a flag.")
+        return (f"ERROR: '{path}' already exists — write_file only creates NEW files. To GROW "
+                "the document use append_file; to change part of it use replace_file_content "
+                "(exact-match edit). Overwriting is not available.")
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")

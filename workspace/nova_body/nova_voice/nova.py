@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 14:54:38
+# Last updated: 2026-07-21 16:49:09
 """
 Nova (Qwen 3.5 27B Dense) inference client for Nova Group Chat.
 ============================================================
@@ -382,7 +382,7 @@ To use a tool, you MUST output a pure JSON block formatted exactly like this:
 Available Tools:
 1. "run_command": {"command": "...", "cwd": "..."} - Run a shell command in the workspace.
 2. "read_file": {"path": "..."} - Read a file's contents.
-3. "write_file": {"path": "...", "content": "..."} - Create a NEW file. REFUSES to overwrite an existing file unless you add "overwrite": true (you almost never want that). Do NOT use this to update a living document — it replaces the whole file and wipes prior content.
+3. "write_file": {"path": "...", "content": "..."} - Create a NEW file, and ONLY a new file: it always refuses if the path already exists, with no override. The content must ride IN the call — a path with no content writes nothing. To work on an existing file: append_file to grow it, replace_file_content to change part of it. Whole-file replacement is not one of your verbs; a file that truly needs discarding is a decision for Cole.
 4. "append_file": {"path": "...", "content": "..."} - Add content to the END of a file (creates it if missing). This is how you GROW a living document section by section.
 5. "replace_file_content" (a.k.a. "edit_file"): {"path": "...", "target_content": "...", "replacement_content": "..."} - Precision EDIT: replace an exact whitespace-matched string inside a file. Use this to change part of a file without rewriting the whole thing.
 6. "list_dir": {"path": "..."} - List files in a directory.
