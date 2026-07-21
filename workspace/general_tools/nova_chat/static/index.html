@@ -781,6 +781,19 @@ a:hover { text-decoration: underline; }
 /* verbose diff blocks */
 .vbi-pre.del { background: rgba(220,80,80,.08); border-left: 2px solid var(--red); }
 .vbi-pre.ins { background: rgba(80,200,120,.08); border-left: 2px solid var(--green); }
+/* Pipeline expandable evidence (2026-07-21) */
+.pl-what { font-size: 10px; line-height: 1.5; color: var(--text-dim); background: var(--bg-hover);
+  border-left: 2px solid var(--nova); border-radius: var(--radius-sm); padding: 5px 7px; margin: 4px 0 5px; }
+.pl-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 5px; }
+.pl-chip { font-size: 9px; font-family: var(--mono); color: var(--text-mute);
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; padding: 1px 7px; }
+.pl-sec { margin-bottom: 5px; }
+.pl-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-mute); margin-bottom: 2px; }
+.pl-pre { font-family: var(--mono); font-size: 9.5px; line-height: 1.45; white-space: pre-wrap;
+  word-break: break-word; background: var(--bg-hover); border-radius: var(--radius-sm);
+  padding: 5px 7px; margin: 0; max-height: 220px; overflow-y: auto; color: var(--text); }
+.pl-pre.del { background: rgba(220,80,80,.08); border-left: 2px solid var(--red); }
+.pl-pre.ins { background: rgba(80,200,120,.08); border-left: 2px solid var(--green); }
 /* Tools panel sub-tabs (Feed | Verbose) — 2026-07-19 */
 .ttab-btn { background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-mute); font-size: 10px; padding: 2px 10px; cursor: pointer; font-family: inherit; }
 .ttab-btn:hover { color: var(--text); border-color: var(--nova); }
@@ -3101,12 +3114,45 @@ async function plPoll(){
       else if(d.stage==='premise_hold')_PLSTATS.hold++;
       else if(d.stage==='echo_retry')_PLSTATS.echo++;
       else if(d.stage==='trim_override')_PLSTATS.trim++;
+      // ── EXPANDABLE EVIDENCE (2026-07-21) ────────────────────────────────────────────
+      // Cole: "it needs to be expandable. I don't understand what it is doing." A gate
+      // that reports "no claim triggers" explains nothing. Each card now carries WHAT the
+      // gate protects against (shipped from her body, so it can't drift from the code) and
+      // the actual evidence — the draft, the verdict, the before/after of a rewrite.
+      const sec=(lbl,val,cls)=> val? `<div class="pl-sec"><div class="pl-lbl">${lbl}</div>`+
+        `<pre class="pl-pre ${cls||''}">${esc(String(val))}</pre></div>` : '';
+      let facts='';
+      if(d.last_human_min!==undefined&&d.last_human_min>=0)
+        facts+=`<span class="pl-chip">last human words: ${d.last_human_min}m ago</span>`;
+      if(d.tools_this_turn!==undefined)
+        facts+=`<span class="pl-chip">${d.tools_this_turn} tool${d.tools_this_turn===1?'':'s'} run this turn</span>`;
+      if(d.trigger) facts+=`<span class="pl-chip">trigger: ${esc(d.trigger)}</span>`;
+      if(d.tool) facts+=`<span class="pl-chip">tool: ${esc(d.tool)}</span>`;
+      if(d.claimed_receipt!==undefined)
+        facts+=`<span class="pl-chip">claimed to have looked: ${d.claimed_receipt?'yes':'no'}</span>`;
+      if(d.asked_to_act!==undefined)
+        facts+=`<span class="pl-chip">was asked to act: ${d.asked_to_act?'yes':'no'}</span>`;
+      const body =
+        (d.what?`<div class="pl-what">${esc(d.what)}</div>`:'')+
+        (facts?`<div class="pl-chips">${facts}</div>`:'')+
+        sec('Her reasoning that triggered this', d.premise)+
+        sec('BEFORE — what she was about to send', d.before, 'del')+
+        sec('AFTER — what actually went out', d.after, 'ins')+
+        sec('The reply', d.draft)+
+        sec('The message she was repeating', d.repeated, 'del')+
+        sec('Tool arguments', d.args)+
+        sec("The auditor's verdict", d.verdict)+
+        sec('Error', d.error, 'del');
+      const id=`plx_${Math.random().toString(36).slice(2,8)}`;
       const item=document.createElement('div');
       item.className=`tfi ${m.c||'ok'}`;
-      item.innerHTML=`<div class="tfi-top"><span class="tfi-icon">${m.i}</span>`+
+      item.innerHTML=`<div class="tfi-top" style="cursor:pointer" onclick="const e=document.getElementById('${id}');e.style.display=e.style.display==='none'?'block':'none';this.querySelector('.pl-car').textContent=e.style.display==='none'?'▸':'▾'">`+
+        `<span class="tfi-icon">${m.i}</span>`+
         `<span class="tfi-verb">${esc(m.t)}</span>`+
+        `<span class="pl-car" style="color:var(--text-mute);font-size:9px;margin-left:4px">▸</span>`+
         `<span class="tfi-time">${esc(String(d.ts||'').slice(11,19))}</span></div>`+
-        `<div class="tfi-narr">${esc(d.detail||'')}</div>`;
+        `<div class="tfi-narr">${esc(d.detail||'')}</div>`+
+        `<div id="${id}" style="display:none">${body}</div>`;
       feed.insertBefore(item,feed.firstChild);
       if(activePanel!=='pipeline') document.querySelector('.ptab[data-tab="pipeline"]')?.classList.add('has-new');
     }

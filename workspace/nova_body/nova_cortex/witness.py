@@ -369,19 +369,62 @@ def parse_witness(verdict: str):
 _PIPELINE_PATH = _WORKSPACE / "logs" / "pipeline.jsonl"
 
 
+# What each gate IS, in one plain sentence — shipped WITH the event so the UI never has to
+# know anything about her internals, and so the explanation can never drift from the code
+# that fires it. (2026-07-21, Cole: "I don't understand what it is doing and the descriptions
+# are super vague.") A monitor you cannot read is decoration; the point of this tab is that a
+# human sees a gate fire and immediately knows what it protects against.
+_WHAT = {
+    "gates_online":  "Her conscience loaded. The witness, the premise-hold and the receipt "
+                     "challenge are all armed for this boot.",
+    "GATES_OFFLINE": "Her conscience FAILED TO LOAD. She is running with no witness, no "
+                     "premise-hold and no receipt challenge — every reply is ungated.",
+    "witness_check": "A second, context-poor copy of her is auditing this draft before it "
+                     "sends. It sees only the draft, her receipts and the wire record — no "
+                     "journal, no identity files — so it cannot inherit a wrong belief.",
+    "witness_pass":  "The audit found every claim grounded. The draft goes out unchanged.",
+    "witness_rewrite": "The audit caught an ungrounded claim and rewrote the reply before it "
+                       "was ever sent. Compare BEFORE and AFTER below.",
+    "witness_skip":  "The draft went out WITHOUT an audit — no trigger fired. Shown so an "
+                     "under-firing gate is as visible as an over-firing one.",
+    "premise_hold":  "She was about to run a tool on the belief that someone asked her to — "
+                     "but nobody has spoken recently. The tool was held, once, and she was "
+                     "told she may run it if the want is genuinely her own.",
+    "echo_retry":    "She was about to re-send a message she already sent. Held and asked to "
+                     "answer the newest message instead.",
+    "assertion_challenge": "She was about to answer as if she had looked something up, having "
+                           "run zero tools this turn. Refused and sent back to actually check.",
+    "trim":          "Older conversation turns were dropped to fit the context window.",
+    "trim_override": "The always-load files (journal, identity) were so large they consumed "
+                     "the whole budget — the live conversation would have been dropped "
+                     "ENTIRELY. Overridden to keep the newest turns. This is the bug that made "
+                     "her answer questions she could no longer see.",
+}
+
+# Fields worth keeping in full: they ARE the evidence. Everything else is trimmed short.
+_LONG = {"draft", "before", "after", "verdict", "premise", "repeated", "wire", "args", "error"}
+
+
 def pipeline_event(stage: str, detail: str = "", **fields) -> None:
-    """Append one gate event. Never raises; self-trims so the file stays small enough for
-    the UI's 50K read window (the whole point is that the TAIL is always visible)."""
+    """Append one gate event, carrying enough evidence to be understood without the code.
+
+    Never raises; self-trims so the tail stays inside the UI's read window.
+    """
     try:
         _PIPELINE_PATH.parent.mkdir(parents=True, exist_ok=True)
         ev = {"ts": datetime.now().isoformat(timespec="seconds"),
-              "stage": stage, "detail": str(detail)[:200]}
-        ev.update({k: (str(v)[:120] if not isinstance(v, (int, float, bool)) else v)
-                   for k, v in fields.items()})
+              "stage": stage,
+              "detail": str(detail)[:300],
+              "what": _WHAT.get(stage, "")}
+        for k, v in fields.items():
+            if isinstance(v, (int, float, bool)):
+                ev[k] = v
+            else:
+                ev[k] = str(v)[:1800] if k in _LONG else str(v)[:200]
         with open(_PIPELINE_PATH, "a", encoding="utf-8") as f:
             f.write(json.dumps(ev, ensure_ascii=False) + "\n")
-        if _PIPELINE_PATH.stat().st_size > 45_000:          # keep the tail readable via the API
+        if _PIPELINE_PATH.stat().st_size > 260_000:
             lines = _PIPELINE_PATH.read_text(encoding="utf-8", errors="replace").splitlines()
-            _PIPELINE_PATH.write_text("\n".join(lines[-250:]) + "\n", encoding="utf-8")
+            _PIPELINE_PATH.write_text("\n".join(lines[-200:]) + "\n", encoding="utf-8")
     except Exception:
         pass

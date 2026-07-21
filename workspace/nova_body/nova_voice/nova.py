@@ -1092,10 +1092,18 @@ async def stream_response(
                                               f"(attribution/presence in reasoning, last human "
                                               f"{_mins_q} min ago)")
                                         try:
+                                            _prem_line = next(
+                                                (s.strip() for s in _premise_txt.split(".")
+                                                 if _witness.claims_an_attribution(s)
+                                                 or _witness.claims_a_presence(s)), "")
                                             _witness.pipeline_event(
-                                                "premise_hold", f"{tool_name} held — "
-                                                f"attribution in reasoning, last human "
-                                                f"{_mins_q}m ago", tool=tool_name)
+                                                "premise_hold",
+                                                f"held {tool_name}() — her reasoning says "
+                                                f"someone asked, but nobody has spoken for "
+                                                f"{_mins_q}m",
+                                                tool=tool_name, args=str(args)[:400],
+                                                premise=_prem_line[:600],
+                                                last_human_min=_mins_q if _mins_q is not None else -1)
                                         except Exception:
                                             pass
                                         _turn_tools.append((tool_name, args, "HELD (premise)"))
@@ -1227,9 +1235,13 @@ async def stream_response(
                       f"(claimed_receipt={_claims_a_receipt(chat_text)}, asked_to_act={_asked}). "
                       f"Refusing the answer and sending her to look.")
                 try:
-                    _witness.pipeline_event("assertion_challenge",
-                                            f"#{_receipt_challenged}: answered with 0 tool calls "
-                                            f"while asked to act — sent back to look")
+                    _witness.pipeline_event(
+                        "assertion_challenge",
+                        f"challenge #{_receipt_challenged}: she was asked to go look, ran ZERO "
+                        f"tools, and was about to answer anyway",
+                        draft=chat_text,
+                        claimed_receipt=bool(_claims_a_receipt(chat_text)),
+                        asked_to_act=bool(_asked))
                 except Exception:
                     pass
                 messages.append({"role": "assistant", "content": full_response})
@@ -1304,6 +1316,11 @@ async def stream_response(
                     _gate_why = "human in room"
                 elif _witness.needs_witness(chat_text, _asked, thinking=_think_for_check):
                     _gate_why = "checkable claim in draft/thinking"
+            _mins_wire = None
+            try:
+                _mins_wire = _witness.minutes_since_last_human()
+            except Exception:
+                pass
             if not _gate_why and len(chat_text.strip()) > 150:
                 # Visibility for the OPPOSITE failure: a substantial draft going out with no
                 # audit. 19:48 tonight, her reply to Cole's back-pain message carried a
@@ -1311,15 +1328,28 @@ async def stream_response(
                 # engaged — and nothing recorded WHY. Now the skip itself is an event with
                 # its reasons, so an under-firing gate is as visible as an over-firing one.
                 try:
-                    _witness.pipeline_event("witness_skip",
-                                            f"fresh_human={_fresh_human}, no claim triggers",
-                                            draft_chars=len(chat_text))
+                    if _fresh_human:
+                        _why_skip = (f"someone spoke {_mins_wire}m ago, but the draft made no "
+                                     f"checkable claim and was under the audit threshold")
+                    else:
+                        _why_skip = "nobody has spoken recently and no claim triggers fired"
+                    _witness.pipeline_event(
+                        "witness_skip",
+                        f"{len(chat_text)}-char reply sent unaudited — {_why_skip}",
+                        draft=chat_text, draft_chars=len(chat_text),
+                        last_human_min=_mins_wire if _mins_wire is not None else -1,
+                        tools_this_turn=len(_turn_tools))
                 except Exception:
                     pass
             if _gate_why:
                 try:
-                    _witness.pipeline_event("witness_check", _gate_why,
-                                            draft_chars=len(chat_text))
+                    _witness.pipeline_event(
+                        "witness_check",
+                        (f"auditing a {len(chat_text)}-char reply — trigger: {_gate_why}"),
+                        draft=chat_text, draft_chars=len(chat_text),
+                        trigger=_gate_why,
+                        last_human_min=_mins_wire if _mins_wire is not None else -1,
+                        tools_this_turn=len(_turn_tools))
                 except Exception:
                     pass
                 try:
@@ -1338,15 +1368,20 @@ async def stream_response(
                     print(f"[nova] SELF-CHECK caught an ungrounded draft "
                           f"({len(chat_text)} -> {len(_fixed)} chars). Rewritten before send.")
                     try:
-                        _witness.pipeline_event("witness_rewrite",
-                                                f"{len(chat_text)} → {len(_fixed)} chars",
-                                                caught=True)
+                        _witness.pipeline_event(
+                            "witness_rewrite",
+                            f"ungrounded claim caught — reply rewritten "
+                            f"({len(chat_text)} → {len(_fixed)} chars) before sending",
+                            before=chat_text, after=_fixed, verdict=_verdict, caught=True)
                     except Exception:
                         pass
                     chat_text = _fixed
                 else:
                     try:
-                        _witness.pipeline_event("witness_pass", "draft grounded")
+                        _witness.pipeline_event(
+                            "witness_pass",
+                            f"every claim in the {len(chat_text)}-char reply checked out",
+                            draft=chat_text, verdict=(_verdict or "PASS"))
                     except Exception:
                         pass
 
@@ -1373,8 +1408,11 @@ async def stream_response(
                         print("[nova] ECHO on direct-reply path — she re-sent a previous "
                               "message. One retry with the collision named.")
                         try:
-                            _witness.pipeline_event("echo_retry",
-                                                    "re-sent a previous message; retrying once")
+                            _witness.pipeline_event(
+                                "echo_retry",
+                                f"about to re-send a {len(chat_text.strip())}-char message she "
+                                f"already sent — asked to answer the newest message instead",
+                                repeated=chat_text.strip())
                         except Exception:
                             pass
                         messages.append({"role": "assistant", "content": full_response})

@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 19:21:56
+# Last updated: 2026-07-21 20:23:11
 """self_memory test — the proof I'm not guessing."""
 
 from nova_forge import CASES, run_tool

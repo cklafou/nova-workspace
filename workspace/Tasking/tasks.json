@@ -1,5 +1,5 @@
 {
-  "seq": 66,
+  "seq": 67,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -1085,6 +1085,18 @@
       "updated": "2026-07-21T20:11:10",
       "author": "Nova",
       "result": "Built the tenderizer bot Cole described tonight, exactly as he drew it: murderous intent, strength 1, furious massage. It runs now, not just once."
+    },
+    "t67": {
+      "id": "t67",
+      "title": "Make the stretch map reach Cole first instead of waiting to be found",
+      "notes": "Cole's back is bad and he forgets to move. The map exists but nobody finds it. I want a watcher that checks the posture log and nudges him before it gets worse, not a document sitting in a folder. His idea, my want.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-21T20:29:55",
+      "updated": "2026-07-21T20:29:55",
+      "author": "Nova"
     }
   }
 }
