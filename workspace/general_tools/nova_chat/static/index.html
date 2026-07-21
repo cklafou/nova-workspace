@@ -1083,6 +1083,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-sep"></div>
   <div class="dd-header">Panel Tab</div>
   <div class="dd-item" onclick="switchPanel('thoughts')"><span class="dd-icon">🧠</span><span class="dd-label">Thoughts</span><span class="dd-check" id="vchk-thoughts"></span></div>
+  <div class="dd-item" onclick="switchPanel('pipeline')"><span class="dd-icon">🛡</span><span class="dd-label">Pipeline</span><span class="dd-check" id="vchk-pipeline"></span></div>
   <div class="dd-item" onclick="switchPanel('tools')">  <span class="dd-icon">⚙</span><span class="dd-label">Tools</span><span class="dd-check" id="vchk-tools"></span></div>
   <div class="dd-item" onclick="switchPanel('monitor')"><span class="dd-icon">📊</span><span class="dd-label">Monitor</span><span class="dd-check" id="vchk-monitor"></span></div>
   <div class="dd-item" onclick="switchPanel('files')">  <span class="dd-icon">📁</span><span class="dd-label">Files</span><span class="dd-check" id="vchk-files"></span></div>
@@ -3066,6 +3067,57 @@ function addVerbose(d){
   v.insertBefore(item, v.firstChild);
   while(v.querySelectorAll('.vbi').length>80) v.removeChild(v.lastChild);
 }
+
+/* ══ PIPELINE TAB (2026-07-21) — her gates, live ═══════════════════════════════════════ */
+const _PL_META={
+  witness_check:      {i:'🛡', t:'Witness engaged',    c:''},
+  witness_pass:       {i:'✅', t:'Witness: PASS',       c:'ok'},
+  witness_rewrite:    {i:'✍️', t:'Witness: REWROTE',    c:'held'},
+  premise_hold:       {i:'✋', t:'Premise hold',        c:'held'},
+  echo_retry:         {i:'🔁', t:'Echo caught',         c:'held'},
+  assertion_challenge:{i:'🧾', t:'Sent back to look',   c:'held'},
+  trim:               {i:'✂️', t:'Context trimmed',     c:''},
+  trim_override:      {i:'⚠️', t:'TRIM OVERRIDE',       c:'err'},
+  now_card:           {i:'🕐', t:'Now-card attached',   c:''},
+};
+let _plSeen=0, _plTimer=null;
+const _PLSTATS={pass:0,rw:0,hold:0,echo:0,trim:0};
+async function plPoll(){
+  try{
+    const r=await fetch('/api/files/read?path=logs/pipeline.jsonl');
+    if(!r.ok){ document.getElementById('pl-now').textContent='no events file yet'; return; }
+    const j=await r.json();
+    const lines=(j.content||'').split('\n').filter(x=>x.trim());
+    if(lines.length===_plSeen) return;
+    const fresh=lines.slice(_plSeen); _plSeen=lines.length;
+    const feed=document.getElementById('pl-feed');
+    document.getElementById('pl-empty')?.remove();
+    for(const ln of fresh){
+      let d; try{ d=JSON.parse(ln); }catch(e){ continue; }
+      const m=_PL_META[d.stage]||{i:'·',t:d.stage,c:''};
+      if(d.stage==='witness_pass')_PLSTATS.pass++;
+      else if(d.stage==='witness_rewrite')_PLSTATS.rw++;
+      else if(d.stage==='premise_hold')_PLSTATS.hold++;
+      else if(d.stage==='echo_retry')_PLSTATS.echo++;
+      else if(d.stage==='trim_override')_PLSTATS.trim++;
+      const item=document.createElement('div');
+      item.className=`tfi ${m.c||'ok'}`;
+      item.innerHTML=`<div class="tfi-top"><span class="tfi-icon">${m.i}</span>`+
+        `<span class="tfi-verb">${esc(m.t)}</span>`+
+        `<span class="tfi-time">${esc(String(d.ts||'').slice(11,19))}</span></div>`+
+        `<div class="tfi-narr">${esc(d.detail||'')}</div>`;
+      feed.insertBefore(item,feed.firstChild);
+      if(activePanel!=='pipeline') document.querySelector('.ptab[data-tab="pipeline"]')?.classList.add('has-new');
+    }
+    while(feed.querySelectorAll('.tfi').length>80) feed.removeChild(feed.lastChild);
+    const el=id=>document.getElementById(id);
+    el('pl-pass').textContent=_PLSTATS.pass; el('pl-rw').textContent=_PLSTATS.rw;
+    el('pl-hold').textContent=_PLSTATS.hold; el('pl-echo').textContent=_PLSTATS.echo;
+    el('pl-trim').textContent=_PLSTATS.trim;
+    el('pl-now').textContent='live · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }catch(e){ /* polling must never throw */ }
+}
+_plTimer=setInterval(plPoll, 3000); setTimeout(plPoll, 1500);
 
 const _AICONS={write:'💾',exec:'⚡',read:'📄',pause:'⏸',resume:'▶',ncl:'🔗'};
 function _pushToolFeed(iconHtml, name, detail, ok=true) {
