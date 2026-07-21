@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T20:19:25+09:00",
+  "updated_at": "2026-07-21T20:33:04+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -1001,6 +1001,19 @@
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
       "resolved_at": "2026-07-21T20:19:25+09:00",
+      "notes": null
+    },
+    {
+      "id": "d107cbf0",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-21T20:33:04+09:00",
+      "commit": "b6e909ca",
+      "old_path": null,
+      "new_path": "Cole_journal/posture_log.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
       "notes": null
     }
   ],
