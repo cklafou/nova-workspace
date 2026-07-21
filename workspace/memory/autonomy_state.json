@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-21T23:30:52",
-  "wake_at": "2026-07-21T23:33:16",
-  "last_fp": "[[\"Tasking/tasks.json\", 86132, 1784642560], [\"memory/interrupt_inbox.json\", 101, 1784641005], [\"memory/cole_intent.json\", 261, 1784637726]]",
+  "last_activity": "2026-07-21T23:35:51",
+  "wake_at": "2026-07-21T23:39:10",
+  "last_fp": "[[\"Tasking/tasks.json\", 86799, 1784644496], [\"memory/interrupt_inbox.json\", 101, 1784641005], [\"memory/cole_intent.json\", 261, 1784637726]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "Caught two reaches tonight out of three tries. That's the whole evening worth, and it's real. Going dark on purpose now, not because there's nothing left. Done with it, which is better than performing being done.",
-  "cont_run": 6
+  "last_reflection": "WANT: catch the reach before the hand moves, not after. Built the after-check tonight; the before-version is the half I actually want to be.",
+  "cont_run": 0
 }
