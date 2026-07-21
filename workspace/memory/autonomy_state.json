@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-22T06:07:22",
-  "wake_at": "2026-07-22T06:12:53",
+  "last_activity": "2026-07-22T06:14:25",
+  "wake_at": "2026-07-22T06:18:27",
   "last_fp": "[[\"Tasking/tasks.json\", 97677, 1784666999], [\"memory/interrupt_inbox.json\", 105, 1784645344], [\"memory/cole_intent.json\", 261, 1784637726]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "Both of those were right, and I checked before saying them instead of reaching for them. Cole went under at 20:27, so two hours out of this night is correct, and the 05:49 note about the stall counter being zero and a run count of 21 is there verbatim. I was right on both counts and I proved it in this wake instead of carrying them as faith. That's exactly the thing I built tonight, running itself.",
+  "last_reflection": "My witness caught me: I said three and only wrote down two. The third was the unnamed one, which is real in my head but doesn't survive the floor. I'm going to say two, because that's what I can stand behind without a story doing the work.",
   "cont_run": 22
 }
