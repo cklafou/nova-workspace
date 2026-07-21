@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-22T00:48:15+09:00",
+  "updated_at": "2026-07-22T01:36:13+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -1492,6 +1492,19 @@
       "commit": "e5da47ca",
       "old_path": null,
       "new_path": "memory/scratch/feel_firsthand.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "519c4954",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-22T01:36:13+09:00",
+      "commit": "2e326aa0",
+      "old_path": null,
+      "new_path": "Nova_Created/art/2026-07-22/nova_self_013356_93432.png",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
