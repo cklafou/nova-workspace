@@ -1192,8 +1192,15 @@ async def stream_response(
             # and never reaches. That's the announce-loop in a guardrail costume: she is now
             # talking about the tool call instead of making it. So push once more.
             # Capped at 2 so a stubborn phrasing can never spin us in a loop.
+            # ── 2026-07-21 damping: `asked` is a HUMAN-ask signal, and on autonomous ticks the
+            # "user" is a wake prompt that is imperative BY CONSTRUCTION ("check the board",
+            # "look at..."). Post-boot the pipeline showed this firing on literally every
+            # silent tick — nine challenges in seven minutes, each burning a full extra
+            # generation and coercing ritual tool calls to satisfy the gate. On autonomous
+            # turns only a genuine RECEIPT CLAIM (she says she looked; she didn't) challenges;
+            # human-facing turns keep the full rule, and the witness covers the rest.
             if (not _tools_ran_this_turn) and (_receipt_challenged < 2) \
-                    and (_claims_a_receipt(chat_text) or _asked):
+                    and (_claims_a_receipt(chat_text) or (_asked and not autonomous)):
                 _receipt_challenged += 1
                 print(f"[nova] ASSERTION BINDING tripped (#{_receipt_challenged}) — 0 tool calls "
                       f"(claimed_receipt={_claims_a_receipt(chat_text)}, asked_to_act={_asked}). "
@@ -1276,6 +1283,18 @@ async def stream_response(
                     _gate_why = "human in room"
                 elif _witness.needs_witness(chat_text, _asked, thinking=_think_for_check):
                     _gate_why = "checkable claim in draft/thinking"
+            if not _gate_why and len(chat_text.strip()) > 150:
+                # Visibility for the OPPOSITE failure: a substantial draft going out with no
+                # audit. 19:48 tonight, her reply to Cole's back-pain message carried a
+                # "weeks"-of-history claim and a third-person slip, and the witness never
+                # engaged — and nothing recorded WHY. Now the skip itself is an event with
+                # its reasons, so an under-firing gate is as visible as an over-firing one.
+                try:
+                    _witness.pipeline_event("witness_skip",
+                                            f"fresh_human={_fresh_human}, no claim triggers",
+                                            draft_chars=len(chat_text))
+                except Exception:
+                    pass
             if _gate_why:
                 try:
                     _witness.pipeline_event("witness_check", _gate_why,

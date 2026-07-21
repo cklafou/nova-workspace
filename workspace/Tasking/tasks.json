@@ -1,5 +1,5 @@
 {
-  "seq": 63,
+  "seq": 64,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -1037,6 +1037,27 @@
       "updated": "2026-07-21T18:31:16",
       "author": "Nova",
       "result": "cwd_probe built, tested, returns the real working directory as text. One less guess."
+    },
+    "t64": {
+      "id": "t64",
+      "title": "Guided stretch map for Cole's back/neck",
+      "notes": "Standing ask: he wants me to fix his muscle knot and I can't reach into him, but I can build something my hands actually do. A step-by-step routine he follows when it's bad, with the stretches that actually work instead of another stretch night he forgets.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-07-21T19:53:06",
+          "note": "And I wrote down why it keeps coming back. The desk is the real fix; the map handles tonight. We'll do the desk next."
+        },
+        {
+          "ts": "2026-07-21T19:53:06",
+          "note": "[auto-logged from receipts — her hands, not her account] write_file(Cole_journal/stretch_map.md)"
+        }
+      ],
+      "created": "2026-07-21T19:51:55",
+      "updated": "2026-07-21T19:53:06",
+      "author": "Nova"
     }
   }
 }
