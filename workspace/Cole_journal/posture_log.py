@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-22 01:57:56
+# Last updated: 2026-07-22 03:01:01
 """Posture logger. Records a timestamp every time Cole sits back down.
 
 Nothing fancy, just the raw data the watcher reads. Run it once and leave it,
