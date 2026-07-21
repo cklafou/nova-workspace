@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-21T11:04:46",
+  "generated": "2026-07-21T11:13:12",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 30,
   "described": 28,
@@ -99,7 +99,7 @@
       "name": "nova_imagination",
       "kind": "body_part",
       "path": "nova_body/nova_imagination",
-      "purpose": "Her palette — the mediums she can paint in, and what each one is FOR.",
+      "purpose": "Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches, schematics), auto-applying her self-LoRA when she draws herself.",
       "files": 3,
       "lines": 835,
       "age_days": 0,
