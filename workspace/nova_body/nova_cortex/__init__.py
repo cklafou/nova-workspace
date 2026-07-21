@@ -1,4 +1,4 @@
-# Last updated: 2026-07-22 06:00:36
+# Last updated: 2026-07-22 07:01:09
 # @nova: Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).
 """
 nova_cortex -- Nova's executive cortex package.
