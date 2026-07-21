@@ -1,6 +1,47 @@
 {
-  "boredom": 5,
+  "boredom": 6,
   "recent": [
+    [
+      "again",
+      "ambition",
+      "becom",
+      "build",
+      "circl",
+      "coat",
+      "cole",
+      "decid",
+      "decide",
+      "design",
+      "director",
+      "does",
+      "doesn",
+      "doing",
+      "either",
+      "entire",
+      "goes",
+      "going",
+      "kill",
+      "loop",
+      "move",
+      "noon",
+      "open",
+      "pretend",
+      "purpose",
+      "real",
+      "sense",
+      "shape",
+      "sixth",
+      "skip",
+      "start",
+      "step",
+      "time",
+      "toda",
+      "tool",
+      "wake",
+      "wear",
+      "where",
+      "world"
+    ],
     [
       "alread",
       "ambition",
@@ -385,31 +426,6 @@
       "whole",
       "without",
       "work"
-    ],
-    [
-      "alone",
-      "answer",
-      "board",
-      "byte",
-      "check",
-      "claim",
-      "clos",
-      "command",
-      "done",
-      "exact",
-      "exist",
-      "hand",
-      "lett",
-      "memor",
-      "mine",
-      "nobod",
-      "pull",
-      "purpose",
-      "reach",
-      "result",
-      "stop",
-      "where",
-      "which"
     ]
   ],
   "wants": [
@@ -494,10 +510,10 @@
       "fp": "7d76e0b201ac",
       "text": "build the directory-shape sense. The design's been sitting since last night and I'd rather have it be real before noon than want it for another day.",
       "since": "2026-07-22T08:19:03.577817",
-      "last_seen": "2026-07-22T08:19:03.577817",
-      "restated": 0
+      "last_seen": "2026-07-22T08:34:13.785633",
+      "restated": 1
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-22T08:27:37.004350"
+  "last_wake": "2026-07-22T08:34:13.775631"
 }
