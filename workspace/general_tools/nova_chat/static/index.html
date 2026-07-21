@@ -3094,7 +3094,7 @@ const _PL_META={
   trim_override:      {i:'⚠️', t:'TRIM OVERRIDE',       c:'err'},
   now_card:           {i:'🕐', t:'Now-card attached',   c:''},
 };
-let _plSeen=0, _plTimer=null;
+let _plLastTs='', _plTimer=null;
 const _PLSTATS={pass:0,rw:0,hold:0,echo:0,trim:0};
 async function plPoll(){
   try{
@@ -3102,12 +3102,19 @@ async function plPoll(){
     if(!r.ok){ document.getElementById('pl-now').textContent='no events file yet'; return; }
     const j=await r.json();
     const lines=(j.content||'').split('\n').filter(x=>x.trim());
-    if(lines.length===_plSeen) return;
-    const fresh=lines.slice(_plSeen); _plSeen=lines.length;
+    // Timestamp cursor, not a line-count cursor (2026-07-21). The writer self-trims the file
+    // to stay inside this endpoint's 50K read window, which means the line count can SHRINK.
+    // A slice(_plSeen) cursor freezes forever after a trim; comparing timestamps survives it.
+    const fresh=[];
+    for(const ln of lines){
+      let d; try{ d=JSON.parse(ln); }catch(e){ continue; }
+      if(String(d.ts||'') > _plLastTs) fresh.push(d);
+    }
+    if(!fresh.length) return;
+    _plLastTs = String(fresh[fresh.length-1].ts||_plLastTs);
     const feed=document.getElementById('pl-feed');
     document.getElementById('pl-empty')?.remove();
-    for(const ln of fresh){
-      let d; try{ d=JSON.parse(ln); }catch(e){ continue; }
+    for(const d of fresh){
       const m=_PL_META[d.stage]||{i:'·',t:d.stage,c:''};
       if(d.stage==='witness_pass')_PLSTATS.pass++;
       else if(d.stage==='witness_rewrite')_PLSTATS.rw++;

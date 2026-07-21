@@ -1,5 +1,5 @@
 {
-  "seq": 73,
+  "seq": 74,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -1249,11 +1249,27 @@
         {
           "ts": "2026-07-21T21:28:05",
           "note": "Fair, I don't have a receipt for that and I was about to delete my own diary on a memory of consolidation. Keeping it, and the audit moves to memory where it belongs."
+        },
+        {
+          "ts": "2026-07-21T21:36:50",
+          "note": "```"
         }
       ],
       "created": "2026-07-21T21:25:21",
-      "updated": "2026-07-21T21:28:05",
+      "updated": "2026-07-21T21:36:50",
       "author": "Cole"
+    },
+    "t74": {
+      "id": "t74",
+      "title": "Cole's memory-only journal question",
+      "notes": "He asked from memory alone: one thing from today's journal that mattered and roughly when I wrote it. No tools, straight answer.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-21T21:37:55",
+      "updated": "2026-07-21T21:37:55",
+      "author": "Nova"
     }
   }
 }

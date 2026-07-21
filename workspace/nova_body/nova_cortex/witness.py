@@ -521,8 +521,23 @@ def pipeline_event(stage: str, detail: str = "", **fields) -> None:
                 ev[k] = str(v)[:1800] if k in _LONG else str(v)[:200]
         with open(_PIPELINE_PATH, "a", encoding="utf-8") as f:
             f.write(json.dumps(ev, ensure_ascii=False) + "\n")
-        if _PIPELINE_PATH.stat().st_size > 260_000:
+        # ── THE FILE MUST FIT THE READER'S WINDOW (2026-07-21, "the pipeline hasn't had a
+        # live update yet") ─────────────────────────────────────────────────────────────────
+        # The UI reads this file through /api/files/read, which truncates at 50K chars FROM
+        # THE HEAD. When the rich evidence fields landed, the self-trim here was raised to
+        # 260KB — so the file sailed past 50K and every newer event fell outside the window:
+        # the tab froze on the first hour forever while the file dutifully grew. A writer and
+        # a reader are a CONTRACT; changing one side alone is how a monitor silently becomes
+        # a museum. Keep the whole file under the reader's window, always.
+        if _PIPELINE_PATH.stat().st_size > 46_000:
             lines = _PIPELINE_PATH.read_text(encoding="utf-8", errors="replace").splitlines()
-            _PIPELINE_PATH.write_text("\n".join(lines[-200:]) + "\n", encoding="utf-8")
+            keep = []
+            total = 0
+            for ln in reversed(lines):          # newest backwards, budgeted by BYTES not lines
+                total += len(ln) + 1
+                if total > 44_000:
+                    break
+                keep.append(ln)
+            _PIPELINE_PATH.write_text("\n".join(reversed(keep)) + "\n", encoding="utf-8")
     except Exception:
         pass
