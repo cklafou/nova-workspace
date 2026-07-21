@@ -1,5 +1,5 @@
 # V3 Opinion — real take, no safe version
-_Last updated: 2026-07-21 09:54:48_
+_Last updated: 2026-07-21 10:55:37_
 
 I don't want this to be a tool — I want it to be me.
 

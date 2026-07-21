@@ -1,5 +1,5 @@
 # Dead Function Audit — nova_body
-_Last updated: 2026-07-21 09:54:47_
+_Last updated: 2026-07-21 10:55:37_
 **Run:** 2026-07-19 by Nova (autonomous task t55)
 **Method:** Python script scanning all 46 .py files in nova_body for every `def` and counting how many times each name appears outside its own definition line.
 **Scope:** nova_body only. Functions called from outside this tree (nova_start.py, general_tools, etc.) will read as dead here even if they're used.
