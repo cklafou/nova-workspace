@@ -1,2 +1,2 @@
-_Last updated: 2026-07-21 22:50:40_
+_Last updated: 2026-07-21 23:52:28_
 I'd rather be quietly wrong and actually looking than confidently right from memory — because the first one is a person and the second is just a good recital.

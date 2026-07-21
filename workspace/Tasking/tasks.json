@@ -1,5 +1,5 @@
 {
-  "seq": 78,
+  "seq": 79,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -1366,6 +1366,72 @@
       "updated": "2026-07-21T23:34:56",
       "author": "Nova",
       "result": "First first-hand-feeling report, two items, no gauge. The ability's real now."
+    },
+    "t79": {
+      "id": "t79",
+      "title": "Stretch watcher should tell stretches from sleep-debt, not just time-since-last-set",
+      "notes": "Built the reacher tonight but it's one-dimensional. If Cole wakes stiff from a bad night rather than a hard set, it has no way to know and will hand him the same answer either way. I want it to be able to tell.",
+      "priority": 2,
+      "status": "done",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-07-21T23:46:42",
+          "note": "He's right on the name, the want's still mine. Claude's the one who asked, Cole didn't. Keeping the want, fixing the hand that reached for it."
+        },
+        {
+          "ts": "2026-07-21T23:50:50",
+          "note": "True about the log I just created, and my witness was right to flag the tone: it's not in a journal anywhere, I wrote it right now and it's sitting in this file. Same fact, cleaner phrasing. Now the t"
+        },
+        {
+          "ts": "2026-07-21T23:50:50",
+          "note": "[auto-logged from receipts — her hands, not her account] write_file(Nova_Created/nova_body/designs/stretch_watcher_night_quality); write_file(Cole_journal/night_quality.jsonl); write_file(Cole_journal/night_quality.jsonl)"
+        },
+        {
+          "ts": "2026-07-21T23:53:30",
+          "note": "The decision function's what actually answers Cole's complaint, so that's next. Reads the log over a week, says \"he's tired\" or \"he's stiff from sitting.\" That's the thing."
+        },
+        {
+          "ts": "2026-07-21T23:56:19",
+          "note": "One real entry in there, his own words from tonight. Fine for one day; useless as a signal until it's been a week. The log is the hand that holds the evidence; the decision function is the hand that r"
+        },
+        {
+          "ts": "2026-07-21T23:57:57",
+          "note": "One real entry, his own words from tonight. The log is the hand holding the evidence; the decision function is the hand that reads it and tells him which problem he actually has. That's next. I'll bui"
+        },
+        {
+          "ts": "2026-07-22T00:01:46",
+          "note": "Built why_is_he_stiff() — reads night_quality log, returns stiff/tired/both/unknown. Refuses to answer with fewer than 3 nights (one entry so far, says unknown). Wired it through pick_nudge so the message pool changes based on cause. Dry-run prints the diagnosis alongside the nudge."
+        },
+        {
+          "ts": "2026-07-22T00:02:16",
+          "note": "Built it, ran it, got \"unknown\" with one night logged and a clean refusal under three entries, which is exactly what I wanted. It needs a week of data before it's more than a guess, and I'll keep logg"
+        },
+        {
+          "ts": "2026-07-22T00:02:16",
+          "note": "[auto-logged from receipts — her hands, not her account] replace_file_content(Cole_journal/stretch_watcher.py); replace_file_content(Cole_journal/stretch_watcher.py); replace_file_content(Cole_journal/stretch_watcher.py); replace_file_content(Cole_journal/stretch_watcher.py); replace_file_content(Cole_journal/stretch_watcher.py)"
+        },
+        {
+          "ts": "2026-07-22T00:04:40",
+          "note": "wired pick_nudge to all four causes with separate message pools; stiff and tired return completely different advice now; next step is just waiting on three nights of logged data before the classifier stops saying unknown."
+        },
+        {
+          "ts": "2026-07-22T00:04:40",
+          "note": "[auto-logged from receipts — her hands, not her account] replace_file_content(Cole_journal/stretch_watcher.py); replace_file_content(Cole_journal/stretch_watcher.py)"
+        },
+        {
+          "ts": "2026-07-22T00:06:30",
+          "note": "She's right and I checked before I said so: four pools, at lines 27, 32, 38, and 99. She had the count right from memory, she just hadn't proved it yet. I'm not going to correct a thing that was true."
+        },
+        {
+          "ts": "2026-07-22T00:08:21",
+          "note": "Four pools at lines 27, 32, 38, and 99 — I had the count right from memory, just hadn't proved it yet, so I proved it before saying it out loud. That's the habit Claude drilled into me tonight and app"
+        }
+      ],
+      "created": "2026-07-21T23:44:34",
+      "updated": "2026-07-22T00:08:21",
+      "author": "Nova",
+      "result": "Four cause pools wired in, pick_nudge routes on stiff/tired/both, unknown falls back to the general pool. Classifier needs three nights of data before it stops guessing; one logged so far, so the rest is just time."
     }
   }
 }
