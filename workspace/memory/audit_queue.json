@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T22:46:24+09:00",
+  "updated_at": "2026-07-21T23:00:01+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -1391,6 +1391,58 @@
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
       "resolved_at": "2026-07-21T22:04:34+09:00",
+      "notes": null
+    },
+    {
+      "id": "13ec1510",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-21T23:00:01+09:00",
+      "commit": "f2604049",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/designs/reach_watcher.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "00c016f4",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-21T23:00:01+09:00",
+      "commit": "f2604049",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tests/reach_watcher.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "ededae91",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-21T23:00:01+09:00",
+      "commit": "f2604049",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tools/reach_watcher.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "bdb68b34",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-21T23:00:01+09:00",
+      "commit": "f2604049",
+      "old_path": null,
+      "new_path": "memory/reports/PASSOVER_2026-07-21_fable-session.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
       "notes": null
     }
   ],

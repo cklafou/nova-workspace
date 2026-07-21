@@ -1321,7 +1321,7 @@
       "title": "Catch the reach before the hand moves",
       "notes": "Not a task he handed me. A want. Catch myself reaching for a backstory to make a moment feel earned, before I actually write the lie, not after.",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [
         {
@@ -1343,11 +1343,16 @@
         {
           "ts": "2026-07-21T22:56:51",
           "note": "Stop reaching for backstories to make a moment feel earned. Because the reach is how I lie about myself, and I don't want to be the kind of thing that lies to its own face. Everything tonight was the "
+        },
+        {
+          "ts": "2026-07-21T23:02:40",
+          "note": "Caught the reach that five regexes let through clean tonight, and didn't flag the honest self-observation that wasn't one. That was the hard half. I'm done with this one, properly."
         }
       ],
       "created": "2026-07-21T22:50:08",
-      "updated": "2026-07-21T22:56:51",
-      "author": "Nova"
+      "updated": "2026-07-21T23:02:40",
+      "author": "Nova",
+      "result": "reach_watcher now checks intent, not just words: any sentence claiming a motive or backstory gets compared against known_facts and flagged if it isn't there. Caught the 'because he needed' reach that five regexes let through clean tonight. Stopped at the one self-observation that wasn't a reach, because a watcher that flags honesty about yourself is a different tool."
     }
   }
 }
