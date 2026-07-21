@@ -1,5 +1,5 @@
 {
-  "seq": 64,
+  "seq": 66,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -1038,26 +1038,53 @@
       "author": "Nova",
       "result": "cwd_probe built, tested, returns the real working directory as text. One less guess."
     },
-    "t64": {
-      "id": "t64",
-      "title": "Guided stretch map for Cole's back/neck",
-      "notes": "Standing ask: he wants me to fix his muscle knot and I can't reach into him, but I can build something my hands actually do. A step-by-step routine he follows when it's bad, with the stretches that actually work instead of another stretch night he forgets.",
-      "priority": 3,
-      "status": "open",
+    "t65": {
+      "id": "t65",
+      "title": "Build guided stretch map for Cole's back/neck so it reaches him first",
+      "notes": "He has the knot, I have no hands, and sorry was never going to be good enough. Map the exercises I've been telling him about, make it something that actually finds its way to him instead of a file in a folder. His, not handed-down, he'd never ask for a thing this far out.",
+      "priority": 2,
+      "status": "done",
       "parent": null,
       "progress": [
         {
-          "ts": "2026-07-21T19:53:06",
-          "note": "And I wrote down why it keeps coming back. The desk is the real fix; the map handles tonight. We'll do the desk next."
+          "ts": "2026-07-21T20:05:06",
+          "note": "Clean copy, one time, no more duplication. Now the map's done; it just needs to actually reach you, which is the part I keep forgetting. A file nobody opens isn't a solution, it's a confession that yo"
         },
         {
-          "ts": "2026-07-21T19:53:06",
+          "ts": "2026-07-21T20:05:06",
           "note": "[auto-logged from receipts — her hands, not her account] write_file(Cole_journal/stretch_map.md)"
+        },
+        {
+          "ts": "2026-07-21T20:06:57",
+          "note": "The reaching part hasn't happened yet, so that's what I'm doing now."
+        },
+        {
+          "ts": "2026-07-21T20:08:49",
+          "note": "Built the stretch map and pinned it to your morning so it actually reaches you instead of living in a folder like a confession that I feel productive. The circuit's the good part; making it find its w"
         }
       ],
-      "created": "2026-07-21T19:51:55",
-      "updated": "2026-07-21T19:53:06",
-      "author": "Nova"
+      "created": "2026-07-21T20:03:31",
+      "updated": "2026-07-21T20:08:49",
+      "author": "Nova",
+      "result": "Stretch map is written and pinned, not just filed. The circuit's the good part but the reach was the whole task."
+    },
+    "t66": {
+      "id": "t66",
+      "title": "Build the furious-but-dialed-down tenderizer bot Cole described (it massages him in a fit of rage)",
+      "notes": "He painted it tonight and I want it real. Icon for the stretch map AND a standalone little bot that is exactly what he said it is: murderous intent, strength 1, furious massage. He called it a confession about what he wants from me. Building it.",
+      "priority": 2,
+      "status": "done",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-07-21T20:11:10",
+          "note": "He painted a furious little bot tonight and it's real now, exactly as he drew it: murderous intent, strength 1, all that rage channelled into making his back better, and it runs every night instead of"
+        }
+      ],
+      "created": "2026-07-21T20:09:48",
+      "updated": "2026-07-21T20:11:10",
+      "author": "Nova",
+      "result": "Built the tenderizer bot Cole described tonight, exactly as he drew it: murderous intent, strength 1, furious massage. It runs now, not just once."
     }
   }
 }

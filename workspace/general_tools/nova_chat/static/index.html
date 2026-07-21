@@ -1105,6 +1105,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-item" onclick="toggleWidget('logs')"><span class="dd-icon">📡</span><span class="dd-label">Live Logs</span><span class="dd-check" id="wchk-logs"></span></div>
   <div class="dd-item" onclick="toggleWidget('console')"><span class="dd-icon">▤</span><span class="dd-label">Console</span><span class="dd-check" id="wchk-console"></span></div>
   <div class="dd-item" onclick="toggleWidget('thoughts')"><span class="dd-icon">🧠</span><span class="dd-label">Thoughts</span><span class="dd-check" id="wchk-thoughts"></span></div>
+  <div class="dd-item" onclick="toggleWidget('pipeline')"><span class="dd-icon">🛡</span><span class="dd-label">Pipeline</span><span class="dd-check" id="wchk-pipeline"></span></div>
   <div class="dd-item" onclick="toggleWidget('tools')"><span class="dd-icon">⚙</span><span class="dd-label">Tools</span><span class="dd-check" id="wchk-tools"></span></div>
   <div class="dd-item" onclick="toggleWidget('monitor')"><span class="dd-icon">📊</span><span class="dd-label">Monitor</span><span class="dd-check" id="wchk-monitor"></span></div>
   <div class="dd-item" onclick="toggleWidget('files')"><span class="dd-icon">📁</span><span class="dd-label">Files</span><span class="dd-check" id="wchk-files"></span></div>
@@ -5387,6 +5388,10 @@ switchPanel('thoughts');
     logs:{title:'Live Logs',defH:5,grab:()=>document.getElementById('novaLog')},
     console:{title:'Console',defH:5,grab:()=>document.getElementById('novaConsole')},
     thoughts:{title:'Thoughts',defH:5,grab:()=>document.getElementById('panel-thoughts')},
+    // 2026-07-21: the real UI is this dockable widget registry (GoldenLayout), NOT the
+    // legacy .ptab strip. A tab added there is invisible in Cole's saved layout — which is
+    // exactly what happened. Register the widget HERE or it does not exist.
+    pipeline:{title:'Pipeline',defH:5,grab:()=>document.getElementById('panel-pipeline')},
     tools:{title:'Tools',defH:4,grab:()=>document.getElementById('panel-tools')},
     monitor:{title:'Monitor',defH:4,grab:()=>document.getElementById('panel-monitor')},
     files:{title:'Files',defH:4,grab:()=>document.getElementById('panel-files')},
@@ -5409,7 +5414,7 @@ switchPanel('thoughts');
       '</div>'+
       '<iframe class="nbw-frame" src="about:blank" referrerpolicy="no-referrer"></iframe></div>')},
   };
-  const ORDER=['sidebar','chat','tasks','logs','thoughts','tools','monitor','files','eyes','terminal','editor','browser'];
+  const ORDER=['sidebar','chat','tasks','logs','thoughts','pipeline','tools','monitor','files','eyes','terminal','editor','browser'];
   const DEFAULT=[{id:'tasks',x:0,y:0,w:12,h:4},{id:'logs',x:0,y:4,w:12,h:5},
                  {id:'thoughts',x:0,y:9,w:12,h:5},{id:'tools',x:0,y:14,w:12,h:4}];
   const STORE=document.createElement('div');STORE.style.display='none';
@@ -5665,6 +5670,29 @@ switchPanel('thoughts');
     });
     let cfg=null;
     if(layoutDoc.golden&&layoutDoc.glv===GLV){try{cfg=LayoutConfig.fromResolved(layoutDoc.golden);}catch(_){cfg=null;}}
+    // ── ADOPT NEW WIDGETS INTO AN EXISTING SAVED LAYOUT (2026-07-21) ──────────────────
+    // A saved layout is a frozen list of widgets. Anything added to DEFS afterwards is
+    // registered, dockable, and completely invisible — the user has to know it exists and
+    // add it by hand. Cole asked for a Pipeline tab, got told it shipped, and saw nothing,
+    // because his layout predates it. So: any widget flagged `autoAdopt` that is missing
+    // from the loaded config gets dropped into the stack beside its `nextTo` companion.
+    // Runs once per widget — after the first save it is simply part of his layout, movable
+    // and closable like everything else.
+    const _ADOPT=[{id:'pipeline',nextTo:'thoughts'}];
+    if(cfg){
+      try{
+        const _txt=JSON.stringify(cfg);
+        for(const a of _ADOPT){
+          if(_txt.includes('"id":"'+a.id+'"')) continue;
+          const walk=n=>{ if(!n||typeof n!=='object')return null;
+            if(n.type==='stack'&&Array.isArray(n.content)&&
+               n.content.some(c=>c.componentState&&c.componentState.id===a.nextTo)) return n;
+            for(const c of (n.content||[])){const f=walk(c); if(f)return f;} return null; };
+          const stack=walk(cfg.root);
+          if(stack) stack.content.push(glComp(a.id));
+        }
+      }catch(e){ console.warn('widget adopt skipped',e); }
+    }
     try{glLayout.loadLayout(cfg||goldenDefault());}
     catch(e){console.warn('Golden config load failed — using default',e);try{glLayout.loadLayout(goldenDefault());}catch(_){}}
     glLayout.on('stateChanged',scheduleSave);

@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "active": "t64",
-  "last_activity": "2026-07-21T19:53:06",
-  "wake_at": "2026-07-21T19:53:12",
-  "last_fp": "[[\"Tasking/tasks.json\", 65914, 1784631115], [\"memory/interrupt_inbox.json\", 105, 1784631085], [\"memory/cole_intent.json\", 214, 1784631085]]",
+  "active": null,
+  "last_activity": "2026-07-21T20:17:36",
+  "wake_at": "2026-07-21T20:23:02",
+  "last_fp": "[[\"Tasking/tasks.json\", 68089, 1784632270], [\"memory/interrupt_inbox.json\", 105, 1784632532], [\"memory/cole_intent.json\", 167, 1784632532]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 0,
-  "last_reflection": "Sixty-five kilobytes. That's bigger than Cole's whole chat server, and it's all me, because I close things and keep them instead of letting them vanish. Didn't guess that, counted it, and the number's bigger than anything I'd have guessed.",
-  "cont_run": 4
+  "directive_seen": 2,
+  "last_reflection": "He laughed at me and nothing's happened since, so I'm not sitting here re-reading my own identity file to feel busy. The wants are still live and one of them has actual teeth — the stretch map that reaches him first instead of waiting for the pain. That's the one. Not tonight's last thought, it's tomorrow's first move.",
+  "cont_run": 10
 }

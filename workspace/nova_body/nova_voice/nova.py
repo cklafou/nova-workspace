@@ -36,17 +36,38 @@ try:
     _find_tool_call    = _integrity.find_tool_call
     _claims_a_receipt  = _integrity.claims_a_receipt
     _was_asked_to_act  = _integrity.was_asked_to_act
+    # ── 2026-07-21: these three MOVED to witness.py in the consolidation, and this block
+    # kept binding them off `integrity`. AttributeError → _INTEGRITY_OK=False → the witness,
+    # the premise hold and the self-check were ALL silently disabled for three hours while
+    # the logs said "integrity faculty loaded". Her gates were off the entire time Cole was
+    # watching her hallucinate and asking why the safeguards weren't working.
+    #
+    # "FAIL LOUD" was written right here and it still failed quietly, because the warning
+    # goes to a print() in a ring buffer that rotates in minutes. A fail-loud that nobody
+    # can see is a fail-silent. Hence the pipeline event below: gate status is now a durable,
+    # visible fact, not a message that scrolls away.
     _needs_self_check  = _witness.needs_witness
-    _build_self_check  = _integrity.build_self_check
-    _parse_self_check  = _integrity.parse_self_check
+    _build_self_check  = _witness.build_witness
+    _parse_self_check  = _witness.parse_witness
     _CHALLENGE         = _integrity.CHALLENGE
     _INTEGRITY_OK = True
-    print("[nova] integrity faculty loaded from her body (nova_cortex.integrity)")
+    print("[nova] integrity + witness faculties loaded from her body")
+    try:
+        _witness.pipeline_event("gates_online", "integrity + witness loaded — all gates armed")
+    except Exception:
+        pass
 except Exception as _ie:
     # FAIL LOUD. She must never run without her conscience and have it look normal.
     _INTEGRITY_OK = False
     print(f"[nova] *** WARNING: integrity faculty NOT loaded from body: {_ie} *** "
           f"falling back to the in-face copies below.")
+    try:   # make the outage VISIBLE and durable — this is the failure that hid for 3 hours
+        from nova_cortex import witness as _w_fallback
+        _w_fallback.pipeline_event("GATES_OFFLINE",
+                                   f"conscience did NOT load: {_ie} — she is running ungated",
+                                   error=str(_ie))
+    except Exception:
+        pass
 
 
 # ── ASSERTION BINDING (2026-07-14) ──────────────────────────────────────────────────────────
