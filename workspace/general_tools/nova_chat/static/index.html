@@ -755,6 +755,32 @@ a:hover { text-decoration: underline; }
 .tfi-res  { color: var(--text-mute); font-size: 10px; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tfi.ok  .tfi-icon { color: var(--green); }
 .tfi.err .tfi-icon { color: var(--red); }
+/* ── Narrated tool cards (2026-07-21, Cole: "even Verbose explains nothing") ─────────
+   Every call renders as a plain-English sentence with a colored status edge, not a raw
+   dump. The raw dump is still one click away — narration for the glance, bytes for the
+   dig. */
+.tfi { border-left: 3px solid var(--border); }
+.tfi.ok   { border-left-color: var(--green); }
+.tfi.err  { border-left-color: var(--red); }
+.tfi.held { border-left-color: var(--yellow); }
+.tfi.held .tfi-icon { color: var(--yellow); }
+.tfi-verb { font-weight: 600; font-size: 11px; color: var(--text); }
+.tfi-narr { color: var(--text); font-size: 10.5px; line-height: 1.45; white-space: normal; word-break: break-word; }
+.tfi-narr code { font-family: var(--mono); font-size: 9.5px; background: var(--bg-hover); padding: 0 3px; border-radius: 3px; color: var(--nova); }
+.tfi-narr .t-path { font-family: var(--mono); font-size: 9.5px; color: var(--nova); }
+.tfi-narr .t-dim  { color: var(--text-mute); }
+.tfi-why  { color: var(--yellow); font-size: 10px; line-height: 1.4; white-space: normal; }
+/* live summary strip */
+.tstrip { display: flex; gap: 8px; align-items: center; padding: 4px 6px; margin-bottom: 5px;
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 10px; color: var(--text-mute); flex-shrink: 0; }
+.tstrip b { color: var(--text); font-weight: 600; }
+.tstrip .ts-err  b { color: var(--red); }
+.tstrip .ts-held b { color: var(--yellow); }
+.tstrip .ts-now { margin-left: auto; font-size: 9.5px; }
+/* verbose diff blocks */
+.vbi-pre.del { background: rgba(220,80,80,.08); border-left: 2px solid var(--red); }
+.vbi-pre.ins { background: rgba(80,200,120,.08); border-left: 2px solid var(--green); }
 /* Tools panel sub-tabs (Feed | Verbose) — 2026-07-19 */
 .ttab-btn { background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-mute); font-size: 10px; padding: 2px 10px; cursor: pointer; font-family: inherit; }
 .ttab-btn:hover { color: var(--text); border-color: var(--nova); }
@@ -1628,6 +1654,15 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
           <input type="checkbox" id="vb-expand" style="accent-color:var(--nova)"> expand
         </label>
         <button class="sb-btn" onclick="verboseClear()" title="Clear verbose log">✕</button>
+      </div>
+      <div class="tstrip" id="tools-strip" style="display:none">
+        <span title="commands run">⚡<b id="ts-cmd">0</b></span>
+        <span title="files read">📄<b id="ts-read">0</b></span>
+        <span title="files written / edited">💾<b id="ts-write">0</b></span>
+        <span title="memory searches">🔍<b id="ts-mem">0</b></span>
+        <span class="ts-err"  title="errors">❌<b id="ts-err">0</b></span>
+        <span class="ts-held" title="held / refused by her guards">✋<b id="ts-held">0</b></span>
+        <span class="ts-now" id="ts-now"></span>
       </div>
       <div id="panel-tools-feed">
         <div class="panel-empty" id="tools-empty"><div class="ei">⚙</div>No tool calls yet.<br>Executions stream in live.</div>
@@ -2833,27 +2868,114 @@ function _toolGroupAdd(g,name,cls,html){
 }
 function addInlineTool(d) {
   const g=_toolGroup(); if(!g) return;
-  _toolGroupAdd(g, d.tool||'tool', d.error?'err':'ok',
-    `<span class="tool-card-icon">${TICONS[d.tool]||TICONS.default}</span><span class="tool-card-name">${esc(d.tool||'tool')}</span><span class="tool-card-res">${esc((d.error||d.result||'').toString().slice(0,90))}</span>`);
+  const n=_narrate(d);
+  _toolGroupAdd(g, d.tool||'tool', n.status==='ok'?'ok':'err',
+    `<span class="tool-card-icon">${n.icon}</span><span class="tool-card-name">${n.verb}</span><span class="tool-card-res">${n.narr}</span>`);
   scrollBot();
 }
+// ══ NARRATED TOOL FEED (2026-07-21) ══════════════════════════════════════════════════
+// Cole: "I need to know what is happening and even Verbose mode explains nothing."
+// Raw args and raw results are evidence, not explanation. Every call now renders as a
+// plain-English sentence — what she did, to what, and how it went — with a colored edge
+// (green ok / red error / amber held-or-refused). The raw bytes stay one click away.
+function _base(p){ p=String(p||''); const i=Math.max(p.lastIndexOf('/'),p.lastIndexOf('\\')); return i<0?p:p.slice(i+1); }
+function _dirOf(p){ p=String(p||''); const i=Math.max(p.lastIndexOf('/'),p.lastIndexOf('\\')); return i<0?'':p.slice(0,i); }
+function _kb(n){ return n>=1024?(n/1024).toFixed(1)+' KB':n+' B'; }
+function _words(s){ const m=String(s||'').trim(); return m?m.split(/\s+/).length:0; }
+function _narrate(d){
+  const t=d.tool||'tool', a=d.input||{}, res=(d.error||d.result||'').toString();
+  const path=a.path||'', bn=esc(_base(path)), dir=esc(_dirOf(path));
+  const P=`<span class="t-path" title="${esc(path)}">${bn}</span>${dir?` <span class="t-dim">in ${dir}/</span>`:''}`;
+  let status = d.error?'err':'ok';
+  if(/^(REFUSED|HELD)/.test(res)) status='held';
+  else if(/^ERROR/i.test(res)) status='err';
+  let icon=TICONS[t]||TICONS.default, verb=t, narr='', why='';
+  const clen = c => (a.content!==undefined? String(a.content).length : 0);
+  switch(t){
+    case 'read_file':
+      verb='Read'; narr=`${P} <span class="t-dim">— ${status==='ok'?_kb(res.length)+' of content':'not found'}</span>`; break;
+    case 'list_dir': {
+      const n=res.split('\n').filter(x=>x.trim()).length;
+      verb='Looked inside'; narr=`${P||'<span class="t-path">workspace</span>'} <span class="t-dim">— ${status==='ok'?n+' entries':'missing'}</span>`; break; }
+    case 'write_file':
+      verb = status==='ok'?'Created file':'Tried to create file';
+      narr = `${P} <span class="t-dim">— ${clen(a)?_kb(clen(a))+' of new content':'NO content in the call'}</span>`;
+      if(status==='held') why = /no longer works|already exists.*overwrite/i.test(res)
+          ? '✋ refused: file exists — overwriting is not one of her verbs; she was pointed to her edit tools'
+          : '✋ refused: the call carried a path but no content — the code never left her thinking';
+      break;
+    case 'append_file':
+      verb='Added to file'; narr=`${P} <span class="t-dim">— +${_kb(clen(a))}</span>`;
+      if(status==='held') why='✋ refused: she already wrote this exact text — a repeat, not a record';
+      break;
+    case 'replace_file_content':
+      verb='Edited file'; narr=`${P} <span class="t-dim">— swapped ${_kb(String(a.target_content||'').length)} for ${_kb(String(a.replacement_content||'').length)}</span>`; break;
+    case 'run_command': {
+      const cmd=String(a.command||'').replace(/\s+/g,' ');
+      verb='Ran command';
+      narr=`<code>${esc(cmd.slice(0,72))}${cmd.length>72?'…':''}</code> <span class="t-dim">→ ${status==='ok'?(res.trim()?_kb(res.length)+' output':'no output'):'failed'}</span>`;
+      break; }
+    case 'memory_search':
+      verb='Searched her memory';
+      narr=`<span class="t-dim">for</span> “${esc(String(a.query||'').slice(0,60))}” <span class="t-dim">→ ${_kb(res.length)} of matches</span>`; break;
+    case 'generate_image': {
+      const m=res.match(/(?:saved to|saved:)\s*(\S+\.png)/i);
+      verb='Painted';
+      narr=`“${esc(String(a.prompt||'').slice(0,64))}${String(a.prompt||'').length>64?'…':''}”${m?` <span class="t-dim">→</span> <span class="t-path">${esc(_base(m[1]))}</span>`:''}`; break; }
+    case 'create_task':
+      verb='Put on her board'; narr=`“${esc(String(a.title||'').slice(0,70))}”`; break;
+    case 'task_progress':
+      verb='Logged progress'; narr=`<span class="t-dim">on</span> ${esc(String(a.id||a.task_id||'task'))}: “${esc(String(a.note||a.notes||'').slice(0,64))}”`; break;
+    case 'complete_task':
+      verb='Finished task'; narr=`${esc(String(a.id||a.task_id||''))} <span class="t-dim">closed</span>`; break;
+    case 'journal': case 'journal_note':
+      verb='Wrote in her journal'; narr=`<span class="t-dim">${_words(a.entry||a.note||a.content)} words</span>`; break;
+    case 'ping_claude':
+      verb='Pinged Claude'; narr=`<span class="t-dim">${/DELIVERED/i.test(res)?'delivered to the desktop':'attempted'}</span>`; break;
+    default:
+      if(!(t in TICONS)){ icon='🔨'; verb=`Used her forged tool <span class="t-path">${esc(t)}</span>`; narr=`<span class="t-dim">→ ${_kb(res.length)} result</span>`; }
+      else narr=`<span class="t-dim">${esc(res.replace(/\n/g,' ').slice(0,80))}</span>`;
+  }
+  if(status==='err' && !why) why='❌ '+esc(res.replace(/^ERROR:?\s*/i,'').replace(/\n/g,' ').slice(0,110));
+  if(status==='held' && !why) why='✋ '+esc(res.replace(/^(REFUSED|HELD)[:—-]?\s*/i,'').replace(/\n/g,' ').slice(0,110));
+  return {icon, verb, narr, why, status};
+}
+const _TSTATS={cmd:0,read:0,write:0,mem:0,err:0,held:0,last:0};
+function _stripTick(){
+  const el=id=>document.getElementById(id);
+  if(!el('tools-strip')) return;
+  el('tools-strip').style.display='flex';
+  el('ts-cmd').textContent=_TSTATS.cmd; el('ts-read').textContent=_TSTATS.read;
+  el('ts-write').textContent=_TSTATS.write; el('ts-mem').textContent=_TSTATS.mem;
+  el('ts-err').textContent=_TSTATS.err; el('ts-held').textContent=_TSTATS.held;
+}
+setInterval(()=>{ const el=document.getElementById('ts-now');
+  if(el&&_TSTATS.last) el.textContent='last: '+Math.max(0,Math.round((Date.now()-_TSTATS.last)/1000))+'s ago';
+},1000);
 function addTool(d) {
   const feed=document.getElementById('panel-tools-feed');
   document.getElementById('tools-empty')?.remove();
-  const ok=!d.error;
+  const n=_narrate(d);
   const fullText=(d.error||d.result||'').toString();
-  const preview=fullText.replace(/\n/g,' ').slice(0,80)+(fullText.length>80?'…':'');
   const dur=d.duration_ms?` · ${d.duration_ms}ms`:'';
   const detId=`tdet_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+  _TSTATS.last=Date.now();
+  if(n.status==='err')_TSTATS.err++; else if(n.status==='held')_TSTATS.held++;
+  if(d.tool==='run_command')_TSTATS.cmd++;
+  else if(d.tool==='read_file'||d.tool==='list_dir')_TSTATS.read++;
+  else if(/^(write_file|append_file|replace_file_content)$/.test(d.tool))_TSTATS.write++;
+  else if(d.tool==='memory_search')_TSTATS.mem++;
+  _stripTick();
   const item=document.createElement('div');
-  item.className=`tfi ${ok?'ok':'err'}`;
+  item.className=`tfi ${n.status}`;
   item.innerHTML=
     `<div class="tfi-top" style="cursor:pointer" onclick="const e=document.getElementById('${detId}');e.style.display=e.style.display==='none'?'block':'none'">
-      <span class="tfi-icon">${TICONS[d.tool]||TICONS.default}</span>
-      <span class="tfi-name">${esc(d.tool||'tool')}</span>
+      <span class="tfi-icon">${n.icon}</span>
+      <span class="tfi-verb">${n.verb}</span>
       <span class="tfi-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}${esc(dur)}</span>
     </div>
-    <div class="tfi-res">${esc(preview)}</div>
+    <div class="tfi-narr">${n.narr}</div>
+    ${n.why?`<div class="tfi-why">${n.why}</div>`:''}
     <div id="${detId}" style="display:none;font-size:9.5px;white-space:pre-wrap;padding:4px 5px;background:var(--bg-hover);border-radius:var(--radius-sm);margin-top:3px;max-height:150px;overflow-y:auto;font-family:var(--mono);color:var(--text)">${esc(fullText)}</div>`;
   feed.insertBefore(item,feed.firstChild);
   while(feed.querySelectorAll('.tfi').length>60) feed.removeChild(feed.lastChild);
@@ -2889,23 +3011,39 @@ function addVerbose(d){
   const v=document.getElementById('panel-tools-verbose');
   if(!v) return;
   document.getElementById('verbose-empty')?.remove();
-  const ok=!d.error;
-  const args=_fmtArgs(d.input);
+  const n=_narrate(d);
+  const a=d.input||{};
   const result=(d.error||d.result||'').toString() || '(no output)';
   const dur=d.duration_ms?`${d.duration_ms}ms`:'';
   const id=`vb_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
   const open=document.getElementById('vb-expand')?.checked;
+  const mark = n.status==='ok'?'✅':n.status==='held'?'✋':'❌';
+  // Per-kind sections: show the parts a human actually wants, labeled in plain language.
+  let secs='';
+  if(d.tool==='replace_file_content'){
+    secs=`<div class="vbi-sec"><div class="vbi-lbl">File</div><pre class="vbi-pre">${esc(a.path||'')}</pre></div>
+          <div class="vbi-sec"><div class="vbi-lbl">− What she removed</div><pre class="vbi-pre del">${esc(String(a.target_content||''))}</pre></div>
+          <div class="vbi-sec"><div class="vbi-lbl">+ What she put there instead</div><pre class="vbi-pre ins">${esc(String(a.replacement_content||''))}</pre></div>`;
+  } else if(d.tool==='write_file'||d.tool==='append_file'){
+    secs=`<div class="vbi-sec"><div class="vbi-lbl">File</div><pre class="vbi-pre">${esc(a.path||'')}</pre></div>
+          <div class="vbi-sec"><div class="vbi-lbl">What she wrote (${String(a.content||'').length} chars)</div><pre class="vbi-pre ins">${esc(String(a.content||'(EMPTY — the call carried no content)'))}</pre></div>`;
+  } else if(d.tool==='run_command'){
+    secs=`<div class="vbi-sec"><div class="vbi-lbl">Command</div><pre class="vbi-pre">${esc(String(a.command||''))}</pre></div>`;
+  } else {
+    secs=`<div class="vbi-sec"><div class="vbi-lbl">Input — what she asked the tool to do</div><pre class="vbi-pre">${esc(_fmtArgs(d.input))}</pre></div>`;
+  }
   const item=document.createElement('div');
-  item.className=`vbi ${ok?'':'err'}`;
+  item.className=`vbi ${n.status==='ok'?'':'err'}`;
   item.innerHTML=
     `<div class="vbi-head" onclick="const b=document.getElementById('${id}');b.style.display=b.style.display==='none'?'block':'none'">
-       <span>${ok?'✅':'❌'}</span>
-       <span class="vbi-tool">${esc(d.tool||'tool')}</span>
+       <span>${mark}</span>
+       <span class="vbi-tool">${n.verb}</span>
        <span class="vbi-meta">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}${dur?' · '+esc(dur):''} · ${result.length}b</span>
      </div>
      <div id="${id}" style="display:${open?'block':'none'}">
-       <div class="vbi-sec"><div class="vbi-lbl">Input — what she asked the tool to do</div><pre class="vbi-pre">${esc(args)}</pre></div>
-       <div class="vbi-sec"><div class="vbi-lbl">${ok?'Result — what the tool did':'Error'}</div><pre class="vbi-pre ${ok?'':'err'}">${esc(result)}</pre></div>
+       <div class="vbi-sec"><div class="tfi-narr" style="padding:2px 0 4px">${n.narr}${n.why?`<div class="tfi-why">${n.why}</div>`:''}</div></div>
+       ${secs}
+       <div class="vbi-sec"><div class="vbi-lbl">${n.status==='ok'?'Result — what came back':'What the tool said'}</div><pre class="vbi-pre ${n.status==='ok'?'':'err'}">${esc(result)}</pre></div>
      </div>`;
   v.insertBefore(item, v.firstChild);
   while(v.querySelectorAll('.vbi').length>80) v.removeChild(v.lastChild);

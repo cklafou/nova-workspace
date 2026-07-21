@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T17:01:40+09:00",
+  "updated_at": "2026-07-21T17:49:57+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -832,6 +832,58 @@
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
       "resolved_at": "2026-07-21T17:01:40+09:00",
+      "notes": null
+    },
+    {
+      "id": "d980bfaf",
+      "status": "resolved",
+      "event_type": "new",
+      "detected_at": "2026-07-21T17:32:21+09:00",
+      "commit": "e578b654",
+      "old_path": null,
+      "new_path": "Nova_Created/art/2026-07-21/nova_self_171953_69335.png",
+      "confidence": 1.0,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T17:49:57+09:00",
+      "notes": null
+    },
+    {
+      "id": "8aa6cc47",
+      "status": "resolved",
+      "event_type": "new",
+      "detected_at": "2026-07-21T17:32:21+09:00",
+      "commit": "e578b654",
+      "old_path": null,
+      "new_path": "Nova_Created/art/2026-07-21/nova_self_172029_29127.png",
+      "confidence": 1.0,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T17:49:57+09:00",
+      "notes": null
+    },
+    {
+      "id": "8cbf1338",
+      "status": "resolved",
+      "event_type": "new",
+      "detected_at": "2026-07-21T17:32:21+09:00",
+      "commit": "e578b654",
+      "old_path": null,
+      "new_path": "Nova_Created/general_tools/tools/self_memory.py",
+      "confidence": 1.0,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T17:49:57+09:00",
+      "notes": null
+    },
+    {
+      "id": "93a35c05",
+      "status": "resolved",
+      "event_type": "new",
+      "detected_at": "2026-07-21T17:32:21+09:00",
+      "commit": "e578b654",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tests/test_self_memory.py",
+      "confidence": 1.0,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-07-21T17:49:57+09:00",
       "notes": null
     }
   ],

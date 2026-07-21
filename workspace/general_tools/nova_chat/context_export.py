@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 14:27:40
+# Last updated: 2026-07-21 17:36:36
 """
 nova_chat/context_export.py -- Chat Context Exporter
 Generates shareable context summaries for browser Claude/Gemini sessions.

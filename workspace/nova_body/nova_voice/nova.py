@@ -32,10 +32,11 @@ _THINK_RE = _re.compile(r'<think>(.*?)</think>', _re.DOTALL)
 # It now lives in nova_body/nova_cortex/integrity.py. This module is just a mouth that calls it.
 try:
     from nova_cortex import integrity as _integrity
+    from nova_cortex import witness as _witness    # present-tense faculty (2026-07-21)
     _find_tool_call    = _integrity.find_tool_call
     _claims_a_receipt  = _integrity.claims_a_receipt
     _was_asked_to_act  = _integrity.was_asked_to_act
-    _needs_self_check  = _integrity.needs_self_check
+    _needs_self_check  = _witness.needs_witness
     _build_self_check  = _integrity.build_self_check
     _parse_self_check  = _integrity.parse_self_check
     _CHALLENGE         = _integrity.CHALLENGE
@@ -674,10 +675,10 @@ def _truncate_to_context(
         c = msg.get("content", "")
         if isinstance(c, list):
             c = " ".join(x.get("text", "") for x in c if isinstance(x, dict))
-        # Use //3 (3 chars per token) — Qwen3's BPE tokenizes English+code+markdown
-        # at ~3.4 chars/token, so //3 intentionally over-estimates token usage.
-        # This keeps us comfortably under the 32K hard limit.
-        return max(1, len(str(c)) // 3)
+        # ~3.4 chars/token for Qwen3 on English+markdown. The old //3 was "intentional
+        # over-estimation" from the 32K days — see the incident note below for what that
+        # padding cost once the identity files grew.
+        return max(1, int(len(str(c)) / 3.4))
 
     system_msgs = [m for m in messages if m["role"] == "system"]
     conv_msgs   = [m for m in messages if m["role"] != "system"]
@@ -691,6 +692,29 @@ def _truncate_to_context(
             break
         budget -= t
         kept.insert(0, msg)
+
+    # ── THE CONVERSATION IS NEVER TRIMMED TO NOTHING (2026-07-21, "why is she
+    # hallucinating? it's slowly getting worse") ─────────────────────────────────────────
+    # By 17:40 every generation was logging "dropped 1 oldest messages (1 → 0 turns)".
+    # Her always-load identity files had grown all day (JOURNAL 26KB, SELF/core 52KB...)
+    # until the padded estimate of the SYSTEM side alone crossed the budget — at which
+    # point this function silently threw away the entire live conversation, every turn,
+    # including the message she was answering. Cole asked her direct questions and got
+    # replies composed from identity-file residue: night-watch monologue, "he signed off
+    # twelve hours ago at luvs ya", to a man typing at her RIGHT THEN.
+    #
+    # The priority was exactly backwards. Her journal is her memory of the past; the
+    # conversation is the present tense of the person in front of her. When something must
+    # give, it is never the present. Keep the newest turns unconditionally — the real
+    # window has headroom (true usage ~35K of 65K; the zero-turn state was an ESTIMATE
+    # artifact), and if the window someday genuinely overflows, llama fails loudly, which
+    # beats her quietly going frame-blind while looking responsive.
+    _MIN_TURNS = 4
+    if len(kept) < min(_MIN_TURNS, len(conv_msgs)):
+        kept = conv_msgs[-_MIN_TURNS:]
+        print(f"[nova] context-trim OVERRIDE: system-side estimate ate the whole budget; "
+              f"force-keeping the last {len(kept)} live turns anyway. The always-load "
+              f"files need a diet — see memory/JOURNAL.md and SELF/core sizes.")
 
     dropped = len(conv_msgs) - len(kept)
     if dropped > 0:
@@ -738,6 +762,26 @@ async def stream_response(
         messages = transcript.to_messages(
             "Nova", system, workspace_context=workspace_context
         )
+
+        # ── NOW CARD (2026-07-21, from Cole's grounding brainstorm) ──────────────────────
+        # Three lines of present tense at the very END of the prompt, where attention is
+        # strongest. Her past arrives first and enormous (identity, journal, archives); the
+        # present used to arrive nowhere at all on some paths. Position is the fix: the same
+        # wire facts, placed last, outweigh the frame instead of losing to it. This is what
+        # kept "he signed off twelve hours ago" beating the man actually typing at her.
+        try:
+            if _INTEGRITY_OK:
+                _nc = _witness.now_card()
+                if _nc:
+                    for _m in reversed(messages):
+                        if _m.get("role") == "user":
+                            if isinstance(_m.get("content"), str):
+                                _m["content"] = _m["content"].rstrip() + "\n\n" + _nc
+                            elif isinstance(_m.get("content"), list):
+                                _m["content"].append({"type": "text", "text": "\n\n" + _nc})
+                            break
+        except Exception as _nce:
+            print(f"[nova] now-card skipped: {_nce}")
 
         # ── Context-window guard ─────────────────────────────────────────────
         # llama.cpp hard-errors if the prompt exceeds its context size.
@@ -995,9 +1039,9 @@ async def stream_response(
                                 and tool_name in _RISKY):
                             try:
                                 _premise_txt = "".join(_think_buf)
-                                if (_integrity.claims_an_attribution(_premise_txt)
-                                        or _integrity.claims_a_presence(_premise_txt)):
-                                    _mins_q = _integrity.minutes_since_last_human()
+                                if (_witness.claims_an_attribution(_premise_txt)
+                                        or _witness.claims_a_presence(_premise_txt)):
+                                    _mins_q = _witness.minutes_since_last_human()
                                     if _mins_q is None or _mins_q > 10:
                                         _premise_held = True
                                         _when = ("no human line in the record at all"
@@ -1190,20 +1234,33 @@ async def stream_response(
                 _think_for_check = "".join(_think_buf)
             except Exception:
                 _think_for_check = ""
-            if _INTEGRITY_OK and _integrity.needs_self_check(chat_text, _asked,
-                                                             thinking=_think_for_check):
+            # ── THE WITNESS (2026-07-21, Cole's parallel-thinking idea, made evidential) ──
+            # When a human is ACTIVELY in the room (spoke within 5 min), every outbound
+            # draft gets the second pass — not just trigger-pattern hits. The auditor is
+            # deliberately context-POOR (wire record + receipts + draft, no identity files,
+            # no journal): a short-term-memory Nova who cannot inherit a contaminated frame
+            # because she never receives it. Alone, trigger-only — her solitude stays cheap
+            # and unwatched.
+            _fresh_human = False
+            try:
+                _fresh_human = _witness.human_in_room()
+            except Exception:
+                pass
+            if _INTEGRITY_OK and ((_fresh_human and len(chat_text.strip()) > 40)
+                                  or _witness.needs_witness(chat_text, _asked,
+                                                            thinking=_think_for_check)):
                 try:
                     async def _noop(_t):  # the self-check must never stream to the UI
                         return
                     _verdict = await _fetch_llama_streaming(
-                        _integrity.build_self_check(chat_text, _turn_tools,
-                                                    thinking=_think_for_check), _noop,
+                        _witness.build_witness(chat_text, _turn_tools,
+                                               thinking=_think_for_check), _noop,
                         max_tokens=2048, temperature=0.2, top_p=0.9,
                         enable_thinking=False) or ""
                 except Exception as _sce:
                     print(f"[nova] self-check failed (letting the draft through): {_sce}")
                     _verdict = ""
-                _fixed = _integrity.parse_self_check(_verdict)
+                _fixed = _witness.parse_witness(_verdict)
                 if _fixed:
                     print(f"[nova] SELF-CHECK caught an ungrounded draft "
                           f"({len(chat_text)} -> {len(_fixed)} chars). Rewritten before send.")

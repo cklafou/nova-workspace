@@ -63,8 +63,8 @@ ENTRY_POINTS = [
      "nova_body/nova_voice/tool_router.py", "execute_tool"),
     ("Nova wakes on her own (autonomy: reflect → decide → act)",
      "nova_body/nova_runtime/runtime.py", "run_autonomy"),
-    ("Her integrity gate (reach · ledger · self-check)",
-     "nova_body/nova_cortex/integrity.py", "build_self_check"),
+    ("Her witness (the present-tense audit — 2026-07-21 consolidation)",
+     "nova_body/nova_cortex/witness.py", "build_witness"),
 ]
 
 SCAN_DIRS = [WORKSPACE / "nova_body", WORKSPACE / "general_tools"]

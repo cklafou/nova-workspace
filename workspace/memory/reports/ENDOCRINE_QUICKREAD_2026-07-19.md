@@ -1,5 +1,5 @@
 # Nova's Endocrine System — the quick read
-_Last updated: 2026-07-21 15:07:48_
+_Last updated: 2026-07-21 17:36:36_
 
 **Companion to** `NOVA_ENDOCRINE_SPEC_2026-07-07.md`.
 Same content. Built to be skimmed, restarted, and read out of order.

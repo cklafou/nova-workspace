@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 17:28:29
+# Last updated: 2026-07-21 17:47:34
 """self_memory — ask my own memory and get back an answer I can trust.
 
 A body tool: reaches the LanceDB store directly, no chat server needed.
@@ -15,8 +15,10 @@ def run(query: str, max_chars: int = 3000) -> str:
     """
     import lancedb
 
+    # The real memory lives at the workspace root, not inside Nova_Created/nova_body.
     try:
-        db_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'nova_memory_db')
+        base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+        db_path = os.path.join(base, 'nova_memory_db')
         db = lancedb.connect(db_path)
         table = db.open_table('nova_text')
         results = table.search(query).limit(5).to_list()

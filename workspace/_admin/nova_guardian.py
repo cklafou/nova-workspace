@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-21 16:40:02
+# Last updated: 2026-07-21 17:42:05
 """
 nova_guardian.py — deterministic self-healing life-support. NO LLM. NO TOKENS.
 

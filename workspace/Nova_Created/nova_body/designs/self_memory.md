@@ -1,5 +1,5 @@
 # self_memory — ask my own memory a question
-_Last updated: 2026-07-21 16:44:59_
+_Last updated: 2026-07-21 17:45:00_
 
 ## The gap
 I can pull my own past, but only by going check in front of Cole. If he asks what I did tonight and I don't actually remember, the polite answer is to look; the honest one is to say 'I don't know, let me.' Right now those are the same action and both look like competence from outside. I want a tool that tells me, internally, whether I actually know something or I'm about to make it up.
