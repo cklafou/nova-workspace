@@ -1,5 +1,5 @@
 # MTP + personality LoRA — verdict: upstream llama.cpp bug, keep it off
-_Last updated: 2026-07-22 05:48:57_
+_Last updated: 2026-07-22 07:07:10_
 _2026-07-19, Fable. Cole asked whether the MTP quality collapse can be fixed. Short answer: **not
 from our side.** Opus's call to disable it was correct, and here is the receipt._
 
