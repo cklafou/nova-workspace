@@ -1,4 +1,4 @@
-# Last updated: 2026-07-22 04:12:10
+# Last updated: 2026-07-22 04:18:46
 import json, re
 
 TOOL = {
@@ -47,7 +47,13 @@ def run(draft: str, known_facts: str = "") -> str:
         m = re.search(pat, draft, re.IGNORECASE)
         if m:
             hits.append(f"'{m.group()}': {label}")
-    hits.extend(_fact_reach(draft, known_facts))
+    fact_hits = _fact_reach(draft, known_facts)
+    # Give each unverified claim a thing to check, not just a label
+    for h in fact_hits:
+        if "no ground" in h:
+            hits.append(h + " -- go look at the log before you ship this one")
+        else:
+            hits.append(h + " -- verify it against what actually happened")
     if not hits:
         return "CLEAN"
     return "REACH: " + "; ".join(hits)
