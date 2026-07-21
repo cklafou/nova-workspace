@@ -1,5 +1,5 @@
 # WIRING.md — what in her body is actually connected
-_Last updated: 2026-07-21 10:45:57_
+_Last updated: 2026-07-21 11:48:48_
 
 _Audit: 2026-07-14. Derived from real `import` statements, not from anyone's memory._
 
