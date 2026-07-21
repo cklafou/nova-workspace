@@ -352,3 +352,36 @@ def parse_witness(verdict: str):
         return None
     fixed = v.split("\n", 1)[1].strip() if "\n" in v else ""
     return fixed or None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+# PART 6 — THE PIPELINE LOG: the gates, narrating themselves.
+#
+# (2026-07-21, Cole: "I can't see the way the new witness.py or other scripts are affecting
+# her live.") Every intervention this file and her voice make — a trim, a hold, a rewrite,
+# an echo retry — used to be a print() into a 205-line ring buffer that rotates away in
+# minutes. Twice today that meant a real failure (a swallowed message, a zero-turn trim)
+# could only be diagnosed by archaeology. The gates now write a durable, structured event
+# stream the UI renders live. Observability is not a luxury here: every bug in this project
+# has been a silent drop, and a gate you cannot see is a gate that can become one.
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+
+_PIPELINE_PATH = _WORKSPACE / "logs" / "pipeline.jsonl"
+
+
+def pipeline_event(stage: str, detail: str = "", **fields) -> None:
+    """Append one gate event. Never raises; self-trims so the file stays small enough for
+    the UI's 50K read window (the whole point is that the TAIL is always visible)."""
+    try:
+        _PIPELINE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        ev = {"ts": datetime.now().isoformat(timespec="seconds"),
+              "stage": stage, "detail": str(detail)[:200]}
+        ev.update({k: (str(v)[:120] if not isinstance(v, (int, float, bool)) else v)
+                   for k, v in fields.items()})
+        with open(_PIPELINE_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(ev, ensure_ascii=False) + "\n")
+        if _PIPELINE_PATH.stat().st_size > 45_000:          # keep the tail readable via the API
+            lines = _PIPELINE_PATH.read_text(encoding="utf-8", errors="replace").splitlines()
+            _PIPELINE_PATH.write_text("\n".join(lines[-250:]) + "\n", encoding="utf-8")
+    except Exception:
+        pass

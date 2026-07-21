@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-21T19:19:22",
+  "generated": "2026-07-21T19:39:25",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 30,
   "described": 28,
@@ -50,7 +50,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).",
       "files": 13,
-      "lines": 4020,
+      "lines": 4053,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -333,7 +333,7 @@
       "path": "nova_body/nova_voice",
       "purpose": null,
       "files": 3,
-      "lines": 2683,
+      "lines": 2732,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -422,7 +422,7 @@
       "purpose": "Launcher — runs nova_start.py to bring up the whole Nova stack (double-click entry point).",
       "files": 1,
       "lines": 33,
-      "age_days": 7,
+      "age_days": 8,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],

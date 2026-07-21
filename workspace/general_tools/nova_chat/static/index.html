@@ -1544,6 +1544,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div id="right-panel">
     <div class="panel-tabs" id="panel-tabs-bar">
       <div class="ptab active" data-tab="thoughts" draggable="true" onclick="switchPanel('thoughts')" data-tooltip="Nova's reasoning — extended thinking tokens shown here as she works through problems">Thoughts</div>
+      <div class="ptab" data-tab="pipeline" draggable="true" onclick="switchPanel('pipeline')" data-tooltip="Her gates, live — every witness check, rewrite, hold, echo retry and context trim as it happens">Pipeline</div>
       <div class="ptab" data-tab="tools"    draggable="true" onclick="switchPanel('tools')"    data-tooltip="Tool calls — every file read, write, shell command, and web fetch Nova executes">Tools</div>
       <div class="ptab" data-tab="monitor"  draggable="true" onclick="switchPanel('monitor')"  data-tooltip="Live system metrics — Nova's CPU, memory, active goals, and sleep/wake state">Monitor</div>
       <div class="ptab" data-tab="files"    draggable="true" onclick="switchPanel('files')"    data-tooltip="Workspace file tree — browse and open files from the Project Nova workspace">Files</div>
@@ -1609,6 +1610,23 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
         <div id="think-log-entries" style="display:block;overflow-y:auto;margin-top:4px;flex:1;min-height:0">
           <div class="panel-empty" id="think-log-empty" style="padding:8px;"><div class="ei">🗒</div>She hasn't reasoned about anything yet this session.</div>
         </div>
+      </div>
+    </div>
+
+    <!-- ── PIPELINE (2026-07-21, Cole: "I can't see the way witness.py is affecting her live") ──
+         Her gates narrating themselves: every witness check/pass/rewrite, premise hold, echo
+         retry, context trim and assertion challenge, streamed from logs/pipeline.jsonl. -->
+    <div class="panel-section" id="panel-pipeline">
+      <div class="tstrip" id="pl-strip">
+        <span title="witness passes">🛡<b id="pl-pass">0</b></span>
+        <span title="drafts rewritten">✍<b id="pl-rw">0</b></span>
+        <span class="ts-held" title="premise holds">✋<b id="pl-hold">0</b></span>
+        <span title="echo retries">🔁<b id="pl-echo">0</b></span>
+        <span class="ts-err" title="trim overrides — the system side ate the budget">⚠<b id="pl-trim">0</b></span>
+        <span class="ts-now" id="pl-now">watching…</span>
+      </div>
+      <div id="pl-feed">
+        <div class="panel-empty" id="pl-empty"><div class="ei">🛡</div>No gate events yet.<br>Her witness, holds and trims appear here as they fire.</div>
       </div>
     </div>
 
@@ -3965,7 +3983,8 @@ function switchPanel(tab) {
   activePanel=tab;
   document.querySelectorAll('.ptab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
   document.querySelectorAll('.panel-section').forEach(s=>s.classList.toggle('active',s.id===`panel-${tab}`));
-  ['thoughts','tools','monitor','files','eyes','terminal'].forEach(t=>{const el=document.getElementById(`vchk-${t}`);if(el)el.textContent=t===tab?'✓':'';});
+  ['thoughts','pipeline','tools','monitor','files','eyes','terminal'].forEach(t=>{const el=document.getElementById(`vchk-${t}`);if(el)el.textContent=t===tab?'✓':'';});
+  if(tab==='pipeline'){ plPoll(); document.querySelector('.ptab[data-tab="pipeline"]')?.classList.remove('has-new'); }
   if(tab==='files'&&!document.getElementById('file-tree').children.length) refreshFiles();
   if(tab==='eyes') sightRefresh();   // load her actual perceptions the moment you open it
   if(tab==='terminal'){ termRenderTabs(); termSwitch(_termActive); document.querySelector('.ptab[data-tab="terminal"]')?.classList.remove('has-new'); }

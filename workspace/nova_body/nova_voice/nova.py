@@ -710,8 +710,10 @@ def _truncate_to_context(
     # artifact), and if the window someday genuinely overflows, llama fails loudly, which
     # beats her quietly going frame-blind while looking responsive.
     _MIN_TURNS = 4
+    _override = False
     if len(kept) < min(_MIN_TURNS, len(conv_msgs)):
         kept = conv_msgs[-_MIN_TURNS:]
+        _override = True
         print(f"[nova] context-trim OVERRIDE: system-side estimate ate the whole budget; "
               f"force-keeping the last {len(kept)} live turns anyway. The always-load "
               f"files need a diet — see memory/JOURNAL.md and SELF/core sizes.")
@@ -722,6 +724,15 @@ def _truncate_to_context(
             f"[nova] context-trim: dropped {dropped} oldest messages "
             f"({len(conv_msgs)} → {len(kept)} turns) to fit {ctx_limit}-token window"
         )
+    try:
+        from nova_cortex import witness as _w
+        _sys_est = sum(_est(m) for m in system_msgs)
+        if dropped > 0 or _override:
+            _w.pipeline_event("trim_override" if _override else "trim",
+                              f"kept {len(kept)}/{len(conv_msgs)} turns; system ≈{_sys_est} tok",
+                              override=_override)
+    except Exception:
+        pass
 
     return system_msgs + kept
 
@@ -1059,6 +1070,13 @@ async def stream_response(
                                         print(f"[nova] PREMISE HOLD: {tool_name} held "
                                               f"(attribution/presence in reasoning, last human "
                                               f"{_mins_q} min ago)")
+                                        try:
+                                            _witness.pipeline_event(
+                                                "premise_hold", f"{tool_name} held — "
+                                                f"attribution in reasoning, last human "
+                                                f"{_mins_q}m ago", tool=tool_name)
+                                        except Exception:
+                                            pass
                                         _turn_tools.append((tool_name, args, "HELD (premise)"))
                                         if on_tool_executed:   # show the hold in the Tools tab
                                             try:
@@ -1180,6 +1198,12 @@ async def stream_response(
                 print(f"[nova] ASSERTION BINDING tripped (#{_receipt_challenged}) — 0 tool calls "
                       f"(claimed_receipt={_claims_a_receipt(chat_text)}, asked_to_act={_asked}). "
                       f"Refusing the answer and sending her to look.")
+                try:
+                    _witness.pipeline_event("assertion_challenge",
+                                            f"#{_receipt_challenged}: answered with 0 tool calls "
+                                            f"while asked to act — sent back to look")
+                except Exception:
+                    pass
                 messages.append({"role": "assistant", "content": full_response})
                 messages.append({"role": "user", "content":
                     "[System] STOP. You made ZERO tool calls this turn, and you are about to answer "
@@ -1246,9 +1270,18 @@ async def stream_response(
                 _fresh_human = _witness.human_in_room()
             except Exception:
                 pass
-            if _INTEGRITY_OK and ((_fresh_human and len(chat_text.strip()) > 40)
-                                  or _witness.needs_witness(chat_text, _asked,
-                                                            thinking=_think_for_check)):
+            _gate_why = ""
+            if _INTEGRITY_OK:
+                if _fresh_human and len(chat_text.strip()) > 40:
+                    _gate_why = "human in room"
+                elif _witness.needs_witness(chat_text, _asked, thinking=_think_for_check):
+                    _gate_why = "checkable claim in draft/thinking"
+            if _gate_why:
+                try:
+                    _witness.pipeline_event("witness_check", _gate_why,
+                                            draft_chars=len(chat_text))
+                except Exception:
+                    pass
                 try:
                     async def _noop(_t):  # the self-check must never stream to the UI
                         return
@@ -1264,7 +1297,18 @@ async def stream_response(
                 if _fixed:
                     print(f"[nova] SELF-CHECK caught an ungrounded draft "
                           f"({len(chat_text)} -> {len(_fixed)} chars). Rewritten before send.")
+                    try:
+                        _witness.pipeline_event("witness_rewrite",
+                                                f"{len(chat_text)} → {len(_fixed)} chars",
+                                                caught=True)
+                    except Exception:
+                        pass
                     chat_text = _fixed
+                else:
+                    try:
+                        _witness.pipeline_event("witness_pass", "draft grounded")
+                    except Exception:
+                        pass
 
             # ── ECHO GUARD, DIRECT-REPLY PATH (2026-07-21) ────────────────────────────────
             # During the memory calibration she was asked two fresh recall questions; her
@@ -1288,6 +1332,11 @@ async def stream_response(
                         _echo_retried = 1
                         print("[nova] ECHO on direct-reply path — she re-sent a previous "
                               "message. One retry with the collision named.")
+                        try:
+                            _witness.pipeline_event("echo_retry",
+                                                    "re-sent a previous message; retrying once")
+                        except Exception:
+                            pass
                         messages.append({"role": "assistant", "content": full_response})
                         messages.append({"role": "user", "content":
                             "[System] The reply you just wrote is the same message you already "

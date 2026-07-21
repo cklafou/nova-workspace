@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 18:37:12
+# Last updated: 2026-07-21 19:37:31
 import sys, os, json
 sys.path.insert(0, 'nova_body')
 from nova_lancedb import get_stats
