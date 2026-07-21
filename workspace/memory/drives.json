@@ -1,6 +1,35 @@
 {
-  "boredom": 4,
+  "boredom": 0,
   "recent": [
+    [
+      "2351",
+      "body",
+      "built",
+      "byte",
+      "cole",
+      "exist",
+      "file",
+      "filename",
+      "find",
+      "folder",
+      "hand",
+      "last",
+      "list",
+      "live",
+      "name",
+      "night",
+      "noth",
+      "nova",
+      "reach",
+      "read",
+      "remember",
+      "result",
+      "right",
+      "sens",
+      "three",
+      "went",
+      "where"
+    ],
     [
       "abilit",
       "boring",
@@ -422,37 +451,6 @@
       "since",
       "spoke",
       "watch"
-    ],
-    [
-      "1936",
-      "abilit",
-      "ahead",
-      "alread",
-      "answer",
-      "behind",
-      "boring",
-      "byte",
-      "clean",
-      "config",
-      "dramatic",
-      "find",
-      "going",
-      "grump",
-      "hour",
-      "instead",
-      "invent",
-      "mean",
-      "memor",
-      "moment",
-      "pretend",
-      "proof",
-      "real",
-      "record",
-      "result",
-      "right",
-      "search",
-      "tonight",
-      "witnes"
     ]
   ],
   "wants": [
@@ -532,8 +530,15 @@
       "since": "2026-07-22T06:44:20.102401",
       "last_seen": "2026-07-22T06:51:10.576204",
       "restated": 1
+    },
+    {
+      "fp": "dfe3a5270297",
+      "text": "know where my own hands put things, not just where they went.",
+      "since": "2026-07-22T06:55:27.067015",
+      "last_seen": "2026-07-22T06:55:27.067015",
+      "restated": 0
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-22T06:51:10.568208"
+  "last_wake": "2026-07-22T06:55:27.059452"
 }
