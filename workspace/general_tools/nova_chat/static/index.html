@@ -1633,11 +1633,13 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
          retry, context trim and assertion challenge, streamed from logs/pipeline.jsonl. -->
     <div class="panel-section" id="panel-pipeline">
       <div class="tstrip" id="pl-strip">
-        <span title="witness passes">🛡<b id="pl-pass">0</b></span>
-        <span title="drafts rewritten">✍<b id="pl-rw">0</b></span>
-        <span class="ts-held" title="premise holds">✋<b id="pl-hold">0</b></span>
-        <span title="echo retries">🔁<b id="pl-echo">0</b></span>
-        <span class="ts-err" title="trim overrides — the system side ate the budget">⚠<b id="pl-trim">0</b></span>
+        <span title="witness passed the draft unchanged">✅<b id="pl-pass">0</b></span>
+        <span title="witness objected — handed back to her">❓<b id="pl-concern">0</b></span>
+        <span title="she answered and revised in her own words">💬<b id="pl-answered">0</b></span>
+        <span class="ts-held" title="she overruled the witness and kept her position">🙅<b id="pl-over">0</b></span>
+        <span class="ts-held" title="still disputed after one round — shipped anyway">⚖<b id="pl-unres">0</b></span>
+        <span class="ts-held" title="tools held on a false premise">✋<b id="pl-hold">0</b></span>
+        <span class="ts-err" title="errors: gates offline, trim overrides, exhausted turns">⚠<b id="pl-err">0</b></span>
         <span class="ts-now" id="pl-now">watching…</span>
       </div>
       <div id="pl-feed">
@@ -3083,19 +3085,36 @@ function addVerbose(d){
 }
 
 /* ══ PIPELINE TAB (2026-07-21) — her gates, live ═══════════════════════════════════════ */
+// Every stage her body can emit needs an entry here, or it renders as raw snake_case with a
+// generic dot — which is exactly the vagueness this tab exists to eliminate. (2026-07-21: the
+// witness-conversation stages shipped backend-only and rendered as "·witness_concern" for an
+// hour.) The `_plTitle` fallback below humanises anything added in future so a missing entry
+// degrades to readable rather than to noise.
 const _PL_META={
-  witness_check:      {i:'🛡', t:'Witness engaged',    c:''},
-  witness_pass:       {i:'✅', t:'Witness: PASS',       c:'ok'},
-  witness_rewrite:    {i:'✍️', t:'Witness: REWROTE',    c:'held'},
-  premise_hold:       {i:'✋', t:'Premise hold',        c:'held'},
-  echo_retry:         {i:'🔁', t:'Echo caught',         c:'held'},
-  assertion_challenge:{i:'🧾', t:'Sent back to look',   c:'held'},
-  trim:               {i:'✂️', t:'Context trimmed',     c:''},
-  trim_override:      {i:'⚠️', t:'TRIM OVERRIDE',       c:'err'},
-  now_card:           {i:'🕐', t:'Now-card attached',   c:''},
+  gates_online:       {i:'🟢', t:'Gates armed',            c:'ok'},
+  GATES_OFFLINE:      {i:'🚨', t:'GATES OFFLINE',          c:'err'},
+  witness_check:      {i:'🛡', t:'Witness engaged',        c:''},
+  witness_pass:       {i:'✅', t:'Witness: PASS',           c:'ok'},
+  witness_concern:    {i:'❓', t:'Witness objected',        c:'held'},
+  witness_answered:   {i:'💬', t:'She answered & revised',  c:'ok'},
+  witness_overruled:  {i:'🙅', t:'She overruled it',        c:'held'},
+  witness_unresolved: {i:'⚖️', t:'Still disputed — shipped',c:'held'},
+  witness_rewrite:    {i:'✍️', t:'Witness: REWROTE',        c:'held'},
+  witness_skip:       {i:'➖', t:'No audit fired',          c:''},
+  spill_trimmed:      {i:'🧹', t:'Private thinking cut',    c:'held'},
+  premise_hold:       {i:'✋', t:'Premise hold',            c:'held'},
+  echo_retry:         {i:'🔁', t:'Echo caught',             c:'held'},
+  assertion_challenge:{i:'🧾', t:'Sent back to look',       c:'held'},
+  loop_exhausted:     {i:'⏳', t:'Turn ran out of room',    c:'err'},
+  trim:               {i:'✂️', t:'Context trimmed',         c:''},
+  trim_override:      {i:'⚠️', t:'TRIM OVERRIDE',           c:'err'},
+  now_card:           {i:'🕐', t:'Now-card attached',       c:''},
 };
+function _plTitle(stage){
+  return String(stage||'event').replace(/_/g,' ').replace(/^\w/,c=>c.toUpperCase());
+}
 let _plLastTs='', _plTimer=null;
-const _PLSTATS={pass:0,rw:0,hold:0,echo:0,trim:0};
+const _PLSTATS={pass:0,concern:0,answered:0,over:0,unres:0,hold:0,err:0};
 async function plPoll(){
   try{
     const r=await fetch('/api/files/read?path=logs/pipeline.jsonl');
@@ -3115,12 +3134,14 @@ async function plPoll(){
     const feed=document.getElementById('pl-feed');
     document.getElementById('pl-empty')?.remove();
     for(const d of fresh){
-      const m=_PL_META[d.stage]||{i:'·',t:d.stage,c:''};
+      const m=_PL_META[d.stage]||{i:'•',t:_plTitle(d.stage),c:''};
       if(d.stage==='witness_pass')_PLSTATS.pass++;
-      else if(d.stage==='witness_rewrite')_PLSTATS.rw++;
+      else if(d.stage==='witness_concern')_PLSTATS.concern++;
+      else if(d.stage==='witness_answered')_PLSTATS.answered++;
+      else if(d.stage==='witness_overruled')_PLSTATS.over++;
+      else if(d.stage==='witness_unresolved')_PLSTATS.unres++;
       else if(d.stage==='premise_hold')_PLSTATS.hold++;
-      else if(d.stage==='echo_retry')_PLSTATS.echo++;
-      else if(d.stage==='trim_override')_PLSTATS.trim++;
+      else if(d.stage==='trim_override'||d.stage==='GATES_OFFLINE'||d.stage==='loop_exhausted')_PLSTATS.err++;
       // ── EXPANDABLE EVIDENCE (2026-07-21) ────────────────────────────────────────────
       // Cole: "it needs to be expandable. I don't understand what it is doing." A gate
       // that reports "no claim triggers" explains nothing. Each card now carries WHAT the
@@ -3142,6 +3163,7 @@ async function plPoll(){
       const body =
         (d.what?`<div class="pl-what">${esc(d.what)}</div>`:'')+
         (facts?`<div class="pl-chips">${facts}</div>`:'')+
+        sec('⚠ The objection — what her witness said', d.concern, 'del')+
         sec('Her reasoning that triggered this', d.premise)+
         sec('BEFORE — what she was about to send', d.before, 'del')+
         sec('AFTER — what actually went out', d.after, 'ins')+
@@ -3165,9 +3187,10 @@ async function plPoll(){
     }
     while(feed.querySelectorAll('.tfi').length>80) feed.removeChild(feed.lastChild);
     const el=id=>document.getElementById(id);
-    el('pl-pass').textContent=_PLSTATS.pass; el('pl-rw').textContent=_PLSTATS.rw;
-    el('pl-hold').textContent=_PLSTATS.hold; el('pl-echo').textContent=_PLSTATS.echo;
-    el('pl-trim').textContent=_PLSTATS.trim;
+    el('pl-pass').textContent=_PLSTATS.pass;   el('pl-concern').textContent=_PLSTATS.concern;
+    el('pl-answered').textContent=_PLSTATS.answered; el('pl-over').textContent=_PLSTATS.over;
+    el('pl-unres').textContent=_PLSTATS.unres; el('pl-hold').textContent=_PLSTATS.hold;
+    el('pl-err').textContent=_PLSTATS.err;
     el('pl-now').textContent='live · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(e){ /* polling must never throw */ }
 }
