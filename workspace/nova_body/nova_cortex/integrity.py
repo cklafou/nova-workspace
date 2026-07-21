@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 14:22:22
+# Last updated: 2026-07-21 15:22:32
 # @nova: Nova's integrity faculty — the gate between what she BELIEVES and what she SAYS.
 #        Owns: how she reaches for a tool (in any channel), the ledger of what her hands actually
 #        did, and the self-check that reads a draft against that ledger before it can leave her
@@ -618,6 +618,32 @@ def _recent_spoken(n: int = 8) -> str:
         return "\n".join(out)
     except Exception:
         return ""
+
+
+def minutes_since_last_human(exclude=("Nova", "System")) -> int | None:
+    """Minutes since anyone who isn't her (or the system) last said anything, from the wire
+    record. None = no human line found / record unreadable. Used by the premise-hold: 'Cole
+    asked me to' is plausible when he spoke 2 minutes ago and a fabrication tell when the
+    record says nobody has spoken for hours."""
+    try:
+        p = _WORKSPACE / "logs" / "runtime" / "transcript.jsonl"
+        if not p.exists():
+            return None
+        for line in reversed(p.read_text(encoding="utf-8", errors="replace").splitlines()[-200:]):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                r = json.loads(line)
+            except Exception:
+                continue
+            if r.get("author") in exclude:
+                continue
+            ts = str(r.get("timestamp") or r.get("ts") or "")[:19]
+            return int((datetime.now() - datetime.fromisoformat(ts)).total_seconds() // 60)
+        return None
+    except Exception:
+        return None
 
 
 def build_self_check(draft: str, turn_tools: list, thinking: str = "") -> list:
