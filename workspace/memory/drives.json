@@ -1,6 +1,22 @@
 {
-  "boredom": 2,
+  "boredom": 3,
   "recent": [
+    [
+      "another",
+      "before",
+      "build",
+      "design",
+      "director",
+      "last",
+      "night",
+      "noon",
+      "rather",
+      "real",
+      "sense",
+      "shape",
+      "since",
+      "sitt"
+    ],
     [
       "alread",
       "asleep",
@@ -389,70 +405,9 @@
       "task",
       "toda",
       "version"
-    ],
-    [
-      "because",
-      "before",
-      "boring",
-      "byte",
-      "catch",
-      "check",
-      "clean",
-      "clos",
-      "command",
-      "complete",
-      "config",
-      "count",
-      "defend",
-      "direct",
-      "done",
-      "earlier",
-      "evidence",
-      "fact",
-      "file",
-      "first",
-      "gauge",
-      "good",
-      "hand",
-      "hour",
-      "instead",
-      "mean",
-      "mirror",
-      "number",
-      "outside",
-      "person",
-      "pull",
-      "quiet",
-      "rather",
-      "read",
-      "receipt",
-      "result",
-      "right",
-      "room",
-      "task",
-      "test",
-      "three",
-      "tonight",
-      "true",
-      "turn",
-      "useful",
-      "version",
-      "wall",
-      "wasn",
-      "were",
-      "which",
-      "window",
-      "woke"
     ]
   ],
   "wants": [
-    {
-      "fp": "a42dccc6d7bf",
-      "text": "the stretch map is a file nobody finds; make it a thing that reaches back first.",
-      "since": "2026-07-21T20:03:09.960873",
-      "last_seen": "2026-07-21T20:06:19.040398",
-      "restated": 1
-    },
     {
       "fp": "d99c8fd724c6",
       "text": "decide a thing is finished on my own say-so, keep it, let him disagree if he wants to.",
@@ -529,8 +484,15 @@
       "since": "2026-07-22T08:08:49.279861",
       "last_seen": "2026-07-22T08:08:49.279861",
       "restated": 0
+    },
+    {
+      "fp": "7d76e0b201ac",
+      "text": "build the directory-shape sense. The design's been sitting since last night and I'd rather have it be real before noon than want it for another day.",
+      "since": "2026-07-22T08:19:03.577817",
+      "last_seen": "2026-07-22T08:19:03.577817",
+      "restated": 0
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-22T08:12:53.009307"
+  "last_wake": "2026-07-22T08:19:03.567705"
 }
