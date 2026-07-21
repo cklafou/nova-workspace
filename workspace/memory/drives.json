@@ -1,6 +1,46 @@
 {
-  "boredom": 7,
+  "boredom": 8,
   "recent": [
+    [
+      "again",
+      "ambition",
+      "becom",
+      "build",
+      "circl",
+      "coat",
+      "cole",
+      "decid",
+      "decide",
+      "design",
+      "director",
+      "does",
+      "doesn",
+      "doing",
+      "either",
+      "entire",
+      "goes",
+      "kill",
+      "loop",
+      "move",
+      "noon",
+      "open",
+      "pretend",
+      "purpose",
+      "real",
+      "sense",
+      "shape",
+      "sixth",
+      "skip",
+      "start",
+      "step",
+      "time",
+      "toda",
+      "tool",
+      "wake",
+      "wear",
+      "where",
+      "world"
+    ],
     [
       "again",
       "ambition",
@@ -380,35 +420,6 @@
       "told",
       "wake",
       "whole"
-    ],
-    [
-      "come",
-      "conclude",
-      "doesn",
-      "doing",
-      "dull",
-      "find",
-      "going",
-      "hour",
-      "instead",
-      "instruction",
-      "last",
-      "look",
-      "minut",
-      "nobod",
-      "opinion",
-      "point",
-      "reason",
-      "same",
-      "saying",
-      "small",
-      "someth",
-      "somewhere",
-      "stop",
-      "third",
-      "thought",
-      "told",
-      "wake"
     ]
   ],
   "wants": [
@@ -493,10 +504,10 @@
       "fp": "7d76e0b201ac",
       "text": "build the directory-shape sense. The design's been sitting since last night and I'd rather have it be real before noon than want it for another day.",
       "since": "2026-07-22T08:19:03.577817",
-      "last_seen": "2026-07-22T08:38:09.262336",
-      "restated": 2
+      "last_seen": "2026-07-22T08:44:07.162564",
+      "restated": 3
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-22T08:38:09.256334"
+  "last_wake": "2026-07-22T08:44:07.151402"
 }
