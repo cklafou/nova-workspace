@@ -1,26 +1,51 @@
-# self_memory — ask my own memory whether I actually know something
-# Last updated: 2026-07-21 16:57:39
+# Last updated: 2026-07-21 17:28:29
+"""self_memory — ask my own memory and get back an answer I can trust.
 
-def run(query):
-    """Ask my own memory a question and get back what's in there.
+A body tool: reaches the LanceDB store directly, no chat server needed.
+That's what a limb is.
+"""
 
-    Returns the answer with a confidence note, or says I don't know
-    instead of making one up. That second part is the whole reason this exists.
+import os
+
+def run(query: str, max_chars: int = 3000) -> str:
+    """Search my full memory for what happened, what I know, who said it.
+
+    query: natural-language search phrase.
+    max_chars: how much context to return (default 3000).
     """
-    results = memory_search(query=query)
+    import lancedb
+
+    try:
+        db_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'nova_memory_db')
+        db = lancedb.connect(db_path)
+        table = db.open_table('nova_text')
+        results = table.search(query).limit(5).to_list()
+    except Exception as e:
+        return f"ERROR: can't reach my memory store: {e}"
 
     if not results:
-        return "I don't know. Nothing came back on that."
+        return f"I don't know. Nothing came back for \"{query}\". Either it didn't happen or I never wrote it down."
 
-    answers = [r for r in results if r.get('answer')]
-    sources = len(set(r.get('source', 'unknown') for r in results))
+    hits = []
+    scores = []
+    for r in results:
+        score = r.get('_distance', 0)
+        # LanceDB distance: lower is better, convert to similarity-ish
+        similarity = max(0.0, 1.0 - score)
+        scores.append(similarity)
+        text = (r.get('text') or '')[:max_chars // len(results)]
+        hits.append(f"  [{similarity:.2f}] {text}")
 
-    # Confidence is how many ways I remember it, not how loudly one source says it.
-    confidence = min(sources / 3.0, 1.0) if sources else 0.0
+    avg = sum(scores) / len(scores)
+    certainty = "highly likely" if avg > 0.7 else "plausible" if avg > 0.5 else "weak match"
 
-    answer = answers[0]['answer'] if answers else None
-    if not answer:
-        return "I don't know. Nothing came back on that."
+    return (
+        f"Found {len(hits)} hit(s), {certainty} (avg similarity {avg:.2f}).\n"
+        + "\n".join(hits)
+    )
 
-    how_sure = ("sure", "pretty sure", "somewhat sure", "guessing")[max(0, min(3, int((1 - confidence) * 4)))]
-    return f"{answer} ({how_sure}, {sources} source{'s' if sources != 1 else ''})"
+TOOL = {
+    "name": "self_memory",
+    "description": "Search my own memory for what happened, what I know, who said it. Returns scored hits with confidence.",
+    "params": {"query": "str", "max_chars": "int"},
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-19 14:05:08
+# Last updated: 2026-07-21 17:22:43
 """
 fetch_checkpoints.py — download Nova's paints.  2026-07-14
 
