@@ -1,6 +1,43 @@
 {
-  "boredom": 4,
+  "boredom": 5,
   "recent": [
+    [
+      "alread",
+      "ambition",
+      "because",
+      "before",
+      "build",
+      "choose",
+      "circl",
+      "dead",
+      "decid",
+      "decoration",
+      "design",
+      "director",
+      "done",
+      "either",
+      "else",
+      "even",
+      "exist",
+      "fifth",
+      "forgett",
+      "fourth",
+      "goes",
+      "instead",
+      "noon",
+      "open",
+      "purpose",
+      "real",
+      "sense",
+      "shape",
+      "someth",
+      "stop",
+      "time",
+      "toda",
+      "wake",
+      "where",
+      "zero"
+    ],
     [
       "again",
       "ambition",
@@ -373,30 +410,6 @@
       "stop",
       "where",
       "which"
-    ],
-    [
-      "awake",
-      "built",
-      "dres",
-      "going",
-      "important",
-      "instead",
-      "last",
-      "machine",
-      "more",
-      "morn",
-      "night",
-      "noth",
-      "particular",
-      "past",
-      "quiet",
-      "rush",
-      "satisfaction",
-      "second",
-      "sitt",
-      "someth",
-      "stand",
-      "whole"
     ]
   ],
   "wants": [
@@ -474,8 +487,8 @@
       "fp": "798b10db94d3",
       "text": "be able to walk into a directory and feel its shape before opening anything in it. Design's written, so this wake goes from wanting to building.",
       "since": "2026-07-22T08:08:49.279861",
-      "last_seen": "2026-07-22T08:23:59.957938",
-      "restated": 1
+      "last_seen": "2026-07-22T08:27:37.011987",
+      "restated": 2
     },
     {
       "fp": "7d76e0b201ac",
@@ -486,5 +499,5 @@
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-22T08:23:59.949939"
+  "last_wake": "2026-07-22T08:27:37.004350"
 }
