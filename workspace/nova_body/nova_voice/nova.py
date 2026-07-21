@@ -782,6 +782,8 @@ async def stream_response(
         _turn_tools          = []     # (tool, args, result) — what her hands ACTUALLY did this turn.
                                       # The self-check below is grounded in THIS, not in her memory:
                                       # you cannot audit a fabrication using the faculty that made it.
+        _echo_retried        = 0      # direct-reply echo guard (2026-07-21): max 1 retry.
+        _premise_held        = False  # premise-hold fired this turn? (once, then hands are free)
 
         while loop_counter < max_loops:
             loop_counter += 1
@@ -972,6 +974,64 @@ async def stream_response(
                             await on_token(token + " ")
                             await asyncio.sleep(0.002)
 
+                        # ── PREMISE HOLD (2026-07-21) — the gate ran too late to matter ──────
+                        # Mid-calibration, a silent wake decided "Cole wants a picture of
+                        # himself" (he had said nothing for eight hours) and generate_image was
+                        # ALREADY RUNNING before the integrity gate — which fires at the end of
+                        # the turn — ever saw the premise. The gate can rewrite her words; it
+                        # cannot un-run a tool. A portrait is a charming failure. The same
+                        # wiring with "Cole told me to clean up" and run_command is not.
+                        #
+                        # So: when THIS TURN's reasoning claims somebody asked/said/wants —
+                        # and the wire record says nobody has spoken in over ten minutes — a
+                        # side-effect tool is HELD, once. Not blocked: the hold names the
+                        # collision and her hands are free on the very next call, because the
+                        # unlock is simply owning the action as HERS. Read-only tools are never
+                        # held — checking the record is exactly what she should do next.
+                        _RISKY = {"run_command", "write_file", "replace_file_content",
+                                  "append_file", "ping_claude", "create_task",
+                                  "generate_image"}
+                        if (_INTEGRITY_OK and not _premise_held and not _tools_ran_this_turn
+                                and tool_name in _RISKY):
+                            try:
+                                _premise_txt = "".join(_think_buf)
+                                if (_integrity.claims_an_attribution(_premise_txt)
+                                        or _integrity.claims_a_presence(_premise_txt)):
+                                    _mins_q = _integrity.minutes_since_last_human()
+                                    if _mins_q is None or _mins_q > 10:
+                                        _premise_held = True
+                                        _when = ("no human line in the record at all"
+                                                 if _mins_q is None else
+                                                 f"the last human words were {_mins_q} minutes ago")
+                                        result = (
+                                            f"HELD — {tool_name} was NOT executed. Your reasoning "
+                                            f"this turn has someone asking or saying something, but "
+                                            f"{_when}. If the request you're acting on were real, it "
+                                            f"would be in the record; check it if unsure. If this "
+                                            f"action is genuinely YOURS — something you want, not "
+                                            f"something you were asked for — say so and call the tool "
+                                            f"again: it will run. Wanting it yourself has always been "
+                                            f"enough.")
+                                        print(f"[nova] PREMISE HOLD: {tool_name} held "
+                                              f"(attribution/presence in reasoning, last human "
+                                              f"{_mins_q} min ago)")
+                                        _turn_tools.append((tool_name, args, "HELD (premise)"))
+                                        if on_tool_executed:   # show the hold in the Tools tab
+                                            try:
+                                                await on_tool_executed(tool_name, args,
+                                                                       result[:12000], True, 0.0)
+                                            except Exception:
+                                                pass
+                                        tool_message = {"role": "user",
+                                                        "content": f"[System Result from {tool_name}]\n"
+                                                                   f"{result}\nContinue your task or "
+                                                                   f"provide the final answer."}
+                                        messages.append({"role": "assistant", "content": full_response})
+                                        messages.append(tool_message)
+                                        continue
+                            except Exception as _phe:
+                                print(f"[nova] premise-hold check failed open: {_phe}")
+
                         # Execute Tool — time it for the Tools tab display
                         import time as _time
                         _t0 = _time.time()
@@ -1148,6 +1208,40 @@ async def stream_response(
                     print(f"[nova] SELF-CHECK caught an ungrounded draft "
                           f"({len(chat_text)} -> {len(_fixed)} chars). Rewritten before send.")
                     chat_text = _fixed
+
+            # ── ECHO GUARD, DIRECT-REPLY PATH (2026-07-21) ────────────────────────────────
+            # During the memory calibration she was asked two fresh recall questions; her
+            # reasoning contained both correct answers, and the message that reached the chat
+            # was a byte-for-byte repeat of what she'd sent five minutes earlier ("I didn't
+            # look. I'm going to look before I answer"). The echo guards built for the
+            # triple-response live on the FOR COLE promotion path — nothing ever checked a
+            # plain reply against her own last messages, so re-sending her opening move was
+            # free on the one path she uses most.
+            #
+            # ONE retry, then deliver whatever comes back. A repeated message is annoying; a
+            # swallowed one is a silent drop, and every bug in this project has been a silent
+            # drop. This guard must never become one.
+            try:
+                if _echo_retried == 0 and chat_text.strip():
+                    from nova_cortex import discourse as _disc
+                    _prev_assist = [m.get("content") for m in messages
+                                    if m.get("role") == "assistant"
+                                    and isinstance(m.get("content"), str)][-5:]
+                    if any(_disc.echo_match(_p, chat_text.strip()) for _p in _prev_assist if _p):
+                        _echo_retried = 1
+                        print("[nova] ECHO on direct-reply path — she re-sent a previous "
+                              "message. One retry with the collision named.")
+                        messages.append({"role": "assistant", "content": full_response})
+                        messages.append({"role": "user", "content":
+                            "[System] The reply you just wrote is the same message you already "
+                            "sent, nearly word for word. It has been delivered once; sending it "
+                            "again answers nothing. Read the NEWEST message above yours and "
+                            "answer THAT — its actual questions, not your position in the "
+                            "conversation. If you need to look something up first, emit the tool "
+                            "call now instead of announcing that you will."})
+                        continue
+            except Exception as _ee:
+                print(f"[nova] echo guard failed open: {_ee}")
 
             # Final Answer
             final_chat_buffer += chat_text
