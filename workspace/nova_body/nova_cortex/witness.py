@@ -444,6 +444,12 @@ _WHAT = {
                         "out is hers, not the auditor's.",
     "witness_overruled": "She answered her witness and kept her position. She holds more "
                          "context than it does, so this is allowed — her reply stands.",
+    "witness_unresolved": "She revised after the concern, and the witness is still not "
+                          "satisfied. Her words ship anyway — one round only, no tug-of-war — "
+                          "but the disagreement is preserved here for review.",
+    "loop_exhausted": "The turn hit its iteration limit (long tool chains + guard retries) "
+                      "before reaching a final answer. A best-effort reply was delivered "
+                      "instead of silently dropping the whole turn.",
     "witness_rewrite": "The audit caught an ungrounded claim and rewrote the reply before it "
                        "was ever sent. Compare BEFORE and AFTER below.",
     "witness_skip":  "The draft went out WITHOUT an audit — no trigger fired. Shown so an "

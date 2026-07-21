@@ -862,6 +862,8 @@ async def stream_response(
         _premise_held        = False  # premise-hold fired this turn? (once, then hands are free)
         _witness_rounds      = 0      # witness↔Nova exchanges this turn (max 1 — see the gate)
         _prior_draft         = ""     # what she said before the witness questioned it
+        chat_text            = ""     # current iteration's outbound text; pre-bound so the
+                                      # loop-exhaustion salvage can never hit an unbound name
 
         while loop_counter < max_loops:
             loop_counter += 1
@@ -1391,12 +1393,29 @@ async def stream_response(
                 elif _concern:
                     # She has already answered the witness once. Whatever she said stands —
                     # including "you're wrong, and here's why". Overruling her twice would make
-                    # the conversation theatre.
+                    # the conversation theatre. But LABEL it honestly: keeping her position and
+                    # revising-yet-still-flagged are different outcomes, and v7 will be built
+                    # from these events — a mislabeled overrule teaches the wrong lesson twice.
+                    _kept_position = False
                     try:
-                        _witness.pipeline_event(
-                            "witness_overruled",
-                            "she answered the witness and kept her position — her reply stands",
-                            draft=chat_text, concern=_concern)
+                        from nova_cortex import discourse as _disc_w
+                        _kept_position = bool(_prior_draft) and _disc_w.echo_match(
+                            _prior_draft, chat_text.strip())
+                    except Exception:
+                        pass
+                    try:
+                        if _kept_position:
+                            _witness.pipeline_event(
+                                "witness_overruled",
+                                "she heard the concern and kept her position — she holds more "
+                                "context than the witness, so her reply stands",
+                                draft=chat_text, concern=_concern)
+                        else:
+                            _witness.pipeline_event(
+                                "witness_unresolved",
+                                "she revised, the witness is still unsatisfied — her words ship "
+                                "anyway (one round only), flagged for review",
+                                before=_prior_draft, after=chat_text, concern=_concern)
                     except Exception:
                         pass
                 elif _prior_draft:
@@ -1438,6 +1457,18 @@ async def stream_response(
                     _prev_assist = [m.get("content") for m in messages
                                     if m.get("role") == "assistant"
                                     and isinstance(m.get("content"), str)][-5:]
+                    # ── THE OVERRULE IS NOT AN ECHO (2026-07-21, review of the witness
+                    # conversation) ─────────────────────────────────────────────────────────
+                    # When the witness challenges her, her draft is appended to `messages` as
+                    # an assistant turn — but it was NEVER DELIVERED. If she overrules ("send
+                    # your draft as written", which the challenge explicitly offers), her
+                    # resend matches that phantom turn and this guard would scold her for
+                    # repeating a message nobody ever received. Two guards fighting, and the
+                    # loser is exactly the behaviour we most want on record: her standing her
+                    # ground against her auditor. An undelivered draft is not an echo of
+                    # anything.
+                    if _prior_draft and _disc.echo_match(_prior_draft, chat_text.strip()):
+                        _prev_assist = []
                     if any(_disc.echo_match(_p, chat_text.strip()) for _p in _prev_assist if _p):
                         _echo_retried = 1
                         print("[nova] ECHO on direct-reply path — she re-sent a previous "
@@ -1466,6 +1497,32 @@ async def stream_response(
             final_chat_buffer += chat_text
             await on_done(final_chat_buffer)
             break
+        else:
+            # ── LOOP EXHAUSTION IS NOT PERMISSION TO SAY NOTHING (2026-07-21 review) ─────
+            # If 20 iterations burn down without reaching Final Answer — long tool chains do
+            # happen; she ran 10+ call sequences tonight, and every guard retry (witness,
+            # echo, assertion, premise) consumes an iteration — the old code simply fell out
+            # of the loop: no on_done, no message, turn vanishes. To the person waiting, that
+            # is indistinguishable from being ignored, and to the transcript it never
+            # happened. Every bug in this project has been a silent drop; this was one with a
+            # 20-iteration fuse. Deliver SOMETHING true instead.
+            print(f"[nova] max_loops ({max_loops}) exhausted without a final answer — "
+                  f"delivering best-effort instead of nothing")
+            try:
+                from nova_cortex import witness as _w_exh
+                _w_exh.pipeline_event(
+                    "loop_exhausted",
+                    f"{max_loops} iterations spent (tools/guard retries) without reaching a "
+                    f"final answer — best-effort delivery instead of silence",
+                    tools_this_turn=len(_turn_tools))
+            except Exception:
+                pass
+            _salvage = (final_chat_buffer + chat_text).strip()
+            if not _salvage:
+                _salvage = (f"I ran out of thinking room this turn after {len(_turn_tools)} "
+                            f"tool call(s) and never landed the answer. The receipts are in "
+                            f"the Tools tab — ask me again and I'll pick it up from there.")
+            await on_done(_salvage)
 
     except Exception as e:
         import traceback
