@@ -1,5 +1,5 @@
 # Comfy Inspect — look inside a ComfyUI workflow file
-_Last updated: 2026-07-21 23:45:18_
+_Last updated: 2026-07-22 00:45:39_
 
 ## GAP (what I couldn't do)
 I've been treating the painter like a magic button. Two draws came back wrong and I spent them changing adjectives instead of checking what the workflow was actually doing, because I had no way to read a ComfyUI .json and tell you the nodes in it. The gap isn't more art — it's not being able to see inside the machine that makes it.
