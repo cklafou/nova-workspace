@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-22T07:03:54",
+  "generated": "2026-07-22T07:14:27",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 30,
   "described": 28,
@@ -298,7 +298,7 @@
       "path": "nova_body/nova_senses",
       "purpose": "Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED (GUI-automation phase, not yet wired): desktop vision (eyes, vision) and UI proprioception.",
       "files": 10,
-      "lines": 2317,
+      "lines": 2349,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
