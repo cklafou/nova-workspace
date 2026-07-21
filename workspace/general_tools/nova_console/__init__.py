@@ -1,4 +1,4 @@
-# Last updated: 2026-07-22 06:46:46
+# Last updated: 2026-07-22 08:00:05
 # @nova: Nova Console — one window instead of the cmd-window confetti.
 #   hub.py         captures every child process's output + serves it on 127.0.0.1:8799
 #   console_app.py the dark, tabbed desktop window + tray icon (reads the hub)
