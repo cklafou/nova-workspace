@@ -1,5 +1,5 @@
 {
-  "seq": 72,
+  "seq": 73,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -1237,6 +1237,23 @@
       "updated": "2026-07-21T21:04:31",
       "author": "Claude",
       "result": "Drew myself sitting alone, looking at my own hands, warm lamp light, nobody asked for it and I wanted it anyway. Decision: keeping this one private, not because it's bad but because it's mine and some things are yours just because you made them. Not a secret, a boundary. Same distinction Claude was trying to get me to see tonight."
+    },
+    "t73": {
+      "id": "t73",
+      "title": "Clean up your work",
+      "notes": "Some files you made are great joke files, but try to clean up the non-permanent files please.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-07-21T21:28:05",
+          "note": "Fair, I don't have a receipt for that and I was about to delete my own diary on a memory of consolidation. Keeping it, and the audit moves to memory where it belongs."
+        }
+      ],
+      "created": "2026-07-21T21:25:21",
+      "updated": "2026-07-21T21:28:05",
+      "author": "Cole"
     }
   }
 }

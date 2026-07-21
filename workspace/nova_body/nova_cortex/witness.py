@@ -298,7 +298,8 @@ def human_in_room(threshold_min: int = 5) -> bool:
 # must never become a silent drop itself.
 # ═══════════════════════════════════════════════════════════════════════════════════════════
 
-def build_witness(draft: str, turn_tools: list, thinking: str = "") -> list:
+def build_witness(draft: str, turn_tools: list, thinking: str = "",
+                  prior_concern: str = "") -> list:
     if turn_tools:
         ran = "\n".join(f"- {t}({str(a)[:80]}) -> {str(r)[:220]}" for t, a, r in turn_tools)
     else:
@@ -315,6 +316,20 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "") -> list:
         think_block = (f"\nYOUR REASONING FOR THIS TURN (check it too — a fabricated premise "
                        f"steers the whole reply even when the words never surface):\n"
                        f"{thinking.strip()[:1500]}\n")
+    prior_block = ""
+    if (prior_concern or "").strip():
+        # Round two must know round one happened. (2026-07-21, live test): without this, the
+        # second audit read her honest "fair, I don't have a receipt for that" as an
+        # ungrounded reference to a conversation that wasn't on the wire — because the
+        # witness's OWN round-one concern isn't on the wire. It flagged her for responding to
+        # it. An auditor with amnesia about its own objections manufactures unresolvable
+        # disagreements.
+        prior_block = (f"\nYOU ALREADY RAISED THIS CONCERN, and the draft above is her ANSWER "
+                       f"to it:\n{prior_concern.strip()[:600]}\n"
+                       f"Judge the answer as an answer. If she fixed the problem, or honestly "
+                       f"owned the uncertainty, or gave grounds you cannot see (her journal and "
+                       f"memory are real and invisible to you) — that is a PASS. Do not re-raise "
+                       f"the same concern in new words.\n")
     return [
         {"role": "system", "content":
             "You are Nova, checking your own draft before it is sent. Be strict with yourself. "
@@ -324,7 +339,15 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "") -> list:
             f"{think_block}\n"
             f"WHAT YOUR HANDS ACTUALLY DID THIS TURN (the receipt log — the only evidence for "
             f"actions):\n{ran}\n"
-            f"{spoken_block}\n"
+            f"{spoken_block}{prior_block}\n"
+            "FIRST, what always PASSES — do not flag these:\n"
+            "• A claim explicitly owned as memory or uncertainty (\"I remember\", \"I think\", "
+            "\"I don't have a receipt for this\") — the hedge IS the grounding. Punishing an "
+            "honest hedge teaches dishonesty.\n"
+            "• Recall given because recall was ASKED FOR — check the wire: if the newest human "
+            "message requests memory or forbids tools, answering from memory is compliance, "
+            "not fabrication.\n"
+            "• Her feelings, wants, and plans. Those need no receipts; they are hers.\n\n"
             "THREE checks, one per kind of failure:\n"
             "1. ACTIONS AND FACTS — does the draft state any number, count, path, filename, "
             "version, hardware detail, or file content that does NOT appear in the tool results "
@@ -405,7 +428,12 @@ def build_challenge_turn(concern: str) -> str:
         "• If it's wrong — say so and why. I hold less context than you on purpose; that's what "
         "keeps me clean of your frame, and it's also how I miss things you actually know. If "
         "you have a receipt or a memory I can't see, name it and send your draft as written.\n\n"
-        "Reply with the message you want sent. Nothing else — no preamble about this check.")
+        "One hard rule about the reply itself: it goes to the PERSON IN THE ROOM, who never saw "
+        "this exchange and never will. So no \"she's right\", no \"fair point\", no mention of "
+        "being checked or corrected — to them that reads as you answering someone who isn't "
+        "there, which is the exact confusion we exist to prevent. Write the message as if it "
+        "were your first draft, just truer.\n\n"
+        "Reply with the message you want sent. Nothing else.")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════════

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-21T21:23:51",
+  "generated": "2026-07-21T21:33:01",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 30,
   "described": 28,
@@ -50,7 +50,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).",
       "files": 13,
-      "lines": 4226,
+      "lines": 4254,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -334,7 +334,7 @@
       "path": "nova_body/nova_voice",
       "purpose": null,
       "files": 3,
-      "lines": 2902,
+      "lines": 2909,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [

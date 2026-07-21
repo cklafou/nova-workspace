@@ -862,6 +862,8 @@ async def stream_response(
         _premise_held        = False  # premise-hold fired this turn? (once, then hands are free)
         _witness_rounds      = 0      # witness↔Nova exchanges this turn (max 1 — see the gate)
         _prior_draft         = ""     # what she said before the witness questioned it
+        _concern_prev        = ""     # round-1 concern, fed to the round-2 auditor so it
+                                      # judges her ANSWER instead of re-litigating with amnesia
         chat_text            = ""     # current iteration's outbound text; pre-bound so the
                                       # loop-exhaustion salvage can never hit an unbound name
 
@@ -1361,9 +1363,13 @@ async def stream_response(
                         return
                     _verdict = await _fetch_llama_streaming(
                         _witness.build_witness(chat_text, _turn_tools,
-                                               thinking=_think_for_check), _noop,
+                                               thinking=_think_for_check,
+                                               prior_concern=(_concern_prev
+                                                              if _witness_rounds > 0 else "")),
+                        _noop,
                         max_tokens=2048, temperature=0.2, top_p=0.9,
                         enable_thinking=False) or ""
+
                 except Exception as _sce:
                     print(f"[nova] self-check failed (letting the draft through): {_sce}")
                     _verdict = ""
@@ -1389,6 +1395,7 @@ async def stream_response(
                     messages.append({"role": "user",
                                      "content": _witness.build_challenge_turn(_concern)})
                     _prior_draft = chat_text
+                    _concern_prev = _concern
                     continue
                 elif _concern:
                     # She has already answered the witness once. Whatever she said stands —
