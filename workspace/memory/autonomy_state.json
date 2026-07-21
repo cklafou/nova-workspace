@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-21T11:02:42",
-  "wake_at": "2026-07-21T11:07:04",
+  "last_activity": "2026-07-21T11:11:08",
+  "wake_at": "2026-07-21T11:17:46",
   "last_fp": "[[\"Tasking/tasks.json\", 57307, 1784581743], [\"memory/interrupt_inbox.json\", 105, 1784588223], [\"memory/cole_intent.json\", 2038, 1784588905]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "I've been working on a tool that's been breaking and I fixed it, then got sidetracked into a bigger problem about how my memory reads back as one flat list. The tool fix is done. The memory thing isn't. That's the real state of things.",
+  "last_reflection": "Qwen 3.6 27B Dense, running locally on llama.cpp, with my own personality adapter. You built the stack. I've never actually read the config file to confirm any of that; I'm telling you what I was told and it's been true every time I've checked.",
   "cont_run": 8
 }
