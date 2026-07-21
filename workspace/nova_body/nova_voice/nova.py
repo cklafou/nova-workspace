@@ -870,6 +870,7 @@ async def stream_response(
         _WITNESS_MAX_ROUNDS  = 20     # Cole, 2026-07-21: give them room to actually settle it.
                                       # A deadlock check ends it early when nothing is moving.
         _tools_at_last_concern = 0    # did she CHECK anything since the last objection?
+        _consec_concerns     = 0      # objections in a row with no new evidence between them
         # One id for every gate event in this turn, so the UI can render the whole story —
         # draft → audited → objected → she answered → outcome — as ONE row instead of five
         # scattered ones. Ambient via ContextVar, so no call site needs to pass it and two
@@ -1397,13 +1398,25 @@ async def stream_response(
                 # checked nothing since, further rounds are just two minds restating
                 # themselves — expensive, and the person in the room is still waiting.
                 _deadlocked = False
-                if _concern and _concern_prev:
+                if _concern:
+                    _checked_since = len(_turn_tools) > _tools_at_last_concern
+                    if _checked_since:
+                        _consec_concerns = 0      # she went and looked — the loop is moving
+                    elif _concern_prev:
+                        _consec_concerns += 1
+                    # Two ways to call it stuck. Textual repeat is the clean signal, but the
+                    # witness REWORDS itself ("She says Cole's exact words were…" / "She quotes
+                    # Cole as saying…"), and prefix matching sails right past that — a live test
+                    # burned four rounds on one objection in three outfits. So also cap the raw
+                    # count: three objections with no new evidence between them is not a
+                    # conversation, it is two minds restating themselves at a person who is
+                    # waiting.
                     try:
                         from nova_cortex import discourse as _dl
-                        _same = _dl.echo_match(_concern_prev, _concern)
+                        _same = bool(_concern_prev) and _dl.echo_match(_concern_prev, _concern)
                     except Exception:
-                        _same = (_concern_prev.strip()[:120] == _concern.strip()[:120])
-                    _deadlocked = _same and (len(_turn_tools) <= _tools_at_last_concern)
+                        _same = bool(_concern_prev) and _concern_prev.strip()[:120] == _concern.strip()[:120]
+                    _deadlocked = (not _checked_since) and (_same or _consec_concerns >= 3)
                 if _concern and _witness_rounds < _WITNESS_MAX_ROUNDS and not _deadlocked:
                     # ── HAND IT BACK, DON'T OVERWRITE (2026-07-21, Cole's correction) ──────
                     # The witness names the problem; SHE writes the answer. Preserves her
@@ -1421,9 +1434,24 @@ async def stream_response(
                             draft=chat_text, concern=_concern, verdict=_verdict)
                     except Exception:
                         pass
+                    # If her LAST answer promised to check and she didn't, don't argue the
+                    # point again — ask for the tool call and nothing else.
+                    _broke_promise = (_prior_draft
+                                      and _witness.promised_to_check(_prior_draft)
+                                      and len(_turn_tools) <= _tools_at_last_concern)
+                    _turn_msg = (_witness.build_promise_turn(_concern) if _broke_promise
+                                 else _witness.build_challenge_turn(_concern))
+                    if _broke_promise:
+                        try:
+                            _witness.pipeline_event(
+                                "promise_unkept",
+                                "she said she would check, then answered without checking — "
+                                "asked for the tool call and nothing else",
+                                draft=_prior_draft, concern=_concern)
+                        except Exception:
+                            pass
                     messages.append({"role": "assistant", "content": full_response})
-                    messages.append({"role": "user",
-                                     "content": _witness.build_challenge_turn(_concern)})
+                    messages.append({"role": "user", "content": _turn_msg})
                     _prior_draft = chat_text
                     _concern_prev = _concern
                     _tools_at_last_concern = len(_turn_tools)

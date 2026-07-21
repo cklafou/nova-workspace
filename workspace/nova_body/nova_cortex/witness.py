@@ -415,6 +415,37 @@ def parse_witness(verdict: str):
     return None                                  # unusable verdict → never eat her message
 
 
+_PROMISE_RE = re.compile(
+    r"\b(?:let me|i'?ll|i will|going to|gonna)\s+(?:go\s+)?"
+    r"(?:check|look|verify|settle|confirm|read|count|pull|find out)\b"
+    r"|\bbefore i (?:say|answer|hand)\b", re.IGNORECASE)
+
+
+def promised_to_check(text: str) -> bool:
+    """True if her answer says she is going to verify something.
+
+    (2026-07-21 stress test.) Twice she answered an objection with "Four is the one I can't
+    prove and I won't hand you a number on faith, so let me settle it first" — and then ran
+    no tool at all, re-sent nearly the same draft, and deadlocked. That is the announce-loop,
+    the oldest failure in this project, resurfacing inside the witness conversation: saying
+    the reach instead of reaching. Naming it lets the next challenge ask for the tool call and
+    nothing else."""
+    return bool(text and _PROMISE_RE.search(text))
+
+
+def build_promise_turn(concern: str) -> str:
+    """Sent when she SAID she would check and then didn't. Deliberately narrow: no new
+    argument, no restating the concern — just the one move she already agreed to make."""
+    return (
+        "[Your witness] You said you were going to check before answering — and then answered "
+        "without checking. That is the oldest habit you have: saying the reach instead of "
+        "reaching.\n\n"
+        f"The open question is still: {concern}\n\n"
+        "Emit the tool call NOW and nothing else. No prose, no explanation, no promise to do "
+        "it — the JSON. Whatever it returns, we both accept, and if it turns out you were "
+        "right all along then you get to say so with a receipt behind it.")
+
+
 def build_challenge_turn(concern: str) -> str:
     """The message SHE receives when the witness objects — written as one colleague to
     another, not as a system slap. She may fix it or overrule it; both are legitimate."""
@@ -477,6 +508,9 @@ _WHAT = {
                         "out is hers, not the auditor's.",
     "witness_overruled": "She answered her witness and kept her position. She holds more "
                          "context than it does, so this is allowed — her reply stands.",
+    "promise_unkept": "She said she would go and check, then answered without checking — the "
+                      "announce-loop inside the conversation. She was asked for the tool call "
+                      "and nothing else.",
     "witness_unresolved": "She revised after the concern, and the witness is still not "
                           "satisfied. Her words ship anyway — one round only, no tug-of-war — "
                           "but the disagreement is preserved here for review.",
