@@ -1,4 +1,4 @@
-# Last updated: 2026-07-22 05:50:03
+# Last updated: 2026-07-22 06:50:31
 """self_memory — ask my own memory and get back an answer I can trust.
 
 A body tool: reaches the LanceDB store directly, no chat server needed.
