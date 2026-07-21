@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T08:52:40+09:00",
+  "updated_at": "2026-07-21T09:37:00+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -741,6 +741,19 @@
       "confidence": 0.98,
       "resolved_by": "reconcile: no remaining references to the old path",
       "resolved_at": "2026-07-21T07:59:41+09:00",
+      "notes": null
+    },
+    {
+      "id": "521512b0",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-21T09:37:00+09:00",
+      "commit": "c14a5469",
+      "old_path": null,
+      "new_path": "Nova_Created/art/2026-07-21/nova_art_093402_86277.png",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
       "notes": null
     }
   ],
