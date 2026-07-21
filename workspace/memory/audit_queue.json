@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T19:19:22+09:00",
+  "updated_at": "2026-07-21T19:39:30+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -959,6 +959,19 @@
       "commit": "d5baa88f",
       "old_path": null,
       "new_path": "memory/scratch/deciding_done.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "8079cef8",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-21T19:39:30+09:00",
+      "commit": "02bb4533",
+      "old_path": null,
+      "new_path": "Nova_Created/art/2026-07-21/nova_art_193242_18896.png",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
