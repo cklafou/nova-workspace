@@ -3129,6 +3129,7 @@ const _PL_META={
   witness_unresolved: {i:'⚖️', t:'Still disputed — shipped',c:'held'},
   witness_rewrite:    {i:'✍️', t:'Witness: REWROTE',        c:'held'},
   witness_skip:       {i:'➖', t:'No audit fired',          c:''},
+  witness_verified:   {i:'🔎', t:'Witness checked it',    c:''},
   promise_unkept:     {i:'🤞', t:'Promised, didn\'t check',  c:'held'},
   spill_trimmed:      {i:'🧹', t:'Private thinking cut',    c:'held'},
   premise_hold:       {i:'✋', t:'Premise hold',            c:'held'},
@@ -3157,6 +3158,7 @@ const _PL_OUTCOME={
   witness_overruled: {t:'SHE OVERRULED',    c:'held', d:'Her witness objected; she disagreed and kept her position. She holds more context than it does.'},
   witness_unresolved:{t:'STILL DISPUTED',   c:'held', d:'She revised and the witness still objects. Her words shipped anyway — one round only.'},
   witness_check:     {t:'AUDITING…',        c:'',     d:'Her witness is reading this draft right now. The outcome lands in a moment.'},
+  witness_verified:  {t:'WITNESS VERIFIED',  c:'', d:'Her witness read the evidence itself before ruling.'},
   promise_unkept:    {t:'PROMISED, DIDN\'T CHECK', c:'held', d:'She said she would verify, then answered anyway. Asked for the tool call and nothing else.'},
   witness_concern:   {t:'OBJECTED — awaiting her answer', c:'held', d:'The witness has objected and is waiting on her answer.'},
   witness_skip:      {t:'NOT AUDITED',      c:'',     d:'Sent without an audit — nothing triggered one.'},
@@ -3203,6 +3205,7 @@ function _plRenderGroup(g){
                           // attempt — labelling both "wrote this" made the exchange unreadable
     for(const e of evs){
       const T=e.ts;
+      if(e.stage==='witness_verified')    push('witness','went and checked this itself before ruling', (e.args||'')+'\n'+(e.verdict||''), T);
       if(e.stage==='promise_unkept')      push('system','she said she would check, then didn\'t — asked for the tool call only', e.concern, T, 'del');
       if(e.stage==='witness_check')
         push('nova', objected? 'answered the objection with this'

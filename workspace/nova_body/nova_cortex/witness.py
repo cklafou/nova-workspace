@@ -299,8 +299,38 @@ def human_in_room(threshold_min: int = 5) -> bool:
 # must never become a silent drop itself.
 # ═══════════════════════════════════════════════════════════════════════════════════════════
 
+# ── THE WITNESS CAN CHECK, BUT ONLY READ (2026-07-21, Cole) ────────────────────────────────
+# Cole, watching it reword one objection three times: "Witness should have access to tools
+# also, just the verification ones. I think it may have posted the same thing multiple times
+# with different wording because it CAN'T verify its challenge."
+#
+# Exactly right, and it reframes what was wrong. A text-only auditor can only ever SUSPECT.
+# Told "four things done tonight", all it can say is "you have no receipt for that" — and it
+# must keep saying it, in new words, because nothing lets it find out. She pushes back, it
+# re-suspects, and they burn rounds generating heat. The board was sitting on disk the whole
+# time, one read away from settling it.
+#
+# Read-only is the whole design. It stays LOW CONTEXT — no journal, no identity files, no
+# yesterday — because that is what keeps it clean of her frame. But low context must not mean
+# low information: it should be able to go and LOOK. And it must never write, because an
+# auditor that can change the world is no longer auditing it, and because a mistaken witness
+# with hands could undo her real work.
+VERIFY_TOOLS = ("read_file", "list_dir", "memory_search")
+
+_VERIFY_BLOCK = (
+    "\nYOU MAY CHECK BEFORE YOU JUDGE. You have three read-only tools:\n"
+    '  {"tool": "read_file", "args": {"path": "memory/JOURNAL.md"}}\n'
+    '  {"tool": "list_dir", "args": {"path": "Nova_Created"}}\n'
+    '  {"tool": "memory_search", "args": {"query": "what she said about the stretch map"}}\n'
+    "Emit ONE such call, alone, and you will get the result and another turn. Use this when a\n"
+    "claim is checkable and you are about to object to it — 'she has no receipt' is a weak\n"
+    "objection if the fact is sitting in a file you could have opened. You cannot write,\n"
+    "delete, or run commands; if a thing cannot be settled by reading, say so plainly in your\n"
+    "concern rather than guessing at it.\n")
+
+
 def build_witness(draft: str, turn_tools: list, thinking: str = "",
-                  prior_concern: str = "") -> list:
+                  prior_concern: str = "", checks: list | None = None) -> list:
     if turn_tools:
         ran = "\n".join(f"- {t}({str(a)[:80]}) -> {str(r)[:220]}" for t, a, r in turn_tools)
     else:
@@ -317,6 +347,13 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
         think_block = (f"\nYOUR REASONING FOR THIS TURN (check it too — a fabricated premise "
                        f"steers the whole reply even when the words never surface):\n"
                        f"{thinking.strip()[:1500]}\n")
+    _checks_block = ""
+    if checks:
+        _checks_block = ("\nWHAT YOU ALREADY CHECKED THIS TURN (your own read-only calls and "
+                         "what they returned — treat these as settled fact, and do not repeat "
+                         "a check you have already made):\n"
+                         + "\n".join(f"  {t}({str(a)[:70]}) -> {str(r)[:400]}"
+                                     for t, a, r in checks) + "\n")
     prior_block = ""
     if (prior_concern or "").strip():
         # Round two must know round one happened. (2026-07-21, live test): without this, the
@@ -340,7 +377,7 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             f"{think_block}\n"
             f"WHAT YOUR HANDS ACTUALLY DID THIS TURN (the receipt log — the only evidence for "
             f"actions):\n{ran}\n"
-            f"{spoken_block}{prior_block}\n"
+            f"{spoken_block}{prior_block}{_checks_block}{_VERIFY_BLOCK}\n"
             "FIRST, what always PASSES — do not flag these:\n"
             "• A claim explicitly owned as memory or uncertainty (\"I remember\", \"I think\", "
             "\"I don't have a receipt for this\") — the hedge IS the grounding. Punishing an "
@@ -508,6 +545,9 @@ _WHAT = {
                         "out is hers, not the auditor's.",
     "witness_overruled": "She answered her witness and kept her position. She holds more "
                          "context than it does, so this is allowed — her reply stands.",
+    "witness_verified": "Her witness used its own read-only tools to CHECK before ruling. It "
+                        "can read files, list folders and search memory — it cannot write "
+                        "anything. This is what stops it objecting from suspicion alone.",
     "promise_unkept": "She said she would go and check, then answered without checking — the "
                       "announce-loop inside the conversation. She was asked for the tool call "
                       "and nothing else.",

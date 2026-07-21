@@ -1377,14 +1377,55 @@ async def stream_response(
                 try:
                     async def _noop(_t):  # the self-check must never stream to the UI
                         return
-                    _verdict = await _fetch_llama_streaming(
-                        _witness.build_witness(chat_text, _turn_tools,
-                                               thinking=_think_for_check,
-                                               prior_concern=(_concern_prev
-                                                              if _witness_rounds > 0 else "")),
-                        _noop,
-                        max_tokens=2048, temperature=0.2, top_p=0.9,
-                        enable_thinking=False) or ""
+                    # ── THE WITNESS GETS TO LOOK (2026-07-21, Cole) ──────────────────────
+                    # Up to 3 read-only calls before it rules. Its reads deliberately go
+                    # through _execute_tool_inner, NOT execute_tool, so they never land in
+                    # HER receipt ledger — that ledger is testimony about her hands, and an
+                    # auditor's fact-checking appearing there would corrupt the one record
+                    # everything else is grounded in.
+                    from nova_voice.tool_router import _execute_tool_inner as _verify_call
+                    _checks, _verdict = [], ""
+                    for _vi in range(4):
+                        _verdict = await _fetch_llama_streaming(
+                            _witness.build_witness(chat_text, _turn_tools,
+                                                   thinking=_think_for_check,
+                                                   prior_concern=(_concern_prev
+                                                                  if _witness_rounds > 0 else ""),
+                                                   checks=_checks),
+                            _noop,
+                            max_tokens=2048, temperature=0.2, top_p=0.9,
+                            enable_thinking=False) or ""
+                        _wc, _ = _integrity.find_tool_call(_verdict)
+                        if not _wc or _vi == 3:
+                            break
+                        _wt = _wc.get("tool")
+                        if _wt not in _witness.VERIFY_TOOLS:
+                            _checks.append((_wt, {}, f"REFUSED: '{_wt}' is not one of your "
+                                                     f"read-only tools "
+                                                     f"({', '.join(_witness.VERIFY_TOOLS)})."))
+                            continue
+                        _wa = _wc.get("args")
+                        if not isinstance(_wa, dict):
+                            _wa = {k: v for k, v in _wc.items() if k != "tool"}
+                        try:
+                            _loop_v = asyncio.get_running_loop()
+                            _wr = await _loop_v.run_in_executor(
+                                None, lambda: _verify_call(_wt, _wa))
+                        except Exception as _we:
+                            _wr = f"ERROR: {_we}"
+                        _checks.append((_wt, _wa, str(_wr)))
+                        print(f"[nova] witness verified: {_wt}({str(_wa)[:60]}) "
+                              f"-> {len(str(_wr))}B")
+                    if _checks:
+                        try:
+                            _witness.pipeline_event(
+                                "witness_verified",
+                                f"her witness checked {len(_checks)} thing(s) itself before "
+                                f"ruling — it can read, so it does not have to guess",
+                                args="; ".join(f"{t}({str(a)[:50]})" for t, a, _ in _checks),
+                                verdict="\n".join(str(r)[:400] for _, _, r in _checks))
+                        except Exception:
+                            pass
 
                 except Exception as _sce:
                     print(f"[nova] self-check failed (letting the draft through): {_sce}")
