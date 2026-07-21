@@ -423,7 +423,11 @@ def build_challenge_turn(concern: str) -> str:
         "your receipts from this turn, and the wire record of who actually said what. No "
         "journal, no memory, no identity files.]\n\n"
         f"CONCERN: {concern}\n\n"
-        "Two honest ways forward, and I don't know which is right:\n"
+        "Three honest ways forward, and I don't know which is right:\n"
+        "• SETTLE IT — if one tool call would prove either of us right, make it. Read the file, "
+        "run the command, search your memory. We have room for this: you can go and check and "
+        "come back, more than once. An answer neither of us has to take on faith is worth more "
+        "than a fast one, and the person waiting would rather have it.\n"
         "• If it's correct — say the thing again in YOUR words, grounded. Not an apology, not "
         "a note about being corrected. Just the true version of what you meant.\n"
         "• If it's wrong — say so and why. I hold less context than you on purpose; that's what "
@@ -501,7 +505,10 @@ _WHAT = {
 }
 
 # Fields worth keeping in full: they ARE the evidence. Everything else is trimmed short.
-_LONG = {"draft", "before", "after", "verdict", "premise", "repeated", "wire", "args", "error"}
+_LONG = {"draft", "before", "after", "verdict", "premise", "repeated", "wire", "args", "error",
+         # her reasoning for conceding or standing firm — the whole point of showing the
+         # exchange, and useless clipped to a couple of sentences
+         "rationale"}
 
 
 _CURRENT_TURN = contextvars.ContextVar("nova_pipeline_turn", default="")

@@ -846,7 +846,10 @@ async def stream_response(
         # This is NOT a runaway risk: the loop only continues while she KEEPS emitting tool
         # calls, and it exits the moment she answers instead. The integrity gate still binds
         # every claim to a real receipt, and the guardian still watches for genuine loops.
-        max_loops = 20
+        # 20 witness rounds (Cole's number) + tool calls + guard retries all consume iterations
+        # from the same budget. At 20 total, a real verification conversation would starve her
+        # hands exactly when she needs them to settle the question.
+        max_loops = 60
         loop_counter = 0
         # (see the tool-chain note above — raised from 5 on 2026-07-19)
         final_chat_buffer = ""
@@ -862,8 +865,11 @@ async def stream_response(
         _premise_held        = False  # premise-hold fired this turn? (once, then hands are free)
         _witness_rounds      = 0      # witness↔Nova exchanges this turn (max 1 — see the gate)
         _prior_draft         = ""     # what she said before the witness questioned it
-        _concern_prev        = ""     # round-1 concern, fed to the round-2 auditor so it
-                                      # judges her ANSWER instead of re-litigating with amnesia
+        _concern_prev        = ""     # last concern, fed to the next auditor so it judges her
+                                      # ANSWER instead of re-litigating with amnesia
+        _WITNESS_MAX_ROUNDS  = 20     # Cole, 2026-07-21: give them room to actually settle it.
+                                      # A deadlock check ends it early when nothing is moving.
+        _tools_at_last_concern = 0    # did she CHECK anything since the last objection?
         # One id for every gate event in this turn, so the UI can render the whole story —
         # draft → audited → objected → she answered → outcome — as ONE row instead of five
         # scattered ones. Ambient via ContextVar, so no call site needs to pass it and two
@@ -1383,7 +1389,22 @@ async def stream_response(
                     print(f"[nova] self-check failed (letting the draft through): {_sce}")
                     _verdict = ""
                 _concern = _witness.parse_witness(_verdict)
-                if _concern and _witness_rounds < 1:
+                # ── DEADLOCK CHECK (2026-07-21, Cole: "up to 20 turns... a conversation to
+                # allow the truth to be verified") ────────────────────────────────────────
+                # A long conversation is only worth having while it MOVES. Two things make it
+                # move: she runs a tool and comes back with evidence, or the witness raises
+                # something new. If the same objection returns in new words and she has
+                # checked nothing since, further rounds are just two minds restating
+                # themselves — expensive, and the person in the room is still waiting.
+                _deadlocked = False
+                if _concern and _concern_prev:
+                    try:
+                        from nova_cortex import discourse as _dl
+                        _same = _dl.echo_match(_concern_prev, _concern)
+                    except Exception:
+                        _same = (_concern_prev.strip()[:120] == _concern.strip()[:120])
+                    _deadlocked = _same and (len(_turn_tools) <= _tools_at_last_concern)
+                if _concern and _witness_rounds < _WITNESS_MAX_ROUNDS and not _deadlocked:
                     # ── HAND IT BACK, DON'T OVERWRITE (2026-07-21, Cole's correction) ──────
                     # The witness names the problem; SHE writes the answer. Preserves her
                     # voice, lets her overrule an auditor that lacks her context, and teaches
@@ -1405,6 +1426,7 @@ async def stream_response(
                                      "content": _witness.build_challenge_turn(_concern)})
                     _prior_draft = chat_text
                     _concern_prev = _concern
+                    _tools_at_last_concern = len(_turn_tools)
                     continue
                 elif _concern:
                     # She has already answered the witness once. Whatever she said stands —
@@ -1423,15 +1445,22 @@ async def stream_response(
                         if _kept_position:
                             _witness.pipeline_event(
                                 "witness_overruled",
-                                            "she heard the concern and kept her position — she holds more "
-                                "context than the witness, so her reply stands",
-                                draft=chat_text, concern=_concern)
+                                f"she heard the concern and kept her position after "
+                                f"{_witness_rounds} round(s) — she holds more context than the "
+                                f"witness, so her reply stands",
+                                draft=chat_text, concern=_concern,
+                                rationale=_think_for_check, rounds=_witness_rounds)
                         else:
                             _witness.pipeline_event(
                                 "witness_unresolved",
-                                            "she revised, the witness is still unsatisfied — her words ship "
-                                "anyway (one round only), flagged for review",
-                                before=_prior_draft, after=chat_text, concern=_concern)
+                                (f"deadlocked after {_witness_rounds} round(s) — the same "
+                                 f"objection returned and nothing new was checked"
+                                 if _deadlocked else
+                                 f"still disagreeing after {_witness_rounds} round(s)") +
+                                " — her words ship anyway, flagged for review",
+                                before=_prior_draft, after=chat_text, concern=_concern,
+                                rationale=_think_for_check, rounds=_witness_rounds,
+                                deadlocked=bool(_deadlocked))
                     except Exception:
                         pass
                 elif _prior_draft:
@@ -1441,9 +1470,10 @@ async def stream_response(
                     try:
                         _witness.pipeline_event(
                             "witness_answered",
-                                    f"she answered the concern and revised in her own voice "
-                            f"({len(_prior_draft)} → {len(chat_text)} chars) — now grounded",
-                            before=_prior_draft, after=chat_text, verdict=(_verdict or "PASS"))
+                            f"settled in {_witness_rounds} round(s) — she answered, revised in "
+                            f"her own voice, and the witness now agrees",
+                            before=_prior_draft, after=chat_text, verdict=(_verdict or "PASS"),
+                            rationale=_think_for_check, rounds=_witness_rounds)
                     except Exception:
                         pass
                 else:

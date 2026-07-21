@@ -812,6 +812,8 @@ a:hover { text-decoration: underline; }
 .pl-msg.nova { border-left-color: var(--nova); }
 .pl-msg.wit  { border-left-color: var(--yellow); }
 .pl-msg.sys  { border-left-color: var(--text-mute); }
+.pl-msg.think { border-left-color: var(--text-mute); opacity: .85; }
+.pl-msg.think .pl-pre { font-style: italic; }
 .pl-who { font-size: 9.5px; color: var(--text-dim); margin-bottom: 3px; line-height: 1.4; }
 .pl-who b { color: var(--text); letter-spacing: .03em; }
 .pl-msg.wit .pl-who b { color: var(--yellow); }
@@ -3211,13 +3213,15 @@ function _plRenderGroup(g){
       if(e.stage==='spill_trimmed'){      push('nova','private thinking, about to be posted to chat', e.before, T, 'del');
                                           push('system','what actually went out instead', e.after, T, 'ins'); }
       if(e.concern){                      push('witness','objected — here is exactly why', e.concern, T, 'del'); objected=true; }
+      if(e.rationale)                     push('novathink','was thinking this as she decided how to answer', e.rationale, T);
       if(e.stage==='witness_answered'){   push('nova','answered the objection and rewrote it herself', e.after, T, 'ins'); }
       if(e.stage==='witness_unresolved'){ push('nova','revised, but the witness was still unhappy', e.after, T); }
       if(e.stage==='witness_overruled')   push('nova','disagreed and sent her original anyway', e.draft, T, 'ins');
       if(e.stage==='witness_pass')        push('nova','sent this — the witness found nothing wrong', e.draft, T, 'ins');
       if(e.error)                         push('system','error', e.error, T, 'del');
     }
-    const WHO={nova:{n:'NOVA', c:'nova'}, witness:{n:'HER WITNESS', c:'wit'}, system:{n:'THE SYSTEM', c:'sys'}};
+    const WHO={nova:{n:'NOVA', c:'nova'}, novathink:{n:'NOVA (thinking)', c:'think'},
+               witness:{n:'HER WITNESS', c:'wit'}, system:{n:'THE SYSTEM', c:'sys'}};
     let dialogue='';
     beats.forEach((b,i)=>{
       const w=WHO[b.who];
@@ -3233,6 +3237,8 @@ function _plRenderGroup(g){
     if(tg) facts+=`<div class="pl-fact">Why it was audited at all: ${_plEsc(tg)}.</div>`;
     if(lh!==undefined&&lh>=0) facts+=`<div class="pl-fact">A person had last spoken ${lh} minute${lh===1?'':'s'} before this.</div>`;
     if(tt!==undefined) facts+=`<div class="pl-fact">She ran ${tt} tool${tt===1?'':'s'} this turn — that is all the evidence her witness had about her actions.</div>`;
+    const rr=any('rounds'); const dl=any('deadlocked');
+    if(rr) facts+=`<div class="pl-fact">They went back and forth ${rr} time${rr===1?'':'s'} before this settled${dl?', and stopped because the same objection kept returning with nothing new checked':''}.</div>`;
     body=`<div class="pl-body">`+
       `<div class="pl-oc"><b>What happened:</b> ${_plEsc(oc.d)}</div>`+
       dialogue + facts +

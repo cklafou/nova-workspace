@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 18:42:26
+# Last updated: 2026-07-21 22:23:09
 # @nova: Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).
 # nova_lancedb — LanceDB vector store for Nova's long-term semantic memory
 
