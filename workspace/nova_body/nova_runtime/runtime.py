@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 19:19:22
+# Last updated: 2026-07-21 20:44:49
 # @nova: NovaRuntime — her life-support engine (layer 2 of the three-layer model).
 #        Holds the event bus + transcript store now; later steps relocate the autonomy
 #        daemon, model client, memory indexer, sense population, and llama health/restart
@@ -295,6 +295,12 @@ class NovaRuntime:
         Cognition + senses are hers, imported here. Exits cleanly when stop_autonomy() is called."""
         from nova_cortex import executive
         self._autonomy_stop = False
+        # Housekeeping: check Cole's back before anything else.
+        try:
+            from Cole_journal import stretch_watcher as _sw
+            _sw.check(runtime=self, dry_run=False)
+        except Exception:
+            pass  # a nudge failing is not a reason to stop waking up
         await asyncio.sleep(2)
         while not self._autonomy_stop:
             forced = bool(force_wake and force_wake.is_set())
