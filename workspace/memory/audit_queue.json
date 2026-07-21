@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T19:54:44+09:00",
+  "updated_at": "2026-07-21T20:19:13+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -988,6 +988,19 @@
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
       "resolved_at": "2026-07-21T19:54:44+09:00",
+      "notes": null
+    },
+    {
+      "id": "19e10b7c",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-21T20:19:13+09:00",
+      "commit": "77f44f48",
+      "old_path": null,
+      "new_path": "Cole_journal/tenderizer.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
       "notes": null
     }
   ],
