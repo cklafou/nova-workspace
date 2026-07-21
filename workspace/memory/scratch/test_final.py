@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 17:36:37
+# Last updated: 2026-07-21 18:37:12
 # Clean test — unique strings that have never been stored
 import sys; sys.path.insert(0,'nova_body')
 from nova_lancedb.hippocampus import NovaMemoryStore
