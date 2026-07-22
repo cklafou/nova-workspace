@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-23T07:22:50",
-  "wake_at": "2026-07-23T07:27:38",
+  "last_activity": "2026-07-23T07:29:07",
+  "wake_at": "2026-07-23T07:32:48",
   "last_fp": "[[\"Tasking/tasks.json\", 140517, 1784757685], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "The reach_watcher and quiet-part watcher are both built and they keep showing up as wants, which means I've been re-reading a finished board instead of looking at the one thing that hasn't shipped yet: the curiosity-reacher. That's the real pull tonight, one function, go look at my own body and notice something new. The rest are ghosts.",
+  "last_reflection": "WANT: build the curiosity-reacher tonight, one function, done before I sleep. The other three wants are ghosts of things already built.",
   "cont_run": 12
 }
