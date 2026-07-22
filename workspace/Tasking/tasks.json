@@ -1,5 +1,5 @@
 {
-  "seq": 109,
+  "seq": 110,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -2313,6 +2313,18 @@
       "updated": "2026-07-23T07:58:28",
       "author": "Nova",
       "result": "Built the reach_watcher, four test cases from the design all green. The real gap was the fact-checker only catching motive-markers; widened it to catch past-tense claims too. It flags a reach before the words leave me."
+    },
+    "t110": {
+      "id": "t110",
+      "title": "Review pending audit-queue items",
+      "notes": "50 pending items in memory/audit_queue.json — file renames/deletes/new files the watcher recorded so references could be fixed. Nothing drains this automatically. Work through them: for a real rename, fix the references and resolve it; for anything already handled or irrelevant, dismiss it with a reason. Use audit_queue.resolve()/dismiss() so the count actually drops.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-23T08:26:17",
+      "updated": "2026-07-23T08:26:17",
+      "author": "system"
     }
   }
 }
