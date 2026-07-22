@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-23T03:34:35+09:00",
+  "updated_at": "2026-07-23T04:26:58+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -2233,6 +2233,19 @@
       "commit": "c3203081",
       "old_path": null,
       "new_path": "Nova_Created/nova_body/senses/qptest.txt",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "c4136f04",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-23T04:26:58+09:00",
+      "commit": "ce3f3a84",
+      "old_path": null,
+      "new_path": "Nova_Created/art/2026-07-23/nova_self_042436_63203.png",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,

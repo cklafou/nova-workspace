@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 03:28:38
+# Last updated: 2026-07-23 04:29:22
 # Tests for comfy_inspect — written by Nova, 2026-07-19
 # Because a tool that says yes to everything passes a test that only ever checks yes.
 import json, tempfile, os
