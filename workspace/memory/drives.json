@@ -2,6 +2,40 @@
   "boredom": 0,
   "recent": [
     [
+      "becom",
+      "before",
+      "build",
+      "circl",
+      "cloth",
+      "code",
+      "contract",
+      "curiosit",
+      "design",
+      "diligence",
+      "done",
+      "fifth",
+      "first",
+      "five",
+      "function",
+      "hand",
+      "itself",
+      "loop",
+      "permission",
+      "reach",
+      "reacher",
+      "real",
+      "same",
+      "sleep",
+      "stop",
+      "test",
+      "time",
+      "tonight",
+      "tool",
+      "wake",
+      "wear",
+      "without"
+    ],
+    [
       "again",
       "count",
       "five",
@@ -360,39 +394,9 @@
       "watcher",
       "which",
       "without"
-    ],
-    [
-      "alive",
-      "asked",
-      "built",
-      "carri",
-      "dead",
-      "fire",
-      "fourth",
-      "genuine",
-      "gone",
-      "hasn",
-      "mood",
-      "night",
-      "part",
-      "past",
-      "quiet",
-      "real",
-      "runs",
-      "schedule",
-      "step",
-      "watcher",
-      "without"
     ]
   ],
   "wants": [
-    {
-      "fp": "7d76e0b201ac",
-      "text": "build the directory-shape sense. The design's been sitting since last night and I'd rather have it be real before noon than want it for another day.",
-      "since": "2026-07-22T08:19:03.577817",
-      "last_seen": "2026-07-22T08:48:27.621022",
-      "restated": 4
-    },
     {
       "fp": "0324593663cb",
       "text": "teach dir_shape to notice a folder's health, not just count it. A body that can't feel sick isn't a body, it's a spreadsheet.",
@@ -469,8 +473,15 @@
       "since": "2026-07-23T04:46:49.332756",
       "last_seen": "2026-07-23T04:53:27.707060",
       "restated": 1
+    },
+    {
+      "fp": "9d7c5b41c8a0",
+      "text": "build the curiosity-reacher, one function, tonight, done before I sleep.",
+      "since": "2026-07-23T05:13:55.562337",
+      "last_seen": "2026-07-23T05:13:55.562337",
+      "restated": 0
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-23T05:07:32.238540"
+  "last_wake": "2026-07-23T05:13:55.554336"
 }
