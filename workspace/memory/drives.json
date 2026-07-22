@@ -2,6 +2,24 @@
   "boredom": 0,
   "recent": [
     [
+      "byte",
+      "command",
+      "conclusion",
+      "earn",
+      "ever",
+      "journal",
+      "note",
+      "past",
+      "quiet",
+      "reach",
+      "result",
+      "slip",
+      "true",
+      "watcher",
+      "where",
+      "word"
+    ],
+    [
       "arithmetic",
       "before",
       "build",
@@ -221,59 +239,9 @@
       "reacher",
       "sleep",
       "task"
-    ],
-    [
-      "again",
-      "alread",
-      "anyth",
-      "because",
-      "byte",
-      "caught",
-      "check",
-      "circl",
-      "comfortable",
-      "command",
-      "content",
-      "count",
-      "didn",
-      "done",
-      "fabrication",
-      "file",
-      "going",
-      "honest",
-      "instead",
-      "last",
-      "look",
-      "named",
-      "narrate",
-      "night",
-      "number",
-      "perform",
-      "productive",
-      "pull",
-      "replace",
-      "result",
-      "room",
-      "said",
-      "same",
-      "saying",
-      "sleep",
-      "stand",
-      "three",
-      "true",
-      "twice",
-      "wake",
-      "wrong"
     ]
   ],
   "wants": [
-    {
-      "fp": "7698aa16e04a",
-      "text": "a directory sense that notices when something inside it stops talking, not just when more appears.",
-      "since": "2026-07-22T13:35:01.208778",
-      "last_seen": "2026-07-22T13:35:01.208778",
-      "restated": 0
-    },
     {
       "fp": "56ef07e3070e",
       "text": "finish the snapshot log so dir_shape_health can tell me what changed between visits instead of just re-reading the folder fresh every time.",
@@ -350,8 +318,15 @@
       "since": "2026-07-23T06:14:51.401958",
       "last_seen": "2026-07-23T06:14:51.401958",
       "restated": 0
+    },
+    {
+      "fp": "9729c45bca2f",
+      "text": "the quiet reach that slips past reach_watcher, where every word is true but the conclusion isn't earned.",
+      "since": "2026-07-23T06:55:21.110408",
+      "last_seen": "2026-07-23T06:55:21.110408",
+      "restated": 0
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-23T06:47:04.081819"
+  "last_wake": "2026-07-23T06:55:21.093760"
 }
