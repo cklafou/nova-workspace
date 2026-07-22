@@ -1,5 +1,5 @@
 # Message-doubling bug — evidence, guard shipped, trigger instrumented
-_Last updated: 2026-07-23 03:57:23_
+_Last updated: 2026-07-23 04:58:17_
 _2026-07-02, Fable. Picks up §3 of PASSOVER_2026-07-02. Status: **user-visible bug killed by a
 commit-point guard; root-cause trigger not yet caught — flight recorder now in place to catch it.**_
 

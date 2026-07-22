@@ -1,5 +1,5 @@
 # Mentors removed — no outbound paid API calls anywhere
-_Last updated: 2026-07-23 03:57:23_
+_Last updated: 2026-07-23 04:58:17_
 _2026-07-19, Fable. Cole: "remove the mentors and everything about them from Nova Chat and the
 folders. I don't want the APIs being used." Then, on her vision: **"She has her multimodal model.
 She should be using that."** Both done._
