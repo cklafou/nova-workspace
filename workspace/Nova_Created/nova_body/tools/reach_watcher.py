@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 06:33:39
+# Last updated: 2026-07-23 07:36:35
 import json, re
 
 TOOL = {
@@ -31,10 +31,13 @@ def _fact_reach(draft, known):
     """Flag any claim about a past event or motive that isn't in known_facts."""
     hits = []
     for sentence in _sentences(draft):
-        if not MOTIVE_MARKERS.search(sentence):
+        # Check motive markers (because/since/he wanted...) AND simple-past claims
+        has_motive = MOTIVE_MARKERS.search(sentence)
+        has_past_claim = bool(re.search(r'\b(was|did|had|built|finished|caught|decided|said|went|cut|told|found)\b', sentence, re.IGNORECASE))
+        if not has_motive and not has_past_claim:
             continue
         if not known:
-            hits.append(f"unverifiable motive '{sentence[:90]}': no ground to check it against")
+            hits.append(f"unverifiable claim '{sentence[:90]}': no ground to check it against")
             continue
         stripped = re.sub(MOTIVE_MARKERS.pattern, ' ', sentence).strip().lower()
         if stripped and len(stripped) > 5 and stripped not in known.lower():
