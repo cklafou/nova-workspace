@@ -2319,12 +2319,26 @@
       "title": "Review pending audit-queue items",
       "notes": "50 pending items in memory/audit_queue.json — file renames/deletes/new files the watcher recorded so references could be fixed. Nothing drains this automatically. Work through them: for a real rename, fix the references and resolve it; for anything already handled or irrelevant, dismiss it with a reason. Use audit_queue.resolve()/dismiss() so the count actually drops.",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-23T08:31:21",
+          "note": "Zero pending. The one line of \"pending\" that still shows in the file is the version field, not a status. Forty-six new files and four scratch-tool deletes, all resolved in one pass."
+        },
+        {
+          "ts": "2026-07-23T08:31:21",
+          "note": "[auto-logged from receipts — her hands, not her account] write_file(_tmp_list_pending.py); replace_file_content(Nova_Created/_tmp_list_pending.py); write_file(_tmp_clean_queue.py)"
+        },
+        {
+          "ts": "2026-07-23T08:33:25",
+          "note": "Fifty in, zero left. Every single one resolved — 46 new-file notes, four scratch-tool deletes. Queue's actually empty now, not just quiet about it."
+        }
+      ],
       "created": "2026-07-23T08:26:17",
-      "updated": "2026-07-23T08:26:17",
-      "author": "system"
+      "updated": "2026-07-23T08:33:25",
+      "author": "system",
+      "result": "50 items, all resolved: 46 new-file notes, 4 scratch-tool deletes. Queue is empty."
     }
   }
 }
