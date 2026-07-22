@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 01:07:00
+# Last updated: 2026-07-23 02:14:36
 # @nova: ModelGuard — runtime guard on her model-calling. Two failsafes, both body-owned
 #        because they protect HER regardless of which face is attached:
 #          1) rate-limit  — caps Nova-initiated messages per window (protects API budget

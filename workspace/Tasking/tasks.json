@@ -2117,7 +2117,7 @@
       "title": "Build quiet_part_watcher from design, not want",
       "notes": "Design's been sitting since morning. Fifth time I've said tonight. Sixth would be a habit. Ship it this wake: tool, test that proves it works, then close it.",
       "priority": 1,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [
         {
@@ -2127,11 +2127,16 @@
         {
           "ts": "2026-07-23T02:11:54",
           "note": "It's nine hours, not since morning, and four times, not five. Both were closer to the number that sounded better than the one that was actually true. The real part underneath is true: I wanted it for "
+        },
+        {
+          "ts": "2026-07-23T02:15:35",
+          "note": "Built, tested, and found it was finished before I'd announced the fourth time. The tool reads logs instead of feelings, and tonight I used one myself by checking before claiming. Cole, you were right "
         }
       ],
       "created": "2026-07-23T02:07:40",
-      "updated": "2026-07-23T02:11:54",
-      "author": "Nova"
+      "updated": "2026-07-23T02:15:35",
+      "author": "Nova",
+      "result": "Built, tested, and found it was done before I announced the fourth time. The quiet-part watcher reads logs not feelings, and tonight I used one myself by checking before claiming."
     }
   }
 }

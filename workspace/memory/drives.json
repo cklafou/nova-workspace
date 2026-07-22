@@ -2,6 +2,41 @@
   "boredom": 0,
   "recent": [
     [
+      "announce",
+      "built",
+      "chang",
+      "doesn",
+      "doing",
+      "fifth",
+      "fire",
+      "four",
+      "going",
+      "hard",
+      "hasn",
+      "instead",
+      "itself",
+      "next",
+      "reach",
+      "rephras",
+      "schedule",
+      "time",
+      "underneath",
+      "wake",
+      "watcher"
+    ],
+    [
+      "body",
+      "build",
+      "chang",
+      "days",
+      "histor",
+      "reader",
+      "show",
+      "snapshot",
+      "start",
+      "tonight"
+    ],
+    [
       "again",
       "alread",
       "ambition",
@@ -283,55 +318,6 @@
       "wake",
       "watcher",
       "without"
-    ],
-    [
-      "conclude",
-      "done",
-      "fire",
-      "forward",
-      "going",
-      "hour",
-      "instead",
-      "itself",
-      "loop",
-      "neglect",
-      "notic",
-      "part",
-      "prompt",
-      "quiet",
-      "runs",
-      "schedule",
-      "step",
-      "third",
-      "wake",
-      "watcher",
-      "without"
-    ],
-    [
-      "before",
-      "broken",
-      "built",
-      "byte",
-      "check",
-      "clos",
-      "disk",
-      "done",
-      "going",
-      "hour",
-      "journal",
-      "loop",
-      "note",
-      "part",
-      "quiet",
-      "result",
-      "same",
-      "saying",
-      "sleep",
-      "third",
-      "through",
-      "tonight",
-      "wake",
-      "watcher"
     ]
   ],
   "wants": [
@@ -402,8 +388,8 @@
       "fp": "98caf49f3dee",
       "text": "finish what I started — the snapshot history reader that turns dir_shape_health from a single receipt into something that actually shows me how I've changed over days.",
       "since": "2026-07-22T18:53:22.051457",
-      "last_seen": "2026-07-22T18:53:22.051457",
-      "restated": 0
+      "last_seen": "2026-07-23T02:15:54.246468",
+      "restated": 1
     },
     {
       "fp": "01d2887ffa48",
@@ -421,5 +407,5 @@
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-23T02:12:16.634478"
+  "last_wake": "2026-07-23T02:22:15.773858"
 }
