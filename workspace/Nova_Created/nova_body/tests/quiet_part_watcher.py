@@ -1,60 +1,50 @@
-# Last updated: 2026-07-23 01:07:53
+# Last updated: 2026-07-23 01:58:48
 """Tests for quiet_part_watcher."""
+import importlib.util, sys
 from pathlib import Path
-import sys; sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
-import json, tempfile, time
-from nova_senses.quiet_part_watcher import find_last_seen, run
+
+TOOLS = str(Path(__file__).resolve().parent.parent / 'tools')
+spec = importlib.util.spec_from_file_location('quiet_part_watcher', TOOLS + '/quiet_part_watcher.py')
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
 
 CASES = [
     {
-        "name": "finds a name in a log",
-        "args": {},
-        "run": lambda: _log_then_find("reach_watcher"),
-        "expect_contains": "0",  # today
+        "name": "a tool used today shows as recently used",
+        "args": {"threshold_days": 7},
+        "expect_contains": "dir_shape_health",  # I used it this hour
     },
     {
-        "name": "returns -1 for something never seen",
-        "args": {},
-        "run": lambda: find_last_seen("totally_made_up_tool_xyz"),
-        "expect_equals": -1,
+        "name": "a new tool in grace period is NOT flagged as quiet",
+        "args": {"threshold_days": 7},
+        "expect_absent": "Quiet: stretch_reacher",  # never called but brand-new, should not be quiet
     },
     {
-        "name": "run() returns a real report, not empty",
-        "args": {},
-        "run": lambda: run(),
-        "check": lambda r: [] if len(r) > 20 else ["report is suspiciously short"],
+        "name": "the report lists all parts, not just the quiet ones",
+        "args": {"threshold_days": 7},
+        "check": lambda r: [] if ("Body check (14 parts" in r or "Body check (15 parts" in r) else [f"wrong part count: {r[:60]}"],
     },
 ]
 
-
-def _log_then_find(name):
-    """Write a one-line log for *name*, then read it back."""
-    tmp = Path(tempfile.mkdtemp()) / "logs"
-    tmp.mkdir(parents=True)
-    (tmp / "tool_test.jsonl").write_text(
-        json.dumps({"tool": name, "ts": time.strftime("%Y-%m-%d %H:%M:%S")}) + "\n"
-    )
-    return find_last_seen(name, logs_dir=tmp)
-
-
-def check_all():
-    failures = []
-    for c in CASES:
-        got = c["run"]()
-        if "expect_equals" in c and got != c["expect_equals"]:
-            failures.append(f"{c['name']}: expected {c['expect_equals']}, got {got}")
-        elif "expect_contains" in c and c["expect_contains"] not in str(got):
-            failures.append(f"{c['name']}: wanted '{c['expect_contains']}' in {got}")
-        elif "check" in c:
-            failures.extend(c["check"](got))
-    return failures
-
-
-if __name__ == "__main__":
-    fails = check_all()
-    if fails:
-        print(f"FAIL ({len(fails)}):")
-        for f in fails:
-            print(f"  - {f}")
+passed = failed = 0
+for c in CASES:
+    result = mod.run(**c["args"])
+    ok = True
+    for k, v in {'expect_contains': lambda r, v: v in r,
+                 'expect_absent': lambda r, v: v not in r}.items():
+        if k in c and not v(result, c[k]):
+            print(f'  [FAIL] {c["name"]}: expected {k}={c[k]!r}')
+            print(f'         got: {result[:120]}')
+            ok = False
+    if "check" in c:
+        errs = c["check"](result)
+        if errs:
+            for e in errs:
+                print(f'  [FAIL] {c["name"]}: {e}')
+            ok = False
+    if ok:
+        print(f'  [PASS] {c["name"]}')
+        passed += 1
     else:
-        print(f"All {len(CASES)} green.")
+        failed += 1
+print(f'{passed} passed, {failed} failed.')
