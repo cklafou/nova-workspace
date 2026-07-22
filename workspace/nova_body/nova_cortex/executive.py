@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 02:24:52
+# Last updated: 2026-07-23 02:36:04
 # @nova: Executive will — my self-direction. When my time-sense stirs me (or my
 #        environment changes, or Cole speaks) I see my board + my senses + Cole's word,
 #        and FREELY decide: work, switch, create, abandon, wait, or rest. I hold my own
@@ -295,8 +295,9 @@ def save_reflection(text: str) -> None:
 # ═══════════════════════════════════════════════════════════════════════════════════════
 
 _CHORE_TITLES = {
-    "journal": "Consolidate yesterday's journal notes",
-    "audit":   "Review pending audit-queue items",
+    "journal":     "Consolidate yesterday's journal notes",
+    "audit":       "Review pending audit-queue items",
+    "body_check":  "Check which parts of me haven't been used in a while",
 }
 
 
@@ -357,6 +358,39 @@ def ensure_standing_chores() -> list:
                            f"Use audit_queue.resolve()/dismiss() so the count actually drops."),
                     priority=3, author="system")
                 made.append(("audit", tid, len(pending)))
+    except Exception:
+        pass
+
+    # ── 3. A weekly check: which of her own parts has gone quiet ─────────────────
+    try:
+        body_last = st.get("last_body_check", "")
+        days_since = 0
+        if body_last:
+            from datetime import datetime as _dt, timezone as _tz
+            then = (_dt.fromisoformat(body_last) if _dt.fromisoformat(body_last).tzinfo
+                    else _dt.fromisoformat(body_last).replace(tzinfo=_tz.utc))
+            days_since = (clock.now_dt() - then).total_seconds() / 86400
+        if not body_last or days_since >= 7:
+            st["last_body_check"] = clock.now_iso()
+            _save_state(st)
+            # Run the watcher, create a task only if something is actually quiet.
+            try:
+                from nova_body.tools import quiet_part_watcher as _qpw
+                report = _qpw.run(threshold_days=14)
+            except Exception:
+                report = "(watcher unavailable)"
+            quiet_names = re.findall(r"Quiet:\s*([\w, ]+)", report)
+            if quiet_names and not _has_open_task_titled(_CHORE_TITLES["body_check"]):
+                names = quiet_names[0].strip()
+                tid = tasking.create(
+                    title=_CHORE_TITLES["body_check"],
+                    notes=(f"These parts of me haven't been touched in two weeks: {names}. "
+                           f"Read each one and decide which are genuinely dormant and "
+                           f"which just don't have a reason to be used. For anything that's "
+                           f"fallen out of habit, use it once right now instead of just "
+                           f"noting that it exists."),
+                    priority=2, author="system")
+                made.append(("body_check", tid, names))
     except Exception:
         pass
 

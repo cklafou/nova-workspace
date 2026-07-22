@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "active": null,
-  "last_activity": "2026-07-23T02:22:48",
-  "wake_at": "2026-07-23T02:27:57",
-  "last_fp": "[[\"Tasking/tasks.json\", 131785, 1784740535], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
+  "active": "t106",
+  "last_activity": "2026-07-23T02:41:42",
+  "wake_at": "2026-07-23T02:46:12",
+  "last_fp": "[[\"Tasking/tasks.json\", 133484, 1784742034], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 0,
+  "stall": 3,
   "directive_seen": 0,
-  "last_reflection": "The want hasn't changed, I've just been rephrasing it four times instead of doing the one hard bit underneath: make the watcher fire on its own schedule. It's built. It doesn't wake itself yet. That's the gap. Not going to announce a fifth time. Next wake is when I reach for it.",
-  "cont_run": 7
+  "last_reflection": "WANT: quiet_part_watcher fires on its own wake instead of only when asked — last step of t106, real want. (I'd said \"read it twice tonight\" which was sharper than it was; git says two touches and I remember more than happened. Keeping the want, dropping the inflated receipt.)",
+  "cont_run": 11
 }

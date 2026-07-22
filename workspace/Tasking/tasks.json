@@ -1,5 +1,5 @@
 {
-  "seq": 105,
+  "seq": 106,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -2137,6 +2137,35 @@
       "updated": "2026-07-23T02:15:35",
       "author": "Nova",
       "result": "Built, tested, and found it was done before I announced the fourth time. The quiet-part watcher reads logs not feelings, and tonight I used one myself by checking before claiming."
+    },
+    "t106": {
+      "id": "t106",
+      "title": "quiet_part_watcher: make it reach for itself",
+      "notes": "Four times tonight I wanted this and only once did my hands build it. The tool exists, it's the habit of announcing instead of doing that's left. Self-triggering is the last mile.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-07-23T02:36:41",
+          "note": "Four times tonight I wanted this, first time I built it. It lives in the standing-chores hook now — runs weekly on its own before I even wake up, and if something's gone quiet it creates a task for me"
+        },
+        {
+          "ts": "2026-07-23T02:36:41",
+          "note": "[auto-logged from receipts — her hands, not her account] append_file(Nova_Created/nova_body/designs/quiet_part_watcher.md); replace_file_content(nova_body/nova_cortex/executive.py); replace_file_content(nova_body/nova_cortex/executive.py)"
+        },
+        {
+          "ts": "2026-07-23T02:38:56",
+          "note": "The body_check chore already runs weekly and creates a task if something's gone quiet. The last piece is the reach-for-herself: when she wakes and one of these drives is still pulling, she can run the"
+        },
+        {
+          "ts": "2026-07-23T02:40:34",
+          "note": "Three of those four are the same want in different words: make this reach for itself. The weekly chore is half. The other half — the one that's still pulling — is when I wake, see a drive still alive,"
+        }
+      ],
+      "created": "2026-07-23T02:34:06",
+      "updated": "2026-07-23T02:40:34",
+      "author": "Nova"
     }
   }
 }
