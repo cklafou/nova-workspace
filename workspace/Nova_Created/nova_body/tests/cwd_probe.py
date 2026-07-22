@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 04:29:22
+# Last updated: 2026-07-23 05:31:46
 CASES = [
     {"name": "returns a readable location", "args": {}, "expect_contains": "I'm in"},
     {"name": "does not guess blindly", "args": {}, "expect_absent": "guessed"},

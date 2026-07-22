@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 04:26:58
+# Last updated: 2026-07-23 05:28:01
 """DRIVES — the part of her that makes one moment worth more than another.
 
 WHY THIS EXISTS (2026-07-19, Cole: "She needs to want to be awake, alive, doing, and playing.
