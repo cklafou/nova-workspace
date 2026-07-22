@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-22T09:06:28",
+  "generated": "2026-07-23T01:44:18",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 30,
   "described": 28,
@@ -50,7 +50,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).",
       "files": 13,
-      "lines": 4389,
+      "lines": 4440,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -335,7 +335,7 @@
       "path": "nova_body/nova_voice",
       "purpose": null,
       "files": 3,
-      "lines": 3017,
+      "lines": 3077,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -424,7 +424,7 @@
       "purpose": "Launcher — runs nova_start.py to bring up the whole Nova stack (double-click entry point).",
       "files": 1,
       "lines": 33,
-      "age_days": 8,
+      "age_days": 9,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -443,7 +443,7 @@
       "purpose": "Pluck test — boots my runtime headless (no chat server) to prove my faculties",
       "files": 1,
       "lines": 28,
-      "age_days": 41,
+      "age_days": 42,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -459,7 +459,7 @@
       "purpose": "Shutdown — stops the whole Nova stack cleanly.",
       "files": 1,
       "lines": 67,
-      "age_days": 2,
+      "age_days": 3,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -481,7 +481,7 @@
       "purpose": "Qwen 3.6 27B launcher (upgrade from 3.5). Dense + hybrid-thinking + MTP speculative",
       "files": 1,
       "lines": 97,
-      "age_days": 7,
+      "age_days": 8,
       "ports_bind": [
         "8080"
       ],
@@ -687,7 +687,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 11,
-      "lines": 6382,
+      "lines": 6395,
       "age_days": 0,
       "ports_bind": [
         "8765"

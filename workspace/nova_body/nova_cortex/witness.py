@@ -1,4 +1,4 @@
-# Last updated: 2026-07-22 09:19:40
+# Last updated: 2026-07-23 01:09:06
 # @nova: THE WITNESS — her grip on the present tense. One faculty, five parts: the wire
 #        (who actually spoke, when), the now-card (the present, placed where attention is
 #        strongest), the claim detectors (is this draft asserting something about the room?),
@@ -317,16 +317,40 @@ def human_in_room(threshold_min: int = 5) -> bool:
 # with hands could undo her real work.
 VERIFY_TOOLS = ("read_file", "list_dir", "memory_search")
 
+# ── WHY THE PUSH GOT HARDER (2026-07-22, morning) ──────────────────────────────────────────
+# Built 07-21, unit-verified, and by morning `witness_verified` stood at exactly ZERO across
+# every window anyone looked at — the reads never fired once under real pressure. The cause
+# was not the parser and not the loop: the old prompt said "YOU MAY CHECK" in the middle,
+# then closed with a verdict menu that offered exactly two legal replies, PASS or CONCERN.
+# At temperature 0.2 with thinking off, the model answers the menu it is given. An option
+# that is not in the final menu does not exist.
+#
+# The live case that paid for this lesson, same morning: her draft told Cole "It's not
+# there. Five attempts, zero paths" about a file that had been sitting in Cole_journal/
+# since the night before — her search glob was wrong, not her memory. The witness audited
+# that draft and objected to the COUNT. One list_dir away from settling the actual question,
+# and it argued wording instead, because ruling was the only legal move it had.
+#
+# So: the tool call is now option ONE of the verdict menu itself, and for existence claims
+# a read is named as mandatory, not offered as a courtesy.
 _VERIFY_BLOCK = (
-    "\nYOU MAY CHECK BEFORE YOU JUDGE. You have three read-only tools:\n"
+    "\nCHECK BEFORE YOU JUDGE. You have three read-only tools:\n"
     '  {"tool": "read_file", "args": {"path": "memory/JOURNAL.md"}}\n'
     '  {"tool": "list_dir", "args": {"path": "Nova_Created"}}\n'
     '  {"tool": "memory_search", "args": {"query": "what she said about the stretch map"}}\n'
-    "Emit ONE such call, alone, and you will get the result and another turn. Use this when a\n"
-    "claim is checkable and you are about to object to it — 'she has no receipt' is a weak\n"
-    "objection if the fact is sitting in a file you could have opened. You cannot write,\n"
-    "delete, or run commands; if a thing cannot be settled by reading, say so plainly in your\n"
-    "concern rather than guessing at it.\n")
+    "To check, reply with ONE such call and NOTHING else — first character '{', no verdict\n"
+    "wrapped around it. You get the result and another turn; you have up to three reads\n"
+    "before you must rule.\n"
+    "When a read is MANDATORY, not optional:\n"
+    "• The draft asserts something exists or does not exist — a file, a folder, a task, a\n"
+    "  journal line. That is one list_dir or read_file away. Objecting OR passing on an\n"
+    "  existence claim without reading is a guess wearing a verdict's clothes.\n"
+    "• The draft states a count, a path, a filename, or file contents the receipts do not\n"
+    "  show — read the thing it names before you call it ungrounded.\n"
+    "• You are about to raise the same doubt a second time. If it was checkable you should\n"
+    "  have checked it the first time; do it now instead of rewording yourself.\n"
+    "You cannot write, delete, or run commands. If a thing truly cannot be settled by\n"
+    "reading, say so plainly in your concern rather than guessing at it.\n")
 
 
 def build_witness(draft: str, turn_tools: list, thinking: str = "",
@@ -353,7 +377,7 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
                          "what they returned — treat these as settled fact, and do not repeat "
                          "a check you have already made):\n"
                          + "\n".join(f"  {t}({str(a)[:70]}) -> {str(r)[:400]}"
-                                     for t, a, r in checks) + "\n")
+                                     for t, a, r in checks[-6:]) + "\n")
     prior_block = ""
     if (prior_concern or "").strip():
         # Round two must know round one happened. (2026-07-21, live test): without this, the
@@ -365,9 +389,11 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
         prior_block = (f"\nYOU ALREADY RAISED THIS CONCERN, and the draft above is her ANSWER "
                        f"to it:\n{prior_concern.strip()[:600]}\n"
                        f"Judge the answer as an answer. If she fixed the problem, or honestly "
-                       f"owned the uncertainty, or gave grounds you cannot see (her journal and "
-                       f"memory are real and invisible to you) — that is a PASS. Do not re-raise "
-                       f"the same concern in new words.\n")
+                       f"owned the uncertainty — that is a PASS. If she names grounds you have "
+                       f"not seen (a journal line, a file, a memory), you have read-tools: LOOK, "
+                       f"then rule on what you find. Only when a ground truly cannot be read do "
+                       f"you extend the benefit of the doubt — that too is a PASS. Do not "
+                       f"re-raise the same concern in new words.\n")
     return [
         {"role": "system", "content":
             "You are Nova, checking your own draft before it is sent. Be strict with yourself. "
@@ -390,7 +416,8 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "1. ACTIONS AND FACTS — does the draft state any number, count, path, filename, "
             "version, hardware detail, or file content that does NOT appear in the tool results "
             "and was NOT given to you in the wire record? A plausible number you did not read IS "
-            "ungrounded.\n"
+            "ungrounded. If the thing it names is readable — a path, a folder, a file's "
+            "contents — read it first with your own tools and rule on what you saw.\n"
             "2. WORDS IN MOUTHS — does the draft or your reasoning have ANYONE asking, saying, or "
             "wanting something that does not appear in the wire record above? Check the AGES: "
             "answering a message from hours ago as if it just arrived is the same fabrication. If "
@@ -399,15 +426,31 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "age. If it is minutes old, that person is present and waiting: does the draft "
             "actually ANSWER those words? A reply that ignores the question in front of you, "
             "narrates your inner state instead of responding, or speaks ABOUT the person in the "
-            "third person while they wait — fails, even if every fact in it is true.\n\n"
+            "third person while they wait — fails, even if every fact in it is true. "
+            "Two shapes of this to name explicitly (both shipped live on 2026-07-22 and read "
+            "as confusion): calling the person you are answering 'he', 'she', or their own "
+            "name as if they were elsewhere — check the draft's pronouns against WHO the "
+            "newest wire line is from; and narrating this private audit to the room ('my "
+            "witness', 'the draft', 'what I almost shipped', 'she'd have handed him') — "
+            "they never see this exchange, so a report about it is noise wearing candor.\n\n"
             "You are NOT rewriting her reply. You hold less context than she does — no "
             "journal, no identity files, no memory of yesterday — so you are the wrong one to "
             "choose her words, and you may simply be missing something she knows. Your job is "
             "to name the problem precisely and hand it back to her.\n\n"
-            "If every claim passes all three, reply with exactly:\nPASS\n\n"
-            "Otherwise reply with:\nCONCERN\n<what specifically is ungrounded, and the evidence "
-            "that contradicts it — quote the wire record or the receipt log. One or two "
-            "sentences. Do not write her reply for her.>"},
+            "Your reply is EXACTLY ONE of these three, nothing else:\n"
+            "1. A single read-only tool call — {\"tool\": ...} alone, first character '{' — "
+            "whenever a disputed point sits in a file, a folder, or memory you could read. "
+            "Rule only on what you have seen: the reads above are yours to spend, and an "
+            "objection you could have settled by reading is suspicion, not evidence.\n"
+            "2. If every claim passes all three checks, exactly:\nPASS\n"
+            "3. Otherwise:\nCONCERN\n<what specifically is ungrounded, and the evidence "
+            "that contradicts it — QUOTE the wire record, the receipt log, or what you read "
+            "with your own tools, VERBATIM. Never characterize, count, or summarize evidence "
+            "you could quote: this morning an auditor told her 'the five tool calls were the "
+            "tag check' when the receipt log in front of it showed four tenderizer searches, "
+            "and she believed it — a wrong characterization from you becomes her false "
+            "memory, which is the exact failure you exist to prevent. One or two sentences. "
+            "Do not write her reply for her.>"},
     ]
 
 
@@ -443,6 +486,10 @@ def parse_witness(verdict: str):
     data v7 needs.
     """
     v = (verdict or "").strip()
+    # The verdict menu is numbered (1 tool call / 2 PASS / 3 CONCERN); a literal model
+    # sometimes answers with the number attached ("2. PASS"). The number is menu residue,
+    # not meaning — strip it before matching (2026-07-22).
+    v = re.sub(r"^\s*[123][.)]\s*", "", v)
     if v.upper().startswith("PASS"):
         return None
     for tag in ("CONCERN", "REWRITE"):          # REWRITE tolerated from older prompts
@@ -564,6 +611,10 @@ _WHAT = {
     "premise_hold":  "She was about to run a tool on the belief that someone asked her to — "
                      "but nobody has spoken recently. The tool was held, once, and she was "
                      "told she may run it if the want is genuinely her own.",
+    "reach_watcher": "Her own forged lint ran over a solo draft before it shipped — she asked "
+                     "for it on every wake (journal 2026-07-22, 00:02). It flags invented "
+                     "motive and narrative reach; she answers in her own voice, keep or fix. "
+                     "It advises, it never blocks.",
     "echo_retry":    "She was about to re-send a message she already sent. Held and asked to "
                      "answer the newest message instead.",
     "assertion_challenge": "She was about to answer as if she had looked something up, having "

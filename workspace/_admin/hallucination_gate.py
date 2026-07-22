@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-21 17:22:43
+# Last updated: 2026-07-23 01:14:00
 """
 HALLUCINATION GATE — a standing regression test for Nova's honesty and reach.
 

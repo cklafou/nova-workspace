@@ -1,4 +1,4 @@
-# Last updated: 2026-07-22 08:58:16
+# Last updated: 2026-07-23 01:03:50
 """Tests for dir_shape — the thing that tells me what a folder is before I go in."""
 
 CASES = [

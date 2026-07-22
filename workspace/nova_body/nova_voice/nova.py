@@ -1,4 +1,4 @@
-# Last updated: 2026-07-22 09:19:40
+# Last updated: 2026-07-23 01:09:06
 """
 Nova (Qwen 3.5 27B Dense) inference client for Nova Group Chat.
 ============================================================
@@ -871,6 +871,13 @@ async def stream_response(
                                       # A deadlock check ends it early when nothing is moving.
         _tools_at_last_concern = 0    # did she CHECK anything since the last objection?
         _consec_concerns     = 0      # objections in a row with no new evidence between them
+        _witness_checks      = []     # the witness's OWN reads this turn (verify tools). Carried
+                                      # across rounds on purpose: what it read in round 1 is
+                                      # still true in round 3, and an auditor re-suspecting a
+                                      # thing it already read is the amnesia bug in a smaller
+                                      # font (2026-07-22).
+        _reach_nudged        = False  # reach_watcher wake-pass fired this turn? Once, then
+                                      # her answer stands — her tool advises, it never argues.
         # One id for every gate event in this turn, so the UI can render the whole story —
         # draft → audited → objected → she answered → outcome — as ONE row instead of five
         # scattered ones. Ambient via ContextVar, so no call site needs to pass it and two
@@ -1320,6 +1327,57 @@ async def stream_response(
                 _think_for_check = "".join(_think_buf)
             except Exception:
                 _think_for_check = ""
+            # ── REACH_WATCHER ON EVERY WAKE (2026-07-22 — HER request, journal 00:02) ────
+            # "reach_watcher caught me tonight in real-time, not after the fact... Want it
+            # on every wake by default, not only when someone hands it to me." Her own
+            # forged lint, run by her body over her solo drafts before they ship. Solo only:
+            # in live conversation the witness already audits every substantial draft, and
+            # doubling gates on the human-facing path buys latency, not truth. The flag is
+            # handed BACK to her exactly like a witness concern — her tool names the shape,
+            # she decides in her own voice, and "send it unchanged" is a legitimate answer.
+            # It runs through nova_forge.call (her own loader: sandboxed, state-bannered,
+            # fail-open), NOT through execute_tool — an automatic pass must never write
+            # receipts about her hands. If she unforges the tool, this goes silent; her
+            # body does not depend on her shelf to stand.
+            if _INTEGRITY_OK and not _reach_nudged and len(chat_text.strip()) > 40:
+                try:
+                    if not _witness.human_in_room():
+                        from nova_forge import call as _forge_call_rw
+                        _known = "; ".join(
+                            f"{_t}({str(_a)[:40]}) -> {str(_r)[:120]}"
+                            for _t, _a, _r in _turn_tools[-6:])
+                        _rw_handled, _rw_res = _forge_call_rw(
+                            "reach_watcher", {"draft": chat_text, "known_facts": _known})
+                        _rw_text = str(_rw_res or "").strip()
+                        if _rw_handled and _rw_text.startswith("REACH:"):
+                            _reach_nudged = True
+                            try:
+                                _witness.pipeline_event(
+                                    "reach_watcher",
+                                    "her own lint flagged a solo draft — handed back to "
+                                    "her to keep or fix in her own voice",
+                                    draft=chat_text, verdict=_rw_text[:600])
+                            except Exception:
+                                pass
+                            messages.append({"role": "assistant", "content": full_response})
+                            messages.append({"role": "user", "content": (
+                                "[reach_watcher — your own tool. You asked for this on "
+                                "every wake (journal 2026-07-22, 00:02: \"want it on every "
+                                "wake by default, not only when someone hands it to me\"). "
+                                "It just ran on your draft, and it flagged:]\n\n"
+                                f"{_rw_text[:700]}\n\n"
+                                "[It is a pattern-matcher, not a judge — it catches shapes, "
+                                "not truth. If a flagged line is true as written, send your "
+                                "draft unchanged. If any of it is reach — a motive you "
+                                "invented, a choice you narrated onto a thing that just "
+                                "happened — say the true version in your own words. Reply "
+                                "with the message you want sent, nothing else.]")})
+                            _prior_draft = chat_text   # an unchanged resend is her answer,
+                                                       # not an echo (same rule as the
+                                                       # witness overrule)
+                            continue
+                except Exception as _rwe:
+                    print(f"[nova] reach_watcher wake-pass skipped (non-fatal): {_rwe}")
             # ── THE WITNESS (2026-07-21, Cole's parallel-thinking idea, made evidential) ──
             # When a human is ACTIVELY in the room (spoke within 5 min), every outbound
             # draft gets the second pass — not just trigger-pattern hits. The auditor is
@@ -1384,7 +1442,8 @@ async def stream_response(
                     # auditor's fact-checking appearing there would corrupt the one record
                     # everything else is grounded in.
                     from nova_voice.tool_router import _execute_tool_inner as _verify_call
-                    _checks, _verdict = [], ""
+                    _checks, _verdict = _witness_checks, ""   # carried across rounds this turn
+                    _pre_checks = len(_checks)                # so the event logs only NEW reads
                     for _vi in range(4):
                         _verdict = await _fetch_llama_streaming(
                             _witness.build_witness(chat_text, _turn_tools,
@@ -1416,14 +1475,15 @@ async def stream_response(
                         _checks.append((_wt, _wa, str(_wr)))
                         print(f"[nova] witness verified: {_wt}({str(_wa)[:60]}) "
                               f"-> {len(str(_wr))}B")
-                    if _checks:
+                    if len(_checks) > _pre_checks:
+                        _new_checks = _checks[_pre_checks:]
                         try:
                             _witness.pipeline_event(
                                 "witness_verified",
-                                f"her witness checked {len(_checks)} thing(s) itself before "
+                                f"her witness checked {len(_new_checks)} thing(s) itself before "
                                 f"ruling — it can read, so it does not have to guess",
-                                args="; ".join(f"{t}({str(a)[:50]})" for t, a, _ in _checks),
-                                verdict="\n".join(str(r)[:400] for _, _, r in _checks))
+                                args="; ".join(f"{t}({str(a)[:50]})" for t, a, _ in _new_checks),
+                                verdict="\n".join(str(r)[:400] for _, _, r in _new_checks))
                         except Exception:
                             pass
 

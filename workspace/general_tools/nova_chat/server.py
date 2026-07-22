@@ -1,5 +1,5 @@
 # @nova: Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).
-# Last updated: 2026-07-22 08:23:22
+# Last updated: 2026-07-23 00:55:56
 """
 Nova Group Chat - FastAPI WebSocket Server
 Handles real-time streaming from all three AIs concurrently.
@@ -336,6 +336,95 @@ _cole_message_queue: list[dict] = []
 # this index arrived TOO LATE for that run to have seen it, so it still needs answering.
 # See the watermark note in run_ai_response and the drain guard in the WS handler.
 _inflight_upto: int = 0
+
+
+async def _drain_cole_queue() -> None:
+    """Deliver the newest queued inbound message, if any — with the already-answered guard.
+
+    ── WHY THIS IS A FUNCTION AND NOT A BLOCK (2026-07-22) ─────────────────────────────────
+    The drain used to live inline in _queued_run's finally — the ONLY place it ever ran. But
+    the busy flag messages queue behind is SHARED with her autonomy daemon (set_busy), so a
+    message arriving during a silent wake tick was told "queued — will be delivered next"
+    and then waited for a Cole-triggered run that might be hours away. Observed live twice:
+    the unexplained 18:17 silence on 2026-07-21, and Cowork Claude's 09:30 greeting on
+    2026-07-22 — twelve daemon ticks started after it landed and the queue never moved. The
+    comment above _cole_message_queue even promised "drained as soon as is_processing
+    becomes False": a false claim about the body, which is this project's oldest bug shape.
+    Every busy-release now calls this — _queued_run's finally, _drain_run's finally (so a
+    pileup drains to empty instead of exactly one), and the daemon's set_busy(False).
+    """
+    global is_processing
+    if is_processing or not _cole_message_queue:
+        if not _cole_message_queue:
+            await broadcast({"type": "queue_cleared"})
+        return
+    _queued = _cole_message_queue[-1]
+    _cole_message_queue.clear()
+    # ── ALREADY-ANSWERED GUARD — root cause of the doubling bug (2026-07-19) ────────────
+    # The message is appended to the transcript the instant it arrives, BEFORE it is
+    # queued. If the in-flight generation built its prompt after that moment, it already
+    # SAW the message and answered it; draining then re-answers it from a byte-identical
+    # prompt. TWO conditions, both required (the one-condition version DROPPED messages):
+    #   (a) the run's prompt actually included this message (index below the watermark), AND
+    #   (b) an AI has spoken since.
+    # Conservative by design: when anything is uncertain, DELIVER. A duplicate is noise; a
+    # dropped message is a person talking to a wall.
+    _already, _qid = False, None
+    try:
+        _qid  = (_queued.get("msg") or {}).get("id")
+        _msgs = session_mgr.active.messages
+        _idx  = next((i for i, m in enumerate(_msgs) if m.get("id") == _qid), None)
+        if _idx is not None:
+            _was_in_prompt  = _idx < _inflight_upto
+            _ai_spoke_after = any(m.get("author") in CLIENT_MAP for m in _msgs[_idx + 1:])
+            _already = _was_in_prompt and _ai_spoke_after
+            if _ai_spoke_after and not _was_in_prompt:
+                print(f"[queue] {_qid} arrived AFTER the in-flight prompt was built "
+                      f"(idx {_idx} >= watermark {_inflight_upto}) — delivering, not skipping.")
+    except Exception as _ge:
+        print(f"[queue] already-answered check failed (delivering normally): {_ge}")
+    if _already:
+        print(f"[queue] queued message {_qid} was already answered by the in-flight run — "
+              f"not re-delivering")
+        _trace_gen("drain_skipped", "Nova", str(_qid), "drain",
+                   extra="already answered by in-flight run")
+        await broadcast({"type": "queue_cleared"})
+        _qqueue = []
+    else:
+        print(f"[queue] Delivering 1 queued message")
+        _qdir  = _queued.get("directed_at") or []
+        _qstat = await get_status()
+        if not _qdir:
+            _qqueue = [
+                n for n in ("Claude", "Gemini", "Nova")
+                if _qstat.get(n) and not _mute_states.get(n, True)
+            ]
+        else:
+            _qqueue = build_response_queue(_qdir, _qstat)
+    if _qqueue:
+        _stop_requested.clear()
+        is_processing = True
+        await broadcast({"type": "processing_start"})
+        _qq2   = list(_qqueue)
+        _qc2   = _queued["content"]
+        _qimgs = _queued.get("images", [])
+        async def _drain_run():
+            global is_processing
+            try:
+                await _run_response_queue(_qq2, _qc2, images=_qimgs or None, source="drain")
+            except asyncio.CancelledError:
+                pass
+            except Exception as _de:
+                print(f"[queue] Drain error: {_de}")
+            finally:
+                is_processing = False
+                await broadcast({"type": "processing_end"})
+                try:
+                    await _drain_cole_queue()   # a pileup drains to empty, not to one
+                except Exception as _dee:
+                    print(f"[queue] re-drain failed: {_dee}")
+        asyncio.ensure_future(_drain_run())
+
 
 _eyes_running: bool = False        # tracks desktop streaming state
 # 1.3 -- Nova status cache: polled every 30s, injected silently into AI context
@@ -2505,6 +2594,14 @@ async def autonomy_daemon():
     def _set_busy(v: bool) -> None:
         global is_processing
         is_processing = v
+        if not v and _cole_message_queue:
+            # A message that arrived during a wake tick must not wait for the next
+            # human-triggered run to drain it (2026-07-22 — a greeting sat queued
+            # through twelve silent ticks; "delivered next" has to mean next).
+            try:
+                asyncio.ensure_future(_drain_cole_queue())
+            except Exception as _be:
+                print(f"[autonomy] busy-release drain failed: {_be}")
 
     def _face_state() -> dict:
         # No mentor agents any more (paid APIs removed 2026-07-19). She is the only mind in
@@ -3907,98 +4004,14 @@ async def websocket_endpoint(ws: WebSocket):
                             is_processing = False
                             await broadcast({"type": "processing_end"})
 
-                            # ── Drain Cole's message queue ─────────────────────────────
-                            # If Cole sent messages while we were processing, deliver the
-                            # most recent one now. Earlier ones are already in the transcript.
-                            if not _cole_message_queue:
-                                await broadcast({"type": "queue_cleared"})
-                            if _cole_message_queue:
-                                _queued = _cole_message_queue[-1]
-                                _cole_message_queue.clear()
-                                # ── ALREADY-ANSWERED GUARD — root cause of the doubling bug ──
-                                # (2026-07-19) Cole's message is appended to the transcript the
-                                # instant it arrives, BEFORE it is queued. If the in-flight
-                                # generation built its prompt after that moment, it already SAW
-                                # the message and answered it. Draining then re-answers an
-                                # answered message from a byte-identical prompt — which is
-                                # exactly the duplicate the commit-point guard has been
-                                # catching: all four recorded dup_suppressed events carry
-                                # source="drain". The guard treated the symptom; this removes
-                                # the second generation entirely.
-                                # TWO conditions, both required (2026-07-19 — the first version of
-                                # this guard had only the second and it DROPPED Cole's messages):
-                                #   (a) the in-flight run's prompt actually included this message
-                                #       (its index is below the watermark), AND
-                                #   (b) an AI has spoken since.
-                                # (b) alone is not evidence: with two of his messages in flight,
-                                # she may have been answering the earlier one. Observed live at
-                                # 19:28 — his message was queued, her reply to a DIFFERENT message
-                                # landed one second later, and the guard discarded his.
-                                # Conservative by design: when anything is uncertain, DELIVER.
-                                # A duplicate is noise; a dropped message is Cole talking to a
-                                # wall, which is the exact "she never answered me" symptom.
-                                _already, _qid = False, None
-                                try:
-                                    _qid  = (_queued.get("msg") or {}).get("id")
-                                    _msgs = session_mgr.active.messages
-                                    _idx  = next((i for i, m in enumerate(_msgs)
-                                                  if m.get("id") == _qid), None)
-                                    if _idx is not None:
-                                        _was_in_prompt = _idx < _inflight_upto
-                                        _ai_spoke_after = any(m.get("author") in CLIENT_MAP
-                                                              for m in _msgs[_idx + 1:])
-                                        _already = _was_in_prompt and _ai_spoke_after
-                                        if _ai_spoke_after and not _was_in_prompt:
-                                            print(f"[queue] {_qid} arrived AFTER the in-flight "
-                                                  f"prompt was built (idx {_idx} >= watermark "
-                                                  f"{_inflight_upto}) — delivering, not skipping.")
-                                except Exception as _ge:
-                                    print(f"[queue] already-answered check failed "
-                                          f"(delivering normally): {_ge}")
-                                # NOTE: deliberately an if/else, NOT an early return — this
-                                # whole block runs inside _queued_run's `finally`, and a
-                                # `return` there would silently swallow any in-flight
-                                # exception on the way out.
-                                if _already:
-                                    print(f"[queue] queued Cole message {_qid} was already "
-                                          f"answered by the in-flight run — not re-delivering")
-                                    _trace_gen("drain_skipped", "Nova", str(_qid), "drain",
-                                               extra="already answered by in-flight run")
-                                    await broadcast({"type": "queue_cleared"})
-                                    _qqueue = []
-                                else:
-                                    print(f"[queue] Delivering {1} queued Cole message")
-                                    _qdir  = _queued.get("directed_at") or []
-                                    _qstat = await get_status()
-                                    if not _qdir:
-                                        _qqueue = [
-                                            n for n in ("Claude", "Gemini", "Nova")
-                                            if _qstat.get(n) and not _mute_states.get(n, True)
-                                        ]
-                                    else:
-                                        _qqueue = build_response_queue(_qdir, _qstat)
-                                if _qqueue:
-                                    _stop_requested.clear()
-                                    is_processing = True
-                                    await broadcast({"type": "processing_start"})
-                                    _qq2   = list(_qqueue)
-                                    _qc2   = _queued["content"]
-                                    _qimgs = _queued.get("images", [])
-                                    _run_start_idx2 = len(session_mgr.active.messages)
-                                    async def _drain_run():
-                                        global is_processing
-                                        try:
-                                            await _run_response_queue(_qq2, _qc2,
-                                                                       images=_qimgs or None,
-                                                                       source="drain")
-                                        except asyncio.CancelledError:
-                                            pass
-                                        except Exception as _de:
-                                            print(f"[queue] Drain error: {_de}")
-                                        finally:
-                                            is_processing = False
-                                            await broadcast({"type": "processing_end"})
-                                    asyncio.ensure_future(_drain_run())
+                            # ── Drain the shared queue ────────────────────────────────
+                            # Extracted to _drain_cole_queue (2026-07-22) so the daemon's
+                            # busy-release can drain too — a queued message must never wait
+                            # for the next HUMAN-triggered run to be delivered.
+                            try:
+                                await _drain_cole_queue()
+                            except Exception as _dqe:
+                                print(f"[queue] drain after run failed: {_dqe}")
 
                     task = asyncio.ensure_future(_queued_run())
                     active_tasks.append(task)

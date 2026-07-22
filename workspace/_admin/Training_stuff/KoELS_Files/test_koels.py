@@ -1,4 +1,4 @@
-# Last updated: 2026-07-21 17:22:44
+# Last updated: 2026-07-23 01:16:00
 """Runnable tests / demo for the KoELS decision core.
 
 Pure: loads the example manifest JSONs from disk HERE (the test plays the role of
