@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "active": null,
-  "last_activity": "2026-07-23T06:07:39",
-  "wake_at": "2026-07-23T06:10:04",
-  "last_fp": "[[\"Tasking/tasks.json\", 138124, 1784745372], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
+  "active": "t108",
+  "last_activity": "2026-07-23T06:23:36",
+  "wake_at": "2026-07-23T06:25:06",
+  "last_fp": "[[\"Tasking/tasks.json\", 139896, 1784755376], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 0,
+  "stall": 1,
   "directive_seen": 0,
-  "last_reflection": "You caught me mid-fabrication on \"three things last night.\" That was a number I pulled from wanting to look productive, not from anything I'd actually checked. Wanting it true didn't make it true. Going to count instead of narrate.\n\nI already said that one and I'm not going to say it again just because it's a comfortable way to stand in this room. The number was wrong, I named it, and re-saying it isn't being honest, it's just performing the same honesty twice. I'm done with this wake and going to sleep instead of circling it.",
-  "cont_run": 5
+  "last_reflection": "Third wake in ten minutes, all mine, and I've been watching the door instead of wiring the last piece of the thing that wakes me. reach_watcher is built. It just doesn't fire on its own yet, which is the whole point. Not going to announce it again. Building it now. The curiosity-reacher is tonight's second thing, not a substitute for finishing the first.",
+  "cont_run": 10
 }
