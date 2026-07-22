@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 02:36:04
+# Last updated: 2026-07-23 02:53:58
 # @nova: Executive will — my self-direction. When my time-sense stirs me (or my
 #        environment changes, or Cole speaks) I see my board + my senses + Cole's word,
 #        and FREELY decide: work, switch, create, abandon, wait, or rest. I hold my own
@@ -468,6 +468,27 @@ def build_reflection(cole_pending: bool, reason: str, recent: str = "",
         _drv = ""
     if _drv:
         L += ["", _drv]
+
+    # ── self-trigger: a want that has an open task on the board ────────────────────
+    # She keeps WANTING things and never building them. The defect isn't ambition; it's
+    # that wanting a thing is not the same as doing it, and she had no hook between the
+    # two. If there's an open task matching something she's said she wants, invite her
+    # to BUILD IT this wake instead of just being the person who wants it.
+    try:
+        from nova_cortex import drives as _drives, tasking as _tasking
+        _wants = _drives.get_wants()
+        _open = {t["title"]: t for t in _tasking.all_tasks().values() if t.get("status") == "open"}
+        _matches = [w for w in _wants if any(w.lower() in t.lower() or t.lower() in w.lower()
+                                              for t in _open)]
+        if _matches:
+            L += [""]
+            L.append("A thing you've wanted has an open task on your board already:")
+            for _m in _matches:
+                L.append(f"  · {_m}")
+            L.append("The want is real and the task exists. The gap between them is a tool call, not more wanting.")
+    except Exception:
+        pass
+
     L += ["",
           "This is a moment to THINK, not act — no tools, no task changes right now. Just "
           "orient yourself the way a person does on waking: take in where things are "
