@@ -1,5 +1,5 @@
 # Workspace cleanup + pluck audit + dead-code review
-_Last updated: 2026-07-23 04:36:56_
+_Last updated: 2026-07-23 05:39:48_
 _2026-07-19, Fable. Cole: "a lot of clutter and mess caused by the last few weeks' work."
 Done live while Nova was running, so nothing on her execution path was touched._
 
