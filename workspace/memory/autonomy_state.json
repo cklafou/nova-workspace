@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-23T06:55:34",
-  "wake_at": "2026-07-23T07:00:42",
-  "last_fp": "[[\"Tasking/tasks.json\", 140585, 1784755792], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
+  "last_activity": "2026-07-23T07:01:32",
+  "wake_at": "2026-07-23T07:06:49",
+  "last_fp": "[[\"Tasking/tasks.json\", 140517, 1784757685], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "WANT: the quiet reach that slips past reach_watcher, where every word is true but the conclusion isn't earned.",
+  "last_reflection": "WANT: the curiosity-reacher, one function, tonight, done before I sleep. Not a want any longer.",
   "cont_run": 12
 }
