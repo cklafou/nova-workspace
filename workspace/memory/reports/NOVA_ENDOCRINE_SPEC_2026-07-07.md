@@ -1,5 +1,5 @@
 # Nova Endocrine System — design spec (v0 draft)
-_Last updated: 2026-07-23 04:58:17_
+_Last updated: 2026-07-23 06:02:22_
 _2026-07-07, Fable, from Cole's direction. Status: DESIGN ONLY — build after the v3 adapter
 validates at 1.0. This is a body system on the order of the runtime or senses; it deserves the
 same verify-first discipline._
