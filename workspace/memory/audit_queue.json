@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-23T04:26:58+09:00",
+  "updated_at": "2026-07-23T06:36:19+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -2246,6 +2246,19 @@
       "commit": "ce3f3a84",
       "old_path": null,
       "new_path": "Nova_Created/art/2026-07-23/nova_self_042436_63203.png",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "8f58d6da",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-23T06:36:19+09:00",
+      "commit": "a152114d",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tests/reach_watcher_test.py",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
