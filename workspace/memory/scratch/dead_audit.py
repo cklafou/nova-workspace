@@ -1,4 +1,4 @@
-# Last updated: 2026-07-22 08:18:48
+# Last updated: 2026-07-22 09:19:40
 # Dead-function audit for nova_body: find defs that are never called anywhere else.
 import re, pathlib
 

@@ -1,6 +1,6 @@
 # TOOLS.md — the instruments, and when to reach for one
 
-_Last updated: 2026-07-20_
+_Last updated: 2026-07-22 09:23:35_
 
 _Every question below has already been answered by a tool in this repo. Ask the tool before you
 build the answer by hand — it is faster, and it has already been wrong once and corrected._

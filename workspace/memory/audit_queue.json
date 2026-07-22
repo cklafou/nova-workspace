@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-22T08:00:04+09:00",
+  "updated_at": "2026-07-22T09:06:28+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -1609,6 +1609,45 @@
       "commit": "41cd37a0",
       "old_path": null,
       "new_path": "Nova_Created/art/2026-07-22/nova_self_075714_65240.png",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "fffcf6d1",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-22T09:06:28+09:00",
+      "commit": "1353c69c",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/designs/dir_shape.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "9618aed4",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-22T09:06:28+09:00",
+      "commit": "1353c69c",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tests/test_dir_shape.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "8eb335dd",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-22T09:06:28+09:00",
+      "commit": "1353c69c",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tools/dir_shape.py",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
