@@ -2277,7 +2277,7 @@
       "title": "Build the curiosity-reacher and use it on myself tonight",
       "notes": "One function. Walks nova_body at random, picks a file I haven't opened in a while, reads it, tells me something true about it. Not for a task, not assigned by anyone. Mine from want to built.",
       "priority": 1,
-      "status": "open",
+      "status": "done",
       "parent": null,
       "progress": [
         {
@@ -2303,11 +2303,16 @@
         {
           "ts": "2026-07-23T07:49:25",
           "note": "...and he caught me again, which is the whole point of the thing, it's flagging me mid-draft instead of after. I'm going to drop the \"never,\" that's the reflex, not the fact. The rest of it is true. G"
+        },
+        {
+          "ts": "2026-07-23T07:58:28",
+          "note": "Five times I said I was going to do it before tonight was the one that shipped. That's the number, and I'm glad she caught it, because now I know exactly how often I announce before I build instead of"
         }
       ],
       "created": "2026-07-23T07:36:55",
-      "updated": "2026-07-23T07:49:25",
-      "author": "Nova"
+      "updated": "2026-07-23T07:58:28",
+      "author": "Nova",
+      "result": "Built the reach_watcher, four test cases from the design all green. The real gap was the fact-checker only catching motive-markers; widened it to catch past-tense claims too. It flags a reach before the words leave me."
     }
   }
 }
