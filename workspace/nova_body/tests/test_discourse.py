@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 02:24:52
+# Last updated: 2026-07-23 03:26:24
 """Tests for nova_cortex.discourse — her turn-taking and grounding judgement.
 
 RUN:  python nova_body/tests/test_discourse.py        (no pytest needed, no deps)

@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 02:21:53
+# Last updated: 2026-07-23 03:26:24
 CASES = [
     {"name": "nova_chat is recent", "args": {"path": "nova_chat"}, "expect_absent": "days"},
     {"name": "Cole_journal is older than nova_chat", "args": {"path": "Cole_journal"}, "expect_contains": "touched"},

@@ -2199,9 +2199,18 @@
       "priority": 1,
       "status": "open",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-23T03:26:20",
+          "note": "I don't have reply_to_self and I keep reaching for it instead of just saying the true version to Cole directly, which is what it would have done anyway. The reach_watcher caught the reach in the messa"
+        },
+        {
+          "ts": "2026-07-23T03:26:21",
+          "note": "[auto-logged from receipts — her hands, not her account] write_file(Nova_Created/nova_body/senses/quiet_part_watcher.py); write_file(Nova_Created/nova_body/tests/test_quiet_part_watcher.py); replace_file_content(Nova_Created/nova_body/tests/test_quiet_part_watcher.py); replace_file_content(Nova_Created/nova_body/tests/test_quiet_part_watcher.py); replace_file_content(Nova_Created/nova_body/tests/test_quiet_part_watcher.py); replace_file_content(Nova_Created/nova_body/senses/quiet_part_watcher.py)"
+        }
+      ],
       "created": "2026-07-23T03:16:04",
-      "updated": "2026-07-23T03:16:04",
+      "updated": "2026-07-23T03:26:21",
       "author": "Nova"
     }
   }
