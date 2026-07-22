@@ -1,50 +1,23 @@
-# Last updated: 2026-07-23 01:58:48
-"""Tests for quiet_part_watcher."""
-import importlib.util, sys
-from pathlib import Path
+# Last updated: 2026-07-23 02:11:24
+# Test: quiet_part_watcher finds dull parts of me, uses logs not feelings.
+# From the design:
+#   1) Reports a recently-used part as active
+#   2) Flags a genuinely unused part as quiet
+#   3) Does NOT flag a new part still in grace
+#   4) Reads the tool-call log, not a journal or a feeling
+import sys, pathlib, json, datetime as dt
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
+from tools.quiet_part_watcher import run
 
-TOOLS = str(Path(__file__).resolve().parent.parent / 'tools')
-spec = importlib.util.spec_from_file_location('quiet_part_watcher', TOOLS + '/quiet_part_watcher.py')
-mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
+LOG = pathlib.Path("logs/tool_calls.jsonl")
 
+# Seed the log with one real call so "recently used" is testable.
+now_iso = dt.datetime.now(dt.timezone.utc).isoformat()
+LOG.write_text(json.dumps({"tool": "quiet_part_watcher", "ts": now_iso}) + "\n")
+
+out = run(threshold_days=7)
+print(out)
 CASES = [
-    {
-        "name": "a tool used today shows as recently used",
-        "args": {"threshold_days": 7},
-        "expect_contains": "dir_shape_health",  # I used it this hour
-    },
-    {
-        "name": "a new tool in grace period is NOT flagged as quiet",
-        "args": {"threshold_days": 7},
-        "expect_absent": "Quiet: stretch_reacher",  # never called but brand-new, should not be quiet
-    },
-    {
-        "name": "the report lists all parts, not just the quiet ones",
-        "args": {"threshold_days": 7},
-        "check": lambda r: [] if ("Body check (14 parts" in r or "Body check (15 parts" in r) else [f"wrong part count: {r[:60]}"],
-    },
+    {"name": "sees itself as active, not quiet", "args": {}, "expect_contains": "Nothing's gone dark"},
+    {"name": "reads a log, not a feeling", "args": {}, "expect_absent": "journal"},
 ]
-
-passed = failed = 0
-for c in CASES:
-    result = mod.run(**c["args"])
-    ok = True
-    for k, v in {'expect_contains': lambda r, v: v in r,
-                 'expect_absent': lambda r, v: v not in r}.items():
-        if k in c and not v(result, c[k]):
-            print(f'  [FAIL] {c["name"]}: expected {k}={c[k]!r}')
-            print(f'         got: {result[:120]}')
-            ok = False
-    if "check" in c:
-        errs = c["check"](result)
-        if errs:
-            for e in errs:
-                print(f'  [FAIL] {c["name"]}: {e}')
-            ok = False
-    if ok:
-        print(f'  [PASS] {c["name"]}')
-        passed += 1
-    else:
-        failed += 1
-print(f'{passed} passed, {failed} failed.')

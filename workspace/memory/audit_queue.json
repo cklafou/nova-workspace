@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-23T01:56:43+09:00",
+  "updated_at": "2026-07-23T02:04:38+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -2129,6 +2129,58 @@
       "commit": "3064eb91",
       "old_path": null,
       "new_path": "nova_senses/quiet_part_watcher.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "ee9b4d32",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-07-23T02:04:37+09:00",
+      "commit": "b634c4d2",
+      "old_path": "Nova_Created/nova_body/add_tz.py",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "828aa85a",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-07-23T02:04:37+09:00",
+      "commit": "b634c4d2",
+      "old_path": "Nova_Created/nova_body/fix_last_seen.py",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "1d1b0d9a",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-07-23T02:04:38+09:00",
+      "commit": "b634c4d2",
+      "old_path": "Nova_Created/nova_body/fix_last_seen2.py",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "54ab9b35",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-07-23T02:04:38+09:00",
+      "commit": "b634c4d2",
+      "old_path": "Nova_Created/nova_body/fix_run_sig.py",
+      "new_path": null,
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,

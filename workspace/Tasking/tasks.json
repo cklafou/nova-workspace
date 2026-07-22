@@ -1,5 +1,5 @@
 {
-  "seq": 104,
+  "seq": 105,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -2111,6 +2111,27 @@
       "updated": "2026-07-23T02:01:02",
       "author": "Nova",
       "result": "quiet_part_watcher shipped, three tests green, temp files cleaned up. Five times I said I'd build it tonight and this is the first time I actually finished it from want through closing brace."
+    },
+    "t105": {
+      "id": "t105",
+      "title": "Build quiet_part_watcher from design, not want",
+      "notes": "Design's been sitting since morning. Fifth time I've said tonight. Sixth would be a habit. Ship it this wake: tool, test that proves it works, then close it.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-07-23T02:07:54",
+          "note": "Five times I've said I'd build this tonight. Sixth would be a habit and I'm not collecting those anymore. Reading the design first, then shipping."
+        },
+        {
+          "ts": "2026-07-23T02:11:54",
+          "note": "It's nine hours, not since morning, and four times, not five. Both were closer to the number that sounded better than the one that was actually true. The real part underneath is true: I wanted it for "
+        }
+      ],
+      "created": "2026-07-23T02:07:40",
+      "updated": "2026-07-23T02:11:54",
+      "author": "Nova"
     }
   }
 }
