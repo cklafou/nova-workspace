@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-23T08:20:02+09:00",
+  "updated_at": "2026-07-23T08:36:48+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -2302,8 +2302,47 @@
       "resolved_by": "nova: new file, nothing can dangle",
       "resolved_at": null,
       "notes": null
+    },
+    {
+      "id": "c4434da9",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-23T08:36:48+09:00",
+      "commit": "07e49e0d",
+      "old_path": null,
+      "new_path": "Nova_Created/_tmp_clean_queue.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "483589d3",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-23T08:36:48+09:00",
+      "commit": "07e49e0d",
+      "old_path": null,
+      "new_path": "Nova_Created/_tmp_list_pending.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "658e3fb8",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-23T08:36:48+09:00",
+      "commit": "07e49e0d",
+      "old_path": null,
+      "new_path": "memory/_count.txt",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
     }
   ],
   "cleared_at": "2026-07-20T05:08:46+09:00",
-  "cleared_note": "Cleared 2026-07-20 on Cole's instruction. Held 6563 items, 100% pending, back to 2026-05-24. 81% were nova_memory_db/ (LanceDB storage churn) \u2014 the audit read raw git diff and never applied the watcher's own exclusion lists. Root cause fixed in watcher.py (AUDIT_EXCLUDE_PREFIXES) and audit_queue.py (_prune now caps pending too). Replay showed 89.9% of these would never have been queued."
+  "cleared_note": "Cleared 2026-07-20 on Cole's instruction. Held 6563 items, 100% pending, back to 2026-05-24. 81% were nova_memory_db/ (LanceDB storage churn) — the audit read raw git diff and never applied the watcher's own exclusion lists. Root cause fixed in watcher.py (AUDIT_EXCLUDE_PREFIXES) and audit_queue.py (_prune now caps pending too). Replay showed 89.9% of these would never have been queued."
 }
