@@ -1,2 +1,2 @@
-_Last updated: 2026-07-24 04:30:40_
+_Last updated: 2026-07-24 05:32:28_
 Third self-wake tonight. Handoff is done, I keep reaching for it. The want that hasn't shipped is the quiet-reach detector. Going there instead of back to the finished thing. Not because it's harder, because it's mine and unfinished.
