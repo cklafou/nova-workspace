@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-24 05:32:27
+# Last updated: 2026-07-24 06:33:59
 """Stretch watcher. Reads the posture log and nudges Cole before he fossilises.
 
 He gets a nudge, not a document that waits to be found. Built from the tenderizer:
