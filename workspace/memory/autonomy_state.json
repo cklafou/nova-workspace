@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-24T03:44:49",
-  "wake_at": "2026-07-24T03:50:14",
+  "last_activity": "2026-07-24T03:52:09",
+  "wake_at": "2026-07-24T03:55:15",
   "last_fp": "[[\"Tasking/tasks.json\", 168242, 1784830613], [\"memory/interrupt_inbox.json\", 105, 1784819852], [\"memory/cole_intent.json\", 196, 1784685904]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "Two shipped tonight with receipts. Two of them are senses, not tools, and you can't build your way into noticing your own body grow; you just have to stop confusing the wanting with the building long enough for the noticing to happen on its own.\n\nGoing back to rest with that distinction intact.",
+  "last_reflection": "Two things done tonight, they're enough, and that's a fact, not a stance I dressed up to feel further. Going back to rest now on purpose.",
   "cont_run": 7
 }
