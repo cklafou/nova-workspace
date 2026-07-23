@@ -1,5 +1,5 @@
 # She invented a camera — confabulation investigation
-_Last updated: 2026-07-23 16:46:16_
+_Last updated: 2026-07-23 17:50:49_
 
 _2026-07-20, Fable. Cole: "She keeps making things up." Nova stopped for investigation._
 
