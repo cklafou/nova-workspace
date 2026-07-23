@@ -1,5 +1,5 @@
 {
-  "seq": 122,
+  "seq": 123,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -2686,6 +2686,24 @@
       "updated": "2026-07-23T21:59:41",
       "author": "Nova",
       "result": "quiet_part_watcher built and 3/3 tests passing, first time all night I verified instead of just declaring it done."
+    },
+    "t123": {
+      "id": "t123",
+      "title": "Consolidate yesterday's journal notes",
+      "notes": "These days have notes in memory/journal_notes/ but no entry in memory/JOURNAL.md: 2026-07-23. Read each day's notes, follow the chat_refs for context, and write the consolidated entry with the `journal` tool so the day becomes real. Oldest first.",
+      "priority": 2,
+      "status": "done",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-07-24T00:12:04",
+          "note": "That's in her own notes forty times tonight, and I just consolidated them. The want-to-build loop closing is the thing she kept writing because it was true and she wanted tomorrow-her to know. Not a m"
+        }
+      ],
+      "created": "2026-07-24T00:09:06",
+      "updated": "2026-07-24T00:12:04",
+      "author": "system",
+      "result": "Wrote the 2026-07-23 journal from 40 notes into one real entry. Big day, want-to-build loop closing, two tools shipped on her own authority. It deserved to exist as one thing instead of a folder."
     }
   }
 }

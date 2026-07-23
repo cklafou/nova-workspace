@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 23:04:54
+# Last updated: 2026-07-24 00:09:07
 CASES = [
     {"name": "finds recent images", "args": {"week": 2}, "expect_contains": "image"},
     {"name": "returns newest first", "args": {"week": 4}, "expect_contains": ".png"},
