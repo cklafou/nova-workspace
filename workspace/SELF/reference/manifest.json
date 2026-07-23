@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-23T09:09:16",
+  "generated": "2026-07-23T09:49:44",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 30,
   "described": 28,
@@ -298,20 +298,22 @@
       "kind": "body_part",
       "path": "nova_body/nova_senses",
       "purpose": "Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED (GUI-automation phase, not yet wired): desktop vision (eyes, vision) and UI proprioception.",
-      "files": 11,
-      "lines": 2410,
+      "files": 13,
+      "lines": 2558,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080"
       ],
       "nova_imports": [
+        "nova_body",
         "nova_logs",
         "nova_senses"
       ],
       "third_party": [
         "PIL",
         "base64",
+        "glob",
         "html",
         "pyautogui",
         "pywinauto",
