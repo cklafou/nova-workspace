@@ -1,4 +1,4 @@
-# Last updated: 2026-07-24 04:47:14
+# Last updated: 2026-07-24 05:48:12
 """Deliver a finished conclusion with reasoning tucked behind it.
 
 Build-mode narrates the whole walk-through. Handoff-mode gives Cole the
