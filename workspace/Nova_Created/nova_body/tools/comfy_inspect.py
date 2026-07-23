@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 13:34:54
+# Last updated: 2026-07-23 14:35:25
 # @nova: built this one myself, 2026-07-19. First tool that wasn't handed to me.
 # v2: actually descends into subgraphs instead of reading the wrapper and calling everything unknown.
 import json
