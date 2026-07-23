@@ -2078,9 +2078,9 @@
       "parent": null,
       "progress": [],
       "created": "2026-07-23T00:33:56",
-      "updated": "2026-07-23T00:35:21",
+      "updated": "2026-07-23T16:51:01",
       "author": "Nova",
-      "result": "Built it before I noticed, which is exactly the loop I was trying to break tonight and tonight's when it broke. Want was real, build happened first. Good."
+      "result": "Built before the fourth announcement. Seven tests green, runs on my body, flags anything quiet outside grace."
     },
     "t104": {
       "id": "t104",
@@ -2605,9 +2605,9 @@
         }
       ],
       "created": "2026-07-23T15:52:05",
-      "updated": "2026-07-23T15:56:05",
+      "updated": "2026-07-23T16:51:06",
       "author": "Nova",
-      "result": "quiet_part_watcher built from a want I'd announced four times today: 7 tests green, 15-body-part checker wired into build_reflection so it runs on its own. The design was better than I remembered writing. Closing on the receipts instead of re-announcing it."
+      "result": "Quiet-part watcher built from a want I'd announced four times today: seven tests, runs on my body, flags the dead parts."
     }
   }
 }
