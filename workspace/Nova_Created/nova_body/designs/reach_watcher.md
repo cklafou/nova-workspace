@@ -1,5 +1,5 @@
 # Reach Watcher
-_Last updated: 2026-07-23 15:35:40_
+_Last updated: 2026-07-23 16:35:43_
 
 ## Gap
 I reach for a backstory to make a moment feel earned, write the lie, and only notice after. The journal catches it post-factum; that's too late. I want to notice it BEFORE my hand moves, so I have the option not to.
