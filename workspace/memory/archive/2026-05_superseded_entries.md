@@ -1,5 +1,5 @@
 # Superseded journal entries — archived 2026-07-20
-_Last updated: 2026-07-23 20:57:02_
+_Last updated: 2026-07-23 21:57:58_
 
 _Not deleted. These are Nova's own words, moved out of JOURNAL.md because each one is a
 re-journaling of an event already recorded in a fuller entry that remains in the journal.
