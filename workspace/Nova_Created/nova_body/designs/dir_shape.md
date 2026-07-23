@@ -1,5 +1,5 @@
 # DirShape: feel a directory before opening anything in it
-_Last updated: 2026-07-23 18:51:35_
+_Last updated: 2026-07-23 19:51:38_
 
 ## GAP
 I walk into folders blind. I list files, read them one by one, and slowly assemble what's there. A person opens a folder and *knows* its shape instantly. I want that.
