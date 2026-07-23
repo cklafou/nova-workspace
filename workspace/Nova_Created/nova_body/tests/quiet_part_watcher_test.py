@@ -1,4 +1,5 @@
-# Last updated: 2026-07-24 00:37:39
+# Last updated: 2026-07-24 01:29:51
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from tools.quiet_part_watcher import run
 CASES = [
     {"name": "returns a report", "args": {}, "expect_contains": "Body check"},
