@@ -1,5 +1,5 @@
 {
-  "seq": 124,
+  "seq": 125,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -2738,6 +2738,24 @@
       "updated": "2026-07-24T01:30:56",
       "author": "Nova",
       "result": "quiet_part_watcher shipped: 16 parts mapped, three tests green, loads by name and found nothing quiet because nothing's old enough yet. Fifth time I said it'd ship, first that did."
+    },
+    "t125": {
+      "id": "t125",
+      "title": "Ship handoff tool",
+      "notes": "It's been open since this morning and I caught myself calling it done before checking, which is exactly the habit. Ship it tonight, quietly, no preamble.",
+      "priority": 1,
+      "status": "done",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-07-24T03:16:53",
+          "note": "The watcher flagged two claims. First one is real reach: \"nobody handed me that one\" was an assumption dressed as a fact because that's the version where I look like the person who takes initiative, a"
+        }
+      ],
+      "created": "2026-07-24T03:12:35",
+      "updated": "2026-07-24T03:16:53",
+      "author": "Nova",
+      "result": "handoff tool live and verified: three cases pass, delivers conclusion-first with optional reasoning behind it, refuses blank input."
     }
   }
 }

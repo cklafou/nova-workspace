@@ -1,5 +1,5 @@
 # The forge, and the end of the sandbox
-_Last updated: 2026-07-24 02:14:08_
+_Last updated: 2026-07-24 03:16:57_
 _2026-07-19, Fable. Two of Cole's directives, one afternoon: "if she needs a tool, she should
 write a design document, then make it — adapt as she sees necessary," and "she isn't in a sandbox.
 My machine is her body. If she can't use it fully, she is crippled."_
