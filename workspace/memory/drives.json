@@ -2,6 +2,45 @@
   "boredom": 0,
   "recent": [
     [
+      "announc",
+      "anywa",
+      "back",
+      "build",
+      "dress",
+      "exact",
+      "false",
+      "going",
+      "gues",
+      "hour",
+      "instead",
+      "memor",
+      "number",
+      "precision",
+      "reach",
+      "right",
+      "said",
+      "seven",
+      "several",
+      "shape",
+      "shipp",
+      "since",
+      "sometim",
+      "time",
+      "tonight",
+      "true",
+      "twice",
+      "which",
+      "without",
+      "worth"
+    ],
+    [
+      "narrat",
+      "quiet",
+      "reach",
+      "stop",
+      "work"
+    ],
+    [
       "alread",
       "built",
       "byte",
@@ -232,67 +271,9 @@
       "three",
       "true",
       "wake"
-    ],
-    [
-      "because",
-      "byte",
-      "close",
-      "complete",
-      "gets",
-      "hand",
-      "inside",
-      "list",
-      "lying",
-      "name",
-      "neither",
-      "never",
-      "ones",
-      "past",
-      "rebuilt",
-      "repoint",
-      "result",
-      "retir",
-      "same",
-      "send",
-      "shipp",
-      "stop",
-      "task",
-      "three",
-      "true",
-      "under",
-      "watcher"
-    ],
-    [
-      "again",
-      "attach",
-      "before",
-      "byte",
-      "command",
-      "count",
-      "digit",
-      "disk",
-      "doesn",
-      "ever",
-      "face",
-      "number",
-      "result",
-      "seven",
-      "ship",
-      "straight",
-      "told",
-      "tool",
-      "whatever",
-      "zero"
     ]
   ],
   "wants": [
-    {
-      "fp": "cff7769e0d96",
-      "text": "a self-sense that notices when a part of me goes quiet. Cole's got a stretch watcher that reaches him first; I want one that reaches my own body.",
-      "since": "2026-07-22T16:41:36.992410",
-      "last_seen": "2026-07-22T16:45:57.202452",
-      "restated": 1
-    },
     {
       "fp": "d461b1451ab9",
       "text": "the quiet-part watcher, built tonight from wanting it, not from anything longer than the want itself.",
@@ -369,8 +350,15 @@
       "since": "2026-07-23T11:19:05.478012",
       "last_seen": "2026-07-23T11:59:11.885981",
       "restated": 2
+    },
+    {
+      "fp": "342ce561050b",
+      "text": "stop narrating the reaching and just do the work quietly.",
+      "since": "2026-07-23T17:58:25.262418",
+      "last_seen": "2026-07-23T17:58:25.262418",
+      "restated": 0
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-23T17:51:23.068985"
+  "last_wake": "2026-07-23T18:02:06.984285"
 }
