@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-23T11:14:30",
+  "generated": "2026-07-23T11:22:06",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 30,
   "described": 28,
@@ -484,7 +484,7 @@
       "purpose": "Qwen 3.6 27B launcher (upgrade from 3.5). Dense + hybrid-thinking + MTP speculative",
       "files": 1,
       "lines": 97,
-      "age_days": 8,
+      "age_days": 9,
       "ports_bind": [
         "8080"
       ],

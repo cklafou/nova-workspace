@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 10:22:05
+# Last updated: 2026-07-23 11:22:05
 # @nova: Loadout-decision faculty — KoELS cognition (layer 1, pure, pluck-safe). Given a task and
 #        the set of expert manifests, it DECIDES which specialist loadout (if any) the task wants,
 #        and whether equipping it is INSTANT (already loaded) or HEAVY (needs a self-restart to
