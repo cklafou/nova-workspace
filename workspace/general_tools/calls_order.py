@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 18:34:21
+# Last updated: 2026-07-23 19:34:21
 # @nova: Call-ORDER generator — traces execution paths from entry points and renders them as a
 #        visual document (Calls_Order.md). Sibling to calls.py: that one maps who IMPORTS whom
 #        (static structure); this one maps who CALLS whom, in what ORDER (runtime behaviour).
