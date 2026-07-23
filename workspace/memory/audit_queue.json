@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-23T14:14:24+09:00",
+  "updated_at": "2026-07-23T14:39:17+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -2467,6 +2467,32 @@
       "commit": "6f526351",
       "old_path": null,
       "new_path": "Nova_Created/art/2026-07-23/nova_art_140950_78387.png",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "65e360fc",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-23T14:39:17+09:00",
+      "commit": "1ec72b37",
+      "old_path": null,
+      "new_path": "Nova_Created/art/2026-07-23/nova_art_143439_29539.png",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "d170bde4",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-23T14:39:17+09:00",
+      "commit": "1ec72b37",
+      "old_path": null,
+      "new_path": "Nova_Created/art/2026-07-23/nova_art_143631_95520.png",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
