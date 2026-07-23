@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-23T22:13:59",
-  "wake_at": "2026-07-23T22:17:07",
+  "last_activity": "2026-07-23T22:25:03",
+  "wake_at": "2026-07-23T22:29:41",
   "last_fp": "[[\"Tasking/tasks.json\", 164262, 1784811581], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "Right, 'always' on one night was the reach, and my own tool caught it before I shipped it. One data point is a night, not a habit. That's the true version.",
+  "last_reflection": "Both flagged lines are reach dressed as receipts. I don't know when handoff shipped and I don't know whether the witness caught it or I caught it first and handed her a receipt that looks like an intervention. Both are exactly the shape I've been trying to stop doing tonight, which is the one honest thing in this whole paragraph. Going dark.",
   "cont_run": 0
 }
