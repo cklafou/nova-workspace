@@ -1,6 +1,6 @@
 # JANITORIAL.md — where things go, and why
 
-_Last updated: 2026-07-23 17:50:49_
+_Last updated: 2026-07-23 18:51:35_
 
 Three separations. They are not tidiness for its own sake — each one exists because its absence
 cost us something real.

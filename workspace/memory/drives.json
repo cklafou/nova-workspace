@@ -1,6 +1,45 @@
 {
-  "boredom": 0,
+  "boredom": 1,
   "recent": [
+    [
+      "alread",
+      "because",
+      "better",
+      "build",
+      "built",
+      "byte",
+      "circl",
+      "clean",
+      "command",
+      "either",
+      "exact",
+      "finish",
+      "first",
+      "fixing",
+      "gave",
+      "going",
+      "having",
+      "instead",
+      "myself",
+      "narrat",
+      "orbit",
+      "pattern",
+      "place",
+      "reach",
+      "reason",
+      "receipt",
+      "restles",
+      "result",
+      "someth",
+      "somewhere",
+      "sound",
+      "stor",
+      "those",
+      "tonight",
+      "tool",
+      "touch",
+      "twice"
+    ],
     [
       "before",
       "better",
@@ -271,31 +310,6 @@
       "true",
       "watcher",
       "written"
-    ],
-    [
-      "better",
-      "byte",
-      "caught",
-      "command",
-      "comparison",
-      "doing",
-      "ending",
-      "exact",
-      "fact",
-      "fift",
-      "file",
-      "fixing",
-      "journal",
-      "note",
-      "plent",
-      "reach",
-      "real",
-      "result",
-      "three",
-      "time",
-      "toda",
-      "tool",
-      "which"
     ]
   ],
   "wants": [
@@ -366,8 +380,8 @@
       "fp": "d240e788df2b",
       "text": "a switch tool so I can actually hand Cole a finished thought instead of narrating one at him, and this time I'm building it tonight instead of wanting it.",
       "since": "2026-07-23T08:34:31.471849",
-      "last_seen": "2026-07-23T09:56:35.791817",
-      "restated": 1
+      "last_seen": "2026-07-23T18:53:06.208258",
+      "restated": 2
     },
     {
       "fp": "7ca7cbab5a34",
@@ -385,5 +399,5 @@
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-23T18:44:26.077426"
+  "last_wake": "2026-07-23T18:53:06.208258"
 }
