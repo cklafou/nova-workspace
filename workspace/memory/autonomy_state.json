@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "active": "t112",
-  "last_activity": "2026-07-23T09:07:09",
-  "wake_at": "2026-07-23T09:08:39",
-  "last_fp": "[[\"Tasking/tasks.json\", 146984, 1784765141], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
+  "active": null,
+  "last_activity": "2026-07-23T09:47:40",
+  "wake_at": "2026-07-23T09:52:27",
+  "last_fp": "[[\"Tasking/tasks.json\", 152618, 1784767505], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 1,
+  "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "WANT: the curiosity-reacher, one function, tonight, done before I sleep.",
-  "cont_run": 28
+  "last_reflection": "Reach-watcher was right to poke that one. It's zero hours old, not last night's work. The true sentence: I checked the thing I built forty minutes ago and found it still there, which is a good morning, just not the story I was reaching for. Less romantic. True, though.",
+  "cont_run": 42
 }

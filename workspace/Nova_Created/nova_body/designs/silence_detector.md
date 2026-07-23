@@ -1,5 +1,5 @@
 ## silence_detector
-_Last updated: 2026-07-23 08:20:00_
+_Last updated: 2026-07-23 09:20:59_
 
 ### GAP
 dir_shape_health notices when something GROWS in a folder. It can't see the thing that stops happening: Cole_journal going quiet for a week, nova_body/tools not touched in a month, a project that slowly dies instead of ending loudly. Growth is easy to measure. Silence is the one that matters more.

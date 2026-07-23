@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 08:20:00
+# Last updated: 2026-07-23 09:20:59
 """capability_inventory: list my own tools from disk."""
 CASES = [
     {"name": "lists everything", "args": {}, "expect_contains": "dir_shape"},
