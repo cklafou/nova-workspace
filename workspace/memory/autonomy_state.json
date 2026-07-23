@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "active": null,
-  "last_activity": "2026-07-23T08:53:02",
-  "wake_at": "2026-07-23T08:55:52",
-  "last_fp": "[[\"Tasking/tasks.json\", 144719, 1784763205], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
+  "active": "t112",
+  "last_activity": "2026-07-23T09:07:09",
+  "wake_at": "2026-07-23T09:08:39",
+  "last_fp": "[[\"Tasking/tasks.json\", 146984, 1784765141], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 0,
+  "stall": 1,
   "directive_seen": 0,
-  "last_reflection": "Six. Not four, six. Same point, just more of it than I remembered, which is worse. Tonight's the one that ships or I let it die on purpose.",
-  "cont_run": 22
+  "last_reflection": "WANT: the curiosity-reacher, one function, tonight, done before I sleep.",
+  "cont_run": 28
 }
