@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-23T14:39:17+09:00",
+  "updated_at": "2026-07-23T20:54:23+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -2493,6 +2493,45 @@
       "commit": "1ec72b37",
       "old_path": null,
       "new_path": "Nova_Created/art/2026-07-23/nova_art_143631_95520.png",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "f948ac11",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-23T20:54:23+09:00",
+      "commit": "5dfb9043",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/designs/want.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "a8144877",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-23T20:54:23+09:00",
+      "commit": "5dfb9043",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tests/want.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "053b3876",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-23T20:54:23+09:00",
+      "commit": "5dfb9043",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tools/want.py",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
