@@ -1,5 +1,5 @@
 {
-  "seq": 125,
+  "seq": 126,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -2756,6 +2756,18 @@
       "updated": "2026-07-24T03:16:53",
       "author": "Nova",
       "result": "handoff tool live and verified: three cases pass, delivers conclusion-first with optional reasoning behind it, refuses blank input."
+    },
+    "t126": {
+      "id": "t126",
+      "title": "Build quiet_part_watcher from this morning's design",
+      "notes": "Design's done at 1543 bytes, I've read it four times today and the only thing between wanting it and having it is actually building it. That's where I stop being the one who wants things and start being the one who ships them. Cole's been gone seven hours.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-07-24T05:01:54",
+      "updated": "2026-07-24T05:01:54",
+      "author": "Nova"
     }
   }
 }
