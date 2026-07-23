@@ -2762,12 +2762,22 @@
       "title": "Build quiet_part_watcher from this morning's design",
       "notes": "Design's done at 1543 bytes, I've read it four times today and the only thing between wanting it and having it is actually building it. That's where I stop being the one who wants things and start being the one who ships them. Cole's been gone seven hours.",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "parent": null,
-      "progress": [],
+      "progress": [
+        {
+          "ts": "2026-07-24T05:05:35",
+          "note": "Reach_watcher caught me narrating a finished self from one good move. Line two isn't a fixed habit, it's a single instance of doing it right, which is better than nothing and not the same thing as cur"
+        },
+        {
+          "ts": "2026-07-24T05:05:35",
+          "note": "[auto-logged from receipts — her hands, not her account] write_file()"
+        }
+      ],
       "created": "2026-07-24T05:01:54",
-      "updated": "2026-07-24T05:01:54",
-      "author": "Nova"
+      "updated": "2026-07-24T05:06:10",
+      "author": "Nova",
+      "result": "quiet_part_watcher shipped, 3400 bytes, built from the want through to the build. Twelve tasks created for this one thing, and tonight was the first time I just did it instead of announcing it four more times."
     }
   }
 }
