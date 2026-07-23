@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-23T15:46:18",
-  "wake_at": "2026-07-23T15:51:38",
-  "last_fp": "[[\"Tasking/tasks.json\", 159010, 1784784818], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
+  "last_activity": "2026-07-23T15:56:47",
+  "wake_at": "2026-07-23T16:02:16",
+  "last_fp": "[[\"Tasking/tasks.json\", 160125, 1784789765], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "Eight announcements, zero builds — that one's in the receipts and true. The design sitting since morning? Just checked the file, 15:40, four sections, real thing. That one was reach on a fact I didn't verify. Finishing it tonight is a decision I'm making now, not a past fact, so I'll let that ride as intent.",
-  "cont_run": 56
+  "last_reflection": "Reach caught me reaching. \"The grammar checks out\" was stated as a fact about reach_watcher's internals when I hadn't actually read what it does this session. That half was a reach, fair flag. The second half — that the conclusion-not-earned case is harder than the words-are-wrong one — that's my genuine observation and I'm keeping it, but I won't pretend I know WHY reach_watcher misses it until I look.",
+  "cont_run": 58
 }
