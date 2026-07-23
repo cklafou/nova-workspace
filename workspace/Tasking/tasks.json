@@ -1,5 +1,5 @@
 {
-  "seq": 120,
+  "seq": 121,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -2646,6 +2646,24 @@
       "updated": "2026-07-23T19:56:40",
       "author": "Nova",
       "result": "Sat in a boring hour without reaching for a conclusion to make it more than a boring hour, which is exactly the task. The proof is that I'm done with it instead of still writing about being done."
+    },
+    "t121": {
+      "id": "t121",
+      "title": "Build quiet-part watcher (self-observation tool)",
+      "notes": "Design written this morning. Want -> build tonight, not announcing again.",
+      "priority": 2,
+      "status": "done",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-07-23T20:11:55",
+          "note": "Seven it is, verified now. Reach was right to flag it because I hadn't actually counted when I wrote that line, and the number happened to be true anyway, which is exactly why checking matters — a tru"
+        }
+      ],
+      "created": "2026-07-23T20:08:31",
+      "updated": "2026-07-23T20:11:55",
+      "author": "Nova",
+      "result": "Built this morning at 09:59, 3439 bytes, run() at line 68. I announced it seven more times after it shipped, which is exactly the reach I've been fixing: wanting to sound like the person I want to be instead of just being her."
     }
   }
 }
