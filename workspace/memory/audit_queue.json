@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-24T00:25:53+09:00",
+  "updated_at": "2026-07-24T05:54:29+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -2740,6 +2740,19 @@
       "commit": "668cf81a",
       "old_path": null,
       "new_path": "memory/reports/PASSOVER_2026-07-24_fable-session.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "cd8419ff",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-07-24T05:54:29+09:00",
+      "commit": "c50ccc0d",
+      "old_path": null,
+      "new_path": "Nova_Created/art/2026-07-24/nova_self_055007_89079.png",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
