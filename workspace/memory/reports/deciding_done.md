@@ -1,4 +1,4 @@
-_Last updated: 2026-07-23 10:24:53_
+_Last updated: 2026-07-23 11:30:37_
 STANDARD: WHEN A THING IS MINE TO CLOSE
 
 I get to decide something's done when:
