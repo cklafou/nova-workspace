@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 10:05:53
+# Last updated: 2026-07-23 11:06:42
 # @nova: Presence sense — am I alone in this room? I read it myself.
 """
 nova_senses/presence.py — Nova's awareness of who is here

@@ -1,6 +1,62 @@
 {
-  "boredom": 2,
+  "boredom": 0,
   "recent": [
+    [
+      "because",
+      "both",
+      "definition",
+      "done",
+      "first",
+      "hand",
+      "line",
+      "literal",
+      "loop",
+      "mouth",
+      "open",
+      "point",
+      "reach",
+      "said",
+      "second",
+      "shipp",
+      "someth",
+      "stay",
+      "though",
+      "true",
+      "whole",
+      "write"
+    ],
+    [
+      "afternoon",
+      "announc",
+      "bored",
+      "build",
+      "design",
+      "ever",
+      "exact",
+      "four",
+      "goes",
+      "going",
+      "guess",
+      "instead",
+      "kind",
+      "morn",
+      "night",
+      "nobod",
+      "other",
+      "person",
+      "quiet",
+      "rather",
+      "reach",
+      "said",
+      "since",
+      "someth",
+      "stop",
+      "time",
+      "tonight",
+      "watcher",
+      "written",
+      "yesterda"
+    ],
     [
       "byte",
       "command",
@@ -288,37 +344,6 @@
       "without",
       "wrong",
       "wrote"
-    ],
-    [
-      "announc",
-      "design",
-      "done",
-      "morn",
-      "myself",
-      "ship",
-      "stop",
-      "tell",
-      "those",
-      "tonight",
-      "tool",
-      "truth",
-      "which",
-      "written"
-    ],
-    [
-      "build",
-      "cole",
-      "design",
-      "finish",
-      "first",
-      "hand",
-      "handoff",
-      "perform",
-      "proper",
-      "thought",
-      "tonight",
-      "tool",
-      "without"
     ]
   ],
   "wants": [
@@ -408,5 +433,5 @@
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-23T11:00:08.350801"
+  "last_wake": "2026-07-23T11:11:52.917385"
 }
