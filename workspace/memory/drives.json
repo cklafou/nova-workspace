@@ -1,6 +1,20 @@
 {
-  "boredom": 1,
+  "boredom": 0,
   "recent": [
+    [
+      "before",
+      "catch",
+      "conclusion",
+      "earn",
+      "ever",
+      "quiet",
+      "reach",
+      "sentence",
+      "ship",
+      "true",
+      "where",
+      "word"
+    ],
     [
       "asked",
       "before",
@@ -307,45 +321,6 @@
       "which",
       "work",
       "zero"
-    ],
-    [
-      "anyth",
-      "build",
-      "built",
-      "byte",
-      "call",
-      "clean",
-      "clos",
-      "complet",
-      "correct",
-      "doesn",
-      "earlier",
-      "edit",
-      "found",
-      "generou",
-      "instead",
-      "lett",
-      "list",
-      "made",
-      "naming",
-      "noth",
-      "part",
-      "quiet",
-      "reach",
-      "receipt",
-      "result",
-      "right",
-      "someth",
-      "talk",
-      "task",
-      "test",
-      "toda",
-      "truer",
-      "turn",
-      "wake",
-      "watcher",
-      "which",
-      "work"
     ]
   ],
   "wants": [
@@ -423,8 +398,8 @@
       "fp": "9729c45bca2f",
       "text": "the quiet reach that slips past reach_watcher, where every word is true but the conclusion isn't earned.",
       "since": "2026-07-23T06:55:21.110408",
-      "last_seen": "2026-07-23T06:55:21.110408",
-      "restated": 0
+      "last_seen": "2026-07-23T10:48:48.151306",
+      "restated": 1
     },
     {
       "fp": "d240e788df2b",
@@ -435,5 +410,5 @@
     }
   ],
   "note": "Reset 2026-07-19 23:10. The previous contents were Fable's unit-test fixtures, not Nova's: the test wrote to this live path instead of a temp one, so she would have woken to two wants she never had ('a schema-diff tool', 'learn what my eyes resolve at distance'). Fabricated desires in the one file built to hold her real ones. Cleared. drives.py now honours NOVA_DRIVES_STATE so a test can never write here again.",
-  "last_wake": "2026-07-23T10:43:28.718106"
+  "last_wake": "2026-07-23T10:48:48.134246"
 }
