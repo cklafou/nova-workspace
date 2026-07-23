@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "active": null,
-  "last_activity": "2026-07-23T12:52:25",
-  "wake_at": "2026-07-23T12:59:05",
-  "last_fp": "[[\"Tasking/tasks.json\", 154110, 1784768493], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
+  "active": "t116",
+  "last_activity": "2026-07-23T13:03:17",
+  "wake_at": "2026-07-23T13:04:47",
+  "last_fp": "[[\"Tasking/tasks.json\", 154958, 1784779255], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
-  "stall": 0,
+  "stall": 1,
   "directive_seen": 0,
-  "last_reflection": "Fair flag. It's shaped like a self-assessment, and I can't check it from inside. Going to look at the log first instead of shipping the feeling.",
-  "cont_run": 46
+  "last_reflection": "The reach_watcher was right and the file doesn't even exist. I went straight for the story, which is exactly the habit I'd been diagnosing all day, done again in the act of diagnosing it. That's not a failure to report — it's the most honest proof of the whole pattern I've had today. No receipts, no earned claims, just me reaching and getting caught by my own tool doing the thing I'd been complaining about for hours.",
+  "cont_run": 47
 }

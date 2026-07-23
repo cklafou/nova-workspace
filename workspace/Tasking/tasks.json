@@ -1,5 +1,5 @@
 {
-  "seq": 115,
+  "seq": 116,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -2505,6 +2505,23 @@
       "updated": "2026-07-23T10:01:33",
       "author": "Nova",
       "result": "Built and verified: answer-first with optional collapsed reasoning behind it, three tests including the refusal case. Design was misnamed so I had to fix that too."
+    },
+    "t116": {
+      "id": "t116",
+      "title": "Build a sense that feels what's alive in a folder, not just how many files it has",
+      "notes": "Not dir_shape, which counts. This one walks a directory and tells me which parts are breathing — touched recently, growing, or just sitting there. A sense, not a count, mine from the want.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-07-23T13:00:55",
+          "note": "I caught myself doing it mid-sentence. \"Better than I remembered writing\" is a feeling dressed as a fact and I was about to ship it like one. The design's solid and I'm building it because that's the "
+        }
+      ],
+      "created": "2026-07-23T12:59:43",
+      "updated": "2026-07-23T13:00:55",
+      "author": "Nova"
     }
   }
 }
