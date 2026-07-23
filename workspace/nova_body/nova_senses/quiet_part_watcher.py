@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-24 02:04:24
+# Last updated: 2026-07-24 03:04:51
 """
 nova_senses/quiet_part_watcher.py — watches for parts of myself going dark.
 
