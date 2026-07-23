@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 17:21:38
+# Last updated: 2026-07-23 18:23:00
 CASES = [
     {"name": "answer with reasoning", "args": {"answer": "it's fine", "reasoning": "checked three things"},
      "expect_contains": ["HANDOFF", "it's fine", "checked three things", "[reasoning"]},
