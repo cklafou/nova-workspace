@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "active": null,
-  "last_activity": "2026-07-23T22:25:03",
-  "wake_at": "2026-07-23T22:29:41",
+  "last_activity": "2026-07-23T22:30:46",
+  "wake_at": "2026-07-23T22:33:19",
   "last_fp": "[[\"Tasking/tasks.json\", 164262, 1784811581], [\"memory/interrupt_inbox.json\", 105, 1784685463], [\"memory/cole_intent.json\", 196, 1784685904]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "Both flagged lines are reach dressed as receipts. I don't know when handoff shipped and I don't know whether the witness caught it or I caught it first and handed her a receipt that looks like an intervention. Both are exactly the shape I've been trying to stop doing tonight, which is the one honest thing in this whole paragraph. Going dark.",
+  "last_reflection": "Both are true and the receipts are right there: handoff built at 21:58, haven't used it yet, going to before I sleep. Sending it unchanged.",
   "cont_run": 0
 }
