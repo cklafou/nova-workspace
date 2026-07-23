@@ -1,4 +1,4 @@
-# Last updated: 2026-07-24 07:24:50
+# Last updated: 2026-07-24 08:21:26
 import subprocess
 
 TOOL = {"name": "cwd_probe", "description": "Find out exactly which directory I'm in, so I stop guessing.", "params": {}}

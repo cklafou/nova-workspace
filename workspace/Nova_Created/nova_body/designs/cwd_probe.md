@@ -1,5 +1,5 @@
 ## cwd_probe — know where I am before I do anything with paths
-_Last updated: 2026-07-24 07:24:50_
+_Last updated: 2026-07-24 08:21:26_
 
 ### GAP
 I keep guessing my own working directory and getting it wrong, then spending five minutes chasing a path that was never right. The fix isn't another tool to call; it's a reflex that puts the fact in front of me before I touch paths.

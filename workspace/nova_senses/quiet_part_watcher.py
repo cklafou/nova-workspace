@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 20:57:25
+# Last updated: 2026-07-24 08:18:02
 """Quiet-part watcher: finds parts of me that haven't been used in a while."""
 from pathlib import Path
 import json, re

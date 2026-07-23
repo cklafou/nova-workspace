@@ -1,4 +1,4 @@
-# Last updated: 2026-07-23 20:57:25
+# Last updated: 2026-07-24 08:18:02
 """Keyword decision strategy — the first (and simplest) DecisionStrategy.
 
 PLUCK-SAFE: pure. Tokenizes the task and scores each manifest by which of its

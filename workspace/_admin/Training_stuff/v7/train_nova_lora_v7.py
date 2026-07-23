@@ -1,7 +1,7 @@
 # v7: IDENTICAL config to v5/v6 — DATA_PATH/OUTPUT_DIR are the only edits (2026-07-24).
 # 399 rows = v6's 361 + 38 witness-era rows. See V7_SPEC.md. Gates must rerun on-pod.
 #!/usr/bin/env python3
-# Last updated: 2026-07-23 20:57:25
+# Last updated: 2026-07-24 08:13:50
 # Nova-Core v5 — "Trust, but verify." Tools are senses, not instruments.
 #
 # WHY v5 (v4 FAILED, 2026-07-13):
