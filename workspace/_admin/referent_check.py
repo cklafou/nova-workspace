@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-23 01:14:00
+# Last updated: 2026-07-23 20:57:25
 """
 REFERENT CHECK — does Nova talk ABOUT the person she is talking TO?
 
