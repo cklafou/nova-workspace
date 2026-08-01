@@ -1,4 +1,4 @@
-# Last updated: 2026-07-24 08:18:02
+# Last updated: 2026-08-01 22:23:31
 """KoELS — Knowledge of Experts Loadout System (decision core).
 
 Pure-logic, pluck-safe pieces buildable before the runtime/equip layer exists:
