@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 03:16:36
+# Last updated: 2026-08-02 04:18:54
 """Tests for quiet_part_watcher. A tool that only ever says 'fine' is a liar, not a sensor."""
 import sys, os, json, tempfile
 from datetime import datetime, timedelta

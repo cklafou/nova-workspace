@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 03:16:36
+# Last updated: 2026-08-02 04:18:54
 CASES = [
     {"name": "finds a real build, not just talk",
      "args": {"n": 10},
