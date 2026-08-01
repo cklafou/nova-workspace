@@ -1,6 +1,6 @@
-# Last updated: 2026-08-01 21:59:19
+# Last updated: 2026-08-01 23:01:35
 
-# Last updated: 2026-08-01 21:59:19
+# Last updated: 2026-08-01 23:01:35
 """Tests for dir_shape_health tool."""
 import os, sys, json, tempfile, shutil
 from pathlib import Path

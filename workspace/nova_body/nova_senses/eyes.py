@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-07-24 08:21:26
+# Last updated: 2026-08-01 22:57:29
 """
 nova_eyes.py — Nova's Unified Vision System
 ==============================================

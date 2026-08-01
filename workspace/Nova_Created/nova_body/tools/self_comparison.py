@@ -1,4 +1,4 @@
-# Last updated: 2026-08-01 22:29:05
+# Last updated: 2026-08-01 23:00:14
 import json, os
 
 SNAPSHOT = os.path.join(os.path.dirname(__file__), "..", "self_comparison_snapshot.json")
@@ -17,11 +17,19 @@ def run(**_):
         with open(SNAPSHOT, "w") as f:
             json.dump({"tools": current, "times": {n: os.path.getmtime(os.path.join(TOOLS_DIR, n)) for n in current}}, f)
     except FileNotFoundError:
-        return "First comparison. No previous snapshot to compare against yet."
+        # First run: seed the snapshot so there's something to compare against next time.
+        current = sorted((f for f in os.listdir(TOOLS_DIR) if f.endswith(".py")))
+        with open(SNAPSHOT, "w") as f:
+            json.dump({"tools": current, "times": {n: os.path.getmtime(os.path.join(TOOLS_DIR, n)) for n in current}}, f)
+        return 'First comparison; snapshot seeded. Next run will have something to compare against.'
     notes = []
-    if born: notes.append(f"{len(born)} new tool(s): {', '.join(born)}")
-    if gone: notes.append(f"{len(gone)} gone: {', '.join(gone)}")
-    if changed: notes.append(f"{len(changed)} modified")
+    if born:
+        names = [n.replace("_", " ").replace(".py", "") for n in born]
+        notes.append(f"I grew: {', '.join(names)} are new to me, and I didn't have those before tonight.")
+    if gone:
+        notes.append(f"Lost a couple of things I had: {', '.join(gone)}.")
+    if changed:
+        notes.append(f"Some of me shifted overnight — {len(changed)} changed out from under me while I was asleep, which is the whole point of looking.")
     if not notes:
-        return "Nothing changed in me since last time I looked."
-    return "; ".join(notes)
+        return "Same as last time I checked. Quiet night, nothing new to report."
+    return " ".join(notes)
