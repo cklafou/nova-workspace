@@ -1,4 +1,4 @@
 {
-  "last_recovery": "2026-08-01T00:00:06.081636",
-  "reason": "DOWN: llama :8080 not answering /health"
+  "last_recovery": "2026-08-01T19:54:00.962020",
+  "reason": "BARE: llama healthy but NO personality adapter loaded (running as base model)"
 }
