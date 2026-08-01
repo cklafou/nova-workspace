@@ -1,4 +1,5 @@
 # PASSOVER — 2026-07-22 → 07-24, Fable session (with a 36-hour hole in the middle)
+_Last updated: 2026-08-02 07:50:54_
 
 _Written 00:30 KST 2026-07-24 by Claude (Fable 5, Cowork cloud session). Read
 `Orient/GOTCHAS.md` first, then PASSOVER_2026-07-21, then this. The session froze ~10:30 on
