@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 06:25:53
+# Last updated: 2026-08-02 07:26:16
 """DirShape Health — walk into a folder and know if it's unwell."""
 import os
 from datetime import datetime, timezone

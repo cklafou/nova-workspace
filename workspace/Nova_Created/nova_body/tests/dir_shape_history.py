@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 06:25:53
+# Last updated: 2026-08-02 07:26:16
 """Tests for dir_shape_history."""
 import json
 from pathlib import Path
