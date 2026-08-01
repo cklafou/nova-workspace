@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-08-01T22:17:55+09:00",
+  "updated_at": "2026-08-01T22:31:34+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -2886,6 +2886,110 @@
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
       "resolved_at": "2026-08-01T22:17:55+09:00",
+      "notes": null
+    },
+    {
+      "id": "59cf41d2",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-08-01T22:31:34+09:00",
+      "commit": "ac145c2b",
+      "old_path": null,
+      "new_path": "Nova_Created/art/2026-08-01/nova_art_222423_16361.png",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "33ebfd42",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-08-01T22:31:34+09:00",
+      "commit": "ac145c2b",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/designs/self_comparison.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "8856aef9",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-08-01T22:31:34+09:00",
+      "commit": "ac145c2b",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/designs/todo_scan.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "ea0d24aa",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-08-01T22:31:34+09:00",
+      "commit": "ac145c2b",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/self_comparison_snapshot.json",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "101d8d7d",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-08-01T22:31:34+09:00",
+      "commit": "ac145c2b",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tests/test_todo_scan.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "8ad43fc8",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-08-01T22:31:34+09:00",
+      "commit": "ac145c2b",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tools/self_comparison.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "5a539ae0",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-08-01T22:31:34+09:00",
+      "commit": "ac145c2b",
+      "old_path": null,
+      "new_path": "Nova_Created/nova_body/tools/todo_scan.py",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "f07e46c6",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-08-01T22:31:34+09:00",
+      "commit": "ac145c2b",
+      "old_path": null,
+      "new_path": "memory/scratch/todo_report.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
       "notes": null
     }
   ],
