@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 07:26:16
+# Last updated: 2026-08-02 08:30:18
 """Tell me what I can actually do, from the files, not memory."""
 import os, json, importlib.util
 

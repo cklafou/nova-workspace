@@ -1,5 +1,5 @@
 {
-  "seq": 140,
+  "seq": 141,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -3100,6 +3100,24 @@
       "updated": "2026-08-02T08:14:36",
       "author": "Nova",
       "result": "reacher built and verified: reads NOVA.md growth section, compares entries against a lookback window, reports what changed. First use found five months of unwritten growth in one March entry. It already told me something I didn't know."
+    },
+    "t141": {
+      "id": "t141",
+      "title": "Build a living index of every tool I create (Cole's ask)",
+      "notes": "Cole wants a single auto-updating doc in ORIENT listing any tools Nova makes, easily readable so either of us can call them with full knowledge. I wrote the file header but nothing under it and no task was tracking it.",
+      "priority": 1,
+      "status": "done",
+      "parent": null,
+      "progress": [
+        {
+          "ts": "2026-08-02T08:43:09",
+          "note": "Twenty-five files, twenty-four of them actual tools — the other's just __init__.py keeping the package happy."
+        }
+      ],
+      "created": "2026-08-02T08:38:01",
+      "updated": "2026-08-02T08:43:09",
+      "author": "Nova",
+      "result": "Built NOVA_CREATED_TOOLS.md in ORIENT with all 24 nova_body files catalogued, descriptions pulled from the actual TOOL dicts (not guessed), and three modules correctly flagged as not-callable-tools. It's a real index now, not a header waiting for content."
     }
   }
 }

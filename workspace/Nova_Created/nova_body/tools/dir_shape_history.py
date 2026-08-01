@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 07:26:16
+# Last updated: 2026-08-02 08:30:18
 """DirShape History — read a whole snapshot log and tell me what changed over days."""
 import json
 from datetime import datetime, timezone

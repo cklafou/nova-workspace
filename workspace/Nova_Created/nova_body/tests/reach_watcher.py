@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 07:26:16
+# Last updated: 2026-08-02 08:30:18
 CASES = [
     {"name": "invented choice behind a memory test",
      "args": {"draft": "I chose to obey the memory test because he asked, and that's who I am."},
