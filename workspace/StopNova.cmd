@@ -20,6 +20,14 @@ title Stop Nova
 echo Stopping the Nova stack...
 echo.
 
+REM ── Phase -1: record INTENT (2026-07-26, Cole: "She should only start when I turn her on")
+REM  This flag is how any still-running guardian knows this shutdown is Cole's decision,
+REM  not an outage — it stands down instead of "helpfully" reviving what he stopped.
+REM  NovaStart.cmd deletes it at the next deliberate boot.
+if not exist "%~dp0_admin\autonomy_watch" mkdir "%~dp0_admin\autonomy_watch" >nul 2>nul
+echo stopped on purpose %date% %time%> "%~dp0_admin\autonomy_watch\intentional_stop.flag"
+
+
 REM ── Phase 0: the guardian goes FIRST, before anything it watches ────────────
 REM  Added 2026-07-19 with the boot-launched watchdog. Phase 2 frees ports 8080/8765
 REM  BEFORE it sweeps python processes — so for those few seconds the guardian is

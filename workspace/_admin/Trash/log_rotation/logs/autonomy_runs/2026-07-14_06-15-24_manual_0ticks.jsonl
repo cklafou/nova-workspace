@@ -1,0 +1,1 @@
+{"id": "69c0b473", "timestamp": "2026-07-14T06:15:24.820207", "author": "Nova", "content": "```json\n\n\n[`list_dir` resulted in 121 bytes.]\n\nFour .gguf files: the base model, mmproj, and two v5 LoRA checkpoints (epoch 1 and epoch 2).", "directed_at": null}

@@ -1,4 +1,4 @@
 {
-  "last_recovery": "2026-07-21T18:00:05.825844",
+  "last_recovery": "2026-08-01T00:00:06.081636",
   "reason": "DOWN: llama :8080 not answering /health"
 }

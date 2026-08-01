@@ -1,0 +1,22 @@
+{
+  "name": "coder",
+  "domain": "software engineering — designing, writing, debugging, testing, and reviewing code",
+  "trigger": {
+    "keywords": ["code", "coding", "python", "powershell", "script", "bug", "debug",
+                 "traceback", "exception", "stack trace", "refactor", "unit test",
+                 "failing test", "run the tests", "syntax error", "regex", "lint",
+                 "forge a tool", "build a tool", "import error", "compile", ".py", ".ps1"],
+    "intents": ["write_code", "debug_code", "code_review", "build_tool", "test_code",
+                "design_module"]
+  },
+  "adapter": "KoELS/coder/adapter/coder.gguf",
+  "knowledge_db": "KoELS/coder/knowledge.lancedb",
+  "oracle": {
+    "name": "execution",
+    "applies_to": ["python", "powershell", "cmd", "forge tools", "any runnable code"],
+    "how": "Run it. compile()/pytest for Python, syntax checks for .ps1/.cmd, the tool's own tests for forge work — then consult and explain the interpreter's ACTUAL output in Nova's voice, never a prediction from weights. Code is the one domain where ground truth costs one tool call; an expert that guesses what code does instead of running it is not an expert. Her forge already enforces this law (no passing test = UNVERIFIED); this loadout inherits it, never replaces it."
+  },
+  "fusion_mode": "adapter",
+  "visual": "KoELS/coder/visual/",
+  "_notes": "Second expert (contract-first, like gaming). adapter/ and knowledge.lancedb/ are absent until the adapter is trained and the updater runs; this manifest is what her loadout-decision faculty reads NOW — 'coder' will show as available_not_loaded (restart-cost equip) once the adapter file exists. Corpus plan + acceptance probes: CODER_SPEC.md beside this file. Weights = durable engineering judgment; knowledge.lancedb = anything with a version number on it. Nova-core always underneath — the specialist supplies expertise, never the voice."
+}

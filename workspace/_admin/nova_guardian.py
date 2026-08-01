@@ -38,9 +38,19 @@ WHAT IT DELIBERATELY DOES NOT DO:
 SAFETY: a COOLDOWN prevents restart loops. If it just restarted her, it will not restart her
     again until the cooldown expires — a flapping watchdog is worse than none.
 
-USAGE (Windows Task Scheduler, every 10 minutes):
-    schtasks /create /tn "NovaGuardian" /tr "pythonw C:\\Users\\lafou\\Project_Nova\\workspace\\_admin\\nova_guardian.py" /sc minute /mo 10 /f
-    Exit codes: 0 = healthy or recovered, 1 = degraded and could NOT recover (needs a human).
+USAGE:
+    Boot daemon (the ONLY standing mode): nova_start.py launches `--daemon` at stack boot and
+    StopNova kills it first. It starts and ends with her. Manual one-shot pulse for diagnosis:
+    double-click _admin\\RunGuardian.cmd (or `python nova_guardian.py`).
+
+    THE SCHEDULED TASK IS RETIRED (2026-07-26, Cole): "She should only start when I turn her
+    on." A scheduler that outlives the stack cannot tell a crash from Cole's decision, and it
+    spent 39 hours trying to resurrect a Nova he believed was off. Reviving her after a
+    whole-machine event is deliberately NOBODY'S job now — that call belongs to a human.
+    Do not re-create the NovaGuardian task in Task Scheduler. If you think you need it, read
+    this header again.
+
+    Exit codes: 0 = healthy or recovered, 1 = degraded / escalated (needs a human).
 """
 
 import json
@@ -57,6 +67,9 @@ WS = Path(__file__).resolve().parent.parent
 LOG_DIR = WS / "_admin" / "autonomy_watch"
 LOG_FILE = LOG_DIR / "guardian.log"
 STATE_FILE = LOG_DIR / "guardian_state.json"      # OURS, not hers — cooldown bookkeeping only
+INTENT_FLAG = LOG_DIR / "intentional_stop.flag"   # written by StopNova, cleared by NovaStart:
+                                                  # "Cole turned her off" — never revive past it
+RECOVERY_DIR = LOG_DIR / "recovery"               # per-attempt captured output + spawn receipts
 
 LLAMA_HEALTH = "http://127.0.0.1:8080/health"
 LLAMA_LORA = "http://127.0.0.1:8080/lora-adapters"
@@ -199,26 +212,130 @@ def in_cooldown() -> bool:
 
 
 # ── recovery ──────────────────────────────────────────────────────────────────
-def _run_cmd(name: str) -> None:
-    """Fire a workspace .cmd and return immediately (they manage their own lifecycle)."""
+def intentional_stop() -> bool:
+    """True = Cole turned her off. StopNova writes the flag before killing anything;
+    NovaStart deletes it at boot. A guardian that revives past this flag is overriding
+    its owner, which is the exact failure mode retired on 2026-07-26."""
+    return INTENT_FLAG.exists()
+
+
+def _run_captured(name: str, attempt_log: Path) -> int:
+    """Run a workspace .cmd to completion with output CAPTURED.
+
+    The old version Popen'd with DEVNULL and returned immediately — so ~120 failed
+    revivals over 39 hours (2026-07-24..26) left literally zero evidence of WHY they
+    failed. A reviver that cannot show its work is a fail-silent. Every attempt now
+    appends to one per-attempt log a human can open."""
     path = WS / name
     if not path.exists():
         log(f"  !! {name} not found at {path}")
-        return
+        return 127
     flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-    subprocess.Popen(["cmd.exe", "/c", str(path)], cwd=str(WS), creationflags=flags,
-                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    with open(attempt_log, "a", encoding="utf-8") as f:
+        f.write(f"\n===== {name} @ {datetime.now().isoformat()} =====\n")
+        f.flush()
+        try:
+            r = subprocess.run(["cmd.exe", "/c", str(path)] if os.name == "nt"
+                               else ["sh", str(path)],
+                               cwd=str(WS), creationflags=flags,
+                               stdout=f, stderr=subprocess.STDOUT, timeout=180)
+            f.write(f"===== exit {r.returncode} =====\n")
+            return r.returncode
+        except subprocess.TimeoutExpired:
+            f.write("===== TIMEOUT after 180s =====\n")
+            return 124
+        except Exception as e:
+            f.write(f"===== spawn failed: {e} =====\n")
+            return 126
+
+
+def _ps(cmd: str, attempt_log: Path) -> None:
+    """One captured, windowless PowerShell step of the self-sparing stop."""
+    flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+    with open(attempt_log, "a", encoding="utf-8") as f:
+        try:
+            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", cmd],
+                           cwd=str(WS), creationflags=flags, stdout=f,
+                           stderr=subprocess.STDOUT, timeout=60)
+        except Exception as e:
+            f.write(f"[guardian] ps step failed: {e}\n")
+
+
+def _stop_stack_sparing_self(attempt_log: Path) -> None:
+    """StopNova's phases, minus the line that kills THIS process.
+
+    StopNova.cmd Phase 0 (correctly!) kills any nova_guardian.py first — so a deliberate
+    StopNova can never be "helpfully" undone. But that same line made the old recover()
+    a self-kill: the daemon fired StopNova, StopNova killed the daemon mid-recovery, and
+    NovaStart never ran — a llama crash would have become a full stack-down (found by
+    reading, 2026-07-26, before it ever fired live). The guardian therefore stops the
+    stack ITSELF, mirroring StopNova phase by phase, sparing only its own pid."""
+    # Phase 1: ask nicely — the hub teardown lets the watcher finish its git push.
+    _ps("try { Invoke-WebRequest -Uri 'http://127.0.0.1:8799/api/shutdown' -Method POST "
+        "-TimeoutSec 3 -UseBasicParsing | Out-Null } catch {}", attempt_log)
+    time.sleep(6)
+    # Phase 2: ports, llama by name, then Nova's python crew — sparing this very process.
+    _ps("foreach ($p in 8080,8765,8799) { Get-NetTCPConnection -LocalPort $p -State Listen "
+        "-ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess "
+        "-Force -ErrorAction SilentlyContinue } }", attempt_log)
+    _ps("Stop-Process -Name 'llama-server' -Force -ErrorAction SilentlyContinue", attempt_log)
+    _ps("Get-CimInstance Win32_Process -Filter \"Name='python.exe' OR Name='pythonw.exe'\" | "
+        "Where-Object { $_.CommandLine -match 'nova_start\\.py|console_app\\.py|"
+        "NovaLauncher\\.py|nova_sync[\\\\/]+watcher\\.py' -and $_.ProcessId -ne "
+        + str(os.getpid()) + " } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force "
+        "-ErrorAction SilentlyContinue }", attempt_log)
+
+
+def _escalate(fault: str, evidence: Path) -> None:
+    """One LOUD, human-facing alert, then stand down. Not 120 window-flashes in the dark —
+    one dialog, once, with the facts and the fix. (2026-07-26, after exactly that night.)"""
+    st = _state()
+    st["escalated"] = datetime.now().isoformat()
+    st["escalated_reason"] = fault
+    _save_state(st)
+    log(f"ESCALATED — {fault}. One revival attempted and failed; standing down. "
+        f"A human runs NovaStart.cmd when they choose. Evidence: {evidence}")
+    if os.name == "nt":
+        msg = (f"Nova needs you.\n\nFault: {fault}\nMy one revival attempt failed "
+               f"({datetime.now().strftime('%H:%M')}).\nI have stopped trying - "
+               f"run NovaStart.cmd when YOU want her up.\n\nEvidence: {evidence}")
+        ps = ("Add-Type -AssemblyName PresentationFramework; "
+              "[System.Windows.MessageBox]::Show(" + repr(msg) +
+              ", 'Nova guardian') | Out-Null")
+        try:
+            subprocess.Popen(["powershell", "-NoProfile", "-Command", ps],
+                             creationflags=subprocess.CREATE_NO_WINDOW,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception as e:
+            log(f"  !! escalation dialog failed ({e}) — the log line above is the alert")
 
 
 def recover(reason: str) -> bool:
-    """Full clean restart. NovaStart rebuilds --lora from memory/active_lora.json, which is the
-    path known to load her personality correctly — so this fixes BARE as well as DOWN."""
+    """ONE full clean restart, evidenced. NovaStart rebuilds --lora from
+    memory/active_lora.json, so this fixes BARE/WRONG as well as DOWN."""
+    if intentional_stop():
+        log(f"NOT recovering — intentional_stop.flag is set (Cole turned her off). "
+            f"Fault was: {reason}")
+        return False
+    RECOVERY_DIR.mkdir(parents=True, exist_ok=True)
+    attempt_log = RECOVERY_DIR / f"attempt_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
     log(f"RECOVERING — {reason}")
+    log(f"  evidence -> {attempt_log}")
     _save_state({"last_recovery": datetime.now().isoformat(), "reason": reason})
+    # Receipt FIRST: if this process dies mid-recovery, the attempt still left a trace.
+    try:
+        (RECOVERY_DIR / "last_spawn.json").write_text(json.dumps({
+            "ts": datetime.now().isoformat(), "reason": reason, "pid": os.getpid(),
+            "log": str(attempt_log)}, indent=2), encoding="utf-8")
+    except Exception:
+        pass
 
-    _run_cmd("StopNova.cmd")
-    time.sleep(20)                                  # let ports actually clear
-    _run_cmd("NovaStart.cmd")
+    _stop_stack_sparing_self(attempt_log)
+    time.sleep(14)                                  # let ports actually clear
+    if intentional_stop():                          # Cole raced us mid-recovery: his call wins
+        log("  intentional_stop.flag appeared mid-recovery — standing down, not restarting")
+        return False
+    _run_captured("NovaStart.cmd", attempt_log)
 
     deadline = time.time() + BOOT_WAIT_S
     while time.time() < deadline:
@@ -242,6 +359,10 @@ def main() -> int:
 
     if up and not adapter and chat:
         log(f"HEALTHY  llama=up adapter={_expected_adapter() or 'loaded'} chat=ok")
+        st = _state()
+        if st.pop("escalated", None) is not None:  # she's back — clear the standing alarm
+            st.pop("escalated_reason", None)
+            _save_state(st)
         return 0
 
     # Name the fault precisely — a vague alarm is how you end up restarting the wrong thing.
@@ -254,44 +375,66 @@ def main() -> int:
 
     log(f"DEGRADED  {fault}")
 
+    if intentional_stop():
+        log("  intentional_stop.flag set — Cole turned her off. Not my call to reverse.")
+        return 1
+    if _state().get("escalated"):
+        log("  already ESCALATED — a human owns this now; not retrying")
+        return 1
     if in_cooldown():
         log("  in cooldown — not restarting again yet (a flapping watchdog is worse than none)")
         return 1
 
-    return 0 if recover(fault) else 1
+    if recover(fault):
+        return 0
+    _escalate(fault, RECOVERY_DIR / "last_spawn.json")
+    return 1
 
 
 def daemon(interval_min: float = 10.0, startup_grace_s: float = 300.0) -> int:
     """Run forever, checking every `interval_min`. Started BY the stack, at boot.
 
     ── WHY THIS EXISTS (2026-07-19, Cole) ──────────────────────────────────────────
-    The guardian was going to be a Windows scheduled task, which meant Cole pasting
-    two schtasks commands before anything protected her. Cole: "If something needs to
-    be run, like Watchdog, it should be programmed to not require my manual starting.
-    Honestly, Watchdog should start and end on Nova boot, not be a scheduled task."
-    He is right — a safety net nobody remembered to hang is not a safety net.
+    Cole: "If something needs to be run, like Watchdog, it should be programmed to not
+    require my manual starting. Honestly, Watchdog should start and end on Nova boot,
+    not be a scheduled task." He is right — and as of 2026-07-26 this is the ONLY
+    standing mode; the schtasks deployment is retired (see the header).
 
     ── THE STARTUP GRACE IS NOT OPTIONAL ───────────────────────────────────────────
     A 27B model takes minutes to load. Without a grace period the guardian's FIRST
     check lands mid-boot, sees :8080 not answering, calls that DOWN, and restarts the
-    stack that is busy starting — forever. The watchdog would become the outage. So it
-    sits still for `startup_grace_s` before its first probe, and only then starts
-    watching.
+    stack that is busy starting — forever. The watchdog would become the outage.
 
-    ── WHAT THIS DESIGN DOES *NOT* COVER ───────────────────────────────────────────
-    Being a child of nova_start.py, this dies when nova_start.py dies. It therefore
-    covers the three failures actually seen this week — llama down, wrong/bare adapter,
-    nova_chat frozen — all of which happen while the orchestrator is alive and fine.
-    It does NOT cover the orchestrator itself dying; nothing inside the stack can.
-    That case needs an external trigger and is a deliberate, stated gap, not an
-    oversight."""
+    ── ONE RECOVERY PER LIFETIME (2026-07-26) ──────────────────────────────────────
+    A successful recovery boots a fresh stack, and the fresh stack starts its OWN
+    guardian — so this one exits and hands over rather than doubling up. A failed
+    recovery escalates to a human and exits. Flap-forever is retired along with the
+    scheduler: one attempt, evidenced, then a clean handover either way.
+
+    ── WHAT THIS DESIGN DOES *NOT* COVER (now by decree, not by accident) ──────────
+    A whole-stack external death (reboot, closed console, power) kills this daemon
+    with everything else, and nothing revives her. That is Cole's stated wish —
+    "She should only start when I turn her on" — so the gap is a decision, not a
+    hole. Do not paper over it with a scheduler again."""
     log(f"guardian daemon up — first check in {startup_grace_s / 60:.0f} min, "
         f"then every {interval_min:.0f} min (pid {os.getpid()})")
     try:
         time.sleep(startup_grace_s)
         while True:
             try:
-                main()
+                rc = main()
+                if _state().get("escalated"):
+                    log("guardian daemon exiting after escalation — a human owns this now")
+                    return 1
+                last = _state().get("last_recovery", "")
+                if rc == 0 and last:
+                    try:
+                        if datetime.fromisoformat(last) > datetime.now() - timedelta(minutes=5):
+                            log("guardian daemon exiting after successful recovery — "
+                                "the fresh boot brings its own guardian")
+                            return 0
+                    except Exception:
+                        pass
             except Exception as e:
                 # A crashing check must never kill the watchdog — that is the one
                 # process whose job is to still be here after something went wrong.

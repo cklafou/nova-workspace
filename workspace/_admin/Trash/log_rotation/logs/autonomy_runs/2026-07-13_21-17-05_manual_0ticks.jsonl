@@ -1,0 +1,1 @@
+{"id": "4f3d6293", "timestamp": "2026-07-13T21:17:05.916883", "author": "Nova", "content": "```json\n\n\n[`list_dir` resulted in 135 bytes.]\n\nFour files in there: the base model `Qwen3.6-27B`, `mmproj-F16` (vision adapter), and two v4 LoRAs — checkpoint 25 and checkpoint 50. So two LoRA weights plus the base and the projector.", "directed_at": null}

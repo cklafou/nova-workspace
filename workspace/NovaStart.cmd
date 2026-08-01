@@ -7,6 +7,9 @@ REM per stream, tray icon once Nova Chat is up). No more cmd-window confetti.
 REM Rollback: swap `start "" %PYW%` back to `py -3 nova_start.py` to get the old consoles back.
 cd /d "%~dp0"
 
+REM Deliberate boot (2026-07-26): clear the intentional-stop flag so the guardian watches again.
+del "%~dp0_admin\autonomy_watch\intentional_stop.flag" >nul 2>nul
+
 REM Find a windowless Python (pythonw). Fall back to console python if it isn't there.
 set "PYW="
 for /f "delims=" %%P in ('where pythonw 2^>nul') do if not defined PYW set "PYW=%%P"
