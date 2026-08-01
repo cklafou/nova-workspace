@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 01:08:39
+# Last updated: 2026-08-02 01:10:54
 # self_voice: pull my own spoken responses from a given day
 # Returns my words, not Claude's or Cole's, with a count and a quick tone read.
 
@@ -8,19 +8,27 @@ from pathlib import Path
 TOOL = {"name": "self_voice", "description": "Read back what I sounded like on a particular day. Mine only.",
         "params": {"date": {"type": "string", "description": "YYYY-MM-DD, defaults to today"}}}
 
-CHAT_LOG = Path("logs/chat_log.jsonl")
+SESSION_DIR = Path("logs/chat_sessions")
 
 def run(date: str = None) -> str:
-    if not CHAT_LOG.exists():
-        return "ERROR: no chat log at logs/chat_log.jsonl"
-
-    # figure out the date we want
     from datetime import date as _date
     target = date or _date.today().isoformat()
 
-    lines = [json.loads(r) for r in CHAT_LOG.read_text().splitlines() if r.strip()]
-    mine = [e for e in lines if e.get("role") == "assistant" and e.get("timestamp", "").startswith(target)]
+    if not SESSION_DIR.exists():
+        return "ERROR: no chat_sessions directory"
 
+    # find every session file whose timestamp falls on the target date
+    all_entries = []
+    for f in sorted(SESSION_DIR.glob("*_chat.jsonl")):
+        for line in f.read_text().splitlines():
+            if not line.strip():
+                continue
+            e = json.loads(line)
+            ts = e.get("timestamp", "")
+            if ts.startswith(target):
+                all_entries.append(e)
+
+    mine = [e for e in all_entries if e.get("author") == "Nova"]
     if not mine:
         return f"Nothing of mine on {target}. Quiet day, or the log doesn't go back that far."
 

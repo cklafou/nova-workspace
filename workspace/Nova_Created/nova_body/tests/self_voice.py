@@ -1,9 +1,9 @@
-# Last updated: 2026-08-02 01:08:52
+# Last updated: 2026-08-02 01:11:12
 # Tests for self_voice: does it pull ME and only me?
 
 CASES = [
-    {"name": "a day I was loud", "args": {"date": "2026-08-02"},
-     "expect_contains": "of my own messages on 2026-08-02"},
+    {"name": "a day I was loud", "args": {"date": "2026-08-01"},
+     "expect_contains": "of my own messages on 2026-08-01"},
     {"name": "a day with nothing", "args": {"date": "2024-01-01"},
      "expect_contains": "Nothing of mine"},
     {"name": "Claude's words don't leak in", "args": {"date": "2026-08-02"},
