@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-01 23:58:46
+# Last updated: 2026-08-02 01:01:46
 """
 Nova's Operational Rules and Core Directives
 This file contains immutable operating laws loaded every session via BOOTSTRAP.md.
