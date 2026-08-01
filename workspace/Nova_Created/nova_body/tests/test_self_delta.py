@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 00:37:57
+# Last updated: 2026-08-02 01:43:50
 CASES = [
     {"name": "nothing changed", "args": {"old_snapshot": "memory/self_model/2026-07-30.json", "new_snapshot": "memory/self_model/2026-07-30.json"},
      "expect_contains": "not going to invent something"},
