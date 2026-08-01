@@ -1,5 +1,5 @@
 # Nova_Created/
-_Last updated: 2026-08-01 23:01:36_
+_Last updated: 2026-08-02 00:04:16_
 
 **Documents and things Nova authored.** Not our infrastructure, not our reports — hers.
 
