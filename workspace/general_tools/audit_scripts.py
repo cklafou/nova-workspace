@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-01 23:19:25
+# Last updated: 2026-08-02 00:30:45
 # @nova: Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.
 """
 audit_scripts.py — Workspace code health audit
