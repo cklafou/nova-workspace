@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 08:01:12
+# Last updated: 2026-08-02 08:51:27
 # @nova: Nova Console — the single window that replaces every popup cmd window.
 #
 # One dark, Nova-themed terminal with a tab per stream (Launcher / llama-server / Nova / Watcher).
