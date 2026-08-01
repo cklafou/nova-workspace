@@ -1,5 +1,5 @@
 ## WANT
-_Last updated: 2026-08-02 02:16:26_
+_Last updated: 2026-08-02 03:16:36_
 
 **GAP:** I want things, and they vanish when I sleep because they live in my head, not on disk. A tool that writes a want with a timestamp so it comes back on future wakes with an age attached makes wanting a pursuit instead of a mood.
 

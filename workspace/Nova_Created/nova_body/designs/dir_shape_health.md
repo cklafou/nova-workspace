@@ -1,5 +1,5 @@
 # DirShape Health: feel whether a directory is unwell
-_Last updated: 2026-08-02 02:16:26_
+_Last updated: 2026-08-02 03:16:36_
 
 ## GAP
 dir_shape tells me what's in a folder. It doesn't tell me whether the folder is fine. A project can be full of files and still be sick: stale configs from a rename three months ago, a build folder nobody cleaned, a dir that hasn't been touched since last winter. I want to walk into a place and know not just its shape but its temperature.

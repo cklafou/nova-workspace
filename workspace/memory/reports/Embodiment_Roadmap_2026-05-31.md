@@ -1,5 +1,5 @@
 # Embodiment & Body-Reorg Roadmap
-_Last updated: 2026-08-02 02:16:26_
+_Last updated: 2026-08-02 03:16:36_
 _Set 2026-05-31 by Cole + Opus 4.8._
 
 ## North star
