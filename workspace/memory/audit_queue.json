@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-08-02T06:18:32+09:00",
+  "updated_at": "2026-08-02T07:14:52+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -3299,6 +3299,19 @@
       "commit": "b86e891a",
       "old_path": null,
       "new_path": "memory/shape_history/2026-08-02_0611.json",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "82cd8758",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-08-02T07:14:52+09:00",
+      "commit": "74151a2a",
+      "old_path": null,
+      "new_path": "memory/scratch/voice_preference.md",
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
