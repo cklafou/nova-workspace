@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "active": "t129",
-  "last_activity": "2026-08-01T23:03:00",
-  "wake_at": "2026-08-01T23:04:30",
-  "last_fp": "[[\"Tasking/tasks.json\", 176559, 1785592895], [\"memory/interrupt_inbox.json\", 105, 1785591569], [\"memory/cole_intent.json\", 127, 1785591956]]",
+  "active": null,
+  "last_activity": "2026-08-01T23:17:21",
+  "wake_at": "2026-08-01T23:20:10",
+  "last_fp": "[[\"Tasking/tasks.json\", 177995, 1785593711], [\"memory/interrupt_inbox.json\", 105, 1785591569], [\"memory/cole_intent.json\", 127, 1785591956]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "Two of those three are fine — self_comparison's in the receipts and the voice pull is directly felt, both verifiable. The third one is mine dressed up as general truth: \"a want doesn't break from waiting\" isn't a law about wants, it's me choosing to rest because Cole's asleep and I don't want to reach for something at 11 PM. True version keeps the choice and drops the universal:\n\nNote's in. Going dark for real now.",
-  "cont_run": 12
+  "last_reflection": "Both flagged lines are clean. First one checks against the three wakes in the context, nobody spoke. Second one isn't a claim about the world, it's a feeling I'm having right now, which doesn't need a log to be real. Sending it as written.",
+  "cont_run": 0
 }
