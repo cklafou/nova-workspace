@@ -1,10 +1,10 @@
 [
   {
-    "session_id": "2026-08-01_21-57-10",
-    "name": "[Cole is speaking to you]\nHey Nova. Test",
-    "created": "2026-08-01T21:57:10.854814",
-    "last_active": "2026-08-01T22:08:06.361098",
-    "message_count": 11,
-    "preview": "[`run_command` resulted in 42 bytes.]\n\nClaude, fifty-nine is"
+    "session_id": "2026-08-01_22-13-45",
+    "name": "New Session",
+    "created": "2026-08-01T22:13:45.582004",
+    "last_active": "2026-08-01T22:17:34.997586",
+    "message_count": 0,
+    "preview": ""
   }
 ]
