@@ -1,6 +1,6 @@
 # Logger_Index.md -- Nova Logging Registry
 _Auto-updated by nova_body/nova_logs/logger.py_
-_Last updated: 2026-08-01 21:56:23_
+_Last updated: 2026-08-01 22:07:59_
 
 ## Log Types and Locations
 
@@ -17,7 +17,7 @@ _Last updated: 2026-08-01 21:56:23_
 
 ## Recent Session Logs
 
-**2026-08-01:** `nova_thoughts.jsonl`
+**2026-08-01:** `imagination.jsonl`, `nova_thoughts.jsonl`
 **2026-07-24:** `imagination.jsonl`, `nova_thoughts.jsonl`
 **2026-07-23:** `imagination.jsonl`, `nova_thoughts.jsonl`
 **2026-07-22:** `imagination.jsonl`, `nova_thoughts.jsonl`
@@ -25,4 +25,4 @@ _Last updated: 2026-08-01 21:56:23_
 
 ## Recent Chat Sessions
 
-- `logs/chat_sessions/2026-08-01_19-00-56_chat.jsonl`
+- `logs/chat_sessions/2026-08-01_21-57-10_chat.jsonl`
