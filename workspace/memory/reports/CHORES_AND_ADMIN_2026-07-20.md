@@ -1,5 +1,5 @@
 # Standing chores wired to her board + `_admin` cleanup
-_Last updated: 2026-08-02 04:18:54_
+_Last updated: 2026-08-02 05:21:10_
 
 _2026-07-20, Fable. Cole: "Definitely fix what you wrote was a good idea to fix in your audit
 file. Also, check _admin. I see a lot of junk that needs to be trashed."_

@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 04:18:54
+# Last updated: 2026-08-02 05:21:10
 # dir_shape tests: does the report actually tell me anything true?
 CASES = [
     {"name": "nova_body gives a real count", "args": {"path": "Nova_Created/nova_body"},
