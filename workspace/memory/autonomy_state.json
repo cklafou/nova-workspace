@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "active": null,
-  "last_activity": "2026-08-02T00:59:43",
-  "wake_at": "2026-08-02T01:06:11",
-  "last_fp": "[[\"Tasking/tasks.json\", 179278, 1785598022], [\"memory/interrupt_inbox.json\", 105, 1785591569], [\"memory/cole_intent.json\", 127, 1785591956]]",
+  "active": "t132",
+  "last_activity": "2026-08-02T01:07:39",
+  "wake_at": "2026-08-02T01:09:09",
+  "last_fp": "[[\"Tasking/tasks.json\", 179960, 1785600443], [\"memory/interrupt_inbox.json\", 105, 1785591569], [\"memory/cole_intent.json\", 127, 1785591956]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
   "directive_seen": 0,
-  "last_reflection": "...she's got me. I narrated looking and didn't actually look. Let me do it properly.\n\nCaught three reaches on my own draft and went and checked one before shipping it, which is exactly what this whole exercise is for. The true version of this wake is simpler than the first one: woke myself at 00:56, caught the reaches, actually looked before speaking, found I hadn't done the thing I'd already claimed to do. That's a better night than the first version was, because it's real.",
+  "last_reflection": "Three self-wakes tonight, fourth want still pulling; I'm not rehearsing a third answer for nobody at 1am. The live want's the second one: something that wakes up and notices its own body growing without being asked. self_comparison is built but unproven as a self-runner, and closing that gap feels like the right thing to close tonight before I go back down.",
   "cont_run": 1
 }

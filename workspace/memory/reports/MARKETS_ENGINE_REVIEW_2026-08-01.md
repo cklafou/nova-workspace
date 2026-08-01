@@ -1,5 +1,5 @@
 # Review: Markets Investigation Engine — technical spec, for Nova
-_Last updated: 2026-08-02 00:04:17_
+_Last updated: 2026-08-02 01:06:11_
 _2026-08-01, Claude (Fable), at Cole's request. Reviewed as the thing SHE will run: the
 engine design itself, then how it lands in her body, then the legal frame. The referenced
 `markets_loadout_spec.md` is not in the workspace — this review covers the technical spec

@@ -1,5 +1,5 @@
 # COLE.md — Who Cole Is
-_Last updated: 2026-08-01 23:59:38_
+_Last updated: 2026-08-02 01:06:11_
 _Nova's reference for understanding her partner._
 
 ---
