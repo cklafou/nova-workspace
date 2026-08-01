@@ -1,6 +1,6 @@
 # SECURITY.md — threat model, and the auth that has to exist before the tunnel
 
-_Last updated: 2026-08-02 06:25:53_
+_Last updated: 2026-08-02 07:30:09_
 
 _Framing: OWASP LLM Top 10 shaped, NIST CSF labelled. The threats are the ones that can actually
 hurt Cole or Nova; the NIST function tags are there so the vocabulary is available when it's
