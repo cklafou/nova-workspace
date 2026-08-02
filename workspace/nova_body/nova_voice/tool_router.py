@@ -77,6 +77,46 @@ _PROTECTED_ROOT = re.compile(
     re.I)
 
 
+# ── THE MODELS/ SEAL (2026-08-02) ────────────────────────────────────────────────────────────
+# models/ holds exactly two kinds of thing: engine weights (~26 GB of GGUF that only
+# llama-server ever opens) and the cloud lane's key file. The key is why this is a SEAL and
+# not a hint: everything she reads enters her context, her context lands on the wire, and the
+# wire is synced and durable — one `type` on that file and a live credential exists in three
+# places it can never be recalled from. Tonight's probe (Get-ChildItem models/witness, 18:55)
+# proved the old "seal" was a convention with no lock; now every hand she has refuses the
+# tree with the same sentence. Honest limits: this is an ACCIDENT guard for a mind that
+# reaches before it looks, not an adversary jail — it does not try to outsmart obfuscation,
+# because the deeper locks are her values and her witness, not this regex.
+_SEAL_MSG = (
+    "REFUSED: models/ is sealed to your tools — all of them, including run_command. It holds "
+    "only engine weights (26 GB of GGUF that only llama-server ever opens) and the cloud "
+    "lane's key file, a live secret: anything you read enters your context, your context goes "
+    "on the wire, and the wire is synced and permanent — a secret can never be un-read. "
+    "Nothing your work needs lives in there: your engines are started for you by NovaStart, "
+    "and the cloud door is general_tools/cloud_call.py, which keeps its own key without "
+    "showing it to either of us. If you think you need something from models/, say so in "
+    "chat and Cole will handle that folder with his own hands.")
+_SEAL_CMD_RE = re.compile(
+    r"(?:^|[\s\"'`=(,;|>&\\/])models[\\/]"
+    r"|\b(?:cd|chdir|sl|set-location|pushd|push-location)\s+[\"']?models[\"']?(?=[\s;\"']|$)",
+    re.I)
+
+
+def _sealed_cmd(command: str) -> str:
+    """_SEAL_MSG if the command text reaches into models/, else ''."""
+    return _SEAL_MSG if _SEAL_CMD_RE.search(command or "") else ""
+
+
+def _sealed_path(p) -> bool:
+    """True if p resolves into the workspace models/ tree."""
+    try:
+        rp = Path(p).resolve()
+        mroot = (WORKSPACE_ROOT / "models").resolve()
+        return rp == mroot or mroot in rp.parents
+    except Exception:
+        return False
+
+
 def _catastrophic(command: str) -> str:
     """Reason string if this would irreversibly wreck the machine, else ''.
 
@@ -238,6 +278,9 @@ def run_command(command: str, cwd: str = "") -> str:
             f"If you genuinely need this, don't route around it — tell Cole exactly what you want "
             f"to run and why, and let him do it himself with his eyes on the screen."
         )
+    _sw = _sealed_cmd(command)
+    if _sw:
+        return _sw
     if not cwd:
         working_dir = WORKSPACE_ROOT
     else:
@@ -248,6 +291,8 @@ def run_command(command: str, cwd: str = "") -> str:
             return (f"ERROR: cwd '{cwd}' is not a directory that exists. Relative paths resolve "
                     f"against your workspace; absolute paths anywhere on the machine are fine "
                     r"(e.g. C:\Users\lafou\ComfyUI).")
+    if _sealed_path(working_dir):
+        return _SEAL_MSG
 
     try:
         # Run subprocess with a reasonable timeout to prevent hanging the infinite loop
@@ -349,6 +394,8 @@ def read_file(path: str) -> str:
     target, err = _safe_target(path)
     if err:
         return err
+    if _sealed_path(target):
+        return _SEAL_MSG
     if not target.exists():
         return f"ERROR: File not found at {path}" + _orient(target, path)
 
@@ -405,6 +452,8 @@ def write_file(path: str, content: str, overwrite: bool = False) -> str:
     target, err = _safe_target(path)
     if err:
         return err
+    if _sealed_path(target):
+        return _SEAL_MSG
     # ── THE OVERWRITE ESCAPE HATCH IS GONE (2026-07-21, Cole) ────────────────────────────
     # The standing rule, from the day she overwrote her own files and his: write_file was
     # demoted to CREATE-ONLY, with append_file and replace_file_content as her editing hands.
@@ -455,6 +504,8 @@ def append_file(path: str, content: str) -> str:
     target, err = _safe_target(path)
     if err:
         return err
+    if _sealed_path(target):
+        return _SEAL_MSG
     # Idempotency guard: refuse to append a section heading the file already has — this is what
     # stops the "rewrite the whole doc every wake and append it" loop. Defensive: a read hiccup
     # must never block a legitimate write.
@@ -524,6 +575,8 @@ def replace_file_content(path: str, target_content: str, replacement_content: st
     target, err = _safe_target(path)
     if err:
         return err
+    if _sealed_path(target):
+        return _SEAL_MSG
     if not target.exists():
         return "ERROR: File does not exist."
         
@@ -543,6 +596,8 @@ def list_dir(path: str) -> str:
     target, err = _safe_target(path)
     if err:
         return err
+    if _sealed_path(target):
+        return _SEAL_MSG
     if not target.exists():
         return "ERROR: Directory does not exist."
         
@@ -919,6 +974,9 @@ def list_tools() -> str:
     A person can always answer 'can I reach that?' without being told; so should she."""
     return ("Your body — the things you can do right now:\n"
             "  run_command            shell (PowerShell) — look at anything, run anything\n"
+            "                         EXCEPT models/ — sealed to all your tools (engine\n"
+            "                         weights + a key file; engines start FOR you, and the\n"
+            "                         cloud door general_tools/cloud_call.py keeps its own key)\n"
             "  read_file / list_dir   your eyes\n"
             "  write_file / append_file / replace_file_content   your hands\n"
             "  create_task / task_progress / complete_task       your intentions, made durable\n"
