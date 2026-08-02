@@ -1,4 +1,5 @@
 # STATE + SWEEP — 2026-07-26, 00:35 KST
+_Last updated: 2026-08-02 09:20:47_
 _Claude (Fable), same Cowork session. Two parts: what actually happened to her, and the
 directory sweep you asked for. Every claim has a file behind it._
 

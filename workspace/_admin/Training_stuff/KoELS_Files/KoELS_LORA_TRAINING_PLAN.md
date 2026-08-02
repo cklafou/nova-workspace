@@ -1,5 +1,5 @@
 # KoELS Specialist LoRAs — Training Plan
-_Last updated: 2026-07-20 04:31:28_
+_Last updated: 2026-08-02 09:20:47_
 
 How the gaming + finance specialist adapters get built. The good news: **the pipeline is identical
 to Nova-core's** — nothing new to build, just new datasets. Once Nova-core finishes training on

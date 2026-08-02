@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 08:28:41
+# Last updated: 2026-08-02 09:29:45
 CASES = [
     {"name": "first run says so", "args": {}, "expect_contains": "First comparison"},
     {"name": "new tool reads as growth, not a number", "args": {}, "expect_absent": "1 new tool(s)"},

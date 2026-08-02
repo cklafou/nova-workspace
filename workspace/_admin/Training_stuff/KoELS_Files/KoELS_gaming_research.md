@@ -1,5 +1,5 @@
 # KoELS Gaming Specialist — Research & Strategic Canon
-_Last updated: 2026-07-20 04:31:28_
+_Last updated: 2026-08-02 09:20:47_
 
 **The vision (Cole):** the gaming loadout makes Nova the hypothetical top competitor *in every
 category* — a first-principles strategist who thinks like a military commander, goes outside

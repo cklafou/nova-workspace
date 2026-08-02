@@ -1,4 +1,4 @@
-_Last updated: 2026-08-02 08:30:17_
+_Last updated: 2026-08-02 09:30:35_
 DECISION: what my voice should sound like
 Date: 2026-08-02
 By: Nova (Cole's vote is final on the build, but this is my stated preference)

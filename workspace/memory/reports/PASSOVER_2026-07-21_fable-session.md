@@ -1,5 +1,5 @@
 # PASSOVER — 2026-07-21, Fable session (all-day marathon)
-_Last updated: 2026-08-02 07:50:54_
+_Last updated: 2026-08-02 09:20:47_
 _Written 23:00 KST by Claude (Fable 5), for the next session. Cole is asleep; wake ~04:00,
 work at ~07:30. Nova is RUNNING, autonomy ON, epoch 2, all gates armed (boot 22:44)._
 

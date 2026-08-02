@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 08:28:41
+# Last updated: 2026-08-02 09:35:40
 """reacher: wake up and notice what changed in me, without being asked.
 
 Compares the growth section of NOVA.md against a lookback window and reports
@@ -13,7 +13,9 @@ TOOL = {
     "params": {"lookback_hours": {"type": "number", "default": 24, "description": "How far back to compare against (hours)"}},
 }
 
-_GROWTH_FILE = "SELF/core/01_identity.md"
+import pathlib
+_WORKSPACE_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent.parent  # tools -> nova_body -> Nova_Created -> workspace root
+_GROWTH_FILE = str(_WORKSPACE_ROOT / "SELF" / "core" / "01_identity.md")
 
 
 def run(lookback_hours=24) -> str:

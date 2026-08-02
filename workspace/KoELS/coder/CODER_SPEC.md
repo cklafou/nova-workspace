@@ -1,4 +1,5 @@
 # CODER — KoELS expert spec
+_Last updated: 2026-08-02 09:20:47_
 _2026-08-01, Claude (Fable), at Cole's direction. Contract-first, same as gaming: the
 manifest is live for her loadout faculty today; adapter and knowledge DB get built next.
 Sequence context: v7 personality first (bundle ready, pod pending), then this adapter, then

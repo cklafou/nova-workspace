@@ -1,4 +1,5 @@
 # PROBE BATTERY — the pre/post benchmark for adapter changes (v7 era)
+_Last updated: 2026-08-02 09:20:47_
 _Formalized 2026-07-24 by Claude (Fable), from the passover's instruction: "Formalize the
 probe battery as the pre/post benchmark; baseline epoch 2 before training." Run the WHOLE
 battery before and after every adapter or prompt change; archive scores beside the spec._
