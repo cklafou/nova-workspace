@@ -333,7 +333,10 @@ training). See `memory/reports/comfyui_setup_checklist.md` and `avatar_consisten
 
 ## nova_senses/eyes.py -- How Nova Sees
 
-pywinauto primary, Claude Haiku fallback.
+pywinauto primary; her own Qwen 3.6 + mmproj via llama.cpp fallback — all local, no API vision.
+_(Hand-corrected 2026-08-02: this file was generated 07-19 mid-migration and still claimed Claude
+Haiku. The sources are clean now — the next build_manifest run will re-derive this line and can
+overwrite this note.)_
 
 ```python
 from nova_senses.eyes import NovaEyes

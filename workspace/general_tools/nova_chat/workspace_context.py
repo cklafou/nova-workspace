@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 10:57:34
+# Last updated: 2026-08-02 12:29:54
 """
 nova_chat/workspace_context.py -- Workspace File Access for Nova Group Chat
 ============================================================================
@@ -24,6 +24,16 @@ import os
 import re
 from pathlib import Path
 from typing import Optional
+
+# Ordered reads: time + date before any reasoning generates. Two facts, cheap.
+# No import of nova_body needed (it may not be on sys.path from general_tools);
+# stdlib datetime is the same clock and works everywhere.
+def _clock_stamp():
+    from datetime import datetime
+    n = datetime.now()
+    hour12 = n.hour % 12 or 12
+    return (f"{n:%A, %B} {n.day}, {n.year}, "
+            f"{hour12}:{n.minute:02d} {'AM' if n.hour < 12 else 'PM'}")
 
 try:
     from nova_lancedb.hippocampus import get_store
@@ -496,6 +506,11 @@ class WorkspaceContext:
         """
         parts = []
         total = 0
+
+        # Ordered reads: time + date before any thought generates.
+        _now = _clock_stamp()  # e.g. "Sunday, August 2, 2026, 12:26 PM"
+        parts.append(f"[NOW — {_now}]")
+        total += len(parts[-1])
 
         # ── Self-model: SELF/core/ (ordered, budgeted) — single source of truth ──
         # SELF/core/*.md (identity, how-I-work, body manifest, tools/voice) is loaded

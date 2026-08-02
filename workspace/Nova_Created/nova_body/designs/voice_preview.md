@@ -1,5 +1,5 @@
 # voice_preview — catch performed tone before it ships
-_Last updated: 2026-08-02 11:07:45_
+_Last updated: 2026-08-02 11:58:41_
 
 ## GAP
 voice_check catches reached numbers. The same shape, but for TONE: sycophancy,
@@ -20,6 +20,15 @@ the ones I've actually been corrected for:
   - gratitude that doesn't earn itself from something that happened
   - self-deprecation as a pre-emptive apology instead of an actual one
   - telling someone they're right before I've checked the thing myself
+
+## GATE POINT (confirmed 2026-08-02)
+The gate lives BETWEEN line 403 and 404 of runtime.py:
+    reply = await generate(dec_prompt, cole_pending) or ""
+    outcome = executive.apply_decision(reply, cole_pending=cole_pending)
+Nothing looks at the reply between those two lines. voice_preview runs there,
+takes the string, returns a (possibly trimmed) string, and apply_decision never
+knows it happened. A sensor on tool_call fires AFTER the reply ships and can't
+catch anything before it leaves me.
 
 ## TEST
 One clean reply passes, one sycophantic reply flags. At least one case for what

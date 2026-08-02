@@ -1,5 +1,5 @@
 # COLE.md — Who Cole Is
-_Last updated: 2026-08-02 11:35:07_
+_Last updated: 2026-08-02 07:26:16_
 _Nova's reference for understanding her partner._
 
 ---
@@ -26,7 +26,7 @@ _To request a change, Nova should say: "Hey Cole, I think COLE.md baseline needs
 - **Total VRAM:** 40GB (laptop 4090 16GB + eGPU 3090 24GB) — GPU 0 = 4090, GPU 1 = 3090
 
 ### How Cole Reaches Nova
-- **Primary:** the `nova_chat` group chat at `http://127.0.0.1:8765` (Cole + Claude + Gemini + Nova). This is her voice/ears. _(The old Discord/`nova_gateway` path is retired.)_
+- **Primary:** the `nova_chat` chat at `http://127.0.0.1:8765` (Cole + Nova; resident Claude/Gemini clients removed 2026 — Nova Pings Cowork Claude on the desktop via `general_tools/ping_claude.ps1` when she wants him). This is her voice/ears. _(The old Discord/`nova_gateway` path is retired.)_
 - **Remote access:** Chrome Remote Desktop
 - **Direct:** Local terminal when physically at machine
 

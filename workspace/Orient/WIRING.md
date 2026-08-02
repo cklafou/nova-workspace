@@ -1,5 +1,5 @@
 # WIRING.md — what in her body is actually connected
-_Last updated: 2026-08-02 11:35:08_
+_Last updated: 2026-08-02 07:30:09_
 
 _Audit: 2026-07-14. Derived from real `import` statements, not from anyone's memory._
 
@@ -53,9 +53,13 @@ A body-owned settings loader (`from nova_config import cfg`) that nobody calls. 
 `workspace/nova_config.json` — the file it exists to read — **is read by nothing**. Both orphaned.
 Either wire it or bin them both.
 
-### `nova_senses/vision.py` — **0 importers**
+### `nova_senses/vision.py` — ~~0 importers~~ **WIRED (correction 2026-08-02)**
 
-GUI-automation phase. Note `eyes.py` **is** wired (4 importers) — she can see. `vision.py` cannot.
+_Stale entry: since the 2026-07-19 local-eyes migration, `eyes.py` imports `NovaVision` from
+`vision.py`, and the whole path is LIVE and fully local — screenshots go to her own Qwen 3.6 +
+mmproj on llama.cpp :8080. No API vision tier exists. (The file's docstrings claimed "Claude
+Haiku" long after the code stopped calling it; that language was scrubbed 2026-08-02 per Cole —
+a lesson in the third kind of wiring lie: code that tells the truth while its comments don't.)_
 
 ---
 

@@ -1,5 +1,5 @@
 # STATUS.md — Project Nova Current State
-_Last updated: 2026-08-02 11:28:41_
+_Last updated: 2026-08-02 06:56:56_
 
 _Prior revision 2026-05-25 — reflects the body-relocation + dead-code cleanup. Earlier
 phase history (brain.py "Thoughts cycle", nova_gateway/Discord, nova_qt, OpenClaw) is
@@ -20,9 +20,10 @@ test of her autonomy, not her identity or current focus.
   port **8080** (OpenAI-compatible API), **64K context** (`-c 65536`, single slot; native ctx is
   262144), dual-GPU tensor split `-ts 12,28`, hybrid thinking on via `--jinja --reasoning-format
   deepseek`. Launched by `start_llama_qwen36.cmd` (nova_start.py builds the equivalent).
-- **Her interface:** `nova_chat` (port **8765**) — a web group chat where Cole, Claude,
-  Gemini, and Nova collaborate. This is her single voice/ears. (The `nova_qt` desktop app,
-  `nova_gateway`/Discord, and OpenClaw are all retired.)
+- **Her interface:** `nova_chat` (port **8765**) — Cole and Nova's chat; her single voice/ears.
+  Resident Claude/Gemini chat clients were removed (2026): Nova reaches Cowork Claude on Cole's
+  desktop via her **Ping** function (`general_tools/ping_claude.ps1`) when she wants him.
+  (The `nova_qt` desktop app, `nova_gateway`/Discord, and OpenClaw are all retired.)
 - **Her autonomy is a body faculty:** `nova_body/nova_cortex/executive.py` runs her wake
   cycle in two phases — **reflect** (sit with the moment in first person, fed by her Touch
   sense for what's interacting with her) → **decide freely** (engage Cole, work, switch,
@@ -71,7 +72,7 @@ autonomy_state.json) lives in `workspace/`, not inside the body.
 | Package / file | Purpose |
 |---|---|
 | `nova_chat/` | Her voice — FastAPI/WebSocket group chat server (`server.py`, `clients/`, `nova_bridge.py`, `workspace_context.py`, `nova_lang.py`) |
-| `nova_sync/` | `watcher.py` GitHub auto-commit + `drive.py` Google Drive mirror for Gemini (rides with each push) + `backup.py` local backups |
+| `nova_sync/` | `watcher.py` GitHub auto-commit + `drive.py` Google Drive workspace mirror (rides with each push) + `backup.py` local backups |
 | `build_manifest.py` | Derives the body manifest from `@nova:` tokens → `SELF/` |
 | `calls.py` | Call-graph generator feeding the manifest |
 | `injector.py`, `audit_scripts.py`, `download_models.py`, `NovaLauncher.py` | NCL dispatch, code audit, model downloads, in-process launcher |
@@ -101,10 +102,14 @@ the GitHub watcher → the desktop app window. `start_llama.cmd` launches llama-
 ## API Configuration
 | Service | Model | Role |
 |---|---|---|
-| Anthropic | `claude-sonnet-4-6` | nova_chat Claude client |
-| Anthropic | `claude-haiku-4-5` | Vision verification / routine queries |
-| Google | `gemini-2.5-pro` | nova_chat Gemini client |
-| Local | Qwen 3.6 27B Q6_K_XL | Nova inference (free, llama.cpp on 8080) |
+| Local | Qwen 3.6 27B Q6_K_XL + `mmproj-F16` projector | Nova's thinking AND her sight — one model, one server (llama.cpp on 8080) |
+
+_Her vision is the mmproj projector on her own Qwen 3.6 base — NOT an API. (Haiku-vision was
+migrated to local eyes 2026-07-19; the last stale claims of it were scrubbed from docs and code
+2026-08-02.) Resident Claude (`claude-sonnet-4-6`) and Gemini (`gemini-2.5-pro`) nova_chat
+clients were removed (2026); Nova reaches Cowork Claude on Cole's desktop via Ping
+(`general_tools/ping_claude.ps1`). No external API sits in her live loop today; `ANTHROPIC_API_KEY`
+stays set for the planned cloud witness lane (see `memory/reports/CLOUD_LANES_2026-08-02.md`)._
 
 Required env vars: `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`.
 

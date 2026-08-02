@@ -100,18 +100,18 @@ pass/answered/overruled/unresolved mix vs the July 22 healthy distribution.
 **Step 5 — Voice-register hooks** (rounds cap, deferred-verify, sentence-hold interface for the
 committer) — lands with the voice gateway milestone, designed here so nothing needs re-opening.
 
-**Step 6 (optional) — a heavier MoE witness for the async lane (Cole's idea, 2026-08-02).**
-MoE gives big-model judgment at small-model VRAM — but only via llama.cpp's `--n-cpu-moe` expert
-offload: routed experts (the bulk of the weights) live in system RAM, the GPU keeps attention +
-shared experts + KV (~3–5GB). Two facts bound where it fits. (1) Audits are PREFILL-shaped —
-~2K fresh tokens per audit, barely cacheable since draft+wire change every time — and offloaded
-prefill is the documented bottleneck of the technique (expert weights stream per batch; worse
-here because our GPUs hang off laptop lanes and OCuLink x4). So the INLINE gate stays dense-on-GPU.
-(2) The async lane doesn't care: deferred voice verifications, shadow-mode second opinions, and
-nightly golden-set scoring can eat a 10–20s prefill for a mid-30B-dense-quality verdict — e.g.
-Qwen3.6-35B-A3B hybrid (~30 tok/s decode on ~6GB VRAM). Precondition: ~18GB system RAM reliably
-free — measure first (one boot this week showed 3.5GB free of 32GB); a 2×32GB DDR5 SODIMM upgrade
-is the cheap unlock if we want this tier. Not required for v2 acceptance.
+**Step 6 — a heavier witness for the deferred lane, in the cloud (Cole, 2026-08-02).**
+The deferred lane (voice's "let me double-check while we talk", shadow-mode second opinions,
+nightly golden-set scoring) wants a stronger judge than the inline 4B and doesn't care about
+seconds of latency. Per `memory/reports/CLOUD_LANES_2026-08-02.md` (Cole approved 08-02), this
+tier goes to a cloud model as a stateless organ-for-hire: same `build_witness` prompt, sent by
+`cloud_call` with a deadline, budget cap, and fail-open skip (`cloud_skip` pipeline event; the
+inline verdict simply stands). `ANTHROPIC_API_KEY` is already on the machine; deferred volumes
+cost pennies. Data rule: witness payloads carry drafts + wire excerpts (class N1 — needs Cole's
+one-time blessing of that stream) and must never include N0 content (Cole's health/personal data).
+The INLINE gate never goes to cloud — no internet between her and speaking, ever.
+_Local-MoE variant (Qwen3.6-35B-A3B via `--n-cpu-moe`, ~5GB VRAM + ~18GB RAM) documented and
+DORMANT: 32GB system RAM rules it out today; revisit only if RAM grows to 64GB._
 
 ## Risks, named
 

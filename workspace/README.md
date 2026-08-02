@@ -1,5 +1,5 @@
 # Project Nova
-_Last updated: 2026-08-02 10:57:33_
+_Last updated: 2026-07-21 13:58:49_
 
 Nova is Cole's companion AI and life passion project — built toward full autonomy and
 genuine partnership. She is NOT a trading bot. Trading is one possible future test of her
@@ -21,9 +21,10 @@ modify anything in `models/` under any circumstances.
 | **nova_chat** (her interface) | `python general_tools/nova_chat/launch.py` (port 8765) |
 | **Stop everything** | `StopNova.cmd` |
 
-`nova_chat` opens at `http://127.0.0.1:8765` — a web group chat where Cole, Claude, Gemini,
-and Nova collaborate. (The old `nova_qt` desktop app, `nova_gateway`/Discord, and OpenClaw
-are all retired.)
+`nova_chat` opens at `http://127.0.0.1:8765` — Cole and Nova's chat, her single voice/ears.
+Resident Claude/Gemini chat clients were removed (2026): when Nova wants Claude, she uses her
+**Ping** function (`general_tools/ping_claude.ps1`) to reach Cowork Claude on Cole's desktop.
+(The old `nova_qt` desktop app, `nova_gateway`/Discord, and OpenClaw are all retired.)
 
 ---
 
@@ -59,7 +60,7 @@ workspace/
 │
 ├── general_tools/           ← detachable tools
 │   ├── nova_chat/           ← group chat server (FastAPI + WebSocket, :8765) — her voice
-│   ├── nova_sync/           ← watcher.py (GitHub auto-commit) + drive.py (Google Drive mirror for Gemini, rides with each push) + backup.py
+│   ├── nova_sync/           ← watcher.py (GitHub auto-commit) + drive.py (Google Drive workspace mirror, rides with each push) + backup.py
 │   ├── build_manifest.py    ← derives SELF/ body manifest from @nova: tokens
 │   ├── calls.py             ← call-graph generator feeding the manifest
 │   ├── injector.py          ← NCL context injector / module dispatcher
@@ -144,7 +145,7 @@ an interrupt she attends to first, never a leash. Full detail in `SELF/reference
 
 ```powershell
 pip install pyautogui pillow pywinauto watchdog anthropic httpx fastapi uvicorn websockets
-pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client   # Drive mirror for Gemini
+pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client   # Google Drive workspace mirror
 ```
 
 Required environment variables: `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`.

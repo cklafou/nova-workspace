@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 10:57:34
+# Last updated: 2026-08-02 07:00:49
 # @nova: ModelClient — the act of generation as a body faculty (layer 2). It owns HOW Nova
 #        (and the mentors) are driven to produce a response: the model dispatch + each model's
 #        call convention, lifted faithfully out of the chat server's run_ai_response. It does
@@ -53,7 +53,7 @@ class ModelClient:
         to run_ai_response's three branches:
           • Gemini — the injected runner coroutine (no transcript arg; word-chunk "streaming").
           • Nova   — the rich signature: <think> parsing, live progress, tool callback, sampling.
-          • else   — the basic mentor signature (Claude): transcript + sinks + context + images.
+          • else   — the legacy client signature (mentor-era; resident Claude/Gemini clients removed 2026): transcript + sinks + context + images.
         """
         if ai_name == "Gemini":
             if self._gemini_runner is None:

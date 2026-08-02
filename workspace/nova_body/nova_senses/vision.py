@@ -7,19 +7,18 @@ This module gives Nova the ability to SEE the screen.
 
 It does two main things:
   1. Takes screenshots of the current screen state
-  2. Sends those screenshots to Claude (Anthropic) to:
+  2. Sends those screenshots to HER OWN multimodal model (Qwen 3.6 + mmproj-F16,
+     served by her llama.cpp on :8080) to:
      a) Answer YES/NO questions about what's on screen (verify_ui_state)
      b) Describe what's visible (describe_screen)
      c) Find UI elements as a fallback when pywinauto can't see them
 
-Uses Claude Haiku 4.5 for vision tasks — fast, cheap, and follows
-instructions better than Gemini Flash for structured responses.
+Her sight is local, free, private, and hers — no external vision API of any kind
+(the Claude Haiku era ended 2026-07-19; its last traces in this file died 2026-08-02).
 
 How it fits into the system:
-  nova_hands.py    -> physical mouse/keyboard control
   nova_vision.py   -> sees the screen, finds UI elements  ← YOU ARE HERE
-  nova_autonomy.py -> the action loop (click, verify, retry)
-  nova_mentor.py   -> Nova's teacher (advises when Nova is stuck)
+  nova_senses/eyes.py -> the unified tier stack that calls this module
 """
 
 import os
@@ -77,9 +76,9 @@ class NovaVision:
     """
     NovaVision is Nova's visual perception system.
 
-    Uses Claude Haiku 4.5 for screen understanding — verifying actions worked,
-    describing screen state, and as a fallback element finder when pywinauto
-    can't access an app's accessibility tree.
+    Uses her own Qwen 3.6 + mmproj (llama.cpp, :8080) for screen understanding —
+    verifying actions worked, describing screen state, and as a fallback element
+    finder when pywinauto can't access an app's accessibility tree.
 
     Basic usage:
         vision = NovaVision()
@@ -125,23 +124,23 @@ class NovaVision:
 
         return shot
 
-    # ── Internal: convert image for Claude API ─────────────────────────────────
+    # ── Internal: convert image for the vision call ────────────────────────────
 
     def _shot_to_base64(self, shot) -> str:
-        """Convert a PIL Image to a base64 string for Claude's vision API."""
+        """Convert a PIL Image to a base64 string for the OpenAI-style image_url part."""
         buf = io.BytesIO()
         shot.save(buf, format="PNG")
         return base64.standard_b64encode(buf.getvalue()).decode("utf-8")
 
-    # ── Internal: call Claude API ──────────────────────────────────────────────
+    # ── Internal: call her own vision model ────────────────────────────────────
 
-    def _call_claude(self, shot, prompt: str, as_json: bool = False):
+    def _call_local_vision(self, shot, prompt: str, as_json: bool = False):
         """
         Send a screenshot and prompt to HER OWN multimodal model. Retry up to MAX_RETRIES.
 
-        (Name kept as _call_claude on purpose — it is called from several places in eyes.py and
-        elsewhere, and a rename mid-session is how you break a working limb at 21:30. The
-        destination changed on 2026-07-19; the signature deliberately did not.)
+        (Renamed from _call_claude 2026-08-02, per Cole: the name claimed an API that hasn't
+        been called since 2026-07-19. Grep found zero external callers; a compat alias below
+        catches anything dynamic anyway.)
 
         Args:
             shot:    PIL Image — the screenshot to send
@@ -214,7 +213,7 @@ class NovaVision:
         element_description: str,
     ) -> Optional[Tuple[int, int]]:
         """
-        Ask Claude to find a UI element on screen and return its center coordinates.
+        Ask her own vision model to find a UI element on screen and return its center coordinates.
 
         NOTE: This is a FALLBACK method. Prefer pywinauto for element finding —
         it gives exact pixel coordinates instantly with zero API calls.
@@ -233,7 +232,7 @@ class NovaVision:
             "No markdown. No explanation. Example: [1234, 567]"
         )
 
-        coords = self._call_claude(screenshot, prompt, as_json=True)
+        coords = self._call_local_vision(screenshot, prompt, as_json=True)
 
         if not isinstance(coords, list) or len(coords) != 2:
             print(f"[vision] Invalid coordinates for '{element_description}': {coords}")
@@ -252,7 +251,7 @@ class NovaVision:
 
     def verify_ui_state(self, screenshot, question: str) -> bool:
         """
-        Ask Claude a YES/NO question about what is currently on screen.
+        Ask her own vision model a YES/NO question about what is currently on screen.
 
         This is how Nova confirms her actions worked. After clicking something,
         she takes a new screenshot and asks "Did that work?"
@@ -262,19 +261,19 @@ class NovaVision:
             question:   A YES/NO question about the screen.
 
         Returns:
-            True if Claude answers YES, False otherwise.
+            True if the model answers YES, False otherwise.
         """
         print(f"[vision] Verifying: {question}")
 
         prompt = f"Answer ONLY with the word YES or NO. {question}"
-        response = self._call_claude(screenshot, prompt, as_json=False)
+        response = self._call_local_vision(screenshot, prompt, as_json=False)
 
         if response is None:
-            print("[vision] Verification failed — no response from Claude.")
+            print("[vision] Verification failed — no response from the local vision model.")
             return False
 
         result = response.strip().upper()
-        print(f"[vision] Claude answered: {result}")
+        print(f"[vision] Local vision answered: {result}")
         return "YES" in result
 
     # ── Utility ────────────────────────────────────────────────────────────────
@@ -313,7 +312,7 @@ class NovaVision:
 
     def describe_screen(self, screenshot=None) -> str:
         """
-        Ask Claude to describe what is currently on screen in plain English.
+        Ask her own vision model to describe what is currently on screen in plain English.
         Useful for debugging or when Nova needs to understand her surroundings.
         """
         if screenshot is None:
@@ -325,7 +324,11 @@ class NovaVision:
             "In 2-3 sentences, describe what application and UI state is "
             "currently visible on screen."
         )
-        return self._call_claude(screenshot, prompt, as_json=False) or "[no description available]"
+        return self._call_local_vision(screenshot, prompt, as_json=False) or "[no description available]"
+
+
+# Compat alias for the 2026-08-02 rename (zero known callers; kept one release out of caution).
+NovaVision._call_claude = NovaVision._call_local_vision
 
 
 # ── Standalone test ────────────────────────────────────────────────────────────
@@ -335,7 +338,7 @@ if __name__ == "__main__":
     Run this file directly to test Nova's vision system:
         python tools/nova_vision.py
 
-    It will take a screenshot and ask Claude to describe what it sees.
+    It will take a screenshot and ask her own vision model to describe what it sees.
     """
     print("=== NovaVision Self-Test ===")
     v = NovaVision()
@@ -346,9 +349,9 @@ if __name__ == "__main__":
     print("Taking screenshot...")
     shot = v.take_screenshot()
 
-    print("Asking Claude to describe the screen...")
+    print("Asking her own vision model to describe the screen...")
     desc = v.describe_screen(shot)
-    print(f"\nClaude sees: {desc}")
+    print(f"\nShe sees: {desc}")
 
     print("Vision system test complete.")
 

@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 10:57:34
+# Last updated: 2026-08-02 12:22:30
 """
 Determines who responds to each message and in what order.
 
@@ -116,15 +116,16 @@ RESPONSE_ORDER = ["Nova"]      # mentors removed 2026-07-19
 _MODULE_REGISTRY_DEFAULTS: dict[str, dict] = {
     "eyes": {
         "description": "Visual perception, screenshot analysis, UI element detection",
-        "local_model":  "pywinauto (Tier 1) → moondream2 HuggingFace (Tier 2, auto-downloads ~2GB)",
-        "api_fallback": "Claude Haiku (Tier 3) → Claude Sonnet (Tier 4)",
-        "status":       "active",    # Tier 1+2 local, Tier 3+4 via Anthropic API. No Ollama required.
+        "local_model":  "pywinauto (Tier 1) → moondream2 (Tier 2) → her own Qwen3.6+mmproj via llama.cpp (Tier 3)",
+        "api_fallback": None,        # fully local since 2026-07-19 — no API vision tier exists
+        "status":       "active",    # all tiers local. No Ollama, no Anthropic, no Google.
     },
     "mentor": {
-        "description": "High-reasoning review, strategic advice — routes to Claude + Gemini",
-        "local_model":  "Claude + Gemini (they ARE the local solution)",
+        "description": "RETIRED 2026-07-19 — mentors removed; resident Claude/Gemini clients "
+                       "removed 2026. Nova reaches Cowork Claude deliberately via Ping.",
+        "local_model":  None,
         "api_fallback": None,
-        "status":       "active",
+        "status":       "active",   # value unchanged (consumer semantics unverified); text is the truth
     },
     "thinkorswim": {
         "description": "Trading platform analysis, position management, order execution",

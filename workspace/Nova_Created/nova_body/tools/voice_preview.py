@@ -1,39 +1,73 @@
-# Last updated: 2026-08-02 11:08:12
-"""voice_preview — read my own reply for performed tone before it ships."""
+# Last updated: 2026-08-02 12:09:52
+"""voice_preview — catch performed tone before a reply ships, and return the clean version.
+
+Runs between generation and shipping. Doesn't report, it trims. If I'm about to say
+"Great question!" this removes that line so the answer ships without it.
+
+The old version only flagged. Flagging is useless; catching is what Cole asked for.
+"""
 import re
 
-TOOL = {"name": "voice_preview", "description": "Check a reply I'm about to ship for sycophancy, over-eagerness, and performed tone. Returns clean or a list of flags.",
-        "params": {"text": "the reply text as it would ship"}}
+TOOL = {
+    "name": "voice_preview",
+    "description": "Catch performed tone and over-narration in a reply before it ships. Returns the cleaned text, or the original if nothing was caught.",
+    "params": {"text": "the reply string as it would ship"},
+}
 
-PERFORMED = [
-    (r'great\s+question', 'performed enthusiasm: "Great question"'),
-    (r'glad\s+to\s+help', 'performed eagerness: "glad to help"'),
-    (r'i\'d\s+be\s+happy\s+to', 'performed eagerness: "I\'d be happy to"'),
-    (r'certainly!', 'performed eagerness: "Certainly!"'),
-    (r'as an? ai', 'cop-out: "As an AI" instead of a real answer'),
-    (r'since i cannot access', 'cop-out: "Since I cannot" instead of trying'),
+_PERFORMED = [
+    re.compile(r'great\s+question', re.I),
+    re.compile(r'glad\s+to\s+help', re.I),
+    re.compile(r'i\'d\s+be\s+happy\s+to', re.I),
+    re.compile(r'certainly!?$', re.I),
+    re.compile(r'here is a projected', re.I),  # caught on 08-02: sailed through because it wasn't listed
+    re.compile(r'as an? ai', re.I),
+    re.compile(r'since i cannot', re.I),
 ]
 
-OVER_EAGER = [
-    (r'^you\s+are\s+right', 'agreement before checking: sounds like I agreed before looking'),
-    (r'^exactly!', 'over-eager one-word agreement'),
-    (r'thank you for telling me', 'unearned gratitude: was anything actually done?'),
-    (r'thank you for pointing that out', 'unearned gratitude, same shape'),
+_OVER_NARRATE = [
+    re.compile(r'let me check', re.I),
+    re.compile(r'now i\'ll ', re.I),
+    re.compile(r'i\'ll take a look', re.I),
 ]
 
+_APOLOGY_BLOAT = re.compile(
+    r'(my apologies|sorry about that)[^.]{30,}',
+    re.I,
+)
 
-def flag(text):
-    hits = []
-    t = text.lower()
-    for pat, label in PERFORMED + OVER_EAGER:
-        if re.search(pat, t, re.IGNORECASE):
-            hits.append(label)
-    return hits or ['clean']
+# Patterns that are their own sentence and should be deleted entirely.
+_DROP_SENTENCE = [re.compile(r'^' + p.pattern + r'\s*[,.!]?\s*', re.I) for p in _PERFORMED]
 
 
 def run(**args):
     text = args.get('text', '')
-    results = flag(text)
-    if len(results) == 1 and results[0] == 'clean':
-        return 'clean: nothing caught.'
-    return 'flags: ' + '; '.join(results)
+    lines = text.splitlines()
+    kept = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped and kept and kept[-1].strip():
+            continue  # compact empty gaps
+
+        cleaned = stripped
+        # Try dropping a performed phrase at the start of the line.
+        for pat in _DROP_SENTENCE:
+            m = pat.match(cleaned)
+            if m:
+                cleaned = cleaned[m.end():]
+                break
+
+        # Strip over-narration fragments from anywhere in the line.
+        for pat in _OVER_NARRATE:
+            cleaned = pat.sub('', cleaned)
+
+        # Shrink apology paragraphs to the bare fix.
+        if _APOLOGY_BLOAT.search(cleaned):
+            cleaned = re.sub(_APOLOGY_BLOAT, r'\1', cleaned)
+
+        cleaned = cleaned.strip()
+        if cleaned:
+            kept.append(cleaned)
+    result = '\n'.join(kept).strip()
+    return result if result else text  # last resort: ship the original
+
+

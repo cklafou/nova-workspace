@@ -36,11 +36,9 @@ Ollama is no longer required or used anywhere in this file.
 
 How it fits into the system:
   nova_eyes.py     → unified vision (this file)  ← YOU ARE HERE
-  nova_explorer.py → pywinauto element finding (used internally by nova_eyes)
-  nova_vision.py   → Claude screenshot analysis (used internally by nova_eyes)
-  nova_hands.py    → physical mouse/keyboard control
-  nova_autonomy.py → the action loop (find, click, verify)
-  nova_mentor.py   → Nova's teacher (called for sanity checks)
+  proprioception   → pywinauto element finding (used internally by NovaEyes)
+  nova_vision.py   → local mmproj screenshot analysis via her own llama.cpp (used internally)
+  (nova_hands / nova_autonomy / nova_mentor are retired — the mentor path died 2026-07-19)
 """
 
 import io
@@ -99,12 +97,10 @@ class NovaEyes:
     """
     NovaEyes is Nova's unified vision system.
 
-    It combines pywinauto (exact element finding) with Claude (screen
-    understanding) into a single interface. Nova never needs to decide
-    which tool to use — NovaEyes picks the right one automatically.
-
-    It also supports periodic sanity checks where the mentor AI reviews
-    a screenshot to confirm Nova isn't hallucinating or off-track.
+    It combines pywinauto (exact element finding) with her own multimodal
+    model (screen understanding — Qwen 3.6 + mmproj on her llama.cpp) into a
+    single interface. Nova never needs to decide which tool to use — NovaEyes
+    picks the right one automatically.
 
     Basic usage:
         eyes = NovaEyes()
@@ -114,13 +110,10 @@ class NovaEyes:
         if element:
             print(f"Click at ({element['center_x']}, {element['center_y']})")
 
-        # Verify something on screen — uses Claude vision
+        # Verify something on screen — uses her own vision model
         is_open = eyes.verify("Is ThinkOrSwim showing the Positions page?")
 
-        # Sanity check — mentor reviews what Nova is doing
-        eyes.sanity_check(mentor, expected="Viewing SOXL positions page")
-
-        # Describe what's on screen — uses Claude vision
+        # Describe what's on screen — uses her own vision model
         desc = eyes.describe()
 
         # List everything Nova can see in a window — uses pywinauto
@@ -140,7 +133,7 @@ class NovaEyes:
 
         # Flag for moondream2 availability (loaded lazily on first describe() call)
         self._moondream_available = True
-        print("[eyes] NovaEyes initialized. Tiers: pywinauto → moondream2 → Claude Haiku")
+        print("[eyes] NovaEyes initialized. Tiers: pywinauto → moondream2 → her own Qwen3.6+mmproj (all local)")
 
     # ── Primary: Find a UI element ─────────────────────────────────────────────
 
@@ -151,13 +144,13 @@ class NovaEyes:
         control_type: Optional[str] = None,
     ) -> Optional[Dict]:
         """
-        Find a UI element. Tries pywinauto first (exact), falls back to
-        Claude vision (approximate) if pywinauto can't see it.
+        Find a UI element. Tries pywinauto first (exact), falls back to her
+        own vision model (approximate) if pywinauto can't see it.
 
         Args:
             target:       Element name or description.
                           For pywinauto: use accessibility names like "Five", "Trade Button"
-                          For Claude fallback: use plain English like "the buy button"
+                          For the vision fallback: use plain English like "the buy button"
             window:       Which window to search. Partial title match.
             control_type: Optional pywinauto filter — "Button", "Edit", "Text", etc.
 
@@ -181,13 +174,13 @@ class NovaEyes:
             self._actions_since_check += 1
             return element
 
-        # Tier 2: Claude vision — approximate, costs API call
-        print(f"[eyes] pywinauto can't find '{target}' — asking Claude...")
+        # Vision fallback: her own model — approximate, local, free
+        print(f"[eyes] pywinauto can't find '{target}' — asking her own vision model...")
         shot = self.vision.take_screenshot()
         coords = self.vision.locate_ui_element(shot, target)
 
         if coords is None:
-            print(f"[eyes] Neither pywinauto nor Claude found '{target}'.")
+            print(f"[eyes] Neither pywinauto nor her vision model found '{target}'.")
             log("actions", "element_not_found", target=target, method="both_failed")
             return None
 
@@ -212,7 +205,7 @@ class NovaEyes:
 
     def verify(self, question: str, screenshot=None) -> bool:
         """
-        Ask Claude a YES/NO question about the current screen.
+        Ask her own vision model a YES/NO question about the current screen.
 
         This is how Nova confirms actions worked, checks what app is in
         focus, or validates screen state before taking an action.
@@ -226,7 +219,7 @@ class NovaEyes:
                         If None, takes a fresh screenshot.
 
         Returns:
-            True if Claude answers YES, False otherwise.
+            True if the model answers YES, False otherwise.
         """
         if screenshot is None:
             screenshot = self.vision.take_screenshot()
@@ -240,8 +233,8 @@ class NovaEyes:
 
         Tier chain for visual description:
           Tier 2: moondream2 via HuggingFace transformers (local, fast — preferred)
-          Tier 3: Claude Haiku  (API fallback if moondream2 fails)
-          Tier 4: Claude Sonnet (high-stakes sanity checks only)
+          Tier 3: her own Qwen 3.6 + mmproj via llama.cpp (local — the only fallback;
+                  no API tier exists anymore)
 
         Args:
             prompt:     Optional query or instruction about the screen.
@@ -285,8 +278,8 @@ class NovaEyes:
                 print(f"[eyes] Tier 2 (Moondream2) failed: {e}")
                 self._moondream_available = False
 
-        # Tier 4: Claude Haiku (API fallback)
-        print("[eyes] Using Tier 4 (Claude Haiku) for screen description.")
+        # Tier 3: her own multimodal model (local fallback)
+        print("[eyes] Using Tier 3 (her own Qwen3.6+mmproj) for screen description.")
         return self.vision.describe_screen(screenshot)
 
     # ── Vision helpers (Tiers 2) ─────────────────────────────────────
@@ -307,7 +300,7 @@ class NovaEyes:
         List all visible elements in a window via pywinauto.
 
         This is how Nova "looks around" to see what's clickable.
-        Much faster and more accurate than asking Claude to describe the screen.
+        Much faster and more accurate than asking the vision model to describe the screen.
 
         Args:
             window:       Window title (partial match).
@@ -328,8 +321,9 @@ class NovaEyes:
         """
         Tell NovaEyes what Nova thinks she's doing right now.
 
-        This is used during sanity checks — the mentor compares what
-        Nova THINKS she sees vs what Claude ACTUALLY sees.
+        This is used during sanity checks — comparing what Nova THINKS she
+        sees vs what her vision model actually sees. (Mentor path retired
+        2026-07-19; sanity_check below is a mentor-era remnant, unwired.)
 
         Call this whenever Nova starts a new task or navigates to a new screen.
 
@@ -450,7 +444,7 @@ if __name__ == "__main__":
     Run this to verify NovaEyes works:
         python tools/nova_eyes.py
 
-    Tests pywinauto window listing and Claude screen description.
+    Tests pywinauto window listing and local screen description.
     """
     print("=== NovaEyes Self-Test ===\n")
     eyes = NovaEyes()
@@ -462,7 +456,7 @@ if __name__ == "__main__":
     if len(windows) > 5:
         print(f"    ...and {len(windows) - 5} more")
 
-    print(f"\n[2] Describing screen (Claude Haiku)...")
+    print(f"\n[2] Describing screen (her own vision model)...")
     desc = eyes.describe()
     print(f"    {desc}")
 

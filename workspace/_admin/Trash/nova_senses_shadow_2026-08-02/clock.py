@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 10:30:19
+# Last updated: 2026-08-02 11:54:47
 """Clock sense: real time, injected at the top of every prompt.
 
 Claude wired four callers before he built the module. The spec lives in how they use it:

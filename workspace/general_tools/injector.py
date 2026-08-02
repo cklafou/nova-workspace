@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 10:57:34
+# Last updated: 2026-08-02 12:22:01
 # @nova: NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.
 """
 injector.py — NCL Context Injector & Module Dispatcher
@@ -17,11 +17,11 @@ Sequential chains (:: separator) run in order, each step receiving the prior
 step's output via $$prev substitution.
 
 ── Module dispatch strategies (Phase 4A.4) ────────────────────────────────
-  @eyes    → NovaEyes direct import (pywinauto Tier 1 + Claude Haiku Tier 4)
+  @eyes    → NovaEyes direct import (pywinauto Tier 1 → moondream2 Tier 2 →
+             her own Qwen3.6+mmproj Tier 3 — all local; no API vision since 2026-07-19)
              Falls back gracefully if pywinauto unavailable (e.g. Linux dev)
-  @mentor  → Posts @Claude @Gemini message to Nova Chat (fire-and-forget).
-             Claude + Gemini respond naturally; inbox routing (4A.5) picks up
-             the response when they echo the [task_id] header.
+  @mentor  → RETIRED 2026-07-19 (mentors removed; resident Claude/Gemini chat
+             clients removed 2026 — Nova reaches Cowork Claude via Ping instead).
   @coder, @browser, @thinkorswim, @memory, @voice
            → "not yet implemented" notice posted to Nova Chat + Master_Inbox
              stub written so the Thoughts system knows the call was attempted.
@@ -239,8 +239,8 @@ class NCLInjector:
 
         NovaEyes tier fallback (defined in nova_senses/eyes.py):
           Tier 1: pywinauto accessibility tree (free, instant, structured)
-          Tier 4: Claude Haiku screenshot analysis (API fallback)
-          Tiers 2-3 (moondream2, LLaVA 13B) added in Phase 4A.7.
+          Tier 2: moondream2 (local)
+          Tier 3: her own Qwen3.6+mmproj via llama.cpp (local — no API tier).
 
         Gracefully handles ImportError when pywinauto is unavailable
         (e.g. running on a Linux dev machine without a display).
