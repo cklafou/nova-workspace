@@ -1,17 +1,15 @@
 {
-  "generated": "2026-08-02T12:58:46",
+  "generated": "2026-08-02T13:23:27",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
-  "part_count": 30,
+  "part_count": 29,
   "described": 28,
   "flags": {
     "undescribed": [
-      "nova_voice",
-      "tests"
+      "nova_voice"
     ],
     "dead_part_candidates": [
       "nova_config",
       "nova_memory",
-      "tests",
       "audit_queue.py",
       "audit_scripts.py",
       "calls_order.py",
@@ -70,8 +68,7 @@
       "referenced_by": [
         "nova_chat",
         "nova_runtime",
-        "nova_voice",
-        "tests"
+        "nova_voice"
       ],
       "launched_by": [],
       "flags": []
@@ -367,29 +364,6 @@
       "launched_by": [],
       "flags": [
         "undescribed"
-      ]
-    },
-    {
-      "name": "tests",
-      "kind": "body_part",
-      "path": "nova_body/tests",
-      "purpose": null,
-      "files": 2,
-      "lines": 196,
-      "age_days": 0,
-      "ports_bind": [],
-      "ports_seen": [],
-      "nova_imports": [
-        "nova_cortex"
-      ],
-      "third_party": [
-        "tempfile"
-      ],
-      "referenced_by": [],
-      "launched_by": [],
-      "flags": [
-        "undescribed",
-        "no_inbound_refs"
       ]
     },
     {
