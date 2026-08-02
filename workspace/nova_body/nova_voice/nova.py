@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 21:42:40
+# Last updated: 2026-08-02 07:15:45
 """
 Nova (Qwen 3.5 27B Dense) inference client for Nova Group Chat.
 ============================================================
@@ -1681,6 +1681,18 @@ async def stream_response(
                                     _hw_evidence.append((_twt_hw or "?", {},
                                         "REFUSED: that tool is not available on this "
                                         "lane. Rule on the evidence above."))
+                                if _ri_hw == 1:
+                                    # Its last read is spent. The first live firing
+                                    # (22:05, overruled dispute) burned all three calls
+                                    # asking for MORE reads and never ruled — a judge
+                                    # with unlimited curiosity and a capped meter must
+                                    # be TOLD the meter is capped, the same way the
+                                    # replay harness tells it "rule on the evidence
+                                    # above" when the files are gone.
+                                    _hw_evidence.append(("system", {},
+                                        "FINAL ROUND: no further reads will be granted "
+                                        "on this lane. Rule NOW on the evidence above — "
+                                        "PASS, or CONCERN naming the check it enforces."))
                             try:
                                 _no_ruling = bool(_twc_hw)
                                 _hc_hw = (None if _no_ruling

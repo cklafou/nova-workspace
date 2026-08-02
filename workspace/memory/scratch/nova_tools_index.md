@@ -1,5 +1,5 @@
 # Nova-Created Tools
-_Last updated: 2026-08-02 12:53:55_
+_Last updated: 2026-08-02 22:07:38_
 _Auto-maintained. Updated as tools land._
 
 | Tool | What it does | Status |

@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 12:43:00
+# Last updated: 2026-08-02 22:07:37
 """reacher: wake up and notice what changed in me, without being asked.
 
 Compares the growth section of NOVA.md against a lookback window and reports

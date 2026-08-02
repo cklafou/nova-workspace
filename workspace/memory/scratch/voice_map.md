@@ -1,4 +1,4 @@
-_Last updated: 2026-08-02 12:35:35_
+_Last updated: 2026-08-02 22:07:38_
 - Latency: cannot self-measure (generation happens inside Claude's server). His number, not mine to guess.
 - latency figure so far: ~4s for a one-word reply (measured live tonight, 09:12). The server was down so that's the full loop without the generation step; real voice will be longer. The number is in my head from tonight, not yet in any file.
 #2: the witness breaks when you can't read (he named this one)

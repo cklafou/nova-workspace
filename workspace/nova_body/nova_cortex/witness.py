@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 21:52:38
+# Last updated: 2026-08-02 07:15:45
 # @nova: THE WITNESS — her grip on the present tense. One faculty, five parts: the wire
 #        (who actually spoke, when), the now-card (the present, placed where attention is
 #        strongest), the claim detectors (is this draft asserting something about the room?),
@@ -710,7 +710,13 @@ _WHAT = {
 _LONG = {"draft", "before", "after", "verdict", "premise", "repeated", "wire", "args", "error",
          # her reasoning for conceding or standing firm — the whole point of showing the
          # exchange, and useless clipped to a couple of sentences
-         "rationale"}
+         "rationale",
+         # the witness's stated objection — and, on witness_heavy events, the inline concern
+         # beside it. These ARE the evidence of the exchange's other half, and the 200-char
+         # default cut them mid-word in the Pipeline tab (Cole, 2026-08-02: "why does her
+         # witness get cut off in the pipeline?"). The concern LENGTH cap lives in the
+         # witness prompt where it belongs; the record should carry what was actually said.
+         "concern", "inline_concern"}
 
 
 _CURRENT_TURN = contextvars.ContextVar("nova_pipeline_turn", default="")

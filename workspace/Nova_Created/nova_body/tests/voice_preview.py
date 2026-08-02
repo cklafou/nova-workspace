@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 13:09:34
+# Last updated: 2026-08-02 22:07:37
 """Tests for voice_preview."""
 CASES = [
     {"name": "clean reply passes", "args": {"text": "He's right to correct himself, and that's how I want him to work with me. The rest of his update is about the shadow import and a tidy I don't have a receipt for, so I'll go check where things landed instead of narrating his update as my own conclusion."}, "expect_startswith": "clean"},
