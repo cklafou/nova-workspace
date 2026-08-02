@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-02T20:23:33",
+  "generated": "2026-08-02T20:36:39",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 31,
   "described": 30,
@@ -400,7 +400,7 @@
       "path": "nova_start.py",
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
-      "lines": 939,
+      "lines": 955,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -715,7 +715,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).",
       "files": 11,
-      "lines": 6411,
+      "lines": 6433,
       "age_days": 0,
       "ports_bind": [
         "8765"
