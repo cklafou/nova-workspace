@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-02 13:14:50
 # @nova: Witness v2, Step 0 — golden-set harvester. Reads the CURRENT pipeline.jsonl window
 #        (it self-trims to ~50K, so run this often — every run APPENDS new cases durably)
 #        and joins each witness episode with the wire, receipts, and thinking as they were
@@ -61,6 +60,24 @@ def wire_as_of(wire_rows, when, n=8):
         content = str(r.get("content", ""))[:400].replace("\n", " ")
         lines.append(f'{r.get("author", "?")}{fmt_age(mins)}: "{content}"')
     return "\n".join(lines)
+
+def humans_as_of(wire_rows, when, rows_back=1500, cap=20):
+    """The complete human-lines ledger as human_record() would have shown it at `when`."""
+    past = [r for r in wire_rows if (parse_ts(r.get("timestamp") or r.get("ts")) or datetime.max) <= when]
+    humans = [r for r in past[-rows_back:] if r.get("author") not in ("Nova", "System")]
+    if not humans:
+        return ""
+    shown = humans[-cap:]
+    out = []
+    for r in shown:
+        t = parse_ts(r.get("timestamp") or r.get("ts"))
+        mins = int((when - t).total_seconds() // 60) if t else None
+        out.append(f'{r.get("author", "?")}{fmt_age(mins)}: "{str(r.get("content", ""))[:300]}"'.replace("\n", " "))
+    more = len(humans) - len(shown)
+    head = ("COMPLETE for this span" + (f"; {more} earlier human line(s) exist beyond it" if more > 0
+            else "; nothing earlier exists in the record"))
+    return f"[{head}]\n" + "\n".join(out)
+
 
 def receipts_window(tool_rows, when, minutes=10):
     """Tool receipts in the `minutes` before the audit — approximates _turn_tools."""
@@ -143,6 +160,7 @@ def main():
                 "draft": draft,
                 "thinking": thinking_near(thoughts, when),
                 "wire": wire_as_of(wire, when),
+                "humans": humans_as_of(wire, when),
                 "wire_reconstructed": True,
                 "receipts": receipts_window(tools, when),
                 "recorded_concern": (concern_e or {}).get("concern", ""),

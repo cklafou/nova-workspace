@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-02T13:23:50",
+  "generated": "2026-08-02T13:35:28",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 29,
   "described": 28,
@@ -372,7 +372,7 @@
       "path": "nova_start.py",
       "purpose": "Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.",
       "files": 1,
-      "lines": 828,
+      "lines": 939,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -436,7 +436,7 @@
       "purpose": "Shutdown — stops the whole Nova stack cleanly.",
       "files": 1,
       "lines": 75,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080",

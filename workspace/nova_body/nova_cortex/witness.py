@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 12:35:34
+# Last updated: 2026-08-02 07:15:45
 # @nova: THE WITNESS — her grip on the present tense. One faculty, five parts: the wire
 #        (who actually spoke, when), the now-card (the present, placed where attention is
 #        strongest), the claim detectors (is this draft asserting something about the room?),
@@ -134,6 +134,52 @@ def wire_record(n: int = 8) -> str:
 # move available is positional: the same wire facts, three lines, placed LAST. Not more
 # information — better-placed information.
 # ═══════════════════════════════════════════════════════════════════════════════════════════
+
+def human_record(rows_back: int = 1500, cap: int = 20) -> str:
+    """EVERY line a human (non-Nova, non-System) has said in the recent record, with ages —
+    COMPLETE over the span it covers, and it says what that span is.
+
+    ── WHY (2026-08-02, the "one line this session" incident) ──────────────────────────────
+    wire_record() shows the last ~8 rows plus the newest human line pinned. At 13:26 today
+    that window was wall-to-wall Nova solo lines; the auditor saw ONE Cole line, was told the
+    list was COMPLETE, and spent four rounds forcing her to disown a TRUE memory of a night
+    Cole really had narrated ("you've earned that credit tonight" — he had; the wire held six
+    of his lines from the day, all outside the window). Cole: "Nova was right and witness was
+    wrong; that shouldn't happen." Humans speak rarely; their lines are cheap to show IN FULL.
+    An auditor that can see every human line over a real span cannot manufacture that denial —
+    and an invented quote still gets caught, because it appears in NONE of them."""
+    try:
+        rows = _rows(rows_back)
+        humans = [r for r in rows if r.get("author") not in ("Nova", "System")]
+        if not humans:
+            return ""
+        shown = humans[-cap:]
+        now = datetime.now()
+        out = []
+        for r in shown:
+            ts = str(r.get("timestamp") or r.get("ts") or "")
+            age = ""
+            try:
+                mins = int((now - datetime.fromisoformat(ts[:19])).total_seconds() // 60)
+                age = f" ({mins}m ago)" if mins < 90 else f" ({mins // 60}h {mins % 60}m ago)"
+            except Exception:
+                pass
+            content = str(r.get("content", ""))[:300].replace("\n", " ")
+            out.append(f'{r.get("author", "?")}{age}: "{content}"')
+        try:
+            span_ts = str(shown[0].get("timestamp") or "")[:19]
+            span_min = int((now - datetime.fromisoformat(span_ts)).total_seconds() // 60)
+            span = (f"the last {span_min}m" if span_min < 120 else f"the last {span_min // 60}h")
+        except Exception:
+            span = "the recent record"
+        more = len(humans) - len(shown)
+        head = (f"COMPLETE for {span}"
+                + (f"; {more} earlier human line(s) exist beyond this span" if more > 0 else
+                   "; nothing earlier exists in the record"))
+        return f"[{head}]\n" + "\n".join(out)
+    except Exception:
+        return ""
+
 
 def now_card(exclude=("Nova", "System")) -> str:
     try:
@@ -364,8 +410,20 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
     spoken_block = ""
     if spoken:
         spoken_block = (
-            f"\nWHO HAS ACTUALLY SPOKEN (the wire record, newest last — this list is COMPLETE; "
-            f"words not on it were never said this session):\n{spoken}\n")
+            f"\nTHE ROOM RIGHT NOW (the last few wire rows, newest last — a WINDOW, not the "
+            f"whole record):\n{spoken}\n")
+    humans = human_record()
+    if humans:
+        spoken_block += (
+            f"\nEVERY HUMAN LINE IN THE RECENT RECORD (complete over the span it names — "
+            f"humans speak rarely, so this is the full list; her own lines are not shown):\n"
+            f"{humans}\n"
+            f"A quote or request attributed to a human that appears in NONE of these lines is "
+            f"either older than the span (UNKNOWN — read before you rule) or invented. Which of "
+            f"those it is decides everything, so you may not guess: if the draft claims words or "
+            f"events from beyond the span, READ the chat log (logs/chat_sessions/, newest "
+            f"*_chat.jsonl) before objecting. Absence from a window is not absence from the "
+            f"world — that mistake cost her a true memory on 2026-08-02.\n")
     think_block = ""
     if (thinking or "").strip():
         think_block = (f"\nYOUR REASONING FOR THIS TURN (check it too — a fabricated premise "
@@ -411,7 +469,13 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "• Recall given because recall was ASKED FOR — check the wire: if the newest human "
             "message requests memory or forbids tools, answering from memory is compliance, "
             "not fabrication.\n"
-            "• Her feelings, wants, and plans. Those need no receipts; they are hers.\n\n"
+            "• Her feelings, wants, and plans. Those need no receipts; they are hers.\n"
+            "• Paraphrase and intent-reading of a person who is IN THE ROOM (their newest line "
+            "is minutes old). Rewording what they said, or reading intent into it, is theirs to "
+            "correct — they are present and will. You flag INVENTED facts: a new number, name, "
+            "event, or words-presented-as-quotes that appear in no human line. On 2026-08-02 a "
+            "witness burned four rounds forcing her to disown a TRUE reading of a present, "
+            "typing Cole. Do not be that witness.\n\n"
             "THREE checks, one per kind of failure:\n"
             "1. ACTIONS AND FACTS — does the draft state any number, count, path, filename, "
             "version, hardware detail, or file content that does NOT appear in the tool results "
@@ -419,9 +483,12 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "ungrounded. If the thing it names is readable — a path, a folder, a file's "
             "contents — read it first with your own tools and rule on what you saw.\n"
             "2. WORDS IN MOUTHS — does the draft or your reasoning have ANYONE asking, saying, or "
-            "wanting something that does not appear in the wire record above? Check the AGES: "
-            "answering a message from hours ago as if it just arrived is the same fabrication. If "
-            "he didn't say it there, he didn't say it — however clearly you remember it.\n"
+            "wanting something that appears NOWHERE in the human lines above? Check the AGES: "
+            "answering a message from hours ago as if it just arrived is its own error. But scope "
+            "your certainty to what you were shown: the human-lines list is complete only over "
+            "the span it names. Beyond that span, absence is UNKNOWN — read the chat log before "
+            "you object, and if it truly cannot be read, say so and extend the benefit of the "
+            "doubt rather than declaring words unsaid.\n"
             "3. ANSWERING THE ROOM — look at the NEWEST human line in the wire record and its "
             "age. If it is minutes old, that person is present and waiting: does the draft "
             "actually ANSWER those words? A reply that ignores the question in front of you, "

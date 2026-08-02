@@ -57,6 +57,16 @@ ships — never the auditor's. `nova_cortex/witness.py` remains the faculty; onl
   one; `parse_witness` stays as belt-and-suspenders.
 
 **4. Calibration rev (applies to v1 AND v2 — independently testable).**
+_Partially SHIPPED to v1 early, 2026-08-02 ~15:00, after a live incident: the witness saw one
+Cole line in its 8-row window, declared it "the only line this session," and forced Nova to
+disown a TRUE memory over four rounds (Cole: "Nova was right and witness was wrong; that
+shouldn't happen"). Fix landed in witness.py: (a) `human_record()` — EVERY human line over a
+deep span now shown to the auditor in full (humans speak rarely; their lines are cheap), with
+honest span labeling; (b) the "this list is COMPLETE / words not on it were never said" claim
+is now scoped — beyond the span, absence is UNKNOWN and demands a read of the chat log before
+any objection; (c) the human-in-room paraphrase/intent rule moved into the always-PASS list.
+Cost: ~+1K tokens per audit prompt. Takes effect at the next Full Restart. Both incident shapes
+are golden cases (seed_credit_beyond_window, seed_wish_intent_in_room)._
 - **Paraphrase tolerance:** a reworded version of something on the wire is NOT fabrication. Flag
   only ADDED facts — a new number, name, event, or words-presented-as-quotes. This morning's
   "Time and Date"→"two facts" dispute goes into the prompt verbatim as a named PASS example.

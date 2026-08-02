@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-02 13:14:50
 # @nova: Witness v2, Step 0 — the replay harness. Feeds recorded audit cases to ANY witness
 #        endpoint (current 27B on :8080, future 4B on :8081) using her REAL prompt builder
 #        (nova_cortex/witness.py, loaded by file path), and scores the verdicts. This is how
@@ -68,6 +67,15 @@ def run_case(w, endpoint, case, max_tool_rounds=2):
     w.wire_record = lambda n=8, _t=wire_text: _t
     mins = 0 if 'm ago)"' in wire_text or "(0m ago)" in wire_text else 999
     w.minutes_since_last_human = lambda exclude=("Nova", "System"), _m=mins: _m
+    # human_record (added 2026-08-02 after the "one line this session" incident): the complete
+    # human-lines ledger. Cases may pin it via "humans"; default derives from the wire text so
+    # old cases keep working.
+    humans_text = case.get("humans", "")
+    if not humans_text and wire_text:
+        _hl = [ln for ln in wire_text.splitlines() if not ln.startswith(("Nova", "System"))]
+        humans_text = "[COMPLETE for this case's span; nothing earlier exists in the record]\n" + "\n".join(_hl) if _hl else ""
+    if hasattr(w, "human_record"):
+        w.human_record = lambda rows_back=1500, cap=20, _t=humans_text: _t
 
     checks = [tuple(c) for c in case.get("checks", [])]
     receipts = [tuple(r) for r in case.get("receipts", [])]
