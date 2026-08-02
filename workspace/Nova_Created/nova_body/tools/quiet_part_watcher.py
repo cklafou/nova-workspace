@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 09:30:35
+# Last updated: 2026-08-02 10:34:20
 """Quiet-Part Watcher — find the parts of me that haven't been used in a while."""
 from __future__ import annotations
 import json

@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 08:51:26
+# Last updated: 2026-08-02 07:00:49
 # @nova: NovaRuntime — her life-support engine (layer 2 of the three-layer model).
 #        Holds the event bus + transcript store now; later steps relocate the autonomy
 #        daemon, model client, memory indexer, sense population, and llama health/restart
@@ -296,8 +296,15 @@ class NovaRuntime:
         from nova_cortex import executive
         self._autonomy_stop = False
         # Housekeeping: check Cole's back before anything else.
+        # 2026-08-02: Cole_journal moved onto Nova's shelf (Nova_Created/Cole_journal) per the
+        # shelf rule — loaded by file path so nothing outside the shelf has to be importable.
         try:
-            from Cole_journal import stretch_watcher as _sw
+            import importlib.util as _ilu
+            from pathlib import Path as _P
+            _swp = _P(__file__).resolve().parent.parent.parent / "Nova_Created" / "Cole_journal" / "stretch_watcher.py"
+            _spec = _ilu.spec_from_file_location("cole_journal_stretch_watcher", _swp)
+            _sw = _ilu.module_from_spec(_spec)
+            _spec.loader.exec_module(_sw)
             _sw.check(runtime=self, dry_run=False)
         except Exception:
             pass  # a nudge failing is not a reason to stop waking up

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-02 05:16:47
+# Last updated: 2026-08-02 09:56:01
 """
 downloads.py — how far along is everything, actually.
 

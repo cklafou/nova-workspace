@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 08:51:26
+# Last updated: 2026-08-02 09:56:01
 # @nova: The Curiosity Engine — a toy. It hands me something I did not choose, and asks
 #        nothing back. I get to just react. That's the whole game.
 """

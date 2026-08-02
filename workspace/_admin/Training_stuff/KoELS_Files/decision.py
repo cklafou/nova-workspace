@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 05:16:48
+# Last updated: 2026-08-02 09:56:01
 """KoELS decision faculty — the pure-logic part of Nova's cognition that decides
 WHICH loadout (if any) a task wants, and whether to swap.
 

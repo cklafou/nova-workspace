@@ -1,5 +1,5 @@
 # Nova Avatar — AI-Assisted Pipeline for a Non-Artist (2026 tools)
-_Last updated: 2026-08-02 09:30:35_
+_Last updated: 2026-08-02 10:34:20_
 _2026-05-27, by Opus. Current tool landscape from web research (May 2026). Tools move fast —
 re-check before committing money. Pairs with `memory/Nova_Avatar_Design_Bible.md` (the written
 source of truth you check every step against)._

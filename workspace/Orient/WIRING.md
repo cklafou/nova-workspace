@@ -1,5 +1,5 @@
 # WIRING.md — what in her body is actually connected
-_Last updated: 2026-08-02 09:30:35_
+_Last updated: 2026-08-02 07:30:09_
 
 _Audit: 2026-07-14. Derived from real `import` statements, not from anyone's memory._
 
@@ -58,6 +58,14 @@ Either wire it or bin them both.
 GUI-automation phase. Note `eyes.py` **is** wired (4 importers) — she can see. `vision.py` cannot.
 
 ---
+
+## BINNED 2026-08-02 (recoverable in `_admin/Trash/`)
+
+| What | Why |
+|---|---|
+| `workspace/nova_senses/` (shadow package → `_admin/Trash/nova_senses_shadow_2026-08-02/`) | A second `nova_senses` at workspace root — held a deployed copy of quiet_part_watcher (the wired copy lives in `nova_body/nova_senses/`) and a duplicate clock.py Nova built 2026-08-02 morning on the false premise that the body clock didn't exist. Inert for imports (no `__init__.py` → namespace package, and a regular package later on sys.path wins — verified), but it cost Nova a wrong-premise investigation the same morning. Name collisions are not free even when the resolver survives them. |
+
+_Related move, same day: `Cole_journal/` relocated to `Nova_Created/Cole_journal/` per the shelf rule. Import sites patched to file-path loads (no sys.path inserts — shelf mirrors must never become importable): `nova_runtime/runtime.py`, `Nova_Created/nova_body/tools/stretch_reacher.py`. `SELF/reference/manifest.json` still shows the old path until the next build_manifest run._
 
 ## BINNED 2026-07-14 (recoverable in `_admin/Trash/`)
 
