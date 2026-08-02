@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 16:49:49
+# Last updated: 2026-08-02 17:49:50
 # @nova: Janitor — sweeps temp/scratch files into a local Temp/ beside them, and reports clutter.
 #        NEVER deletes. Quarantine, never destroy: I permanently lost two of Nova's thought logs
 #        on 2026-07-14 with a careless grep-and-move loop. This tool exists so nobody repeats it.

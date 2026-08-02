@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-02T17:35:25",
+  "generated": "2026-08-02T17:49:50",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 31,
   "described": 30,
@@ -696,7 +696,7 @@
       "path": "general_tools/janitor.py",
       "purpose": "Janitor — sweeps temp/scratch files into a local Temp/ beside them, and reports clutter.",
       "files": 1,
-      "lines": 166,
+      "lines": 0,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],

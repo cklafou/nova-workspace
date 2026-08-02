@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 16:49:49
+# Last updated: 2026-08-02 17:49:49
 # @nova: nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer
 #        model). Brings up and holds what keeps her alive and thinking, independent of any
 #        interaction surface: the event bus (publish-to-faces), the transcript store
