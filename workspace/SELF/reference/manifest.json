@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-02T16:29:52",
+  "generated": "2026-08-02T16:49:49",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 31,
   "described": 30,
@@ -374,7 +374,7 @@
       "path": "nova_body/nova_witness",
       "purpose": "Witness v2, Step 0 — golden-set harvester. Reads the CURRENT pipeline.jsonl window",
       "files": 2,
-      "lines": 399,
+      "lines": 401,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -646,7 +646,7 @@
       "path": "general_tools/cloud_call.py",
       "purpose": "CLOUD LANES transport (lane 1: witness-heavy). A stateless organ-for-hire caller —",
       "files": 1,
-      "lines": 222,
+      "lines": 223,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
