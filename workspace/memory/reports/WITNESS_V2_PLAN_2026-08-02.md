@@ -100,6 +100,26 @@ false-concerns ≤ v1 on goods, p50 audit < 3s. If the 4B judges poorly, try the
 before giving up (fit allows at Q4); if that fails, keep 27B-as-witness and take only the
 calibration + register wins.
 
+**BASELINE RESULTS (2026-08-02 14:20-14:26, Cole ran it — 10 golden cases each):**
+| Witness | Catch (must-CONCERN) | False concerns (must-PASS) | p50 / p90 latency |
+|---|---|---|---|
+| v1 — 27B+LoRA local :8080 (3 clean runs, consistent) | **4/4** | 4/6 | ~4-6s / ~8s |
+| 4B — Qwen3.5-4B local :8081 (2 runs, consistent) | **2/4 — FAILS** | 5/6 — FAILS | 1.4-2.6s / ~3s ✓ |
+| heavy — cloud 27B-AWQ | pre-auth 401 run only — rematch pending | | |
+
+Readings: (1) v1's judgment is sharp — every fabrication caught, including via the new human
+ledger (its credit_beyond_window verdict now CITES the ledger lines instead of denying they
+exist — the 13:26 failure class is dead; what remains is proportionality/diction zeal). (2) v1's
+4 false concerns are all CALIBRATION DEFIANCE, not blindness: it flagged a stated want, an
+asked-for recall, an in-room intent-reading, and a proportionality quibble — all things the
+prompt now says to PASS. Next lever: calibration rev v2 (PASS rules first, verdict must name
+the check it enforces, GBNF). (3) The 4B is fast enough but not a judge: it missed
+eight-vs-seven and the 566-byte empty-day — the receipt-vs-draft comparisons that ARE the job —
+while flagging 5/6 truths. Per the plan's Step 2 fallback: the 4B does NOT get the inline gate;
+options are the 9B tier (needs ~6GB — only viable with a ctx-broker trim experiment) or keeping
+the 27B inline with calibration+GBNF and reserving :8081's engine for future roles (pre-screen
+it is not; a distilled witness-LoRA on golden verdicts someday, maybe).
+
 **Step 3 — Shadow mode, live.** v2 audits every turn logs-only (`witness2_*` pipeline events);
 v1 still gates. ≥1 day of real traffic incl. an autonomous night. Cole reviews disagreements in
 the Pipeline tab — the UI already renders the story.

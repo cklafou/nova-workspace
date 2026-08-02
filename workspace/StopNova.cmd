@@ -59,7 +59,14 @@ for %%P in (8080 8081 8765 8799) do (
 )
 
 REM llama-server by name: aborted restarts orphan instances that never reach LISTENING.
+REM (This kills BOTH engines — hers on :8080 and the witness on :8081; same exe.)
 taskkill /F /IM llama-server.exe >nul 2>nul && set FOUND=1
+
+REM The witness console window (a manual start_witness.cmd run) survives its server: the batch
+REM sits at its crash-readability pause after llama-server dies, leaving a "press any key"
+REM window behind (Cole, 2026-08-02: "It should just close fully"). Close the WINDOW itself,
+REM by the title the script sets. NovaStart-managed witnesses have no window — unaffected.
+taskkill /F /FI "WINDOWTITLE eq llama.cpp WITNESS*" >nul 2>nul
 
 REM The invisible pythonw crew: orchestrator, console viewer, watcher, launcher.
 REM Matched on COMMAND LINE so we never touch an unrelated Python you have open.
