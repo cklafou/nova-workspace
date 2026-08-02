@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 19:53:33
+# Last updated: 2026-08-02 12:22:01
 # @nova: Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.
 """
 nova_start.py  --  Project Nova one-shot launcher / orchestrator
@@ -582,15 +582,31 @@ def open_app_window():
 
     log(f"Opening Nova app window via {browser.name} (persistent profile)")
     args = [str(browser),
-            f"--app=http://127.0.0.1:{CHAT_PORT}",
+            f"--app=http://127.0.0.1:{CHAT_PORT}/?app=1",
             f"--user-data-dir={_app_profile_dir}",
             "--no-first-run", "--no-default-browser-check",
             "--new-window"]
-    # 2026-07-18: only force a window size on the FIRST-EVER launch (no profile yet). Passing
-    # --window-size every time was overriding Cole's manual resize on every restart. With the
-    # profile now persistent (see the shutdown block — no more rmtree), Chrome restores the
-    # size he last left, so his window geometry sticks.
-    if _first_launch:
+    # ── THE WINDOW OPENS WHERE HE LEFT IT (2026-08-02, Cole: "make it remember the size
+    # I make it on each open") ────────────────────────────────────────────────────────────
+    # The 07-18 fix trusted Chrome to restore geometry from the persistent profile. It
+    # doesn't survive this stack: placement is written on graceful close, and this window
+    # dies by taskkill every single night — so Chrome's memory of it was always the stale
+    # one. Now WE own it: the page itself reports size+position while he uses it (?app=1
+    # → index.html saver → POST /api/app_window → _admin/app_window.json), and every launch
+    # passes that back explicitly. His last resize is the next boot's opening shape.
+    _geom = None
+    try:
+        _geom = json.loads((WS / "_admin" / "app_window.json").read_text(encoding="utf-8"))
+        _gw, _gh = int(_geom["w"]), int(_geom["h"])
+        _gx, _gy = int(_geom["x"]), int(_geom["y"])
+        if _gw >= 400 and _gh >= 300:
+            args += [f"--window-size={_gw},{_gh}", f"--window-position={_gx},{_gy}"]
+            log(f"Window geometry restored: {_gw}x{_gh} at {_gx},{_gy} (his last resize)")
+        else:
+            _geom = None
+    except Exception:
+        _geom = None
+    if _first_launch and not _geom:
         args.append("--window-size=1500,950")
     try:
         return subprocess.Popen(args)

@@ -1,5 +1,5 @@
 # @nova: Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).
-# Last updated: 2026-08-02 20:13:36
+# Last updated: 2026-08-02 06:54:53
 """
 Nova Group Chat - FastAPI WebSocket Server
 Handles real-time streaming from all three AIs concurrently.
@@ -289,6 +289,28 @@ async def shutdown_event():
         print("[shutdown] llama-server on port 8080 stopped.")
     except Exception as e:
         print(f"[shutdown] llama stop error: {e}")
+
+@app.post("/api/app_window")
+async def api_app_window(request: Request):
+    """The app window reports its own geometry (index.html's ?app=1 saver). nova_start
+    reads _admin/app_window.json at boot and opens the window exactly where Cole left it —
+    Chrome's own placement memory dies with the force-kill teardown, so the page owns it.
+    Loopback-only by default: this path is not on the remote allow-list."""
+    import json as _json
+    try:
+        g = await request.json()
+        out = {k: int(g[k]) for k in ("x", "y", "w", "h")}
+        if out["w"] < 400 or out["h"] < 300:
+            return {"ok": False, "why": "implausibly small; ignored"}
+        p = _ws_root() / "_admin" / "app_window.json"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        tmp = p.with_suffix(".tmp")
+        tmp.write_text(_json.dumps(out), encoding="utf-8")
+        os.replace(tmp, p)
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "why": str(e)[:120]}
+
 
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")

@@ -1,4 +1,5 @@
 # CLOUD LANES — skippable cloud offload for Nova
+_Last updated: 2026-08-02 20:33:47_
 _2026-08-02. Cole's idea; shaped with Claude (Cowork). Cole approved the direction same day._
 
 Cole's framing: use cloud resources for anything that doesn't need immediate local compute, with
