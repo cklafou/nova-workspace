@@ -104,18 +104,20 @@ Two different kinds of "cloud" — don't conflate them:
    an environment. Cost (Anthropic, current): Haiku 4.5 $1/M in, $5/M out; cache reads 0.1×;
    Batch API 50% off, stackable. A ~2.5K-token verdict ≈ $0.003 standard, ~$0.001-0.002 with
    caching/batch → even 200 deferred audits/day lands around **$6-20/month**.
-2. **Rented GPU compute (account + environment + uploads — does NOT exist yet).** Needed only for
-   later lanes: cloud TTS in HER voice (reference clip uploaded), ComfyUI offload, self-hosted
-   heavy witness, v7+ training. Picks for a 24/7-autonomous-but-BURSTY system (idle cost must be
-   zero): **RunPod serverless** primary — per-second billing, scale-to-zero, no egress fees,
-   ~$0.34/hr-class 4090 (a 10s TTS burst ≈ $0.001); **Vast.ai** for checkpointed batch/training —
-   cheapest raw rate (~$0.31/hr interruptible 4090), reliability varies by host; TensorDock
-   (~$0.35/hr) as alternate. **Anti-pick:** any always-on rented box (~$225/mo at those rates) —
-   violates the non-goal below until the ledger proves otherwise.
+2. **Rented GPU compute — account EXISTS (Cole, 2026-08-02: LoRA training already runs on RunPod
+   pods).** Division of labor, per RunPod's own guidance and ours: **pods for training** (long
+   continuous jobs; serverless's ~2-3x per-second premium buys scale-to-zero that a never-idle
+   job can't use; automate lifecycle via runpodctl/API so a forgotten pod can't idle-bill),
+   **serverless for bursty inference lanes** (TTS, image gen, self-hosted heavy witness) —
+   per-second billing, scale-to-zero, no egress fees, ~$0.34/hr-class 4090. **Vast.ai** stays the
+   cheaper checkpointed-training alternate (~$0.31/hr interruptible). Korea latency: RunPod's
+   AP-JP-1 (Fukushima, H200s headline) claims 8-50ms for JP/KR users vs 150-200ms US/EU — verify
+   on the console whether serverless + cheap GPU classes are offered there before counting on it
+   for the TTS deadline. **Anti-pick** unchanged: no always-on rented box until the ledger says so.
 
-**Weights caveat for the training lane:** Cole's git-boundary rule cuts the OTHER way here —
-`models/` is SEALED and gitignored, so her LoRA adapters and training corpus are NOT auto-blessed
-for egress. v7-in-cloud needs Cole's explicit call on shipping weights when that lane opens.
+**Weights ruling (Cole, 2026-08-02):** `models/` is gitignored for SIZE, not privacy — and LoRA
+training already runs on RunPod pods, so weights/corpus egress is established practice, blessed.
+(The earlier "weights caveat" here is void.)
 
 ## Non-goals
 
