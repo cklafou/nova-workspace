@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 10:32:56
+# Last updated: 2026-08-02 11:35:08
 """Ordered Reads — always-important metadata before any thought generates."""
 
 import json

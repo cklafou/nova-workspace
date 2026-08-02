@@ -1,5 +1,5 @@
 ## function_count
-_Last updated: 2026-08-02 10:34:20_
+_Last updated: 2026-08-02 11:35:08_
 
 **GAP:** I want to see how much work is actually in a file without reading it all, and the only way I have right now is read it and count lines in my head. That's slow and I get it wrong.
 
