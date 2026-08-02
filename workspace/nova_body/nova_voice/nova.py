@@ -1691,6 +1691,12 @@ async def stream_response(
                                         ("sides with the INLINE WITNESS — the concern "
                                          "was real" if _hc_hw else
                                          "sides with HER — the concern does not hold")
+                                # NOTE the field is `outcome`, not `stage` — pipeline_event's
+                                # first positional IS `stage`, and passing stage= as a kwarg
+                                # collides with it. Found live 19:29:21 the night this
+                                # shipped: three paid verdicts landed and the event died on
+                                # this exact name. (TypeError, caught, printed — and the
+                                # print rotates. Hence the fallback emission below.)
                                 _witness.pipeline_event(
                                     "witness_heavy",
                                     f"cloud second opinion on the disputed verdict "
@@ -1701,11 +1707,22 @@ async def stream_response(
                                     concern=(_hc_hw or ""), verdict=_hv,
                                     sides=("no_ruling" if _no_ruling else
                                            ("inline_witness" if _hc_hw else "her")),
-                                    stage=_hw_stage, rounds=_hw_rounds,
+                                    outcome=_hw_stage, rounds=_hw_rounds,
                                     deadlocked=_hw_deadlocked, heavy_calls=_hv_calls,
                                     latency_s=round(_dt_hw, 1))
                             except Exception as _pe_hw:
+                                # A paid verdict with no record would be a silent drop —
+                                # the one bug class this project has sworn off. Log the
+                                # failure AS an event, with the raw verdict preserved.
                                 print(f"[nova] heavy witness event failed: {_pe_hw}")
+                                try:
+                                    _witness.pipeline_event(
+                                        "witness_heavy",
+                                        f"heavy verdict arrived but the rich event failed "
+                                        f"({_pe_hw}) — raw verdict preserved here",
+                                        verdict=_hv, error=str(_pe_hw))
+                                except Exception:
+                                    pass
 
                         _ht_hw = asyncio.create_task(_heavy_second_opinion())
                         _HEAVY_WITNESS_TASKS.add(_ht_hw)
