@@ -1,0 +1,22 @@
+# voice_gateway dependencies. Install in tiers — the gateway runs at each tier, more capable
+# as you add the next. Nothing here touches Nova's body or her existing environment beyond
+# these packages.
+
+# Tier 1 — transport + committer smoke (--smoke-link). This is all you need to prove the
+# gateway talks to Nova and chunks her replies into speech units, with NO audio hardware.
+websockets>=12.0
+
+# Tier 2 — TTS out (--smoke-tts, and hearing her in --run).
+#   Option A (recommended, expressive — Cole's "tomboyish, not-AI"): Chatterbox.
+# torch>=2.2            # CUDA build for the 4090/3090; CPU works but slow
+# chatterbox-tts        # pip install chatterbox-tts
+#   Option B (zero extra weight — uses llama/llama-tts.exe already on the box):
+#     set tts_backend='llamacpp' and point llamacpp_tts_model at a TTS gguf (e.g. OuteTTS).
+
+# Tier 3 — mic in (--run with stt_backend='moonshine'). Until you install these, use
+# stt_backend='stdin' and TYPE to her — the full loop still works.
+# sounddevice>=0.4
+# numpy>=1.24
+# onnxruntime>=1.17     # onnxruntime-gpu for CUDA
+# useful-moonshine-onnx # streaming STT (MIT); import name: moonshine_onnx
+# silero-vad            # or torch.hub snakers4/silero-vad (see stt.py)

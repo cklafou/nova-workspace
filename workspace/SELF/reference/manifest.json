@@ -1,8 +1,8 @@
 {
-  "generated": "2026-08-02T23:00:10",
+  "generated": "2026-08-03T00:43:42",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
-  "part_count": 31,
-  "described": 30,
+  "part_count": 32,
+  "described": 31,
   "flags": {
     "undescribed": [
       "nova_voice"
@@ -15,7 +15,8 @@
       "calls_order.py",
       "cloud_call.py",
       "injector.py",
-      "restructure.py"
+      "restructure.py",
+      "voice_gateway"
     ],
     "stale": []
   },
@@ -70,7 +71,8 @@
         "cloud_call.py",
         "nova_chat",
         "nova_runtime",
-        "nova_voice"
+        "nova_voice",
+        "voice_gateway"
       ],
       "launched_by": [],
       "flags": []
@@ -337,7 +339,7 @@
       "path": "nova_body/nova_voice",
       "purpose": null,
       "files": 3,
-      "lines": 3286,
+      "lines": 3323,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -429,7 +431,7 @@
       "purpose": "Launcher — runs nova_start.py to bring up the whole Nova stack (double-click entry point).",
       "files": 1,
       "lines": 36,
-      "age_days": 1,
+      "age_days": 2,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -835,6 +837,45 @@
       ],
       "third_party": [
         "__future__"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    },
+    {
+      "name": "voice_gateway",
+      "kind": "tool",
+      "path": "general_tools/voice_gateway",
+      "purpose": "voice_gateway — Cole's microphone to Nova. A comms tool (pluck test: her body is",
+      "files": 8,
+      "lines": 907,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [
+        "8765"
+      ],
+      "nova_imports": [
+        "nova_cortex",
+        "nova_link"
+      ],
+      "third_party": [
+        "__future__",
+        "argparse",
+        "chatterbox",
+        "committer",
+        "config",
+        "moonshine",
+        "moonshine_onnx",
+        "numpy",
+        "onnxruntime",
+        "sounddevice",
+        "stt",
+        "torch",
+        "tts",
+        "wave",
+        "websockets"
       ],
       "referenced_by": [],
       "launched_by": [],

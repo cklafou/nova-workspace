@@ -1,5 +1,5 @@
 # voice_preview — catch performed tone before it ships
-_Last updated: 2026-08-02 22:07:37_
+_Last updated: 2026-08-02 23:08:32_
 
 ## GAP
 voice_check catches reached numbers. The same shape, but for TONE: sycophancy,

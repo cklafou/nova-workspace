@@ -1,5 +1,5 @@
 # CONTEXT DIET — measured numbers and a decision list (2026-07-22)
-_Last updated: 2026-08-02 22:07:37_
+_Last updated: 2026-08-02 23:08:32_
 
 _Written by Claude (Fable, Cowork session) for Cole. The passover called this "a design talk
 with Cole, not a patch" — so this is the talk, with receipts. Nothing here is implemented

@@ -780,6 +780,14 @@ async def stream_response(
     autonomous:  bool  = False,  # if True, inject autonomous-mode directive into system prompt
     temperature: float = 0.7,
     top_p:       float = 0.9,
+    register:    str   = "text",  # "voice"/"voice_fast" (gateway) cap witness rounds at 2 —
+                                  # spoken audio cannot wait out a 20-round debate; disputes
+                                  # defer to the heavy lane instead (witness_deferred).
+                                  # "voice_fast" ALSO skips the reasoning pass on the first
+                                  # reply (casual chit-chat the gateway classified as light):
+                                  # no <think> means first audio in ~1s instead of after a
+                                  # full silent reasoning generation. "voice" keeps thinking
+                                  # (substantive turns); the gateway picks which to send.
 ):
     """
     Call llama.cpp server and process the response in an autonomy loop if tools are used.
@@ -875,6 +883,15 @@ async def stream_response(
         _concern_prev        = ""     # last concern, fed to the next auditor so it judges her
                                       # ANSWER instead of re-litigating with amnesia
         _WITNESS_MAX_ROUNDS  = 20     # Cole, 2026-07-21: give them room to actually settle it.
+        if register in ("voice", "voice_fast"):
+            # ── VOICE REGISTER (2026-08-02, dormant until the gateway exists) ────────────
+            # A person on a phone or watch cannot wait out an audit debate. Two rounds and
+            # the dispute leaves the speech path: the heavy-witness escalation (below, the
+            # disputed-verdict branch) already runs on every overrule/deadlock, so capping
+            # rounds here loses NOTHING except waiting — the record still gets settled, in
+            # the cloud, after her words are already in the air. The gateway's follow-up
+            # queue can then speak "checked it — I was right/wrong" from witness_heavy.
+            _WITNESS_MAX_ROUNDS = 2
                                       # A deadlock check ends it early when nothing is moving.
         _tools_at_last_concern = 0    # did she CHECK anything since the last objection?
         _consec_concerns     = 0      # objections in a row with no new evidence between them
@@ -960,13 +977,23 @@ async def stream_response(
                 # Loop 1 is her talking, so it keeps the conversational sampler.
                 _literal_safe = loop_counter > 1
 
+                # ── VOICE-FAST: skip the reasoning pass on the first spoken reply ─────────
+                # Only for register "voice_fast" (casual chit-chat the gateway flagged light)
+                # and only on loop 1 (her actual reply — tool loops keep thinking so agentic
+                # work stays sound). A full <think> pass is a silent multi-second generation
+                # before a single token of audio can commit; for "hey" / "what's up" / "yeah"
+                # that reasoning buys nothing and costs the whole first-audio budget. Plain
+                # "voice" and "text" are unchanged. If this reply turns out claim-bearing the
+                # witness still gates it — speed here never bypasses the conscience.
+                _think_this = not (register == "voice_fast" and loop_counter == 1)
+
                 full_response = await _fetch_llama_streaming(
                     messages, token_handler,
                     on_think_token=think_handler,
                     max_tokens=tok_budget,
                     temperature=temperature,
                     top_p=top_p,
-                    enable_thinking=True,
+                    enable_thinking=_think_this,
                     literal_safe=_literal_safe,
                 )
             except Exception as e:
@@ -1535,6 +1562,16 @@ async def stream_response(
                     print(f"[nova] WITNESS raised a concern — handing it back to her "
                           f"(round {_witness_rounds}): {_concern[:120]}")
                     try:
+                        if register == "voice" and _witness_rounds >= _WITNESS_MAX_ROUNDS - 1:
+                            try:
+                                _witness.pipeline_event(
+                                    "witness_deferred",
+                                    f"voice register: round {_witness_rounds + 1} is the last "
+                                    f"before this dispute defers to the heavy lane — speech "
+                                    f"cannot wait out a debate",
+                                    concern=_concern, rounds=_witness_rounds + 1)
+                            except Exception:
+                                pass
                         _witness.pipeline_event(
                             "witness_concern",
                                     f"witness objected to a {len(chat_text)}-char draft — handed back "

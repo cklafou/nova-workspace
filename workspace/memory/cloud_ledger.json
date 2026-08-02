@@ -2,9 +2,9 @@
  "month": "2026-08",
  "lanes": {
   "witness_heavy": {
-   "calls": 8,
-   "est_usd": 0.064,
-   "last_ts": "2026-08-02T22:05:25"
+   "calls": 11,
+   "est_usd": 0.088,
+   "last_ts": "2026-08-02T23:14:18"
   }
  }
 }
