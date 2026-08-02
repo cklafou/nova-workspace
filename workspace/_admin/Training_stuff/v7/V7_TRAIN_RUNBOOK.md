@@ -1,5 +1,5 @@
 # v7 TRAIN RUNBOOK — the whole ritual, in order
-_Last updated: 2026-08-02 09:20:47_
+_Last updated: 2026-08-02 10:57:33_
 _2026-08-01, Claude (Fable). Cole approved the corpus as built ("build the V7 from what you
 made", after reviewing the gated rows B3/C5/D5 in full — all 38 new rows ship; pulling any
 later means a rebuild + re-gate, which is a 10-minute job, not a crisis)._

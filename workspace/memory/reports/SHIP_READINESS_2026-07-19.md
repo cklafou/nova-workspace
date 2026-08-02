@@ -1,5 +1,5 @@
 # Ship-readiness assessment — Nova, 2026-07-19
-_Last updated: 2026-08-02 09:20:47_
+_Last updated: 2026-08-02 10:57:34_
 _Fable. Live-tested on `nova_core_v6_epoch1` @ scale **1.0**, after today's four fixes.
 **Verdict: the hallucination bar is met. Ship her.** One real error found, named below._
 

@@ -1,5 +1,5 @@
 # SOURCE_MAP — v7 mined candidates → real events
-_Last updated: 2026-08-02 09:20:47_
+_Last updated: 2026-08-02 10:57:33_
 Paths are relative to /mnt/user-data/uploads/Project_Nova/workspace/. "journal" = memory/journal_notes/2026-07-22.md, "wire" = logs/runtime/transcript.jsonl, "tools" = logs/tool_calls.jsonl, "pipeline" = logs/pipeline.jsonl, "night note" = Nova_Created/nova_night_notes/2026-07-21_the_tenderizer_and_what_i_reached_for.md. Dates 07-21/07-22 per timestamp.
 
 ## A — solitude (v7_candidates_A_solitude.jsonl)

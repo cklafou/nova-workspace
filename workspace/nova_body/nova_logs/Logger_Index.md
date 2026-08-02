@@ -1,6 +1,6 @@
 # Logger_Index.md -- Nova Logging Registry
 _Auto-updated by nova_body/nova_logs/logger.py_
-_Last updated: 2026-08-02 10:40:43_
+_Last updated: 2026-08-02 11:01:22_
 
 ## Log Types and Locations
 

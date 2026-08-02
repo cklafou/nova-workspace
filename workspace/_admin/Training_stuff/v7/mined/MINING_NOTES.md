@@ -1,5 +1,5 @@
 # MINING_NOTES — v7 candidate pass, 2026-07-23
-_Last updated: 2026-08-02 09:20:47_
+_Last updated: 2026-08-02 10:57:33_
 
 ## Where the sources contradict the instructions (or each other)
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-02 09:56:01
+# Last updated: 2026-08-02 10:57:33
 # mk_template.py — produce qwen_template_gen.jinja: Qwen's OWN chat template, with
 # {% generation %} markers placed around the ASSISTANT turn only.
 #

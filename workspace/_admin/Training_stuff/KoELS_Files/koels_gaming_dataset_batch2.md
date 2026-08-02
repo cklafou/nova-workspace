@@ -1,5 +1,5 @@
 # KoELS Gaming Specialist — Dataset Batch 2 (doctrine-grounded: frameworks + coaching)
-_Last updated: 2026-08-02 09:20:47_
+_Last updated: 2026-08-02 10:57:33_
 
 _30 examples deepening the universal-strategy and coaching bands, each anchored to a named concept
 from `KoELS_gaming_research.md` (OODA, Sun Tzu, MOOSEMUSS, Sirlin, minimax/EV, deliberate practice,

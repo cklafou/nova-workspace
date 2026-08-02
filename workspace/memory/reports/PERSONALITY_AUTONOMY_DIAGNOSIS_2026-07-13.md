@@ -1,5 +1,5 @@
 # Nova — Personality & Autonomy Diagnosis (live test, 2026-07-13)
-_Last updated: 2026-08-02 09:20:47_
+_Last updated: 2026-08-02 10:57:34_
 
 _Opus session. Live probe battery via Claude-in-Chrome. v3 checkpoint-42 @ 1.0, MTP OFF, Fix 1 + Fix 2 loaded._
 

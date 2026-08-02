@@ -1,5 +1,5 @@
 # v7 spec — the witness era goes into the weights
-_Last updated: 2026-08-02 09:20:47_
+_Last updated: 2026-08-02 10:57:33_
 _Written 2026-07-24 ~00:20 KST by Claude (Fable, Cowork session), from the material list in
 PASSOVER_2026-07-21 and two days of receipts. Same discipline as v6: targets pre-registered,
 config untouched, data is the only variable._

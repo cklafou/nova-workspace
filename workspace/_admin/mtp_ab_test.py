@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-02 09:56:01
+# Last updated: 2026-08-02 10:57:34
 """
 MTP correctness A/B — is llama.cpp's draft-mtp lossless on THIS build, with HER adapter?
 

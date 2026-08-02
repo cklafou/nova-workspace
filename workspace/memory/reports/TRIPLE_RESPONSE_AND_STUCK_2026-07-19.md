@@ -1,5 +1,5 @@
 # The triple response, and why she thinks but doesn't do
-_Last updated: 2026-08-02 09:20:47_
+_Last updated: 2026-08-02 10:57:34_
 
 _2026-07-19, Fable. Cole, on his way to bed: "Nova just triple responded to my message. That is a
 serious flaw." And: "She also keeps thinking about doing things but won't actually do them. Unless
