@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-02T09:46:20",
+  "generated": "2026-08-02T10:44:57",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 30,
   "described": 28,
@@ -266,7 +266,7 @@
       "path": "nova_body/nova_runtime",
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
       "files": 9,
-      "lines": 1415,
+      "lines": 1422,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -280,7 +280,7 @@
         "nova_voice"
       ],
       "third_party": [
-        "Cole_journal",
+        "importlib",
         "psutil",
         "urllib"
       ],
