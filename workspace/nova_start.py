@@ -374,7 +374,7 @@ def start_witness() -> subprocess.Popen | None:
     model = _find_witness_model()
     if model is None:
         log("No witness model in models/witness — skipping the witness engine (fail-open; "
-            "run _admin/witness_v2/fetch_witness_model.cmd once to add it).", "WARN")
+            "run nova_body/nova_witness/fetch_witness_model.cmd once to add it).", "WARN")
         return None
     wlog = LLAMA_LOGS / f"witness-{_STAMP}.log"
     log(f"Starting witness engine ({model.name}) on :{WITNESS_PORT}. Output -> {wlog.relative_to(WS)}")

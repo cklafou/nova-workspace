@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-02 14:12:42
 # @nova: Witness v2, Step 0 — golden-set harvester. Reads the CURRENT pipeline.jsonl window
 #        (it self-trims to ~50K, so run this often — every run APPENDS new cases durably)
 #        and joins each witness episode with the wire, receipts, and thinking as they were
@@ -108,7 +107,7 @@ LABELS = {
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--workspace", default=".")
-    ap.add_argument("--out", default="_admin/witness_v2/cases/candidates.jsonl")
+    ap.add_argument("--out", default="nova_body/nova_witness/cases/candidates.jsonl")
     args = ap.parse_args()
     ws = Path(args.workspace).resolve()
 

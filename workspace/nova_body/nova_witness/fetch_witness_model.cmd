@@ -31,5 +31,5 @@ exit /b 1
 echo.
 echo [witness-fetch] Done: %OUT%
 for %%A in ("%OUT%") do echo [witness-fetch] Size: %%~zA bytes (expect roughly 2.3-2.9 GB)
-echo [witness-fetch] Next: _admin\witness_v2\start_witness.cmd
+echo [witness-fetch] Next: NovaStart auto-boots the engine, or run nova_body\nova_witness\start_witness.cmd to test now
 pause

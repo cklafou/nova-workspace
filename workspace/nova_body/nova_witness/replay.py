@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-02 14:13:06
 # @nova: Witness v2, Step 0 — the replay harness. Feeds recorded audit cases to ANY witness
 #        endpoint (current 27B on :8080, future 4B on :8081) using her REAL prompt builder
 #        (nova_cortex/witness.py, loaded by file path), and scores the verdicts. This is how
@@ -7,8 +6,8 @@
 """
 replay.py — endpoint-agnostic witness A/B harness.
 
-    python _admin/witness_v2/replay.py --endpoint http://127.0.0.1:8080 \
-        --cases _admin/witness_v2/golden_seed.jsonl _admin/witness_v2/cases/candidates.jsonl
+    python nova_body/nova_witness/replay.py --endpoint http://127.0.0.1:8080 \
+        --cases nova_body/nova_witness/golden_seed.jsonl nova_body/nova_witness/cases/candidates.jsonl
 
 Notes
 - Runs on the Windows box (needs HTTP to the llama server). No GPU work of its own.
@@ -169,7 +168,7 @@ def main():
         "latency_p50_s": lat[len(lat) // 2] if lat else None,
         "latency_p90_s": lat[int(len(lat) * 0.9)] if lat else None,
     }
-    outdir = ws / "_admin" / "witness_v2" / "reports"
+    outdir = ws / "nova_body" / "nova_witness" / "reports"
     outdir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     tag = args.endpoint.split("//")[-1].replace(":", "_").replace("/", "")
