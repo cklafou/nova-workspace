@@ -1,5 +1,5 @@
 # Nova — Locked Prompt + Seed Kit
-_Last updated: 2026-08-02 12:35:34_
+_Last updated: 2026-08-02 18:46:33_
 
 _Last updated: 2026-05-27, by Opus. The reusable text every Nova generation starts from, so
 wording never drifts session to session. Referenced by `avatar_consistency_protocol.md` (rung 4
