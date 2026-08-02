@@ -31,8 +31,11 @@ def load_witness(ws: Path):
     spec.loader.exec_module(mod)
     return mod
 
-def http_json(url, payload=None, timeout=180):
-    req = urllib.request.Request(url, headers={"Content-Type": "application/json"},
+def http_json(url, payload=None, timeout=180, headers=None):
+    h = {"Content-Type": "application/json"}
+    if headers:
+        h.update(headers)
+    req = urllib.request.Request(url, headers=h,
                                  data=json.dumps(payload).encode() if payload else None)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode())
@@ -51,12 +54,13 @@ def wait_idle(endpoint, nice=True, max_wait=600):
             return  # no /slots endpoint (or older server) — proceed
         time.sleep(3)
 
-def ask(endpoint, messages, max_tokens=2048):
-    payload = {"messages": messages, "max_tokens": max_tokens, "temperature": 0.2,
-               "top_p": 0.9, "stream": False,
+def ask(endpoint, messages, max_tokens=2048, api_key="", model="nova-witness-heavy"):
+    payload = {"model": model, "messages": messages, "max_tokens": max_tokens,
+               "temperature": 0.2, "top_p": 0.9, "stream": False,
                "chat_template_kwargs": {"enable_thinking": False}}
     t0 = time.time()
-    out = http_json(endpoint.rstrip("/") + "/v1/chat/completions", payload)
+    hdrs = {"Authorization": "Bearer " + api_key} if api_key else None
+    out = http_json(endpoint.rstrip("/") + "/v1/chat/completions", payload, headers=hdrs)
     dt = time.time() - t0
     txt = out.get("choices", [{}])[0].get("message", {}).get("content", "") or ""
     return txt.strip(), dt
@@ -85,7 +89,7 @@ def run_case(w, endpoint, case, max_tool_rounds=2):
                                thinking=case.get("thinking", ""),
                                prior_concern=case.get("prior_concern", ""),
                                checks=checks)
-        verdict, dt = ask(endpoint, msgs)
+        verdict, dt = ask(endpoint, msgs, api_key=case.get("_api_key", ""))
         latency += dt
         rounds += 1
         if verdict.lstrip().startswith("{") and i < max_tool_rounds:
@@ -109,6 +113,12 @@ def main():
     ap.add_argument("--only-reviewed", action="store_true",
                     help="skip harvested cases nobody has promoted yet")
     ap.add_argument("--no-nice", action="store_true")
+    ap.add_argument("--api-key-env", default="",
+                    help="env var holding a Bearer key (e.g. RUNPOD_API_KEY); for RunPod pass "
+                         "--endpoint https://api.runpod.ai/v2/ENDPOINT_ID/openai")
+    ap.add_argument("--api-key-file", default="",
+                    help="file holding the Bearer key (e.g. models/witness/APILargeWitness.txt); "
+                         "used when the env var is empty")
     args = ap.parse_args()
     ws = Path(args.workspace).resolve()
     w = load_witness(ws)
@@ -124,8 +134,18 @@ def main():
     if args.limit:
         cases = cases[: args.limit]
 
+    import os as _os
+    _key = _os.environ.get(args.api_key_env, "") if args.api_key_env else ""
+    if not _key and args.api_key_file:
+        try:
+            _key = Path(args.api_key_file).read_text(encoding="utf-8").strip()
+        except Exception as _e:
+            print("WARNING: could not read --api-key-file: " + str(_e))
+    if (args.api_key_env or args.api_key_file) and not _key:
+        print("WARNING: no key found via env or file; sending without auth")
     results = []
     for i, case in enumerate(cases, 1):
+        case["_api_key"] = _key
         wait_idle(args.endpoint, nice=not args.no_nice)
         try:
             r = run_case(w, args.endpoint, case)

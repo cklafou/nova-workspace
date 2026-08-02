@@ -13,5 +13,19 @@
     "exec_timeout_s": 60,
     "exec_cwd": null,
     "read_max_bytes": 524288
+  },
+  "cloud": {
+    "enabled": true,
+    "monthly_cap_usd": 25,
+    "lanes": {
+      "witness_heavy": {
+        "base_url": "https://api.runpod.ai/v2/97crmbjbtf9j7s/openai/v1",
+        "model": "nova-witness-heavy",
+        "api_key_env": "RUNPOD_API_KEY",
+        "deadline_s": 90,
+        "est_cost_per_call_usd": 0.008,
+        "api_key_file": "models/witness/APILargeWitness.txt"
+      }
+    }
   }
 }
