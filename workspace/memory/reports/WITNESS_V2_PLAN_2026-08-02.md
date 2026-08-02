@@ -100,6 +100,19 @@ pass/answered/overruled/unresolved mix vs the July 22 healthy distribution.
 **Step 5 — Voice-register hooks** (rounds cap, deferred-verify, sentence-hold interface for the
 committer) — lands with the voice gateway milestone, designed here so nothing needs re-opening.
 
+**Step 6 (optional) — a heavier MoE witness for the async lane (Cole's idea, 2026-08-02).**
+MoE gives big-model judgment at small-model VRAM — but only via llama.cpp's `--n-cpu-moe` expert
+offload: routed experts (the bulk of the weights) live in system RAM, the GPU keeps attention +
+shared experts + KV (~3–5GB). Two facts bound where it fits. (1) Audits are PREFILL-shaped —
+~2K fresh tokens per audit, barely cacheable since draft+wire change every time — and offloaded
+prefill is the documented bottleneck of the technique (expert weights stream per batch; worse
+here because our GPUs hang off laptop lanes and OCuLink x4). So the INLINE gate stays dense-on-GPU.
+(2) The async lane doesn't care: deferred voice verifications, shadow-mode second opinions, and
+nightly golden-set scoring can eat a 10–20s prefill for a mid-30B-dense-quality verdict — e.g.
+Qwen3.6-35B-A3B hybrid (~30 tok/s decode on ~6GB VRAM). Precondition: ~18GB system RAM reliably
+free — measure first (one boot this week showed 3.5GB free of 32GB); a 2×32GB DDR5 SODIMM upgrade
+is the cheap unlock if we want this tier. Not required for v2 acceptance.
+
 ## Risks, named
 
 - **4B judgment quality** — mitigated by Step 0/2 measurement gates, 8B fallback tier, 27B fallback config.
