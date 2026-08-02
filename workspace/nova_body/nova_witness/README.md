@@ -1,5 +1,5 @@
 # nova_witness — the witness organ's engine + its yardstick
-_Last updated: 2026-08-02 22:35:09_
+_Last updated: 2026-08-03 00:59:50_
 _(Moved from _admin/witness_v2 on 2026-08-02 — Cole: "It should be in nova_witness if it is a body part." The witness FACULTY (judgment logic) is nova_cortex/witness.py; this folder is its engine, its golden cases, and the harness that keeps it honest.)_
 _2026-08-02, Claude (Cowork). Plan: `memory/reports/WITNESS_V2_PLAN_2026-08-02.md` (Cole approved 08-02)._
 

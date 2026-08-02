@@ -73,6 +73,24 @@ SKIP_FILES        = {"FILE_INDEX.md", "FILE_INDEX_LINK.md", ".drive_sync_cache.j
 
 MANIFEST_MAX       = 25000  # flat file listing — needs room for full workspace
 MEMORY_FILE_MAX    = 20000  # per memory/ file (STATUS.md can be detailed)
+# JOURNAL.md is chronological and append-only (March at the top, today at the bottom). The
+# always-load used content[:MEMORY_FILE_MAX], which kept the OLDEST ~20KB (March–June) and
+# truncated the newest entries — she was carrying spring's journal into every turn while
+# today's reflection fell off the end. _fit_memory_file keeps the title + the NEWEST entries
+# (the tail) instead, which is both more relevant AND ~8KB smaller in the always-load prefix
+# (a small, safe step of the context diet — the cache-cold prompt-eval driver). 2026-08-02.
+JOURNAL_ALWAYS_MAX = 12000
+
+
+def _fit_memory_file(name: str, content: str) -> str:
+    """Cap a memory/ file for the always-load. JOURNAL.md keeps its header + newest entries
+    (tail); every other memory file keeps the head (they are reference files and all sit under
+    MEMORY_FILE_MAX anyway, so this changes only JOURNAL)."""
+    if name.lower() == "journal.md" and len(content) > JOURNAL_ALWAYS_MAX:
+        head = content[:500]                                   # title + "how to write" preamble
+        tail = content[-(JOURNAL_ALWAYS_MAX - 560):]           # the newest entries
+        return head + "\n\n[... older entries trimmed to fit; newest below ...]\n\n" + tail
+    return content[:MEMORY_FILE_MAX]
 ONDEMAND_FILE_MAX  = 50000  # per on-demand file -- server.py is ~23k, no file should hit this
 DIR_INJECT_MAX     = 200000 # total chars for directory injection -- nova_chat is ~100k
 TOTAL_MAX          = 300000 # Sonnet 4.6=200k tokens, Gemini 2.5Pro=1M tokens -- use the room
@@ -253,7 +271,7 @@ class WorkspaceContext:
             if mem_path.exists():
                 try:
                     content = mem_path.read_text(encoding="utf-8", errors="replace")
-                    self._always[rel] = content[:MEMORY_FILE_MAX]
+                    self._always[rel] = _fit_memory_file(parts_list[-1], content)
                 except Exception as e:
                     self._always[rel] = f"[read error: {e}]"
 

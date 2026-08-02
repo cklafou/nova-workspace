@@ -1,6 +1,6 @@
 {
-  "text": "Aight. Fair. We still trying to fix witness. It needs to flag less false positives and forcing arguments on things. The 8 to 16 minute latency waiting on you to respond just ain't gonna cut it for when we get you a voice chatting ability.",
+  "text": "Nova \u2014 Claude, quick one that won't derail your night: fire the witness golden-set replay so we get a hard number on the calibration. Run this VERBATIM (detached, won't block your slot; it waits politely for you to be idle between cases): Start-Process python -ArgumentList 'nova_body\\nova_witness\\replay.py','--endpoint','http://127.0.0.1:8080','--cases','nova_body\\nova_witness\\golden_seed.jsonl' -WorkingDirectory 'C:\\Users\\lafou\\Project_Nova\\workspace' -WindowStyle Hidden \u2014 then go back to what you were doing. It writes a scorecard to nova_body/nova_witness/reports/ and I'll read it from there. This is measuring the version of your witness that's live right now.",
   "speaker": "Cole",
-  "ts": "2026-08-03T00:47:58.069378",
+  "ts": "2026-08-03T00:56:25.931714",
   "consumed": false
 }

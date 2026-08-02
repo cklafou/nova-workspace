@@ -535,7 +535,34 @@ def _detect_and_queue_changes(watch_dir: Path, commit_hash: str) -> None:
         print(f"[watcher] audit_queue error (non-fatal): {e}")
 
 
+def _clear_stale_git_lock(watch_dir, max_age_s=30):
+    """Remove a STALE .git/index.lock. (Cole's fix, 2026-08-02.)
+
+    A crashed or interrupted git leaves .git/index.lock behind. While it sits there, EVERY
+    `git add`/`commit` fails — and because git_push() calls `git add` with check=True, one
+    stale lock makes the whole push cycle raise and return None, so the watcher silently stops
+    committing. The working tree then drifts ahead of HEAD, and the next restart can revert
+    uncommitted work back to the stale HEAD. That is exactly how the heavy-witness escalation
+    got reverted twice on 2026-08-02: written to disk, never committed (lock), lost on restart.
+
+    Only remove a lock OLDER than max_age_s, so we never yank a lock that a concurrent git op
+    (this cycle's own commit, or Claude's device-side git) legitimately just created. The
+    watcher's own git ops finish in well under a second, so a lock older than 30s is dead."""
+    try:
+        lock = Path(watch_dir) / ".git" / "index.lock"
+        if lock.exists() and (time.time() - lock.stat().st_mtime) > max_age_s:
+            lock.unlink()
+            print(f"[{time.strftime('%H:%M:%S')}] Removed stale .git/index.lock "
+                  f"(it was blocking every commit — the working tree could not reach HEAD)")
+    except Exception as e:
+        print(f"[watcher] could not clear stale git lock: {e}")
+
+
 def git_push(watch_dir):
+    # A leftover lock from a prior crashed git blocks this whole cycle. Clear it FIRST so the
+    # watcher can always make forward progress; without this, one stale lock froze commits
+    # indefinitely and let a restart revert uncommitted work.
+    _clear_stale_git_lock(watch_dir)
     try:
         subprocess.run(["git", "add", "."], cwd=watch_dir, check=True,
                        capture_output=True, text=True)
@@ -579,6 +606,9 @@ def git_push(watch_dir):
         print(f"[{time.strftime('%H:%M:%S')}] Git error: {e}")
         if hasattr(e, 'stderr') and e.stderr:
             print(f"  stderr: {e.stderr.strip()}")
+        # If THIS cycle's git left a lock behind, clear it (force — it is ours) so the next
+        # cycle is not blocked. This is the belt to the start-of-cycle suspenders above.
+        _clear_stale_git_lock(watch_dir, max_age_s=0)
         return None
 
 

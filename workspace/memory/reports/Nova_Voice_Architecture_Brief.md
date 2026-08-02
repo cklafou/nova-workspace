@@ -1,4 +1,5 @@
 # Nova Voice — Architecture Brief (working)
+_Last updated: 2026-08-03 00:54:35_
 _2026-08-02, Claude session following Cole's Nova Chat post on voice plans_
 
 ## Goal

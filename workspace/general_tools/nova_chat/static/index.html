@@ -48,8 +48,6 @@
   --yellow:       #fbbf24;
   --red:          #f87171;
   --red-dim:      rgba(248,113,113,0.12);
-  --cloud:        #7dd3fc;   /* sky — anything that LEFT the machine; all else is local */
-  --cloud-dim:    rgba(125,211,252,0.12);
 
   /* ── Text — readable, violet-warm ──────────────────────────────────── */
   --text:         #f4f2ff;   /* near-white with violet warmth             */
@@ -766,8 +764,6 @@ a:hover { text-decoration: underline; }
 .tfi.err  { border-left-color: var(--red); }
 .tfi.held { border-left-color: var(--yellow); }
 .tfi.held .tfi-icon { color: var(--yellow); }
-.tfi.cloud { border-left-color: var(--cloud); }
-.tfi.cloud .tfi-icon { color: var(--cloud); }
 .tfi-verb { font-weight: 600; font-size: 11px; color: var(--text); }
 .tfi-narr { color: var(--text); font-size: 10.5px; line-height: 1.45; white-space: normal; word-break: break-word; }
 .tfi-narr code { font-family: var(--mono); font-size: 9.5px; background: var(--bg-hover); padding: 0 3px; border-radius: 3px; color: var(--nova); }
@@ -808,8 +804,6 @@ a:hover { text-decoration: underline; }
 .pl-badge.ok   { color: var(--green); }
 .pl-badge.held { color: var(--yellow); }
 .pl-badge.err  { color: var(--red); }
-.pl-badge.cloud { color: var(--cloud); }
-.pl-turn.cloud > .pl-row { background: linear-gradient(90deg, var(--cloud-dim), transparent 55%); }
 .pl-n { margin-left: auto; color: var(--text-mute); font-size: 9px; flex-shrink: 0; }
 .pl-body { padding: 4px 8px 9px 21px; background: var(--bg-hover); }
 .pl-oc { font-size: 10px; color: var(--text-dim); line-height: 1.5; margin-bottom: 5px; }
@@ -817,7 +811,6 @@ a:hover { text-decoration: underline; }
 .pl-msg { margin-top: 8px; padding-left: 8px; border-left: 2px solid var(--border); }
 .pl-msg.nova { border-left-color: var(--nova); }
 .pl-msg.wit  { border-left-color: var(--yellow); }
-.pl-msg.cloud { border-left-color: var(--cloud); }
 .pl-msg.sys  { border-left-color: var(--text-mute); }
 .pl-msg.think { border-left-color: var(--text-mute); opacity: .85; }
 .pl-msg.think .pl-pre { font-style: italic; }
@@ -1142,6 +1135,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 <!-- Widgets -->
 <div id="dd-widgets" class="dropdown">
   <div class="dd-header">Dashboard Widgets</div>
+  <div class="dd-item" onclick="window.open('/variables','nova_variables','width=580,height=780')" title="Live-adjust Nova's tunable knobs (witness rounds, deadlock threshold, tool-chain depth, ...) — changes take effect on her next turn, no restart."><span class="dd-icon">🎛</span><span class="dd-label">Variables…</span></div>
   <div class="dd-engine" title="Switch the dashboard's layout engine. Grid = original Gridstack. Golden = dockable window manager (edge-dock, tab groups, pop-out). Switching reloads the panel.">
     <span class="dd-eng-label">Layout engine</span>
     <button class="dd-eng-btn" id="dengine-grid" onclick="setDockEngine('grid')">Grid</button>
@@ -3137,9 +3131,6 @@ const _PL_META={
   witness_rewrite:    {i:'✍️', t:'Witness: REWROTE',        c:'held'},
   witness_skip:       {i:'➖', t:'No audit fired',          c:''},
   witness_verified:   {i:'🔎', t:'Witness checked it',    c:''},
-  witness_heavy:      {i:'☁️', t:'Cloud witness ruled',     c:'cloud'},
-  cloud_call:         {i:'☁️', t:'Cloud lane call',          c:'cloud'},
-  cloud_skip:         {i:'⛅', t:'Cloud skipped — ran local',c:'cloud'},
   promise_unkept:     {i:'🤞', t:'Promised, didn\'t check',  c:'held'},
   spill_trimmed:      {i:'🧹', t:'Private thinking cut',    c:'held'},
   premise_hold:       {i:'✋', t:'Premise hold',            c:'held'},
@@ -3167,10 +3158,7 @@ const _PL_OUTCOME={
   witness_answered:  {t:'SHE FIXED IT',     c:'ok',   d:'Her witness objected; she answered and revised in her own words.'},
   witness_overruled: {t:'SHE OVERRULED',    c:'held', d:'Her witness objected; she disagreed and kept her position. She holds more context than it does.'},
   witness_unresolved:{t:'STILL DISPUTED',   c:'held', d:'She revised and the witness still objects. Her words shipped anyway — one round only.'},
-  witness_heavy:     {t:'☁ CLOUD SECOND OPINION', c:'cloud', d:'This dispute went AFTER her words shipped to the heavy witness in the cloud — same audit, stronger model, no persona weights. Logs-only: it settles the record, never her reply. Everything WITHOUT the ☁ mark is local, on this machine.'},
-  cloud_call:        {t:'☁ CLOUD CALL',      c:'cloud', d:'One paid call left the machine through a cloud lane. Spend: memory/cloud_ledger.json; kill switch: nova_config.json → cloud.enabled. Rows without the ☁ mark never leave this machine.'},
-  cloud_skip:        {t:'☁ CLOUD SKIPPED',   c:'cloud', d:'A cloud lane declined — disabled, no key, over budget, deadline, or error — and she continued local. Fail-open, working as designed.'},
-  witness_check:     {t:'AUDITING…',        c:'',     d:'Her LOCAL witness — the context-poor second pass on this machine — is reading this draft right now. The outcome lands in a moment.'},
+  witness_check:     {t:'AUDITING…',        c:'',     d:'Her witness is reading this draft right now. The outcome lands in a moment.'},
   witness_verified:  {t:'WITNESS VERIFIED',  c:'', d:'Her witness read the evidence itself before ruling.'},
   promise_unkept:    {t:'PROMISED, DIDN\'T CHECK', c:'held', d:'She said she would verify, then answered anyway. Asked for the tool call and nothing else.'},
   witness_concern:   {t:'OBJECTED — awaiting her answer', c:'held', d:'The witness has objected and is waiting on her answer.'},
@@ -3200,14 +3188,6 @@ function _plRenderGroup(g){
   const evs=g.events;
   const last=evs[evs.length-1];
   const oc=_PL_OUTCOME[last.stage]||{t:_plTitle(last.stage),c:'',d:last.what||''};
-  // A cloud ruling arrives minutes late on the same turn id and becomes the turn's last
-  // word — so the badge says the RULING, not merely that one exists.
-  let ocT=oc.t;
-  if(last.stage==='witness_heavy'){
-    ocT += last.sides==='her' ? ' — SIDED WITH HER'
-         : last.sides==='inline_witness' ? ' — LOCAL WITNESS WAS RIGHT'
-         : ' — NO RULING';
-  }
   const m=_PL_META[last.stage]||{i:'•'};
   const t0=String(evs[0].ts||'').slice(11,16);
   const open=!!_plOpen[g.turn];
@@ -3239,13 +3219,7 @@ function _plRenderGroup(g){
                                           push('system','so this tool was held', (e.tool?e.tool+'  ':'')+(e.args||''), T, 'del'); }
       if(e.stage==='spill_trimmed'){      push('nova','private thinking, about to be posted to chat', e.before, T, 'del');
                                           push('system','what actually went out instead', e.after, T, 'ins'); }
-      if(e.stage==='witness_heavy'){      push('cloudwit',
-                                            e.sides==='her' ? 'ruled from the cloud — sided with HER; the concern does not hold'
-                                          : e.sides==='inline_witness' ? 'ruled from the cloud — the local witness was right; the concern was real'
-                                          : 'was asked from the cloud but never ruled',
-                                            (e.verdict||e.detail||''), T,
-                                            e.sides==='her'?'ins':(e.sides==='inline_witness'?'del':'')); }
-      if(e.concern && e.stage!=='witness_heavy'){ push('witness','objected — here is exactly why', e.concern, T, 'del'); objected=true; }
+      if(e.concern){                      push('witness','objected — here is exactly why', e.concern, T, 'del'); objected=true; }
       if(e.rationale)                     push('novathink','was thinking this as she decided how to answer', e.rationale, T);
       if(e.stage==='witness_answered'){   push('nova','answered the objection and rewrote it herself', e.after, T, 'ins'); }
       if(e.stage==='witness_unresolved'){ push('nova','revised, but the witness was still unhappy', e.after, T); }
@@ -3254,8 +3228,7 @@ function _plRenderGroup(g){
       if(e.error)                         push('system','error', e.error, T, 'del');
     }
     const WHO={nova:{n:'NOVA', c:'nova'}, novathink:{n:'NOVA (thinking)', c:'think'},
-               witness:{n:'HER WITNESS (local)', c:'wit'}, system:{n:'THE SYSTEM', c:'sys'},
-               cloudwit:{n:'☁ CLOUD WITNESS', c:'cloud'}};
+               witness:{n:'HER WITNESS', c:'wit'}, system:{n:'THE SYSTEM', c:'sys'}};
     let dialogue='';
     beats.forEach((b,i)=>{
       const w=WHO[b.who];
@@ -3282,7 +3255,7 @@ function _plRenderGroup(g){
     `<div class="pl-row" onclick="plToggle('${g.turn}')">`+
       `<span class="pl-car">${open?'▾':'▸'}</span>`+
       `<span class="pl-time">${t0}</span>`+
-      `<span class="pl-badge ${oc.c||'ok'}">${m.i} ${_plEsc(ocT)}</span>`+
+      `<span class="pl-badge ${oc.c||'ok'}">${m.i} ${_plEsc(oc.t)}</span>`+
       steps+
     `</div>`+ body +
   `</div>`;
@@ -5950,33 +5923,6 @@ switchPanel('thoughts');
     else initGrid();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-})();
-</script>
-<script>
-// ── APP-WINDOW GEOMETRY SAVER (2026-08-02, Cole: "make it remember the size I make it") ──
-// Chrome's own placement memory is written on graceful close, and this window dies by
-// taskkill every night — so it always reopened at a stale size. Now the page itself owns
-// its geometry: while Cole uses it, it reports size+position to /api/app_window, and
-// nova_start passes that file back as --window-size/--window-position on every launch.
-// Only the real app window saves (launched with ?app=1) — a normal browser tab viewing
-// this page must never overwrite his window's shape.
-(function(){
-  if(!new URLSearchParams(location.search).has('app')) return;
-  let t=null, last='';
-  const save=()=>{
-    clearTimeout(t);
-    t=setTimeout(()=>{
-      const g={x:window.screenX, y:window.screenY, w:window.outerWidth, h:window.outerHeight};
-      const k=JSON.stringify(g);
-      if(k===last) return;              // moves/resizes only — no idle chatter
-      last=k;
-      try{ fetch('/api/app_window',{method:'POST',
-            headers:{'Content-Type':'application/json'}, body:k}); }catch(_){}
-    }, 800);
-  };
-  window.addEventListener('resize', save);
-  setInterval(save, 15000);             // a drag fires no resize event; the poll catches it
-  save();
 })();
 </script>
 </body>

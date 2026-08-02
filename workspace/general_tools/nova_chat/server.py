@@ -1,5 +1,5 @@
 # @nova: Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).
-# Last updated: 2026-08-02 22:37:13
+# Last updated: 2026-08-02 06:54:53
 """
 Nova Group Chat - FastAPI WebSocket Server
 Handles real-time streaming from all three AIs concurrently.
@@ -290,28 +290,6 @@ async def shutdown_event():
     except Exception as e:
         print(f"[shutdown] llama stop error: {e}")
 
-@app.post("/api/app_window")
-async def api_app_window(request: Request):
-    """The app window reports its own geometry (index.html's ?app=1 saver). nova_start
-    reads _admin/app_window.json at boot and opens the window exactly where Cole left it —
-    Chrome's own placement memory dies with the force-kill teardown, so the page owns it.
-    Loopback-only by default: this path is not on the remote allow-list."""
-    import json as _json
-    try:
-        g = await request.json()
-        out = {k: int(g[k]) for k in ("x", "y", "w", "h")}
-        if out["w"] < 400 or out["h"] < 300:
-            return {"ok": False, "why": "implausibly small; ignored"}
-        p = _ws_root() / "_admin" / "app_window.json"
-        p.parent.mkdir(parents=True, exist_ok=True)
-        tmp = p.with_suffix(".tmp")
-        tmp.write_text(_json.dumps(out), encoding="utf-8")
-        os.replace(tmp, p)
-        return {"ok": True}
-    except Exception as e:
-        return {"ok": False, "why": str(e)[:120]}
-
-
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
@@ -333,6 +311,122 @@ workspace = WorkspaceContext()  # lazy: loads memory/ now, indexes disk on first
 # Nova identity (AGENTS.md, NOVA.md, TOOLS.md) is now injected inside
 # workspace_context.build_nova_context_block() so it works for both the live
 # server and the compiled Nova.exe without any extra init here.
+
+# ── LIVE VARIABLES (2026-08-03, Cole) ─────────────────────────────────────────────────────────
+# The "adjust things on the fly" tool. GET returns every registered knob (value + metadata);
+# POST sets one. The registry + persistence live in nova_cortex/tunables.py; nova.py reads the
+# values hot, so a change here takes effect on her NEXT turn with no restart. The panel at
+# /variables is a self-contained page (no dashboard surgery). See Orient/TUNABLE_VARIABLES.md.
+@app.get("/api/variables")
+async def api_variables_get():
+    try:
+        from nova_cortex import tunables
+        return JSONResponse({"ok": True, "tunables": tunables.snapshot()})
+    except Exception as e:
+        return JSONResponse({"ok": False, "why": str(e)[:200], "tunables": []})
+
+
+@app.post("/api/variables")
+async def api_variables_set(body: dict = Body(...)):
+    """Set one knob: {"key":..., "value":...}  or reset one: {"key":..., "reset":true}."""
+    try:
+        from nova_cortex import tunables
+        key = (body.get("key") or "").strip()
+        if body.get("reset"):
+            return JSONResponse(tunables.reset(key))
+        return JSONResponse(tunables.set(key, body.get("value")))
+    except Exception as e:
+        return JSONResponse({"ok": False, "why": str(e)[:200]})
+
+
+_VARIABLES_HTML = """<!doctype html><html><head><meta charset="utf-8">
+<title>Nova · Variables</title><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+ :root{--bg:#0e1013;--surf:#171a1f;--bd:#262b33;--tx:#d7dbe0;--mut:#8b93a0;--acc:#6ea8fe;--ok:#3fb950}
+ *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--tx);
+  font:13px/1.5 ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif;padding:16px}
+ h1{font-size:15px;margin:0 0 2px} .sub{color:var(--mut);font-size:11.5px;margin-bottom:14px}
+ .cat{color:var(--acc);font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+  margin:16px 0 6px;border-bottom:1px solid var(--bd);padding-bottom:4px}
+ .knob{background:var(--surf);border:1px solid var(--bd);border-radius:9px;padding:10px 12px;margin-bottom:8px}
+ .row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+ .lbl{font-weight:600} .desc{color:var(--mut);font-size:11.5px;margin-top:4px}
+ input[type=range]{flex:1;accent-color:var(--acc)} input[type=number]{width:64px;background:#0e1013;
+  color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:3px 6px;font:inherit;text-align:right}
+ .val{min-width:40px;text-align:right;font-variant-numeric:tabular-nums;color:var(--acc);font-weight:600}
+ .sw{position:relative;width:40px;height:22px;flex:none} .sw input{opacity:0;width:0;height:0}
+ .sl{position:absolute;inset:0;background:#333a44;border-radius:22px;cursor:pointer;transition:.15s}
+ .sl:before{content:"";position:absolute;height:16px;width:16px;left:3px;top:3px;background:#cfd6df;border-radius:50%;transition:.15s}
+ input:checked+.sl{background:var(--ok)} input:checked+.sl:before{transform:translateX(18px)}
+ .rst{background:none;border:none;color:var(--mut);cursor:pointer;font-size:11px;text-decoration:underline}
+ .saved{color:var(--ok);font-size:11px;opacity:0;transition:opacity .2s} .saved.on{opacity:1}
+ .foot{color:var(--mut);font-size:11px;margin-top:18px;border-top:1px solid var(--bd);padding-top:10px}
+</style></head><body>
+ <h1>Variables</h1>
+ <div class="sub">Live knobs — changes take effect on Nova's next turn, no restart. Persisted to _admin/tunables.json.</div>
+ <div id="root">loading…</div>
+ <div class="foot">Add knobs in <code>nova_cortex/tunables.py</code>. Convention: <code>Orient/TUNABLE_VARIABLES.md</code>.</div>
+<script>
+ const R=document.getElementById('root');
+ async function load(){
+   const r=await fetch('/api/variables'); const d=await r.json();
+   if(!d.ok){R.textContent='could not load: '+(d.why||'?');return}
+   const cats={}; d.tunables.forEach(t=>{(cats[t.category||'Other']=cats[t.category||'Other']||[]).push(t)});
+   R.innerHTML='';
+   for(const cat in cats){
+     const h=document.createElement('div');h.className='cat';h.textContent=cat;R.appendChild(h);
+     cats[cat].forEach(t=>R.appendChild(knob(t)));
+   }
+ }
+ function knob(t){
+   const box=document.createElement('div');box.className='knob';
+   const row=document.createElement('div');row.className='row';
+   const lbl=document.createElement('span');lbl.className='lbl';lbl.textContent=t.label||t.key;
+   row.appendChild(lbl);
+   const saved=document.createElement('span');saved.className='saved';saved.textContent='saved';
+   let ctrl;
+   if(t.type==='bool'){
+     const w=document.createElement('label');w.className='sw';
+     const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!t.value;
+     const sl=document.createElement('span');sl.className='sl';
+     cb.onchange=()=>save(t.key,cb.checked,saved);
+     w.appendChild(cb);w.appendChild(sl);ctrl=w;
+   }else{
+     const wrap=document.createElement('div');wrap.className='row';wrap.style.flex='1';wrap.style.marginLeft='12px';
+     const rng=document.createElement('input');rng.type='range';rng.min=t.min;rng.max=t.max;
+     rng.step=t.type==='float'?0.05:1;rng.value=t.value;
+     const num=document.createElement('input');num.type='number';num.min=t.min;num.max=t.max;
+     num.step=rng.step;num.value=t.value;
+     const sync=(v)=>{rng.value=v;num.value=v;};
+     rng.oninput=()=>{num.value=rng.value};
+     rng.onchange=()=>save(t.key,+rng.value,saved,sync);
+     num.onchange=()=>save(t.key,+num.value,saved,sync);
+     wrap.appendChild(rng);wrap.appendChild(num);ctrl=wrap;
+   }
+   row.appendChild(ctrl);row.appendChild(saved);box.appendChild(row);
+   const d=document.createElement('div');d.className='desc';d.textContent=t.desc||'';box.appendChild(d);
+   const rst=document.createElement('button');rst.className='rst';rst.textContent='reset to default ('+t.default+')';
+   rst.onclick=()=>reset(t.key,saved);box.appendChild(rst);
+   return box;
+ }
+ async function save(key,value,saved,sync){
+   const r=await fetch('/api/variables',{method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({key,value})}); const d=await r.json();
+   if(d.ok){if(sync)sync(d.value);flash(saved)}else{alert('failed: '+(d.why||'?'))}
+ }
+ async function reset(key,saved){
+   await fetch('/api/variables',{method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({key,reset:true})}); flash(saved); load();
+ }
+ function flash(el){el.classList.add('on');setTimeout(()=>el.classList.remove('on'),1200)}
+ load();
+</script></body></html>"""
+
+
+@app.get("/variables")
+async def variables_page():
+    return HTMLResponse(_VARIABLES_HTML)
+
 
 connected_clients: list[WebSocket] = []
 active_tasks: list[asyncio.Task] = []

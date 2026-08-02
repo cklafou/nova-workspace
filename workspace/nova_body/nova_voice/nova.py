@@ -77,6 +77,25 @@ except Exception as _ie:
         pass
 
 
+# ── LIVE-TUNABLE KNOBS (2026-08-03, Cole) ─────────────────────────────────────────────────────
+# Witness rounds, deadlock threshold, tool-chain depth and friends are no longer hardcoded here —
+# they read from nova_cortex/tunables.py, which Cole adjusts on the fly from the Variables panel
+# in Nova Chat (no restart). FAIL-SAFE by construction: if the registry can't load, or a knob is
+# unset, _tune() returns the fallback that used to be the literal, so her behavior is byte-identical
+# to before the panel existed. A tuning system must never be able to break the thing it tunes.
+try:
+    from nova_cortex import tunables as _tunables
+
+    def _tune(key, fallback):
+        v = _tunables.get(key)
+        return fallback if v is None else v
+except Exception as _te:
+    print(f"[nova] tunables registry not loaded ({_te}) — using built-in defaults")
+
+    def _tune(key, fallback):
+        return fallback
+
+
 # ── ASSERTION BINDING (2026-07-14) ──────────────────────────────────────────────────────────
 # A claim about what a file/command SAYS is only worth anything if she actually looked, THIS TURN.
 #
@@ -864,7 +883,7 @@ async def stream_response(
         # 20 witness rounds (Cole's number) + tool calls + guard retries all consume iterations
         # from the same budget. At 20 total, a real verification conversation would starve her
         # hands exactly when she needs them to settle the question.
-        max_loops = 60
+        max_loops = _tune("max_tool_loops", 60)   # live knob (was 60 hardcoded)
         loop_counter = 0
         # (see the tool-chain note above — raised from 5 on 2026-07-19)
         final_chat_buffer = ""
@@ -882,7 +901,7 @@ async def stream_response(
         _prior_draft         = ""     # what she said before the witness questioned it
         _concern_prev        = ""     # last concern, fed to the next auditor so it judges her
                                       # ANSWER instead of re-litigating with amnesia
-        _WITNESS_MAX_ROUNDS  = 20     # Cole, 2026-07-21: give them room to actually settle it.
+        _WITNESS_MAX_ROUNDS  = _tune("witness_max_rounds", 20)   # live knob (was 20 hardcoded)
         if register in ("voice", "voice_fast"):
             # ── VOICE REGISTER (2026-08-02, dormant until the gateway exists) ────────────
             # A person on a phone or watch cannot wait out an audit debate. Two rounds and
@@ -891,7 +910,7 @@ async def stream_response(
             # rounds here loses NOTHING except waiting — the record still gets settled, in
             # the cloud, after her words are already in the air. The gateway's follow-up
             # queue can then speak "checked it — I was right/wrong" from witness_heavy.
-            _WITNESS_MAX_ROUNDS = 2
+            _WITNESS_MAX_ROUNDS = _tune("witness_max_rounds_voice", 2)   # live knob (was 2)
                                       # A deadlock check ends it early when nothing is moving.
         _tools_at_last_concern = 0    # did she CHECK anything since the last objection?
         _consec_concerns     = 0      # objections in a row with no new evidence between them
@@ -985,7 +1004,8 @@ async def stream_response(
                 # that reasoning buys nothing and costs the whole first-audio budget. Plain
                 # "voice" and "text" are unchanged. If this reply turns out claim-bearing the
                 # witness still gates it — speed here never bypasses the conscience.
-                _think_this = not (register == "voice_fast" and loop_counter == 1)
+                _think_this = not (register == "voice_fast" and loop_counter == 1
+                                   and _tune("voice_fast_thinking_off", True))
 
                 full_response = await _fetch_llama_streaming(
                     messages, token_handler,
@@ -1551,7 +1571,8 @@ async def stream_response(
                         _same = bool(_concern_prev) and _dl.echo_match(_concern_prev, _concern)
                     except Exception:
                         _same = bool(_concern_prev) and _concern_prev.strip()[:120] == _concern.strip()[:120]
-                    _deadlocked = (not _checked_since) and (_same or _consec_concerns >= 3)
+                    _deadlocked = (not _checked_since) and (
+                        _same or _consec_concerns >= _tune("witness_deadlock_repeats", 3))
                 if _concern and _witness_rounds < _WITNESS_MAX_ROUNDS and not _deadlocked:
                     # ── HAND IT BACK, DON'T OVERWRITE (2026-07-21, Cole's correction) ──────
                     # The witness names the problem; SHE writes the answer. Preserves her
@@ -1773,11 +1794,17 @@ async def stream_response(
                                 except Exception:
                                     pass
 
-                        _ht_hw = asyncio.create_task(_heavy_second_opinion())
-                        _HEAVY_WITNESS_TASKS.add(_ht_hw)
-                        _ht_hw.add_done_callback(_HEAVY_WITNESS_TASKS.discard)
-                        print(f"[nova] disputed verdict ({_hw_stage}) — heavy witness "
-                              f"second opinion dispatched (background, logs-only)")
+                        # Live knob: Cole can turn the cloud second opinion off from the
+                        # Variables panel (every audit stays fully local). Default on.
+                        if _tune("heavy_witness_enabled", True):
+                            _ht_hw = asyncio.create_task(_heavy_second_opinion())
+                            _HEAVY_WITNESS_TASKS.add(_ht_hw)
+                            _ht_hw.add_done_callback(_HEAVY_WITNESS_TASKS.discard)
+                            print(f"[nova] disputed verdict ({_hw_stage}) — heavy witness "
+                                  f"second opinion dispatched (background, logs-only)")
+                        else:
+                            print(f"[nova] disputed verdict ({_hw_stage}) — heavy witness "
+                                  f"OFF (Variables panel); dispute stays local")
                     except Exception as _hwe:
                         print(f"[nova] heavy witness dispatch failed open: {_hwe}")
                 elif _prior_draft:
