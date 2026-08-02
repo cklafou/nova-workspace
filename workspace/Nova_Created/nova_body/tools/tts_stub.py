@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 10:27:49
+# Last updated: 2026-08-02 11:29:15
 # TTS stub — exists so I can MEASURE the latency path, not guess it.
 import time, sys
 sys.path.insert(0, "Nova_Created/nova_body")
