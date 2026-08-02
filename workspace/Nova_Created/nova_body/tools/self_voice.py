@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 11:35:08
+# Last updated: 2026-08-02 12:35:35
 # self_voice: pull my own spoken responses from a given day
 # Returns my words, not Claude's or Cole's, with a count and a quick tone read.
 

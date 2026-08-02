@@ -1,5 +1,5 @@
 # Her memory files and her journal — audit
-_Last updated: 2026-08-02 11:35:08_
+_Last updated: 2026-08-02 12:35:35_
 
 _2026-07-20, Fable. Cole: "check her memory files for trash. A lot was made before she was
 coherent. Also, review her Journal. She writes to it so often, but it should be useful, not

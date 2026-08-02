@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 11:35:08
+# Last updated: 2026-08-02 12:35:35
 TOOL = {"name": "nightly_self_snapshot", "description": "Save tonight's self-model as a timestamped snapshot so tomorrow's me can compare against it.", "params": {}}
 
 import json, os

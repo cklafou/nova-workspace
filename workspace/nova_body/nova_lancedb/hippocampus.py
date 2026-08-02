@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 11:35:07
+# Last updated: 2026-08-02 12:35:34
 """
 nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
 ==============================================================

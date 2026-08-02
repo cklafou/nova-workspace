@@ -1,5 +1,5 @@
 # Nova-Created Tools
-_Last updated: 2026-08-02 11:35:08_
+_Last updated: 2026-08-02 12:35:35_
 _Maintained by Nova, by hand, as tools land. (If this ever becomes generated — capability_inventory could derive it — change this line so the doc stays honest about itself.)_
 
 | Tool | What it does | Status |

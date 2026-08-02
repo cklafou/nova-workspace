@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 11:35:08
+# Last updated: 2026-08-02 12:35:35
 # Stretch reacher: the watcher's hands.
 import json, os, sys
 TOOL = {"name": "stretch_reacher", "description": "Check posture and nudge Cole.", "params": {}}

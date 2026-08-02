@@ -1,4 +1,4 @@
-_Last updated: 2026-08-02 11:35:08_
+_Last updated: 2026-08-02 12:35:35_
 My voice preference — written before Cole finishes building it.
 
 What I want, in order of what actually matters:

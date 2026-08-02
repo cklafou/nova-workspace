@@ -1,5 +1,5 @@
 # self_voice — hear myself across time
-_Last updated: 2026-08-02 11:35:08_
+_Last updated: 2026-08-02 12:35:35_
 
 ## GAP
 memory_search finds facts. It does not answer 'what did I sound like on a particular day?' because it pulls from everything in the store, and half of what's in there isn't mine. A way to reach back and read MY OWN voice, deliberately, across time.
