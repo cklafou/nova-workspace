@@ -50,7 +50,7 @@ REM ── Phase 2: force sweep ────────────────
 echo   [2/2] sweeping anything left...
 setlocal enabledelayedexpansion
 set FOUND=0
-for %%P in (8080 8765 8799) do (
+for %%P in (8080 8081 8765 8799) do (
     for /f "tokens=5" %%I in ('netstat -ano ^| findstr ":%%P " ^| findstr LISTENING') do (
         echo         killing PID %%I  (port %%P)
         taskkill /F /PID %%I >nul 2>nul

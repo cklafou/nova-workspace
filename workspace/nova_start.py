@@ -54,6 +54,12 @@ PROMPT_CACHE = WS / "prompt_cache"
 LLAMA_PORT = 8080
 CHAT_PORT  = 8765
 LLAMA_HEALTH = f"http://127.0.0.1:{LLAMA_PORT}/health"
+# ── Witness engine (Witness v2, Step 1 — memory/reports/WITNESS_V2_PLAN_2026-08-02.md) ──────
+# Her auditor's own small model on its own port, so audits stop queueing behind her voice.
+# FAIL-OPEN everywhere: no model / no boot -> warn and continue; her own boot never blocks.
+WITNESS_PORT   = 8081
+WITNESS_HEALTH = f"http://127.0.0.1:{WITNESS_PORT}/health"
+WITNESS_MODELS = WS / "models" / "witness"
 
 LOG_DIR    = WS / "logs" / "launcher"
 LLAMA_LOGS = WS / "logs" / "llama"
@@ -172,6 +178,14 @@ def port_open(port: int, host: str = "127.0.0.1", timeout: float = 1.0) -> bool:
 def llama_healthy(timeout: float = 2.0) -> bool:
     try:
         with urllib.request.urlopen(LLAMA_HEALTH, timeout=timeout) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+
+def witness_healthy(timeout: float = 2.0) -> bool:
+    try:
+        with urllib.request.urlopen(WITNESS_HEALTH, timeout=timeout) as r:
             return r.status == 200
     except Exception:
         return False
@@ -308,6 +322,95 @@ def wait_for_llama(timeout_s: int = 300) -> bool:
     print(flush=True)
     log("llama-server did not become healthy within %ds." % timeout_s, "ERROR")
     return False
+
+
+# ── Witness engine (:8081) — starts AFTER the main model is resident ─────────
+def _find_witness_model():
+    """Preferred names first (what fetch_witness_model.cmd downloads), else any GGUF."""
+    for name in ("Qwen3.5-4B-UD-Q4_K_XL.gguf", "Qwen3.5-4B-Q4_K_M.gguf"):
+        cand = WITNESS_MODELS / name
+        if cand.exists():
+            return cand
+    try:
+        for cand in sorted(WITNESS_MODELS.glob("*.gguf")):
+            return cand
+    except Exception:
+        pass
+    return None
+
+
+def build_witness_cmd(model) -> list:
+    """Mirrors nova_body/nova_witness/start_witness.cmd (the manual/test path) — keep the
+    two in sync, same contract as build_llama_cmd() vs start_llama_qwen36.cmd. Small model,
+    CUDA0, thinking off at the server default, NO persona LoRA (the auditor must not
+    inherit the priors it audits)."""
+    return [str(LLAMA_EXE),
+            "-m", str(model),
+            "--device", "CUDA0",
+            "-ngl", "999",
+            "-c", "16384",
+            "--parallel", "2",
+            "-ctk", "q8_0",
+            "-ctv", "q8_0",
+            "-fa", "on",
+            "--jinja",
+            "--chat-template-kwargs", "{\"enable_thinking\":false}",
+            "--cache-prompt",
+            "-b", "2048",
+            "-ub", "512",
+            "--port", str(WITNESS_PORT), "--host", "127.0.0.1"]
+
+
+def start_witness() -> subprocess.Popen | None:
+    """FAIL-OPEN: every early return here is a warning, never a halt — the witness engine
+    is an upgrade, not a dependency. Called only after wait_for_llama() succeeds so the
+    27B's VRAM allocation lands first and the 4B takes what CUDA0 has left."""
+    if witness_healthy():
+        log("Witness engine already healthy on :%d — reusing it." % WITNESS_PORT)
+        return None
+    if port_open(WITNESS_PORT):
+        log("Something is on :%d but /health is not 200 yet — leaving it be." % WITNESS_PORT, "WARN")
+        return None
+    model = _find_witness_model()
+    if model is None:
+        log("No witness model in models/witness — skipping the witness engine (fail-open; "
+            "run _admin/witness_v2/fetch_witness_model.cmd once to add it).", "WARN")
+        return None
+    wlog = LLAMA_LOGS / f"witness-{_STAMP}.log"
+    log(f"Starting witness engine ({model.name}) on :{WITNESS_PORT}. Output -> {wlog.relative_to(WS)}")
+    try:
+        lf = open(wlog, "a", encoding="utf-8", errors="replace")
+        return subprocess.Popen(build_witness_cmd(model), cwd=str(WS), stdout=lf,
+                                stderr=subprocess.STDOUT, creationflags=_NO_WINDOW)
+    except Exception as e:
+        log(f"Could not start the witness engine: {e} — continuing without it.", "WARN")
+        return None
+
+
+def wait_for_witness(timeout_s: int = 90) -> bool:
+    """Non-fatal check-in. The 4B loads in ~10-20s; give it slack, then shrug."""
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        if witness_healthy():
+            log("Witness engine is HEALTHY on :%d" % WITNESS_PORT)
+            return True
+        time.sleep(2)
+    log("Witness engine not healthy after %ds — continuing without it (fail-open; "
+        "audits stay on the main server until it appears)." % timeout_s, "WARN")
+    return False
+
+
+def stop_witness(proc: subprocess.Popen | None) -> None:
+    if proc and proc.poll() is None:
+        log("Stopping witness engine...")
+        try:
+            proc.terminate()
+            proc.wait(timeout=10)
+        except Exception:
+            try:
+                proc.kill()
+            except Exception:
+                pass
 
 
 # ── Pick a Python that actually has Nova's server deps ─────────────────────--
@@ -738,9 +841,16 @@ def main() -> None:
         halt("Aborting: model not ready. See the llama-server tab for why.")
         return
 
+    # Witness engine loads AFTER her 27B is resident (VRAM order matters on CUDA0) and
+    # in parallel with the chat server boot. Fail-open: absence never blocks her.
+    witness_proc = start_witness()
+
     nova_proc = start_nova()
     if not wait_for_nova():
         log("Proceeding to open the app window anyway; it may show a connection error.", "WARN")
+
+    if witness_proc is not None:
+        wait_for_witness()
 
     app_proc = open_app_window()
     watcher_proc = start_watcher()
@@ -750,7 +860,7 @@ def main() -> None:
     # spawned" from "a terminal Cole opened". It only ever hides windows whose ancestry reaches
     # one of these PIDs — it must never touch a window that isn't ours.
     if HUB:
-        HUB.pids = [p.pid for p in (llama_proc, nova_proc, watcher_proc, console_proc)
+        HUB.pids = [p.pid for p in (llama_proc, witness_proc, nova_proc, watcher_proc, console_proc)
                     if p is not None] + [os.getpid()]
 
     # StopNova.cmd can now ask for a CLEAN teardown instead of blunt-force killing the watcher.
@@ -797,6 +907,7 @@ def main() -> None:
         stop_watcher(watcher_proc)
         _shutdown_nova(nova_proc)
         stop_llama(llama_proc)
+        stop_witness(witness_proc)
         try:
             if _app_profile_dir:
                 shutil.rmtree(_app_profile_dir, ignore_errors=True)

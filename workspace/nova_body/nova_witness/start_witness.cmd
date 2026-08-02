@@ -10,6 +10,10 @@ REM switch --device to CUDA1 below.
 REM
 REM Thinking is OFF at the server default (the witness rules on evidence, it doesn't muse) —
 REM replay.py and nova.py also send enable_thinking:false per-request; belt and suspenders.
+REM AUTO-STARTED by NovaStart since 2026-08-02: nova_start.py builds the equivalent command
+REM (build_witness_cmd) and health-gates it fail-open. This file remains the MANUAL/test path —
+REM if you change flags here, change build_witness_cmd() to match (same contract as
+REM start_llama_qwen36.cmd vs build_llama_cmd). StopNova.cmd sweeps :8081 too.
 title llama.cpp WITNESS - Qwen3.5-4B on :8081 (CUDA0)
 cd /d "%~dp0..\.."
 

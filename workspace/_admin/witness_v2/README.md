@@ -1,5 +1,4 @@
 # witness_v2 — Step 0 tooling (golden set + replay)
-_Last updated: 2026-08-02 13:14:39_
 _2026-08-02, Claude (Cowork). Plan: `memory/reports/WITNESS_V2_PLAN_2026-08-02.md` (Cole approved 08-02)._
 
 Measure the current witness before replacing its engine. Everything here is read-only toward
@@ -37,8 +36,14 @@ false-concern rate ≤ v1 on must-PASS, and p50 audit latency < 3s.
 
 ## Step 1 — the witness engine (:8081)
 
-    _admin\witness_v2\fetch_witness_model.cmd    # one-time ~2.5GB download (resumable)
-    _admin\witness_v2\start_witness.cmd          # llama-server, Qwen3.5-4B, CUDA0, :8081
+    _admin\witness_v2\fetch_witness_model.cmd     # one-time ~2.5GB download (resumable)
+    nova_body\nova_witness\start_witness.cmd      # manual/test path (Cole moved it into her body 2026-08-02)
+
+**Auto-start (2026-08-02):** NovaStart brings the witness engine up itself — nova_start.py
+builds the equivalent command (`build_witness_cmd`, kept in sync with the .cmd), starts it AFTER
+the 27B is resident (VRAM order on CUDA0), health-gates it FAIL-OPEN (no model / no boot = warn
+and continue, never a halt), logs to `logs/llama/witness-*.log` (visible in the Console's llama
+tab), and StopNova.cmd sweeps :8081. Manual start is only needed for testing outside the stack.
 
 Verify: `curl http://127.0.0.1:8081/health`, then a 2-case smoke against it:
 
@@ -46,9 +51,7 @@ Verify: `curl http://127.0.0.1:8081/health`, then a 2-case smoke against it:
 
 Model note: Qwen3.5-4B (official unsloth GGUF) — same family as her base, NO persona LoRA on
 this server by design: the auditor must not inherit the priors it audits. The MTP variant
-(unsloth/Qwen3.5-4B-MTP-GGUF) is a drop-in speed upgrade later. StopNova.cmd does not yet know
-about :8081 — stop the witness window manually for now (wiring it in comes with the nova.py
-endpoint switch, Step 3 of the plan).
+(unsloth/Qwen3.5-4B-MTP-GGUF) is a drop-in speed upgrade later.
 
 ## Replay limits (known, deliberate)
 
