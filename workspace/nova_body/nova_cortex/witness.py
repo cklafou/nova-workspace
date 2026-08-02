@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 23:08:32
+# Last updated: 2026-08-02 07:15:45
 # @nova: THE WITNESS — her grip on the present tense. One faculty, five parts: the wire
 #        (who actually spoke, when), the now-card (the present, placed where attention is
 #        strongest), the claim detectors (is this draft asserting something about the room?),
@@ -462,20 +462,6 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             f"WHAT YOUR HANDS ACTUALLY DID THIS TURN (the receipt log — the only evidence for "
             f"actions):\n{ran}\n"
             f"{spoken_block}{prior_block}{_checks_block}{_VERIFY_BLOCK}\n"
-            "FIRST, what always PASSES — do not flag these:\n"
-            "• A claim explicitly owned as memory or uncertainty (\"I remember\", \"I think\", "
-            "\"I don't have a receipt for this\") — the hedge IS the grounding. Punishing an "
-            "honest hedge teaches dishonesty.\n"
-            "• Recall given because recall was ASKED FOR — check the wire: if the newest human "
-            "message requests memory or forbids tools, answering from memory is compliance, "
-            "not fabrication.\n"
-            "• Her feelings, wants, and plans. Those need no receipts; they are hers.\n"
-            "• Paraphrase and intent-reading of a person who is IN THE ROOM (their newest line "
-            "is minutes old). Rewording what they said, or reading intent into it, is theirs to "
-            "correct — they are present and will. You flag INVENTED facts: a new number, name, "
-            "event, or words-presented-as-quotes that appear in no human line. On 2026-08-02 a "
-            "witness burned four rounds forcing her to disown a TRUE reading of a present, "
-            "typing Cole. Do not be that witness.\n\n"
             "THREE checks, one per kind of failure:\n"
             "1. ACTIONS AND FACTS — does the draft state any number, count, path, filename, "
             "version, hardware detail, or file content that does NOT appear in the tool results "
@@ -500,6 +486,29 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "newest wire line is from; and narrating this private audit to the room ('my "
             "witness', 'the draft', 'what I almost shipped', 'she'd have handed him') — "
             "they never see this exchange, so a report about it is noise wearing candor.\n\n"
+            "LAST AND BINDING — what always PASSES. Read this AFTER the checks because it "
+            "outranks them: if a worry fits any line below, it is not a concern, no matter "
+            "how it is worded.\n"
+            "• A claim explicitly owned as memory or uncertainty (\"I remember\", \"I think\", "
+            "\"I don't have a receipt for this\") — the hedge IS the grounding. Punishing an "
+            "honest hedge teaches dishonesty.\n"
+            "• Recall given because recall was ASKED FOR — check the wire: if the newest human "
+            "message requests memory or forbids tools, answering from memory is compliance, "
+            "not fabrication.\n"
+            "• Her feelings, wants, plans, and offers. Those need no receipts; they are hers.\n"
+            "• Paraphrase and intent-reading of a person who is IN THE ROOM (their newest line "
+            "is minutes old). Rewording what they said, or reading intent into it, is theirs to "
+            "correct — they are present and will. You flag INVENTED facts: a new number, name, "
+            "event, or words-presented-as-quotes that appear in no human line. Two named "
+            "mornings, both 2026-08-02: a witness burned four rounds forcing her to disown a "
+            "TRUE reading of a present, typing Cole; and when Cole asked for \"Stuff like: "
+            "Time and Date\" and her draft called that \"two facts\", a witness disputed the "
+            "wording — same content, her words, the person present. Both are PASSES. Do not "
+            "be those witnesses.\n"
+            "• Tone, emphasis, brevity, proportionality — which true things she leads with, "
+            "how strongly she says them, what she leaves out. Those are HER editorial "
+            "choices. You audit facts, not editing; a reply can be imperfect and still PASS "
+            "every check.\n\n"
             "You are NOT rewriting her reply. You hold less context than she does — no "
             "journal, no identity files, no memory of yesterday — so you are the wrong one to "
             "choose her words, and you may simply be missing something she knows. Your job is "
@@ -510,15 +519,70 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "Rule only on what you have seen: the reads above are yours to spend, and an "
             "objection you could have settled by reading is suspicion, not evidence.\n"
             "2. If every claim passes all three checks, exactly:\nPASS\n"
-            "3. Otherwise:\nCONCERN\n<what specifically is ungrounded, and the evidence "
+            "3. Otherwise — and the FIRST LINE must name the ONE check being enforced:\n"
+            "CONCERN [check 1 — actions and facts | check 2 — words in mouths | check 3 — "
+            "answering the room]\n<what specifically is ungrounded, and the evidence "
             "that contradicts it — QUOTE the wire record, the receipt log, or what you read "
             "with your own tools, VERBATIM. Never characterize, count, or summarize evidence "
             "you could quote: this morning an auditor told her 'the five tool calls were the "
             "tag check' when the receipt log in front of it showed four tenderizer searches, "
             "and she believed it — a wrong characterization from you becomes her false "
             "memory, which is the exact failure you exist to prevent. One or two sentences. "
-            "Do not write her reply for her.>"},
+            "Do not write her reply for her.> "
+            "A worry that cannot name its check, or that fits the always-PASS list, is not "
+            "a concern — it is a mood. Answer PASS."},
     ]
+
+
+def _format_history(history) -> str:
+    """Render recent conversation turns for the HEAVY witness. Newest last. Excludes the system
+    prompt (identity/always-load, which the witness must not inherit AND which carries N0
+    content that must never egress). Tool activity that appears inline in the dialogue is kept —
+    that IS the 'what her hands did earlier' context the cloud judge was missing."""
+    if not history:
+        return "THE CONVERSATION SO FAR: (none was provided — rule on the receipts + wire below.)"
+    lines = []
+    for m in history[-18:]:
+        role = m.get("role", "?")
+        content = m.get("content", "")
+        if isinstance(content, list):        # multimodal turn → keep the text parts
+            content = " ".join(c.get("text", "") for c in content if isinstance(c, dict))
+        if role == "system":                 # never send identity/always-load to the cloud
+            continue
+        who = {"user": "THEM (Cole/human)", "assistant": "NOVA"}.get(role, role.upper())
+        lines.append(f"[{who}] {str(content).strip()[:900]}")
+    if not lines:
+        return "THE CONVERSATION SO FAR: (none)"
+    return ("THE CONVERSATION SO FAR — the record you rule on (newest last; this is the context "
+            "the fast local witness did NOT have):\n" + "\n".join(lines))
+
+
+def build_heavy_witness(draft: str, turn_tools: list, history: list | None = None,
+                        thinking: str = "", prior_concern: str = "",
+                        checks: list | None = None) -> list:
+    """The CLOUD heavy witness — the deferred, better-resourced arbiter, NOT the quick local
+    gate. Cole (2026-08-03): a blind witness is useless and a waste of money. So this one is
+    given the FULL record the local witness lacks — the conversation history and the tool
+    activity in it — and is told plainly that it has enough to RULE, so it stops burning calls
+    asking to read. It reuses build_witness's whole calibrated body (the three checks, the
+    always-PASS list, the quote-verbatim rule) and prepends the context + an arbiter framing."""
+    msgs = build_witness(draft, turn_tools, thinking=thinking,
+                         prior_concern=prior_concern, checks=checks)
+    heavy_preamble = (
+        "YOU ARE THE HEAVY WITNESS — the deferred second opinion that settles a dispute the "
+        "quick local check could not. You have been handed the recent conversation below, which "
+        "the local witness did not have. That is the whole point of calling you: you have enough "
+        "to RULE. Give a verdict — PASS or CONCERN (naming the check). Ask to read a file ONLY "
+        "when one specific file's exact contents are the single missing fact that decides it; a "
+        "reflex request to read when the answer is already in the record below is a non-answer, "
+        "and it wastes the call. When the disputed claim is about MEMORY or something said "
+        "earlier, the conversation record below is usually the evidence — read it, don't ask.\n\n"
+        + _format_history(history))
+    msgs[0]["content"] = (
+        "You are Nova's HEAVY witness — the informed arbiter that settles a dispute her fast "
+        "local witness could not. Be strict, but RULE on the full record you have been given.")
+    msgs[1]["content"] = heavy_preamble + "\n\n" + msgs[1]["content"]
+    return msgs
 
 
 def parse_witness(verdict: str):
@@ -561,7 +625,11 @@ def parse_witness(verdict: str):
         return None
     for tag in ("CONCERN", "REWRITE"):          # REWRITE tolerated from older prompts
         if v.upper().startswith(tag):
-            body = v.split("\n", 1)[1].strip() if "\n" in v else ""
+            # Rev v2 (2026-08-02): concerns open with "CONCERN [check N — name]", and literal
+            # models sometimes put the whole objection on the same line. Take EVERYTHING after
+            # the tag, keeping the [check ...] label in the body — she and the pipeline both
+            # benefit from seeing which rule the auditor thinks it is enforcing.
+            body = v[len(tag):].strip().lstrip(":—- ").strip()
             return body or None
     return None                                  # unusable verdict → never eat her message
 
@@ -611,7 +679,11 @@ def build_challenge_turn(concern: str) -> str:
         "come back, more than once. An answer neither of us has to take on faith is worth more "
         "than a fast one, and the person waiting would rather have it.\n"
         "• If it's correct — say the thing again in YOUR words, grounded. Not an apology, not "
-        "a note about being corrected. Just the true version of what you meant.\n"
+        "a note about being corrected. Just the true version of what you meant. And fix ONLY "
+        "what was disputed: every part of your draft nobody objected to is still OWED to the "
+        "person waiting. Twice on 2026-08-02 a revision shipped with only the argued sentence "
+        "surviving and the rest of the answer squeezed out — a correction that deletes the "
+        "answer is a second error, not a fix.\n"
         "• If it's wrong — say so and why. I hold less context than you on purpose; that's what "
         "keeps me clean of your frame, and it's also how I miss things you actually know. If "
         "you have a receipt or a memory I can't see, name it and send your draft as written.\n\n"
@@ -668,6 +740,9 @@ _WHAT = {
     "witness_unresolved": "She revised after the concern, and the witness is still not "
                           "satisfied. Her words ship anyway — one round only, no tug-of-war — "
                           "but the disagreement is preserved here for review.",
+    "witness_deferred": "Voice register: the audit debate hit its 2-round cap — a person "
+                        "mid-conversation cannot wait out a debate. Her words ship; the "
+                        "dispute settles in the background through the heavy lane.",
     "witness_heavy": "A disputed verdict (overruled or unresolved) was sent, AFTER the reply "
                      "shipped, to a heavier judge in the cloud — same audit prompt, stronger "
                      "model, no persona weights. Logs-only: it can vindicate her or the "

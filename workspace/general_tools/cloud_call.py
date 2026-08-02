@@ -199,15 +199,48 @@ def cloud_chat(lane: str, messages: list, max_tokens: int = 2048,
     return text
 
 
-def heavy_witness(draft: str, turn_tools: list, thinking: str = "",
-                  prior_concern: str = "", checks: list | None = None) -> str:
-    """The deferred-lane heavy witness: her exact audit prompt, judged by her own base model
-    (no persona LoRA) in the cloud. Returns the raw verdict text; raises CloudSkip on any
-    failure — the inline verdict simply stands."""
+_HEAVY_LOG_DIR = _WS / "logs" / "heavy_witness"
+
+
+def _log_heavy(messages: list, response: str, meta: dict | None = None) -> None:
+    """Write the FULL cloud exchange — the exact payload sent and the exact reply — to
+    logs/heavy_witness/YYYY-MM-DD.jsonl. (Cole, 2026-08-03: 'A blind uninformed witness is
+    useless... there should always be a payload with full context, and I need to see what was
+    sent and what they said.') The pipeline event is the headline; THIS is the receipt. Never
+    raises."""
+    try:
+        _HEAVY_LOG_DIR.mkdir(parents=True, exist_ok=True)
+        day = datetime.now().strftime("%Y-%m-%d")
+        rec = {
+            "ts": datetime.now().isoformat(timespec="seconds"),
+            # the system + user messages EXACTLY as the cloud judge received them
+            "payload": [{"role": m.get("role"), "content": str(m.get("content", ""))[:12000]}
+                        for m in (messages or [])],
+            "response": str(response or "")[:8000],
+        }
+        if meta:
+            rec.update(meta)
+        with open(_HEAVY_LOG_DIR / f"{day}.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
+def heavy_witness(draft: str, turn_tools: list, history: list | None = None,
+                  thinking: str = "", prior_concern: str = "",
+                  checks: list | None = None) -> str:
+    """The deferred-lane heavy witness — the INFORMED arbiter (Cole, 2026-08-03). It gets the
+    context-RICH prompt (build_heavy_witness: the conversation record + tool activity the fast
+    local witness lacked) so it can actually RULE instead of blindly asking to read. Judged by
+    her own base model (no persona LoRA) in the cloud. Every exchange — the full payload and the
+    full reply — is written to logs/heavy_witness/. Returns the raw verdict; raises CloudSkip on
+    any failure (the inline verdict simply stands)."""
     from nova_cortex import witness as _w
-    messages = _w.build_witness(draft, turn_tools, thinking=thinking,
-                                prior_concern=prior_concern, checks=checks)
-    return cloud_chat("witness_heavy", messages, max_tokens=2048)
+    messages = _w.build_heavy_witness(draft, turn_tools, history=history, thinking=thinking,
+                                      prior_concern=prior_concern, checks=checks)
+    resp = cloud_chat("witness_heavy", messages, max_tokens=2048)
+    _log_heavy(messages, resp)
+    return resp
 
 
 if __name__ == "__main__":

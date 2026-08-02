@@ -1673,11 +1673,19 @@ async def stream_response(
                         _hw_stage = ("witness_overruled" if _kept_position
                                      else "witness_unresolved")
 
+                        # The conversation record the cloud judge needs to RULE instead of
+                        # blindly asking to read (Cole, 2026-08-03). Snapshot the recent turns,
+                        # dropping the system message (identity/always-load — must not egress,
+                        # and the witness must not inherit it anyway).
+                        _hw_history = [m for m in messages
+                                       if isinstance(m, dict) and m.get("role") != "system"][-18:]
+
                         async def _heavy_second_opinion(
                                 _hw_draft=chat_text, _hw_tools=list(_turn_tools),
                                 _hw_think=_think_for_check, _hw_concern=_concern,
                                 _hw_evidence=list(_checks), _hw_rounds=_witness_rounds,
-                                _hw_stage=_hw_stage, _hw_deadlocked=bool(_deadlocked)):
+                                _hw_stage=_hw_stage, _hw_deadlocked=bool(_deadlocked),
+                                _hw_history=_hw_history):
                             import time as _t_hw
                             _t0_hw = _t_hw.time()
                             try:
@@ -1708,8 +1716,8 @@ async def stream_response(
                                 try:
                                     _hv = await _loop_hw.run_in_executor(
                                         None, lambda: _cc_hw.heavy_witness(
-                                            _hw_draft, _hw_tools, thinking=_hw_think,
-                                            prior_concern=_hw_concern,
+                                            _hw_draft, _hw_tools, history=_hw_history,
+                                            thinking=_hw_think, prior_concern=_hw_concern,
                                             checks=_hw_evidence)) or ""
                                     _hv_calls += 1
                                 except Exception as _he_hw:
@@ -1775,6 +1783,11 @@ async def stream_response(
                                     f"[{_dt_hw:.0f}s, logs-only]",
                                     draft=_hw_draft, inline_concern=_hw_concern,
                                     concern=(_hc_hw or ""), verdict=_hv,
+                                    history_turns=len(_hw_history),
+                                    tools_seen=len(_hw_tools),
+                                    heavy_log=("logs/heavy_witness/" +
+                                               _t_hw.strftime("%Y-%m-%d",
+                                                              _t_hw.localtime()) + ".jsonl"),
                                     sides=("no_ruling" if _no_ruling else
                                            ("inline_witness" if _hc_hw else "her")),
                                     outcome=_hw_stage, rounds=_hw_rounds,
