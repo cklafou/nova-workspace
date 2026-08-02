@@ -94,6 +94,29 @@ TTS is `CloudLocalHybrid` with hard rules:
 5. **v7+ training as `Cloud_Only`** — rented GPU per run, the single biggest thing the local
    box cannot do.
 
+## Providers + costs (researched 2026-08-02; the ledger revisits this with real usage)
+
+Two different kinds of "cloud" — don't conflate them:
+1. **Managed inference APIs (no provider account for compute, nothing uploaded, no server).**
+   The vendor permanently hosts THEIR model; each HTTPS call carries its own payload (the witness
+   prompt) and nothing of Nova persists there. Only prerequisite: the API key already in her env.
+   This is why the heavy-witness lane is buildable TODAY — `cloud_call.py` is an HTTP client, not
+   an environment. Cost (Anthropic, current): Haiku 4.5 $1/M in, $5/M out; cache reads 0.1×;
+   Batch API 50% off, stackable. A ~2.5K-token verdict ≈ $0.003 standard, ~$0.001-0.002 with
+   caching/batch → even 200 deferred audits/day lands around **$6-20/month**.
+2. **Rented GPU compute (account + environment + uploads — does NOT exist yet).** Needed only for
+   later lanes: cloud TTS in HER voice (reference clip uploaded), ComfyUI offload, self-hosted
+   heavy witness, v7+ training. Picks for a 24/7-autonomous-but-BURSTY system (idle cost must be
+   zero): **RunPod serverless** primary — per-second billing, scale-to-zero, no egress fees,
+   ~$0.34/hr-class 4090 (a 10s TTS burst ≈ $0.001); **Vast.ai** for checkpointed batch/training —
+   cheapest raw rate (~$0.31/hr interruptible 4090), reliability varies by host; TensorDock
+   (~$0.35/hr) as alternate. **Anti-pick:** any always-on rented box (~$225/mo at those rates) —
+   violates the non-goal below until the ledger proves otherwise.
+
+**Weights caveat for the training lane:** Cole's git-boundary rule cuts the OTHER way here —
+`models/` is SEALED and gitignored, so her LoRA adapters and training corpus are NOT auto-blessed
+for egress. v7-in-cloud needs Cole's explicit call on shipping weights when that lane opens.
+
 ## Non-goals
 
 No cloud copy of the body. No always-on rented GPU until the ledger shows usage that justifies
