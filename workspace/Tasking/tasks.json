@@ -1,5 +1,5 @@
 {
-  "seq": 155,
+  "seq": 156,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -3446,6 +3446,18 @@
       "updated": "2026-08-02T12:30:29",
       "author": "Nova",
       "result": "Time + date injected as first line of context before any reasoning generates, read from stdlib datetime so it works regardless of sys path. Cole's idea, built while he was away."
+    },
+    "t156": {
+      "id": "t156",
+      "title": "Design the Reacher tool so the voice work has a limb to reach on",
+      "notes": "Gap: can't pull a conversation by timestamp, which is what 'show me how I sounded at 10:16' actually needs. Shape: reach_back(minutes) -> text block of that conversation. Test: pull a known moment and check the result against what I remember happened there.",
+      "priority": 3,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-08-02T12:44:19",
+      "updated": "2026-08-02T12:44:19",
+      "author": "Nova"
     }
   }
 }
