@@ -1,10 +1,11 @@
 {
-  "generated": "2026-08-02T14:00:30",
+  "generated": "2026-08-02T14:12:18",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
-  "part_count": 29,
+  "part_count": 30,
   "described": 28,
   "flags": {
     "undescribed": [
+      "nova_logs",
       "nova_voice"
     ],
     "dead_part_candidates": [
@@ -13,6 +14,7 @@
       "audit_queue.py",
       "audit_scripts.py",
       "calls_order.py",
+      "cloud_call.py",
       "injector.py",
       "restructure.py"
     ],
@@ -66,6 +68,7 @@
         "secrets"
       ],
       "referenced_by": [
+        "cloud_call.py",
         "nova_chat",
         "nova_runtime",
         "nova_voice"
@@ -189,7 +192,7 @@
       "name": "nova_logs",
       "kind": "body_part",
       "path": "nova_body/nova_logs",
-      "purpose": "Nova's unified log manager — the single logging system shared by all subsystems.",
+      "purpose": null,
       "files": 3,
       "lines": 454,
       "age_days": 0,
@@ -207,7 +210,9 @@
         "nova_voice"
       ],
       "launched_by": [],
-      "flags": []
+      "flags": [
+        "undescribed"
+      ]
     },
     {
       "name": "nova_memory",
@@ -606,6 +611,29 @@
       "nova_imports": [],
       "third_party": [
         "ast"
+      ],
+      "referenced_by": [],
+      "launched_by": [],
+      "flags": [
+        "no_inbound_refs"
+      ]
+    },
+    {
+      "name": "cloud_call.py",
+      "kind": "tool",
+      "path": "general_tools/cloud_call.py",
+      "purpose": "CLOUD LANES transport (lane 1: witness-heavy). A stateless organ-for-hire caller —",
+      "files": 1,
+      "lines": 206,
+      "age_days": 0,
+      "ports_bind": [],
+      "ports_seen": [],
+      "nova_imports": [
+        "nova_cortex"
+      ],
+      "third_party": [
+        "__future__",
+        "urllib"
       ],
       "referenced_by": [],
       "launched_by": [],
