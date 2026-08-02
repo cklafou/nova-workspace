@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-08-02T13:21:39+09:00",
+  "updated_at": "2026-08-02T13:23:33+09:00",
   "items": [
     {
       "id": "57cfa554",
@@ -3780,6 +3780,32 @@
       "commit": "bd5b640f",
       "old_path": null,
       "new_path": "nova_body/nova_witness/start_witness.cmd",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "ccc05cc1",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-08-02T13:23:33+09:00",
+      "commit": "266d6fa9",
+      "old_path": "nova_body/tests/test_discourse.py",
+      "new_path": null,
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "b0ba3d85",
+      "status": "pending",
+      "event_type": "delete",
+      "detected_at": "2026-08-02T13:23:33+09:00",
+      "commit": "266d6fa9",
+      "old_path": "nova_body/tests/test_presence.py",
+      "new_path": null,
       "confidence": 1.0,
       "resolved_by": null,
       "resolved_at": null,
