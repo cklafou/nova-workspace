@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 17:49:49
+# Last updated: 2026-08-02 07:15:45
 """
 Nova (Qwen 3.5 27B Dense) inference client for Nova Group Chat.
 ============================================================
@@ -20,6 +20,13 @@ import httpx
 
 # Safety-net: strip any stray <think>...</think> blocks that leak into content
 _THINK_RE = _re.compile(r'<think>(.*?)</think>', _re.DOTALL)
+
+# ── HEAVY-WITNESS TASKS IN FLIGHT (2026-08-02, Witness v2 Step 6) ──────────────────────────
+# Background cloud second-opinions on disputed witness verdicts. asyncio keeps only WEAK
+# references to tasks — without a strong ref here, a dispatched audit could be garbage-
+# collected mid-flight and its witness_heavy event would silently never land. Every bug in
+# this project has been a silent drop; this set is the two lines that keep this from being one.
+_HEAVY_WITNESS_TASKS: set = set()
 
 # ── HER INTEGRITY FACULTY LIVES IN HER BODY (2026-07-14) ───────────────────────────────────
 # Reach-parsing, the receipt ledger, and the honesty gate were all first built HERE, in the chat
@@ -1592,6 +1599,121 @@ async def stream_response(
                                 deadlocked=bool(_deadlocked))
                     except Exception:
                         pass
+                    # ── HEAVY WITNESS — SECOND OPINION IN THE BACKGROUND (2026-08-02) ─────
+                    # Witness v2 Step 6 (WITNESS_V2_PLAN + CLOUD_LANES, Cole approved 08-02).
+                    # A dispute means one of two minds is wrong and the record cannot yet say
+                    # which. So the deferred lane sends the SAME audit — same draft, same
+                    # receipts, same gathered evidence — to the heavy cloud judge
+                    # (cloud_call lane "witness_heavy") and logs whose side it takes.
+                    # LOGS-ONLY: her words are already on their way to the room; nothing on
+                    # this path can touch them. FAIL-OPEN: no config, no key, over budget, no
+                    # internet -> CloudSkip, and the record simply keeps the inline outcome.
+                    # The INLINE gate never goes to cloud — this runs AFTER the outcome is
+                    # sealed, never between her and speaking. asyncio.create_task snapshots
+                    # the turn ContextVar, so the late event still lands on THIS turn's id.
+                    try:
+                        _hw_stage = ("witness_overruled" if _kept_position
+                                     else "witness_unresolved")
+
+                        async def _heavy_second_opinion(
+                                _hw_draft=chat_text, _hw_tools=list(_turn_tools),
+                                _hw_think=_think_for_check, _hw_concern=_concern,
+                                _hw_evidence=list(_checks), _hw_rounds=_witness_rounds,
+                                _hw_stage=_hw_stage, _hw_deadlocked=bool(_deadlocked)):
+                            import time as _t_hw
+                            _t0_hw = _t_hw.time()
+                            try:
+                                # The body must never DEPEND on the tool: loaded by file
+                                # path, and any failure here is a shrug, not a crash.
+                                import importlib.util as _ilu_hw
+                                from pathlib import Path as _P_hw
+                                _ccp = (_P_hw(__file__).resolve().parents[2]
+                                        / "general_tools" / "cloud_call.py")
+                                _spec_hw = _ilu_hw.spec_from_file_location(
+                                    "nova_cloud_call", _ccp)
+                                _cc_hw = _ilu_hw.module_from_spec(_spec_hw)
+                                _spec_hw.loader.exec_module(_cc_hw)
+                            except Exception as _ie_hw:
+                                print(f"[nova] heavy witness unavailable (fail-open): "
+                                      f"{_ie_hw}")
+                                return
+                            try:
+                                # Its verify reads use the same read-only door the inline
+                                # witness uses — never her receipt ledger.
+                                from nova_voice.tool_router import (
+                                    _execute_tool_inner as _vc_hw)
+                            except Exception:
+                                _vc_hw = None
+                            _hv, _hv_calls, _twc_hw = "", 0, None
+                            _loop_hw = asyncio.get_running_loop()
+                            for _ri_hw in range(3):  # <=3 paid calls: 2 verify rounds + rule
+                                try:
+                                    _hv = await _loop_hw.run_in_executor(
+                                        None, lambda: _cc_hw.heavy_witness(
+                                            _hw_draft, _hw_tools, thinking=_hw_think,
+                                            prior_concern=_hw_concern,
+                                            checks=_hw_evidence)) or ""
+                                    _hv_calls += 1
+                                except Exception as _he_hw:
+                                    # CloudSkip lands here; cloud_call already logged why.
+                                    print(f"[nova] heavy witness skipped (fail-open): "
+                                          f"{_he_hw}")
+                                    return
+                                try:
+                                    _twc_hw, _ = _integrity.find_tool_call(_hv)
+                                except Exception:
+                                    _twc_hw = None
+                                if not _twc_hw or _ri_hw == 2:
+                                    break
+                                _twt_hw = _twc_hw.get("tool")
+                                if _vc_hw and _twt_hw in _witness.VERIFY_TOOLS:
+                                    _twa_hw = _twc_hw.get("args")
+                                    if not isinstance(_twa_hw, dict):
+                                        _twa_hw = {k: v for k, v in _twc_hw.items()
+                                                   if k != "tool"}
+                                    try:
+                                        _twr_hw = await _loop_hw.run_in_executor(
+                                            None, lambda: _vc_hw(_twt_hw, _twa_hw))
+                                    except Exception as _twe_hw:
+                                        _twr_hw = f"ERROR: {_twe_hw}"
+                                    _hw_evidence.append((_twt_hw, _twa_hw, str(_twr_hw)))
+                                else:
+                                    _hw_evidence.append((_twt_hw or "?", {},
+                                        "REFUSED: that tool is not available on this "
+                                        "lane. Rule on the evidence above."))
+                            try:
+                                _no_ruling = bool(_twc_hw)
+                                _hc_hw = (None if _no_ruling
+                                          else _witness.parse_witness(_hv))
+                                _dt_hw = _t_hw.time() - _t0_hw
+                                _took = (f"could NOT rule — still asking for reads after "
+                                         f"{_hv_calls} call(s)") if _no_ruling else \
+                                        ("sides with the INLINE WITNESS — the concern "
+                                         "was real" if _hc_hw else
+                                         "sides with HER — the concern does not hold")
+                                _witness.pipeline_event(
+                                    "witness_heavy",
+                                    f"cloud second opinion on the disputed verdict "
+                                    f"({_hw_stage.replace('witness_', '')} after "
+                                    f"{_hw_rounds} round(s)): {_took} "
+                                    f"[{_dt_hw:.0f}s, logs-only]",
+                                    draft=_hw_draft, inline_concern=_hw_concern,
+                                    concern=(_hc_hw or ""), verdict=_hv,
+                                    sides=("no_ruling" if _no_ruling else
+                                           ("inline_witness" if _hc_hw else "her")),
+                                    stage=_hw_stage, rounds=_hw_rounds,
+                                    deadlocked=_hw_deadlocked, heavy_calls=_hv_calls,
+                                    latency_s=round(_dt_hw, 1))
+                            except Exception as _pe_hw:
+                                print(f"[nova] heavy witness event failed: {_pe_hw}")
+
+                        _ht_hw = asyncio.create_task(_heavy_second_opinion())
+                        _HEAVY_WITNESS_TASKS.add(_ht_hw)
+                        _ht_hw.add_done_callback(_HEAVY_WITNESS_TASKS.discard)
+                        print(f"[nova] disputed verdict ({_hw_stage}) — heavy witness "
+                              f"second opinion dispatched (background, logs-only)")
+                    except Exception as _hwe:
+                        print(f"[nova] heavy witness dispatch failed open: {_hwe}")
                 elif _prior_draft:
                     # She was questioned, answered in her own words, and the witness now
                     # passes it. This is the whole design working — show both versions so the

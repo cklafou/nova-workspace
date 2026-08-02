@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 17:49:49
+# Last updated: 2026-08-02 07:15:45
 # @nova: THE WITNESS — her grip on the present tense. One faculty, five parts: the wire
 #        (who actually spoke, when), the now-card (the present, placed where attention is
 #        strongest), the claim detectors (is this draft asserting something about the room?),
@@ -668,6 +668,16 @@ _WHAT = {
     "witness_unresolved": "She revised after the concern, and the witness is still not "
                           "satisfied. Her words ship anyway — one round only, no tug-of-war — "
                           "but the disagreement is preserved here for review.",
+    "witness_heavy": "A disputed verdict (overruled or unresolved) was sent, AFTER the reply "
+                     "shipped, to a heavier judge in the cloud — same audit prompt, stronger "
+                     "model, no persona weights. Logs-only: it can vindicate her or the "
+                     "inline witness for the record; it can never touch her words. Fail-open.",
+    "cloud_call":    "One paid call left the machine through a cloud lane — a stateless "
+                     "organ-for-hire; nothing of her persists out there. Spend accumulates in "
+                     "memory/cloud_ledger.json; the kill switch is nova_config.json -> "
+                     "cloud.enabled.",
+    "cloud_skip":    "A cloud lane declined to run (disabled, no key, over budget, deadline, "
+                     "or error) and the caller continued local. Fail-open working as designed.",
     "loop_exhausted": "The turn hit its iteration limit (long tool chains + guard retries) "
                       "before reaching a final answer. A best-effort reply was delivered "
                       "instead of silently dropping the whole turn.",

@@ -1,0 +1,10 @@
+{
+ "month": "2026-08",
+ "lanes": {
+  "witness_heavy": {
+   "calls": 1,
+   "est_usd": 0.008,
+   "last_ts": "2026-08-02T18:23:48"
+  }
+ }
+}

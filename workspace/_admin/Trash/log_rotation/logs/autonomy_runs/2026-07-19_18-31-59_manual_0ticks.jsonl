@@ -1,0 +1,1 @@
+{"id": "03f8dcca", "timestamp": "2026-07-19T18:31:59.739850", "author": "Nova", "content": "```json\n\n\n[`run_command` resulted in 142 bytes.]\n\nTwo cards, both busy — 4090 laptop with 16G total (11G in use) and a full-fat 3090 with 24G (21G in use). Read those from nvidia-smi, not a guess.", "directed_at": null}

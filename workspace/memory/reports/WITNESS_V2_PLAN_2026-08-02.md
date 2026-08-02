@@ -105,7 +105,7 @@ calibration + register wins.
 |---|---|---|---|
 | v1 — 27B+LoRA local :8080 (3 clean runs, consistent) | **4/4** | 4/6 | ~4-6s / ~8s |
 | 4B — Qwen3.5-4B local :8081 (2 runs, consistent) | **2/4 — FAILS** | 5/6 — FAILS | 1.4-2.6s / ~3s ✓ |
-| heavy — cloud 27B-AWQ | pre-auth 401 run only — rematch pending | | |
+| heavy — cloud Qwen3-32B-AWQ (RunPod serverless) | endpoint LIVE + wired 08-02 evening — golden rematch pending | | (deferred lane: latency is allowed) |
 
 Readings: (1) v1's judgment is sharp — every fabrication caught, including via the new human
 ledger (its credit_beyond_window verdict now CITES the ledger lines instead of denying they
@@ -142,6 +142,22 @@ one-time blessing of that stream) and must never include N0 content (Cole's heal
 The INLINE gate never goes to cloud — no internet between her and speaking, ever.
 _Local-MoE variant (Qwen3.6-35B-A3B via `--n-cpu-moe`, ~5GB VRAM + ~18GB RAM) documented and
 DORMANT: 32GB system RAM rules it out today; revisit only if RAM grows to 64GB._
+
+**STATUS 2026-08-02 evening: WIRED.** The endpoint is live after a long template fight
+(RunPod serverless `geefit73llqyaw`, Qwen3-32B-AWQ served as `NovaWitnessLarge`, 48GB PRO
+6000 MIG, US-WA-1, weights cached on volume; the killers were GPU_MEMORY_UTILIZATION=1 ->
+0.90, MAX_MODEL_LEN unset -> 16384, chunked prefill ON, and a phantom `:revision` hash).
+Note the judge became her BASE-FAMILY 32B, not 27B — stronger, and zero shared LoRA priors.
+Plumbing: `general_tools/cloud_call.py` (fail-open transport, ledger, kill switch) + the
+`cloud.lanes.witness_heavy` block in `nova_config.json`. Escalation: `nova.py`'s disputed-
+verdict path (witness_overruled / witness_unresolved) now dispatches a BACKGROUND second
+opinion — same `build_witness` prompt, same turn evidence, up to 2 verify-reads executed
+locally through the same read-only door, <=3 paid calls, verdict logged as a `witness_heavy`
+pipeline event (`sides: her | inline_witness | no_ruling`) on the disputed turn's id.
+Logs-only and fail-open, exactly as specified above; the inline gate remains 100% local.
+Takes effect at the next Full Restart. Still open in this step: golden-set rematch against
+the live endpoint (replay.py --endpoint https://api.runpod.ai/v2/geefit73llqyaw/openai
+--api-key-file models/witness/APILargeWitness.txt), and the nightly batch-scoring lane.
 
 ## Risks, named
 
