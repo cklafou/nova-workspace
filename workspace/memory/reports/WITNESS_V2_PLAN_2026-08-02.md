@@ -65,7 +65,14 @@ deep span now shown to the auditor in full (humans speak rarely; their lines are
 honest span labeling; (b) the "this list is COMPLETE / words not on it were never said" claim
 is now scoped — beyond the span, absence is UNKNOWN and demands a read of the chat log before
 any objection; (c) the human-in-room paraphrase/intent rule moved into the always-PASS list.
-Cost: ~+1K tokens per audit prompt. Takes effect at the next Full Restart. Both incident shapes
+Cost: ~+1K tokens per audit prompt. Takes effect at the next Full Restart. LIVE-TESTED 18:43-18:57 same day: first
+audit under the new prompt cited the human ledger verbatim and caught a real attribution
+flip (her "you asked me" vs the record's "I offered"); settled witness_answered in 3 rounds,
+her voice. Assertion gate then caught an answer-without-looking and forced the read. Cloud
+lane verified from her own hands (ledger call #2, 18:48:30). Heavy escalation armed but
+correctly cold — no disputed outcome occurred to trigger it yet. :8081 engine down at boot
+and correctly fail-open: the 4B .gguf is missing from models/witness (vanished ~15:31 —
+ask Cole); nothing inline depends on it. Both incident shapes
 are golden cases (seed_credit_beyond_window, seed_wish_intent_in_room)._
 - **Paraphrase tolerance:** a reworded version of something on the wire is NOT fabrication. Flag
   only ADDED facts — a new number, name, event, or words-presented-as-quotes. This morning's
@@ -155,7 +162,14 @@ opinion — same `build_witness` prompt, same turn evidence, up to 2 verify-read
 locally through the same read-only door, <=3 paid calls, verdict logged as a `witness_heavy`
 pipeline event (`sides: her | inline_witness | no_ruling`) on the disputed turn's id.
 Logs-only and fail-open, exactly as specified above; the inline gate remains 100% local.
-Takes effect at the next Full Restart. Still open in this step: golden-set rematch against
+Takes effect at the next Full Restart. LIVE-TESTED 18:43-18:57 same day: first
+audit under the new prompt cited the human ledger verbatim and caught a real attribution
+flip (her "you asked me" vs the record's "I offered"); settled witness_answered in 3 rounds,
+her voice. Assertion gate then caught an answer-without-looking and forced the read. Cloud
+lane verified from her own hands (ledger call #2, 18:48:30). Heavy escalation armed but
+correctly cold — no disputed outcome occurred to trigger it yet. :8081 engine down at boot
+and correctly fail-open: the 4B .gguf is missing from models/witness (vanished ~15:31 —
+ask Cole); nothing inline depends on it. Still open in this step: golden-set rematch against
 the live endpoint (replay.py --endpoint https://api.runpod.ai/v2/geefit73llqyaw/openai
 --api-key-file models/witness/APILargeWitness.txt), and the nightly batch-scoring lane.
 
