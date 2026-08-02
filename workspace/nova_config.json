@@ -19,12 +19,12 @@
     "monthly_cap_usd": 25,
     "lanes": {
       "witness_heavy": {
-        "base_url": "https://api.runpod.ai/v2/97crmbjbtf9j7s/openai/v1",
+        "base_url": "https://api.runpod.ai/v2/lbs8yxtwahtoj7/openai/v1",
         "model": "nova-witness-heavy",
         "api_key_env": "RUNPOD_API_KEY",
+        "api_key_file": "models/witness/APILargeWitness.txt",
         "deadline_s": 90,
-        "est_cost_per_call_usd": 0.008,
-        "api_key_file": "models/witness/APILargeWitness.txt"
+        "est_cost_per_call_usd": 0.008
       }
     }
   }

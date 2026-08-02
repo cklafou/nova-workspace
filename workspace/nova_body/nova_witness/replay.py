@@ -40,6 +40,21 @@ def http_json(url, payload=None, timeout=180, headers=None):
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode())
 
+def discover_model(endpoint, api_key=""):
+    """Ask the server what model name it actually serves (GET /v1/models). Removes the
+    'model not found' failure when a RunPod override wasn't set. Returns the first id, or ''."""
+    try:
+        url = endpoint.rstrip("/") + "/v1/models"
+        h = {"Authorization": "Bearer " + api_key} if api_key else None
+        req = urllib.request.Request(url, headers=h or {})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            data = json.loads(r.read().decode())
+        ids = [m.get("id") for m in data.get("data", []) if m.get("id")]
+        return ids[0] if ids else ""
+    except Exception:
+        return ""
+
+
 def wait_idle(endpoint, nice=True, max_wait=600):
     if not nice:
         return
@@ -89,7 +104,8 @@ def run_case(w, endpoint, case, max_tool_rounds=2):
                                thinking=case.get("thinking", ""),
                                prior_concern=case.get("prior_concern", ""),
                                checks=checks)
-        verdict, dt = ask(endpoint, msgs, api_key=case.get("_api_key", ""))
+        verdict, dt = ask(endpoint, msgs, api_key=case.get("_api_key", ""),
+                          model=case.get("_model", "nova-witness-heavy"))
         latency += dt
         rounds += 1
         if verdict.lstrip().startswith("{") and i < max_tool_rounds:
@@ -143,9 +159,18 @@ def main():
             print("WARNING: could not read --api-key-file: " + str(_e))
     if (args.api_key_env or args.api_key_file) and not _key:
         print("WARNING: no key found via env or file; sending without auth")
+    _model = "nova-witness-heavy"
+    if "runpod.ai" in args.endpoint or _key:
+        _found = discover_model(args.endpoint, _key)
+        if _found:
+            _model = _found
+            print("discovered served model: " + _model)
+        else:
+            print("could not discover served model; sending 'nova-witness-heavy' (override name)")
     results = []
     for i, case in enumerate(cases, 1):
         case["_api_key"] = _key
+        case["_model"] = _model
         wait_idle(args.endpoint, nice=not args.no_nice)
         try:
             r = run_case(w, args.endpoint, case)

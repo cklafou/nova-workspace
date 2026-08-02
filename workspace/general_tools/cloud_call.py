@@ -101,6 +101,20 @@ def _ledger_add(lane: str, est_usd: float) -> None:
         pass
 
 
+def _served_model(base_url: str, api_key: str) -> str:
+    """Best-effort: what model does the endpoint actually serve? Avoids a name-mismatch 404
+    when a RunPod served-name override wasn't set. Empty on any failure (caller falls back)."""
+    try:
+        req = urllib.request.Request(base_url + "/models",
+                                     headers={"Authorization": f"Bearer {api_key}"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        ids = [m.get("id") for m in data.get("data", []) if m.get("id")]
+        return ids[0] if ids else ""
+    except Exception:
+        return ""
+
+
 def _get_api_key(lane_cfg: dict) -> str:
     """Env var first (never logged), then the key file (path relative to the workspace).
     The file lives in models/ on purpose: gitignored for size, SEALED to Nova's own tools —
@@ -150,8 +164,10 @@ def cloud_chat(lane: str, messages: list, max_tokens: int = 2048,
         raise CloudSkip(f"monthly cap ${cap} reached")
 
     deadline = float(deadline_s or lane_cfg.get("deadline_s", 90))
-    url = lane_cfg["base_url"].rstrip("/") + "/chat/completions"
-    payload = {"model": lane_cfg.get("model", "default"), "messages": messages,
+    base = lane_cfg["base_url"].rstrip("/")
+    url = base + "/chat/completions"
+    model_name = _served_model(base, api_key) or lane_cfg.get("model", "default")
+    payload = {"model": model_name, "messages": messages,
                "max_tokens": max_tokens, "temperature": temperature, "top_p": top_p,
                "stream": False, "chat_template_kwargs": {"enable_thinking": False}}
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
