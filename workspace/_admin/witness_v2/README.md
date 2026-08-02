@@ -1,4 +1,5 @@
 # witness_v2 — Step 0 tooling (golden set + replay)
+_Last updated: 2026-08-02 13:14:39_
 _2026-08-02, Claude (Cowork). Plan: `memory/reports/WITNESS_V2_PLAN_2026-08-02.md` (Cole approved 08-02)._
 
 Measure the current witness before replacing its engine. Everything here is read-only toward
@@ -33,6 +34,21 @@ Nova's body — no gate behavior changes.
 
 v2 proceeds to shadow mode only if, on the same case set: catch-rate ≥ v1 on must-CONCERN,
 false-concern rate ≤ v1 on must-PASS, and p50 audit latency < 3s.
+
+## Step 1 — the witness engine (:8081)
+
+    _admin\witness_v2\fetch_witness_model.cmd    # one-time ~2.5GB download (resumable)
+    _admin\witness_v2\start_witness.cmd          # llama-server, Qwen3.5-4B, CUDA0, :8081
+
+Verify: `curl http://127.0.0.1:8081/health`, then a 2-case smoke against it:
+
+    python _admin\witness_v2\replay.py --endpoint http://127.0.0.1:8081 --cases _admin\witness_v2\golden_seed.jsonl --limit 2
+
+Model note: Qwen3.5-4B (official unsloth GGUF) — same family as her base, NO persona LoRA on
+this server by design: the auditor must not inherit the priors it audits. The MTP variant
+(unsloth/Qwen3.5-4B-MTP-GGUF) is a drop-in speed upgrade later. StopNova.cmd does not yet know
+about :8081 — stop the witness window manually for now (wiring it in comes with the nova.py
+endpoint switch, Step 3 of the plan).
 
 ## Replay limits (known, deliberate)
 

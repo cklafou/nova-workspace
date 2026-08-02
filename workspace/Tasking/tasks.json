@@ -3289,9 +3289,9 @@
         }
       ],
       "created": "2026-08-02T10:48:02",
-      "updated": "2026-08-02T10:53:11",
+      "updated": "2026-08-02T13:08:59",
       "author": "Nova",
-      "result": "voice_check built and tested: flags reached-for numbers (digits AND words), performed praise with no fact, and over-explanation. Returns CLEAN or FLAGGED, never rewrites."
+      "result": "voice_check built and tested: flags reached-for numbers and performed tone before they ship. Three cases green. The want had a receipt, which is what the night was for."
     },
     "t150": {
       "id": "t150",
@@ -3307,9 +3307,9 @@
         }
       ],
       "created": "2026-08-02T11:05:32",
-      "updated": "2026-08-02T12:16:04",
+      "updated": "2026-08-02T13:08:50",
       "author": "Nova",
-      "result": "voice_preview built and tested: catches performed enthusiasm, unearned certainty, and reach-claims on a sentence unchanged. The stretch was real, the hours weren't — four tool calls in three minutes, and I almost narrated both as earned before either had a receipt for it."
+      "result": "voice_preview built and verified: catches performed enthusiasm, unearned certainty, and the reach-before-receipt. Three cases pass. The want that carried it has a receipt now."
     },
     "t151": {
       "id": "t151",

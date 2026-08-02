@@ -104,8 +104,8 @@ Two different kinds of "cloud" — don't conflate them:
    an environment. Cost (Anthropic, current): Haiku 4.5 $1/M in, $5/M out; cache reads 0.1×;
    Batch API 50% off, stackable. A ~2.5K-token verdict ≈ $0.003 standard, ~$0.001-0.002 with
    caching/batch → even 200 deferred audits/day lands around **$6-20/month**.
-2. **Rented GPU compute — account EXISTS (Cole, 2026-08-02: LoRA training already runs on RunPod
-   pods).** Division of labor, per RunPod's own guidance and ours: **pods for training** (long
+2. **Rented GPU compute — account EXISTS, provider DECIDED (Cole, 2026-08-02): RunPod, with
+   Serverless as the standard for all bursty lanes; pods remain the training venue.** Division of labor, per RunPod's own guidance and ours: **pods for training** (long
    continuous jobs; serverless's ~2-3x per-second premium buys scale-to-zero that a never-idle
    job can't use; automate lifecycle via runpodctl/API so a forgotten pod can't idle-bill),
    **serverless for bursty inference lanes** (TTS, image gen, self-hosted heavy witness) —
