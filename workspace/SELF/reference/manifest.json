@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-04T07:14:55",
+  "generated": "2026-08-04T07:21:49",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 32,
   "described": 31,
@@ -339,7 +339,7 @@
       "path": "nova_body/nova_voice",
       "purpose": null,
       "files": 3,
-      "lines": 3651,
+      "lines": 3667,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
