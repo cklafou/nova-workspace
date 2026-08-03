@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-03 17:25:51
+# Last updated: 2026-08-03 18:35:47
 """
 nova_sync/dir_patch.py -- Nova Workspace Path Auditor
 ======================================================

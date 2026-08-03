@@ -1,4 +1,4 @@
-# Last updated: 2026-08-03 17:25:51
+# Last updated: 2026-08-03 18:35:47
 # @nova: Nova Console — the log hub. Captures every child process's output into in-memory
 # ring buffers and serves them over a tiny local HTTP API, so the stack can run with ZERO
 # popup cmd windows while everything stays visible in one place.
