@@ -1,11 +1,12 @@
 {
-  "generated": "2026-08-03T20:05:51",
+  "generated": "2026-08-03T20:16:55",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 32,
-  "described": 31,
+  "described": 30,
   "flags": {
     "undescribed": [
-      "nova_voice"
+      "nova_voice",
+      "cloud_call.py"
     ],
     "dead_part_candidates": [
       "nova_config",
@@ -648,7 +649,7 @@
       "name": "cloud_call.py",
       "kind": "tool",
       "path": "general_tools/cloud_call.py",
-      "purpose": "CLOUD LANES transport (lane 1: witness-heavy). A stateless organ-for-hire caller —",
+      "purpose": null,
       "files": 1,
       "lines": 272,
       "age_days": 0,
@@ -664,6 +665,7 @@
       "referenced_by": [],
       "launched_by": [],
       "flags": [
+        "undescribed",
         "no_inbound_refs"
       ]
     },
