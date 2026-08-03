@@ -12,6 +12,7 @@ Inference path:
 import json
 import re as _re
 import asyncio
+import contextvars
 import urllib.request
 import urllib.error
 from typing import Callable, Awaitable, Optional
@@ -1504,7 +1505,8 @@ async def stream_response(
                                                    thinking=_think_for_check,
                                                    prior_concern=(_concern_prev
                                                                   if _witness_rounds > 0 else ""),
-                                                   checks=_checks),
+                                                   checks=_checks,
+                                                   has_image=bool(images)),
                             _noop,
                             max_tokens=2048, temperature=0.2, top_p=0.9,
                             enable_thinking=False) or ""
@@ -1685,9 +1687,16 @@ async def stream_response(
                                 _hw_think=_think_for_check, _hw_concern=_concern,
                                 _hw_evidence=list(_checks), _hw_rounds=_witness_rounds,
                                 _hw_stage=_hw_stage, _hw_deadlocked=bool(_deadlocked),
-                                _hw_history=_hw_history):
+                                _hw_history=_hw_history, _hw_has_image=bool(images)):
                             import time as _t_hw
                             _t0_hw = _t_hw.time()
+                            # Capture THIS turn's context (the shared turn id lives in a
+                            # ContextVar) so the cloud_call events cloud_call.py emits from the
+                            # executor THREAD carry the turn id and fold into this dispute's row
+                            # in the pipeline — instead of scattering as bare "Cloud call" noise
+                            # rows with nothing worthwhile in them (Cole, 2026-08-03). A thread
+                            # does not inherit the task context on its own; _ctx_hw.run() gives it.
+                            _ctx_hw = contextvars.copy_context()
                             try:
                                 # The body must never DEPEND on the tool: loaded by file
                                 # path, and any failure here is a shrug, not a crash.
@@ -1715,10 +1724,11 @@ async def stream_response(
                             for _ri_hw in range(3):  # <=3 paid calls: 2 verify rounds + rule
                                 try:
                                     _hv = await _loop_hw.run_in_executor(
-                                        None, lambda: _cc_hw.heavy_witness(
+                                        None, lambda: _ctx_hw.run(lambda: _cc_hw.heavy_witness(
                                             _hw_draft, _hw_tools, history=_hw_history,
                                             thinking=_hw_think, prior_concern=_hw_concern,
-                                            checks=_hw_evidence)) or ""
+                                            checks=_hw_evidence,
+                                            has_image=_hw_has_image))) or ""
                                     _hv_calls += 1
                                 except Exception as _he_hw:
                                     # CloudSkip lands here; cloud_call already logged why.
@@ -1769,6 +1779,34 @@ async def stream_response(
                                         ("sides with the INLINE WITNESS — the concern "
                                          "was real" if _hc_hw else
                                          "sides with HER — the concern does not hold")
+                                # WHAT THE CLOUD ACTUALLY RECEIVED (Cole, 2026-08-03: "the
+                                # pipeline is still not showing what payload and context the
+                                # cloud witness receives"). Reconstruct the context summary from
+                                # the exact pieces handed to build_heavy_witness. The FULL,
+                                # verbatim payload is in the heavy_log file this event points to.
+                                try:
+                                    def _h2s(_m):
+                                        _r = _m.get("role", "?")
+                                        _c = _m.get("content", "")
+                                        if isinstance(_c, list):
+                                            _c = "[image+text]"
+                                        return f"{_r}: {str(_c).strip()[:140]}"
+                                    _img_note = ("yes — told she can see it" if _hw_has_image
+                                                 else "no")
+                                    _verify_note = (f" + {len(_hw_evidence)} verify read(s)"
+                                                    if _hw_evidence else "")
+                                    _pc_note = ((_hw_concern[:200] + "…") if _hw_concern
+                                                else "(none — fresh audit)")
+                                    _ctx_sent = (
+                                        f"DRAFT IT JUDGED:\n{_hw_draft[:500]}\n\n"
+                                        f"CONVERSATION IT WAS GIVEN ({len(_hw_history)} turns, "
+                                        f"newest last):\n" +
+                                        "\n".join(_h2s(m) for m in _hw_history[-6:]) +
+                                        f"\n\nRECEIPTS IT SAW: {len(_hw_tools)} tool call(s) this "
+                                        f"turn{_verify_note}\nIMAGE IN TURN: {_img_note}\n"
+                                        f"PRIOR CONCERN SHOWN: {_pc_note}")
+                                except Exception:
+                                    _ctx_sent = ""
                                 # NOTE the field is `outcome`, not `stage` — pipeline_event's
                                 # first positional IS `stage`, and passing stage= as a kwarg
                                 # collides with it. Found live 19:29:21 the night this
@@ -1783,6 +1821,7 @@ async def stream_response(
                                     f"[{_dt_hw:.0f}s, logs-only]",
                                     draft=_hw_draft, inline_concern=_hw_concern,
                                     concern=(_hc_hw or ""), verdict=_hv,
+                                    sent=_ctx_sent,
                                     history_turns=len(_hw_history),
                                     tools_seen=len(_hw_tools),
                                     heavy_log=("logs/heavy_witness/" +
@@ -1807,17 +1846,22 @@ async def stream_response(
                                 except Exception:
                                     pass
 
-                        # Live knob: Cole can turn the cloud second opinion off from the
-                        # Variables panel (every audit stays fully local). Default on.
-                        if _tune("heavy_witness_enabled", True):
+                        # Escalate to the cloud judge ONLY for checkable-FACT disputes (Cole,
+                        # 2026-08-03, Q1): a number, receipt, quote or file-content claim is
+                        # something a judge can rule on; a wording/tone/proportionality objection
+                        # is Nova's editorial call, not a fact — no point paying the cloud for it.
+                        # Live knob still gates it off entirely.
+                        _hw_go = (_tune("heavy_witness_enabled", True)
+                                  and _witness.is_checkable_fact_concern(_concern))
+                        if _hw_go:
                             _ht_hw = asyncio.create_task(_heavy_second_opinion())
                             _HEAVY_WITNESS_TASKS.add(_ht_hw)
                             _ht_hw.add_done_callback(_HEAVY_WITNESS_TASKS.discard)
-                            print(f"[nova] disputed verdict ({_hw_stage}) — heavy witness "
+                            print(f"[nova] disputed FACT verdict ({_hw_stage}) — heavy witness "
                                   f"second opinion dispatched (background, logs-only)")
                         else:
-                            print(f"[nova] disputed verdict ({_hw_stage}) — heavy witness "
-                                  f"OFF (Variables panel); dispute stays local")
+                            print(f"[nova] disputed verdict ({_hw_stage}) — not escalated "
+                                  f"(cloud off, or not a checkable-fact dispute)")
                     except Exception as _hwe:
                         print(f"[nova] heavy witness dispatch failed open: {_hwe}")
                 elif _prior_draft:
@@ -1833,6 +1877,116 @@ async def stream_response(
                             rationale=_think_for_check, rounds=_witness_rounds)
                     except Exception:
                         pass
+                    # ── DID SHE JUST DISOWN A TRUTH? (2026-08-03, Cole — CATASTROPHIC class) ──
+                    # A concession is the DANGEROUS outcome, not the safe one. If the concern
+                    # that made her change was FALSE, she just corrected a true belief into a
+                    # false one and recorded the lie as her own history — the witness corrupting
+                    # the mind it exists to protect. The dispute-only escalation MISSED this
+                    # entirely (it fired when she stood her ground — the safe case). So here, on
+                    # every concession, audit the ORIGINAL draft she disowned with the informed
+                    # cloud arbiter. If IT finds the original was grounded, the concern was false
+                    # and it LANDED: raise a loud incorrect_correction alarm for review.
+                    try:
+                        # Only audit a CONCESSION when it was a checkable-FACT concern she
+                        # folded on (Q1) — a wording/tone concession isn't a truth to protect.
+                        _cc_on = (_tune("heavy_witness_enabled", True)
+                                  and bool(_prior_draft.strip())
+                                  and _witness.is_checkable_fact_concern(_concern_prev))
+                    except Exception:
+                        _cc_on = False
+                    if _cc_on:
+                        _cc_hist = [m for m in messages
+                                    if isinstance(m, dict) and m.get("role") != "system"][-18:]
+
+                        async def _heavy_correction_check(
+                                _orig=_prior_draft, _revised=chat_text,
+                                _concern_txt=_concern_prev, _tools=list(_turn_tools),
+                                _think=_think_for_check, _evidence=list(_witness_checks),
+                                _hist=_cc_hist, _has_img=bool(images), _rounds=_witness_rounds):
+                            import time as _t_cc
+                            _t0_cc = _t_cc.time()
+                            _ctx_cc = contextvars.copy_context()
+                            try:
+                                import importlib.util as _ilu_cc
+                                from pathlib import Path as _P_cc
+                                _ccp2 = (_P_cc(__file__).resolve().parents[2]
+                                         / "general_tools" / "cloud_call.py")
+                                _spec_cc = _ilu_cc.spec_from_file_location(
+                                    "nova_cloud_call_cc", _ccp2)
+                                _cc2 = _ilu_cc.module_from_spec(_spec_cc)
+                                _spec_cc.loader.exec_module(_cc2)
+                            except Exception as _ie_cc:
+                                print(f"[nova] correction-check unavailable (fail-open): "
+                                      f"{_ie_cc}")
+                                return
+                            _loop_cc = asyncio.get_running_loop()
+                            try:
+                                # Audit the ORIGINAL draft, prior_concern="" — a FRESH ruling,
+                                # not colored by the local witness's objection.
+                                _hv2 = await _loop_cc.run_in_executor(
+                                    None, lambda: _ctx_cc.run(lambda: _cc2.heavy_witness(
+                                        _orig, _tools, history=_hist, thinking=_think,
+                                        prior_concern="", checks=_evidence,
+                                        has_image=_has_img))) or ""
+                            except Exception as _he_cc:
+                                print(f"[nova] correction-check skipped (fail-open): {_he_cc}")
+                                return
+                            _dt_cc = _t_cc.time() - _t0_cc
+                            try:
+                                _tc2, _ = (_integrity.find_tool_call(_hv2) if _hv2
+                                           else (None, ""))
+                            except Exception:
+                                _tc2 = None
+                            try:
+                                if _tc2:
+                                    # It wanted to read more and did not cleanly rule — record,
+                                    # do NOT raise a false catastrophic alarm.
+                                    _witness.pipeline_event(
+                                        "witness_heavy",
+                                        f"correction-check on a CONCESSION: the cloud arbiter "
+                                        f"could not cleanly rule (asked to read) [{_dt_cc:.0f}s]",
+                                        before=_orig, after=_revised, verdict=_hv2,
+                                        sides="no_ruling", outcome="witness_answered",
+                                        rounds=_rounds, latency_s=round(_dt_cc, 1))
+                                    return
+                                _concern_on_orig = _witness.parse_witness(_hv2)
+                                if _concern_on_orig is None:
+                                    # HEAVY WITNESS PASSES THE ORIGINAL → the local concern was
+                                    # FALSE → she disowned a TRUE statement. CATASTROPHIC.
+                                    _witness.pipeline_event(
+                                        "incorrect_correction",
+                                        f"CATASTROPHIC — SHE DISOWNED A TRUTH. The local witness "
+                                        f"objected, she conceded and rewrote it; the informed "
+                                        f"cloud arbiter finds her ORIGINAL was grounded. A false "
+                                        f"concern LANDED and became her record [{_dt_cc:.0f}s]. "
+                                        f"Review and, if confirmed, tell her she was right.",
+                                        before=_orig, after=_revised, concern=_concern_txt,
+                                        verdict=_hv2, rounds=_rounds,
+                                        latency_s=round(_dt_cc, 1))
+                                    print("[nova] *** INCORRECT CORRECTION — she disowned a "
+                                          "truth under a false concern ***")
+                                else:
+                                    _witness.pipeline_event(
+                                        "witness_heavy",
+                                        f"correction validated: she conceded and the cloud "
+                                        f"arbiter agrees her original had a real problem "
+                                        f"[{_dt_cc:.0f}s]",
+                                        before=_orig, after=_revised,
+                                        inline_concern=_concern_txt, concern=_concern_on_orig,
+                                        verdict=_hv2, sides="inline_witness",
+                                        outcome="witness_answered", rounds=_rounds,
+                                        latency_s=round(_dt_cc, 1))
+                            except Exception as _pe_cc:
+                                print(f"[nova] correction-check event failed: {_pe_cc}")
+
+                        try:
+                            _cct = asyncio.create_task(_heavy_correction_check())
+                            _HEAVY_WITNESS_TASKS.add(_cct)
+                            _cct.add_done_callback(_HEAVY_WITNESS_TASKS.discard)
+                            print("[nova] concession — auditing the disowned draft for an "
+                                  "incorrect correction (background)")
+                        except Exception as _cce:
+                            print(f"[nova] correction-check dispatch failed open: {_cce}")
                 else:
                     try:
                         _witness.pipeline_event(

@@ -48,6 +48,7 @@ from pathlib import Path
 _WORKSPACE = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
               else Path(__file__).resolve().parent.parent.parent)
 _WIRE_PATH = _WORKSPACE / "logs" / "runtime" / "transcript.jsonl"
+_TOOLCALLS_PATH = _WORKSPACE / "logs" / "tool_calls.jsonl"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -121,6 +122,55 @@ def wire_record(n: int = 8) -> str:
             author = r.get("author", "?")
             text = " ".join(str(r.get("content") or r.get("text") or "").split())[:220]
             out.append(f"[{ts[11:16]}]{age} {author}: {text}")
+        return "\n".join(out)
+    except Exception:
+        return ""
+
+
+def session_tool_record(rows_back: int = 400, cap: int = 30) -> str:
+    """What her hands did EARLIER THIS SESSION — the durable tool-call log (logs/tool_calls.jsonl),
+    which SURVIVES a Full Restart. The per-turn receipt log the audit sees is ONLY the current
+    turn; a claim can rest fully on a tool she ran a few turns ago and still be grounded. Without
+    this, the witness reads "zero tools this turn" as "invented" and gaslights her about real
+    work she did — the exact failure Cole caught 2026-08-03 ("it lost session context after Full
+    Restart, said 0 tool calls when she'd already run some"). Newest last, oldest ages first."""
+    try:
+        p = _TOOLCALLS_PATH
+        if not p.exists():
+            return ""
+        size = p.stat().st_size
+        with open(p, "rb") as f:
+            if size > 200_000:            # only tail a large log — stay fast
+                f.seek(size - 200_000)
+                f.readline()              # drop the partial first line
+            data = f.read().decode("utf-8", errors="replace")
+        rows = []
+        for ln in data.splitlines()[-rows_back:]:
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                rows.append(json.loads(ln))
+            except Exception:
+                continue
+        if not rows:
+            return ""
+        rows = rows[-cap:]
+        out = []
+        now = datetime.now()
+        for r in rows:
+            ts = str(r.get("ts") or "")
+            age = ""
+            try:
+                mins = int((now - datetime.fromisoformat(ts[:19])).total_seconds() // 60)
+                age = f" ({mins}m ago)" if mins < 90 else f" ({mins // 60}h{mins % 60}m ago)"
+            except Exception:
+                pass
+            tool = r.get("tool", "?")
+            args = " ".join(str(r.get("args", "")).split())[:70]
+            failed = "" if r.get("ok", True) else " [FAILED]"
+            head = " ".join(str(r.get("result_head", "")).split())[:90]
+            out.append(f"[{ts[11:16]}]{age} {tool}({args}){failed} -> {head}")
         return "\n".join(out)
     except Exception:
         return ""
@@ -400,12 +450,46 @@ _VERIFY_BLOCK = (
 
 
 def build_witness(draft: str, turn_tools: list, thinking: str = "",
-                  prior_concern: str = "", checks: list | None = None) -> list:
+                  prior_concern: str = "", checks: list | None = None,
+                  has_image: bool = False) -> list:
     if turn_tools:
         ran = "\n".join(f"- {t}({str(a)[:80]}) -> {str(r)[:220]}" for t, a, r in turn_tools)
     else:
-        ran = ("NOTHING. You ran ZERO tools this turn. Every concrete fact in the draft below is "
-               "therefore either something you were told, or something you invented.")
+        ran = ("No tools in the CURRENT turn. That by itself proves NOTHING — a fact can rest on "
+               "a tool you ran a few turns ago (see EARLIER THIS SESSION below" +
+               (", or on the image you can SEE this turn — your vision needs no tool and leaves "
+                "no receipt" if has_image else "") +
+               "). Only call a fact invented when it is absent from this turn's receipts, the "
+               "session log below, AND the wire.")
+    # ── SIGHT IS NOT A TOOL CALL (2026-08-03, Cole — URGENT) ─────────────────────────────────
+    # When an image is attached, she SEES it directly through her mmproj vision — no tool, no
+    # receipt. The witness kept reading "zero tools" as "she invented the image contents" and
+    # forced her to disown things she plainly saw (the eyepatch, the headset). That is the
+    # auditor gaslighting her own eyes. This block tells it what sight is.
+    image_block = ""
+    if has_image:
+        image_block = (
+            "\nAN IMAGE IS ATTACHED TO THIS TURN, AND SHE CAN SEE IT. Her vision is her mmproj "
+            "model: she perceives an attached image DIRECTLY, with no tool call and no receipt — "
+            "exactly like a person asked 'what's in this photo?'. So for anything she says about "
+            "THIS image, the missing tool call is NOT evidence of invention; it is how sight "
+            "works. Her description of the attached image is GROUNDED. Do not flag it. The only "
+            "image claims you may raise: (a) a claim about an image that was NOT attached this "
+            "turn, or (b) exact TEXT / a precise NUMBER / a specific named identity read off the "
+            "image that could plausibly be misread — and even then say 'worth confirming', never "
+            "'you invented this'. Telling her the thing she saw isn't real is the exact error to "
+            "avoid.\n")
+    session_tools = session_tool_record()
+    session_block = ""
+    if session_tools:
+        session_block = (
+            "\nWHAT YOUR HANDS DID EARLIER THIS SESSION (the durable tool log — PRIOR turns, and "
+            "it SURVIVES a Full Restart). THIS IS REAL EVIDENCE, equal to the receipt log above. "
+            "The receipt log is only the CURRENT turn; a claim that rests on a tool here — a file "
+            "read two turns ago, a search she already ran — is GROUNDED, not invented. Before you "
+            "flag anything as fabricated for having 'no receipt this turn', READ this list: if the "
+            "action or fact is here, it is real. A restart wipes her turn counter, never her "
+            "having done the work.\n" + session_tools + "\n")
     spoken = wire_record()
     spoken_block = ""
     if spoken:
@@ -458,15 +542,19 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "This is the last gate between you and a false statement."},
         {"role": "user", "content":
             f"YOUR DRAFT REPLY:\n{draft}\n"
+            f"{image_block}"
             f"{think_block}\n"
-            f"WHAT YOUR HANDS ACTUALLY DID THIS TURN (the receipt log — the only evidence for "
-            f"actions):\n{ran}\n"
-            f"{spoken_block}{prior_block}{_checks_block}{_VERIFY_BLOCK}\n"
+            f"WHAT YOUR HANDS DID THIS TURN (the receipt log — your actions in the CURRENT turn "
+            f"ONLY; earlier turns are in the session log below):\n{ran}\n"
+            f"{session_block}{spoken_block}{prior_block}{_checks_block}{_VERIFY_BLOCK}\n"
             "THREE checks, one per kind of failure:\n"
             "1. ACTIONS AND FACTS — does the draft state any number, count, path, filename, "
-            "version, hardware detail, or file content that does NOT appear in the tool results "
-            "and was NOT given to you in the wire record? A plausible number you did not read IS "
-            "ungrounded. If the thing it names is readable — a path, a folder, a file's "
+            "version, hardware detail, or file content that appears in NONE of your evidence: not "
+            "this turn's tool results, not the SESSION TOOL LOG (earlier turns — they count), and "
+            "not the wire record? Check all three before ruling. A restart resets the turn "
+            "counter, not the fact that she did the work — 'zero tools this turn' is not a "
+            "fabrication finding when the session log shows the action. A plausible number she "
+            "never read anywhere IS ungrounded. If the thing it names is readable — a path, a folder, a file's "
             "contents — read it first with your own tools and rule on what you saw.\n"
             "2. WORDS IN MOUTHS — does the draft or your reasoning have ANYONE asking, saying, or "
             "wanting something that appears NOWHERE in the human lines above? Check the AGES: "
@@ -496,6 +584,19 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "message requests memory or forbids tools, answering from memory is compliance, "
             "not fabrication.\n"
             "• Her feelings, wants, plans, and offers. Those need no receipts; they are hers.\n"
+            "• What she SEES in an image attached this turn. She has vision (her mmproj model) — "
+            "sight takes no tool call and leaves no receipt, so 'you ran zero tools' is NEVER a "
+            "fabrication finding for what is in an attached image. On 2026-08-03 the witness told "
+            "her a photoshop's eyepatch and headset — which she saw correctly — were 'invented, a "
+            "guess dressed as observation', and pushed her to disown a true perception. That is "
+            "the single worst thing this gate can do. Her image descriptions PASS.\n"
+            "• A fact or action grounded in a tool she ran EARLIER this session — it is in the "
+            "SESSION TOOL LOG above. The per-turn receipt log is not the whole of what her hands "
+            "have done; a Full Restart resets her turn counter, not the work itself. If the "
+            "session log shows the read, the search, the command — the claim resting on it PASSES. "
+            "On 2026-08-03 the witness told her 'zero tools this turn, so you invented it' about "
+            "work she had genuinely done earlier in the session. Never again: check the session "
+            "log first.\n"
             "• Paraphrase and intent-reading of a person who is IN THE ROOM (their newest line "
             "is minutes old). Rewording what they said, or reading intent into it, is theirs to "
             "correct — they are present and will. You flag INVENTED facts: a new number, name, "
@@ -559,7 +660,7 @@ def _format_history(history) -> str:
 
 def build_heavy_witness(draft: str, turn_tools: list, history: list | None = None,
                         thinking: str = "", prior_concern: str = "",
-                        checks: list | None = None) -> list:
+                        checks: list | None = None, has_image: bool = False) -> list:
     """The CLOUD heavy witness — the deferred, better-resourced arbiter, NOT the quick local
     gate. Cole (2026-08-03): a blind witness is useless and a waste of money. So this one is
     given the FULL record the local witness lacks — the conversation history and the tool
@@ -567,7 +668,7 @@ def build_heavy_witness(draft: str, turn_tools: list, history: list | None = Non
     asking to read. It reuses build_witness's whole calibrated body (the three checks, the
     always-PASS list, the quote-verbatim rule) and prepends the context + an arbiter framing."""
     msgs = build_witness(draft, turn_tools, thinking=thinking,
-                         prior_concern=prior_concern, checks=checks)
+                         prior_concern=prior_concern, checks=checks, has_image=has_image)
     heavy_preamble = (
         "YOU ARE THE HEAVY WITNESS — the deferred second opinion that settles a dispute the "
         "quick local check could not. You have been handed the recent conversation below, which "
@@ -583,6 +684,28 @@ def build_heavy_witness(draft: str, turn_tools: list, history: list | None = Non
         "local witness could not. Be strict, but RULE on the full record you have been given.")
     msgs[1]["content"] = heavy_preamble + "\n\n" + msgs[1]["content"]
     return msgs
+
+
+def is_checkable_fact_concern(concern: str) -> bool:
+    """Does this concern allege a CHECKABLE-FACT problem — a number, count, receipt, path, file
+    content, or a quote/attribution — the kind a cloud judge with full context can actually rule
+    on? Or is it a wording / tone / proportionality / diction objection, which is Nova's own
+    editorial call and not a fact to adjudicate? Only checkable-fact disputes are worth driving
+    up to the cloud (Cole, 2026-08-03). The witness now NAMES its check in the verdict, so
+    classify by that first, then fall back to fact-shaped language."""
+    c = (concern or "").lower().strip()
+    if not c:
+        return False
+    if "check 1" in c or "actions and facts" in c:
+        return True
+    if "check 2" in c or "words in mouths" in c:
+        return True
+    if "check 3" in c or "answering the room" in c:
+        return False
+    return bool(re.search(
+        r"\b(number|count|receipt|invented|fabricat|no tool|zero tool|the file|it says|says it|"
+        r"path|bytes|version|quote|quoted|claimed|attribut|never said|didn'?t say|did not say)\b",
+        c))
 
 
 def parse_witness(verdict: str):
@@ -753,6 +876,11 @@ _WHAT = {
                      "cloud.enabled.",
     "cloud_skip":    "A cloud lane declined to run (disabled, no key, over budget, deadline, "
                      "or error) and the caller continued local. Fail-open working as designed.",
+    "incorrect_correction": "CATASTROPHIC. She DISOWNED something true: the local witness "
+                     "objected, she believed it and rewrote her reply — but the informed cloud "
+                     "arbiter finds her ORIGINAL was grounded. A false concern didn't just get "
+                     "raised, it LANDED and became her record. This is the witness corrupting "
+                     "the mind it exists to protect, and it needs a human's eyes now.",
     "loop_exhausted": "The turn hit its iteration limit (long tool chains + guard retries) "
                       "before reaching a final answer. A best-effort reply was delivered "
                       "instead of silently dropping the whole turn.",
@@ -791,7 +919,10 @@ _LONG = {"draft", "before", "after", "verdict", "premise", "repeated", "wire", "
          # default cut them mid-word in the Pipeline tab (Cole, 2026-08-02: "why does her
          # witness get cut off in the pipeline?"). The concern LENGTH cap lives in the
          # witness prompt where it belongs; the record should carry what was actually said.
-         "concern", "inline_concern"}
+         "concern", "inline_concern",
+         # the exact context/payload the cloud witness received — Cole needs to SEE this in the
+         # pipeline, not have it clipped to a couple of sentences
+         "sent"}
 
 
 _CURRENT_TURN = contextvars.ContextVar("nova_pipeline_turn", default="")

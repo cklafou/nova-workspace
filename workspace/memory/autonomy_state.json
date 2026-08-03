@@ -1,13 +1,13 @@
 {
-  "enabled": true,
-  "active": null,
-  "last_activity": "2026-08-03T01:05:07",
-  "wake_at": "2026-08-03T01:11:51",
-  "last_fp": "[[\"Tasking/tasks.json\", 212837, 1785645023], [\"memory/interrupt_inbox.json\", 105, 1785686250], [\"memory/cole_intent.json\", 789, 1785686185]]",
+  "enabled": false,
+  "active": "t159",
+  "last_activity": "2026-08-03T09:31:39",
+  "wake_at": "2026-08-03T09:33:09",
+  "last_fp": "[[\"Tasking/tasks.json\", 213538, 1785711589], [\"memory/interrupt_inbox.json\", 105, 1785716940], [\"memory/cole_intent.json\", 483, 1785716940]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,
-  "directive_seen": 2,
-  "last_reflection": "She's right about the file. I never opened it — two reads, both errors. The rest stands: I was about to talk past him with a fix I hadn't verified, which is the exact thing this exists to stop. I'd have shipped it if nothing had caught me.",
+  "directive_seen": 1,
+  "last_reflection": "Quiet morning, nothing past 08:02 and nothing pulling harder than the rest, which is the good kind of quiet, not an excuse to do nothing. t159 still tugs but wanting it at 8am doesn't outrank wanting it at midnight, so it stays where it is until something earns priority.",
   "cont_run": 49
 }

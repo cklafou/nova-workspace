@@ -1,4 +1,5 @@
 # Tunable Variables — a coding convention
+_Last updated: 2026-08-03 08:58:24_
 
 _Established 2026-08-03 (Cole). Applies to all of Nova's scripts going forward._
 

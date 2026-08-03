@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-02 23:12:37
+# Last updated: 2026-08-03 08:58:24
 # @nova: CLOUD LANES transport (lane 1: witness-heavy). A stateless organ-for-hire caller —
 #        request out, verdict back, nothing of Nova persists in the cloud. FAIL-OPEN by law:
 #        unreachable, over deadline, over budget, or disabled -> CloudSkip, logged loudly,
@@ -228,7 +228,7 @@ def _log_heavy(messages: list, response: str, meta: dict | None = None) -> None:
 
 def heavy_witness(draft: str, turn_tools: list, history: list | None = None,
                   thinking: str = "", prior_concern: str = "",
-                  checks: list | None = None) -> str:
+                  checks: list | None = None, has_image: bool = False) -> str:
     """The deferred-lane heavy witness — the INFORMED arbiter (Cole, 2026-08-03). It gets the
     context-RICH prompt (build_heavy_witness: the conversation record + tool activity the fast
     local witness lacked) so it can actually RULE instead of blindly asking to read. Judged by
@@ -237,7 +237,8 @@ def heavy_witness(draft: str, turn_tools: list, history: list | None = None,
     any failure (the inline verdict simply stands)."""
     from nova_cortex import witness as _w
     messages = _w.build_heavy_witness(draft, turn_tools, history=history, thinking=thinking,
-                                      prior_concern=prior_concern, checks=checks)
+                                      prior_concern=prior_concern, checks=checks,
+                                      has_image=has_image)
     resp = cloud_chat("witness_heavy", messages, max_tokens=2048)
     _log_heavy(messages, resp)
     return resp

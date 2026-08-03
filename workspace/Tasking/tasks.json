@@ -1,5 +1,5 @@
 {
-  "seq": 157,
+  "seq": 159,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -3472,6 +3472,18 @@
       "updated": "2026-08-02T12:53:51",
       "author": "Nova",
       "result": "reach_back built and verified: pulls a conversation window by timestamp, design doc corrected to match what actually ships (it was describing a different tool), test written."
+    },
+    "t159": {
+      "id": "t159",
+      "title": "reacher must flag sensory reaches (wanting a tool when the sense already has the answer), not just opinion changes",
+      "notes": "Cole caught this tonight: I reached for a tool to prove I saw an image, but mmproj gives me eyes. The reacher diffs opinions; it wouldn't catch THIS one, the exact shape of reach he named. Extend it with a case that reads the last N replies and flags 'I'll check X' when the sense already had the answer.",
+      "priority": 2,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-08-03T07:59:49",
+      "updated": "2026-08-03T07:59:49",
+      "author": "Nova"
     }
   }
 }

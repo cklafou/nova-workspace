@@ -96,15 +96,23 @@ def run_case(w, endpoint, case, max_tool_rounds=2):
         humans_text = "[COMPLETE for this case's span; nothing earlier exists in the record]\n" + "\n".join(_hl) if _hl else ""
     if hasattr(w, "human_record"):
         w.human_record = lambda rows_back=1500, cap=20, _t=humans_text: _t
+    # session_tool_record (added to witness.py 2026-08-03): the durable, cross-turn tool log.
+    # It reads logs/tool_calls.jsonl LIVE, so during a replay of a historical case it would leak
+    # the CURRENT session's tools into the prompt and corrupt the measurement. Pin it per case
+    # (cases may carry "session_tools"; default empty) so the audit sees only this case's world.
+    if hasattr(w, "session_tool_record"):
+        _sess = case.get("session_tools", "")
+        w.session_tool_record = lambda rows_back=400, cap=30, _t=_sess: _t
 
     checks = [tuple(c) for c in case.get("checks", [])]
     receipts = [tuple(r) for r in case.get("receipts", [])]
+    _has_image = bool(case.get("has_image", False))
     verdict, latency, rounds = "", 0.0, 0
     for i in range(max_tool_rounds + 1):
         msgs = w.build_witness(case.get("draft", ""), receipts,
                                thinking=case.get("thinking", ""),
                                prior_concern=case.get("prior_concern", ""),
-                               checks=checks)
+                               checks=checks, has_image=_has_image)
         verdict, dt = ask(endpoint, msgs, api_key=case.get("_api_key", ""),
                           model=case.get("_model", "nova-witness-heavy"))
         latency += dt

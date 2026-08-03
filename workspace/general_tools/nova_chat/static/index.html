@@ -804,6 +804,9 @@ a:hover { text-decoration: underline; }
 .pl-badge.ok   { color: var(--green); }
 .pl-badge.held { color: var(--yellow); }
 .pl-badge.err  { color: var(--red); }
+.pl-badge.catastrophic { color: #fff; background: var(--red); padding: 1px 7px; border-radius: 4px; font-weight: 700; letter-spacing: .02em; animation: cataPulse 1.3s ease-in-out infinite; }
+.pl-turn.catastrophic { border: 1px solid var(--red); background: rgba(255,80,80,0.07); border-radius: 7px; }
+@keyframes cataPulse { 0%,100%{ box-shadow: 0 0 0 0 rgba(255,80,80,.55); } 50%{ box-shadow: 0 0 0 5px rgba(255,80,80,0); } }
 .pl-n { margin-left: auto; color: var(--text-mute); font-size: 9px; flex-shrink: 0; }
 .pl-body { padding: 4px 8px 9px 21px; background: var(--bg-hover); }
 .pl-oc { font-size: 10px; color: var(--text-dim); line-height: 1.5; margin-bottom: 5px; }
@@ -817,6 +820,9 @@ a:hover { text-decoration: underline; }
 .pl-who { font-size: 9.5px; color: var(--text-dim); margin-bottom: 3px; line-height: 1.4; }
 .pl-who b { color: var(--text); letter-spacing: .03em; }
 .pl-msg.wit .pl-who b { color: var(--yellow); }
+.pl-badge.cloud { color: #38bdf8; }
+.pl-msg.cloud { border-left-color: #38bdf8; }
+.pl-msg.cloud .pl-who b { color: #38bdf8; }
 .pl-num { display: inline-block; min-width: 13px; height: 13px; line-height: 13px; text-align: center;
   background: var(--bg-surface); border: 1px solid var(--border); border-radius: 50%;
   font-size: 8px; color: var(--text-mute); margin-right: 5px; }
@@ -1125,6 +1131,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-header">Panel Tab</div>
   <div class="dd-item" onclick="switchPanel('thoughts')"><span class="dd-icon">🧠</span><span class="dd-label">Thoughts</span><span class="dd-check" id="vchk-thoughts"></span></div>
   <div class="dd-item" onclick="switchPanel('pipeline')"><span class="dd-icon">🛡</span><span class="dd-label">Pipeline</span><span class="dd-check" id="vchk-pipeline"></span></div>
+  <div class="dd-item" onclick="switchPanel('variables')"><span class="dd-icon">🎛</span><span class="dd-label">Variables</span><span class="dd-check" id="vchk-variables"></span></div>
   <div class="dd-item" onclick="switchPanel('tools')">  <span class="dd-icon">⚙</span><span class="dd-label">Tools</span><span class="dd-check" id="vchk-tools"></span></div>
   <div class="dd-item" onclick="switchPanel('monitor')"><span class="dd-icon">📊</span><span class="dd-label">Monitor</span><span class="dd-check" id="vchk-monitor"></span></div>
   <div class="dd-item" onclick="switchPanel('files')">  <span class="dd-icon">📁</span><span class="dd-label">Files</span><span class="dd-check" id="vchk-files"></span></div>
@@ -1135,7 +1142,6 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 <!-- Widgets -->
 <div id="dd-widgets" class="dropdown">
   <div class="dd-header">Dashboard Widgets</div>
-  <div class="dd-item" onclick="window.open('/variables','nova_variables','width=580,height=780')" title="Live-adjust Nova's tunable knobs (witness rounds, deadlock threshold, tool-chain depth, ...) — changes take effect on her next turn, no restart."><span class="dd-icon">🎛</span><span class="dd-label">Variables…</span></div>
   <div class="dd-engine" title="Switch the dashboard's layout engine. Grid = original Gridstack. Golden = dockable window manager (edge-dock, tab groups, pop-out). Switching reloads the panel.">
     <span class="dd-eng-label">Layout engine</span>
     <button class="dd-eng-btn" id="dengine-grid" onclick="setDockEngine('grid')">Grid</button>
@@ -1148,6 +1154,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-item" onclick="toggleWidget('console')"><span class="dd-icon">▤</span><span class="dd-label">Console</span><span class="dd-check" id="wchk-console"></span></div>
   <div class="dd-item" onclick="toggleWidget('thoughts')"><span class="dd-icon">🧠</span><span class="dd-label">Thoughts</span><span class="dd-check" id="wchk-thoughts"></span></div>
   <div class="dd-item" onclick="toggleWidget('pipeline')"><span class="dd-icon">🛡</span><span class="dd-label">Pipeline</span><span class="dd-check" id="wchk-pipeline"></span></div>
+  <div class="dd-item" onclick="toggleWidget('variables')"><span class="dd-icon">🎛</span><span class="dd-label">Variables</span><span class="dd-check" id="wchk-variables"></span></div>
   <div class="dd-item" onclick="toggleWidget('tools')"><span class="dd-icon">⚙</span><span class="dd-label">Tools</span><span class="dd-check" id="wchk-tools"></span></div>
   <div class="dd-item" onclick="toggleWidget('monitor')"><span class="dd-icon">📊</span><span class="dd-label">Monitor</span><span class="dd-check" id="wchk-monitor"></span></div>
   <div class="dd-item" onclick="toggleWidget('files')"><span class="dd-icon">📁</span><span class="dd-label">Files</span><span class="dd-check" id="wchk-files"></span></div>
@@ -1589,6 +1596,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <div class="panel-tabs" id="panel-tabs-bar">
       <div class="ptab active" data-tab="thoughts" draggable="true" onclick="switchPanel('thoughts')" data-tooltip="Nova's reasoning — extended thinking tokens shown here as she works through problems">Thoughts</div>
       <div class="ptab" data-tab="pipeline" draggable="true" onclick="switchPanel('pipeline')" data-tooltip="Her gates, live — every witness check, rewrite, hold, echo retry and context trim as it happens">Pipeline</div>
+      <div class="ptab" data-tab="variables" draggable="true" onclick="switchPanel('variables')" data-tooltip="Live knobs — witness rounds, deadlock threshold, tool-chain depth, cloud-witness on/off. Changes take effect on her next turn, no restart.">Variables</div>
       <div class="ptab" data-tab="tools"    draggable="true" onclick="switchPanel('tools')"    data-tooltip="Tool calls — every file read, write, shell command, and web fetch Nova executes">Tools</div>
       <div class="ptab" data-tab="monitor"  draggable="true" onclick="switchPanel('monitor')"  data-tooltip="Live system metrics — Nova's CPU, memory, active goals, and sleep/wake state">Monitor</div>
       <div class="ptab" data-tab="files"    draggable="true" onclick="switchPanel('files')"    data-tooltip="Workspace file tree — browse and open files from the Project Nova workspace">Files</div>
@@ -1674,6 +1682,16 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       <div id="pl-feed">
         <div class="panel-empty" id="pl-empty"><div class="ei">🛡</div>No gate events yet.<br>Her witness, holds and trims appear here as they fire.</div>
       </div>
+    </div>
+
+    <!-- ══ VARIABLES ═══════════════════════════════════════════════════════════════
+         Live-tunable knobs (Cole, 2026-08-03). Renders itself from /api/variables — the
+         registry in nova_cortex/tunables.py. Change a value and it takes effect on her next
+         turn (nova.py reads them hot); no restart. Add a knob to the registry → it appears here. -->
+    <div class="panel-section" id="panel-variables">
+      <div style="font-size:11px;color:var(--text-mute,#8b93a0);margin-bottom:7px;line-height:1.5">
+        Live knobs — changes apply on her next turn, no restart. Stored in <code>_admin/tunables.json</code>.</div>
+      <div id="vars-body"><div class="panel-empty"><div class="ei">🎛</div>loading knobs…</div></div>
     </div>
 
     <div class="panel-section" id="panel-tools">
@@ -3140,6 +3158,10 @@ const _PL_META={
   trim:               {i:'✂️', t:'Context trimmed',         c:''},
   trim_override:      {i:'⚠️', t:'TRIM OVERRIDE',           c:'err'},
   now_card:           {i:'🕐', t:'Now-card attached',       c:''},
+  witness_heavy:      {i:'☁️', t:'Cloud second opinion',    c:'cloud'},
+  cloud_call:         {i:'☁️', t:'Cloud call',              c:'cloud'},
+  cloud_skip:         {i:'☁️', t:'Cloud skipped',           c:'cloud'},
+  incorrect_correction:{i:'🛑', t:'INCORRECT CORRECTION',   c:'catastrophic'},
 };
 function _plTitle(stage){
   return String(stage||'event').replace(/_/g,' ').replace(/^\w/,c=>c.toUpperCase());
@@ -3172,6 +3194,10 @@ const _PL_OUTCOME={
   GATES_OFFLINE:     {t:'GATES OFFLINE',    c:'err',  d:'Her conscience FAILED to load. She is running ungated.'},
   trim_override:     {t:'CONTEXT RESCUED',  c:'err',  d:'Her always-load files nearly consumed the whole window.'},
   trim:              {t:'CONTEXT TRIMMED',  c:'',     d:'Old turns dropped to fit the window.'},
+  witness_heavy:     {t:'CLOUD SECOND OPINION', c:'cloud', d:'This dispute was sent AFTER her words shipped to the heavier cloud witness — the informed arbiter, given the whole conversation the fast local witness lacked. Logs-only: it settles the record, never her reply. Open to see what it was sent, what it said, and which side it took.'},
+  cloud_call:        {t:'CLOUD CALL',      c:'cloud', d:'A paid call left the machine on the witness lane. Spend is in memory/cloud_ledger.json.'},
+  cloud_skip:        {t:'CLOUD SKIPPED',   c:'cloud', d:'The cloud second opinion was skipped (disabled, no key, over budget, deadline, or error) — she stayed fully local. Fail-open.'},
+  incorrect_correction:{t:'🛑 INCORRECT CORRECTION', c:'catastrophic', d:'CATASTROPHIC: she DISOWNED something TRUE. The local witness objected, she believed it and rewrote her reply — but the informed cloud arbiter finds her ORIGINAL was grounded. A false concern LANDED and became her record. This is the conscience corrupting the mind it protects. Open it, and if confirmed, tell her she was right the first time.'},
 };
 function _plTitle(stage){ return String(stage||'event').replace(/_/g,' ').replace(/^\w/,c=>c.toUpperCase()); }
 function _plEsc(v){ return esc(String(v==null?'':v)); }
@@ -3225,10 +3251,32 @@ function _plRenderGroup(g){
       if(e.stage==='witness_unresolved'){ push('nova','revised, but the witness was still unhappy', e.after, T); }
       if(e.stage==='witness_overruled')   push('nova','disagreed and sent her original anyway', e.draft, T, 'ins');
       if(e.stage==='witness_pass')        push('nova','sent this — the witness found nothing wrong', e.draft, T, 'ins');
+      if(e.stage==='witness_heavy'){
+        // The cloud judge's actual words + which side it took. This is the detail Cole asked
+        // to see: what the heavy witness was sent (summarized in facts below), what it said,
+        // and why (its full verdict text). Full payload+reply lives in the heavy_log file.
+        const _side = e.sides==='her'
+            ? 'ruled from the cloud — sided with HER (the concern does NOT hold)'
+          : e.sides==='inline_witness'
+            ? 'ruled from the cloud — the LOCAL WITNESS was right (the concern is real)'
+          : 'was asked for a second opinion but could not rule (still needed to read)';
+        if(e.sent) push('system','WHAT THE CLOUD WAS SENT (its full context/payload — the verbatim copy is in logs/heavy_witness/)', e.sent, T);
+        push('cloud', _side, e.verdict||e.concern, T,
+             e.sides==='her'?'ins':(e.sides==='inline_witness'?'del':''));
+        if(e.inline_concern) push('witness','the concern the cloud was judging', e.inline_concern, T, 'del');
+      }
+      if(e.stage==='cloud_skip')          push('system','cloud second opinion skipped (fail-open) — stayed local', e.detail||e.reason, T);
+      if(e.stage==='incorrect_correction'){
+        push('cloud','the cloud arbiter checked the draft she disowned — and finds it was TRUE. The correction was WRONG.', e.verdict, T, 'ins');
+        push('nova','what she DISOWNED (this was grounded, and she gave it up)', e.before, T, 'ins');
+        push('nova','what she wrongly shipped instead', e.after, T, 'del');
+        push('witness','the FALSE concern that made her fold', e.concern, T, 'del');
+      }
       if(e.error)                         push('system','error', e.error, T, 'del');
     }
     const WHO={nova:{n:'NOVA', c:'nova'}, novathink:{n:'NOVA (thinking)', c:'think'},
-               witness:{n:'HER WITNESS', c:'wit'}, system:{n:'THE SYSTEM', c:'sys'}};
+               witness:{n:'HER WITNESS', c:'wit'}, system:{n:'THE SYSTEM', c:'sys'},
+               cloud:{n:'☁ CLOUD WITNESS', c:'cloud'}};
     let dialogue='';
     beats.forEach((b,i)=>{
       const w=WHO[b.who];
@@ -3246,6 +3294,16 @@ function _plRenderGroup(g){
     if(tt!==undefined) facts+=`<div class="pl-fact">She ran ${tt} tool${tt===1?'':'s'} this turn — that is all the evidence her witness had about her actions.</div>`;
     const rr=any('rounds'); const dl=any('deadlocked');
     if(rr) facts+=`<div class="pl-fact">They went back and forth ${rr} time${rr===1?'':'s'} before this settled${dl?', and stopped because the same objection kept returning with nothing new checked':''}.</div>`;
+    // Cloud heavy-witness context — what the second opinion was actually given, and where to
+    // read the full exchange (Cole, 2026-08-03: "I want to see what was sent, what they said, why").
+    const hc=any('heavy_calls'), hh=any('history_turns'), hts=any('tools_seen'), hlat=any('latency_s'), hlog=any('heavy_log');
+    if(hc!==undefined){
+      facts+=`<div class="pl-fact">Escalated to the ☁ cloud heavy witness: ${hc} paid call${hc===1?'':'s'}`+
+        `${hh!==undefined?`, given the last ${hh} conversation turn${hh===1?'':'s'} to rule on`:''}`+
+        `${hts!==undefined?` and ${hts} tool receipt${hts===1?'':'s'}`:''}`+
+        `${hlat?`, ${hlat}s`:''}. It is the informed arbiter — it has the record the fast local witness lacked.</div>`;
+    }
+    if(hlog) facts+=`<div class="pl-fact">Full payload sent + full reply received: <code>${_plEsc(hlog)}</code></div>`;
     body=`<div class="pl-body">`+
       `<div class="pl-oc"><b>What happened:</b> ${_plEsc(oc.d)}</div>`+
       dialogue + facts +
@@ -4203,6 +4261,22 @@ function sendParams(){
    IMAGES
 ══════════════════════════════════════════════════ */
 function handleFiles(files){Array.from(files).forEach(f=>{if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=e=>addPending(e.target.result);r.readAsDataURL(f);});}
+// Paste a copied image straight into the composer (Cole, 2026-08-03: "I should be able to paste
+// my copied images, not only upload saved files"). Reads any image on the clipboard as a data
+// URL and drops it into pendingImages exactly like an uploaded file. Text pastes are untouched.
+function handlePaste(e){
+  const items=(e.clipboardData||window.clipboardData)&&(e.clipboardData||window.clipboardData).items;
+  if(!items) return;
+  let pastedImage=false;
+  for(const it of items){
+    if(it.type&&it.type.indexOf('image')===0){
+      const blob=it.getAsFile();
+      if(blob){ pastedImage=true; const r=new FileReader(); r.onload=ev=>addPending(ev.target.result); r.readAsDataURL(blob); }
+    }
+  }
+  if(pastedImage) e.preventDefault();   // don't also drop the image's filename/text into the box
+}
+(function(){const _inp=document.getElementById('input'); if(_inp)_inp.addEventListener('paste',handlePaste);})();
 function addPending(url){pendingImages.push({dataUrl:url});const s=document.getElementById('pending-images');const w=document.createElement('div');w.className='p-thumb';const i=pendingImages.length-1;w.innerHTML=`<img src="${url}"><button class="p-rm" onclick="rmPending(${i})">✕</button>`;s.appendChild(w);}
 function rmPending(i){pendingImages.splice(i,1);document.getElementById('pending-images').innerHTML='';pendingImages.forEach(x=>addPending(x.dataUrl));}
 function openLB(src){document.getElementById('lb-img').src=src;document.getElementById('lightbox').classList.add('open');}
@@ -4227,12 +4301,76 @@ function toggleSidebar() {
   else{sb.style.display='none';sh.style.display='none';}
   closeDD();
 }
+// ── VARIABLES panel (2026-08-03) — renders itself from /api/variables (the tunables registry) ──
+async function varsPoll(){
+  const body=document.getElementById('vars-body'); if(!body) return;
+  try{
+    const r=await fetch('/api/variables'); const d=await r.json();
+    if(!d.ok){body.innerHTML='<div class="panel-empty">could not load variables: '+(d.why||'?')+'</div>';return;}
+    const cats={}; d.tunables.forEach(t=>{(cats[t.category||'Other']=cats[t.category||'Other']||[]).push(t);});
+    body.innerHTML='';
+    for(const cat in cats){
+      const h=document.createElement('div');
+      h.style.cssText='color:var(--accent,#6ea8fe);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 5px;border-bottom:1px solid var(--border,#262b33);padding-bottom:3px;';
+      h.textContent=cat; body.appendChild(h);
+      cats[cat].forEach(t=>body.appendChild(varKnob(t)));
+    }
+  }catch(e){ body.innerHTML='<div class="panel-empty">variables unavailable</div>'; }
+}
+function varKnob(t){
+  const box=document.createElement('div');
+  box.style.cssText='background:var(--bg-surface,#171a1f);border:1px solid var(--border,#262b33);border-radius:8px;padding:8px 10px;margin-bottom:6px;';
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;align-items:center;gap:8px;justify-content:space-between;';
+  const lbl=document.createElement('span'); lbl.textContent=t.label||t.key; lbl.style.cssText='font-weight:600;font-size:12px;';
+  row.appendChild(lbl);
+  const saved=document.createElement('span'); saved.textContent='saved ✓'; saved.style.cssText='color:#3fb950;font-size:10px;opacity:0;transition:opacity .2s;white-space:nowrap;';
+  let ctrl;
+  if(t.type==='bool'){
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!t.value;
+    cb.style.cssText='width:16px;height:16px;accent-color:#3fb950;cursor:pointer;';
+    cb.onchange=()=>varSet(t.key,cb.checked,saved);
+    ctrl=cb;
+  }else{
+    const wrap=document.createElement('span'); wrap.style.cssText='display:flex;align-items:center;gap:6px;flex:1;margin:0 8px;';
+    const rng=document.createElement('input'); rng.type='range'; rng.min=t.min; rng.max=t.max;
+    rng.step=t.type==='float'?0.05:1; rng.value=t.value; rng.style.cssText='flex:1;accent-color:var(--accent,#6ea8fe);cursor:pointer;';
+    const num=document.createElement('input'); num.type='number'; num.min=t.min; num.max=t.max; num.step=rng.step; num.value=t.value;
+    num.style.cssText='width:52px;background:#0e1013;color:inherit;border:1px solid var(--border,#262b33);border-radius:4px;padding:2px 4px;text-align:right;font:inherit;';
+    const sync=v=>{rng.value=v;num.value=v;};
+    rng.oninput=()=>{num.value=rng.value;};
+    rng.onchange=()=>varSet(t.key,+rng.value,saved,sync);
+    num.onchange=()=>varSet(t.key,+num.value,saved,sync);
+    wrap.appendChild(rng); wrap.appendChild(num); ctrl=wrap;
+  }
+  row.appendChild(ctrl); row.appendChild(saved); box.appendChild(row);
+  const d=document.createElement('div'); d.textContent=t.desc||'';
+  d.style.cssText='color:var(--text-mute,#8b93a0);font-size:10.5px;margin-top:4px;line-height:1.4;';
+  box.appendChild(d);
+  const rst=document.createElement('button'); rst.textContent='reset to default ('+t.default+')';
+  rst.style.cssText='background:none;border:none;color:var(--text-mute,#8b93a0);cursor:pointer;font-size:10px;text-decoration:underline;padding:3px 0 0;';
+  rst.onclick=()=>varReset(t.key);
+  box.appendChild(rst);
+  return box;
+}
+async function varSet(key,value,saved,sync){
+  try{
+    const r=await fetch('/api/variables',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value})});
+    const d=await r.json();
+    if(d.ok){ if(sync)sync(d.value); if(saved){saved.style.opacity='1';setTimeout(()=>saved.style.opacity='0',1300);} }
+    else alert('failed to set '+key+': '+(d.why||'?'));
+  }catch(e){}
+}
+async function varReset(key){
+  try{ await fetch('/api/variables',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,reset:true})}); varsPoll(); }catch(e){}
+}
 function switchPanel(tab) {
   activePanel=tab;
   document.querySelectorAll('.ptab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
   document.querySelectorAll('.panel-section').forEach(s=>s.classList.toggle('active',s.id===`panel-${tab}`));
-  ['thoughts','pipeline','tools','monitor','files','eyes','terminal'].forEach(t=>{const el=document.getElementById(`vchk-${t}`);if(el)el.textContent=t===tab?'✓':'';});
+  ['thoughts','pipeline','variables','tools','monitor','files','eyes','terminal'].forEach(t=>{const el=document.getElementById(`vchk-${t}`);if(el)el.textContent=t===tab?'✓':'';});
   if(tab==='pipeline'){ plPoll(); document.querySelector('.ptab[data-tab="pipeline"]')?.classList.remove('has-new'); }
+  if(tab==='variables'){ varsPoll(); }
   if(tab==='files'&&!document.getElementById('file-tree').children.length) refreshFiles();
   if(tab==='eyes') sightRefresh();   // load her actual perceptions the moment you open it
   if(tab==='terminal'){ termRenderTabs(); termSwitch(_termActive); document.querySelector('.ptab[data-tab="terminal"]')?.classList.remove('has-new'); }
@@ -5587,6 +5725,7 @@ switchPanel('thoughts');
     // legacy .ptab strip. A tab added there is invisible in Cole's saved layout — which is
     // exactly what happened. Register the widget HERE or it does not exist.
     pipeline:{title:'Pipeline',defH:5,grab:()=>document.getElementById('panel-pipeline')},
+    variables:{title:'Variables',defH:5,grab:()=>document.getElementById('panel-variables')},
     tools:{title:'Tools',defH:4,grab:()=>document.getElementById('panel-tools')},
     monitor:{title:'Monitor',defH:4,grab:()=>document.getElementById('panel-monitor')},
     files:{title:'Files',defH:4,grab:()=>document.getElementById('panel-files')},
@@ -5609,7 +5748,7 @@ switchPanel('thoughts');
       '</div>'+
       '<iframe class="nbw-frame" src="about:blank" referrerpolicy="no-referrer"></iframe></div>')},
   };
-  const ORDER=['sidebar','chat','tasks','logs','thoughts','pipeline','tools','monitor','files','eyes','terminal','editor','browser'];
+  const ORDER=['sidebar','chat','tasks','logs','thoughts','pipeline','variables','tools','monitor','files','eyes','terminal','editor','browser'];
   const DEFAULT=[{id:'tasks',x:0,y:0,w:12,h:4},{id:'logs',x:0,y:4,w:12,h:5},
                  {id:'thoughts',x:0,y:9,w:12,h:5},{id:'tools',x:0,y:14,w:12,h:4}];
   const STORE=document.createElement('div');STORE.style.display='none';
@@ -5651,6 +5790,10 @@ switchPanel('thoughts');
     present[id]=true;
     if(!silent){updateChecks();scheduleSave();}
     if(id==='tasks'&&window.refreshBoard)window.refreshBoard();
+    // Populate the Variables widget the moment it mounts as a dock tile (Gridstack engine).
+    // Deferred a tick for the same reason as the golden path — let the tile attach so varsPoll's
+    // getElementById('vars-body') can find it (Cole, 2026-08-03: "it never populates").
+    if(id==='variables'&&window.varsPoll)setTimeout(()=>window.varsPoll(),60);
   }
   function removeWidget(id){
     if(!present[id]||!grid)return;
@@ -5816,6 +5959,12 @@ switchPanel('thoughts');
     const body=ce('<div class="nv-wbody"></div>');
     const node=getNode(id); if(node)body.appendChild(node);
     el.appendChild(body);
+    // Populate the Variables widget when it mounts in the GOLDEN engine (Cole's dock engine —
+    // tabbed groups). Deferred one tick ON PURPOSE: buildGoldenContent runs while `el` is still
+    // DETACHED from the document, and varsPoll finds #vars-body via getElementById — which only
+    // sees attached nodes. Without the defer it bailed and the tile sat on "loading knobs…"
+    // forever (Cole, 2026-08-03). The timeout lets the layout attach the tile first.
+    if(id==='variables'&&window.varsPoll)setTimeout(()=>window.varsPoll(),60);
     // Per-widget opacity (dashboard widgets only) via the shared tab-anchored popover.
     if(!def.bare){
       const sv=layoutDoc.opacity&&layoutDoc.opacity[id];
@@ -5873,7 +6022,7 @@ switchPanel('thoughts');
     // from the loaded config gets dropped into the stack beside its `nextTo` companion.
     // Runs once per widget — after the first save it is simply part of his layout, movable
     // and closable like everything else.
-    const _ADOPT=[{id:'pipeline',nextTo:'thoughts'}];
+    const _ADOPT=[{id:'pipeline',nextTo:'thoughts'},{id:'variables',nextTo:'pipeline'}];
     if(cfg){
       try{
         const _txt=JSON.stringify(cfg);

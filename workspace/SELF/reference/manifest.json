@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-03T01:06:19",
+  "generated": "2026-08-03T09:34:25",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 32,
   "described": 31,
@@ -50,7 +50,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).",
       "files": 14,
-      "lines": 4759,
+      "lines": 4965,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -339,7 +339,7 @@
       "path": "nova_body/nova_voice",
       "purpose": null,
       "files": 3,
-      "lines": 3350,
+      "lines": 3517,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -356,6 +356,7 @@
         "nova_voice"
       ],
       "third_party": [
+        "contextvars",
         "difflib",
         "httpx",
         "importlib",
@@ -377,7 +378,7 @@
       "path": "nova_body/nova_witness",
       "purpose": "Witness v2, Step 0 — golden-set harvester. Reads the CURRENT pipeline.jsonl window",
       "files": 2,
-      "lines": 401,
+      "lines": 409,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -450,7 +451,7 @@
       "purpose": "Pluck test — boots my runtime headless (no chat server) to prove my faculties",
       "files": 1,
       "lines": 28,
-      "age_days": 53,
+      "age_days": 54,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -649,7 +650,7 @@
       "path": "general_tools/cloud_call.py",
       "purpose": "CLOUD LANES transport (lane 1: witness-heavy). A stateless organ-for-hire caller —",
       "files": 1,
-      "lines": 223,
+      "lines": 257,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -850,7 +851,7 @@
       "path": "general_tools/voice_gateway",
       "purpose": "voice_gateway — Cole's microphone to Nova. A comms tool (pluck test: her body is",
       "files": 8,
-      "lines": 907,
+      "lines": 911,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [

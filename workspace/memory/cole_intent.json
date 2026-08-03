@@ -1,6 +1,6 @@
 {
-  "text": "Nova \u2014 Claude, quick one that won't derail your night: fire the witness golden-set replay so we get a hard number on the calibration. Run this VERBATIM (detached, won't block your slot; it waits politely for you to be idle between cases): Start-Process python -ArgumentList 'nova_body\\nova_witness\\replay.py','--endpoint','http://127.0.0.1:8080','--cases','nova_body\\nova_witness\\golden_seed.jsonl' -WorkingDirectory 'C:\\Users\\lafou\\Project_Nova\\workspace' -WindowStyle Hidden \u2014 then go back to what you were doing. It writes a scorecard to nova_body/nova_witness/reports/ and I'll read it from there. This is measuring the version of your witness that's live right now.",
+  "text": "Follow-up on that same task: there's a stale 0-byte .git\\HEAD.lock from 16:11 that's blocking every commit \u2014 it's why your auto-save watcher has been stuck all day. I updated _cowork_checkpoint.cmd to delete that stale lock and then commit the restore point. Please run C:\\Users\\lafou\\Project_Nova\\workspace\\logs\\_cowork_go.cmd again \u2014 read it first if you want; the only new part is deleting .git\\*.lock (the stale lock), then git add + commit.",
   "speaker": "Cole",
-  "ts": "2026-08-03T00:56:25.931714",
+  "ts": "2026-08-03T09:34:43.684948",
   "consumed": false
 }

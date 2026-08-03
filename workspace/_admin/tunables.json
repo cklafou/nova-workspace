@@ -1,3 +1,4 @@
 {
- "witness_max_rounds": 20
+ "witness_max_rounds": 10,
+ "max_tool_loops": 45
 }
