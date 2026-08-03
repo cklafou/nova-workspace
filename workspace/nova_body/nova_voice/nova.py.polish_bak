@@ -1672,7 +1672,7 @@ async def stream_response(
                                  f"objection returned and nothing new was checked"
                                  if _deadlocked else
                                  f"still disagreeing after {_witness_rounds} round(s)") +
-                                "",
+                                " — her words ship anyway, flagged for review",
                                 before=_prior_draft, after=chat_text, concern=_concern,
                                 rationale=_think_for_check, rounds=_witness_rounds,
                                 deadlocked=bool(_deadlocked))
@@ -1951,14 +1951,6 @@ async def stream_response(
                                 print(f"[nova] binding arbitration crashed (fail-open): {_abe}")
                                 _arb = "skip"
                             if _arb == "concern":
-                                try:
-                                    _witness.pipeline_event(
-                                        "cloud_binding",
-                                        "the cloud arbiter read the whole conversation "
-                                        "and sided with the WITNESS — she revises to "
-                                        "address it", concern=_concern, draft=chat_text)
-                                except Exception:
-                                    pass
                                 messages.append({"role": "assistant", "content": full_response})
                                 messages.append({"role": "user", "content": (
                                     "[The cloud arbiter — it had the whole conversation in "
@@ -1973,14 +1965,6 @@ async def stream_response(
                                 _tools_at_last_concern = len(_turn_tools)
                                 continue
                             if _arb == "skip":
-                                try:
-                                    _witness.pipeline_event(
-                                        "consensus_turn",
-                                        "cloud unreachable in time — Nova decides as "
-                                        "the FINAL AUTHORITY on this concern (keep or "
-                                        "revise, her call)", concern=_concern, draft=chat_text)
-                                except Exception:
-                                    pass
                                 messages.append({"role": "assistant", "content": full_response})
                                 messages.append({"role": "user", "content": (
                                     "[The witness raised a concern about your reply, and the "
