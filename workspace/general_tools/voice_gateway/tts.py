@@ -1,4 +1,4 @@
-# Last updated: 2026-08-04 02:05:53
+# Last updated: 2026-08-04 03:17:00
 # @nova-adjacent: voice_gateway — text→speech backends. Three, in preference order:
 #   Chatterbox (expressive, zero-shot clone — Cole's "tomboyish, not-AI"), llama.cpp TTS
 #   (zero python-deps, uses the llama-tts.exe already on the box), and Null (logs only, for
