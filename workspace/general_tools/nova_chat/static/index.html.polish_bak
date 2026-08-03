@@ -3162,8 +3162,6 @@ const _PL_META={
   cloud_call:         {i:'☁️', t:'Cloud call',              c:'cloud'},
   cloud_skip:         {i:'☁️', t:'Cloud skipped',           c:'cloud'},
   incorrect_correction:{i:'🛑', t:'INCORRECT CORRECTION',   c:'catastrophic'},
-  consensus_turn:     {i:'👑', t:'Nova decides (final authority)', c:'cloud'},
-  cloud_binding:      {i:'☁️', t:'Cloud arbiter: revise',    c:'cloud'},
 };
 function _plTitle(stage){
   return String(stage||'event').replace(/_/g,' ').replace(/^\w/,c=>c.toUpperCase());
@@ -3200,8 +3198,6 @@ const _PL_OUTCOME={
   cloud_call:        {t:'CLOUD CALL',      c:'cloud', d:'A paid call left the machine on the witness lane. Spend is in memory/cloud_ledger.json.'},
   cloud_skip:        {t:'CLOUD SKIPPED',   c:'cloud', d:'The cloud second opinion was skipped (disabled, no key, over budget, deadline, or error) — she stayed fully local. Fail-open.'},
   incorrect_correction:{t:'🛑 INCORRECT CORRECTION', c:'catastrophic', d:'CATASTROPHIC: she DISOWNED something TRUE. The local witness objected, she believed it and rewrote her reply — but the informed cloud arbiter finds her ORIGINAL was grounded. A false concern LANDED and became her record. This is the conscience corrupting the mind it protects. Open it, and if confirmed, tell her she was right the first time.'},
-  consensus_turn:    {t:'NOVA DECIDES',   c:'cloud', d:'The cloud arbiter could not be reached in time, so Nova is the final authority on this concern: she decides to keep or revise on her own judgment. The witness never forces a concession she does not accept. The anti-gaslighting backstop.'},
-  cloud_binding:     {t:'CLOUD: REVISE',  c:'cloud', d:'The cloud arbiter read the whole conversation and sided with the witness: the concern is real, so she revises to address it. Binding, because the cloud holds more context than the fast local witness.'},
 };
 function _plTitle(stage){ return String(stage||'event').replace(/_/g,' ').replace(/^\w/,c=>c.toUpperCase()); }
 function _plEsc(v){ return esc(String(v==null?'':v)); }
@@ -3270,8 +3266,6 @@ function _plRenderGroup(g){
         if(e.inline_concern) push('witness','the concern the cloud was judging', e.inline_concern, T, 'del');
       }
       if(e.stage==='cloud_skip')          push('system','cloud second opinion skipped (fail-open) — stayed local', e.detail||e.reason, T);
-      if(e.stage==='consensus_turn')      push('system','cloud unreachable in time — Nova is the final authority on this concern', e.detail, T);
-      if(e.stage==='cloud_binding')       push('cloud','the cloud arbiter read everything and sided with the witness', e.detail, T, 'del');
       if(e.stage==='incorrect_correction'){
         push('cloud','the cloud arbiter checked the draft she disowned — and finds it was TRUE. The correction was WRONG.', e.verdict, T, 'ins');
         push('nova','what she DISOWNED (this was grounded, and she gave it up)', e.before, T, 'ins');
