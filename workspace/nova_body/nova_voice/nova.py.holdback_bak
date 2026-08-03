@@ -931,19 +931,6 @@ async def stream_response(
                 _witness.begin_turn()
         except Exception:
             pass
-
-        # ── HOLD-BACK STREAMING (2026-08-03, Cole's turnabout redesign) ──
-        # The old model streamed every draft token to chat AS IT GENERATED, so the witness
-        # audited a reply already on screen — and tool-call JSON and "[executing…]" scaffolding
-        # flashed there too (the thinking-leak). Hold-back buffers the draft AND the whole
-        # turnabout debate: nothing reaches chat until the witness clears it, then only the
-        # resolved answer ships (on_done → message_end, which finalizeMsg renders + cleans).
-        # Reasoning still streams to the Thoughts pane and tools to the Tools tab, so the
-        # screen is never dead. Autonomous/silent ticks are EXEMPT (they stream to the Monitor
-        # pane, not chat). Fail-safe: hold_back_streaming=false in _admin/tunables.json
-        # restores live streaming instantly, no code change.
-        _HOLD = bool(_tune("hold_back_streaming", True)) and not autonomous
-
         chat_text            = ""     # current iteration's outbound text; pre-bound so the
                                       # loop-exhaustion salvage can never hit an unbound name
 
@@ -969,10 +956,7 @@ async def stream_response(
                 full_response    += token
                 _streamed.append(token)
                 _chat_chars[0]   += len(token)
-                if not _HOLD:
-                    await on_token(token)   # ← forward to server WebSocket broadcast
-                # HELD: draft buffered in full_response/_streamed and NOT shown; only the
-                # witness-cleared final answer ships, via on_done → message_end below.
+                await on_token(token)   # ← forward to server WebSocket broadcast
                 if on_progress and _chat_chars[0] % 4 == 0:
                     elapsed = asyncio.get_event_loop().time() - _start_time[0]
                     await on_progress(_chat_chars[0], _think_chars[0], elapsed, full_response)
@@ -1145,11 +1129,10 @@ async def stream_response(
                             args = {k: v for k, v in tool_call.items() if k != "tool"}
                         
                         # Send the Tool execution placeholder
-                        if not _HOLD:
-                            msg = f"\n\n[Nova is autonomously executing {tool_name}...]\n\n"
-                            for token in msg.split(" "):
-                                await on_token(token + " ")
-                                await asyncio.sleep(0.002)
+                        msg = f"\n\n[Nova is autonomously executing {tool_name}...]\n\n"
+                        for token in msg.split(" "):
+                            await on_token(token + " ")
+                            await asyncio.sleep(0.002)
 
                         # ── PREMISE HOLD (2026-07-21) — the gate ran too late to matter ──────
                         # Mid-calibration, a silent wake decided "Cole wants a picture of

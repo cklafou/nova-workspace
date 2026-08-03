@@ -60,14 +60,6 @@ REGISTRY: dict = {
         "desc": "On a disputed verdict, escalate to the cloud 32B judge for a logged second "
                 "opinion (fail-open, logs-only, ~$0.008/dispute). Turning this off keeps every "
                 "audit fully local."},
-    "hold_back_streaming": {
-        "default": True, "type": "bool", "category": "Witness",
-        "label": "Hold-back streaming",
-        "desc": "Buffer her draft AND the whole turnabout debate — nothing reaches chat "
-                "until the witness clears it, then only the resolved answer ships. The "
-                "thinking-leak fix: no tool-call JSON or reasoning flashing on screen "
-                "mid-turn. OFF = old behavior, the draft streams live as she writes it. "
-                "Human turns only — autonomous ticks always stream to the Monitor pane."},
     "max_tool_loops": {
         "default": 60, "type": "int", "min": 10, "max": 120, "category": "Cognition",
         "label": "Max tool-chain depth",

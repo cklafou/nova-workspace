@@ -549,24 +549,11 @@ def _clear_stale_git_lock(watch_dir, max_age_s=30):
     (this cycle's own commit, or Claude's device-side git) legitimately just created. The
     watcher's own git ops finish in well under a second, so a lock older than 30s is dead."""
     try:
-        _git = Path(watch_dir) / ".git"
-        # 2026-08-03: sweep EVERY lock kind that can wedge a commit, not just index.lock. A
-        # stale 0-byte HEAD.lock (left by a device-side git that could not unlink it on the
-        # mount) froze every commit for ~8h; the old sweep only cleared index.lock so it never
-        # self-healed. refs/**/*.lock covers a lock left mid ref-update.
-        _locks = [_git / "index.lock", _git / "HEAD.lock", _git / "config.lock"]
-        try:
-            _locks += list((_git / "refs").rglob("*.lock"))
-        except Exception:
-            pass
-        for lock in _locks:
-            try:
-                if lock.exists() and (time.time() - lock.stat().st_mtime) > max_age_s:
-                    lock.unlink()
-                    print(f"[{time.strftime('%H:%M:%S')}] Removed stale {lock.name} "
-                          f"(it was blocking every commit — the working tree could not reach HEAD)")
-            except Exception as _le:
-                print(f"[watcher] could not clear {lock}: {_le}")
+        lock = Path(watch_dir) / ".git" / "index.lock"
+        if lock.exists() and (time.time() - lock.stat().st_mtime) > max_age_s:
+            lock.unlink()
+            print(f"[{time.strftime('%H:%M:%S')}] Removed stale .git/index.lock "
+                  f"(it was blocking every commit — the working tree could not reach HEAD)")
     except Exception as e:
         print(f"[watcher] could not clear stale git lock: {e}")
 
