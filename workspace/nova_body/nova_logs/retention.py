@@ -1,4 +1,4 @@
-# Last updated: 2026-08-04 03:17:00
+# Last updated: 2026-08-04 04:25:53
 """RETENTION — the thing that stops logs/ growing forever.
 
 WHY (2026-07-20, Cole: "take logs")
