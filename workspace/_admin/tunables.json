@@ -1,4 +1,5 @@
 {
- "witness_max_rounds": 10,
- "max_tool_loops": 45
+ "witness_max_rounds": 1,
+ "max_tool_loops": 45,
+ "_prev_witness_max_rounds": 10
 }
