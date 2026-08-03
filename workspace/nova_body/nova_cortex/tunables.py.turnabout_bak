@@ -68,14 +68,6 @@ REGISTRY: dict = {
                 "thinking-leak fix: no tool-call JSON or reasoning flashing on screen "
                 "mid-turn. OFF = old behavior, the draft streams live as she writes it. "
                 "Human turns only — autonomous ticks always stream to the Monitor pane."},
-    "binding_cloud_escalation": {
-        "default": True, "type": "bool", "category": "Witness",
-        "label": "Binding cloud escalation",
-        "desc": "On a checkable-FACT dispute the local witness can't settle, pause and ask "
-                "the cloud arbiter (ping-verified, ~8s) who's right, and ACT on its ruling "
-                "instead of only logging it. If the cloud can't be reached in time, Nova gets "
-                "one consensus turn as the final authority (keep or revise, her call). OFF = "
-                "the cloud stays a background logs-only opinion and her draft ships as-is."},
     "max_tool_loops": {
         "default": 60, "type": "int", "min": 10, "max": 120, "category": "Cognition",
         "label": "Max tool-chain depth",

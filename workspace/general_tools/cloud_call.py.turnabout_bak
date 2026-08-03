@@ -102,15 +102,13 @@ def _ledger_add(lane: str, est_usd: float) -> None:
         pass
 
 
-def _served_model(base_url: str, api_key: str, timeout: float = 15) -> str:
+def _served_model(base_url: str, api_key: str) -> str:
     """Best-effort: what model does the endpoint actually serve? Avoids a name-mismatch 404
-    when a RunPod served-name override wasn't set. Empty on any failure (caller falls back).
-    Doubles as the reachability PING (Cole, 2026-08-03): a short timeout means a cold or
-    unreachable endpoint returns '' fast instead of hanging the dispute on a dead socket."""
+    when a RunPod served-name override wasn't set. Empty on any failure (caller falls back)."""
     try:
         req = urllib.request.Request(base_url + "/models",
                                      headers={"Authorization": f"Bearer {api_key}"})
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        with urllib.request.urlopen(req, timeout=15) as r:
             data = json.loads(r.read().decode("utf-8"))
         ids = [m.get("id") for m in data.get("data", []) if m.get("id")]
         return ids[0] if ids else ""
@@ -166,23 +164,10 @@ def cloud_chat(lane: str, messages: list, max_tokens: int = 2048,
                         lane=lane, reason="over_budget")
         raise CloudSkip(f"monthly cap ${cap} reached")
 
+    deadline = float(deadline_s or lane_cfg.get("deadline_s", 90))
     base = lane_cfg["base_url"].rstrip("/")
     url = base + "/chat/completions"
-    # ── PING-VERIFIED ESCALATION (Cole, 2026-08-03, turnabout Q1) ──
-    # Ping the endpoint FIRST (GET /models) with a short timeout. No confirmed receipt in
-    # time — cold serverless worker, no route, dead lane — and we SKIP IMMEDIATELY instead
-    # of hanging the dispute on a 90s socket. Only a confirmed receipt earns the ~8s wait
-    # for the ruling (Cole's number); the caller may override via deadline_s. On any skip
-    # Nova stays the final authority (the consensus turn), so failing fast is always safe.
-    _ping_to = float(lane_cfg.get("ping_timeout_s", 4))
-    model_name = _served_model(base, api_key, timeout=_ping_to)
-    if not model_name:
-        _pipeline_event("cloud_skip",
-                        f"lane {lane}: ping unanswered in {_ping_to:.0f}s — not reachable "
-                        f"in time, skipping now (fail-open)",
-                        lane=lane, reason="ping_no_receipt")
-        raise CloudSkip(f"ping unanswered in {_ping_to:.0f}s")
-    deadline = float(deadline_s or lane_cfg.get("wait_s", 8))
+    model_name = _served_model(base, api_key) or lane_cfg.get("model", "default")
     payload = {"model": model_name, "messages": messages,
                "max_tokens": max_tokens, "temperature": temperature, "top_p": top_p,
                "stream": False, "chat_template_kwargs": {"enable_thinking": False}}
