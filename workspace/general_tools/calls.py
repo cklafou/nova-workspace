@@ -1,5 +1,5 @@
 # @nova: Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.
-# Last updated: 2026-08-03 10:37:15
+# Last updated: 2026-08-03 11:51:27
 """
 general_tools/calls.py -- Nova Package Call Graph Generator
 ============================================================
