@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-03T09:34:25",
+  "generated": "2026-08-03T09:41:28",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 32,
   "described": 31,
@@ -50,7 +50,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status, context_builder).",
       "files": 14,
-      "lines": 4965,
+      "lines": 4966,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -851,7 +851,7 @@
       "path": "general_tools/voice_gateway",
       "purpose": "voice_gateway — Cole's microphone to Nova. A comms tool (pluck test: her body is",
       "files": 8,
-      "lines": 911,
+      "lines": 915,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [

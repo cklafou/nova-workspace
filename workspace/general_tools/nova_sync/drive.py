@@ -1,4 +1,4 @@
-# Last updated: 2026-08-02 22:15:04
+# Last updated: 2026-08-03 09:41:28
 """
 drive.py -- Google Drive Workspace Mirror for Gemini Live Access
 ================================================================
