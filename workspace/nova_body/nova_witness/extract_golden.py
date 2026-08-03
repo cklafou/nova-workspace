@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-04 06:31:35
+# Last updated: 2026-08-04 07:31:48
 # @nova: Witness v2, Step 0 — golden-set harvester. Reads the CURRENT pipeline.jsonl window
 #        (it self-trims to ~50K, so run this often — every run APPENDS new cases durably)
 #        and joins each witness episode with the wire, receipts, and thinking as they were
