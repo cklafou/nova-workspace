@@ -1,11 +1,12 @@
 {
-  "generated": "2026-08-03T19:25:48",
+  "generated": "2026-08-03T19:35:49",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 32,
-  "described": 31,
+  "described": 30,
   "flags": {
     "undescribed": [
-      "nova_voice"
+      "nova_voice",
+      "NovaLauncher.py"
     ],
     "dead_part_candidates": [
       "nova_config",
@@ -508,7 +509,7 @@
       "name": "NovaLauncher.py",
       "kind": "tool",
       "path": "general_tools/NovaLauncher.py",
-      "purpose": "Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.",
+      "purpose": null,
       "files": 1,
       "lines": 220,
       "age_days": 0,
@@ -535,7 +536,9 @@
         "nova_start.py",
         "start_llama_qwen36.cmd"
       ],
-      "flags": []
+      "flags": [
+        "undescribed"
+      ]
     },
     {
       "name": "audit_queue.py",
