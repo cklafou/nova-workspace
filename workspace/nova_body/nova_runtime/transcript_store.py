@@ -1,4 +1,4 @@
-# Last updated: 2026-08-03 17:06:12
+# Last updated: 2026-08-03 18:16:55
 # @nova: Runtime transcript store — her runtime's own view of the conversation.
 #        A face WRITES messages in (append); her runtime READS them (has_unread_cole,
 #        recent) to perceive whether Cole has spoken, WITHOUT depending on the chat
