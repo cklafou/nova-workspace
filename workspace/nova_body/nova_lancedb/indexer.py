@@ -1,4 +1,4 @@
-# Last updated: 2026-08-03 13:55:14
+# Last updated: 2026-08-03 14:55:15
 """
 nova_lancedb/indexer.py
 ======================
