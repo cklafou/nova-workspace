@@ -1,4 +1,4 @@
-# Last updated: 2026-08-03 15:15:15
+# Last updated: 2026-08-03 16:25:18
 # @nova: THE WITNESS — her grip on the present tense. One faculty, five parts: the wire
 #        (who actually spoke, when), the now-card (the present, placed where attention is
 #        strongest), the claim detectors (is this draft asserting something about the room?),
