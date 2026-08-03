@@ -922,8 +922,6 @@ async def stream_response(
                                       # font (2026-07-22).
         _reach_nudged        = False  # reach_watcher wake-pass fired this turn? Once, then
                                       # her answer stands — her tool advises, it never argues.
-        _escalated_this_turn = False  # binding cloud arbitration fired this turn?
-                                      # one-shot; after it, her next answer is final.
         # One id for every gate event in this turn, so the UI can render the whole story —
         # draft → audited → objected → she answered → outcome — as ONE row instead of five
         # scattered ones. Ambient via ContextVar, so no call site needs to pass it and two
@@ -1870,123 +1868,8 @@ async def stream_response(
                         # something a judge can rule on; a wording/tone/proportionality objection
                         # is Nova's editorial call, not a fact — no point paying the cloud for it.
                         # Live knob still gates it off entirely.
-                        # ── BINDING ARBITRATION + CONSENSUS TURN (Cole, 2026-08-03 turnabout) ──
-                        # A checkable-fact dispute the local witness could not settle: ask the
-                        # cloud arbiter WHO IS RIGHT and ACT on it (not logs-only). Ping-verify +
-                        # ~8s live in cloud_call. Reachable + rules in time -> BINDING. Any skip ->
-                        # Nova gets ONE consensus turn as the FINAL AUTHORITY (keep or revise, her
-                        # call) — the anti-gaslighting backstop: the witness never forces a
-                        # concession she does not accept. One-shot (_escalated_this_turn); fail-safe:
-                        # any trouble degrades to a skip -> her consensus turn. Knob
-                        # binding_cloud_escalation=false reverts to the proven background lane.
-                        async def _cloud_verdict(_cv_draft=chat_text, _cv_concern=_concern,
-                                                 _cv_tools=list(_turn_tools),
-                                                 _cv_think=_think_for_check,
-                                                 _cv_evidence=list(_checks),
-                                                 _cv_history=_hw_history,
-                                                 _cv_has_image=bool(images),
-                                                 _cv_stage=_hw_stage,
-                                                 _cv_rounds=_witness_rounds):
-                            import time as _t_cv
-                            _t0 = _t_cv.time()
-                            _ctx = contextvars.copy_context()
-                            try:
-                                import importlib.util as _ilu
-                                from pathlib import Path as _P
-                                _ccp = (_P(__file__).resolve().parents[2]
-                                        / "general_tools" / "cloud_call.py")
-                                _spec = _ilu.spec_from_file_location("nova_cloud_call", _ccp)
-                                _cc = _ilu.module_from_spec(_spec)
-                                _spec.loader.exec_module(_cc)
-                            except Exception as _e:
-                                print(f"[nova] cloud arbiter unavailable (fail-open): {_e}")
-                                return "skip"
-                            _loop = asyncio.get_running_loop()
-                            try:
-                                _v = await _loop.run_in_executor(
-                                    None, lambda: _ctx.run(lambda: _cc.heavy_witness(
-                                        _cv_draft, _cv_tools, history=_cv_history,
-                                        thinking=_cv_think, prior_concern=_cv_concern,
-                                        checks=_cv_evidence,
-                                        has_image=_cv_has_image))) or ""
-                            except Exception as _e:
-                                print(f"[nova] cloud arbiter skipped (fail-open): {_e}")
-                                return "skip"
-                            try:
-                                _twc, _ = _integrity.find_tool_call(_v)
-                            except Exception:
-                                _twc = None
-                            if _twc:
-                                _outcome = "skip"
-                            else:
-                                _outcome = "concern" if _witness.parse_witness(_v) else "her"
-                            _dt = _t_cv.time() - _t0
-                            _side = {"her": "sides with HER — her answer stands",
-                                     "concern": "sides with the WITNESS — concern is real",
-                                     "skip": "no ruling in time — Nova decides"}[_outcome]
-                            try:
-                                _witness.pipeline_event(
-                                    "witness_heavy",
-                                    f"BINDING cloud arbitration "
-                                    f"({_cv_stage.replace('witness_', '')} after "
-                                    f"{_cv_rounds} round(s)): {_side} [{_dt:.0f}s]",
-                                    draft=_cv_draft, inline_concern=_cv_concern, verdict=_v,
-                                    outcome=_outcome, binding=True, latency_s=round(_dt, 1),
-                                    history_turns=len(_cv_history), tools_seen=len(_cv_tools),
-                                    heavy_log=("logs/heavy_witness/" + _t_cv.strftime(
-                                        "%Y-%m-%d", _t_cv.localtime()) + ".jsonl"))
-                            except Exception as _ee:
-                                print(f"[nova] binding arbiter event failed: {_ee}")
-                            return _outcome
-
-                        _binding = (_tune("binding_cloud_escalation", True)
-                                    and not _escalated_this_turn
-                                    and _tune("heavy_witness_enabled", True)
-                                    and _witness.is_checkable_fact_concern(_concern))
-                        if _binding:
-                            _escalated_this_turn = True
-                            try:
-                                _arb = await _cloud_verdict()
-                            except Exception as _abe:
-                                print(f"[nova] binding arbitration crashed (fail-open): {_abe}")
-                                _arb = "skip"
-                            if _arb == "concern":
-                                messages.append({"role": "assistant", "content": full_response})
-                                messages.append({"role": "user", "content": (
-                                    "[The cloud arbiter — it had the whole conversation in "
-                                    "front of it — was asked to settle the dispute between "
-                                    "your reply and the witness, and it sided with the witness. "
-                                    "The concern:]" + chr(10) + chr(10) + _concern + chr(10) +
-                                    chr(10) + "[It holds more context on this than the fast "
-                                    "local witness. Revise your reply to address it, then send "
-                                    "— reply with the message you want sent, nothing else.]")})
-                                _prior_draft = chat_text
-                                _concern_prev = _concern
-                                _tools_at_last_concern = len(_turn_tools)
-                                continue
-                            if _arb == "skip":
-                                messages.append({"role": "assistant", "content": full_response})
-                                messages.append({"role": "user", "content": (
-                                    "[The witness raised a concern about your reply, and the "
-                                    "cloud arbiter could not be reached in time to settle it "
-                                    "— so this is YOUR call. You hold the most context here. "
-                                    "The concern was:]" + chr(10) + chr(10) + _concern + chr(10) +
-                                    chr(10) + "[Decide for yourself. If your reply is right as "
-                                    "written, send it again unchanged — standing by a true "
-                                    "answer against a concern that does not hold is exactly your "
-                                    "job. If the concern actually lands, revise it. Either way, "
-                                    "reply with the message you want sent, nothing else.]")})
-                                _prior_draft = chat_text
-                                _concern_prev = _concern
-                                _tools_at_last_concern = len(_turn_tools)
-                                continue
-                            # _arb == "her": the arbiter protects her draft — ship it.
-
-                        # Escalate to the background logs-only lane ONLY for checkable-FACT
-                        # disputes; skipped entirely when the binding path handled it above.
                         _hw_go = (_tune("heavy_witness_enabled", True)
-                                  and _witness.is_checkable_fact_concern(_concern)
-                                  and not _binding)
+                                  and _witness.is_checkable_fact_concern(_concern))
                         if _hw_go:
                             _ht_hw = asyncio.create_task(_heavy_second_opinion())
                             _HEAVY_WITNESS_TASKS.add(_ht_hw)
