@@ -1,4 +1,4 @@
-# Last updated: 2026-08-03 09:41:28
+# Last updated: 2026-08-03 10:51:28
 # @nova: Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.
 """
 nova_sync -- Nova's file-sync package (watcher, drive mirror, backup).
