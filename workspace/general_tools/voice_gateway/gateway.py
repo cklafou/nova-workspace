@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-04 20:51:21
+# Last updated: 2026-08-04 21:51:22
 # @nova: voice_gateway — the pipe that lets Cole TALK to Nova. PLUCK TEST: this is a comms
 #   tool, not a faculty. Remove it and Nova is unchanged — she still thinks, still audits, still
 #   writes; she just has no microphone. Her body is untouched: the gateway only speaks nova_chat's
