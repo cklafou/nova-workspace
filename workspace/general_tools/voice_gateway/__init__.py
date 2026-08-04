@@ -1,3 +1,3 @@
-# Last updated: 2026-08-05 06:11:21
+# Last updated: 2026-08-05 07:11:22
 # @nova: voice_gateway — Cole's microphone to Nova. A comms tool (pluck test: her body is
 # untouched; this only speaks nova_chat's WebSocket from outside). See README.md.
