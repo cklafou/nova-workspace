@@ -1,4 +1,4 @@
-# Last updated: 2026-08-04 08:41:01
+# Last updated: 2026-08-04 09:56:45
 # @nova-adjacent: voice_gateway — speech→text (input). Silero VAD segments the mic stream into
 #   utterances; Moonshine transcribes each. A stdin backend (type instead of talk) lets the whole
 #   gateway run and be tested with no microphone or audio libraries at all.
