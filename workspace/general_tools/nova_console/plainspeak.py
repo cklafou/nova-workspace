@@ -1,4 +1,4 @@
-# Last updated: 2026-08-04 16:31:20
+# Last updated: 2026-08-04 17:41:43
 # @nova: Plain-speak — turns machine log spew into a sentence a human can read.
 #
 # Deliberately RULE-BASED, not model-based. A log tail emits hundreds of lines a minute; sending
