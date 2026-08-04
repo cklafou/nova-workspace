@@ -1,4 +1,4 @@
-# Last updated: 2026-08-04 13:11:16
+# Last updated: 2026-08-04 14:11:16
 # @nova: nova_cortex/tunables.py — LIVE-TUNABLE knobs. Cole (2026-08-03): "make things that
 #   should be easily changed into adjustable variables, with a tool that adjusts them on the
 #   fly." This is that registry. Any constant Cole might reasonably want to change WITHOUT a
