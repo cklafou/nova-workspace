@@ -1,13 +1,11 @@
 {
-  "generated": "2026-08-05T09:51:23",
+  "generated": "2026-08-05T10:01:22",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 32,
-  "described": 29,
+  "described": 31,
   "flags": {
     "undescribed": [
-      "nova_config",
-      "nova_voice",
-      "janitor.py"
+      "nova_voice"
     ],
     "dead_part_candidates": [
       "nova_config",
@@ -27,9 +25,9 @@
       "name": "nova_config",
       "kind": "body_part",
       "path": "nova_body/nova_config",
-      "purpose": null,
+      "purpose": "Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads workspace/nova_config.json; falls back to defaults. Import as: from nova_config import cfg.",
       "files": 1,
-      "lines": 0,
+      "lines": 138,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -43,7 +41,6 @@
       "referenced_by": [],
       "launched_by": [],
       "flags": [
-        "undescribed",
         "no_inbound_refs"
       ]
     },
@@ -701,9 +698,9 @@
       "name": "janitor.py",
       "kind": "tool",
       "path": "general_tools/janitor.py",
-      "purpose": null,
+      "purpose": "Janitor — sweeps temp/scratch files into a local Temp/ beside them, and reports clutter.",
       "files": 1,
-      "lines": 0,
+      "lines": 166,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -713,9 +710,7 @@
       "launched_by": [
         "nova_start.py"
       ],
-      "flags": [
-        "undescribed"
-      ]
+      "flags": []
     },
     {
       "name": "nova_chat",
