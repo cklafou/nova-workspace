@@ -1,4 +1,4 @@
-# Last updated: 2026-08-05 20:31:28
+# Last updated: 2026-08-05 21:42:18
 """
 nova_lancedb/embedder.py
 ========================
