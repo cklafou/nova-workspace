@@ -1,4 +1,4 @@
-# Last updated: 2026-08-05 23:42:33
+# Last updated: 2026-08-06 00:51:26
 """PRINCIPALS — who is allowed to talk to Nova, and how much of her they get.
 
 WHY THIS LIVES IN HER BODY (not in nova_chat/)

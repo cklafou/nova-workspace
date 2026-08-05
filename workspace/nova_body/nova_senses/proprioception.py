@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-05 23:42:33
+# Last updated: 2026-08-06 00:51:27
 """
 nova_senses/proprioception.py — Nova's System State Awareness
 ================================================================
