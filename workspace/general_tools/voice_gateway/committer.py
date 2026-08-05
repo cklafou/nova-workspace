@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 04:11:31
+# Last updated: 2026-08-06 05:11:31
 # @nova-adjacent: voice_gateway — the sentence-committer. PURE PYTHON, no audio, no models,
 #   no network: this is the one piece that carries real design intelligence, so it is the one
 #   piece with unit tests (test_committer.py). Everything else is an adapter around it.
