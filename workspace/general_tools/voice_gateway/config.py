@@ -1,4 +1,4 @@
-# Last updated: 2026-08-05 08:51:22
+# Last updated: 2026-08-05 09:51:22
 # @nova-adjacent: voice_gateway — configuration. All knobs in one place; overridable from
 #   _admin/voice_gateway.json and env. No secrets here (there are none — this tool is local).
 """voice_gateway/config.py — every tunable for the gateway, with safe defaults."""
