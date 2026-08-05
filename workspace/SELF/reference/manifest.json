@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-05T21:42:19",
+  "generated": "2026-08-05T21:51:25",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 32,
   "described": 31,
@@ -650,7 +650,7 @@
       "path": "general_tools/cloud_call.py",
       "purpose": "CLOUD LANES transport (lane 1: witness-heavy). A stateless organ-for-hire caller —",
       "files": 1,
-      "lines": 271,
+      "lines": 272,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
