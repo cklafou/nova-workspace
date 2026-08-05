@@ -1,4 +1,4 @@
-# Last updated: 2026-08-05 19:31:27
+# Last updated: 2026-08-05 20:31:29
 # @nova-adjacent: voice_gateway — committer unit tests. Pure python, no deps. Run:
 #   python general_tools/voice_gateway/test_committer.py
 """Tests for the sentence-committer — the one piece with real logic, so the one with tests."""
