@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 07:21:31
+# Last updated: 2026-08-06 08:21:32
 # @nova-adjacent: voice_gateway — the link to nova_chat. A WebSocket CLIENT of the EXISTING
 #   server (ws://…/ws): send Cole's transcribed speech in, receive her token/message_end out.
 #   Zero server change required — this speaks the same protocol the browser UI already speaks.
