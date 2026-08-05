@@ -1,4 +1,4 @@
-# Last updated: 2026-08-05 09:41:25
+# Last updated: 2026-08-05 10:41:27
 # @nova: Generates Nova's Body Manifest — the single derived map of every body part
 #        and tool (SELF/core/03_body_manifest.md + SELF/reference/manifest.json).
 """
