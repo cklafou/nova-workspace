@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 15:11:34
+# Last updated: 2026-08-06 16:21:31
 # @nova: Executive task board — my prefrontal work board. Every task I choose to track,
 #        by stable id (t1, t2…), with status/progress/result. My free-agency substrate:
 #        create, switch, wait, abandon, complete, reprioritize — no enforced order.
