@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 10:01:28
+# Last updated: 2026-08-06 11:01:29
 """DISCOURSE — what she knows about the conversation, and whether she may speak into it.
 
 WHY THIS MOVED BODY-WARD (2026-07-20)
