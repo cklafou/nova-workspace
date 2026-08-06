@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-06T14:31:33",
+  "generated": "2026-08-06T14:41:33",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 32,
   "described": 31,
@@ -467,7 +467,7 @@
       "purpose": "Shutdown — stops the whole Nova stack cleanly.",
       "files": 1,
       "lines": 82,
-      "age_days": 3,
+      "age_days": 4,
       "ports_bind": [],
       "ports_seen": [
         "8080",
