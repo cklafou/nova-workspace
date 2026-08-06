@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 14:11:31
+# Last updated: 2026-08-06 15:11:34
 # @nova: Stray-console janitor — the safety net under the Nova Console.
 #
 # WHAT IT CAN DO:  find console windows that belong to Nova's process tree, HIDE them, and report

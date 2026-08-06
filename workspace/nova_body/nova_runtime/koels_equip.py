@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 14:11:31
+# Last updated: 2026-08-06 15:11:34
 # @nova: KoELS equip mechanism — runtime / life-support (layer 2). The PHYSICAL act of wearing a
 #        specialist loadout: reading which adapters are loaded, the free in-set scale-swap, and
 #        the heavy self-restart that rotates which adapters are loaded at boot. Bytes→GPU is a
