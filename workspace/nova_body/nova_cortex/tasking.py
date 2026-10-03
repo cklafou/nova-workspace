@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: Executive task board — my prefrontal work board. Every task I choose to track,
 #        by stable id (t1, t2…), with status/progress/result. My free-agency substrate:
 #        create, switch, wait, abandon, complete, reprioritize — no enforced order.
@@ -16,16 +16,29 @@ Pure file + logic — no chat/server dependency, so it survives the pluck-test a
 be used by any host.
 """
 
+from nova_paths import body_path
+
 import os
 import json
+import threading
+from functools import wraps
 from datetime import datetime
 from pathlib import Path
 
 WORKSPACE_ROOT = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
                   else Path(__file__).resolve().parent.parent.parent)
-_STORE = WORKSPACE_ROOT / "Tasking" / "tasks.json"
+_STORE = body_path('Tasking') / "tasks.json"
 
 OPEN, WAITING, DONE, ABANDONED = "open", "waiting", "done", "abandoned"
+_lock = threading.RLock()
+
+
+def _locked(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        with _lock:
+            return fn(*args, **kwargs)
+    return wrapped
 
 
 def _now() -> str:
@@ -39,8 +52,8 @@ def _load() -> dict:
             d.setdefault("seq", 0)
             d.setdefault("tasks", {})
             return d
-    except Exception:
-        pass
+    except Exception as e:
+        raise RuntimeError(f"Task board could not be read; refusing to replace it: {e}") from e
     return {"seq": 0, "tasks": {}}
 
 
@@ -51,7 +64,7 @@ def _save(store: dict) -> None:
         tmp.write_text(json.dumps(store, indent=2, ensure_ascii=False), encoding="utf-8")
         os.replace(tmp, _STORE)
     except Exception as e:
-        print(f"[tasking] save failed: {e}")
+        raise RuntimeError(f"Task board was not saved: {e}") from e
 
 
 def all_tasks() -> dict:
@@ -62,6 +75,7 @@ def get(tid: str):
     return _load()["tasks"].get(tid)
 
 
+@_locked
 def _update(tid: str, **fields) -> bool:
     store = _load()
     t = store["tasks"].get(tid)
@@ -75,8 +89,9 @@ def _update(tid: str, **fields) -> bool:
     return True
 
 
+@_locked
 def create(title: str, notes: str = "", priority: int = 3, parent: str = None,
-           author: str = "Nova") -> str:
+           author: str = "Nova", acceptance=None) -> str:
     """Create a task. `author` is WHO ASKED — and it matters more than it looks.
 
     2026-07-19: tasks carried no attribution, so every instruction reaching her read
@@ -87,6 +102,8 @@ def create(title: str, notes: str = "", priority: int = 3, parent: str = None,
 
     Defaults to "Nova" because the common caller is her own apply_decision creating
     her own work. Hosts that queue on someone else's behalf pass the real name."""
+    from nova_cortex.verification import validate_checks
+    checks = validate_checks(acceptance or [])
     store = _load()
     store["seq"] += 1
     tid = f"t{store['seq']}"
@@ -106,11 +123,14 @@ def create(title: str, notes: str = "", priority: int = 3, parent: str = None,
         "notes": notes or "", "priority": pr, "status": OPEN, "parent": par,
         "progress": [], "created": _now(), "updated": _now(),
         "author": (author or "").strip() or "Nova",
+        "acceptance": checks,
+        "scheduling": {"state": "queued", "reason": "Awaiting the next scheduling decision", "at": _now()},
     }
     _save(store)
     return tid
 
 
+@_locked
 def progress(tid: str, note: str) -> bool:
     store = _load()
     t = store["tasks"].get(tid)
@@ -124,22 +144,55 @@ def progress(tid: str, note: str) -> bool:
     return True
 
 
-def complete(tid: str, result: str = "") -> bool:
-    return _update(tid, status=DONE, result=result or "")
+def complete(tid: str, result: str = "", *, manual: bool = False) -> bool:
+    from nova_cortex.verification import verify
+    task = get(tid)
+    if not task:
+        return False
+    evidence = ({"ok": True, "state": "human_confirmed"} if manual
+                else verify(task.get("acceptance", [])))
+    with _lock:
+        current=get(tid)
+        if not current: return False
+        if not manual and current.get('acceptance',[]) != task.get('acceptance',[]):
+            evidence={'ok':False,'state':'needs_review','checks':[],
+                      'reason':'Acceptance checks changed during verification; run them again.'}
+        if evidence["ok"]:
+            return _update(tid, status=DONE, result=result or "", verification=evidence,
+                           waiting_on='', scheduling={'state':'completed','reason':evidence['state'],'at':_now()})
+        reason=evidence.get("reason", "Acceptance checks failed; inspect verification details before resuming.")
+        _update(tid, status=WAITING, proposed_result=result or "", verification=evidence,
+                waiting_on=reason, scheduling={'state':'waiting','reason':reason,'at':_now()})
+        return False
+
+
+def scheduling(tid, state, reason):
+    return _update(tid, scheduling={"state": state, "reason": reason, "at": _now()})
+
+
+def set_acceptance(tid, checks):
+    from nova_cortex.verification import validate_checks
+    return _update(tid, acceptance=validate_checks(checks))
 
 
 def wait(tid: str, waiting_on: str = "") -> bool:
-    return _update(tid, status=WAITING, waiting_on=waiting_on or "(unspecified)")
+    reason=waiting_on or "(unspecified)"
+    return _update(tid, status=WAITING, waiting_on=reason,
+                   scheduling={'state':'deferred','reason':reason,'at':_now()})
 
 
 def abandon(tid: str, reason: str = "") -> bool:
-    return _update(tid, status=ABANDONED, abandon_reason=reason or "(no reason given)")
+    reason=reason or "(no reason given)"
+    return _update(tid, status=ABANDONED, abandon_reason=reason,
+                   scheduling={'state':'abandoned','reason':reason,'at':_now()})
 
 
 def reopen(tid: str) -> bool:
-    return _update(tid, status=OPEN)
+    return _update(tid, status=OPEN, waiting_on='',
+                   scheduling={'state':'queued','reason':'Resumed for another attempt','at':_now()})
 
 
+@_locked
 def delete(tid: str) -> bool:
     """Remove a task from the board entirely. Nova herself never deletes (she completes
     or abandons, keeping history — see Design Principle #11); this exists only for Cole's

@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 # @nova: Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.
 """
 NovaLauncher.py  (fixed)
@@ -16,6 +16,7 @@ Build to Nova.exe:
   pip install pyinstaller
   python build_nova.py
 """
+
 
 import multiprocessing
 multiprocessing.freeze_support()   # MUST be first — prevents PyInstaller recursive spawn
@@ -63,8 +64,14 @@ else:
     _WS = _TOOLS.parent
     _EXE_DIR = _TOOLS
 
+# Resolve the real workspace before importing body paths, including frozen launchers.
+import os as _path_os
+_path_os.environ.setdefault("NOVA_WORKSPACE", str(_WS))
+sys.path.insert(0, str(_WS / "nova_body"))
+from nova_paths import body_path
+
 # ── Logging — always write to workspace/logs/ regardless of frozen/script mode ─
-_LOG_DIR = _WS / "logs"
+_LOG_DIR = body_path('logs', workspace=_WS)
 _LOG_DIR.mkdir(parents=True, exist_ok=True)
 _LOG_FILE = _LOG_DIR / "nova_launcher.log"
 
@@ -189,8 +196,8 @@ def main():
         log.warning(f"Log retention skipped ({_e}) — not fatal, boot continues.")
 
     # ── Launcher-managed window mode ──────────────────────────────────────────
-    # When started by NovaStart (nova_start.py), the launcher opens a dedicated
-    # Edge/Chrome app window and owns the lifecycle. Here we just keep the
+    # When started by NovaStart (nova_start.py), the launcher opens the desktop
+    # controller and owns the lifecycle. Here we just keep the
     # in-process servers alive and skip our own (fragile) window step.
     if _os.environ.get("NOVA_NO_WINDOW") == "1":
         log.info("NOVA_NO_WINDOW=1 — window managed by NovaStart; keeping servers alive.")
@@ -201,9 +208,17 @@ def main():
             pass
         return
 
-    # Standalone mode (not launched by NovaStart): open the browser UI directly.
-    # The native nova_qt window was retired — the app window is Chrome/Edge --app
-    # owned by NovaStart, or a plain browser tab here.
+    # Standalone mode uses the same desktop face as NovaStart.
+    try:
+        from nova_chat.desktop import main as desktop_main
+    except ImportError:
+        log.warning("Qt WebEngine unavailable; opening the browser fallback.")
+    else:
+        desktop_main()
+        log.info("Nova stopped.")
+        return
+
+    # Browser fallback for installations without the desktop dependencies.
     log.info("Opening Nova in the browser...")
     import webbrowser
     webbrowser.open(CHAT_URL)

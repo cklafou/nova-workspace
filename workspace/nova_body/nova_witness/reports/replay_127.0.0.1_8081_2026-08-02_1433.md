@@ -1,5 +1,6 @@
 # Witness replay — http://127.0.0.1:8081 — 2026-08-02_1433
-_Last updated: 2026-08-03 00:59:50_
+<!-- @nova: Witness replay report: the golden witness cases scored against http://127.0.0.1:8081 at 2026-08-02_1433. -->
+_Last updated: 2026-10-03 10:58:22_
 
 Cases: 10 (errors 0)
 Catch-rate on must-CONCERN: 0.5

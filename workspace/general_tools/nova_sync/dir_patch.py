@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 """
 nova_sync/dir_patch.py -- Nova Workspace Path Auditor
 ======================================================
@@ -32,7 +32,7 @@ from pathlib import Path
 TOOLS_DIR     = Path(__file__).parent.parent
 WORKSPACE_DIR = TOOLS_DIR.parent
 SYNC_DIR      = Path(__file__).parent
-FILE_INDEX    = SYNC_DIR / "FILE_INDEX.md"
+FILE_INDEX    = WORKSPACE_DIR / "Orient" / "INDEX.md"
 
 SKIP_DIRS = {
     "__pycache__", ".git", "node_modules",

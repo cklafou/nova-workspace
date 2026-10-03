@@ -1,103 +1,89 @@
-# Last updated: 2026-08-06 16:11:34
-"""
-nova_lancedb/indexer.py
-======================
-Background indexer for Nova's persistent memory.
-
-Provides a thread-safe queue to ingest new chat messages and workspace
-documents into the LanceDB store without blocking the main event loops.
-"""
-import asyncio
-import queue
-import threading
-import time
+# Last updated: 2026-10-03 10:59:53
+"""Durable background memory ingestion with visible failures and bounded retries."""
+import base64
+import io
 from pathlib import Path
+import threading
 
+from nova_runtime.work_queue import WorkQueue
 from .hippocampus import get_store
 
+
 class MemoryIndexer:
-    def __init__(self):
-        self._queue = queue.Queue()
+    def __init__(self, path=None, store_factory=None):
+        self.queue = WorkQueue('memory', path)
+        self._store_factory = store_factory or get_store
         self._stop_event = threading.Event()
         self._thread = None
 
     def start(self):
-        """Start the background indexing thread."""
-        if self._thread is not None and self._thread.is_alive():
+        if self._thread and self._thread.is_alive():
             return
-        
-        # Ensure store is initialized on the worker thread too, or before starting
-        get_store()
-        
         self._stop_event.clear()
-        self._thread = threading.Thread(target=self._worker, daemon=True, name="MemoryIndexer")
+        self._thread = threading.Thread(target=self._worker, daemon=True, name='MemoryIndexer')
         self._thread.start()
-        print("[nova_memory] Indexer thread started.")
 
     def stop(self):
-        """Stop the background indexing thread."""
         self._stop_event.set()
-        if self._thread is not None:
-            self._thread.join(timeout=2.0)
-            self._thread = None
-        print("[nova_memory] Indexer thread stopped.")
+        if self._thread:
+            self._thread.join(timeout=2)
+            if not self._thread.is_alive():
+                self._thread = None
 
-    def add_message(self, content: str, author: str, session_id: str = ""):
-        """Queue a generic message for indexing."""
-        if not content.strip():
-            return
-        self._queue.put({
-            "type": "text",
-            "content": content,
-            "author": author,
-            "source": "chat",
-            "session_id": session_id,
-        })
-        
-    def add_image(self, image_data, caption: str, filename: str, session_id: str = ""):
-        """Queue an image for indexing."""
-        self._queue.put({
-            "type": "image",
-            "image_data": image_data,
-            "caption": caption,
-            "filename": filename,
-            "session_id": session_id,
-        })
+    def add_message(self, content, author, session_id=''):
+        if content.strip():
+            return self.queue.put({'type':'text','content':content,'author':author,
+                                   'source':'chat','session_id':session_id})
+
+    def add_image(self, image_data, caption, filename, session_id=''):
+        if isinstance(image_data, Path):
+            image_data = image_data.read_bytes()
+        elif not isinstance(image_data, (str,bytes)):
+            buf=io.BytesIO(); image_data.save(buf,format='PNG'); image_data=buf.getvalue()
+        if isinstance(image_data,bytes):
+            image_data='data:image/png;base64,'+base64.b64encode(image_data).decode('ascii')
+        return self.queue.put({'type':'image','image_data':image_data,'caption':caption,
+                               'filename':filename,'session_id':session_id})
+
+    def process_one(self):
+        job=self.queue.claim()
+        if not job:
+            return False
+        try:
+            item=job['payload']; store=self._store_factory()
+            if item['type']=='text':
+                ok=store.add_text(content=item['content'],author=item['author'],
+                                  source=item['source'],session_id=item['session_id'],
+                                  **({'timestamp':item['timestamp']} if 'timestamp' in item else {}))
+            else:
+                ok=store.add_image(image_input=item['image_data'],caption=item['caption'],
+                                   filename=item['filename'],session_id=item['session_id'])
+            if not ok:
+                raise RuntimeError(getattr(store,'last_error',None) or 'Memory store rejected the write')
+            self.queue.finish(job['id'])
+        except Exception as e:
+            self.queue.finish(job['id'],error=str(e))
+            print(f'[nova_memory] Write retained for retry: {e}')
+        return True
 
     def _worker(self):
-        store = get_store()
         while not self._stop_event.is_set():
             try:
-                item = self._queue.get(timeout=1.0)
-            except queue.Empty:
-                continue
-
-            try:
-                if item["type"] == "text":
-                    store.add_text(
-                        content=item["content"],
-                        author=item["author"],
-                        source=item["source"],
-                        session_id=item["session_id"]
-                    )
-                elif item["type"] == "image":
-                    store.add_image(
-                        image_input=item["image_data"],
-                        caption=item["caption"],
-                        filename=item["filename"],
-                        session_id=item["session_id"]
-                    )
+                if not self.process_one():
+                    self._stop_event.wait(1)
             except Exception as e:
-                print(f"[nova_memory] Indexer error processing item: {e}")
-            finally:
-                self._queue.task_done()
+                print(f'[nova_memory] Queue unavailable: {e}')
+                self._stop_event.wait(2)
 
-# ── Singleton ──
+    def status(self):
+        return {**self.queue.snapshot(), 'running':bool(self._thread and self._thread.is_alive())}
 
-_indexer = None
 
-def get_indexer() -> MemoryIndexer:
+_indexer=None
+
+
+def get_indexer():
     global _indexer
     if _indexer is None:
-        _indexer = MemoryIndexer()
+        _indexer=MemoryIndexer()
     return _indexer

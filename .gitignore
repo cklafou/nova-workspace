@@ -26,3 +26,24 @@ Thumbs.db
 desktop.ini
 *.swp
 *.swo
+
+# ── VM exports & backup artifacts (2026-09-07) ────────────────────────────────
+# NovaDrop is the shared drop folder between Nova's computer and the host, and it is
+# where SNAPSHOT.cmd writes `wsl --export` images. A 1.07 GB tar landed in three
+# auto-commits on 2026-09-06 and GitHub rejects anything over 100 MB, so every watcher
+# push failed from then on. Source checkpoints and VM backups need separate homes:
+# git holds the code, the tar belongs on a disk/off-machine backup.
+NovaDrop/
+*.tar
+*.tar.gz
+*.vhdx
+*.vhd
+
+# ── Google Drive for Desktop (2026-10-02) ─────────────────────────────────
+# Drive backs up this folder and stages its uploads and downloads in these two folders. They
+# are Drive's own temp copies, never source. 75,450 of them were auto-committed on 2026-10-01,
+# and autosave then committed nothing for 35 hours. See Orient/OPERATIONS.md#lessons-from-incidents
+.tmp.driveupload/
+.tmp.drivedownload/
+# The copy Drive for Desktop syncs instead of this repo (workspace/general_tools/nova_sync/drive_copy.py).
+/Nova_Drive/

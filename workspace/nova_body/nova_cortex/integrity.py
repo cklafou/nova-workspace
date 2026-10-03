@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: Nova's integrity faculty — the gate between what she BELIEVES and what she SAYS.
 #        Owns: how she reaches for a tool (in any channel), the ledger of what her hands actually
 #        did, and the self-check that reads a draft against that ledger before it can leave her
@@ -54,6 +54,8 @@ THE THREE PARTS
 
 from __future__ import annotations
 
+from nova_paths import body_path
+
 import json
 import re
 import os
@@ -62,7 +64,7 @@ from pathlib import Path
 
 _WORKSPACE = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
               else Path(__file__).resolve().parent.parent.parent)
-RECEIPTS_PATH = _WORKSPACE / "logs" / "tool_calls.jsonl"
+RECEIPTS_PATH = body_path('logs') / "tool_calls.jsonl"
 
 
 # ── REACH ───────────────────────────────────────────────────────────────────────────────────
@@ -127,7 +129,8 @@ def log_receipt(tool: str, args: dict, result, ms: float, ok: bool) -> None:
                 "ts": datetime.now().isoformat(),
                 "tool": tool,
                 "args": {k: str(v)[:200] for k, v in (args or {}).items()},
-                "ok": bool(ok),
+                "ok": ok,
+                "outcome": result.to_dict() if hasattr(result, "to_dict") else None,
                 "ms": round(ms, 1),
                 "result_bytes": len(r),
                 "result_head": r[:200],
@@ -185,7 +188,7 @@ def work_done_since(since_iso: str) -> list:
     return out
 
 
-_RECONCILE_MARK = _WORKSPACE / "memory" / "last_board_reconcile.txt"
+_RECONCILE_MARK = body_path('memory') / "last_board_reconcile.txt"
 
 
 def _last_reconcile() -> str:

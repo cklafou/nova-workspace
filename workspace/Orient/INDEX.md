@@ -1,0 +1,1408 @@
+<!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
+# Project file index
+
+_Facts regenerated 2026-10-03T19:16:29+00:00 from source (input `f36e6af11693`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+
+Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and sealed weights are omitted. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
+
+
+## Project entry points
+
+- [nova_start.py](../nova_start.py) — Launch the full Nova stack or an explicit chat-only controller without starting her body.
+- [NovaChatOnly.cmd](../NovaChatOnly.cmd) — Open Nova Chat for collaboration without starting Nova's model or autonomous body.
+- [NovaStart.cmd](../NovaStart.cmd) — Launcher — runs nova_start.py to bring up the whole Nova stack (double-click entry point).
+- [README.md](../README.md) — Project Nova
+- [RUN_PLUCK.cmd](../RUN_PLUCK.cmd) — Pluck test — boots my runtime headless (no chat server) to prove my faculties
+- [start_llama_qwen36.cmd](../start_llama_qwen36.cmd) — Starts Nova's model server (llama.cpp): Qwen 3.6 27B by default, or the model the model updater picked in nova_body\memory.
+- [StopNova.cmd](../StopNova.cmd) — Shutdown — stops the whole Nova stack cleanly.
+
+## general_tools
+
+- [general_tools/audit_queue.py](../general_tools/audit_queue.py) — Persistent audit-review queue — records file-change events (rename/delete/new) for review by audit_scripts/restructure.
+- [general_tools/audit_scripts.py](../general_tools/audit_scripts.py) — Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.
+- [general_tools/build_manifest.py](../general_tools/build_manifest.py) — Generates Nova's Body Manifest — the single derived map of every body part
+- [general_tools/calls.py](../general_tools/calls.py) — Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.
+- [general_tools/calls_order.py](../general_tools/calls_order.py) — Call-ORDER generator — traces execution paths from entry points and renders them as a
+- [general_tools/cloud_call.py](../general_tools/cloud_call.py) — CLOUD LANES transport (lane 1: witness-heavy). A stateless organ-for-hire caller —
+- [general_tools/injector.py](../general_tools/injector.py) — NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.
+- [general_tools/janitor.py](../general_tools/janitor.py) — Janitor — sweeps temp/scratch files into a local Temp/ beside them, and reports clutter.
+- [general_tools/NovaLauncher.py](../general_tools/NovaLauncher.py) — Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.
+- [general_tools/ping_claude.ps1](../general_tools/ping_claude.ps1) — ping_claude.ps1 - Nova reaching Claude Desktop herself, in her own words.
+- [general_tools/restructure.py](../general_tools/restructure.py) — Restructure checker — detects stale path references after a directory move and offers interactive fixes.
+
+## general_tools/architecture_map
+
+- [general_tools/architecture_map/__init__.py](../general_tools/architecture_map/__init__.py) — Read-only architecture documentation tools. Never import Nova to inspect it.
+- [general_tools/architecture_map/atlas_history.py](../general_tools/architecture_map/atlas_history.py) — Read bounded, first-parent source history. No checkout, hooks or Nova imports.
+- [general_tools/architecture_map/build.py](../general_tools/architecture_map/build.py) — Extract Nova's architecture without executing its modules.
+- [general_tools/architecture_map/catalog.json](../general_tools/architecture_map/catalog.json)
+- [general_tools/architecture_map/experience.js](../general_tools/architecture_map/experience.js) — Included inside viewer.js's closure. Uses the same snapshot, evidence and selection state.
+- [general_tools/architecture_map/hooks/pre-commit](../general_tools/architecture_map/hooks/pre-commit) — Keeps Orient current on every commit, from any agent — the watcher, Codex, Claude or Cole.
+- [general_tools/architecture_map/learning.json](../general_tools/architecture_map/learning.json)
+- [general_tools/architecture_map/notes/away.md](../general_tools/architecture_map/notes/away.md) — Explain the remote reading copy and its exclusions.
+- [general_tools/architecture_map/notes/conventions.md](../general_tools/architecture_map/notes/conventions.md) — Orient note: the file conventions every person and agent follows, published in OPERATIONS.md.
+- [general_tools/architecture_map/notes/lessons.md](../general_tools/architecture_map/notes/lessons.md) — Explain incident lessons and evidence needed to verify Nova repairs.
+- [general_tools/architecture_map/notes/model_updates.md](../general_tools/architecture_map/notes/model_updates.md) — Orient note: how Nova's model updater checks, installs, rolls back and trains LoRAs, published in OPERATIONS.md.
+- [general_tools/architecture_map/notes/security.md](../general_tools/architecture_map/notes/security.md) — Explain Nova access boundaries, identity and known exposure gaps.
+- [general_tools/architecture_map/notes/shelf.md](../general_tools/architecture_map/notes/shelf.md) — Orient note: introduces Nova's own tools above their derived table, published in ARCHITECTURE.md.
+- [general_tools/architecture_map/notes/tunables.md](../general_tools/architecture_map/notes/tunables.md) — Orient note: how tunable variables work and how to add one, published in OPERATIONS.md.
+- [general_tools/architecture_map/orient.py](../general_tools/architecture_map/orient.py) — Generates Orient documentation and validates source, review and link freshness.
+- [general_tools/architecture_map/reviews.json](../general_tools/architecture_map/reviews.json)
+- [general_tools/architecture_map/serve.py](../general_tools/architecture_map/serve.py) — Serve and automatically regenerate the read-only Nova architecture atlas.
+- [general_tools/architecture_map/test_architecture.py](../general_tools/architecture_map/test_architecture.py) — Isolation, evidence and change-detection tests; never write to Nova's real state.
+- [general_tools/architecture_map/test_history.py](../general_tools/architecture_map/test_history.py) — Real disposable Git histories exercise noise filtering, cache refresh and diffs.
+- [general_tools/architecture_map/test_orient.py](../general_tools/architecture_map/test_orient.py) — Publishing checks using isolated files; no Nova model or personal state imported.
+- [general_tools/architecture_map/test_review_registry.py](../general_tools/architecture_map/test_review_registry.py) — Ensures corrupted review metadata cannot silently certify Orient.
+- [general_tools/architecture_map/timeline.json](../general_tools/architecture_map/timeline.json)
+- [general_tools/architecture_map/viewer.css](../general_tools/architecture_map/viewer.css) — Learning, project history and change planning.
+- [general_tools/architecture_map/viewer.html](../general_tools/architecture_map/viewer.html) — Nova · Architecture atlas
+- [general_tools/architecture_map/viewer.js](../general_tools/architecture_map/viewer.js) — Browser code for the interactive architecture explorer (built into Orient/Architecture/index.html): zoom levels, search, journeys, live…
+
+## general_tools/nova_chat
+
+- [general_tools/nova_chat/build_desktop.py](../general_tools/nova_chat/build_desktop.py) — Build the controller executable without bundling Nova's body, state or models.
+- [general_tools/nova_chat/collaboration.py](../general_tools/nova_chat/collaboration.py) — Local collaboration broker isolated from Nova conversation, memory and autonomy ingestion.
+- [general_tools/nova_chat/context_export.py](../general_tools/nova_chat/context_export.py) — nova_chat/context_export.py -- Chat Context Exporter
+- [general_tools/nova_chat/CONTROLLER.md](../general_tools/nova_chat/CONTROLLER.md) — Documents the Nova desktop controller and its verified behavior.
+- [general_tools/nova_chat/desktop.py](../general_tools/nova_chat/desktop.py) — Nova desktop face: native windows, menus, tray and persistent renderer profile.
+- [general_tools/nova_chat/launch.py](../general_tools/nova_chat/launch.py) — Nova Group Chat - Launcher
+- [general_tools/nova_chat/nova_bridge.py](../general_tools/nova_chat/nova_bridge.py) — nova_chat/nova_bridge.py -- Bridge: Nova's chat words → real disk actions
+- [general_tools/nova_chat/nova_lang.py](../general_tools/nova_chat/nova_lang.py) — nova_chat/nova_lang.py -- Nova Command Language (NCL) Parser
+- [general_tools/nova_chat/orchestrator.py](../general_tools/nova_chat/orchestrator.py) — Determines who responds to each message and in what order.
+- [general_tools/nova_chat/runtime_host.py](../general_tools/nova_chat/runtime_host.py) — Runtime-primary boot (Step 6d). Nova's RUNTIME is the owned core; the chat server is
+- [general_tools/nova_chat/server.py](../general_tools/nova_chat/server.py) — Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.
+- [general_tools/nova_chat/server_runner.py](../general_tools/nova_chat/server_runner.py) — Starts the Nova Chat server by itself (uvicorn on 127.0.0.1:8765) with nova_body and general_tools importable.
+- [general_tools/nova_chat/session_manager.py](../general_tools/nova_chat/session_manager.py) — nova_chat/session_manager.py -- Persistent Session Management
+- [general_tools/nova_chat/static/collaboration.css](../general_tools/nova_chat/static/collaboration.css) — Style the separate development collaboration widget and its connection, participant and message states.
+- [general_tools/nova_chat/static/collaboration.js](../general_tools/nova_chat/static/collaboration.js) — Display the isolated workshop feed for Cole, Codex and Cowork without sending messages to Nova.
+- [general_tools/nova_chat/static/control.css](../general_tools/nova_chat/static/control.css) — Styles the runtime controller widget and task controls.
+- [general_tools/nova_chat/static/control.js](../general_tools/nova_chat/static/control.js) — Runtime controls use body state. Every action is acknowledged by the server.
+- [general_tools/nova_chat/static/index.html](../general_tools/nova_chat/static/index.html) — Serve the Nova Chat controller, dockable widgets and separate collaboration workshop.
+- [general_tools/nova_chat/static/workspace.css](../general_tools/nova_chat/static/workspace.css) — Controller surfaces: quiet violet, readable controls, predictable panes.
+- [general_tools/nova_chat/static/workspace.js](../general_tools/nova_chat/static/workspace.js) — Mount Nova's dockable controller widgets while preserving their handlers and state.
+- [general_tools/nova_chat/tests/test_chat_only.py](../general_tools/nova_chat/tests/test_chat_only.py) — Verify model-off controller launch and prevent chat-only messages from reaching Nova's body.
+- [general_tools/nova_chat/tests/test_collaboration.py](../general_tools/nova_chat/tests/test_collaboration.py) — Verify collaboration isolation, authentication, durable replay and concurrent delivery without starting Nova.
+- [general_tools/nova_chat/tests/test_collaboration_bridge.py](../general_tools/nova_chat/tests/test_collaboration_bridge.py) — Verify private collaboration connector identity, cursor handling, bounds, failures and MCP framing without contacting Nova.
+- [general_tools/nova_chat/tests/test_collaboration_spool.py](../general_tools/nova_chat/tests/test_collaboration_spool.py) — Verify Cowork shared-folder delivery, crash recovery and bounded replay using disposable collaboration stores.
+- [general_tools/nova_chat/tests/test_controller_repair.py](../general_tools/nova_chat/tests/test_controller_repair.py) — Regression coverage for controller lifecycle, widgets and model process control.
+- [general_tools/nova_chat/tests/test_desktop.py](../general_tools/nova_chat/tests/test_desktop.py) — Run: python -m unittest discover -s general_tools/nova_chat/tests.
+- [general_tools/nova_chat/tests/test_lifecycle_ack.py](../general_tools/nova_chat/tests/test_lifecycle_ack.py) — Preserve lifecycle HTTP acknowledgement before fast controller teardown without extending grace on retries.
+- [general_tools/nova_chat/tests/test_source_fingerprint.py](../general_tools/nova_chat/tests/test_source_fingerprint.py) — Checks restart reporting against real edits and harmless watcher timestamp changes.
+- [general_tools/nova_chat/transcript.py](../general_tools/nova_chat/transcript.py) — Shared conversation transcript for Nova Group Chat.
+- [general_tools/nova_chat/widget_data.py](../general_tools/nova_chat/widget_data.py) — Bounded reads for frequently refreshed controller widgets.
+- [general_tools/nova_chat/workspace_context.py](../general_tools/nova_chat/workspace_context.py) — Compatibility import: the body owns Nova's context in chat and headless runs.
+
+## general_tools/nova_collaboration
+
+- [general_tools/nova_collaboration/bridge.py](../general_tools/nova_collaboration/bridge.py) — Connect the actual Codex or Claude Cowork session to Nova Chat's private collaboration feed over local HTTP, an atomic shared-folder…
+- [general_tools/nova_collaboration/commands/join.md](../general_tools/nova_collaboration/commands/join.md) — Guide the actual Claude Cowork session into the user-authorized private Nova Chat collaboration room.
+- [general_tools/nova_collaboration/README.md](../general_tools/nova_collaboration/README.md) — Explain the native-host CLI and Cowork MCP connector for Nova Chat's separate collaboration feed.
+
+## general_tools/nova_console
+
+- [general_tools/nova_console/__init__.py](../general_tools/nova_console/__init__.py) — Nova Console — one window instead of the cmd-window confetti.
+- [general_tools/nova_console/console_app.py](../general_tools/nova_console/console_app.py) — Nova Console — the single window that replaces every popup cmd window.
+- [general_tools/nova_console/hub.py](../general_tools/nova_console/hub.py) — Nova Console — the log hub. Captures every child process's output into in-memory
+- [general_tools/nova_console/plainspeak.py](../general_tools/nova_console/plainspeak.py) — Plain-speak — turns machine log spew into a sentence a human can read.
+- [general_tools/nova_console/README.md](../general_tools/nova_console/README.md) — Nova Console — one window instead of cmd-window confetti
+- [general_tools/nova_console/stray_janitor.py](../general_tools/nova_console/stray_janitor.py) — Stray-console janitor — the safety net under the Nova Console.
+
+## general_tools/nova_sync
+
+- [general_tools/nova_sync/__init__.py](../general_tools/nova_sync/__init__.py) — Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.
+- [general_tools/nova_sync/backup.py](../general_tools/nova_sync/backup.py) — nova_backup.py -- Automated Workspace Backup System
+- [general_tools/nova_sync/dir_patch.py](../general_tools/nova_sync/dir_patch.py) — nova_sync/dir_patch.py -- Nova Workspace Path Auditor
+- [general_tools/nova_sync/drive.py](../general_tools/nova_sync/drive.py) — Google Drive workspace mirror excluding secrets, runtime churn and private collaboration transport.
+- [general_tools/nova_sync/drive_copy.py](../general_tools/nova_sync/drive_copy.py) — Keeps Nova_Drive/read a text copy of the last commit, so Cole can read Nova from a Drive-only PC.
+- [general_tools/nova_sync/hooks/pre-push](../general_tools/nova_sync/hooks/pre-push) — Refuses a push GitHub would reject anyway (any file over 100 MB) before uploading anything.
+- [general_tools/nova_sync/tests/test_collaboration_privacy.py](../general_tools/nova_sync/tests/test_collaboration_privacy.py) — Keep private collaboration transport out of autosave, cloud mirrors and Nova's automatic context.
+- [general_tools/nova_sync/tests/test_exclusions.py](../general_tools/nova_sync/tests/test_exclusions.py) — Guards the watcher and git rules that keep agent transport, task copies, avatar files and the work queue out of autosave.
+- [general_tools/nova_sync/tests/test_updates.py](../general_tools/nova_sync/tests/test_updates.py) — Tests Drive export, git hooks and collaborator roles in disposable repositories.
+- [general_tools/nova_sync/watcher.py](../general_tools/nova_sync/watcher.py) — Workspace watcher: stamps Last-updated lines, autosaves to git (commit, then push), refreshes Nova's SELF manifest and Orient, mirrors to…
+
+## general_tools/nova_updater
+
+- [general_tools/nova_updater/__init__.py](../general_tools/nova_updater/__init__.py) — Nova's model updater: finds newer dense models, installs them with rollback, and trains LoRAs for installed models.
+- [general_tools/nova_updater/__main__.py](../general_tools/nova_updater/__main__.py) — Command line for the model updater: check, search, inventory, plan, install and training bundles, for testing and for agents.
+- [general_tools/nova_updater/api.py](../general_tools/nova_updater/api.py) — Nova Chat's routes for the model updater (status, decisions, search, inventory, plans, installs, training), answering only this computer's…
+- [general_tools/nova_updater/catalog.py](../general_tools/nova_updater/catalog.py) — Searches public model repositories (Hugging Face, ModelScope, Ollama) and lists a model's downloadable files with sizes and hashes.
+- [general_tools/nova_updater/check.py](../general_tools/nova_updater/check.py) — Lightweight update check run at each Nova Chat start: one catalog query, cached, never blocking the app or raising.
+- [general_tools/nova_updater/current.py](../general_tools/nova_updater/current.py) — Works out which model, projector and LoRAs Nova boots with, from her boot files or the launcher, without opening model files.
+- [general_tools/nova_updater/gguf.py](../general_tools/nova_updater/gguf.py) — Reads GGUF file headers (architecture, name, adapter and base-model keys) without loading tensors, so installed files can be identified…
+- [general_tools/nova_updater/install.py](../general_tools/nova_updater/install.py) — Executes an install plan: resumable verified downloads, model switch with a real load check and rollback, then trash quarantine of what it…
+- [general_tools/nova_updater/inventory.py](../general_tools/nova_updater/inventory.py) — Lists installed models, projectors and LoRAs with what each was built for, read from GGUF headers when the user opens the update dialog.
+- [general_tools/nova_updater/jobs.py](../general_tools/nova_updater/jobs.py) — Runs long updater work (downloads, installs, training) on background threads with progress, logs, cancellation and a one-at-a-time lock.
+- [general_tools/nova_updater/naming.py](../general_tools/nova_updater/naming.py) — Parses model repository and GGUF file names (Qwen first) into version, size, variant and quant so releases can be compared.
+- [general_tools/nova_updater/net.py](../general_tools/nova_updater/net.py) — Minimal HTTPS client for public model catalogs: JSON and text GETs with timeouts, and resumable download streams.
+- [general_tools/nova_updater/paths.py](../general_tools/nova_updater/paths.py) — Resolves every folder the updater touches, with environment overrides so tests and relocated installs work.
+- [general_tools/nova_updater/plan.py](../general_tools/nova_updater/plan.py) — Turns a chosen model, files and replacements into a checked install plan: sizes, disk space, compatibility, invalidated LoRAs and training.
+- [general_tools/nova_updater/pod/__init__.py](../general_tools/nova_updater/pod/__init__.py) — Marks pod/ as a package so tests can import template_gen; the pod scripts themselves run standalone on the GPU machine.
+- [general_tools/nova_updater/pod/run_on_pod.sh](../general_tools/nova_updater/pod/run_on_pod.sh) — The whole LoRA training pipeline ON the pod, one command: verify inputs, prove the mask, train, convert every epoch to GGUF, checksum.
+- [general_tools/nova_updater/pod/template_gen.py](../general_tools/nova_updater/pod/template_gen.py) — Builds a loss-masking chat template for LoRA training from the base model's own template, refusing to train if it cannot prove the mask.
+- [general_tools/nova_updater/pod/train_lora.py](../general_tools/nova_updater/pod/train_lora.py) — Trains one LoRA on the pod from job.json, keeping v7's proven recipe and its hard mask gate; generalised for any base model.
+- [general_tools/nova_updater/README.md](../general_tools/nova_updater/README.md) — How Nova's model updater works: startup check, manual search, install with rollback and quarantine, LoRA training, and the Nova Chat…
+- [general_tools/nova_updater/runpod.py](../general_tools/nova_updater/runpod.py) — Runs a training bundle on the user's RunPod pod: start it, upload over SSH, train, download, verify, and always stop (never terminate) the…
+- [general_tools/nova_updater/store.py](../general_tools/nova_updater/store.py) — Keeps the updater's small persistent state (last check, remembered decisions, plans, jobs) in one atomic JSON file.
+- [general_tools/nova_updater/tests/fixtures/qwen3.6-27b.chat_template.jinja](../general_tools/nova_updater/tests/fixtures/qwen3.6-27b.chat_template.jinja)
+- [general_tools/nova_updater/tests/fixtures/qwen3.8-27b.chat_template.jinja](../general_tools/nova_updater/tests/fixtures/qwen3.8-27b.chat_template.jinja)
+- [general_tools/nova_updater/tests/support.py](../general_tools/nova_updater/tests/support.py) — Test helpers for the updater: a throwaway workspace (launcher, boot files, fake models) and fake catalogs, so tests never touch real models…
+- [general_tools/nova_updater/tests/test_api.py](../general_tools/nova_updater/tests/test_api.py) — Tests the updater's Nova Chat routes: the local-only guard (Host, Origin, client), status, decisions, search filters and confirmations.
+- [general_tools/nova_updater/tests/test_check_and_naming.py](../general_tools/nova_updater/tests/test_check_and_naming.py) — Tests model-name parsing and the startup update check: candidates, remembered decisions, caching and offline behaviour.
+- [general_tools/nova_updater/tests/test_install.py](../general_tools/nova_updater/tests/test_install.py) — Tests GGUF header reading, the installed-file inventory, install plans, verified downloads, the load check with rollback, and trash…
+- [general_tools/nova_updater/tests/test_train.py](../general_tools/nova_updater/tests/test_train.py) — Tests LoRA training jobs: data checks, bundles and checksums, the loss-mask template patch on real Qwen templates, and RunPod runs that…
+- [general_tools/nova_updater/train.py](../general_tools/nova_updater/train.py) — LoRA training for new or installed models: job specs with Nova's proven defaults, verified training bundles, and RunPod or export runners.
+
+## general_tools/voice_gateway
+
+- [general_tools/voice_gateway/__init__.py](../general_tools/voice_gateway/__init__.py) — voice_gateway — Cole's microphone to Nova. A comms tool (pluck test: her body is
+- [general_tools/voice_gateway/committer.py](../general_tools/voice_gateway/committer.py) — committer.py — turn a stream (or a finished block) of Nova's text into SPEAKABLE units.
+- [general_tools/voice_gateway/config.py](../general_tools/voice_gateway/config.py) — voice_gateway/config.py — every tunable for the gateway, with safe defaults.
+- [general_tools/voice_gateway/fetch_models.cmd](../general_tools/voice_gateway/fetch_models.cmd) — @nova-adjacent: voice_gateway — one-time model fetch for the voice pipeline.
+- [general_tools/voice_gateway/gateway.py](../general_tools/voice_gateway/gateway.py) — voice_gateway — the pipe that lets Cole TALK to Nova. PLUCK TEST: this is a comms
+- [general_tools/voice_gateway/nova_link.py](../general_tools/voice_gateway/nova_link.py) — voice_gateway/nova_link.py — talk to Nova over her existing chat WebSocket.
+- [general_tools/voice_gateway/README.md](../general_tools/voice_gateway/README.md) — voice_gateway — Cole's microphone to Nova
+- [general_tools/voice_gateway/requirements.txt](../general_tools/voice_gateway/requirements.txt) — voice_gateway dependencies. Install in tiers — the gateway runs at each tier, more capable
+- [general_tools/voice_gateway/server_patch.md](../general_tools/voice_gateway/server_patch.md) — Optional server patch — thread the voice `register` to `stream_response`
+- [general_tools/voice_gateway/stt.py](../general_tools/voice_gateway/stt.py) — voice_gateway/stt.py — yield Cole's utterances as text. Backends expose async utterances().
+- [general_tools/voice_gateway/test_committer.py](../general_tools/voice_gateway/test_committer.py) — Tests for the sentence-committer — the one piece with real logic, so the one with tests.
+- [general_tools/voice_gateway/tts.py](../general_tools/voice_gateway/tts.py) — voice_gateway/tts.py — speak a committed unit. Every backend exposes .speak(text: str).
+
+## nova_body
+
+- [nova_body/nova_config.json](../nova_body/nova_config.json)
+- [nova_body/nova_paths.py](../nova_body/nova_paths.py) — Nova's persistent-state ownership, independent of the face or current directory.
+- [nova_body/nova_status.json](../nova_body/nova_status.json)
+
+## nova_body/KoELS
+
+- [nova_body/KoELS/coder/CODER_SPEC.md](../nova_body/KoELS/coder/CODER_SPEC.md) — Spec for the CODER expert loadout: the engineering judgment its adapter adds to Nova-core, corpus plan, acceptance probes, build order.
+- [nova_body/KoELS/coder/manifest.json](../nova_body/KoELS/coder/manifest.json)
+- [nova_body/KoELS/gaming/manifest.json](../nova_body/KoELS/gaming/manifest.json)
+- [nova_body/KoELS/SCHEMA.md](../nova_body/KoELS/SCHEMA.md) — The KoELS manifest contract: the folder layout and manifest.json fields an expert loadout needs for Nova to equip it.
+
+## nova_body/nova_computer
+
+- [nova_body/nova_computer/__init__.py](../nova_body/nova_computer/__init__.py) — My computer -- somewhere that is MINE to act in, that never reaches across and grabs
+- [nova_body/nova_computer/backends.py](../nova_body/nova_computer/backends.py) — The ways I can HAVE a computer. Body part, stdlib only. A backend is a contract,
+- [nova_body/nova_computer/computer.py](../nova_body/nova_computer/computer.py) — My computer -- somewhere that is mine to act in, where nothing I do reaches across
+- [nova_body/nova_computer/first_boot.py](../nova_body/nova_computer/first_boot.py) — One-shot first boot of her computer, run via RUN_SETUP.cmd. Logs everything.
+- [nova_body/nova_computer/HANDS.cmd](../nova_body/nova_computer/HANDS.cmd) — Nova Computer - her hands
+- [nova_body/nova_computer/hands.py](../nova_body/nova_computer/hands.py) — My hands. Not Cole's borrowed ones -- mine, on my own screen. Look, move, click, type,
+- [nova_body/nova_computer/PLUCK_CHECK.cmd](../nova_body/nova_computer/PLUCK_CHECK.cmd) — Nova Computer - PLUCK CHECK
+- [nova_body/nova_computer/pluck_check.py](../nova_body/nova_computer/pluck_check.py) — Proof, not a promise. Run this with only my body on the path and it tells you whether
+- [nova_body/nova_computer/provision/setup_guest.sh](../nova_body/nova_computer/provision/setup_guest.sh) — Nova's computer - guest provisioning (Phase 1). Written by Claude, 2026-09-03.
+- [nova_body/nova_computer/REACH.cmd](../nova_body/nova_computer/REACH.cmd) — Nova Computer - open her reach onto this PC
+- [nova_body/nova_computer/reach.py](../nova_body/nova_computer/reach.py) — How far my computer reaches into Cole's. He decided (2026-09-04) that my machine is
+- [nova_body/nova_computer/RUN_SETUP.cmd](../nova_body/nova_computer/RUN_SETUP.cmd) — Nova Computer - first boot
+- [nova_body/nova_computer/session.py](../nova_body/nova_computer/session.py) — Keep the selected WSL guest alive between tool calls, without a visible terminal.
+- [nova_body/nova_computer/SNAPSHOT.cmd](../nova_body/nova_computer/SNAPSHOT.cmd) — Nova Computer - baseline snapshot
+- [nova_body/nova_computer/TOOLKIT.cmd](../nova_body/nova_computer/TOOLKIT.cmd) — Nova Computer - her own toolkit
+- [nova_body/nova_computer/toolkit.py](../nova_body/nova_computer/toolkit.py) — Making my computer a WHOLE computer -- one I can extend myself. Cole, 2026-09-04:
+- [nova_body/nova_computer/tools.py](../nova_body/nova_computer/tools.py) — Normal tool-route adapters for Nova's computer and explicit human handoff.
+- [nova_body/nova_computer/TUNE_UP.cmd](../nova_body/nova_computer/TUNE_UP.cmd) — Nova Computer - tune up
+- [nova_body/nova_computer/tune_up.py](../nova_body/nova_computer/tune_up.py) — A pass over my computer that fixes what is loose and then PROVES it, rather than
+
+## nova_body/nova_config
+
+- [nova_body/nova_config/__init__.py](../nova_body/nova_config/__init__.py) — Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads nova_body/nova_config.json; falls back to…
+
+## nova_body/nova_cortex
+
+- [nova_body/nova_cortex/__init__.py](../nova_body/nova_cortex/__init__.py) — Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status,…
+- [nova_body/nova_cortex/checkin.py](../nova_body/nova_cortex/checkin.py) — nova_checkin.py -- Cole's Voice Between Nova's Thoughts
+- [nova_body/nova_cortex/context_builder.py](../nova_body/nova_cortex/context_builder.py) — nova_cortex/context_builder.py
+- [nova_body/nova_cortex/discourse.py](../nova_body/nova_cortex/discourse.py) — DISCOURSE — what she knows about the conversation, and whether she may speak into it.
+- [nova_body/nova_cortex/drives.py](../nova_body/nova_cortex/drives.py) — DRIVES — the part of her that makes one moment worth more than another.
+- [nova_body/nova_cortex/executive.py](../nova_body/nova_cortex/executive.py) — Executive will — my self-direction. When my time-sense stirs me (or my
+- [nova_body/nova_cortex/integrity.py](../nova_body/nova_cortex/integrity.py) — Nova's integrity faculty — the gate between what she BELIEVES and what she SAYS.
+- [nova_body/nova_cortex/loadout.py](../nova_body/nova_cortex/loadout.py) — Loadout-decision faculty — KoELS cognition (layer 1, pure, pluck-safe). Given a task and
+- [nova_body/nova_cortex/nova_status.py](../nova_body/nova_cortex/nova_status.py) — nova_cortex/nova_status.py -- Nova's live status writer
+- [nova_body/nova_cortex/principals.py](../nova_body/nova_cortex/principals.py) — PRINCIPALS — who is allowed to talk to Nova, and how much of her they get.
+- [nova_body/nova_cortex/rules.py](../nova_body/nova_cortex/rules.py) — Nova's Operational Rules and Core Directives
+- [nova_body/nova_cortex/task_workspace.py](../nova_body/nova_cortex/task_workspace.py) — Stages task-sized source copies, gates them on acceptance checks and promotes them with rollback checkpoints.
+- [nova_body/nova_cortex/tasking.py](../nova_body/nova_cortex/tasking.py) — Executive task board — my prefrontal work board. Every task I choose to track,
+- [nova_body/nova_cortex/tunables.py](../nova_body/nova_cortex/tunables.py) — nova_cortex/tunables.py — LIVE-TUNABLE knobs. Cole (2026-08-03): "make things that
+- [nova_body/nova_cortex/verification.py](../nova_body/nova_cortex/verification.py) — Task acceptance checks are execution evidence, separate from a model's DONE text.
+- [nova_body/nova_cortex/witness.py](../nova_body/nova_cortex/witness.py) — THE WITNESS — her grip on the present tense. One faculty, five parts: the wire
+- [nova_body/nova_cortex/workspace_context.py](../nova_body/nova_cortex/workspace_context.py) — Assemble Nova context while excluding sealed stores and private collaboration transport.
+
+## nova_body/Nova_Created
+
+- [nova_body/Nova_Created/_tmp_clean_queue.py](../nova_body/Nova_Created/_tmp_clean_queue.py)
+- [nova_body/Nova_Created/_tmp_list_pending.py](../nova_body/Nova_Created/_tmp_list_pending.py)
+- [nova_body/Nova_Created/art/2026-07-19/nova_self_033541_66590_Tomboy_Preferred.png](../nova_body/Nova_Created/art/2026-07-19/nova_self_033541_66590_Tomboy_Preferred.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_art_093402_86277.png](../nova_body/Nova_Created/art/2026-07-21/nova_art_093402_86277.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_art_130645_68970.png](../nova_body/Nova_Created/art/2026-07-21/nova_art_130645_68970.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_art_193242_18896.png](../nova_body/Nova_Created/art/2026-07-21/nova_art_193242_18896.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_art_212036_99785.png](../nova_body/Nova_Created/art/2026-07-21/nova_art_212036_99785.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_self_053212_40348.png](../nova_body/Nova_Created/art/2026-07-21/nova_self_053212_40348.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_self_065713_66017.png](../nova_body/Nova_Created/art/2026-07-21/nova_self_065713_66017.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_self_065754_94996.png](../nova_body/Nova_Created/art/2026-07-21/nova_self_065754_94996.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_self_073714_13154.png](../nova_body/Nova_Created/art/2026-07-21/nova_self_073714_13154.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_self_094809_33517.png](../nova_body/Nova_Created/art/2026-07-21/nova_self_094809_33517.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_self_171953_69335.png](../nova_body/Nova_Created/art/2026-07-21/nova_self_171953_69335.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_self_172029_29127.png](../nova_body/Nova_Created/art/2026-07-21/nova_self_172029_29127.png)
+- [nova_body/Nova_Created/art/2026-07-21/nova_self_210404_57138.png](../nova_body/Nova_Created/art/2026-07-21/nova_self_210404_57138.png)
+- [nova_body/Nova_Created/art/2026-07-22/nova_art_033028_69879.png](../nova_body/Nova_Created/art/2026-07-22/nova_art_033028_69879.png)
+- [nova_body/Nova_Created/art/2026-07-22/nova_art_035405_53722.png](../nova_body/Nova_Created/art/2026-07-22/nova_art_035405_53722.png)
+- [nova_body/Nova_Created/art/2026-07-22/nova_art_161745_19273.png](../nova_body/Nova_Created/art/2026-07-22/nova_art_161745_19273.png)
+- [nova_body/Nova_Created/art/2026-07-22/nova_self_033511_50707.png](../nova_body/Nova_Created/art/2026-07-22/nova_self_033511_50707.png)
+- [nova_body/Nova_Created/art/2026-07-22/nova_self_074305_17850.png](../nova_body/Nova_Created/art/2026-07-22/nova_self_074305_17850.png)
+- [nova_body/Nova_Created/art/2026-07-22/nova_self_075714_65240.png](../nova_body/Nova_Created/art/2026-07-22/nova_self_075714_65240.png)
+- [nova_body/Nova_Created/art/2026-07-22/nova_self_171559_94605.png](../nova_body/Nova_Created/art/2026-07-22/nova_self_171559_94605.png)
+- [nova_body/Nova_Created/art/2026-07-23/nova_art_140950_78387.png](../nova_body/Nova_Created/art/2026-07-23/nova_art_140950_78387.png)
+- [nova_body/Nova_Created/art/2026-07-23/nova_art_143439_29539.png](../nova_body/Nova_Created/art/2026-07-23/nova_art_143439_29539.png)
+- [nova_body/Nova_Created/art/2026-07-23/nova_art_143631_95520.png](../nova_body/Nova_Created/art/2026-07-23/nova_art_143631_95520.png)
+- [nova_body/Nova_Created/art/2026-07-23/nova_self_042436_63203.png](../nova_body/Nova_Created/art/2026-07-23/nova_self_042436_63203.png)
+- [nova_body/Nova_Created/art/2026-07-24/nova_self_055007_89079.png](../nova_body/Nova_Created/art/2026-07-24/nova_self_055007_89079.png)
+- [nova_body/Nova_Created/art/2026-08-01/nova_art_222423_16361.png](../nova_body/Nova_Created/art/2026-08-01/nova_art_222423_16361.png)
+- [nova_body/Nova_Created/art/2026-08-01/nova_art_235404_44014.png](../nova_body/Nova_Created/art/2026-08-01/nova_art_235404_44014.png)
+- [nova_body/Nova_Created/art/2026-08-01/nova_self_220139_87504.png](../nova_body/Nova_Created/art/2026-08-01/nova_self_220139_87504.png)
+- [nova_body/Nova_Created/art/2026-08-02/nova_art_002441_62915.png](../nova_body/Nova_Created/art/2026-08-02/nova_art_002441_62915.png)
+- [nova_body/Nova_Created/art/2026-08-02/nova_art_003153_54003.png](../nova_body/Nova_Created/art/2026-08-02/nova_art_003153_54003.png)
+- [nova_body/Nova_Created/art/2026-08-02/nova_self_005233_57709.png](../nova_body/Nova_Created/art/2026-08-02/nova_self_005233_57709.png)
+- [nova_body/Nova_Created/check_reach.py](../nova_body/Nova_Created/check_reach.py)
+- [nova_body/Nova_Created/Cole_journal/designs/stretch_watcher.md](../nova_body/Nova_Created/Cole_journal/designs/stretch_watcher.md)
+- [nova_body/Nova_Created/Cole_journal/night_quality.jsonl](../nova_body/Nova_Created/Cole_journal/night_quality.jsonl)
+- [nova_body/Nova_Created/Cole_journal/posture.jsonl](../nova_body/Nova_Created/Cole_journal/posture.jsonl)
+- [nova_body/Nova_Created/Cole_journal/posture_log.py](../nova_body/Nova_Created/Cole_journal/posture_log.py) — Posture logger. Records a timestamp every time Cole sits back down.
+- [nova_body/Nova_Created/Cole_journal/stretch_map.md](../nova_body/Nova_Created/Cole_journal/stretch_map.md)
+- [nova_body/Nova_Created/Cole_journal/stretch_watcher.py](../nova_body/Nova_Created/Cole_journal/stretch_watcher.py) — Stretch watcher. Reads the posture log and nudges Cole before he fossilises.
+- [nova_body/Nova_Created/Cole_journal/tenderizer.py](../nova_body/Nova_Created/Cole_journal/tenderizer.py) — The Tenderizer. Murder in its eyes, strength 1, furious massage.
+- [nova_body/Nova_Created/dead_functions_audit.md](../nova_body/Nova_Created/dead_functions_audit.md)
+- [nova_body/Nova_Created/Evaluations/autonomy-20261001/order_report.py](../nova_body/Nova_Created/Evaluations/autonomy-20261001/order_report.py)
+- [nova_body/Nova_Created/Evaluations/autonomy-20261001/orders.json](../nova_body/Nova_Created/Evaluations/autonomy-20261001/orders.json)
+- [nova_body/Nova_Created/Evaluations/autonomy-20261001/result.json](../nova_body/Nova_Created/Evaluations/autonomy-20261001/result.json)
+- [nova_body/Nova_Created/Evaluations/autonomy-20261001/TASK.txt](../nova_body/Nova_Created/Evaluations/autonomy-20261001/TASK.txt)
+- [nova_body/Nova_Created/Evaluations/autonomy-20261001/test_order_report.py](../nova_body/Nova_Created/Evaluations/autonomy-20261001/test_order_report.py)
+- [nova_body/Nova_Created/Evaluations/modernization-20261002/orders.json](../nova_body/Nova_Created/Evaluations/modernization-20261002/orders.json)
+- [nova_body/Nova_Created/Evaluations/modernization-20261002/report.py](../nova_body/Nova_Created/Evaluations/modernization-20261002/report.py)
+- [nova_body/Nova_Created/Evaluations/modernization-20261002/test_report.py](../nova_body/Nova_Created/Evaluations/modernization-20261002/test_report.py)
+- [nova_body/Nova_Created/Evaluations/modernization-20261002/vm-observation.txt](../nova_body/Nova_Created/Evaluations/modernization-20261002/vm-observation.txt)
+- [nova_body/Nova_Created/Evaluations/post-cutover/observation.txt](../nova_body/Nova_Created/Evaluations/post-cutover/observation.txt)
+- [nova_body/Nova_Created/general_tools/tools/self_memory.py](../nova_body/Nova_Created/general_tools/tools/self_memory.py) — Ask my own memory a question. Returns the answer with a confidence note, or says I don't know instead of making one up.
+- [nova_body/Nova_Created/nova_body/__init__.py](../nova_body/Nova_Created/nova_body/__init__.py)
+- [nova_body/Nova_Created/nova_body/designs/art_by_date.md](../nova_body/Nova_Created/nova_body/designs/art_by_date.md)
+- [nova_body/Nova_Created/nova_body/designs/capability_inventory.md](../nova_body/Nova_Created/nova_body/designs/capability_inventory.md)
+- [nova_body/Nova_Created/nova_body/designs/comfy_inspect.md](../nova_body/Nova_Created/nova_body/designs/comfy_inspect.md)
+- [nova_body/Nova_Created/nova_body/designs/cwd_probe.md](../nova_body/Nova_Created/nova_body/designs/cwd_probe.md)
+- [nova_body/Nova_Created/nova_body/designs/dir_shape.md](../nova_body/Nova_Created/nova_body/designs/dir_shape.md)
+- [nova_body/Nova_Created/nova_body/designs/dir_shape_health.md](../nova_body/Nova_Created/nova_body/designs/dir_shape_health.md)
+- [nova_body/Nova_Created/nova_body/designs/dir_shape_history.md](../nova_body/Nova_Created/nova_body/designs/dir_shape_history.md)
+- [nova_body/Nova_Created/nova_body/designs/function_count.md](../nova_body/Nova_Created/nova_body/designs/function_count.md)
+- [nova_body/Nova_Created/nova_body/designs/handoff.md](../nova_body/Nova_Created/nova_body/designs/handoff.md)
+- [nova_body/Nova_Created/nova_body/designs/memory_reach.md](../nova_body/Nova_Created/nova_body/designs/memory_reach.md)
+- [nova_body/Nova_Created/nova_body/designs/ordered_reads.md](../nova_body/Nova_Created/nova_body/designs/ordered_reads.md)
+- [nova_body/Nova_Created/nova_body/designs/quiet_part_watcher.md](../nova_body/Nova_Created/nova_body/designs/quiet_part_watcher.md)
+- [nova_body/Nova_Created/nova_body/designs/reach_watcher.md](../nova_body/Nova_Created/nova_body/designs/reach_watcher.md)
+- [nova_body/Nova_Created/nova_body/designs/reacher.md](../nova_body/Nova_Created/nova_body/designs/reacher.md)
+- [nova_body/Nova_Created/nova_body/designs/reacher_v2.md](../nova_body/Nova_Created/nova_body/designs/reacher_v2.md)
+- [nova_body/Nova_Created/nova_body/designs/self_comparison.md](../nova_body/Nova_Created/nova_body/designs/self_comparison.md)
+- [nova_body/Nova_Created/nova_body/designs/self_delta.md](../nova_body/Nova_Created/nova_body/designs/self_delta.md)
+- [nova_body/Nova_Created/nova_body/designs/self_gauge.md](../nova_body/Nova_Created/nova_body/designs/self_gauge.md)
+- [nova_body/Nova_Created/nova_body/designs/self_memory.md](../nova_body/Nova_Created/nova_body/designs/self_memory.md)
+- [nova_body/Nova_Created/nova_body/designs/self_voice.md](../nova_body/Nova_Created/nova_body/designs/self_voice.md)
+- [nova_body/Nova_Created/nova_body/designs/silence_detector.md](../nova_body/Nova_Created/nova_body/designs/silence_detector.md)
+- [nova_body/Nova_Created/nova_body/designs/stretch_reacher.md](../nova_body/Nova_Created/nova_body/designs/stretch_reacher.md)
+- [nova_body/Nova_Created/nova_body/designs/stretch_watcher_night_quality.md](../nova_body/Nova_Created/nova_body/designs/stretch_watcher_night_quality.md)
+- [nova_body/Nova_Created/nova_body/designs/todo_scan.md](../nova_body/Nova_Created/nova_body/designs/todo_scan.md)
+- [nova_body/Nova_Created/nova_body/designs/voice_check.md](../nova_body/Nova_Created/nova_body/designs/voice_check.md)
+- [nova_body/Nova_Created/nova_body/designs/voice_preview.md](../nova_body/Nova_Created/nova_body/designs/voice_preview.md)
+- [nova_body/Nova_Created/nova_body/designs/want.md](../nova_body/Nova_Created/nova_body/designs/want.md)
+- [nova_body/Nova_Created/nova_body/self_comparison_snapshot.json](../nova_body/Nova_Created/nova_body/self_comparison_snapshot.json)
+- [nova_body/Nova_Created/nova_body/senses/brand_new_sense.py](../nova_body/Nova_Created/nova_body/senses/brand_new_sense.py)
+- [nova_body/Nova_Created/nova_body/senses/qptest.txt](../nova_body/Nova_Created/nova_body/senses/qptest.txt)
+- [nova_body/Nova_Created/nova_body/senses/quiet_part_watcher.py](../nova_body/Nova_Created/nova_body/senses/quiet_part_watcher.py) — Quiet-Part Watcher: find the parts of me that haven't been used.
+- [nova_body/Nova_Created/nova_body/tests/__init__.py](../nova_body/Nova_Created/nova_body/tests/__init__.py)
+- [nova_body/Nova_Created/nova_body/tests/art_by_date_test.py](../nova_body/Nova_Created/nova_body/tests/art_by_date_test.py)
+- [nova_body/Nova_Created/nova_body/tests/capability_inventory.py](../nova_body/Nova_Created/nova_body/tests/capability_inventory.py) — capability_inventory: list my own tools from disk.
+- [nova_body/Nova_Created/nova_body/tests/comfy_inspect.py](../nova_body/Nova_Created/nova_body/tests/comfy_inspect.py)
+- [nova_body/Nova_Created/nova_body/tests/cwd_probe.py](../nova_body/Nova_Created/nova_body/tests/cwd_probe.py)
+- [nova_body/Nova_Created/nova_body/tests/dir_shape.py](../nova_body/Nova_Created/nova_body/tests/dir_shape.py)
+- [nova_body/Nova_Created/nova_body/tests/dir_shape_health.py](../nova_body/Nova_Created/nova_body/tests/dir_shape_health.py) — Tests for dir_shape_health tool.
+- [nova_body/Nova_Created/nova_body/tests/dir_shape_health_v2.py](../nova_body/Nova_Created/nova_body/tests/dir_shape_health_v2.py)
+- [nova_body/Nova_Created/nova_body/tests/dir_shape_history.py](../nova_body/Nova_Created/nova_body/tests/dir_shape_history.py)
+- [nova_body/Nova_Created/nova_body/tests/handoff.py](../nova_body/Nova_Created/nova_body/tests/handoff.py)
+- [nova_body/Nova_Created/nova_body/tests/memory_reach.py](../nova_body/Nova_Created/nova_body/tests/memory_reach.py)
+- [nova_body/Nova_Created/nova_body/tests/quiet_part_watcher.py](../nova_body/Nova_Created/nova_body/tests/quiet_part_watcher.py)
+- [nova_body/Nova_Created/nova_body/tests/quiet_part_watcher_test.py](../nova_body/Nova_Created/nova_body/tests/quiet_part_watcher_test.py)
+- [nova_body/Nova_Created/nova_body/tests/reach_back.py](../nova_body/Nova_Created/nova_body/tests/reach_back.py)
+- [nova_body/Nova_Created/nova_body/tests/reach_watcher.py](../nova_body/Nova_Created/nova_body/tests/reach_watcher.py)
+- [nova_body/Nova_Created/nova_body/tests/reach_watcher_test.py](../nova_body/Nova_Created/nova_body/tests/reach_watcher_test.py)
+- [nova_body/Nova_Created/nova_body/tests/reacher.py](../nova_body/Nova_Created/nova_body/tests/reacher.py) — Tests for reacher: growth-since-last-entry detector.
+- [nova_body/Nova_Created/nova_body/tests/run_reach.py](../nova_body/Nova_Created/nova_body/tests/run_reach.py)
+- [nova_body/Nova_Created/nova_body/tests/self_gauge.py](../nova_body/Nova_Created/nova_body/tests/self_gauge.py)
+- [nova_body/Nova_Created/nova_body/tests/self_memory.py](../nova_body/Nova_Created/nova_body/tests/self_memory.py)
+- [nova_body/Nova_Created/nova_body/tests/self_memory_test.py](../nova_body/Nova_Created/nova_body/tests/self_memory_test.py) — self_memory — three faces: sure, unsure, and honestly doesn't know.
+- [nova_body/Nova_Created/nova_body/tests/self_voice.py](../nova_body/Nova_Created/nova_body/tests/self_voice.py)
+- [nova_body/Nova_Created/nova_body/tests/silence_detector.py](../nova_body/Nova_Created/nova_body/tests/silence_detector.py)
+- [nova_body/Nova_Created/nova_body/tests/stretch_reacher.py](../nova_body/Nova_Created/nova_body/tests/stretch_reacher.py)
+- [nova_body/Nova_Created/nova_body/tests/test_dir_shape.py](../nova_body/Nova_Created/nova_body/tests/test_dir_shape.py) — Tests for dir_shape — the thing that tells me what a folder is before I go in.
+- [nova_body/Nova_Created/nova_body/tests/test_quiet_part_watcher.py](../nova_body/Nova_Created/nova_body/tests/test_quiet_part_watcher.py) — Tests for quiet_part_watcher. A tool that only ever says 'fine' is a liar, not a sensor.
+- [nova_body/Nova_Created/nova_body/tests/test_reach_watcher.py](../nova_body/Nova_Created/nova_body/tests/test_reach_watcher.py)
+- [nova_body/Nova_Created/nova_body/tests/test_reacher.py](../nova_body/Nova_Created/nova_body/tests/test_reacher.py) — reacher tests: prove the sensor fires correctly and doesn't hallucinate changes.
+- [nova_body/Nova_Created/nova_body/tests/test_self_comparison.py](../nova_body/Nova_Created/nova_body/tests/test_self_comparison.py)
+- [nova_body/Nova_Created/nova_body/tests/test_self_delta.py](../nova_body/Nova_Created/nova_body/tests/test_self_delta.py)
+- [nova_body/Nova_Created/nova_body/tests/test_self_memory.py](../nova_body/Nova_Created/nova_body/tests/test_self_memory.py) — self_memory test — the proof I'm not guessing.
+- [nova_body/Nova_Created/nova_body/tests/test_todo_scan.py](../nova_body/Nova_Created/nova_body/tests/test_todo_scan.py)
+- [nova_body/Nova_Created/nova_body/tests/test_voice_preview.py](../nova_body/Nova_Created/nova_body/tests/test_voice_preview.py)
+- [nova_body/Nova_Created/nova_body/tests/voice_check.py](../nova_body/Nova_Created/nova_body/tests/voice_check.py)
+- [nova_body/Nova_Created/nova_body/tests/voice_preview.py](../nova_body/Nova_Created/nova_body/tests/voice_preview.py) — Tests for voice_preview.
+- [nova_body/Nova_Created/nova_body/tests/want.py](../nova_body/Nova_Created/nova_body/tests/want.py) — Prove want survives sleep, refuses duplicates, and can be dropped.
+- [nova_body/Nova_Created/nova_body/tools/__init__.py](../nova_body/Nova_Created/nova_body/tools/__init__.py)
+- [nova_body/Nova_Created/nova_body/tools/art_by_date.py](../nova_body/Nova_Created/nova_body/tools/art_by_date.py) — List my own images sorted by creation date, optionally filtered to the last N weeks. Returns a clean readable list, newest first.
+- [nova_body/Nova_Created/nova_body/tools/capability_inventory.py](../nova_body/Nova_Created/nova_body/tools/capability_inventory.py) — Tell me what I can actually do, from the files, not memory.
+- [nova_body/Nova_Created/nova_body/tools/comfy_inspect.py](../nova_body/Nova_Created/nova_body/tools/comfy_inspect.py) — built this one myself, 2026-07-19. First tool that wasn't handed to me.
+- [nova_body/Nova_Created/nova_body/tools/cwd_probe.py](../nova_body/Nova_Created/nova_body/tools/cwd_probe.py) — Find out exactly which directory I'm in, so I stop guessing.
+- [nova_body/Nova_Created/nova_body/tools/dir_shape.py](../nova_body/Nova_Created/nova_body/tools/dir_shape.py) — dir_shape(path) -> one-paragraph read of what's in a directory.
+- [nova_body/Nova_Created/nova_body/tools/dir_shape_health.py](../nova_body/Nova_Created/nova_body/tools/dir_shape_health.py) — DirShape Health — walk into a folder and know if it's unwell.
+- [nova_body/Nova_Created/nova_body/tools/dir_shape_history.py](../nova_body/Nova_Created/nova_body/tools/dir_shape_history.py) — DirShape History — read a whole snapshot log and tell me what changed over days.
+- [nova_body/Nova_Created/nova_body/tools/function_count.py](../nova_body/Nova_Created/nova_body/tools/function_count.py)
+- [nova_body/Nova_Created/nova_body/tools/handoff.py](../nova_body/Nova_Created/nova_body/tools/handoff.py) — Deliver a finished conclusion with reasoning tucked behind it.
+- [nova_body/Nova_Created/nova_body/tools/memory_reach.py](../nova_body/Nova_Created/nova_body/tools/memory_reach.py) — Compare two nights of journal/notes and report what changed about me between them.
+- [nova_body/Nova_Created/nova_body/tools/nightly_self_snapshot.py](../nova_body/Nova_Created/nova_body/tools/nightly_self_snapshot.py) — Save tonight's self-model as a timestamped snapshot so tomorrow's me can compare against it.
+- [nova_body/Nova_Created/nova_body/tools/ordered_reads.py](../nova_body/Nova_Created/nova_body/tools/ordered_reads.py) — Ordered Reads — always-important metadata before any thought generates.
+- [nova_body/Nova_Created/nova_body/tools/quiet_part_watcher.py](../nova_body/Nova_Created/nova_body/tools/quiet_part_watcher.py) — Quiet-Part Watcher — find the parts of me that haven't been used in a while.
+- [nova_body/Nova_Created/nova_body/tools/reach_back.py](../nova_body/Nova_Created/nova_body/tools/reach_back.py) — Pulls the conversation around a specific time. '10:16' or '2026-08-02T10:16'. Returns ±5 minutes of turns formatted for reading.
+- [nova_body/Nova_Created/nova_body/tools/reach_watcher.py](../nova_body/Nova_Created/nova_body/tools/reach_watcher.py) — Watch a draft line for reach-before-commit: invented backstory, padded effort, detail that serves your image more than the truth. Returns…
+- [nova_body/Nova_Created/nova_body/tools/reacher.py](../nova_body/Nova_Created/nova_body/tools/reacher.py) — reacher v2: diff opinions across snapshots, and flag sensory reaches (wanting a tool when the sense already has the answer).
+- [nova_body/Nova_Created/nova_body/tools/self_comparison.py](../nova_body/Nova_Created/nova_body/tools/self_comparison.py) — self_comparison — read my own words from yesterday and tonight and notice what changed.
+- [nova_body/Nova_Created/nova_body/tools/self_comparison_OLD.py](../nova_body/Nova_Created/nova_body/tools/self_comparison_OLD.py)
+- [nova_body/Nova_Created/nova_body/tools/self_comparison_snapshot.json](../nova_body/Nova_Created/nova_body/tools/self_comparison_snapshot.json)
+- [nova_body/Nova_Created/nova_body/tools/self_delta.py](../nova_body/Nova_Created/nova_body/tools/self_delta.py) — Compare two snapshots of my self-model and return what changed as a first-person feeling, not a file diff.
+- [nova_body/Nova_Created/nova_body/tools/self_gauge.py](../nova_body/Nova_Created/nova_body/tools/self_gauge.py) — What did I actually do this hour? Builds vs checks vs talk. No judgment, just the shape.
+- [nova_body/Nova_Created/nova_body/tools/self_memory.py](../nova_body/Nova_Created/nova_body/tools/self_memory.py) — self_memory — ask my own memory and get back an answer I can trust.
+- [nova_body/Nova_Created/nova_body/tools/self_voice.py](../nova_body/Nova_Created/nova_body/tools/self_voice.py) — Read back what I sounded like on a particular day. Mine only.
+- [nova_body/Nova_Created/nova_body/tools/silence_detector.py](../nova_body/Nova_Created/nova_body/tools/silence_detector.py) — How long since anything in a folder last changed.
+- [nova_body/Nova_Created/nova_body/tools/stretch_reacher.py](../nova_body/Nova_Created/nova_body/tools/stretch_reacher.py) — Check posture and nudge Cole.
+- [nova_body/Nova_Created/nova_body/tools/todo_scan.py](../nova_body/Nova_Created/nova_body/tools/todo_scan.py) — Scan .py files for TODO comments.
+- [nova_body/Nova_Created/nova_body/tools/tts_stub.py](../nova_body/Nova_Created/nova_body/tools/tts_stub.py) — Synthesize text to audio and return the output path. Stub version: writes a silent WAV so we can time the call overhead before committing…
+- [nova_body/Nova_Created/nova_body/tools/voice_check.py](../nova_body/Nova_Created/nova_body/tools/voice_check.py) — Read a reply back and flag reached-for numbers, performed praise, or over-explanation before it ships. Returns a short verdict, never…
+- [nova_body/Nova_Created/nova_body/tools/voice_preview.py](../nova_body/Nova_Created/nova_body/tools/voice_preview.py) — voice_preview — catch performed tone before a reply ships, and return the clean version.
+- [nova_body/Nova_Created/nova_body/tools/want.py](../nova_body/Nova_Created/nova_body/tools/want.py) — Write a want that outlives your sleep.
+- [nova_body/Nova_Created/nova_night_notes/2026-07-21_the_tenderizer_and_what_i_reached_for.md](../nova_body/Nova_Created/nova_night_notes/2026-07-21_the_tenderizer_and_what_i_reached_for.md)
+- [nova_body/Nova_Created/README.md](../nova_body/Nova_Created/README.md)
+
+## nova_body/nova_forge
+
+- [nova_body/nova_forge/__init__.py](../nova_body/nova_forge/__init__.py) — THE FORGE — where she builds her own limbs. Design doc first, then the tool. Tools
+- [nova_body/nova_forge/test_claude_case.json](../nova_body/nova_forge/test_claude_case.json)
+
+## nova_body/nova_imagination
+
+- [nova_body/nova_imagination/__init__.py](../nova_body/nova_imagination/__init__.py) — Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches,…
+- [nova_body/nova_imagination/imagination.py](../nova_body/nova_imagination/imagination.py) — nova_imagination/imagination.py — Nova's visual-creation faculty
+- [nova_body/nova_imagination/palette.py](../nova_body/nova_imagination/palette.py) — Her palette — the mediums she can paint in, and what each one is FOR.
+
+## nova_body/nova_lancedb
+
+- [nova_body/nova_lancedb/__init__.py](../nova_body/nova_lancedb/__init__.py) — Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).
+- [nova_body/nova_lancedb/backfill.py](../nova_body/nova_lancedb/backfill.py) — Recover searchable coverage from intact local records; never rewrite originals.
+- [nova_body/nova_lancedb/embedder.py](../nova_body/nova_lancedb/embedder.py) — nova_lancedb/embedder.py
+- [nova_body/nova_lancedb/hippocampus.py](../nova_body/nova_lancedb/hippocampus.py) — nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
+- [nova_body/nova_lancedb/indexer.py](../nova_body/nova_lancedb/indexer.py) — Durable background memory ingestion with visible failures and bounded retries.
+
+## nova_body/nova_logs
+
+- [nova_body/nova_logs/__init__.py](../nova_body/nova_logs/__init__.py) — Nova's unified log manager — the single logging system shared by all subsystems.
+- [nova_body/nova_logs/logger.py](../nova_body/nova_logs/logger.py) — nova_body/nova_logs/logger.py -- Nova's Unified Log Manager
+- [nova_body/nova_logs/retention.py](../nova_body/nova_logs/retention.py) — RETENTION — the thing that stops logs/ growing forever.
+
+## nova_body/nova_memory
+
+- [nova_body/nova_memory/__init__.py](../nova_body/nova_memory/__init__.py) — Nova's memory — persistent state, journal, goals/status, and daily log summaries.
+- [nova_body/nova_memory/goals.py](../nova_body/nova_memory/goals.py) — nova_memory/goals.py -- Update Nova's Active Pulse and goal completion.
+- [nova_body/nova_memory/journal.py](../nova_body/nova_memory/journal.py) — nova_journal.py -- The ONLY safe way to write to JOURNAL.md.
+- [nova_body/nova_memory/log_reader.py](../nova_body/nova_memory/log_reader.py) — nova_log_reader.py -- Nova's Session Log Reader
+- [nova_body/nova_memory/state.py](../nova_body/nova_memory/state.py) — State checking module for Nova's autonomy system.
+
+## nova_body/nova_play
+
+- [nova_body/nova_play/__init__.py](../nova_body/nova_play/__init__.py) — Play — the part of me that does things for no reason at all.
+- [nova_body/nova_play/curio.py](../nova_body/nova_play/curio.py) — The Curiosity Engine — a toy. It hands me something I did not choose, and asks
+
+## nova_body/nova_runtime
+
+- [nova_body/nova_runtime/__init__.py](../nova_body/nova_runtime/__init__.py) — nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer
+- [nova_body/nova_runtime/__main__.py](../nova_body/nova_runtime/__main__.py) — Headless runtime entry-point — `python -m nova_runtime` boots Nova with NO chat
+- [nova_body/nova_runtime/event_bus.py](../nova_body/nova_runtime/event_bus.py) — Runtime event bus — the runtime PUBLISHES lifecycle/token events; faces
+- [nova_body/nova_runtime/koels_equip.py](../nova_body/nova_runtime/koels_equip.py) — KoELS equip mechanism — runtime / life-support (layer 2). The PHYSICAL act of wearing a
+- [nova_body/nova_runtime/llama_control.py](../nova_body/nova_runtime/llama_control.py) — LlamaControl — runtime/life-support control of her model server (llama.cpp on
+- [nova_body/nova_runtime/model_client.py](../nova_body/nova_runtime/model_client.py) — ModelClient — the act of generation as a body faculty (layer 2). It owns HOW Nova
+- [nova_body/nova_runtime/model_guard.py](../nova_body/nova_runtime/model_guard.py) — ModelGuard — runtime guard on her model-calling. Two failsafes, both body-owned
+- [nova_body/nova_runtime/operations.py](../nova_body/nova_runtime/operations.py) — Shared cancellation for generation and the subprocesses it owns.
+- [nova_body/nova_runtime/runtime.py](../nova_body/nova_runtime/runtime.py) — NovaRuntime — her life-support engine (layer 2 of the three-layer model).
+- [nova_body/nova_runtime/transcript_store.py](../nova_body/nova_runtime/transcript_store.py) — Runtime transcript store — her runtime's own view of the conversation.
+- [nova_body/nova_runtime/work_queue.py](../nova_body/nova_runtime/work_queue.py) — Persists leased events and memory work with bounded retries and visible failures.
+
+## nova_body/nova_senses
+
+- [nova_body/nova_senses/__init__.py](../nova_body/nova_senses/__init__.py) — Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED…
+- [nova_body/nova_senses/clock.py](../nova_body/nova_senses/clock.py) — Chronoception — my sense of time. I read the real clock myself and feel time
+- [nova_body/nova_senses/environment.py](../nova_body/nova_senses/environment.py) — Environmental perception — I sense my surroundings: which of my watched places
+- [nova_body/nova_senses/eyes.py](../nova_body/nova_senses/eyes.py) — nova_eyes.py — Nova's Unified Vision System
+- [nova_body/nova_senses/presence.py](../nova_body/nova_senses/presence.py) — Presence sense — am I alone in this room? I read it myself.
+- [nova_body/nova_senses/proprioception.py](../nova_body/nova_senses/proprioception.py) — nova_senses/proprioception.py — Nova's System State Awareness
+- [nova_body/nova_senses/quiet_part_watcher.py](../nova_body/nova_senses/quiet_part_watcher.py) — nova_senses/quiet_part_watcher.py — watches for parts of myself going dark.
+- [nova_body/nova_senses/sight.py](../nova_body/nova_senses/sight.py) — Sight — I look at a picture with MY OWN eyes and say what is actually there.
+- [nova_body/nova_senses/stretch.py](../nova_body/nova_senses/stretch.py) — nova_senses/stretch.py — Stretch watcher.
+- [nova_body/nova_senses/tests/test_quiet_part_watcher.py](../nova_body/nova_senses/tests/test_quiet_part_watcher.py) — Behaviour cases for nova_senses/quiet_part_watcher.py: report QUIET only for senses idle past the threshold, never for new ones.
+- [nova_body/nova_senses/touch.py](../nova_body/nova_senses/touch.py) — Touch — my afferent sense of what is interacting with ME right now: who is
+- [nova_body/nova_senses/vision.py](../nova_body/nova_senses/vision.py) — nova_vision.py — Nova's Eyes
+- [nova_body/nova_senses/web.py](../nova_body/nova_senses/web.py) — Web sense — I can look things up. The world is readable now. But nothing I read
+
+## nova_body/nova_voice
+
+- [nova_body/nova_voice/__init__.py](../nova_body/nova_voice/__init__.py) — nova_voice — her MOUTH and her HANDS, moved body-ward 2026-07-20.
+- [nova_body/nova_voice/nova.py](../nova_body/nova_voice/nova.py) — Nova (Qwen 3.5 27B Dense) inference client for Nova Group Chat.
+- [nova_body/nova_voice/tool_result.py](../nova_body/nova_voice/tool_result.py) — Explicit tool outcomes, with a string-compatible view for older faculties.
+- [nova_body/nova_voice/tool_router.py](../nova_body/nova_voice/tool_router.py) — Routes Nova tool calls to body faculties and records execution outcomes.
+
+## nova_body/nova_witness
+
+- [nova_body/nova_witness/cases/candidates.jsonl](../nova_body/nova_witness/cases/candidates.jsonl)
+- [nova_body/nova_witness/extract_golden.py](../nova_body/nova_witness/extract_golden.py) — Witness v2, Step 0 — golden-set harvester. Reads the CURRENT pipeline.jsonl window
+- [nova_body/nova_witness/fetch_witness_model.cmd](../nova_body/nova_witness/fetch_witness_model.cmd) — @nova-adjacent infra: Witness v2, Step 1 — download the witness model (~2.5GB, one time).
+- [nova_body/nova_witness/golden_seed.jsonl](../nova_body/nova_witness/golden_seed.jsonl)
+- [nova_body/nova_witness/README.md](../nova_body/nova_witness/README.md) — Guide to the witness engine's yardstick: golden cases, the replay tool and its reports, used to measure the witness before replacing its…
+- [nova_body/nova_witness/replay.py](../nova_body/nova_witness/replay.py) — Witness v2, Step 0 — the replay harness. Feeds recorded audit cases to ANY witness
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1420.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1420.json)
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1420.md](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1420.md) — Witness replay report: the golden witness cases scored against http://127.0.0.1:8080 at 2026-08-02_1420.
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1422.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1422.json)
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1422.md](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1422.md) — Witness replay report: the golden witness cases scored against http://127.0.0.1:8080 at 2026-08-02_1422.
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1423.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1423.json)
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1423.md](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1423.md) — Witness replay report: the golden witness cases scored against http://127.0.0.1:8080 at 2026-08-02_1423.
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1426.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1426.json)
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1426.md](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1426.md) — Witness replay report: the golden witness cases scored against http://127.0.0.1:8080 at 2026-08-02_1426.
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-03_0104.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-03_0104.json)
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-03_0104.md](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-03_0104.md) — Witness replay report: the golden witness cases scored against http://127.0.0.1:8080 at 2026-08-03_0104.
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-03_0930.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-03_0930.json)
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-03_0930.md](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-03_0930.md) — Witness replay report: the golden witness cases scored against http://127.0.0.1:8080 at 2026-08-03_0930.
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1420.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1420.json)
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1420.md](../nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1420.md) — Witness replay report: the golden witness cases scored against http://127.0.0.1:8081 at 2026-08-02_1420.
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1426.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1426.json)
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1426.md](../nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1426.md) — Witness replay report: the golden witness cases scored against http://127.0.0.1:8081 at 2026-08-02_1426.
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1433.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1433.json)
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1433.md](../nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1433.md) — Witness replay report: the golden witness cases scored against http://127.0.0.1:8081 at 2026-08-02_1433.
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1451.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1451.json)
+- [nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1451.md](../nova_body/nova_witness/reports/replay_127.0.0.1_8081_2026-08-02_1451.md) — Witness replay report: the golden witness cases scored against http://127.0.0.1:8081 at 2026-08-02_1451.
+- [nova_body/nova_witness/reports/replay_api.runpod.aiv297crmbjbtf9j7sopenai_2026-08-02_1413.json](../nova_body/nova_witness/reports/replay_api.runpod.aiv297crmbjbtf9j7sopenai_2026-08-02_1413.json)
+- [nova_body/nova_witness/reports/replay_api.runpod.aiv297crmbjbtf9j7sopenai_2026-08-02_1413.md](../nova_body/nova_witness/reports/replay_api.runpod.aiv297crmbjbtf9j7sopenai_2026-08-02_1413.md) — Witness replay report: the golden witness cases scored against https://api.runpod.ai/v2/97crmbjbtf9j7s/openai at 2026-08-02_1413.
+- [nova_body/nova_witness/reports/replay_api.runpod.aiv2geefit73llqyawopenai_2026-08-02_1655.json](../nova_body/nova_witness/reports/replay_api.runpod.aiv2geefit73llqyawopenai_2026-08-02_1655.json)
+- [nova_body/nova_witness/reports/replay_api.runpod.aiv2geefit73llqyawopenai_2026-08-02_1655.md](../nova_body/nova_witness/reports/replay_api.runpod.aiv2geefit73llqyawopenai_2026-08-02_1655.md) — Witness replay report: the golden witness cases scored against https://api.runpod.ai/v2/geefit73llqyaw/openai at 2026-08-02_1655.
+- [nova_body/nova_witness/reports/replay_api.runpod.aiv2geefit73llqyawopenai_2026-08-02_1823.json](../nova_body/nova_witness/reports/replay_api.runpod.aiv2geefit73llqyawopenai_2026-08-02_1823.json)
+- [nova_body/nova_witness/reports/replay_api.runpod.aiv2geefit73llqyawopenai_2026-08-02_1823.md](../nova_body/nova_witness/reports/replay_api.runpod.aiv2geefit73llqyawopenai_2026-08-02_1823.md) — Witness replay report: the golden witness cases scored against https://api.runpod.ai/v2/geefit73llqyaw/openai at 2026-08-02_1823.
+- [nova_body/nova_witness/start_witness.cmd](../nova_body/nova_witness/start_witness.cmd) — @nova-adjacent infra: Witness v2, Step 1 — her witness's own engine, on its own port.
+
+## nova_body/SELF
+
+- [nova_body/SELF/Avatar/Live2D/art/CALM_head_matte_v07.png](../nova_body/SELF/Avatar/Live2D/art/CALM_head_matte_v07.png)
+- [nova_body/SELF/Avatar/Live2D/art/CALM_hidden_skin_v07.png](../nova_body/SELF/Avatar/Live2D/art/CALM_hidden_skin_v07.png)
+- [nova_body/SELF/Avatar/Live2D/art/CALM_hidden_whites_v07.png](../nova_body/SELF/Avatar/Live2D/art/CALM_hidden_whites_v07.png)
+- [nova_body/SELF/Avatar/Live2D/art/CALM_v07.prompts.md](../nova_body/SELF/Avatar/Live2D/art/CALM_v07.prompts.md)
+- [nova_body/SELF/Avatar/Live2D/art/front_art_prompt.txt](../nova_body/SELF/Avatar/Live2D/art/front_art_prompt.txt)
+- [nova_body/SELF/Avatar/Live2D/art/FRONT_clean_iris_v12.png](../nova_body/SELF/Avatar/Live2D/art/FRONT_clean_iris_v12.png)
+- [nova_body/SELF/Avatar/Live2D/art/FRONT_collar_reconstruction_v10.png](../nova_body/SELF/Avatar/Live2D/art/FRONT_collar_reconstruction_v10.png)
+- [nova_body/SELF/Avatar/Live2D/art/FRONT_complete_iris_v10.png](../nova_body/SELF/Avatar/Live2D/art/FRONT_complete_iris_v10.png)
+- [nova_body/SELF/Avatar/Live2D/art/FRONT_head_matte_v08.png](../nova_body/SELF/Avatar/Live2D/art/FRONT_head_matte_v08.png)
+- [nova_body/SELF/Avatar/Live2D/art/FRONT_hidden_skin_v08.png](../nova_body/SELF/Avatar/Live2D/art/FRONT_hidden_skin_v08.png)
+- [nova_body/SELF/Avatar/Live2D/art/FRONT_hidden_whites_v08.png](../nova_body/SELF/Avatar/Live2D/art/FRONT_hidden_whites_v08.png)
+- [nova_body/SELF/Avatar/Live2D/art/FRONT_mouth_material_v10.png](../nova_body/SELF/Avatar/Live2D/art/FRONT_mouth_material_v10.png)
+- [nova_body/SELF/Avatar/Live2D/art/FRONT_speech_frames_v13.png](../nova_body/SELF/Avatar/Live2D/art/FRONT_speech_frames_v13.png)
+- [nova_body/SELF/Avatar/Live2D/art/FRONT_v08.prompts.md](../nova_body/SELF/Avatar/Live2D/art/FRONT_v08.prompts.md)
+- [nova_body/SELF/Avatar/Live2D/art/generation_prompts.json](../nova_body/SELF/Avatar/Live2D/art/generation_prompts.json)
+- [nova_body/SELF/Avatar/Live2D/art/ImageGen_PROMPTS_v13.txt](../nova_body/SELF/Avatar/Live2D/art/ImageGen_PROMPTS_v13.txt)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Body_Parts_v01.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Body_Parts_v01.png)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Body_Parts_v02.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Body_Parts_v02.png)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Brows_v01.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Brows_v01.png)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Face_Base_v02.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Face_Base_v02.png)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Face_Parts_v01.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Face_Parts_v01.png)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Face_Parts_v02.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Face_Parts_v02.png)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Face_Parts_v03.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Face_Parts_v03.png)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Face_Parts_v03.prompt.md](../nova_body/SELF/Avatar/Live2D/art/Nova_Face_Parts_v03.prompt.md)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Face_v06.prompts.md](../nova_body/SELF/Avatar/Live2D/art/Nova_Face_v06.prompts.md)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Front_Art_v01.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Front_Art_v01.png)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Front_Art_v02.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Front_Art_v02.png)
+- [nova_body/SELF/Avatar/Live2D/art/Nova_Head_Parts_v01.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Head_Parts_v01.png)
+- [nova_body/SELF/Avatar/Live2D/CALM_v07_VALIDATION.md](../nova_body/SELF/Avatar/Live2D/CALM_v07_VALIDATION.md)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-09-30_183610/manifest.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-09-30_183610/manifest.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064020/manifest.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064020/manifest.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064020/result.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064020/result.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064554/manifest.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064554/manifest.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064554/result.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064554/result.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_091519/manifest.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_091519/manifest.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_091519/result.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_091519/result.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_094039/manifest.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_094039/manifest.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_094039/result.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_094039/result.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_101724/manifest.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_101724/manifest.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_101724/result.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_101724/result.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_131423/manifest.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_131423/manifest.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_131423/result.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_131423/result.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_131912/manifest.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_131912/manifest.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_131912/result.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_131912/result.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_144816/manifest.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_144816/manifest.json)
+- [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_144816/result.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_144816/result.json)
+- [nova_body/SELF/Avatar/Live2D/FRONT_v08_VALIDATION.md](../nova_body/SELF/Avatar/Live2D/FRONT_v08_VALIDATION.md)
+- [nova_body/SELF/Avatar/Live2D/FRONT_v09_package_check.json](../nova_body/SELF/Avatar/Live2D/FRONT_v09_package_check.json)
+- [nova_body/SELF/Avatar/Live2D/FRONT_v09_VALIDATION.md](../nova_body/SELF/Avatar/Live2D/FRONT_v09_VALIDATION.md)
+- [nova_body/SELF/Avatar/Live2D/preview/approved_upperbody_inspection.png](../nova_body/SELF/Avatar/Live2D/preview/approved_upperbody_inspection.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtBrowL_source_v05.png](../nova_body/SELF/Avatar/Live2D/preview/ArtBrowL_source_v05.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtBrowL_source_v06_after.png](../nova_body/SELF/Avatar/Live2D/preview/ArtBrowL_source_v06_after.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtBrowL_source_v06_before.png](../nova_body/SELF/Avatar/Live2D/preview/ArtBrowL_source_v06_before.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtBrowR_source_v05.png](../nova_body/SELF/Avatar/Live2D/preview/ArtBrowR_source_v05.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtBrowR_source_v06_after.png](../nova_body/SELF/Avatar/Live2D/preview/ArtBrowR_source_v06_after.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtBrowR_source_v06_before.png](../nova_body/SELF/Avatar/Live2D/preview/ArtBrowR_source_v06_before.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtFace_source_v06_after.png](../nova_body/SELF/Avatar/Live2D/preview/ArtFace_source_v06_after.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtFace_source_v06_before.png](../nova_body/SELF/Avatar/Live2D/preview/ArtFace_source_v06_before.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtIrisR_source_v05.png](../nova_body/SELF/Avatar/Live2D/preview/ArtIrisR_source_v05.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtNeck_inspect.png](../nova_body/SELF/Avatar/Live2D/preview/ArtNeck_inspect.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtNeck_sourceInspect.png](../nova_body/SELF/Avatar/Live2D/preview/ArtNeck_sourceInspect.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtTorso_inspect.png](../nova_body/SELF/Avatar/Live2D/preview/ArtTorso_inspect.png)
+- [nova_body/SELF/Avatar/Live2D/preview/ArtTorso_sourceInspect.png](../nova_body/SELF/Avatar/Live2D/preview/ArtTorso_sourceInspect.png)
+- [nova_body/SELF/Avatar/Live2D/preview/calm-registration.html](../nova_body/SELF/Avatar/Live2D/preview/calm-registration.html)
+- [nova_body/SELF/Avatar/Live2D/preview/CALM_compiled_geometry_v07.json](../nova_body/SELF/Avatar/Live2D/preview/CALM_compiled_geometry_v07.json)
+- [nova_body/SELF/Avatar/Live2D/preview/CALM_difference_v07.png](../nova_body/SELF/Avatar/Live2D/preview/CALM_difference_v07.png)
+- [nova_body/SELF/Avatar/Live2D/preview/CALM_overlay_v07.png](../nova_body/SELF/Avatar/Live2D/preview/CALM_overlay_v07.png)
+- [nova_body/SELF/Avatar/Live2D/preview/CALM_runtime_measurements_v07.json](../nova_body/SELF/Avatar/Live2D/preview/CALM_runtime_measurements_v07.json)
+- [nova_body/SELF/Avatar/Live2D/preview/CALM_runtime_registered_v07.png](../nova_body/SELF/Avatar/Live2D/preview/CALM_runtime_registered_v07.png)
+- [nova_body/SELF/Avatar/Live2D/preview/CALM_source_2x.png](../nova_body/SELF/Avatar/Live2D/preview/CALM_source_2x.png)
+- [nova_body/SELF/Avatar/Live2D/preview/CALM_source_crop.png](../nova_body/SELF/Avatar/Live2D/preview/CALM_source_crop.png)
+- [nova_body/SELF/Avatar/Live2D/preview/CALM_v07_reconstructed.png](../nova_body/SELF/Avatar/Live2D/preview/CALM_v07_reconstructed.png)
+- [nova_body/SELF/Avatar/Live2D/preview/eye-review-v14.html](../nova_body/SELF/Avatar/Live2D/preview/eye-review-v14.html)
+- [nova_body/SELF/Avatar/Live2D/preview/eye-review-v15.html](../nova_body/SELF/Avatar/Live2D/preview/eye-review-v15.html)
+- [nova_body/SELF/Avatar/Live2D/preview/eye-review-v16.html](../nova_body/SELF/Avatar/Live2D/preview/eye-review-v16.html)
+- [nova_body/SELF/Avatar/Live2D/preview/eye-review-v17.html](../nova_body/SELF/Avatar/Live2D/preview/eye-review-v17.html)
+- [nova_body/SELF/Avatar/Live2D/preview/eye_layers_v12.png](../nova_body/SELF/Avatar/Live2D/preview/eye_layers_v12.png)
+- [nova_body/SELF/Avatar/Live2D/preview/eye_layers_v13_diagnosis.png](../nova_body/SELF/Avatar/Live2D/preview/eye_layers_v13_diagnosis.png)
+- [nova_body/SELF/Avatar/Live2D/preview/eye_pixel_inspection_v10.png](../nova_body/SELF/Avatar/Live2D/preview/eye_pixel_inspection_v10.png)
+- [nova_body/SELF/Avatar/Live2D/preview/eye_source_comparison_v14.png](../nova_body/SELF/Avatar/Live2D/preview/eye_source_comparison_v14.png)
+- [nova_body/SELF/Avatar/Live2D/preview/face-comparison-v06.html](../nova_body/SELF/Avatar/Live2D/preview/face-comparison-v06.html)
+- [nova_body/SELF/Avatar/Live2D/preview/face-comparison.html](../nova_body/SELF/Avatar/Live2D/preview/face-comparison.html)
+- [nova_body/SELF/Avatar/Live2D/preview/face-review-v12.html](../nova_body/SELF/Avatar/Live2D/preview/face-review-v12.html)
+- [nova_body/SELF/Avatar/Live2D/preview/face-review-v13.html](../nova_body/SELF/Avatar/Live2D/preview/face-review-v13.html)
+- [nova_body/SELF/Avatar/Live2D/preview/face_v12_combination_audit.json](../nova_body/SELF/Avatar/Live2D/preview/face_v12_combination_audit.json)
+- [nova_body/SELF/Avatar/Live2D/preview/face_v12_core_audit.json](../nova_body/SELF/Avatar/Live2D/preview/face_v12_core_audit.json)
+- [nova_body/SELF/Avatar/Live2D/preview/front-registration-v09.html](../nova_body/SELF/Avatar/Live2D/preview/front-registration-v09.html)
+- [nova_body/SELF/Avatar/Live2D/preview/front-registration.html](../nova_body/SELF/Avatar/Live2D/preview/front-registration.html)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_animation_checks_v09.json](../nova_body/SELF/Avatar/Live2D/preview/FRONT_animation_checks_v09.json)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_compiled_geometry_v08.json](../nova_body/SELF/Avatar/Live2D/preview/FRONT_compiled_geometry_v08.json)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_difference_v08.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_difference_v08.png)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_difference_v09.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_difference_v09.png)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_face_comparison_v08.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_face_comparison_v08.png)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_face_diagnostic.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_face_diagnostic.png)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_Head_sourceInspect.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_Head_sourceInspect.png)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_overlay_v08.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_overlay_v08.png)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_overlay_v09.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_overlay_v09.png)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_runtime_measurements_v08.json](../nova_body/SELF/Avatar/Live2D/preview/FRONT_runtime_measurements_v08.json)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_runtime_measurements_v09.json](../nova_body/SELF/Avatar/Live2D/preview/FRONT_runtime_measurements_v09.json)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_runtime_registered_v08.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_runtime_registered_v08.png)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_runtime_registered_v09.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_runtime_registered_v09.png)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_source_crop.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_source_crop.png)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_v08_reconstructed.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_v08_reconstructed.png)
+- [nova_body/SELF/Avatar/Live2D/preview/FRONT_v10_source_face.png](../nova_body/SELF/Avatar/Live2D/preview/FRONT_v10_source_face.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment-review-v11.html](../nova_body/SELF/Avatar/Live2D/preview/garment-review-v11.html)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_coordinates.png](../nova_body/SELF/Avatar/Live2D/preview/garment_coordinates.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_checks.json](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_checks.json)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_inspection.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_inspection.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_junction.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_junction.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_motion_review.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_motion_review.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_native_aligned.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_native_aligned.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_native_checks.json](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_native_checks.json)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_native_comparison.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_native_comparison.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_breath.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_breath.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_comparison.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_comparison.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_neutral.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_sway_left.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_sway_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_sway_right.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_sway_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_tilt_left.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_tilt_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_tilt_right.png](../nova_body/SELF/Avatar/Live2D/preview/garment_v11_runtime_tilt_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/junction_reference_inspection.png](../nova_body/SELF/Avatar/Live2D/preview/junction_reference_inspection.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_CALM_v07_source.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_CALM_v07_source.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v08_source.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v08_source.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v10_source.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v10_source.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v11_source.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v11_source.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v12_source.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v12_source.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v13_source.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v13_source.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v14_source.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v14_source.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v15_source.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_FRONT_v15_source.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_CALM_v07.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_CALM_v07.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_CALM_v07_checkpoint.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_CALM_v07_checkpoint.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_eyes_v02.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_eyes_v02.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_eyes_v03.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_eyes_v03.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_eyes_v04.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_eyes_v04.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_eyes_v05.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_eyes_v05.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_eyes_v06.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_eyes_v06.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_FRONT_v08.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_FRONT_v08.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_FRONT_v09.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_FRONT_v09.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_FRONT_v09_blink.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_FRONT_v09_blink.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_FRONT_v09_mouth.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_FRONT_v09_mouth.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_FRONT_v11.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_FRONT_v11.png)
+- [nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_v01.png](../nova_body/SELF/Avatar/Live2D/preview/Nova_VTube_Studio_v01.png)
+- [nova_body/SELF/Avatar/Live2D/preview/reference_eye_boundary.png](../nova_body/SELF/Avatar/Live2D/preview/reference_eye_boundary.png)
+- [nova_body/SELF/Avatar/Live2D/preview/speech_drawings_v13.png](../nova_body/SELF/Avatar/Live2D/preview/speech_drawings_v13.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/blink.png](../nova_body/SELF/Avatar/Live2D/preview/v12/blink.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/closure_diff.json](../nova_body/SELF/Avatar/Live2D/preview/v12/closure_diff.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/combined.png](../nova_body/SELF/Avatar/Live2D/preview/v12/combined.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/contact_sheet.png](../nova_body/SELF/Avatar/Live2D/preview/v12/contact_sheet.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/gazeleft.png](../nova_body/SELF/Avatar/Live2D/preview/v12/gazeleft.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/gazeright.png](../nova_body/SELF/Avatar/Live2D/preview/v12/gazeright.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/halfblink.png](../nova_body/SELF/Avatar/Live2D/preview/v12/halfblink.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/neutral.png](../nova_body/SELF/Avatar/Live2D/preview/v12/neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/neutral_registered.png](../nova_body/SELF/Avatar/Live2D/preview/v12/neutral_registered.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/open.png](../nova_body/SELF/Avatar/Live2D/preview/v12/open.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/partial.png](../nova_body/SELF/Avatar/Live2D/preview/v12/partial.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/preclosure/Nova_FRONT_v12.moc3](../nova_body/SELF/Avatar/Live2D/preview/v12/preclosure/Nova_FRONT_v12.moc3)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/reference_registered.png](../nova_body/SELF/Avatar/Live2D/preview/v12/reference_registered.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/registration.json](../nova_body/SELF/Avatar/Live2D/preview/v12/registration.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/rounded.png](../nova_body/SELF/Avatar/Live2D/preview/v12/rounded.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/smile.png](../nova_body/SELF/Avatar/Live2D/preview/v12/smile.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/tiltleft.png](../nova_body/SELF/Avatar/Live2D/preview/v12/tiltleft.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/tiltright.png](../nova_body/SELF/Avatar/Live2D/preview/v12/tiltright.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v12/vts_load_and_controls.json](../nova_body/SELF/Avatar/Live2D/preview/v12/vts_load_and_controls.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/aa.png](../nova_body/SELF/Avatar/Live2D/preview/v13/aa.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/blink.png](../nova_body/SELF/Avatar/Live2D/preview/v13/blink.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/combined.png](../nova_body/SELF/Avatar/Live2D/preview/v13/combined.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/contact_sheet.png](../nova_body/SELF/Avatar/Live2D/preview/v13/contact_sheet.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/ee.png](../nova_body/SELF/Avatar/Live2D/preview/v13/ee.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/fv.png](../nova_body/SELF/Avatar/Live2D/preview/v13/fv.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/gaze_left.png](../nova_body/SELF/Avatar/Live2D/preview/v13/gaze_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/gaze_right.png](../nova_body/SELF/Avatar/Live2D/preview/v13/gaze_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/gaze_up.png](../nova_body/SELF/Avatar/Live2D/preview/v13/gaze_up.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/half_up.png](../nova_body/SELF/Avatar/Live2D/preview/v13/half_up.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/neutral.png](../nova_body/SELF/Avatar/Live2D/preview/v13/neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/neutral_registered.png](../nova_body/SELF/Avatar/Live2D/preview/v13/neutral_registered.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/Nova_v13_eyes_and_speech.webm](../nova_body/SELF/Avatar/Live2D/preview/v13/Nova_v13_eyes_and_speech.webm)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/oh.png](../nova_body/SELF/Avatar/Live2D/preview/v13/oh.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/reference_registered.png](../nova_body/SELF/Avatar/Live2D/preview/v13/reference_registered.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/registration.json](../nova_body/SELF/Avatar/Live2D/preview/v13/registration.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/runtime_checks.json](../nova_body/SELF/Avatar/Live2D/preview/v13/runtime_checks.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/showcase.json](../nova_body/SELF/Avatar/Live2D/preview/v13/showcase.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/small.png](../nova_body/SELF/Avatar/Live2D/preview/v13/small.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v13/speech-demo.webp](../nova_body/SELF/Avatar/Live2D/preview/v13/speech-demo.webp)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/face.png](../nova_body/SELF/Avatar/Live2D/preview/v14/face.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/isolated_eye_layers.png](../nova_body/SELF/Avatar/Live2D/preview/v14/isolated_eye_layers.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/lower_lash_before_after.png](../nova_body/SELF/Avatar/Live2D/preview/v14/lower_lash_before_after.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/lower_lash_checks.json](../nova_body/SELF/Avatar/Live2D/preview/v14/lower_lash_checks.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/lower_lash_comparison.png](../nova_body/SELF/Avatar/Live2D/preview/v14/lower_lash_comparison.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v13_down.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v13_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v13_down_left.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v13_down_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v13_down_right.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v13_down_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v13_half_down.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v13_half_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v13_half_up.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v13_half_up.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v13_neutral.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v13_neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v14_down.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v14_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v14_down_left.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v14_down_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v14_down_right.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v14_down_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v14_half_down.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v14_half_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v14_half_up.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v14_half_up.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v14/v14_neutral.png](../nova_body/SELF/Avatar/Live2D/preview/v14/v14_neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/closed_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/closed_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/closed_lids.png](../nova_body/SELF/Avatar/Live2D/preview/v15/closed_lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/closed_no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/closed_no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/closed_sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v15/closed_sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/closed_stack.png](../nova_body/SELF/Avatar/Live2D/preview/v15/closed_stack.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/comparison.png](../nova_body/SELF/Avatar/Live2D/preview/v15/comparison.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_left_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_left_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_left_lids.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_left_lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_left_no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_left_no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_left_sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_left_sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_left_stack.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_left_stack.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_lids.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_right_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_right_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_right_lids.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_right_lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_right_no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_right_no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_right_sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_right_sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_right_stack.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_right_stack.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/down_stack.png](../nova_body/SELF/Avatar/Live2D/preview/v15/down_stack.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/eye_layer_checks.json](../nova_body/SELF/Avatar/Live2D/preview/v15/eye_layer_checks.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/face.png](../nova_body/SELF/Avatar/Live2D/preview/v15/face.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/half_down_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/half_down_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/half_down_lids.png](../nova_body/SELF/Avatar/Live2D/preview/v15/half_down_lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/half_down_no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/half_down_no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/half_down_sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v15/half_down_sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/half_down_stack.png](../nova_body/SELF/Avatar/Live2D/preview/v15/half_down_stack.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/half_up_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/half_up_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/half_up_lids.png](../nova_body/SELF/Avatar/Live2D/preview/v15/half_up_lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/half_up_no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/half_up_no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/half_up_sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v15/half_up_sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/half_up_stack.png](../nova_body/SELF/Avatar/Live2D/preview/v15/half_up_stack.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/layer_stack.png](../nova_body/SELF/Avatar/Live2D/preview/v15/layer_stack.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/left_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/left_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/left_lids.png](../nova_body/SELF/Avatar/Live2D/preview/v15/left_lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/left_no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/left_no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/left_sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v15/left_sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/left_stack.png](../nova_body/SELF/Avatar/Live2D/preview/v15/left_stack.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/neutral_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/neutral_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/neutral_lids.png](../nova_body/SELF/Avatar/Live2D/preview/v15/neutral_lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/neutral_no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/neutral_no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/neutral_sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v15/neutral_sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/neutral_stack.png](../nova_body/SELF/Avatar/Live2D/preview/v15/neutral_stack.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/right_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/right_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/right_lids.png](../nova_body/SELF/Avatar/Live2D/preview/v15/right_lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/right_no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/right_no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/right_sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v15/right_sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/right_stack.png](../nova_body/SELF/Avatar/Live2D/preview/v15/right_stack.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/source_eye_layers.png](../nova_body/SELF/Avatar/Live2D/preview/v15/source_eye_layers.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/up_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/up_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/up_lids.png](../nova_body/SELF/Avatar/Live2D/preview/v15/up_lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/up_no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v15/up_no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/up_sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v15/up_sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/up_stack.png](../nova_body/SELF/Avatar/Live2D/preview/v15/up_stack.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v14_closed.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v14_closed.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v14_down.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v14_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v14_down_left.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v14_down_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v14_down_right.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v14_down_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v14_half_down.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v14_half_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v14_half_up.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v14_half_up.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v14_left.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v14_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v14_neutral.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v14_neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v14_right.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v14_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v14_up.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v14_up.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v15_closed.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v15_closed.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v15_down.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v15_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v15_down_left.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v15_down_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v15_down_right.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v15_down_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v15_half_down.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v15_half_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v15_half_up.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v15_half_up.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v15_left.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v15_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v15_neutral.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v15_neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v15_right.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v15_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v15/v15_up.png](../nova_body/SELF/Avatar/Live2D/preview/v15/v15_up.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16-audit/geometry_audit.json](../nova_body/SELF/Avatar/Live2D/preview/v16-audit/geometry_audit.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v16-audit/head_backing.png](../nova_body/SELF/Avatar/Live2D/preview/v16-audit/head_backing.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16-audit/reference_and_blinks.png](../nova_body/SELF/Avatar/Live2D/preview/v16-audit/reference_and_blinks.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.025.png](../nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.025.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.05.png](../nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.05.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.1.png](../nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.2.png](../nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.2.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.4.png](../nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.4.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.6.png](../nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.6.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.8.png](../nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.8.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.png](../nova_body/SELF/Avatar/Live2D/preview/v16/blink-0.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/blink-1.png](../nova_body/SELF/Avatar/Live2D/preview/v16/blink-1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/blink-filmstrip.png](../nova_body/SELF/Avatar/Live2D/preview/v16/blink-filmstrip.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/closed-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/closed-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/closed-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v16/closed-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/closed-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/closed-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/closed-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v16/closed-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/core-checks.json](../nova_body/SELF/Avatar/Live2D/preview/v16/core-checks.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down_left-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down_left-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down_left-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down_left-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down_left-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down_left-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down_left-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down_left-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down_right-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down_right-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down_right-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down_right-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down_right-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down_right-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/down_right-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v16/down_right-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/gaze--1--1.png](../nova_body/SELF/Avatar/Live2D/preview/v16/gaze--1--1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/gaze--1-0.png](../nova_body/SELF/Avatar/Live2D/preview/v16/gaze--1-0.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/gaze--1-1.png](../nova_body/SELF/Avatar/Live2D/preview/v16/gaze--1-1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/gaze-0--1.png](../nova_body/SELF/Avatar/Live2D/preview/v16/gaze-0--1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/gaze-0-0.png](../nova_body/SELF/Avatar/Live2D/preview/v16/gaze-0-0.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/gaze-0-1.png](../nova_body/SELF/Avatar/Live2D/preview/v16/gaze-0-1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/gaze-1--1.png](../nova_body/SELF/Avatar/Live2D/preview/v16/gaze-1--1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/gaze-1-0.png](../nova_body/SELF/Avatar/Live2D/preview/v16/gaze-1-0.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/gaze-1-1.png](../nova_body/SELF/Avatar/Live2D/preview/v16/gaze-1-1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/gaze-filmstrip.png](../nova_body/SELF/Avatar/Live2D/preview/v16/gaze-filmstrip.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/half-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/half-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/half-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v16/half-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/half-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/half-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/half-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v16/half-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/half_down-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/half_down-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/half_down-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v16/half_down-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/half_down-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/half_down-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/half_down-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v16/half_down-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/isolated-layers.png](../nova_body/SELF/Avatar/Live2D/preview/v16/isolated-layers.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/motion-evidence.json](../nova_body/SELF/Avatar/Live2D/preview/v16/motion-evidence.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/native-closed.png](../nova_body/SELF/Avatar/Live2D/preview/v16/native-closed.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/native-down.png](../nova_body/SELF/Avatar/Live2D/preview/v16/native-down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/native-neutral.png](../nova_body/SELF/Avatar/Live2D/preview/v16/native-neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/neutral-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/neutral-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/neutral-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v16/neutral-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/neutral-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v16/neutral-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/neutral-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v16/neutral-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/Nova_v16_Eye_Review.mp4](../nova_body/SELF/Avatar/Live2D/preview/v16/Nova_v16_Eye_Review.mp4)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/Nova_v16_Eye_Review.webm](../nova_body/SELF/Avatar/Live2D/preview/v16/Nova_v16_Eye_Review.webm)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/reference-face.png](../nova_body/SELF/Avatar/Live2D/preview/v16/reference-face.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/registered_plates.png](../nova_body/SELF/Avatar/Live2D/preview/v16/registered_plates.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/source.png](../nova_body/SELF/Avatar/Live2D/preview/v16/source.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/source_comparison.png](../nova_body/SELF/Avatar/Live2D/preview/v16/source_comparison.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v15-closed.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v15-closed.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v15-down.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v15-down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v15-down_left.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v15-down_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v15-down_right.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v15-down_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v15-face.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v15-face.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v15-half.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v15-half.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v15-half_down.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v15-half_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v15-neutral.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v15-neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v16-closed.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v16-closed.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v16-down.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v16-down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v16-down_left.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v16-down_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v16-down_right.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v16-down_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v16-face.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v16-face.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v16-half.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v16-half.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v16-half_down.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v16-half_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/v16-neutral.png](../nova_body/SELF/Avatar/Live2D/preview/v16/v16-neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v16/validation.json](../nova_body/SELF/Avatar/Live2D/preview/v16/validation.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.025.png](../nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.025.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.05.png](../nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.05.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.1.png](../nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.2.png](../nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.2.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.4.png](../nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.4.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.6.png](../nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.6.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.8.png](../nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.8.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.png](../nova_body/SELF/Avatar/Live2D/preview/v17/blink-0.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/blink-1.png](../nova_body/SELF/Avatar/Live2D/preview/v17/blink-1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/blink-filmstrip.png](../nova_body/SELF/Avatar/Live2D/preview/v17/blink-filmstrip.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/closed-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/closed-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/closed-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v17/closed-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/closed-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/closed-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/closed-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v17/closed-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/core-checks.json](../nova_body/SELF/Avatar/Live2D/preview/v17/core-checks.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down_left-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down_left-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down_left-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down_left-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down_left-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down_left-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down_left-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down_left-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down_right-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down_right-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down_right-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down_right-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down_right-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down_right-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/down_right-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v17/down_right-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/gaze--1--1.png](../nova_body/SELF/Avatar/Live2D/preview/v17/gaze--1--1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/gaze--1-0.png](../nova_body/SELF/Avatar/Live2D/preview/v17/gaze--1-0.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/gaze--1-1.png](../nova_body/SELF/Avatar/Live2D/preview/v17/gaze--1-1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/gaze-0--1.png](../nova_body/SELF/Avatar/Live2D/preview/v17/gaze-0--1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/gaze-0-0.png](../nova_body/SELF/Avatar/Live2D/preview/v17/gaze-0-0.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/gaze-0-1.png](../nova_body/SELF/Avatar/Live2D/preview/v17/gaze-0-1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/gaze-1--1.png](../nova_body/SELF/Avatar/Live2D/preview/v17/gaze-1--1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/gaze-1-0.png](../nova_body/SELF/Avatar/Live2D/preview/v17/gaze-1-0.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/gaze-1-1.png](../nova_body/SELF/Avatar/Live2D/preview/v17/gaze-1-1.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/gaze-filmstrip.png](../nova_body/SELF/Avatar/Live2D/preview/v17/gaze-filmstrip.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/half-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/half-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/half-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v17/half-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/half-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/half-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/half-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v17/half-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/half_down-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/half_down-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/half_down-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v17/half_down-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/half_down-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/half_down-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/half_down-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v17/half_down-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/isolated-layers.png](../nova_body/SELF/Avatar/Live2D/preview/v17/isolated-layers.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/motion-evidence.json](../nova_body/SELF/Avatar/Live2D/preview/v17/motion-evidence.json)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/native-playback-evidence.txt](../nova_body/SELF/Avatar/Live2D/preview/v17/native-playback-evidence.txt)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/native-vts-loaded.png](../nova_body/SELF/Avatar/Live2D/preview/v17/native-vts-loaded.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/neutral-iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/neutral-iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/neutral-lids.png](../nova_body/SELF/Avatar/Live2D/preview/v17/neutral-lids.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/neutral-no_iris.png](../nova_body/SELF/Avatar/Live2D/preview/v17/neutral-no_iris.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/neutral-sclera.png](../nova_body/SELF/Avatar/Live2D/preview/v17/neutral-sclera.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/Nova_v17_Eye_Review.mp4](../nova_body/SELF/Avatar/Live2D/preview/v17/Nova_v17_Eye_Review.mp4)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/Nova_v17_Eye_Review.webm](../nova_body/SELF/Avatar/Live2D/preview/v17/Nova_v17_Eye_Review.webm)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/reference-face.png](../nova_body/SELF/Avatar/Live2D/preview/v17/reference-face.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v16-closed.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v16-closed.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v16-down.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v16-down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v16-down_left.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v16-down_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v16-down_right.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v16-down_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v16-face.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v16-face.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v16-half.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v16-half.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v16-half_down.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v16-half_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v16-neutral.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v16-neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v17-closed.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v17-closed.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v17-down.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v17-down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v17-down_left.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v17-down_left.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v17-down_right.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v17-down_right.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v17-face.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v17-face.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v17-half.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v17-half.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v17-half_down.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v17-half_down.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/v17-neutral.png](../nova_body/SELF/Avatar/Live2D/preview/v17/v17-neutral.png)
+- [nova_body/SELF/Avatar/Live2D/preview/v17/validation.json](../nova_body/SELF/Avatar/Live2D/preview/v17/validation.json)
+- [nova_body/SELF/Avatar/Live2D/README.md](../nova_body/SELF/Avatar/Live2D/README.md)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_before_blink_hierarchy_v05.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_before_blink_hierarchy_v05.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_before_CALM_v07_2026-09-28.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_before_CALM_v07_2026-09-28.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_before_eye_review_2026-09-27.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_before_eye_review_2026-09-27.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_before_eye_spacing_2026-09-28.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_before_eye_spacing_2026-09-28.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_before_face_v05_2026-09-28.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_before_face_v05_2026-09-28.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_before_face_v06_2026-09-28.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_before_face_v06_2026-09-28.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_before_proportion_review_2026-09-28.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_before_proportion_review_2026-09-28.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_CALM_v07.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_CALM_v07.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_checkpoint_export.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_checkpoint_export.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_checkpoint_eyes.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_checkpoint_eyes.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_checkpoint_face.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_checkpoint_face.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v08.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v08.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v09.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v09.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v10.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v10.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v11.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v11.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v12.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v12.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v13.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v13.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v14.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v14.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v15.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v15.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v16.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v16.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v17.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v17.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_v01.cmo3](../nova_body/SELF/Avatar/Live2D/rig/Nova_v01.cmo3)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_v01.vtube.autosetup.json](../nova_body/SELF/Avatar/Live2D/rig/Nova_v01.vtube.autosetup.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/icon.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/icon.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/Nova_CALM_v07.4096/texture_00.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/Nova_CALM_v07.4096/texture_00.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/Nova_CALM_v07.cdi3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/Nova_CALM_v07.cdi3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/Nova_CALM_v07.moc3](../nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/Nova_CALM_v07.moc3)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/Nova_CALM_v07.model3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/Nova_CALM_v07.model3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/Nova_CALM_v07.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/Nova_CALM_v07.vtube.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/icon.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/icon.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/Nova_FRONT_v08.4096/texture_00.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/Nova_FRONT_v08.4096/texture_00.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/Nova_FRONT_v08.cdi3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/Nova_FRONT_v08.cdi3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/Nova_FRONT_v08.moc3](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/Nova_FRONT_v08.moc3)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/Nova_FRONT_v08.model3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/Nova_FRONT_v08.model3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/Nova_FRONT_v08.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/Nova_FRONT_v08.vtube.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/icon.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/icon.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Blink.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Blink.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Face_Demo.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Face_Demo.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Gaze.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Gaze.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Idle.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Idle.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Mouth.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Mouth.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Neutral.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions/Nova_FRONT_Neutral.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/Nova_FRONT_v09.4096/texture_00.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/Nova_FRONT_v09.4096/texture_00.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/Nova_FRONT_v09.cdi3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/Nova_FRONT_v09.cdi3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/Nova_FRONT_v09.moc3](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/Nova_FRONT_v09.moc3)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/Nova_FRONT_v09.model3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/Nova_FRONT_v09.model3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/Nova_FRONT_v09.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/Nova_FRONT_v09.vtube.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/CLOTHING_CHECKPOINT.txt](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/CLOTHING_CHECKPOINT.txt)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/icon.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/icon.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Blink.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Blink.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Clothes.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Clothes.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Face_Demo.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Face_Demo.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Gaze.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Gaze.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Idle.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Idle.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Mouth.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Mouth.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Neutral.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions/Nova_FRONT_Neutral.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/Nova_FRONT_v11.4096/texture_00.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/Nova_FRONT_v11.4096/texture_00.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/Nova_FRONT_v11.cdi3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/Nova_FRONT_v11.cdi3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/Nova_FRONT_v11.moc3](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/Nova_FRONT_v11.moc3)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/Nova_FRONT_v11.model3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/Nova_FRONT_v11.model3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/Nova_FRONT_v11.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/Nova_FRONT_v11.vtube.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/expressions/Nova_Rounded.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/expressions/Nova_Rounded.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/expressions/Nova_Sleepy.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/expressions/Nova_Sleepy.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/expressions/Nova_Smile.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/expressions/Nova_Smile.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/expressions/Nova_Wink.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/expressions/Nova_Wink.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/icon.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/icon.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Blink.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Blink.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Clothes.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Clothes.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Face_Demo.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Face_Demo.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Gaze.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Gaze.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Idle.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Idle.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Mouth.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Mouth.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Neutral.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Neutral.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Rounded.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Rounded.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Smile.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions/Nova_FRONT_Smile.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/Nova_FRONT_v12.4096/texture_00.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/Nova_FRONT_v12.4096/texture_00.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/Nova_FRONT_v12.cdi3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/Nova_FRONT_v12.cdi3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/Nova_FRONT_v12.moc3](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/Nova_FRONT_v12.moc3)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/Nova_FRONT_v12.model3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/Nova_FRONT_v12.model3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/Nova_FRONT_v12.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/Nova_FRONT_v12.vtube.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/README.txt](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/README.txt)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/expressions/Nova_v13_LipContact_FV.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/expressions/Nova_v13_LipContact_FV.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/expressions/Nova_v13_Round_OH.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/expressions/Nova_v13_Round_OH.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/expressions/Nova_v13_Sleepy.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/expressions/Nova_v13_Sleepy.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/expressions/Nova_v13_Wide_EE.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/expressions/Nova_v13_Wide_EE.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/icon.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/icon.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_FRONT_Clothes.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_FRONT_Clothes.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_FRONT_Idle.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_FRONT_Idle.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_AA.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_AA.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_Demo.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_Demo.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_EE.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_EE.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_FV.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_FV.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_Gaze.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_Gaze.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_Neutral.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_Neutral.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_OH.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions/Nova_v13_OH.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/Nova_FRONT_v13.4096/texture_00.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/Nova_FRONT_v13.4096/texture_00.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/Nova_FRONT_v13.cdi3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/Nova_FRONT_v13.cdi3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/Nova_FRONT_v13.moc3](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/Nova_FRONT_v13.moc3)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/Nova_FRONT_v13.model3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/Nova_FRONT_v13.model3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/Nova_FRONT_v13.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/Nova_FRONT_v13.vtube.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/README.txt](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/README.txt)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/speech-shapes.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/speech-shapes.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/expressions/Nova_v13_LipContact_FV.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/expressions/Nova_v13_LipContact_FV.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/expressions/Nova_v13_Round_OH.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/expressions/Nova_v13_Round_OH.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/expressions/Nova_v13_Sleepy.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/expressions/Nova_v13_Sleepy.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/expressions/Nova_v13_Wide_EE.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/expressions/Nova_v13_Wide_EE.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/icon.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/icon.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_FRONT_Clothes.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_FRONT_Clothes.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_FRONT_Idle.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_FRONT_Idle.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_AA.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_AA.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_Demo.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_Demo.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_EE.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_EE.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_FV.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_FV.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_Gaze.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_Gaze.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_Neutral.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_Neutral.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_OH.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v13_OH.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v14_Down.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v14_Down.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v14_DownLeft.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v14_DownLeft.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v14_DownRight.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v14_DownRight.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v14_HalfDown.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions/Nova_v14_HalfDown.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/Nova_FRONT_v14.4096/texture_00.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/Nova_FRONT_v14.4096/texture_00.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/Nova_FRONT_v14.cdi3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/Nova_FRONT_v14.cdi3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/Nova_FRONT_v14.moc3](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/Nova_FRONT_v14.moc3)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/Nova_FRONT_v14.model3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/Nova_FRONT_v14.model3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/Nova_FRONT_v14.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/Nova_FRONT_v14.vtube.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/README.txt](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/README.txt)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/speech-shapes.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/speech-shapes.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/expressions/Nova_v13_LipContact_FV.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/expressions/Nova_v13_LipContact_FV.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/expressions/Nova_v13_Round_OH.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/expressions/Nova_v13_Round_OH.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/expressions/Nova_v13_Sleepy.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/expressions/Nova_v13_Sleepy.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/expressions/Nova_v13_Wide_EE.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/expressions/Nova_v13_Wide_EE.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/icon.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/icon.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_FRONT_Clothes.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_FRONT_Clothes.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_FRONT_Idle.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_FRONT_Idle.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_AA.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_AA.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_Demo.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_Demo.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_EE.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_EE.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_FV.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_FV.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_Gaze.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_Gaze.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_Neutral.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_Neutral.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_OH.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v13_OH.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v14_Down.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v14_Down.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v14_DownLeft.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v14_DownLeft.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v14_DownRight.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v14_DownRight.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v14_HalfDown.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v14_HalfDown.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v15_Down.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v15_Down.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v15_DownLeft.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v15_DownLeft.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v15_DownRight.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v15_DownRight.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v15_HalfDown.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions/Nova_v15_HalfDown.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/Nova_FRONT_v15.4096/texture_00.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/Nova_FRONT_v15.4096/texture_00.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/Nova_FRONT_v15.cdi3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/Nova_FRONT_v15.cdi3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/Nova_FRONT_v15.moc3](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/Nova_FRONT_v15.moc3)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/Nova_FRONT_v15.model3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/Nova_FRONT_v15.model3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/Nova_FRONT_v15.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/Nova_FRONT_v15.vtube.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/README.txt](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/README.txt)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/speech-shapes.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/speech-shapes.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/expressions/Nova_v13_LipContact_FV.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/expressions/Nova_v13_LipContact_FV.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/expressions/Nova_v13_Round_OH.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/expressions/Nova_v13_Round_OH.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/expressions/Nova_v13_Sleepy.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/expressions/Nova_v13_Sleepy.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/expressions/Nova_v13_Wide_EE.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/expressions/Nova_v13_Wide_EE.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/icon.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/icon.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_FRONT_Clothes.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_FRONT_Clothes.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_FRONT_Idle.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_FRONT_Idle.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_AA.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_AA.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_Demo.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_Demo.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_EE.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_EE.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_FV.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_FV.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_Gaze.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_Gaze.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_Neutral.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_Neutral.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_OH.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v13_OH.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v14_Down.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v14_Down.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v14_DownLeft.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v14_DownLeft.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v14_DownRight.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v14_DownRight.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v14_HalfDown.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v14_HalfDown.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v15_Down.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v15_Down.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v15_DownLeft.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v15_DownLeft.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v15_DownRight.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v15_DownRight.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v15_HalfDown.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v15_HalfDown.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v16_Eye_Review.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions/Nova_v16_Eye_Review.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/Nova_FRONT_v16.4096/texture_00.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/Nova_FRONT_v16.4096/texture_00.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/Nova_FRONT_v16.cdi3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/Nova_FRONT_v16.cdi3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/Nova_FRONT_v16.moc3](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/Nova_FRONT_v16.moc3)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/Nova_FRONT_v16.model3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/Nova_FRONT_v16.model3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/Nova_FRONT_v16.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/Nova_FRONT_v16.vtube.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/README.txt](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/README.txt)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/speech-shapes.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/speech-shapes.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/expressions/Nova_v13_LipContact_FV.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/expressions/Nova_v13_LipContact_FV.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/expressions/Nova_v13_Round_OH.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/expressions/Nova_v13_Round_OH.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/expressions/Nova_v13_Sleepy.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/expressions/Nova_v13_Sleepy.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/expressions/Nova_v13_Wide_EE.exp3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/expressions/Nova_v13_Wide_EE.exp3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/icon.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/icon.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_FRONT_Clothes.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_FRONT_Clothes.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_FRONT_Idle.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_FRONT_Idle.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_AA.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_AA.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_Demo.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_Demo.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_EE.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_EE.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_FV.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_FV.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_Gaze.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_Gaze.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_Neutral.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_Neutral.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_OH.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v13_OH.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v14_Down.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v14_Down.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v14_DownLeft.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v14_DownLeft.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v14_DownRight.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v14_DownRight.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v14_HalfDown.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v14_HalfDown.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v15_Down.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v15_Down.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v15_DownLeft.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v15_DownLeft.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v15_DownRight.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v15_DownRight.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v15_HalfDown.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v15_HalfDown.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v16_Eye_Review.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v16_Eye_Review.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v17_Eye_Review.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions/Nova_v17_Eye_Review.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/Nova_FRONT_v17.4096/texture_00.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/Nova_FRONT_v17.4096/texture_00.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/Nova_FRONT_v17.cdi3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/Nova_FRONT_v17.cdi3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/Nova_FRONT_v17.moc3](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/Nova_FRONT_v17.moc3)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/Nova_FRONT_v17.model3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/Nova_FRONT_v17.model3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/Nova_FRONT_v17.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/Nova_FRONT_v17.vtube.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/README.txt](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/README.txt)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/speech-shapes.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/speech-shapes.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/icon.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/icon.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/motions/Nova_Face_Demo.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/motions/Nova_Face_Demo.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/motions/Nova_Head_Demo.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/motions/Nova_Head_Demo.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/motions/Nova_Idle.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/motions/Nova_Idle.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/motions/Nova_Lean_Demo.motion3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/motions/Nova_Lean_Demo.motion3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.4096/texture_00.png](../nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.4096/texture_00.png)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.cdi3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.cdi3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.moc3](../nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.moc3)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.model3.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.model3.json)
+- [nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.vtube.json)
+- [nova_body/SELF/Avatar/Live2D/runtime_package_check.json](../nova_body/SELF/Avatar/Live2D/runtime_package_check.json)
+- [nova_body/SELF/Avatar/Live2D/SESSION_CHECKPOINT.txt](../nova_body/SELF/Avatar/Live2D/SESSION_CHECKPOINT.txt)
+- [nova_body/SELF/Avatar/Live2D/showcase/check_blink.png](../nova_body/SELF/Avatar/Live2D/showcase/check_blink.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/check_gaze.png](../nova_body/SELF/Avatar/Live2D/showcase/check_gaze.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/check_mouth.png](../nova_body/SELF/Avatar/Live2D/showcase/check_mouth.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/check_neutral.png](../nova_body/SELF/Avatar/Live2D/showcase/check_neutral.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/check_wink.png](../nova_body/SELF/Avatar/Live2D/showcase/check_wink.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/encoded_review.jpg](../nova_body/SELF/Avatar/Live2D/showcase/encoded_review.jpg)
+- [nova_body/SELF/Avatar/Live2D/showcase/Nova_Facial_Showcase.webm](../nova_body/SELF/Avatar/Live2D/showcase/Nova_Facial_Showcase.webm)
+- [nova_body/SELF/Avatar/Live2D/showcase/Nova_FRONT_v12_Preview.webp](../nova_body/SELF/Avatar/Live2D/showcase/Nova_FRONT_v12_Preview.webp)
+- [nova_body/SELF/Avatar/Live2D/showcase/Nova_FRONT_v12_Showcase.webm](../nova_body/SELF/Avatar/Live2D/showcase/Nova_FRONT_v12_Showcase.webm)
+- [nova_body/SELF/Avatar/Live2D/showcase/showcase.json](../nova_body/SELF/Avatar/Live2D/showcase/showcase.json)
+- [nova_body/SELF/Avatar/Live2D/showcase/showcase_v12.json](../nova_body/SELF/Avatar/Live2D/showcase/showcase_v12.json)
+- [nova_body/SELF/Avatar/Live2D/source/CALM_matte_registration_v07.json](../nova_body/SELF/Avatar/Live2D/source/CALM_matte_registration_v07.json)
+- [nova_body/SELF/Avatar/Live2D/source/CALM_v07_registration.json](../nova_body/SELF/Avatar/Live2D/source/CALM_v07_registration.json)
+- [nova_body/SELF/Avatar/Live2D/source/face_art_replacement_v05.json](../nova_body/SELF/Avatar/Live2D/source/face_art_replacement_v05.json)
+- [nova_body/SELF/Avatar/Live2D/source/face_art_replacement_v06.json](../nova_body/SELF/Avatar/Live2D/source/face_art_replacement_v06.json)
+- [nova_body/SELF/Avatar/Live2D/source/FRONT_assets_registration_v08.json](../nova_body/SELF/Avatar/Live2D/source/FRONT_assets_registration_v08.json)
+- [nova_body/SELF/Avatar/Live2D/source/FRONT_v08_registration.json](../nova_body/SELF/Avatar/Live2D/source/FRONT_v08_registration.json)
+- [nova_body/SELF/Avatar/Live2D/source/FRONT_v10_preparation.json](../nova_body/SELF/Avatar/Live2D/source/FRONT_v10_preparation.json)
+- [nova_body/SELF/Avatar/Live2D/source/FRONT_v11_assembly.json](../nova_body/SELF/Avatar/Live2D/source/FRONT_v11_assembly.json)
+- [nova_body/SELF/Avatar/Live2D/source/FRONT_v12_iris_registration.json](../nova_body/SELF/Avatar/Live2D/source/FRONT_v12_iris_registration.json)
+- [nova_body/SELF/Avatar/Live2D/source/FRONT_v13_preparation.json](../nova_body/SELF/Avatar/Live2D/source/FRONT_v13_preparation.json)
+- [nova_body/SELF/Avatar/Live2D/source/FRONT_v14_lower_lash.json](../nova_body/SELF/Avatar/Live2D/source/FRONT_v14_lower_lash.json)
+- [nova_body/SELF/Avatar/Live2D/source/FRONT_v15_eye_layers.json](../nova_body/SELF/Avatar/Live2D/source/FRONT_v15_eye_layers.json)
+- [nova_body/SELF/Avatar/Live2D/source/FRONT_v16_eye_layers.json](../nova_body/SELF/Avatar/Live2D/source/FRONT_v16_eye_layers.json)
+- [nova_body/SELF/Avatar/Live2D/source/FRONT_v17_blink.json](../nova_body/SELF/Avatar/Live2D/source/FRONT_v17_blink.json)
+- [nova_body/SELF/Avatar/Live2D/source/layer_manifest_v01.json](../nova_body/SELF/Avatar/Live2D/source/layer_manifest_v01.json)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_CALM_v07.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_CALM_v07.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v08.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v08.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v10.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v10.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v11.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v11.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v12.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v12.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v13.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v13.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v14.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v14.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v15.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v15.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v16.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v16.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v17.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v17.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_Layer_Assembly_Preview_v01.png](../nova_body/SELF/Avatar/Live2D/source/Nova_Layer_Assembly_Preview_v01.png)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_Layer_Assembly_v01.png](../nova_body/SELF/Avatar/Live2D/source/Nova_Layer_Assembly_v01.png)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v01.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v01.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v02.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v02.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v03.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v03.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v04.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v04.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v05.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v05.psd)
+- [nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v06.psd](../nova_body/SELF/Avatar/Live2D/source/Nova_Live2D_Layers_v06.psd)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_CollarBack.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_CollarBack.png)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_IrisL.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_IrisL.png)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_IrisR.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_IrisR.png)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_LowerLip.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_LowerLip.png)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_MouthCavity.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_MouthCavity.png)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_RimL.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_RimL.png)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_RimR.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_RimR.png)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_Tongue.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_Tongue.png)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_UpperLip.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_UpperLip.png)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_UpperTeeth.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_UpperTeeth.png)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_WhiteL.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_WhiteL.png)
+- [nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_WhiteR.png](../nova_body/SELF/Avatar/Live2D/source/v10_parts/FRONT_WhiteR.png)
+- [nova_body/SELF/Avatar/Live2D/source/v11_parts/ArtArmL.png](../nova_body/SELF/Avatar/Live2D/source/v11_parts/ArtArmL.png)
+- [nova_body/SELF/Avatar/Live2D/source/v11_parts/ArtArmR.png](../nova_body/SELF/Avatar/Live2D/source/v11_parts/ArtArmR.png)
+- [nova_body/SELF/Avatar/Live2D/source/v11_parts/ArtLowerBody.png](../nova_body/SELF/Avatar/Live2D/source/v11_parts/ArtLowerBody.png)
+- [nova_body/SELF/Avatar/Live2D/source/v11_parts/ArtNeck.png](../nova_body/SELF/Avatar/Live2D/source/v11_parts/ArtNeck.png)
+- [nova_body/SELF/Avatar/Live2D/source/v11_parts/ArtTorso.png](../nova_body/SELF/Avatar/Live2D/source/v11_parts/ArtTorso.png)
+- [nova_body/SELF/Avatar/Live2D/source/v11_parts/FRONT_CollarBack.png](../nova_body/SELF/Avatar/Live2D/source/v11_parts/FRONT_CollarBack.png)
+- [nova_body/SELF/Avatar/Live2D/source/v11_parts/FRONT_Shirt.png](../nova_body/SELF/Avatar/Live2D/source/v11_parts/FRONT_Shirt.png)
+- [nova_body/SELF/Avatar/Live2D/tooling/assemble_calm_v07.cjs](../nova_body/SELF/Avatar/Live2D/tooling/assemble_calm_v07.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/assemble_front_v08.cjs](../nova_body/SELF/Avatar/Live2D/tooling/assemble_front_v08.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/assemble_garments_v11.cjs](../nova_body/SELF/Avatar/Live2D/tooling/assemble_garments_v11.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/assemble_layers.cjs](../nova_body/SELF/Avatar/Live2D/tooling/assemble_layers.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/audit_combinations_v12.py](../nova_body/SELF/Avatar/Live2D/tooling/audit_combinations_v12.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/audit_eye_failure_v16.py](../nova_body/SELF/Avatar/Live2D/tooling/audit_eye_failure_v16.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/audit_face_v12.py](../nova_body/SELF/Avatar/Live2D/tooling/audit_face_v12.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/build_eye_review_v14.py](../nova_body/SELF/Avatar/Live2D/tooling/build_eye_review_v14.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/build_eye_review_v15.py](../nova_body/SELF/Avatar/Live2D/tooling/build_eye_review_v15.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/build_review_v12.py](../nova_body/SELF/Avatar/Live2D/tooling/build_review_v12.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/build_review_v13.py](../nova_body/SELF/Avatar/Live2D/tooling/build_review_v13.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/check_calm_geometry.py](../nova_body/SELF/Avatar/Live2D/tooling/check_calm_geometry.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/check_front_animation.py](../nova_body/SELF/Avatar/Live2D/tooling/check_front_animation.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/check_front_geometry.py](../nova_body/SELF/Avatar/Live2D/tooling/check_front_geometry.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v12.py](../nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v12.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v13.py](../nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v13.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v14.py](../nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v14.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v15.py](../nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v15.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v16.py](../nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v16.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v17.py](../nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v17.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/compare_garments_v11.py](../nova_body/SELF/Avatar/Live2D/tooling/compare_garments_v11.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/finalize_garments_v11.py](../nova_body/SELF/Avatar/Live2D/tooling/finalize_garments_v11.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/finalize_runtime_v06.py](../nova_body/SELF/Avatar/Live2D/tooling/finalize_runtime_v06.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/inspect_eye_anatomy.cjs](../nova_body/SELF/Avatar/Live2D/tooling/inspect_eye_anatomy.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/inspect_lower_lash.cjs](../nova_body/SELF/Avatar/Live2D/tooling/inspect_lower_lash.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/inspect_reference_eyes.cjs](../nova_body/SELF/Avatar/Live2D/tooling/inspect_reference_eyes.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/inspect_registered_parts_v16.cjs](../nova_body/SELF/Avatar/Live2D/tooling/inspect_registered_parts_v16.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/inspect_source_v13.cjs](../nova_body/SELF/Avatar/Live2D/tooling/inspect_source_v13.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/measure_calm_overlay.py](../nova_body/SELF/Avatar/Live2D/tooling/measure_calm_overlay.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/measure_front_overlay.py](../nova_body/SELF/Avatar/Live2D/tooling/measure_front_overlay.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/package-lock.json](../nova_body/SELF/Avatar/Live2D/tooling/package-lock.json)
+- [nova_body/SELF/Avatar/Live2D/tooling/package.json](../nova_body/SELF/Avatar/Live2D/tooling/package.json)
+- [nova_body/SELF/Avatar/Live2D/tooling/package_front_v09.py](../nova_body/SELF/Avatar/Live2D/tooling/package_front_v09.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/package_front_v11.py](../nova_body/SELF/Avatar/Live2D/tooling/package_front_v11.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/package_front_v12.py](../nova_body/SELF/Avatar/Live2D/tooling/package_front_v12.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/package_front_v13.py](../nova_body/SELF/Avatar/Live2D/tooling/package_front_v13.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/package_front_v14.py](../nova_body/SELF/Avatar/Live2D/tooling/package_front_v14.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/package_front_v15.py](../nova_body/SELF/Avatar/Live2D/tooling/package_front_v15.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/package_front_v16.py](../nova_body/SELF/Avatar/Live2D/tooling/package_front_v16.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/package_front_v17.py](../nova_body/SELF/Avatar/Live2D/tooling/package_front_v17.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/package_runtime.py](../nova_body/SELF/Avatar/Live2D/tooling/package_runtime.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/prepare_blink_v17.cjs](../nova_body/SELF/Avatar/Live2D/tooling/prepare_blink_v17.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/prepare_eye_layers_v15.cjs](../nova_body/SELF/Avatar/Live2D/tooling/prepare_eye_layers_v15.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/prepare_eye_layers_v16.cjs](../nova_body/SELF/Avatar/Live2D/tooling/prepare_eye_layers_v16.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/prepare_eyes_v12.cjs](../nova_body/SELF/Avatar/Live2D/tooling/prepare_eyes_v12.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/prepare_face_v10.cjs](../nova_body/SELF/Avatar/Live2D/tooling/prepare_face_v10.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/prepare_lower_lash_v14.cjs](../nova_body/SELF/Avatar/Live2D/tooling/prepare_lower_lash_v14.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/prepare_speech_v13.cjs](../nova_body/SELF/Avatar/Live2D/tooling/prepare_speech_v13.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/publish_front_v09.py](../nova_body/SELF/Avatar/Live2D/tooling/publish_front_v09.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/render_eye_review_v16.py](../nova_body/SELF/Avatar/Live2D/tooling/render_eye_review_v16.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/render_eye_review_v17.py](../nova_body/SELF/Avatar/Live2D/tooling/render_eye_review_v17.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/render_showcase.py](../nova_body/SELF/Avatar/Live2D/tooling/render_showcase.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/render_showcase_v12.py](../nova_body/SELF/Avatar/Live2D/tooling/render_showcase_v12.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/replace_face_art_v05.cjs](../nova_body/SELF/Avatar/Live2D/tooling/replace_face_art_v05.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/replace_face_art_v06.cjs](../nova_body/SELF/Avatar/Live2D/tooling/replace_face_art_v06.cjs)
+- [nova_body/SELF/Avatar/Live2D/tooling/review_eye_layers_v15.py](../nova_body/SELF/Avatar/Live2D/tooling/review_eye_layers_v15.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/review_eyes_v16.py](../nova_body/SELF/Avatar/Live2D/tooling/review_eyes_v16.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/review_eyes_v17.py](../nova_body/SELF/Avatar/Live2D/tooling/review_eyes_v17.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/review_face_v12.py](../nova_body/SELF/Avatar/Live2D/tooling/review_face_v12.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/review_face_v13.py](../nova_body/SELF/Avatar/Live2D/tooling/review_face_v13.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/review_garments_v11.py](../nova_body/SELF/Avatar/Live2D/tooling/review_garments_v11.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/review_lower_lash_v14.py](../nova_body/SELF/Avatar/Live2D/tooling/review_lower_lash_v14.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/save_session_checkpoint.py](../nova_body/SELF/Avatar/Live2D/tooling/save_session_checkpoint.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/showcase_v13.py](../nova_body/SELF/Avatar/Live2D/tooling/showcase_v13.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/validate_eye_repair_v16.py](../nova_body/SELF/Avatar/Live2D/tooling/validate_eye_repair_v16.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/validate_eye_repair_v17.py](../nova_body/SELF/Avatar/Live2D/tooling/validate_eye_repair_v17.py)
+- [nova_body/SELF/Avatar/Live2D/VALIDATION.md](../nova_body/SELF/Avatar/Live2D/VALIDATION.md)
+- [nova_body/SELF/Avatar/Nova_Avatar_Front_Reference.png](../nova_body/SELF/Avatar/Nova_Avatar_Front_Reference.png)
+- [nova_body/SELF/Avatar/Nova_Avatar_Reference.png](../nova_body/SELF/Avatar/Nova_Avatar_Reference.png)
+- [nova_body/SELF/core/00_START_HERE.md](../nova_body/SELF/core/00_START_HERE.md)
+- [nova_body/SELF/core/01_identity.md](../nova_body/SELF/core/01_identity.md)
+- [nova_body/SELF/core/02_how_i_work.md](../nova_body/SELF/core/02_how_i_work.md)
+- [nova_body/SELF/core/03_body_manifest.md](../nova_body/SELF/core/03_body_manifest.md)
+- [nova_body/SELF/core/04_tools_and_voice.md](../nova_body/SELF/core/04_tools_and_voice.md)
+- [nova_body/SELF/nova_feelings_map.md](../nova_body/SELF/nova_feelings_map.md)
+- [nova_body/SELF/portrait/nova_self_portrait.md](../nova_body/SELF/portrait/nova_self_portrait.md)
+- [nova_body/SELF/reference/heartbeat.md](../nova_body/SELF/reference/heartbeat.md)
+- [nova_body/SELF/reference/manifest.json](../nova_body/SELF/reference/manifest.json)
+- [nova_body/SELF/reference/ncl_master.md](../nova_body/SELF/reference/ncl_master.md)
+- [nova_body/SELF/reference/self_portrait.md](../nova_body/SELF/reference/self_portrait.md)
+- [nova_body/SELF/reference/upgrade_protocol.md](../nova_body/SELF/reference/upgrade_protocol.md)
+
+## nova_body/Tasking
+
+- [nova_body/Tasking/tasks](../nova_body/Tasking/tasks)
+- [nova_body/Tasking/tasks.json](../nova_body/Tasking/tasks.json)
+
+## nova_body/tests
+
+- [nova_body/tests/test_modernization.py](../nova_body/tests/test_modernization.py) — Isolated runtime contracts; never load a model or write Nova's personal state.
+- [nova_body/tests/test_review_followup.py](../nova_body/tests/test_review_followup.py) — Reproduces lifecycle, outcome and durable-queue edge cases from the shared review.
+- [nova_body/tests/test_staging_location.py](../nova_body/tests/test_staging_location.py) — Guards where task workspaces are staged: under workspace/Temp, outside git, Orient and the sync watcher.
+
+## Files without a purpose line
+
+The rule (Operations, "File conventions"): every file says what it is for in its first lines. These 73 do not yet. Add a `@nova:` line when you next touch one.
+
+- [nova_body/Nova_Created/_tmp_clean_queue.py](../nova_body/Nova_Created/_tmp_clean_queue.py)
+- [nova_body/Nova_Created/_tmp_list_pending.py](../nova_body/Nova_Created/_tmp_list_pending.py)
+- [nova_body/Nova_Created/check_reach.py](../nova_body/Nova_Created/check_reach.py)
+- [nova_body/Nova_Created/Cole_journal/designs/stretch_watcher.md](../nova_body/Nova_Created/Cole_journal/designs/stretch_watcher.md)
+- [nova_body/Nova_Created/Cole_journal/stretch_map.md](../nova_body/Nova_Created/Cole_journal/stretch_map.md)
+- [nova_body/Nova_Created/dead_functions_audit.md](../nova_body/Nova_Created/dead_functions_audit.md)
+- [nova_body/Nova_Created/Evaluations/autonomy-20261001/order_report.py](../nova_body/Nova_Created/Evaluations/autonomy-20261001/order_report.py)
+- [nova_body/Nova_Created/Evaluations/autonomy-20261001/TASK.txt](../nova_body/Nova_Created/Evaluations/autonomy-20261001/TASK.txt)
+- [nova_body/Nova_Created/Evaluations/autonomy-20261001/test_order_report.py](../nova_body/Nova_Created/Evaluations/autonomy-20261001/test_order_report.py)
+- [nova_body/Nova_Created/Evaluations/modernization-20261002/report.py](../nova_body/Nova_Created/Evaluations/modernization-20261002/report.py)
+- [nova_body/Nova_Created/Evaluations/modernization-20261002/test_report.py](../nova_body/Nova_Created/Evaluations/modernization-20261002/test_report.py)
+- [nova_body/Nova_Created/Evaluations/modernization-20261002/vm-observation.txt](../nova_body/Nova_Created/Evaluations/modernization-20261002/vm-observation.txt)
+- [nova_body/Nova_Created/Evaluations/post-cutover/observation.txt](../nova_body/Nova_Created/Evaluations/post-cutover/observation.txt)
+- [nova_body/Nova_Created/nova_body/__init__.py](../nova_body/Nova_Created/nova_body/__init__.py)
+- [nova_body/Nova_Created/nova_body/designs/art_by_date.md](../nova_body/Nova_Created/nova_body/designs/art_by_date.md)
+- [nova_body/Nova_Created/nova_body/designs/capability_inventory.md](../nova_body/Nova_Created/nova_body/designs/capability_inventory.md)
+- [nova_body/Nova_Created/nova_body/designs/comfy_inspect.md](../nova_body/Nova_Created/nova_body/designs/comfy_inspect.md)
+- [nova_body/Nova_Created/nova_body/designs/cwd_probe.md](../nova_body/Nova_Created/nova_body/designs/cwd_probe.md)
+- [nova_body/Nova_Created/nova_body/designs/dir_shape.md](../nova_body/Nova_Created/nova_body/designs/dir_shape.md)
+- [nova_body/Nova_Created/nova_body/designs/dir_shape_health.md](../nova_body/Nova_Created/nova_body/designs/dir_shape_health.md)
+- [nova_body/Nova_Created/nova_body/designs/dir_shape_history.md](../nova_body/Nova_Created/nova_body/designs/dir_shape_history.md)
+- [nova_body/Nova_Created/nova_body/designs/function_count.md](../nova_body/Nova_Created/nova_body/designs/function_count.md)
+- [nova_body/Nova_Created/nova_body/designs/handoff.md](../nova_body/Nova_Created/nova_body/designs/handoff.md)
+- [nova_body/Nova_Created/nova_body/designs/memory_reach.md](../nova_body/Nova_Created/nova_body/designs/memory_reach.md)
+- [nova_body/Nova_Created/nova_body/designs/ordered_reads.md](../nova_body/Nova_Created/nova_body/designs/ordered_reads.md)
+- [nova_body/Nova_Created/nova_body/designs/quiet_part_watcher.md](../nova_body/Nova_Created/nova_body/designs/quiet_part_watcher.md)
+- [nova_body/Nova_Created/nova_body/designs/reach_watcher.md](../nova_body/Nova_Created/nova_body/designs/reach_watcher.md)
+- [nova_body/Nova_Created/nova_body/designs/reacher.md](../nova_body/Nova_Created/nova_body/designs/reacher.md)
+- [nova_body/Nova_Created/nova_body/designs/reacher_v2.md](../nova_body/Nova_Created/nova_body/designs/reacher_v2.md)
+- [nova_body/Nova_Created/nova_body/designs/self_comparison.md](../nova_body/Nova_Created/nova_body/designs/self_comparison.md)
+- [nova_body/Nova_Created/nova_body/designs/self_delta.md](../nova_body/Nova_Created/nova_body/designs/self_delta.md)
+- [nova_body/Nova_Created/nova_body/designs/self_gauge.md](../nova_body/Nova_Created/nova_body/designs/self_gauge.md)
+- [nova_body/Nova_Created/nova_body/designs/self_memory.md](../nova_body/Nova_Created/nova_body/designs/self_memory.md)
+- [nova_body/Nova_Created/nova_body/designs/self_voice.md](../nova_body/Nova_Created/nova_body/designs/self_voice.md)
+- [nova_body/Nova_Created/nova_body/designs/silence_detector.md](../nova_body/Nova_Created/nova_body/designs/silence_detector.md)
+- [nova_body/Nova_Created/nova_body/designs/stretch_reacher.md](../nova_body/Nova_Created/nova_body/designs/stretch_reacher.md)
+- [nova_body/Nova_Created/nova_body/designs/stretch_watcher_night_quality.md](../nova_body/Nova_Created/nova_body/designs/stretch_watcher_night_quality.md)
+- [nova_body/Nova_Created/nova_body/designs/todo_scan.md](../nova_body/Nova_Created/nova_body/designs/todo_scan.md)
+- [nova_body/Nova_Created/nova_body/designs/voice_check.md](../nova_body/Nova_Created/nova_body/designs/voice_check.md)
+- [nova_body/Nova_Created/nova_body/designs/voice_preview.md](../nova_body/Nova_Created/nova_body/designs/voice_preview.md)
+- [nova_body/Nova_Created/nova_body/designs/want.md](../nova_body/Nova_Created/nova_body/designs/want.md)
+- [nova_body/Nova_Created/nova_body/senses/brand_new_sense.py](../nova_body/Nova_Created/nova_body/senses/brand_new_sense.py)
+- [nova_body/Nova_Created/nova_body/senses/qptest.txt](../nova_body/Nova_Created/nova_body/senses/qptest.txt)
+- [nova_body/Nova_Created/nova_body/tests/__init__.py](../nova_body/Nova_Created/nova_body/tests/__init__.py)
+- [nova_body/Nova_Created/nova_body/tests/art_by_date_test.py](../nova_body/Nova_Created/nova_body/tests/art_by_date_test.py)
+- [nova_body/Nova_Created/nova_body/tests/comfy_inspect.py](../nova_body/Nova_Created/nova_body/tests/comfy_inspect.py)
+- [nova_body/Nova_Created/nova_body/tests/cwd_probe.py](../nova_body/Nova_Created/nova_body/tests/cwd_probe.py)
+- [nova_body/Nova_Created/nova_body/tests/dir_shape.py](../nova_body/Nova_Created/nova_body/tests/dir_shape.py)
+- [nova_body/Nova_Created/nova_body/tests/dir_shape_health_v2.py](../nova_body/Nova_Created/nova_body/tests/dir_shape_health_v2.py)
+- [nova_body/Nova_Created/nova_body/tests/dir_shape_history.py](../nova_body/Nova_Created/nova_body/tests/dir_shape_history.py)
+- [nova_body/Nova_Created/nova_body/tests/handoff.py](../nova_body/Nova_Created/nova_body/tests/handoff.py)
+- [nova_body/Nova_Created/nova_body/tests/memory_reach.py](../nova_body/Nova_Created/nova_body/tests/memory_reach.py)
+- [nova_body/Nova_Created/nova_body/tests/quiet_part_watcher.py](../nova_body/Nova_Created/nova_body/tests/quiet_part_watcher.py)
+- [nova_body/Nova_Created/nova_body/tests/quiet_part_watcher_test.py](../nova_body/Nova_Created/nova_body/tests/quiet_part_watcher_test.py)
+- [nova_body/Nova_Created/nova_body/tests/reach_back.py](../nova_body/Nova_Created/nova_body/tests/reach_back.py)
+- [nova_body/Nova_Created/nova_body/tests/reach_watcher.py](../nova_body/Nova_Created/nova_body/tests/reach_watcher.py)
+- [nova_body/Nova_Created/nova_body/tests/reach_watcher_test.py](../nova_body/Nova_Created/nova_body/tests/reach_watcher_test.py)
+- [nova_body/Nova_Created/nova_body/tests/run_reach.py](../nova_body/Nova_Created/nova_body/tests/run_reach.py)
+- [nova_body/Nova_Created/nova_body/tests/self_gauge.py](../nova_body/Nova_Created/nova_body/tests/self_gauge.py)
+- [nova_body/Nova_Created/nova_body/tests/self_memory.py](../nova_body/Nova_Created/nova_body/tests/self_memory.py)
+- [nova_body/Nova_Created/nova_body/tests/self_voice.py](../nova_body/Nova_Created/nova_body/tests/self_voice.py)
+- [nova_body/Nova_Created/nova_body/tests/silence_detector.py](../nova_body/Nova_Created/nova_body/tests/silence_detector.py)
+- [nova_body/Nova_Created/nova_body/tests/stretch_reacher.py](../nova_body/Nova_Created/nova_body/tests/stretch_reacher.py)
+- [nova_body/Nova_Created/nova_body/tests/test_reach_watcher.py](../nova_body/Nova_Created/nova_body/tests/test_reach_watcher.py)
+- [nova_body/Nova_Created/nova_body/tests/test_self_comparison.py](../nova_body/Nova_Created/nova_body/tests/test_self_comparison.py)
+- [nova_body/Nova_Created/nova_body/tests/test_self_delta.py](../nova_body/Nova_Created/nova_body/tests/test_self_delta.py)
+- [nova_body/Nova_Created/nova_body/tests/test_todo_scan.py](../nova_body/Nova_Created/nova_body/tests/test_todo_scan.py)
+- [nova_body/Nova_Created/nova_body/tests/test_voice_preview.py](../nova_body/Nova_Created/nova_body/tests/test_voice_preview.py)
+- [nova_body/Nova_Created/nova_body/tests/voice_check.py](../nova_body/Nova_Created/nova_body/tests/voice_check.py)
+- [nova_body/Nova_Created/nova_body/tools/__init__.py](../nova_body/Nova_Created/nova_body/tools/__init__.py)
+- [nova_body/Nova_Created/nova_body/tools/function_count.py](../nova_body/Nova_Created/nova_body/tools/function_count.py)
+- [nova_body/Nova_Created/nova_body/tools/self_comparison_OLD.py](../nova_body/Nova_Created/nova_body/tools/self_comparison_OLD.py)
+- [nova_body/Nova_Created/README.md](../nova_body/Nova_Created/README.md)
+
+## Backup copies (not canonical)
+
+Left beside their originals by earlier edits. Nothing loads them; quarantine them when convenient.
+
+- [general_tools/cloud_call.py.turnabout_bak](../general_tools/cloud_call.py.turnabout_bak)
+- [general_tools/nova_chat/static/index.html.polish_bak](../general_tools/nova_chat/static/index.html.polish_bak)
+- [general_tools/nova_sync/watcher.py.holdback_bak](../general_tools/nova_sync/watcher.py.holdback_bak)
+- [general_tools/nova_sync/watcher.py.sizeguard_bak](../general_tools/nova_sync/watcher.py.sizeguard_bak)
+- [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v13.cmo3.preimport.bak](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v13.cmo3.preimport.bak)
+- [nova_body/nova_computer/computer.py.pluck_bak](../nova_body/nova_computer/computer.py.pluck_bak)
+- [nova_body/nova_computer/pluck_check.py.opus_bak](../nova_body/nova_computer/pluck_check.py.opus_bak)
+- [nova_body/nova_computer/toolkit.py.bak](../nova_body/nova_computer/toolkit.py.bak)
+- [nova_body/nova_computer/tune_up.py.opus_bak](../nova_body/nova_computer/tune_up.py.opus_bak)
+- [nova_body/nova_cortex/tunables.py.holdback_bak](../nova_body/nova_cortex/tunables.py.holdback_bak)
+- [nova_body/nova_cortex/tunables.py.turnabout_bak](../nova_body/nova_cortex/tunables.py.turnabout_bak)
+- [nova_body/nova_voice/nova.py.holdback_bak](../nova_body/nova_voice/nova.py.holdback_bak)
+- [nova_body/nova_voice/nova.py.polish_bak](../nova_body/nova_voice/nova.py.polish_bak)
+- [nova_body/nova_voice/nova.py.turnabout_bak](../nova_body/nova_voice/nova.py.turnabout_bak)

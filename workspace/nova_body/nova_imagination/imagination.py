@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """
 nova_imagination/imagination.py — Nova's visual-creation faculty
 ================================================================
@@ -23,6 +23,8 @@ Consistency contract (see memory/reports/avatar_consistency_protocol.md):
 Pure stdlib. No torch, no GPU import — loads fine whether ComfyUI is up or not.
 """
 
+from nova_paths import body_path
+
 import os
 import json
 import time
@@ -45,7 +47,7 @@ WORKSPACE_ROOT = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.e
 # Where finished art lands — a visible top-level folder Cole can browse, dated.
 # 2026-07-20: everything she makes lives under Nova_Created/ (Cole's rule). Her pictures
 # were the last creation still sitting at the workspace root.
-ART_ROOT = WORKSPACE_ROOT / "Nova_Created" / "art"
+ART_ROOT = body_path('Nova_Created') / "art"
 
 # ── Config (all overridable by env so nothing is hardcoded to one machine) ───────
 COMFY_URL = os.environ.get("NOVA_COMFYUI_URL", "http://127.0.0.1:8188").rstrip("/")
@@ -269,7 +271,7 @@ def start_painter(wait: bool = True) -> dict:
     import sys
     import subprocess
     try:
-        log_dir = WORKSPACE_ROOT / "logs" / "comfy"
+        log_dir = body_path('logs') / "comfy"
         log_dir.mkdir(parents=True, exist_ok=True)
         lf = open(log_dir / f"comfy-{datetime.now().strftime('%Y-%m-%d')}.log",
                   "a", encoding="utf-8", errors="replace")

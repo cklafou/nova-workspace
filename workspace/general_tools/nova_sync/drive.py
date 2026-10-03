@@ -1,4 +1,5 @@
-# Last updated: 2026-08-06 16:21:32
+# @nova: Google Drive workspace mirror excluding secrets, runtime churn and private collaboration transport.
+# Last updated: 2026-10-03 10:59:53
 """
 drive.py -- Google Drive Workspace Mirror for Gemini Live Access
 ================================================================
@@ -79,7 +80,7 @@ EXCLUDE_DIRS     = {".git", "__pycache__", "node_modules", "screenshots",
                     "_build", "models", "llama"}
 # Path-prefix excludes (relative to workspace root). logs/ is pure runtime churn
 # and would re-trigger a sync every cycle, so it stays out of Gemini's mirror.
-EXCLUDE_SUBPATHS = {"logs", "nova_body/backups", "general_tools/backups",
+EXCLUDE_SUBPATHS = {"Temp/collaboration/", "logs", "nova_body/logs", "nova_body/nova_memory_db", "nova_body/backups", "general_tools/backups",
                     "agents/main/sessions"}
 INCLUDE_EXTENSIONS = {".py", ".md", ".json", ".jsonl", ".txt", ".cmd", ".ps1", ".html"}
 # Files that must never be uploaded -- secrets, sync bookkeeping, or large/churny data.
@@ -100,7 +101,7 @@ EXCLUDE_FILES    = {
     # between the two so this can't rot again.
     ".env",                     # any environment/secret file
     "nova_gateway.json",        # holds the Discord token
-    ".auth_token",              # tunnel bearer token (see Orient/SECURITY.md)
+    ".auth_token",              # tunnel bearer token (see Orient/OPERATIONS.md#security-model)
     "nova_users.json",          # device identities + their token hashes
 }
 
@@ -387,11 +388,11 @@ def _build_gemini_index_content() -> str:
     lines.append("")
     lines.append("| File | Search Key | Description |")
     lines.append("|------|-----------|-------------|")
-    lines.append("| STATUS.md | `workspace/memory/STATUS.md` | Current project state -- READ FIRST |")
-    lines.append("| JOURNAL.md | `workspace/memory/JOURNAL.md` | Nova's session log -- READ SECOND |")
-    lines.append("| COLE.md | `workspace/memory/COLE.md` | Who Cole is and Nova's notes |")
+    lines.append("| STATUS.md | `workspace/nova_body/memory/STATUS.md` | Current project state -- READ FIRST |")
+    lines.append("| JOURNAL.md | `workspace/nova_body/memory/JOURNAL.md` | Nova's session log -- READ SECOND |")
+    lines.append("| COLE.md | `workspace/nova_body/memory/COLE.md` | Who Cole is and Nova's notes |")
     lines.append("| NOVA.md | `workspace/NOVA.md` | Nova's identity and values |")
-    lines.append("| 00_START_HERE.md | `workspace/SELF/core/00_START_HERE.md` | Entry into Nova's self-model |")
+    lines.append("| 00_START_HERE.md | `workspace/nova_body/SELF/core/00_START_HERE.md` | Entry into Nova's self-model |")
     lines.append("")
 
     # Build full manifest table by scanning workspace

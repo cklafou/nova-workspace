@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """
 nova_vision.py — Nova's Eyes
 ==============================
@@ -21,6 +21,8 @@ How it fits into the system:
   nova_senses/eyes.py -> the unified tier stack that calls this module
 """
 
+from nova_paths import body_path
+
 import os
 import io
 import json
@@ -41,7 +43,7 @@ except ImportError:
         def log(*args, **kwargs): pass
         def get_screenshot_dir():
             from pathlib import Path
-            return Path("logs") / "screenshots"
+            return body_path("logs", "screenshots")
 
 # Detect screen dimensions as reported by pyautogui (used for mouse movement).
 # NOTE: This may differ from actual screenshot pixel dimensions due to Windows DPI scaling.

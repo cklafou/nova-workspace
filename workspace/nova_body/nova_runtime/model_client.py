@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: ModelClient — the act of generation as a body faculty (layer 2). It owns HOW Nova
 #        (and the mentors) are driven to produce a response: the model dispatch + each model's
 #        call convention, lifted faithfully out of the chat server's run_ai_response. It does
@@ -18,6 +18,9 @@ tokens a faculty; the thing that *shows* them stays a detachable face concern. T
 (ModelGuard) and the success/error bookkeeping stay in the caller's sinks for now — this step
 moves only the dispatch, nothing else, so behavior is identical.
 """
+
+
+from nova_runtime.operations import supervised
 
 
 class ModelClient:
@@ -42,6 +45,7 @@ class ModelClient:
             return self._gemini_runner is not None
         return ai_name in self._clients
 
+    @supervised
     async def generate(self, ai_name: str, transcript, *,
                        on_token, on_done, on_error,
                        on_think_token=None, on_progress=None, on_tool_executed=None,

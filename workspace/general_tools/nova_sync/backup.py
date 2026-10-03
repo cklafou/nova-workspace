@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 """
 nova_backup.py -- Automated Workspace Backup System
 =====================================================
@@ -27,6 +27,12 @@ Restore from backup:
     python general_tools/nova_sync/backup.py --restore <zip_path>
 """
 
+# Body-owned paths also work when this tool is launched directly.
+import sys as _nova_path_sys
+from pathlib import Path as _NovaPath
+_nova_path_sys.path.insert(0, str(_NovaPath(__file__).resolve().parents[2] / 'nova_body'))
+from nova_paths import body_path
+
 import sys
 import zipfile
 import traceback
@@ -36,18 +42,18 @@ from datetime import datetime
 # -- Config -------------------------------------------------------------------
 
 WORKSPACE_DIR = Path(__file__).parent.parent.parent
-BACKUP_DIR = WORKSPACE_DIR / "logs" / "backups"
+BACKUP_DIR = body_path('logs', workspace=WORKSPACE_DIR) / "backups"
 SESSION_BACKUP_DIR = BACKUP_DIR / "sessions"
 WEEKLY_BACKUP_DIR = BACKUP_DIR / "weekly"
 
 # Critical files for session snapshots
 SESSION_SNAPSHOT_FILES = [
-    "memory/STATUS.md",
-    "memory/JOURNAL.md",
-    "memory/COLE.md",
-    "memory/session_start.json",
-    "general_tools/nova_sync/FILE_INDEX.md",
-    "general_tools/nova_sync/FILE_INDEX_LINK.md",
+    "nova_body/memory/STATUS.md",
+    "nova_body/memory/JOURNAL.md",
+    "nova_body/memory/COLE.md",
+    "nova_body/memory/session_start.json",
+    "Orient/INDEX.md",
+    "Orient/Architecture/inventory.json",
 ]
 
 EXCLUDE_DIRS = {
@@ -56,7 +62,7 @@ EXCLUDE_DIRS = {
     "models",       # model weight files (GGUF etc.) — never back up, 18GB+
 }
 EXCLUDE_SUBPATHS = {
-    "logs/screenshots",
+    "nova_body/logs/screenshots",
     "tools/backups",
     "agents/main/sessions",
 }
@@ -82,9 +88,9 @@ def session_snapshot():
                     zf.write(path, rel_str)
                     backed_up += 1
             today = datetime.now().strftime("%Y-%m-%d")
-            mentor_log = WORKSPACE_DIR / "logs" / "sessions" / today / "mentor.jsonl"
+            mentor_log = body_path('logs', workspace=WORKSPACE_DIR) / "sessions" / today / "mentor.jsonl"
             if mentor_log.exists():
-                zf.write(mentor_log, f"logs/sessions/{today}/mentor.jsonl")
+                zf.write(mentor_log, f"nova_body/logs/sessions/{today}/mentor.jsonl")
                 backed_up += 1
 
         size_kb = zip_path.stat().st_size // 1024

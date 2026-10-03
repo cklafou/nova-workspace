@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """
 nova_log_reader.py -- Nova's Session Log Reader
 
@@ -18,11 +18,13 @@ for _p in [str(_nml_ws / 'nova_tools'), str(_nml_ws / 'general_tools')]:
     "
 """
 
+from nova_paths import body_path
+
 import json
 from pathlib import Path
 from datetime import datetime, timedelta
 
-LOGS_ROOT = Path("logs/sessions")
+LOGS_ROOT = body_path("logs", "sessions")
 
 
 def _read_jsonl(path: Path) -> list:

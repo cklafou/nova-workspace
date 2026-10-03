@@ -1,0 +1,35 @@
+{
+  "purpose": "Historical avatar-design reference only; these copies are not Nova runtime configuration. The current v6/v7 training examples were also inspected in place. Design percentages in the documents are authoring guidance, not measured LoRA contributions.",
+  "historical_sources": [
+    {
+      "file": "nova_core_lora_dataset_spec.md",
+      "source_path": "workspace/_admin/Training_stuff/v1/nova_core_lora_dataset_spec.md",
+      "commit": "4a85abc9d463cc10f794451752f7472275c13fce",
+      "sha256": "b50498b11a989638e19549a49ee5c9d42ec1b491008070a0699b318da9b903d3"
+    },
+    {
+      "file": "nova_core_v2_character_bible.md",
+      "source_path": "workspace/_admin/Training_stuff/v1/nova_core_v2_character_bible.md",
+      "commit": "4a85abc9d463cc10f794451752f7472275c13fce",
+      "sha256": "d3cecbf65477b9cd79a98ad9f08e78ceee0847f2bba1ac71c3d6d1e932f61459"
+    },
+    {
+      "file": "nova_core_v2_strengthened_spec.md",
+      "source_path": "workspace/_admin/Training_stuff/v1/nova_core_v2_strengthened_spec.md",
+      "commit": "4a85abc9d463cc10f794451752f7472275c13fce",
+      "sha256": "1e66a0ed8592856552e6868dcd13f2840d7e068768c2c4356fb0b9dbe9f021b1"
+    },
+    {
+      "file": "nova_lora_dataset_batch5_mischief_decision_solonarration.md",
+      "source_path": "workspace/_admin/Training_stuff/v1/nova_lora_dataset_batch5_mischief_decision_solonarration.md",
+      "commit": "4a85abc9d463cc10f794451752f7472275c13fce",
+      "sha256": "2aa0d75910ebd4d366050383ca8f0571fdb3834e12d56ca8e439c71daa75d340"
+    }
+  ],
+  "current_sources": [
+    "workspace/_admin/Training_stuff/v6/V6_SPEC.md",
+    "workspace/_admin/Training_stuff/v6/nova_core_v6.jsonl",
+    "workspace/_admin/Training_stuff/v7/V7_SPEC.md",
+    "workspace/_admin/Training_stuff/v7/nova_core_v7_add.jsonl"
+  ]
+}

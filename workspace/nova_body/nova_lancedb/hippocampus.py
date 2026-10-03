@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:11:34
+# Last updated: 2026-10-03 10:59:53
 """
 nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
 ==============================================================
@@ -19,6 +19,8 @@ Design principles:
 """
 from __future__ import annotations
 
+from nova_paths import body_path
+
 import os
 import time
 import uuid
@@ -32,7 +34,7 @@ WORKSPACE_DIR = (
     Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
     else Path(__file__).parent.parent
 )
-DB_PATH = str(WORKSPACE_DIR / "nova_memory_db")
+DB_PATH = str(body_path('nova_memory_db'))
 
 # ── Category rules ───────────────────────────────────────────────────────────
 
@@ -130,6 +132,7 @@ class NovaMemoryStore:
         self._visual_tbl = None
         self._known_hashes: set[str] = set()  # in-memory dedup cache
         self._ready = False
+        self.last_error = None
         self._init()
 
     def _init(self):
@@ -149,6 +152,7 @@ class NovaMemoryStore:
             self._ready = True
             print(f"[nova_memory] DB ready at {DB_PATH}")
         except Exception as e:
+            self.last_error = str(e)
             print(f"[nova_memory] WARNING: DB init failed — {e}. Memory disabled.")
 
     def _open_or_create(self, name: str, schema):
@@ -161,7 +165,7 @@ class NovaMemoryStore:
 
     def add_text(self, content: str, author: str = "Nova",
                  source: str = "chat", session_id: str = "",
-                 category: str = "") -> bool:
+                 category: str = "", timestamp: float = None) -> bool:
         """
         Embed and store a text memory. Returns True if stored, False if duplicate/error.
 
@@ -176,12 +180,14 @@ class NovaMemoryStore:
             return False
         from .embedder import embed_text, content_hash
         chash = content_hash(content)
-        if chash in self._known_hashes:
-            return False  # byte-identical replay — skip
         try:
+            if chash in self._known_hashes:
+                if self._text_tbl.count_rows(f"content_hash = '{chash}'"):
+                    return True  # Verify the row still exists; eviction can outlive the cache.
+                self._known_hashes.discard(chash)
             vec  = embed_text(content)
             cat  = category or _classify(content)
-            now  = time.time()
+            now  = time.time() if timestamp is None else timestamp
 
             # ── Cluster dedup: find the semantic cluster, keep newest N ───
             # A single threshold can't separate "same thought evolved" from
@@ -192,7 +198,8 @@ class NovaMemoryStore:
                 MAX_CLUSTER = 0.25  # tight: only evict when it's clearly the same thought evolved
                 KEEP = 3            # keep 3 versions — growth gets room to evolve
                 hits = self._text_tbl.search(vec).limit(10).metric("cosine").to_list()
-                cluster = [h for h in hits if h.get("_distance", 1.0) < MAX_CLUSTER]
+                cluster = [h for h in hits if h.get("_distance", 1.0) < MAX_CLUSTER
+                           and not h.get("source", "").startswith("archive:")]
                 # Include this new memory so the second version of a thought triggers eviction
                 cluster.append({"id": "new", "timestamp": now})
                 if len(cluster) > KEEP:
@@ -213,12 +220,13 @@ class NovaMemoryStore:
                 "timestamp":    now,
             }
 
-            for cid in cluster_ids_to_evict:
-                self._text_tbl.delete(f'id = "{cid}"' if "'" in cid else f"id = '{cid}'")
             self._text_tbl.add([row])
             self._known_hashes.add(chash)
+            for cid in ([] if source.startswith('archive:') else cluster_ids_to_evict):
+                self._text_tbl.delete(f'id = "{cid}"' if "'" in cid else f"id = '{cid}'")
             return True
         except Exception as e:
+            self.last_error = str(e)
             print(f"[nova_memory] add_text error: {e}")
             return False
 
@@ -239,6 +247,7 @@ class NovaMemoryStore:
                 r.pop("vector", None)
             return rows
         except Exception as e:
+            self.last_error = str(e)
             print(f"[nova_memory] search_text error: {e}")
             return []
 
@@ -258,7 +267,7 @@ class NovaMemoryStore:
         from .embedder import embed_image, content_hash
         chash = content_hash(caption + filename)
         if chash in self._known_hashes:
-            return False  # byte-identical replay
+            return True  # already durable
         try:
             vec  = embed_image(image_input)
             cat  = category or _classify(caption)
@@ -286,18 +295,21 @@ class NovaMemoryStore:
                 "timestamp":    now,
             }
 
+            self._visual_tbl.add([row])
             if replace_id:
                 self._visual_tbl.delete(f"id = '{replace_id}'")
-            self._visual_tbl.add([row])
             self._known_hashes.add(chash)
             return True
         except Exception as e:
+            self.last_error = str(e)
             print(f"[nova_memory] add_image error: {e}")
             return False
 
     def search_visual(self, query: str, top_k: int = 5) -> list[dict]:
         """Search visual memories using a text query (cross-modal CLIP search)."""
         if not self._ready:
+            return []
+        if self._visual_tbl.count_rows() == 0:
             return []
         from .embedder import embed_text_for_visual
         try:
@@ -307,6 +319,7 @@ class NovaMemoryStore:
                 r.pop("vector", None)
             return rows
         except Exception as e:
+            self.last_error = str(e)
             print(f"[nova_memory] search_visual error: {e}")
             return []
 
@@ -321,8 +334,11 @@ class NovaMemoryStore:
         if not self._ready:
             return ""
 
+        self.last_error = None
         text_hits   = self.search_text(query,   top_k=6)
         visual_hits = self.search_visual(query, top_k=3)
+        if self.last_error:
+            raise RuntimeError(f"Memory search failed: {self.last_error}")
 
         if not text_hits and not visual_hits:
             return ""

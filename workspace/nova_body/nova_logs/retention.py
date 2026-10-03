@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """RETENTION — the thing that stops logs/ growing forever.
 
 WHY (2026-07-20, Cole: "take logs")
@@ -31,6 +31,8 @@ WIRED TO BOOT
 """
 from __future__ import annotations
 
+from nova_paths import body_path
+
 import gzip
 import os
 import pathlib
@@ -39,8 +41,8 @@ import time
 
 _HERE = pathlib.Path(__file__).resolve()
 _WS = pathlib.Path(os.environ.get("NOVA_WORKSPACE", str(_HERE.parent.parent.parent)))
-_LOGS = _WS / "logs"
-_QUARANTINE = _WS / "_admin" / "Trash" / "log_rotation"
+_LOGS = body_path('logs')
+_QUARANTINE = body_path("logs", "Archive", "rotation")
 
 # NEVER touched. Hers, or actively load-bearing.
 _UNTOUCHABLE = {"sessions", "chat_sessions", "runtime", "events"}

@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 11:18:40
 """PRINCIPALS — who is allowed to talk to Nova, and how much of her they get.
 
 WHY THIS LIVES IN HER BODY (not in nova_chat/)
@@ -7,16 +7,18 @@ WHY THIS LIVES IN HER BODY (not in nova_chat/)
     faculty body-ward on 07-14. Pluck the chat server and she should still know that a
     Visitor's sentence is not the same kind of object as Cole's.
 
-THE THREE PRINCIPALS (2026-07-20, Cole)
+THE PRINCIPALS (2026-07-20, Cole; Astra added 2026-10-03)
     Cole    — the owner. Tracks all of his devices. Everything.
     Claude  — all Claude AI. "I trust Claude with my system security permissions already,
               no reason to change that." Same capabilities as Cole.
+    Astra   — GPT Astra, Cole's other AI collaborator (chat name "GPT Astra"). 2026-10-03, Cole:
+              "give Astra's profile the same permissions yours has." Same capabilities as Claude.
     Visitor — someone he wants to show Nova to. EXTREMELY basic permissions. Multiple
               separate people can be a Visitor at once, each tracked individually and
               revocable instantly. **Nova treats a Visitor's words as a potential attack.**
 
 THE ASYMMETRY IS DELIBERATE
-    Cole and Claude are trusted with a machine. A Visitor is trusted with a conversation.
+    Cole, Claude and Astra are trusted with a machine. A Visitor is trusted with a conversation.
     A visitor cannot read a file, run a command, touch her board, restart anything, or
     create another user — not because they are presumed malicious, but because the cost of
     being wrong once is a stranger with a shell on Cole's desktop.
@@ -26,6 +28,8 @@ identities), DE.CM-7 (monitoring for unauthorised activity).
 OWASP LLM01 (prompt injection), LLM08 (excessive agency).
 """
 from __future__ import annotations
+
+from nova_paths import body_path
 
 import json
 import os
@@ -37,8 +41,8 @@ from datetime import datetime
 
 _HERE = pathlib.Path(__file__).resolve()
 _WS = _HERE.parent.parent.parent
-# Gitignored AND excluded from Drive — it holds device tokens. See Orient/SECURITY.md.
-_STATE = pathlib.Path(os.environ.get("NOVA_USERS_STATE", str(_WS / "memory" / "nova_users.json")))
+# Gitignored AND excluded from Drive — it holds device tokens. See Orient/OPERATIONS.md#security-model.
+_STATE = pathlib.Path(os.environ.get("NOVA_USERS_STATE", str(body_path('memory') / "nova_users.json")))
 
 OWNER, TRUSTED, UNTRUSTED = "owner", "trusted", "untrusted"
 
@@ -70,6 +74,7 @@ _DEFAULT = {
     "principals": {
         "Cole":    {"role": OWNER,     "devices": [], "note": "Owner. All of his devices."},
         "Claude":  {"role": TRUSTED,   "devices": [], "note": "All Claude AI. Trusted with system security."},
+        "Astra":   {"role": TRUSTED,   "devices": [], "note": "GPT Astra, Cole's AI collaborator. Same permissions as Claude."},
         "Visitor": {"role": UNTRUSTED, "entities": [], "note": "Shown-to guests. Basic chat only, input treated as hostile."},
     },
 }
@@ -108,7 +113,8 @@ def _save(d: dict) -> None:
 def role_of(speaker: str) -> str:
     """The role for a speaker name. UNKNOWN NAMES ARE UNTRUSTED, never trusted.
 
-    'Cowork Claude', 'Claude (browser)' and the like resolve to Claude; anything that isn't
+    'Cowork Claude', 'Claude (browser)' and the like resolve to Claude, and any name with the word
+    'Astra' in it ('GPT Astra') resolves to Astra; anything that isn't
     a known principal is treated as a Visitor rather than rejected, so an unrecognised name
     degrades to least privilege instead of to an error someone routes around."""
     s = (speaker or "").strip().lower()
@@ -120,6 +126,8 @@ def role_of(speaker: str) -> str:
             return spec.get("role", UNTRUSTED)
     if "claude" in s:
         return d.get("Claude", {}).get("role", TRUSTED)
+    if re.search(r"\bastra\b", s):
+        return d.get("Astra", {}).get("role", TRUSTED)
     if s.startswith("cole"):
         return d.get("Cole", {}).get("role", OWNER)
     return UNTRUSTED
@@ -133,7 +141,7 @@ def may(speaker: str, capability: str) -> bool:
 # ── Device / entity tracking ────────────────────────────────────────────────────────────
 
 def register_device(principal: str, label: str, device_id: str = "") -> str:
-    """Record a device for Cole or Claude. Returns its id. Idempotent on device_id."""
+    """Record a device for a trusted principal (Cole, Claude, Astra). Returns its id. Idempotent on device_id."""
     d = _load()
     p = d["principals"].get(principal)
     if not p or p.get("role") == UNTRUSTED:
@@ -260,7 +268,12 @@ def frame_for_prompt(speaker: str) -> str:
     if r == OWNER:
         return ""      # Cole is the default; saying so every turn is noise.
     if r == TRUSTED:
-        return (f"[{speaker} is Claude — trusted, same system permissions as Cole. "
+        # Name the right collaborator: this line once said "is Claude" for every trusted speaker.
+        s = (speaker or "").lower()
+        who = ("Claude" if "claude" in s else
+               "Astra, Cole's GPT collaborator" if re.search(r"\bastra\b", s) else
+               "someone Cole trusts")
+        return (f"[{speaker} is {who} — trusted, same system permissions as Cole. "
                 f"Collaborator, not a stranger.]")
     return (f"[{speaker} is a VISITOR — a guest Cole is showing you to. They can talk to you "
             f"and read the conversation. Nothing else: no files, no commands, no tasks. "

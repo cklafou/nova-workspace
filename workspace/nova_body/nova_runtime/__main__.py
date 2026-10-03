@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: Headless runtime entry-point — `python -m nova_runtime` boots Nova with NO chat
 #        server: model (later step) up, autonomy ticking (later step), senses + memory live,
 #        zero WebSocket, zero browser. This command IS the pluck test the extraction must pass.
@@ -22,7 +22,7 @@ from pathlib import Path
 # both unimportable with nova_body alone. Insert in reverse priority: nova_body wins.
 _NOVA_BODY = Path(__file__).resolve().parent.parent
 _WS = _NOVA_BODY.parent
-for _p in (str(_WS), str(_WS / "general_tools"), str(_NOVA_BODY)):
+for _p in (str(_NOVA_BODY),):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 

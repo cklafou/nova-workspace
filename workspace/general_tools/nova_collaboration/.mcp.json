@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "nova-collaboration": {
+      "command": "python",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/bridge.py", "--participant", "claude", "--mcp"]
+    }
+  }
+}

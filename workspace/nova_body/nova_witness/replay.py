@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:51:13
 # @nova: Witness v2, Step 0 — the replay harness. Feeds recorded audit cases to ANY witness
 #        endpoint (current 27B on :8080, future 4B on :8081) using her REAL prompt builder
 #        (nova_cortex/witness.py, loaded by file path), and scores the verdicts. This is how
@@ -209,7 +209,8 @@ def main():
     (outdir / f"replay_{tag}_{stamp}.json").write_text(
         json.dumps({"summary": summary, "results": results}, ensure_ascii=False, indent=1),
         encoding="utf-8")
-    lines = [f"# Witness replay — {args.endpoint} — {stamp}", "",
+    lines = [f"# Witness replay — {args.endpoint} — {stamp}",
+             f"<!-- @nova: Witness replay report: the golden witness cases scored against {args.endpoint} at {stamp}. -->", "",
              f"Cases: {summary['cases']} (errors {summary['errors']})",
              f"Catch-rate on must-CONCERN: {summary['catch_rate']}",
              f"False-concern rate on must-PASS: {summary['false_concern_rate']}",

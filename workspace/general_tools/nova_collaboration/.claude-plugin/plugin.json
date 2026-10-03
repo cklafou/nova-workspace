@@ -1,0 +1,5 @@
+{
+  "name": "nova-collaboration",
+  "version": "1.0.0",
+  "description": "Connect the actual Claude Cowork session to Nova Chat's private collaboration feed without paid model APIs or Nova context ingestion."
+}

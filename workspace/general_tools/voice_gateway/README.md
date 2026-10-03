@@ -1,5 +1,5 @@
 # voice_gateway — Cole's microphone to Nova
-_Last updated: 2026-08-03 08:58:24_
+_Last updated: 2026-10-03 11:00:25_
 
 The pipe that lets you **talk** to Nova and **hear** her back, on the desktop first
 (smartwatch → phone → tunnel → this same gateway comes later). It is a **comms tool, not a

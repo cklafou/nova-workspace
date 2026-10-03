@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Nova · Architecture atlas</title>
+  <style>/*__STYLE__*/</style>
+</head>
+<body>
+<header class="app-header">
+  <a class="brand" href="#level=1" aria-label="Nova architecture home"><span class="brand-mark">N</span><span>NOVA <span class="brand-sub">/ architecture atlas</span></span></a>
+  <nav class="levels" aria-label="Architecture level">
+    <button data-level="1" class="level active" aria-pressed="true"><span>01</span> Understand</button>
+    <button data-level="2" class="level" aria-pressed="false"><span>02</span> Inspect</button>
+    <button data-level="3" class="level" aria-pressed="false"><span>03</span> Live explorer</button>
+    <button data-level="4" class="level" aria-pressed="false">Timeline</button>
+  </nav>
+  <button id="about-button" class="quiet-button">How to read this</button>
+</header>
+<main>
+  <section class="intro">
+    <div><p class="eyebrow" id="level-eyebrow">LEVEL 1 · THE BIG PICTURE</p><h1 id="page-title">How Nova fits together.</h1><p id="page-description">Follow a message, a thought, or a memory. Select a part to see what it does.</p></div>
+    <div class="build-status"><div id="live-status" role="status"><span class="status-dot"></span><span id="live-label">Source snapshot</span></div><span id="build-time"></span><button id="refresh-button" class="text-button" hidden>Check for changes</button></div>
+  </section>
+  <div class="learning-bar"><span id="learning-bar-text">Build a mental model, then follow the evidence.</span><div><button id="concepts-button" class="quiet-button">AI &amp; architecture glossary</button><button id="saved-button" class="quiet-button">Saved parts</button></div></div>
+  <section id="understand-guide" class="understand-guide" aria-label="Architecture learning guide"></section>
+  <div id="map-controls" class="control-bar">
+    <div class="journey-control"><label for="journey">Follow a flow</label><select id="journey"><option value="">Whole architecture</option></select></div>
+    <div id="advanced-controls" class="advanced-controls" hidden>
+      <label class="search-box"><span>Find</span><input id="search" type="search" placeholder="Faculty, file or function…" autocomplete="off"></label>
+      <label><input id="show-resources" type="checkbox" checked> Processes &amp; files</label>
+      <select id="edge-filter" aria-label="Connection type"><option value="architecture">Architecture connections</option><option value="imports">Import dependencies</option><option value="calls">Resolved calls</option><option value="all">All mapped connections</option></select>
+      <button id="inventory-button" class="quiet-button">Module index</button>
+    </div>
+  </div>
+  <div id="search-results" class="search-results" hidden></div>
+  <section id="journey-player" class="journey-player" aria-label="Step by step walkthrough" hidden></section>
+  <section id="live-learning" class="live-learning" hidden></section>
+  <section class="workspace" id="workspace">
+    <div class="map-column">
+      <div class="map-heading"><div id="breadcrumbs"><button id="home-map" class="text-button">Nova</button><span id="crumb"></span></div><span id="graph-count"></span></div>
+      <div id="map-viewport" class="map-viewport" aria-label="Interactive architecture diagram">
+        <div class="grid-background"></div><div id="graph-stage" class="graph-stage"><svg id="graph-lines" aria-hidden="true"></svg><div id="graph-nodes"></div></div>
+        <div id="empty-map" class="empty-map" hidden>No mapped connections match this view.</div>
+        <div class="map-tools"><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">100%</span><button id="zoom-in" aria-label="Zoom in">+</button><button id="fit-map" aria-label="Fit diagram">Fit</button><button id="reset-map">Reset</button></div>
+        <div class="map-hint">Drag the background to pan · select a part or connection</div>
+      </div>
+      <div class="map-legend" id="map-legend"><span><i class="legend-dot body"></i>Body faculty</span><span><i class="legend-dot boundary"></i>Attachment boundary</span><span><i class="legend-dot storage"></i>File or service</span><span><i class="legend-line"></i>Source evidence</span><span><i class="legend-line caution"></i>Needs review</span></div>
+      <div class="scope-note" id="scope-note"></div>
+    </div>
+    <aside id="detail-panel" class="detail-panel" aria-label="Selected component details">
+      <div class="detail-top"><span class="eyebrow" id="detail-kind">START EXPLORING</span><button id="close-detail" class="text-button" aria-label="Close details" hidden>Close</button></div>
+      <div id="detail-content"></div>
+    </aside>
+  </section>
+  <section id="timeline-page" hidden aria-label="Nova change timeline">
+    <div class="timeline-intro"><div><p class="eyebrow">A HISTORY WITH EVIDENCE</p><h2>Decisions, changes and unfinished questions.</h2><p id="history-origin"></p><p id="history-coverage" class="coverage-note"></p></div><button id="decision-template" class="quiet-button">Download decision template</button></div>
+    <div class="timeline-controls">
+      <label>Show<select id="history-mode"><option value="milestones">Documented milestones</option><option value="code">Recorded source changes</option><option value="all">Milestones + source changes</option></select></label>
+      <label>Part<select id="history-part"><option value="">All parts</option></select></label>
+      <label>Month<select id="history-month"><option value="">All months</option></select></label>
+      <label>Find<input id="history-search" type="search" placeholder="A reason, capability or filename"></label>
+      <label>Order<select id="history-order"><option value="oldest">Oldest first</option><option value="newest">Newest first</option></select></label>
+      <label class="check-label"><input type="checkbox" id="history-noise"> Include header-only days</label>
+    </div>
+    <div id="working-changes"></div><p id="history-count" role="status"></p><div id="timeline-list" class="timeline-list"></div><button id="history-more" class="quiet-button" hidden>Show more history</button>
+    <div class="timeline-footnote"><strong>Preserve the next “why.”</strong> Record the problem, before/after behavior, tradeoff and verification while they are fresh. A timestamped auto-save cannot recover that reasoning later. The template shows the fields to add to the atlas's decision catalog.</div>
+  </section>
+  <section class="evidence-section" id="evidence-section" hidden>
+    <div class="section-heading"><div><p class="eyebrow">THE COMPLETE MAPPED INVENTORY</p><h2>Every part has a place.</h2></div><button id="download-json" class="quiet-button">Export evidence JSON</button></div>
+    <div id="coverage"></div><div id="inventory"></div>
+  </section>
+  <footer><span>Built from the checkout. No Nova modules are executed.</span><span id="revision-label"></span><button id="print-button" class="text-button">Print / save PDF</button></footer>
+</main>
+<dialog id="source-dialog"><div class="dialog-top"><div><p class="eyebrow">SOURCE EVIDENCE</p><h2 id="source-title"></h2></div><button id="close-source" class="quiet-button">Close</button></div><p id="source-note"></p><pre id="source-code"></pre></dialog>
+<dialog id="about-dialog"><div class="dialog-top"><h2>Read the map with confidence.</h2><button id="close-about" class="quiet-button">Close</button></div>
+  <p><strong>Level 1</strong> explains the main ideas. <strong>Level 2</strong> is the source snapshot, with the complete module inventory and evidence. <strong>Level 3</strong> receives regenerated data while the local watcher is running.</p>
+  <p><strong>Timeline</strong> adds documented decisions and daily source changes from retained Git history. Reasons are attributed to development notes; automatic-save messages cannot establish intent. Use the glossary, guided flows, saved parts and component work briefs to connect an explanation to your next change.</p>
+  <p>An <strong>import</strong> means code depends on a module. A <strong>resolved call</strong> means the caller and target could be identified statically. Neither proves that a branch executed. <strong>Reviewed connections</strong> explain callbacks, files, events and network seams with source references.</p>
+  <p>Descriptions and reviewed connections carry hashes of the code that was inspected. When it changes, the map flags them for review instead of silently presenting old explanations as current. New modules, imports, resolved calls and endpoint defaults are discovered automatically.</p>
+  <p>Dynamic receivers and third-party operations cannot all be inferred from Python source. They remain visible as unresolved references. Unused imports do not prove that a capability runs; an absence of imports does not prove it can never be called dynamically.</p>
+  <p>Detachable tool internals, model binaries, personal memory contents, generated code, tests and archived copies are not expanded. Launch/chat seams remain visible where they touch the body. Live status checks only whether a configured local port accepts a TCP connection.</p>
+  <p>To start automatic updates, run <code>Orient\Architecture\RUN_MAP.cmd</code>. It watches source, catalog, viewer assets, relevant configuration definitions and mapped file metadata. Keep the watcher running for updates; <code>STOP_MAP.cmd</code> stops only the atlas.</p>
+</dialog>
+<dialog id="learning-dialog"><div class="dialog-top"><div><p class="eyebrow" id="learning-dialog-kind">LEARN &amp; EXPLORE</p><h2 id="learning-dialog-title"></h2></div><button id="close-learning" class="quiet-button">Close</button></div><div id="learning-dialog-content"></div></dialog>
+<script>window.NOVA_ARCHITECTURE=/*__DATA__*/null;</script>
+<script>/*__APP__*/</script>
+</body>
+</html>

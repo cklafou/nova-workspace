@@ -1,5 +1,5 @@
-# Last updated: 2026-08-06 16:21:32
 # @nova: Nova Console — the log hub. Captures every child process's output into in-memory
+# Last updated: 2026-10-03 11:27:32
 # ring buffers and serves them over a tiny local HTTP API, so the stack can run with ZERO
 # popup cmd windows while everything stays visible in one place.
 #
@@ -84,10 +84,35 @@ class LogHub:
         # can finish its git push instead of leaving a stale .git/index.lock behind. A blunt
         # taskkill cannot do that, which is why StopNova asks nicely FIRST.
         self._shutdown_req = False
+        self._restart_req = False
+        self._lifecycle_lock = threading.Lock()
+        self._lifecycle_ready_at = None
         # PIDs of Nova's process tree roots. The console app's stray-window janitor asks for these
         # so it can tell "a console owned by Nova" from "Cole's own terminal" — we must never hide
         # a window that isn't ours.
         self.pids: list[int] = []
+
+    def request_lifecycle(self, action: str):
+        """Acknowledge one pending action; repeated clicks cannot race shutdown/restart."""
+        with self._lifecycle_lock:
+            pending = "restart" if self._restart_req else "shutdown" if self._shutdown_req else None
+            if pending and pending != action:
+                return {"ok": False, "error": f"{pending} is already pending"}, 409
+            if pending is None:
+                # Chat-only teardown is fast enough to kill the proxy before its 202
+                # reaches the caller. Give the first accepted request a bounded grace
+                # period; retries cannot keep postponing shutdown.
+                self._lifecycle_ready_at = time.monotonic() + 1.0
+            self._restart_req = action == "restart"
+            self._shutdown_req = True
+            return {"ok": True, "accepted": True, "action": action,
+                    "message": f"Launcher accepted {action}; app and services will stop together."}, 202
+
+    def lifecycle_ready(self) -> bool:
+        """A pending action may tear down after its original acknowledgement grace."""
+        with self._lifecycle_lock:
+            return (self._shutdown_req and self._lifecycle_ready_at is not None
+                    and time.monotonic() >= self._lifecycle_ready_at)
 
     # ── stream registry ───────────────────────────────────────────────────────
     def add_stream(self, name: str, label: str) -> _Stream:
@@ -205,9 +230,9 @@ class LogHub:
                 if u.path == "/api/show":
                     hub._show_req = True
                     return self._send({"ok": True})
-                if u.path == "/api/shutdown":
-                    hub._shutdown_req = True
-                    return self._send({"ok": True, "message": "graceful shutdown requested"})
+                if u.path in ("/api/shutdown", "/api/restart"):
+                    result, code = hub.request_lifecycle(u.path.rsplit("/", 1)[-1])
+                    return self._send(result, code)
                 if u.path == "/api/write":
                     # The console app's janitor reports stray windows here, so they land in the
                     # SAME stream set the widget reads. One source of truth, as everywhere else.
@@ -255,5 +280,6 @@ class LogHub:
         if self._httpd:
             try:
                 self._httpd.shutdown()
+                self._httpd.server_close()
             except Exception:
                 pass

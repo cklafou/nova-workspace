@@ -1,0 +1,26 @@
+#!/bin/sh
+# @nova: Refuses a push GitHub would reject anyway (any file over 100 MB) before uploading anything.
+#
+# Install: copy this file to .git/hooks/pre-push in the repository root (FIX_GIT.cmd does it).
+# Why (2026-10-02): a 1 GB VM export sat in unpushed history for weeks. Every watcher push uploaded
+# all of it, GitHub refused it at the end, and the next cycle started over. Checking sizes locally
+# takes seconds and uploads nothing. FAIL-OPEN: if this check itself errors, the push proceeds.
+limit="${NOVA_PUSH_LIMIT:-104857600}"     # GitHub's hard per-file limit (100 MiB)
+big=""
+while read -r lref lsha rref rsha; do
+    case "$lsha" in *[!0]*) ;; *) continue ;; esac          # deleting a branch uploads nothing
+    found=$(git rev-list --objects "$lsha" --not --remotes 2>/dev/null |
+            git cat-file --batch-check='%(objecttype) %(objectsize) %(rest)' 2>/dev/null |
+            awk -v L="$limit" '$1 == "blob" && $2 + 0 > L + 0 {
+                s = $2; $1 = ""; $2 = ""; sub(/^ +/, ""); printf "    %s (%.0f MB)\n", $0, s / 1048576 }')
+    [ -n "$found" ] && big="$big$found
+"
+done
+if [ -n "$big" ]; then
+    echo "[pre-push] BLOCKED - nothing was uploaded. GitHub rejects files over 100 MB, and the" >&2
+    echo "[pre-push] history being pushed contains:" >&2
+    printf '%s' "$big" >&2
+    echo "[pre-push] Fix: quit Nova, then run workspace\\_admin\\FIX_GIT.cmd." >&2
+    exit 1
+fi
+exit 0

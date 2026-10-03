@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """
 nova_body/nova_logs/logger.py -- Nova's Unified Log Manager
 =========================================================
@@ -14,6 +14,8 @@ Import style:
   from nova_logs.logger import log, log_thought, get_screenshot_dir
 """
 
+from nova_paths import body_path
+
 import json
 import time
 import threading
@@ -26,7 +28,7 @@ from pathlib import Path
 _THIS_FILE      = Path(__file__).resolve()
 _WORKSPACE_ROOT = _THIS_FILE.parents[2]
 
-LOGS_ROOT         = _WORKSPACE_ROOT / "logs"
+LOGS_ROOT         = body_path('logs')
 SESSIONS_ROOT     = LOGS_ROOT / "sessions"
 CHAT_SESSIONS_DIR = LOGS_ROOT / "chat_sessions"
 SCREENSHOTS_ROOT  = LOGS_ROOT / "screenshots"

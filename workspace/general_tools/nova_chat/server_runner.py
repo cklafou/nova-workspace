@@ -1,4 +1,5 @@
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:51:13
+# @nova: Starts the Nova Chat server by itself (uvicorn on 127.0.0.1:8765) with nova_body and general_tools importable.
 import sys
 from pathlib import Path
 _WS = Path(__file__).resolve().parent.parent.parent

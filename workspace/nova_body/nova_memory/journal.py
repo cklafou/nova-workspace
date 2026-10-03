@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """
 nova_journal.py -- The ONLY safe way to write to JOURNAL.md.
 
@@ -36,6 +36,8 @@ for _p in [str(_nml_ws / 'nova_tools'), str(_nml_ws / 'general_tools')]:
     "
 """
 
+from nova_paths import body_path
+
 import re
 from datetime import datetime
 from pathlib import Path
@@ -59,7 +61,7 @@ def sanitize(text: str) -> str:
     text = text.replace("”", '"')  # right double quote
     return text
 
-JOURNAL_PATH = Path("memory/JOURNAL.md")
+JOURNAL_PATH = body_path("memory", "JOURNAL.md")
 
 
 def _get_last_date_header() -> str:

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1505 478" role="img" aria-label="Nova architecture overview">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#63768f"/></marker></defs>
+<rect width="1505" height="478" fill="#0c1421"/>
+<text x="30" y="32" fill="#edf3fc" font-size="20" font-family="sans-serif">Nova — the simple view</text>
+<path d="M275,106 C350.0,106 350.0,106 425,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<text x="350.0" y="96.0" text-anchor="middle" fill="#81d9c4" font-size="11" font-family="sans-serif">message</text>
+<path d="M670,106 C745.0,106 745.0,106 820,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<text x="745.0" y="96.0" text-anchor="middle" fill="#81d9c4" font-size="11" font-family="sans-serif">conversation + context</text>
+<path d="M275,232 C350.0,232 350.0,232 425,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<text x="350.0" y="222.0" text-anchor="middle" fill="#81d9c4" font-size="11" font-family="sans-serif">what is happening</text>
+<path d="M670,232 C745.0,232 745.0,106 820,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<text x="745.0" y="159.0" text-anchor="middle" fill="#81d9c4" font-size="11" font-family="sans-serif">what to consider / do</text>
+<path d="M670,358 C745.0,358 745.0,106 820,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<text x="745.0" y="222.0" text-anchor="middle" fill="#81d9c4" font-size="11" font-family="sans-serif">relevant past context</text>
+<path d="M1065,106 C1140.0,106 1140.0,106 1215,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<text x="1140.0" y="96.0" text-anchor="middle" fill="#81d9c4" font-size="11" font-family="sans-serif">reply or requested action</text>
+<path d="M1215,106 C942.5,106 942.5,358 670,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<text x="942.5" y="222.0" text-anchor="middle" fill="#81d9c4" font-size="11" font-family="sans-serif">new recorded experience</text>
+<g><rect x="30" y="66" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="44" y="94" fill="#edf3fc" font-size="15" font-family="sans-serif">You</text>
+<text x="44" y="119" fill="#9fb2cd" font-size="12" font-family="sans-serif">Send a message</text></g>
+<g><rect x="425" y="66" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="439" y="94" fill="#edf3fc" font-size="15" font-family="sans-serif">Conversation window</text>
+<text x="439" y="119" fill="#9fb2cd" font-size="12" font-family="sans-serif">Brings your words to Nova</text></g>
+<g><rect x="30" y="192" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="44" y="220" fill="#edf3fc" font-size="15" font-family="sans-serif">Senses</text>
+<text x="44" y="245" fill="#9fb2cd" font-size="12" font-family="sans-serif">Notice time and surroundings</text></g>
+<g><rect x="425" y="192" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="439" y="220" fill="#edf3fc" font-size="15" font-family="sans-serif">Self-direction</text>
+<text x="439" y="245" fill="#9fb2cd" font-size="12" font-family="sans-serif">Reflect, decide, work or rest</text></g>
+<g><rect x="425" y="318" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="439" y="346" fill="#edf3fc" font-size="15" font-family="sans-serif">Memory</text>
+<text x="439" y="371" fill="#9fb2cd" font-size="12" font-family="sans-serif">Written context and recall</text></g>
+<g><rect x="820" y="66" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="834" y="94" fill="#edf3fc" font-size="15" font-family="sans-serif">Thinking and reply loop</text>
+<text x="834" y="119" fill="#9fb2cd" font-size="12" font-family="sans-serif">Model + body checks</text></g>
+<g><rect x="1215" y="66" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="1229" y="94" fill="#edf3fc" font-size="15" font-family="sans-serif">Replies and actions</text>
+<text x="1229" y="119" fill="#9fb2cd" font-size="12" font-family="sans-serif">Results come back as evidence</text></g>
+<g><rect x="1215" y="192" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="1229" y="220" fill="#edf3fc" font-size="15" font-family="sans-serif">Separate computer</text>
+<text x="1229" y="245" fill="#9fb2cd" font-size="12" font-family="sans-serif">Its connection needs inspection</text></g>
+</svg>

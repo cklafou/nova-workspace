@@ -1,5 +1,5 @@
-# Last updated: 2026-08-06 16:21:31
-# @nova: Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads workspace/nova_config.json; falls back to defaults. Import as: from nova_config import cfg.
+# Last updated: 2026-10-03 10:59:53
+# @nova: Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads nova_body/nova_config.json; falls back to defaults. Import as: from nova_config import cfg.
 """
 nova_body/nova_config — Nova's Settings Loader
 ===============================================
@@ -10,7 +10,7 @@ This lives in the body (not general_tools) on purpose: the pluck-test says the
 body must keep working if every tool is removed, so the config the body depends
 on cannot live in a tool. The detachable chat/voice tooling no longer owns it.
 
-Settings DATA lives in workspace/nova_config.json (parallel to memory/ and
+Settings DATA lives in nova_body/nova_config.json (parallel to body memory/ and
 Tasking/). If that file is missing, DEFAULT_CONFIG is used and a template is
 written. Import the singleton anywhere with:  from nova_config import cfg
 
@@ -19,6 +19,10 @@ gateway / cron sections were dropped; only live settings remain.)
 """
 
 from __future__ import annotations
+
+from nova_paths import workspace_path
+
+from nova_paths import body_path
 
 import json
 import logging
@@ -36,7 +40,7 @@ WORKSPACE = (
     if "NOVA_WORKSPACE" in os.environ
     else Path(__file__).resolve().parent.parent.parent
 )
-CONFIG_PATH = WORKSPACE / "nova_config.json"
+CONFIG_PATH = body_path('nova_config.json')
 
 # ── Defaults (used if nova_config.json is missing or incomplete) ─────────────
 DEFAULT_CONFIG: dict[str, Any] = {
@@ -91,7 +95,7 @@ class NovaConfig:
 
     @property
     def sessions_dir(self) -> Path:
-        return WORKSPACE / self.sessions["dir"]
+        return workspace_path(self.sessions["dir"], workspace=WORKSPACE)
 
     def __repr__(self) -> str:
         return f"<NovaConfig workspace={WORKSPACE}>"

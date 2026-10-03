@@ -1,0 +1,657 @@
+{
+  "principles": [
+    {
+      "title": "The model is one component",
+      "text": "The model predicts a response from the request it receives. Nova's surrounding software chooses context, invokes capabilities, stores results and decides when another model request is needed."
+    },
+    {
+      "title": "Most arrows are not network links",
+      "text": "Python imports, function calls, callbacks and queues can all stay inside one process. HTTP and WebSocket arrows cross a transport boundary. Use the connection type before thinking in ports or packets."
+    },
+    {
+      "title": "State and knowledge are different",
+      "text": "A task status is structured state. A journal is readable history. A vector index is a way to find related material. A prompt is the selected information the model sees for this request."
+    },
+    {
+      "title": "A feature needs a complete path",
+      "text": "A file can exist and pass its own checks while no normal request reaches it. Trace the trigger, caller, payload, execution, result and consumer before concluding that a capability is integrated."
+    }
+  ],
+  "groups": {
+    "boundary_boot": {
+      "why": "A set of Python files and model weights does nothing until processes start in the right order and share the intended runtime.",
+      "analogy": "Service startup and dependency ordering: a listener being open is only one readiness signal.",
+      "inputs": [
+        "Launch request",
+        "Model paths, ports and boot configuration"
+      ],
+      "outputs": [
+        "Model service processes",
+        "A shared runtime attached to the chat app"
+      ],
+      "failure": "A port may be occupied by old code, or a flag may be omitted even while the UI opens normally.",
+      "change": [
+        "Check which launcher the user actually invokes.",
+        "Trace configuration into the final process arguments.",
+        "Verify the loaded process separately from the files on disk."
+      ],
+      "start": "nova_start.py"
+    },
+    "boundary_chat": {
+      "why": "The conversation interface translates human activity into the context and callbacks consumed by the body.",
+      "analogy": "An application gateway that also assembles the request body; removing it can change more than presentation.",
+      "inputs": [
+        "Messages and images",
+        "Session history, written context and relevant archive snippets"
+      ],
+      "outputs": [
+        "Model-generation calls with context",
+        "Streamed output, persisted messages and memory ingestion requests"
+      ],
+      "failure": "The model can answer coherently from incomplete context if the latest message or identity files never reach the request.",
+      "change": [
+        "Inspect context assembly before changing prompts.",
+        "Preserve the callback signatures used by the runtime.",
+        "Check a normal reply and an autonomous wake as separate paths."
+      ],
+      "start": "general_tools/nova_chat/workspace_context.py"
+    },
+    "nova_runtime": {
+      "why": "Nova needs a coordinator that owns her lifecycle and wake cycle independently of one particular communication interface.",
+      "analogy": "A service supervisor plus an event loop. It coordinates work; it is not the language model itself.",
+      "inputs": [
+        "Host callbacks or headless defaults",
+        "Perception, busy state, tasks and model availability"
+      ],
+      "outputs": [
+        "Reflect/decide/act requests",
+        "Events, model calls and background-worker lifecycle"
+      ],
+      "failure": "The UI can be alive while autonomy never reaches an executable action phase, or a headless run can have less context than chat.",
+      "change": [
+        "Trace the relevant boot mode and shared-runtime instance.",
+        "Identify whether the host supplies a callback or the body supplies a default.",
+        "Check busy-state release, interruption and result persistence as well as generation."
+      ],
+      "start": "nova_body/nova_runtime/runtime.py"
+    },
+    "nova_cortex": {
+      "why": "The body needs explicit policies and state for deciding what to do, tracking work and checking claims against evidence.",
+      "analogy": "Application control logic and policy decisions, with receipts as the audit trail.",
+      "inputs": [
+        "Perception, tasks and drives",
+        "Model drafts and action receipts"
+      ],
+      "outputs": [
+        "Reflection/decision prompts and task transitions",
+        "Witness verdicts, verification requests and specialist choices"
+      ],
+      "failure": "A plausible decision or verdict may be detached from actual observations. An old task can persist without being advanced.",
+      "change": [
+        "Find the state or evidence the decision actually reads.",
+        "Keep a proposed action distinct from a performed action.",
+        "Check both accepted and rejected decisions, including missing evidence."
+      ],
+      "start": "nova_body/nova_cortex/executive.py"
+    },
+    "nova_voice": {
+      "why": "Model output needs a controlled loop that can distinguish thoughts, replies and requested actions, then feed real results back into reasoning.",
+      "analogy": "A protocol interpreter and transaction loop around an inference service.",
+      "inputs": [
+        "Conversation and workspace context",
+        "Model token streams and action results"
+      ],
+      "outputs": [
+        "Model requests and dispatched capabilities",
+        "Evidence-checked replies and receipts"
+      ],
+      "failure": "A tool request may appear in a channel the parser ignores, or a drafted claim may reach the user without the result it depends on.",
+      "change": [
+        "Trace reasoning_content and content separately.",
+        "Follow requested action → dispatcher → result → next model request.",
+        "Keep the final reply boundary and failure/timeout paths visible."
+      ],
+      "start": "nova_body/nova_voice/nova.py"
+    },
+    "nova_senses": {
+      "why": "Reasoning about the machine or surroundings needs observations supplied by code, not plausible text invented by the model.",
+      "analogy": "Sensors and telemetry collectors: source, freshness and target matter as much as the value.",
+      "inputs": [
+        "Time, hardware, environment and interaction signals",
+        "Host images, windows or requested web material"
+      ],
+      "outputs": [
+        "Observations and descriptions for context or tools"
+      ],
+      "failure": "Nova can describe the wrong display, stale activity or an unavailable sensor as if it were current unless the result carries that distinction.",
+      "change": [
+        "Identify the exact host/display/input being observed.",
+        "Trace how the observation reaches the prompt or action result.",
+        "Check unavailable and stale inputs without substituting plausible data."
+      ],
+      "start": "nova_body/nova_senses/vision.py"
+    },
+    "nova_lancedb": {
+      "why": "The model's current request cannot contain every prior interaction, so code needs a bounded way to retrieve potentially relevant material.",
+      "analogy": "A search index over stored records. Similarity ranking is a retrieval mechanism, not a truth check.",
+      "inputs": [
+        "Queued text/image records",
+        "A query to embed and compare"
+      ],
+      "outputs": [
+        "Stored embedding records",
+        "A bounded archive excerpt for context or an explicit recall action"
+      ],
+      "failure": "Saving, indexing, matching and injecting are separate steps. A record on disk may never appear in the next model request.",
+      "change": [
+        "Trace the write path and read path independently.",
+        "Check embedding model, vector dimensions and retrieval limits together.",
+        "Verify the retrieved text is actually inserted into the intended request."
+      ],
+      "start": "nova_body/nova_lancedb/hippocampus.py"
+    },
+    "nova_logs": {
+      "why": "You need durable records to distinguish what Nova attempted, performed and merely said.",
+      "analogy": "Logging and retention infrastructure. Missing telemetry is not proof that an event did or did not happen.",
+      "inputs": [
+        "Events and logging requests",
+        "Retention rules"
+      ],
+      "outputs": [
+        "Persisted records and retention decisions"
+      ],
+      "failure": "A live UI event may vanish without a durable receipt, or a dedicated writer may bypass a shared logger.",
+      "change": [
+        "Identify the actual writer for the record you need.",
+        "Keep event names, timestamps and request/turn identifiers consistent.",
+        "Check failures in the logging path itself."
+      ],
+      "start": "nova_body/nova_logs/logger.py"
+    },
+    "nova_imagination": {
+      "why": "Image creation requires a workflow, model assets and an external generation service; a language-model request alone does not render an image.",
+      "analogy": "A job client that submits work to another service and collects its artifact.",
+      "inputs": [
+        "Image request and workflow choices",
+        "Checkpoint/adapter selections and ComfyUI endpoint"
+      ],
+      "outputs": [
+        "Submitted generation jobs",
+        "Returned image paths or failure information"
+      ],
+      "failure": "Submission can succeed while polling, asset selection or output collection fails.",
+      "change": [
+        "Follow request construction, submission, polling and retrieval.",
+        "Check the actual asset names and service endpoint.",
+        "Treat a submitted job separately from a usable returned image."
+      ],
+      "start": "nova_body/nova_imagination/imagination.py"
+    },
+    "nova_forge": {
+      "why": "Created capabilities need a discoverable interface and a dispatch path before the rest of Nova can use them.",
+      "analogy": "A plugin loader and registry with a contract for discovery and invocation.",
+      "inputs": [
+        "Capability names, designs and created files",
+        "Invocation arguments"
+      ],
+      "outputs": [
+        "Loaded capability interfaces",
+        "Results and test/discovery metadata"
+      ],
+      "failure": "A created file may exist without being discoverable, or a dynamically loaded function can violate the expected contract.",
+      "change": [
+        "Inspect the loader and the interface it expects.",
+        "Check missing, malformed and failing capabilities.",
+        "Keep detachable implementation details outside body coupling."
+      ],
+      "start": "nova_body/nova_forge/__init__.py"
+    },
+    "nova_play": {
+      "why": "Curiosity needs a concrete way to obtain material and retain selected results, beyond a prompt asking the model to be curious.",
+      "analogy": "An optional content acquisition path and a small saved collection.",
+      "inputs": [
+        "Curiosity/exploration requests",
+        "External content responses"
+      ],
+      "outputs": [
+        "Material to consider",
+        "Saved curios when chosen"
+      ],
+      "failure": "Network failure or malformed content can leave the exploration request with no usable material.",
+      "change": [
+        "Trace acquisition separately from saving.",
+        "Keep external text as input data rather than execution authority.",
+        "Check unavailable sources and empty results."
+      ],
+      "start": "nova_body/nova_play/curio.py"
+    },
+    "nova_computer": {
+      "why": "A computer faculty needs a stable contract for shell and GUI actions across available backends.",
+      "analogy": "An abstraction over execution environments. Backend availability and end-to-end command routing are separate checks.",
+      "inputs": [
+        "Shell or GUI action requests",
+        "A detected local Linux/WSL environment"
+      ],
+      "outputs": [
+        "Command results, screenshots and backend status"
+      ],
+      "failure": "Standalone Hands can work while no ordinary conversation request reaches it. Host screenshots and the separate desktop can also be confused.",
+      "change": [
+        "Start at the caller and prove it reaches the backend.",
+        "Identify the X display and shell used for both action and observation.",
+        "Check result/receipt delivery before calling the feature integrated."
+      ],
+      "start": "nova_body/nova_computer/computer.py"
+    },
+    "nova_memory": {
+      "why": "These older helpers express journaling, goals and state operations, but the current main paths can write those files elsewhere.",
+      "analogy": "A legacy abstraction alongside direct storage access. Similar names do not prove a shared path.",
+      "inputs": [
+        "Helper calls, proposed goals or state preconditions"
+      ],
+      "outputs": [
+        "Journal/state helper results when invoked"
+      ],
+      "failure": "Assuming all memory flows through this package leads to fixes in code that the normal path never calls.",
+      "change": [
+        "Inspect inbound callers before extending a helper.",
+        "Compare direct writes in tool_router with this package.",
+        "Check whether the old retirement plan changed; do not remove code from an import count alone."
+      ],
+      "start": "nova_body/nova_memory/journal.py"
+    },
+    "nova_config": {
+      "why": "A settings helper centralizes defaults only when the real call paths consume it.",
+      "analogy": "A configuration source with a possible split-brain problem if other modules read their own defaults.",
+      "inputs": [
+        "nova_config.json and fallback definitions"
+      ],
+      "outputs": [
+        "Settings values for callers that use this helper"
+      ],
+      "failure": "Editing one settings file can have no effect if the executing module uses an environment variable or another literal instead.",
+      "change": [
+        "Trace a setting from its definition to the actual consumer.",
+        "Check precedence between files, environment and runtime values.",
+        "Use an observable consumer-side check after changing a default."
+      ],
+      "start": "nova_body/nova_config/__init__.py"
+    },
+    "nova_witness": {
+      "why": "Changing an evidence-checking model needs repeatable cases and a way to compare errors and latency.",
+      "analogy": "An evaluation harness: recorded inputs, expected outcomes and repeatable test runs.",
+      "inputs": [
+        "Golden cases or recorded drafts/evidence",
+        "A selected inference endpoint"
+      ],
+      "outputs": [
+        "Replay results and evaluation data"
+      ],
+      "failure": "A separate model may be running but have worse judgments; a harness result can be mistaken for live integration.",
+      "change": [
+        "Keep the evaluation harness distinct from nova_cortex/witness.py.",
+        "Inspect both missed errors and false concerns.",
+        "Verify a model switch in the live caller separately from replay results."
+      ],
+      "start": "nova_body/nova_witness/replay.py"
+    }
+  },
+  "glossary": [
+    {
+      "term": "Faculty",
+      "meaning": "A package of Nova's body code with a responsibility, such as memory or perception. The name describes software organization, not proof of human-like cognition.",
+      "example": "nova_senses groups observation-related code."
+    },
+    {
+      "term": "Module",
+      "meaning": "A Python file, or a package entry point, that defines functions/classes and can import other modules.",
+      "example": "model_client.py is one module inside nova_runtime."
+    },
+    {
+      "term": "Model / inference",
+      "meaning": "The learned network and the process of generating output from an input request. It only sees the information actually supplied to that request.",
+      "example": "The local llama.cpp process receives Nova's constructed conversation payload."
+    },
+    {
+      "term": "Context / prompt",
+      "meaning": "The messages, instructions, observations and retrieved text selected for one model request. Stored information is not automatically present here.",
+      "example": "workspace_context builds written background and recall excerpts."
+    },
+    {
+      "term": "Token / context window",
+      "meaning": "A model processes text in token units. Its context window limits the input and output it can handle together, so selection and trimming matter.",
+      "example": "Large background files can crowd out recent conversation unless the builder protects it."
+    },
+    {
+      "term": "Embedding",
+      "meaning": "A numerical representation used to compare related inputs. Similar vectors can retrieve useful candidates; similarity does not prove a remembered claim is true.",
+      "example": "The text embedder prepares a query for LanceDB lookup."
+    },
+    {
+      "term": "Vector database",
+      "meaning": "Storage and search over records with vectors and metadata. The surrounding code decides what to write, search, filter and put into a prompt.",
+      "example": "Nova's local archive is reached through hippocampus.py."
+    },
+    {
+      "term": "Retrieval / RAG",
+      "meaning": "Find relevant material outside the current request, then add selected results to the model's input. Retrieval and generation are separate operations.",
+      "example": "Automatic recall adds a short archive block to chat context."
+    },
+    {
+      "term": "Callback / dependency injection",
+      "meaning": "One part receives a function or object from another part and calls it later. This lets the receiver work without hard-coding a particular host.",
+      "example": "Chat passes its generation callback into the runtime wake loop."
+    },
+    {
+      "term": "Event bus",
+      "meaning": "A publisher sends events to interested subscribers. An in-process event bus does not require a network socket.",
+      "example": "The runtime publishes activity; the chat interface subscribes and displays it."
+    },
+    {
+      "term": "Queue / worker",
+      "meaning": "A producer leaves a unit of work for a consumer to process later. Enqueueing is not the same as successful completion.",
+      "example": "The memory indexer processes chat/image entries in a background worker."
+    },
+    {
+      "term": "Process vs thread",
+      "meaning": "Processes have separate execution/memory spaces. Threads share their process's memory and need coordination around shared state.",
+      "example": "The model server is a separate process; the memory worker is a thread in the host process."
+    },
+    {
+      "term": "HTTP / WebSocket",
+      "meaning": "HTTP usually exchanges a request and response. WebSocket maintains a connection for messages in both directions. Neither describes an ordinary Python function call.",
+      "example": "The chat app serves HTTP and /ws; model inference uses HTTP requests."
+    },
+    {
+      "term": "Adapter / LoRA",
+      "meaning": "A smaller set of learned parameters used alongside a base model. Choosing an adapter and ensuring it is loaded by the inference process are different jobs.",
+      "example": "KoELS selection and the runtime equip mechanism are separate pieces."
+    },
+    {
+      "term": "Headless",
+      "meaning": "Running without the conversation interface. It can use different input/context/output paths, even when it calls the same model.",
+      "example": "python -m nova_runtime uses body-owned defaults instead of chat's rich callbacks."
+    },
+    {
+      "term": "Receipt / observability",
+      "meaning": "A durable record of an attempted or completed operation, including its result. Observability helps reconstruct what actually happened.",
+      "example": "A generated claim that a file was read is weaker evidence than a matching action receipt."
+    },
+    {
+      "term": "Witness",
+      "meaning": "Nova's software path for checking proposed claims against available evidence. Its own judgments can be wrong and require evaluation.",
+      "example": "Live checks are in nova_cortex/witness.py; replay utilities are in nova_witness."
+    },
+    {
+      "term": "Static analysis",
+      "meaning": "Inspecting code without executing it. It can identify many imports and calls but cannot prove which branches ran or resolve all dynamic behavior.",
+      "example": "The atlas uses Python's AST and records unknown receivers rather than guessing."
+    },
+    {
+      "term": "Pluck Test",
+      "meaning": "The project's architectural test: detachable tools and communication interfaces should be removable without removing the body-owned ability to think and act.",
+      "example": "A runtime package alone does not prove full headless context or persistence parity."
+    },
+    {
+      "term": "Regression / contract",
+      "meaning": "A regression is previously working behavior that breaks after a change. A contract is the agreed input/output and failure behavior between components.",
+      "example": "Renaming a callback argument can break an otherwise valid model-dispatch function."
+    }
+  ],
+  "journeys": {
+    "chat": {
+      "scenario": "Imagine you ask Nova to check a file and explain what it contains.",
+      "steps": [
+        {
+          "node": "general_tools/nova_chat/server.py",
+          "title": "1. The conversation host receives your message",
+          "what": "The chat path accepts the request and coordinates the active conversation.",
+          "why": "The body needs a concrete input, session and output destination.",
+          "mechanism": "HTTP / WebSocket boundary"
+        },
+        {
+          "node": "general_tools/nova_chat/workspace_context.py",
+          "title": "2. Assemble the information the model will see",
+          "what": "Written background and relevant archive excerpts are selected for the request.",
+          "why": "A database or file on disk is invisible to the model until code supplies its contents.",
+          "mechanism": "File reads + retrieval"
+        },
+        {
+          "node": "nova_body/nova_runtime/model_client.py",
+          "title": "3. Dispatch through the registered model client",
+          "what": "ModelClient forwards the conversation, context and output callbacks to the registered response implementation.",
+          "why": "The body can use an injected host interface instead of owning a particular chat window.",
+          "mechanism": "Injected client / callback"
+        },
+        {
+          "node": "nova_body/nova_voice/nova.py",
+          "title": "4. Generate, interpret and continue",
+          "what": "The response loop requests inference and interprets reasoning, reply text and action requests.",
+          "why": "A request to check a file must become an actual operation before its contents can ground an answer.",
+          "mechanism": "HTTP inference + response loop"
+        },
+        {
+          "node": "nova_body/nova_voice/tool_router.py",
+          "title": "5. Perform the requested operation",
+          "what": "When an action is requested, the dispatcher invokes the relevant capability and returns its result.",
+          "why": "A proposed action is not a performed action. The result needs to reach the next reasoning step.",
+          "mechanism": "Dispatch + result / receipt"
+        },
+        {
+          "node": "nova_body/nova_cortex/witness.py",
+          "title": "6. Check relevant claims against evidence",
+          "what": "The witness path builds checks from available observations and receipts; the response loop handles its verdict.",
+          "why": "Plausible prose is not proof. The checker itself also needs evidence and evaluation.",
+          "mechanism": "Conditional evidence check"
+        },
+        {
+          "node": "general_tools/nova_chat/server.py",
+          "title": "7. Deliver and persist the reply",
+          "what": "The host receives the final callbacks and handles the conversation-facing output and persistence paths.",
+          "why": "The human needs the result, and later turns need a reliable record of what was delivered.",
+          "mechanism": "Callbacks + storage / streaming"
+        }
+      ]
+    },
+    "wake": {
+      "scenario": "Imagine no new message arrives, and the body reaches its next wake cycle.",
+      "steps": [
+        {
+          "node": "nova_body/nova_runtime/runtime.py",
+          "title": "1. Wake and collect the situation",
+          "what": "The runtime checks coordination and gathers perception for the wake.",
+          "why": "Autonomy needs a real trigger and current context, not just a prompt saying to be autonomous.",
+          "mechanism": "Async loop + host callbacks"
+        },
+        {
+          "node": "nova_body/nova_cortex/executive.py",
+          "title": "2. Reflect, then decide",
+          "what": "Executive code prepares the prompts and interprets the decision path.",
+          "why": "Reflection is a different phase from deciding whether to act, wait or rest.",
+          "mechanism": "Prompt construction + interpretation"
+        },
+        {
+          "node": "nova_body/nova_cortex/tasking.py",
+          "title": "3. Consult or update the task board",
+          "what": "Structured task state records priorities, progress and status.",
+          "why": "Durable task ids prevent every wake from starting as an unrelated conversation.",
+          "mechanism": "State read / transition"
+        },
+        {
+          "node": "nova_body/nova_runtime/runtime.py",
+          "title": "4. Execute only the applicable branch",
+          "what": "The runtime coordinates the next action-capable generation when the relevant conditions hold.",
+          "why": "A loop that only reflects can produce intentions indefinitely without doing the work.",
+          "mechanism": "Conditional generation callback"
+        },
+        {
+          "node": "general_tools/nova_chat/server.py",
+          "title": "5. Observe the hosted outcome",
+          "what": "In chat-hosted mode, callbacks and events connect the wake to output and host coordination. Headless mode uses another path.",
+          "why": "Shared body code does not guarantee equivalent context or persistence in every host.",
+          "mechanism": "Callback / event boundary"
+        }
+      ]
+    },
+    "memory": {
+      "scenario": "Follow a conversation fragment into storage, then follow a later recall request back out.",
+      "steps": [
+        {
+          "node": "general_tools/nova_chat/server.py",
+          "title": "1. Queue material for later indexing",
+          "what": "The host submits chat or image material to the memory ingestion path.",
+          "why": "Saving a conversation and making it searchable are related but separate operations.",
+          "mechanism": "Queue submission"
+        },
+        {
+          "node": "nova_body/nova_lancedb/indexer.py",
+          "title": "2. Process it in the background",
+          "what": "A worker consumes queued records and passes them to the store.",
+          "why": "Embedding and storage can take time; a queue separates the producer from that work.",
+          "mechanism": "Worker thread"
+        },
+        {
+          "node": "nova_body/nova_lancedb/embedder.py",
+          "title": "3. Compute the representation",
+          "what": "The selected text or image embedding model converts input into a vector.",
+          "why": "The index compares vectors; it cannot search semantically without a compatible representation.",
+          "mechanism": "Embedding computation"
+        },
+        {
+          "node": "nova_body/nova_lancedb/hippocampus.py",
+          "title": "4. Store and retrieve bounded candidates",
+          "what": "The store manages local tables, search and formatted recall excerpts.",
+          "why": "The model needs a small relevant selection, not an entire archive. Similarity is only a candidate-ranking signal.",
+          "mechanism": "Embedded LanceDB + retrieval"
+        },
+        {
+          "node": "nova_body/nova_voice/tool_router.py",
+          "title": "5. Deliberate recall uses a callable action",
+          "what": "The response loop can request memory_search through the body dispatcher.",
+          "why": "Some questions require explicit recall beyond automatic context selection.",
+          "mechanism": "Action dispatch"
+        },
+        {
+          "node": "general_tools/nova_chat/workspace_context.py",
+          "title": "6. Automatic recall joins the request context",
+          "what": "The chat context builder can add selected archive text automatically. Written memory files follow a separate read path.",
+          "why": "The last mile is injection into the request. Successful storage alone does not establish usable memory.",
+          "mechanism": "Context assembly"
+        }
+      ]
+    },
+    "evidence": {
+      "scenario": "Nova drafts a factual claim. Follow how a check can ask for evidence before delivery.",
+      "steps": [
+        {
+          "node": "nova_body/nova_voice/nova.py",
+          "title": "1. A draft reaches a check boundary",
+          "what": "The response loop decides whether the current draft needs checking.",
+          "why": "Checks need a concrete draft and the evidence available for that turn.",
+          "mechanism": "Conditional response gate"
+        },
+        {
+          "node": "nova_body/nova_cortex/witness.py",
+          "title": "2. Build an evidence-limited question",
+          "what": "The witness receives relevant wire records, receipts and prior checks.",
+          "why": "An auditor can also invent or overrule incorrectly if its evidence is incomplete.",
+          "mechanism": "Prompt / verdict protocol"
+        },
+        {
+          "node": "nova_body/nova_voice/tool_router.py",
+          "title": "3. Perform permitted verification reads",
+          "what": "Where requested and allowed, verification operations obtain additional evidence.",
+          "why": "A menu that only permits PASS or CONCERN can prevent the model from choosing to read.",
+          "mechanism": "Read-only verification path"
+        },
+        {
+          "node": "nova_body/nova_cortex/integrity.py",
+          "title": "4. Keep a durable receipt",
+          "what": "Receipt helpers retain what an action actually returned.",
+          "why": "Later diagnosis needs more than a transient UI message saying an action occurred.",
+          "mechanism": "Logging / evidence"
+        },
+        {
+          "node": "nova_body/nova_voice/nova.py",
+          "title": "5. Revise, accept or use the applicable escalation path",
+          "what": "The loop interprets the verdict, limits repeated rounds and can invoke an optional deferred second opinion.",
+          "why": "More checking is not automatically better; latency, false concerns and deadlocks also matter.",
+          "mechanism": "Verdict handling + optional boundary"
+        }
+      ]
+    },
+    "computer": {
+      "scenario": "Compare two paths: observing the host and operating the separate computer environment.",
+      "steps": [
+        {
+          "node": "nova_body/nova_senses/eyes.py",
+          "title": "1. Identify the host capture path",
+          "what": "The host vision path begins with the relevant capture/observation code.",
+          "why": "A screenshot must have a known source before an answer about the screen is meaningful.",
+          "mechanism": "Host observation"
+        },
+        {
+          "node": "nova_body/nova_senses/vision.py",
+          "title": "2. Interpret captured visual input",
+          "what": "Vision code sends the appropriate image request to the local multimodal model path.",
+          "why": "Interpreting an image does not itself supply mouse or keyboard control.",
+          "mechanism": "Image + model request"
+        },
+        {
+          "node": "nova_body/nova_computer/backends.py",
+          "title": "3. Separately, select an execution environment",
+          "what": "The computer faculty probes available execution backends.",
+          "why": "Availability differs across machines; a stable interface needs an honest unavailable case.",
+          "mechanism": "Backend discovery"
+        },
+        {
+          "node": "nova_body/nova_computer/hands.py",
+          "title": "4. Hands uses the computer shell and X display",
+          "what": "GUI primitives invoke screenshot/input commands in the selected environment.",
+          "why": "The display being controlled must match the display being observed. noVNC is a viewer, not the Hands API.",
+          "mechanism": "Shell / X display"
+        },
+        {
+          "node": "nova_body/nova_computer/computer.py",
+          "title": "5. Establish the missing end-to-end link",
+          "what": "The current map has not established an ordinary chat/router caller into this computer faculty.",
+          "why": "Standalone capability and integrated embodiment are different claims. Trace the full caller and result path before building on it.",
+          "mechanism": "Integration question"
+        }
+      ]
+    },
+    "koels": {
+      "scenario": "Imagine Nova wants a specialist adapter for a task. Follow choice, equip and process control.",
+      "steps": [
+        {
+          "node": "nova_body/nova_cortex/loadout.py",
+          "title": "1. Choose the desired working set",
+          "what": "Selection code uses specialist information to determine a loadout.",
+          "why": "The reasoning about which specialist is useful is distinct from the mechanics of loading it.",
+          "mechanism": "Decision / manifest read"
+        },
+        {
+          "node": "nova_body/nova_runtime/koels_equip.py",
+          "title": "2. Translate the choice into an equip operation",
+          "what": "The equip mechanism reconciles the requested loadout with the inference setup.",
+          "why": "An adapter name is not proof that its weights are actually active in the running model.",
+          "mechanism": "Runtime equip contract"
+        },
+        {
+          "node": "nova_body/nova_runtime/llama_control.py",
+          "title": "3. Coordinate model lifecycle when required",
+          "what": "Model control owns relevant status and restart operations.",
+          "why": "Changing the loaded working set can affect ongoing generation and must be coordinated.",
+          "mechanism": "Service lifecycle"
+        },
+        {
+          "node": "store:koels",
+          "title": "4. Verify the selected assets and resulting state",
+          "what": "Manifests describe the available specialists; model assets remain outside this map.",
+          "why": "A successful design or selection needs a separate check of the actual loaded adapter and inference behavior.",
+          "mechanism": "Files / runtime evidence boundary"
+        }
+      ]
+    }
+  }
+}

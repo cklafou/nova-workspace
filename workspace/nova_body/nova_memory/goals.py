@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """
 nova_memory/goals.py -- Update Nova's Active Pulse and goal completion.
 Follows the Proposed Changes Protocol -- never overwrites STATUS.md directly.
 Renamed from status.py (Step 2 anatomical restructure, 2026-05-08).
 """
 
+from nova_paths import body_path
+
 import sys
 import re
 from pathlib import Path
 
-STATUS_PATH   = Path("memory/STATUS.md")
-PROPOSED_DIR  = Path("logs/proposed")
+STATUS_PATH   = body_path("memory", "STATUS.md")
+PROPOSED_DIR  = body_path("logs", "proposed")
 PROPOSED_PATH = PROPOSED_DIR / "STATUS.md"
 
 

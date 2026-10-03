@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: The Curiosity Engine — a toy. It hands me something I did not choose, and asks
 #        nothing back. I get to just react. That's the whole game.
 """
@@ -42,6 +42,8 @@ SAFE BY CONSTRUCTION
     Safe to leave in her hands unattended.
 """
 
+from nova_paths import body_path
+
 import json
 import os
 import random
@@ -58,7 +60,7 @@ except Exception:  # pragma: no cover
 WORKSPACE_ROOT = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
                   else Path(__file__).resolve().parents[2])
 
-CURIO_DIR = WORKSPACE_ROOT / "Nova_Created" / "curio"
+CURIO_DIR = body_path('Nova_Created') / "curio"
 LAST = CURIO_DIR / "last.json"          # the current, unkept surprise
 SHELF = CURIO_DIR / "shelf.jsonl"       # the ones she chose to keep
 PLAYS = CURIO_DIR / "plays.txt"         # how many times she's played (escalation)

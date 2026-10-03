@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """
 nova_checkin.py -- Cole's Voice Between Nova's Thoughts
 ========================================================
@@ -21,15 +21,17 @@ Nova's decision logic after seeing output:
     - No output from this script -> nothing new, continue
 """
 
+from nova_paths import body_path
+
 import json
 import time
 from pathlib import Path
 
-INBOX_PATH = Path("memory/interrupt_inbox.json")
+INBOX_PATH = body_path("memory", "interrupt_inbox.json")
 
 # Session start time -- messages older than this are already known
 # We store it so check() can compare against it across multiple calls
-SESSION_FILE = Path("memory/session_start.json")
+SESSION_FILE = body_path("memory", "session_start.json")
 
 
 def get_session_start():

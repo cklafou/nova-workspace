@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 982" role="img" aria-label="Nova architecture overview">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#63768f"/></marker></defs>
+<rect width="1560" height="982" fill="#0c1421"/>
+<text x="30" y="32" fill="#edf3fc" font-size="20" font-family="sans-serif">Nova — component dependency overview</text>
+<path d="M275,232 C307.5,232 307.5,232 340,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M275,232 C307.5,232 307.5,106 340,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M275,232 C462.5,232 462.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M275,232 C462.5,232 462.5,106 650,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M275,232 C307.5,232 307.5,358 340,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M275,106 C462.5,106 462.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M275,106 C307.5,106 307.5,106 340,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M275,106 C327,106 327,232 275,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M275,106 C462.5,106 462.5,358 650,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,862 C617.5,862 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,232 C617.5,232 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,232 C637,232 637,358 585,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,232 C617.5,232 617.5,232 650,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,484 C617.5,484 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,484 C947,484 947,862 895,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,484 C947,484 947,358 895,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,232 C947,232 947,862 895,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,358 C947,358 947,862 895,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,736 C617.5,736 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,736 C637,736 637,358 585,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,610 C947,610 947,862 895,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,610 C947,610 947,358 895,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,610 C947,610 947,484 895,484" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,106 C617.5,106 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,106 C617.5,106 617.5,232 650,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,106 C637,106 637,358 585,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,106 C617.5,106 617.5,106 650,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,106 C637,106 637,232 585,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,358 C617.5,358 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,358 C617.5,358 617.5,358 650,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,106 C947,106 947,862 895,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M650,106 C617.5,106 617.5,232 585,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,106 C947,106 947,358 895,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M650,106 C617.5,106 617.5,484 585,484" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,106 C947,106 947,484 895,484" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,106 C947,106 947,232 895,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,106 C947,106 947,610 895,610" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M650,106 C617.5,106 617.5,358 585,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,736 C947,736 947,862 895,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,232 C1082.5,232 1082.5,106 1270,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,106 C772.5,106 772.5,106 960,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,232 C927.5,232 927.5,736 1270,736" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,106 C927.5,106 927.5,358 1270,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,232 C927.5,232 927.5,610 1270,610" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,358 C772.5,358 772.5,106 960,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,484 C927.5,484 927.5,232 960,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,610 C772.5,610 772.5,358 960,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,484 C772.5,484 772.5,484 960,484" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M895,106 C927.5,106 927.5,484 960,484" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M275,106 C617.5,106 617.5,610 960,610" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<g><rect x="30" y="66" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="44" y="94" fill="#edf3fc" font-size="15" font-family="sans-serif">Launch boundary</text>
+<text x="44" y="119" fill="#9fb2cd" font-size="12" font-family="sans-serif">Starts the local processes</text></g>
+<g><rect x="30" y="192" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="44" y="220" fill="#edf3fc" font-size="15" font-family="sans-serif">Chat attachment</text>
+<text x="44" y="245" fill="#9fb2cd" font-size="12" font-family="sans-serif">The conversation window</text></g>
+<g><rect x="340" y="570" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="354" y="598" fill="#edf3fc" font-size="15" font-family="sans-serif">Computer faculty</text>
+<text x="354" y="623" fill="#9fb2cd" font-size="12" font-family="sans-serif">Acts in a separate desktop</text></g>
+<g><rect x="340" y="822" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="354" y="850" fill="#edf3fc" font-size="15" font-family="sans-serif">Config helper</text>
+<text x="354" y="875" fill="#9fb2cd" font-size="12" font-family="sans-serif">Loads default settings</text></g>
+<g><rect x="340" y="192" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="354" y="220" fill="#edf3fc" font-size="15" font-family="sans-serif">Cortex</text>
+<text x="354" y="245" fill="#9fb2cd" font-size="12" font-family="sans-serif">Decides, checks and plans</text></g>
+<g><rect x="340" y="444" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="354" y="472" fill="#edf3fc" font-size="15" font-family="sans-serif">Forge</text>
+<text x="354" y="497" fill="#9fb2cd" font-size="12" font-family="sans-serif">Builds new capabilities</text></g>
+<g><rect x="650" y="444" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="664" y="472" fill="#edf3fc" font-size="15" font-family="sans-serif">Imagination</text>
+<text x="664" y="497" fill="#9fb2cd" font-size="12" font-family="sans-serif">Creates and inspects artwork</text></g>
+<g><rect x="650" y="192" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="664" y="220" fill="#edf3fc" font-size="15" font-family="sans-serif">Searchable memory</text>
+<text x="664" y="245" fill="#9fb2cd" font-size="12" font-family="sans-serif">Finds relevant past material</text></g>
+<g><rect x="650" y="318" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="664" y="346" fill="#edf3fc" font-size="15" font-family="sans-serif">Logging and retention</text>
+<text x="664" y="371" fill="#9fb2cd" font-size="12" font-family="sans-serif">Keeps records of activity</text></g>
+<g><rect x="340" y="696" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="354" y="724" fill="#edf3fc" font-size="15" font-family="sans-serif">Journal and state helpers</text>
+<text x="354" y="749" fill="#9fb2cd" font-size="12" font-family="sans-serif">Older memory helpers</text></g>
+<g><rect x="650" y="822" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="664" y="850" fill="#edf3fc" font-size="15" font-family="sans-serif">nova_paths.py</text>
+<text x="664" y="875" fill="#9fb2cd" font-size="12" font-family="sans-serif">paths.py</text></g>
+<g><rect x="650" y="570" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="664" y="598" fill="#edf3fc" font-size="15" font-family="sans-serif">Play</text>
+<text x="664" y="623" fill="#9fb2cd" font-size="12" font-family="sans-serif">Explores out of curiosity</text></g>
+<g><rect x="340" y="66" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="354" y="94" fill="#edf3fc" font-size="15" font-family="sans-serif">Runtime</text>
+<text x="354" y="119" fill="#9fb2cd" font-size="12" font-family="sans-serif">Keeps Nova running</text></g>
+<g><rect x="340" y="318" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="354" y="346" fill="#edf3fc" font-size="15" font-family="sans-serif">Senses</text>
+<text x="354" y="371" fill="#9fb2cd" font-size="12" font-family="sans-serif">Notices what is happening</text></g>
+<g><rect x="650" y="66" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="664" y="94" fill="#edf3fc" font-size="15" font-family="sans-serif">Voice and action router</text>
+<text x="664" y="119" fill="#9fb2cd" font-size="12" font-family="sans-serif">Turns reasoning into replies</text></g>
+<g><rect x="650" y="696" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="664" y="724" fill="#edf3fc" font-size="15" font-family="sans-serif">Witness evaluation</text>
+<text x="664" y="749" fill="#9fb2cd" font-size="12" font-family="sans-serif">Tests the evidence checker</text></g>
+<g><rect x="960" y="66" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="974" y="94" fill="#edf3fc" font-size="15" font-family="sans-serif">Local language / vision model</text>
+<text x="974" y="119" fill="#9fb2cd" font-size="12" font-family="sans-serif">Source default :8080</text></g>
+<g><rect x="960" y="192" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="974" y="220" fill="#edf3fc" font-size="15" font-family="sans-serif">Image generation service</text>
+<text x="974" y="245" fill="#9fb2cd" font-size="12" font-family="sans-serif">Source default :8188</text></g>
+<g><rect x="960" y="318" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="974" y="346" fill="#edf3fc" font-size="15" font-family="sans-serif">Linux desktop / noVNC</text>
+<text x="974" y="371" fill="#9fb2cd" font-size="12" font-family="sans-serif">Source default :6080</text></g>
+<g><rect x="1270" y="66" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="1284" y="94" fill="#edf3fc" font-size="15" font-family="sans-serif">LanceDB files</text>
+<text x="1284" y="119" fill="#9fb2cd" font-size="12" font-family="sans-serif">Local vector tables</text></g>
+<g><rect x="1270" y="192" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="1284" y="220" fill="#edf3fc" font-size="15" font-family="sans-serif">Self and written memory</text>
+<text x="1284" y="245" fill="#9fb2cd" font-size="12" font-family="sans-serif">SELF + memory documents</text></g>
+<g><rect x="1270" y="318" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="1284" y="346" fill="#edf3fc" font-size="15" font-family="sans-serif">Persistent body state</text>
+<text x="1284" y="371" fill="#9fb2cd" font-size="12" font-family="sans-serif">memory/*.json</text></g>
+<g><rect x="1270" y="444" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="1284" y="472" fill="#edf3fc" font-size="15" font-family="sans-serif">Task board file</text>
+<text x="1284" y="497" fill="#9fb2cd" font-size="12" font-family="sans-serif">Tasking/tasks.json</text></g>
+<g><rect x="1270" y="570" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="1284" y="598" fill="#edf3fc" font-size="15" font-family="sans-serif">Transcripts and receipts</text>
+<text x="1284" y="623" fill="#9fb2cd" font-size="12" font-family="sans-serif">logs/</text></g>
+<g><rect x="1270" y="696" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="1284" y="724" fill="#edf3fc" font-size="15" font-family="sans-serif">KoELS / model assets</text>
+<text x="1284" y="749" fill="#9fb2cd" font-size="12" font-family="sans-serif">Manifests and model files</text></g>
+<g><rect x="1270" y="822" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="1284" y="850" fill="#edf3fc" font-size="15" font-family="sans-serif">Configuration definitions</text>
+<text x="1284" y="875" fill="#9fb2cd" font-size="12" font-family="sans-serif">nova_config + tunables</text></g>
+<g><rect x="960" y="444" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="974" y="472" fill="#edf3fc" font-size="15" font-family="sans-serif">Detachable / created tools</text>
+<text x="974" y="497" fill="#9fb2cd" font-size="12" font-family="sans-serif">PLUCK-exempt boundary</text></g>
+<g><rect x="960" y="696" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="974" y="724" fill="#edf3fc" font-size="15" font-family="sans-serif">External web</text>
+<text x="974" y="749" fill="#9fb2cd" font-size="12" font-family="sans-serif">HTTP content sources</text></g>
+<g><rect x="30" y="318" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="44" y="346" fill="#edf3fc" font-size="15" font-family="sans-serif">Chat HTTP / WebSocket</text>
+<text x="44" y="371" fill="#9fb2cd" font-size="12" font-family="sans-serif">Source default :8765</text></g>
+<g><rect x="960" y="570" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
+<text x="974" y="598" fill="#edf3fc" font-size="15" font-family="sans-serif">Optional witness model</text>
+<text x="974" y="623" fill="#9fb2cd" font-size="12" font-family="sans-serif">Source default :8081</text></g>
+</svg>

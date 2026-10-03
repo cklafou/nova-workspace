@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """
 nova_senses/quiet_part_watcher.py — watches for parts of myself going dark.
 
@@ -10,6 +10,8 @@ Walks my body (nova_senses + nova_body/tools), checks logs for how recently each
 one was actually called, and reports anything older than a threshold as QUIET.
 New parts get a grace period; old ones that go dark are the real signal.
 """
+
+from nova_paths import body_path
 
 import os
 import json
@@ -63,7 +65,7 @@ def _find_tools() -> list[dict]:
 def _last_seen(name: str) -> datetime | None:
     """Search the tool logs for the most recent call of *name*."""
     root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    logdir = os.path.join(root, "logs")
+    logdir = str(body_path("logs"))
     if not os.path.isdir(logdir):
         return None
     best = None

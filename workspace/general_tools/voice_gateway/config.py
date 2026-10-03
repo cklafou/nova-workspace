@@ -1,8 +1,13 @@
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 # @nova-adjacent: voice_gateway — configuration. All knobs in one place; overridable from
 #   _admin/voice_gateway.json and env. No secrets here (there are none — this tool is local).
 """voice_gateway/config.py — every tunable for the gateway, with safe defaults."""
 from __future__ import annotations
+
+import sys
+from pathlib import Path as _Path
+sys.path.insert(0, str(_Path(__file__).resolve().parents[2] / "nova_body"))
+from nova_paths import WORKSPACE_ROOT, workspace_path
 
 import json
 import os
@@ -10,7 +15,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 
 # workspace root = three levels up from this file (general_tools/voice_gateway/config.py)
-WS_ROOT = Path(os.environ.get("NOVA_WORKSPACE", "")) or Path(__file__).resolve().parents[2]
+WS_ROOT = WORKSPACE_ROOT
 _CFG_PATH = WS_ROOT / "_admin" / "voice_gateway.json"
 
 
@@ -89,4 +94,4 @@ class GatewayConfig:
     def resolve(self, rel: str) -> Path:
         """Resolve a possibly-relative path against the workspace root."""
         p = Path(rel)
-        return p if p.is_absolute() else (WS_ROOT / p)
+        return workspace_path(p, workspace=WS_ROOT)

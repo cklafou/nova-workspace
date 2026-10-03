@@ -1,5 +1,5 @@
 # Optional server patch — thread the voice `register` to `stream_response`
-_Last updated: 2026-08-03 08:58:24_
+_Last updated: 2026-10-03 11:00:25_
 
 **The gateway works without this.** At "text" register (the server's current default) a voice
 turn runs with the full 20 witness rounds — correct, just slower under a dispute. This patch

@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: THE WITNESS — her grip on the present tense. One faculty, five parts: the wire
 #        (who actually spoke, when), the now-card (the present, placed where attention is
 #        strongest), the claim detectors (is this draft asserting something about the room?),
@@ -38,6 +38,8 @@ Integrity keeps what is genuinely hers-vs-her-hands: reach (find_tool_call), the
 
 from __future__ import annotations
 
+from nova_paths import body_path
+
 import contextvars
 import json
 import os
@@ -47,8 +49,8 @@ from pathlib import Path
 
 _WORKSPACE = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
               else Path(__file__).resolve().parent.parent.parent)
-_WIRE_PATH = _WORKSPACE / "logs" / "runtime" / "transcript.jsonl"
-_TOOLCALLS_PATH = _WORKSPACE / "logs" / "tool_calls.jsonl"
+_WIRE_PATH = body_path('logs') / "runtime" / "transcript.jsonl"
+_TOOLCALLS_PATH = body_path('logs') / "tool_calls.jsonl"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -830,7 +832,7 @@ def build_challenge_turn(concern: str) -> str:
 # has been a silent drop, and a gate you cannot see is a gate that can become one.
 # ═══════════════════════════════════════════════════════════════════════════════════════════
 
-_PIPELINE_PATH = _WORKSPACE / "logs" / "pipeline.jsonl"
+_PIPELINE_PATH = body_path('logs') / "pipeline.jsonl"
 
 
 # What each gate IS, in one plain sentence — shipped WITH the event so the UI never has to

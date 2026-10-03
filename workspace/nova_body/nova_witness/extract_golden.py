@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 # @nova: Witness v2, Step 0 — golden-set harvester. Reads the CURRENT pipeline.jsonl window
 #        (it self-trims to ~50K, so run this often — every run APPENDS new cases durably)
 #        and joins each witness episode with the wire, receipts, and thinking as they were
@@ -16,6 +16,8 @@ Auto-labels (candidates only — promote to golden with a human eye, or Nova's):
   witness_unresolved -> needs_review
   witness_check with no concern in the same turn -> clean_pass_candidate
 """
+
+from nova_paths import body_path
 import argparse, json, os, sys
 from datetime import datetime
 from pathlib import Path
@@ -112,11 +114,11 @@ def main():
     args = ap.parse_args()
     ws = Path(args.workspace).resolve()
 
-    pipeline = rows(ws / "logs" / "pipeline.jsonl")
-    wire = rows(ws / "logs" / "runtime" / "transcript.jsonl")
-    tools = rows(ws / "logs" / "tool_calls.jsonl")
+    pipeline = rows(body_path('logs', workspace=ws) / "pipeline.jsonl")
+    wire = rows(body_path('logs', workspace=ws) / "runtime" / "transcript.jsonl")
+    tools = rows(body_path('logs', workspace=ws) / "tool_calls.jsonl")
     thoughts = []
-    sess = ws / "logs" / "sessions"
+    sess = body_path('logs', workspace=ws) / "sessions"
     if sess.exists():
         for day in sorted(sess.iterdir())[-3:]:
             thoughts += rows(day / "nova_thoughts.jsonl")

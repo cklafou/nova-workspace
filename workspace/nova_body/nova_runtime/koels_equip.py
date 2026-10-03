@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 09:59:47
 # @nova: KoELS equip mechanism — runtime / life-support (layer 2). The PHYSICAL act of wearing a
 #        specialist loadout: reading which adapters are loaded, the free in-set scale-swap, and
 #        the heavy self-restart that rotates which adapters are loaded at boot. Bytes→GPU is a
@@ -22,6 +22,8 @@ All HTTP is injectable so the logic is testable with no model server; the real o
 defaults. Pairs with nova_cortex.loadout (the pure decision faculty that says WHICH loadout).
 """
 
+from nova_paths import body_path
+
 import json
 import urllib.request
 from pathlib import Path
@@ -32,8 +34,8 @@ class KoELSEquip:
         self.workspace = Path(workspace)
         self.llama = llama                      # LlamaControl — composition, not inheritance
         self.port = port
-        self.state_path = self.workspace / "memory" / "koels_loadout.json"   # desired set (persisted)
-        self.args_path = self.workspace / "memory" / "koels_lora_args.json"  # boot --lora the launcher reads
+        self.state_path = body_path('memory', workspace=self.workspace) / "koels_loadout.json"   # desired set (persisted)
+        self.args_path = body_path('memory', workspace=self.workspace) / "koels_lora_args.json"  # boot --lora the launcher reads
         self._http_get = http_get or self._default_get      # injectable for tests
         self._http_post = http_post or self._default_post
 
@@ -132,7 +134,7 @@ class KoELSEquip:
             self.args_path.parent.mkdir(parents=True, exist_ok=True)
             self.args_path.write_text(json.dumps({"args": args}, indent=2), encoding="utf-8")
             # batch-ready line the launcher (start_llama_koels.cmd) reads via `set /p`
-            (self.workspace / "memory" / "koels_lora_args.txt").write_text(
+            (body_path('memory', workspace=self.workspace) / "koels_lora_args.txt").write_text(
                 self.build_lora_args_line(adapter_paths), encoding="utf-8")
         except Exception as e:
             print(f"[koels] could not write lora args: {e}")
@@ -153,9 +155,9 @@ class KoELSEquip:
             return {"ok": False, "mode": "restart_needed",
                     "note": (f"'{loadout_name}' not loaded; rotating it in needs a self-restart "
                              "(~30-60s dark). Call again with allow_restart=True — never mid-reply.")}
-        return {"ok": True, "mode": "restart",
-                "result": self.self_restart_with_loadout([man.get("adapter")],
-                                                          desired_names=[loadout_name])}
+        result = self.self_restart_with_loadout([man.get("adapter")], desired_names=[loadout_name])
+        return {"ok": bool(result.get("ok")) and result.get("started") is not False,
+                "mode": "restart", "result": result}
 
     # ── default real HTTP (overridden in tests) ─────────────────────────────────────
     @staticmethod

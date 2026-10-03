@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: Executive will — my self-direction. When my time-sense stirs me (or my
 #        environment changes, or Cole speaks) I see my board + my senses + Cole's word,
 #        and FREELY decide: work, switch, create, abandon, wait, or rest. I hold my own
@@ -30,6 +30,10 @@ Autonomy on/off + active focus persist in memory/autonomy_state.json — hers, n
 server's.
 """
 
+from nova_paths import workspace_path
+
+from nova_paths import body_path
+
 import os
 import re
 import json
@@ -41,9 +45,10 @@ from nova_senses import clock, environment, touch
 
 WORKSPACE_ROOT = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
                   else Path(__file__).resolve().parent.parent.parent)
-_STATE = WORKSPACE_ROOT / "memory" / "autonomy_state.json"
+_STATE = body_path('memory') / "autonomy_state.json"
 
 _DEFAULT_CFG = {
+    "wake_budget_seconds": 300,
     "sleep_interval_s": 300,
     # 90s, was 30: at 30s she'd autonomously re-wake right after replying to Cole, re-read his
     # (already-answered) message — so it looked duplicated to her — and fire a second reply
@@ -54,7 +59,7 @@ _DEFAULT_CFG = {
     # apply_decision so she stirs at a natural human pace instead of a fixed 30s metronome.
     # This is what stops her churning reflect→rest→reflect every half-minute when nothing's up.
     "wander_gap_s": 240,
-    "watch_paths": ["Tasking/tasks.json", "memory/interrupt_inbox.json",
+    "watch_paths": ["memory/interrupt_inbox.json",
                     "memory/cole_intent.json"],
 }
 
@@ -130,7 +135,10 @@ def _set_active(tid: Optional[str]) -> None:
 
 
 def _cfg() -> dict:
-    return dict(_DEFAULT_CFG)
+    cfg = dict(_DEFAULT_CFG)
+    from nova_cortex import tunables
+    cfg["wake_budget_seconds"] = tunables.get("autonomy_wake_budget_seconds")
+    return cfg
 
 
 def note_activity() -> None:
@@ -224,15 +232,26 @@ def should_wake(cole_pending: bool = False) -> tuple:
         return (False, "cole typing")
     if cole_pending:
         return (True, "cole")
+    from nova_runtime.work_queue import WorkQueue
+    queue = WorkQueue()
+    import hashlib
+    fp_now = json.dumps(environment.fingerprint(cfg["watch_paths"]), default=list)
+    # Acknowledge observed snapshots separately from work completion. Debounce changes
+    # and retain failed/interrupted work in the durable queue instead of losing it.
+    if fp_now != st.get("observed_fp", ""):
+        queue.put({"kind": "environment", "fingerprint": fp_now},
+                  key="environment:" + hashlib.sha256(fp_now.encode()).hexdigest(), delay=3)
+        st["observed_fp"] = fp_now
+        _save_state(st)
+    if queue.ready():
+        return (True, "pending event")
     # A standing directive that hasn't been turned into a task yet is worth waking
     # for — otherwise a chat instruction waits for the next scheduled nap before she
     # acts. consume_cole_directive() clears it the moment she creates the task, so
     # this can't spin: it wakes her at most a few times until the task lands.
-    if environment.cole_directive():
+    if environment.cole_directive() and environment.directive_is_fresh():
         return (True, "directive")
     fp_now = json.dumps(environment.fingerprint(cfg["watch_paths"]), default=list)
-    if fp_now != st.get("last_fp", ""):
-        return (True, "change")
     wake_at = st.get("wake_at", "")
     if not wake_at or clock.now_iso() >= wake_at:
         return (True, "scheduled")
@@ -316,8 +335,8 @@ def ensure_standing_chores() -> list:
 
     # ── 1. A previous day has notes that JOURNAL.md never absorbed ──────────────────────
     try:
-        notes_dir = WORKSPACE_ROOT / "memory" / "journal_notes"
-        journal = WORKSPACE_ROOT / "memory" / "JOURNAL.md"
+        notes_dir = body_path('memory') / "journal_notes"
+        journal = body_path('memory') / "JOURNAL.md"
         if notes_dir.is_dir() and journal.exists():
             today = clock.now_iso()[:10]
             jtext = journal.read_text(encoding="utf-8", errors="replace")
@@ -343,7 +362,7 @@ def ensure_standing_chores() -> list:
     # ── 2. The audit queue has accumulated enough to be worth a pass ────────────────────
     try:
         import json as _json
-        qp = WORKSPACE_ROOT / "memory" / "audit_queue.json"
+        qp = body_path('memory') / "audit_queue.json"
         if qp.exists():
             items = _json.loads(qp.read_text(encoding="utf-8")).get("items", [])
             pending = [i for i in items if i.get("status") == "pending"]
@@ -816,9 +835,9 @@ def set_active(tid: Optional[str]) -> None:
 def pick_execution_target() -> Optional[str]:
     """Which open task to actually WORK this wake. Prefers open LEAF tasks (open tasks
     with no open children) — i.e. concrete work, not umbrellas waiting on their subtasks.
-    Order of preference: keep the active task if it's an open leaf; else if active is an
-    open umbrella, descend to its highest-priority open leaf; else the highest-priority
-    open leaf anywhere. Persists the choice as active focus. Returns id or None."""
+    Keep an open leaf during its bounded lease. At the next checkpoint choose by
+    priority, then least recently selected, so equal-priority work cannot starve.
+    Persists the choice as active focus. Returns id or None."""
     st = _load_state()
     tasks = tasking.all_tasks()
     # children map (parent id -> [child ids]); dangling/no parent -> top-level
@@ -843,23 +862,33 @@ def pick_execution_target() -> Optional[str]:
     open_tasks = [t for t in tasks.values() if t.get("status") == "open"]
     if not open_tasks:
         return None
-    _key = lambda t: (t.get("priority", 3), t.get("created", ""))
+    _key = lambda t: (t.get("priority", 3), t.get("last_selected_at", 0), t.get("created", ""))
 
+    import time
     active = st.get("active")
     at = tasks.get(active) if active else None
     if at and at.get("status") == "open":
-        if _is_leaf(active):
-            return active                       # already on concrete work
+        if _is_leaf(active) and time.time() < st.get("focus_lease_until", 0):
+            for other in open_tasks:
+                if other["id"] != active:
+                    tasking.scheduling(other["id"], "deferred", f"Continuing {active} until its two-minute focus checkpoint")
+            tasking.scheduling(active, "running", "Continuing within the current focus lease")
+            return active
         sub = sorted(_subtree_open_leaves(active), key=_key)
-        if sub:                                 # active is an umbrella → go to its next leaf
-            _set_active(sub[0]["id"])
-            return sub[0]["id"]
+        # At the checkpoint all available leaves compete, including this subtree.
 
     leaves = [t for t in open_tasks if _is_leaf(t["id"])]
     pool = sorted(leaves or open_tasks, key=_key)
     tid = pool[0].get("id")
     if tid:
         _set_active(tid)
+        tasking._update(tid, last_selected_at=time.time())
+        st = _load_state()
+        st["focus_lease_until"] = time.time() + 120
+        _save_state(st)
+        for other in open_tasks:
+            tasking.scheduling(other["id"], "running" if other["id"] == tid else "deferred",
+                               "Selected at focus checkpoint" if other["id"] == tid else f"Queued behind {tid} by priority; reconsidered at the next checkpoint")
     return tid
 
 
@@ -878,7 +907,7 @@ def _artifact_hint(task: dict) -> Optional[str]:
     if not rel:
         return None
     try:
-        p = (WORKSPACE_ROOT / rel).resolve()
+        p = workspace_path(rel).resolve()
         if not p.exists():
             return None
         text = p.read_text(encoding="utf-8")
@@ -939,6 +968,10 @@ def build_execution(task: dict, recent: str = "") -> str:
     tid    = task.get("id", "")
     title  = task.get("title", "")
     notes  = task.get("notes", "")
+    notes += "\nAcceptance checks: " + json.dumps(task.get("acceptance", []))
+    notes += "\nDONE requests verification. Without acceptance checks this task waits for human review."
+    if task.get("workspace"):
+        notes += "\nStaged workspace: " + json.dumps(task["workspace"])
     prog   = task.get("progress", []) or []
     recent_prog = "\n".join(f"  - {p.get('note','')}" for p in prog[-4:]) or "  (nothing yet)"
     loop_n = _progress_loop_count(task)

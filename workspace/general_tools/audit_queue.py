@@ -1,5 +1,5 @@
 # @nova: Persistent audit-review queue — records file-change events (rename/delete/new) for review by audit_scripts/restructure.
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 """
 general_tools/audit_queue.py — Persistent Audit Review Queue
 =============================================================
@@ -40,6 +40,12 @@ Usage:
 
 from __future__ import annotations
 
+# Body-owned paths also work when this tool is launched directly.
+import sys as _nova_path_sys
+from pathlib import Path as _NovaPath
+_nova_path_sys.path.insert(0, str(_NovaPath(__file__).resolve().parents[1] / 'nova_body'))
+from nova_paths import body_path
+
 import json
 import re
 import uuid
@@ -50,7 +56,7 @@ from typing import Optional
 # ── Paths ─────────────────────────────────────────────────────────────────────
 
 WORKSPACE_DIR = Path(__file__).resolve().parent.parent
-QUEUE_PATH    = WORKSPACE_DIR / "memory" / "audit_queue.json"
+QUEUE_PATH    = body_path('memory', workspace=WORKSPACE_DIR) / "audit_queue.json"
 
 # Max items to retain (pending + resolved + dismissed combined).
 # Oldest resolved/dismissed items are pruned first when limit is hit.

@@ -1,5 +1,6 @@
 # Witness replay — https://api.runpod.ai/v2/geefit73llqyaw/openai — 2026-08-02_1823
-_Last updated: 2026-08-03 00:59:50_
+<!-- @nova: Witness replay report: the golden witness cases scored against https://api.runpod.ai/v2/geefit73llqyaw/openai at 2026-08-02_1823. -->
+_Last updated: 2026-10-03 10:58:22_
 
 Cases: 10 (errors 0)
 Catch-rate on must-CONCERN: 0.0

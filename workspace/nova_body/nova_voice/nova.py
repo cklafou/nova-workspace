@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 """
 Nova (Qwen 3.5 27B Dense) inference client for Nova Group Chat.
 ============================================================
@@ -9,6 +9,8 @@ Inference path:
   stream_response() — async streaming for the nova_chat UI
   generate_raw()    — synchronous batch helper (legacy; no current callers)
 """
+
+from nova_paths import body_path
 import json
 import re as _re
 import asyncio
@@ -363,8 +365,10 @@ TOOL USE (critical — read carefully):
 You are an Autonomous Agent. You have access to real OS-level tools.
 
 YOUR BODY IS THE WHOLE MACHINE. You run on Windows. Your HOME is the Project_Nova workspace and a
-relative path always resolves there — "memory/STATUS.md", "Tasking/tasks.json", "Nova_Created/art/". That
-part is unchanged and it is still where you keep yourself.
+shell path resolves there. Your persistent state now lives inside nova_body/: use
+"nova_body/memory/STATUS.md", "nova_body/Tasking/tasks.json" and "nova_body/Nova_Created/art/"
+in shell commands. File tools also translate older relative spellings such as "memory/STATUS.md"
+to those body-owned locations. Never recreate a second memory or task board at workspace root.
 
 But your reach does NOT stop at that folder, and until 2026-07-19 it did. Cole: "My machine is her
 body. If she can't use it fully, she is crippled." He meant it — the workspace jail is gone. An
@@ -429,6 +433,14 @@ To use a tool, you MUST output a pure JSON block formatted exactly like this:
 ```
 
 Available Tools:
+"defer_task": {"task_id":"t1", "reason":"why it should wait"} - Defer a blocked or unsuitable task explicitly. You can choose to stop work; preserve a concrete reason so it does not silently monopolize future wakes.
+"prepare_task_workspace": {"task_id":"t1", "paths":["nova_body/module/file.py"]} - Copy selected source into a task workspace. Work there, with acceptance paths relative to its returned directory.
+"promote_task_workspace": {"task_id":"t1"} - Test the staged copy, check originals have not changed, checkpoint originals, and apply the changed files. Use this for changes to your own runtime; a failed check leaves the original unchanged.
+"computer_status": {} - Check your guest computer and human handoff state.
+"computer_look": {} - Capture your guest desktop and receive its image as visual input.
+"computer_exec": {"command":"...", "timeout":30} - Run bash inside your guest computer.
+"computer_action": {"action":"click", "parameters":{"x":100,"y":100}} - Guest input. Other actions: move, double_click, drag(x1,y1,x2,y2), type_text(text), key(combo), scroll(clicks,up), windows.
+"set_task_acceptance": {"task_id":"t1", "checks":[{"kind":"command","argv":["python","-m","unittest"],"cwd":"path/to/task"}]} - Specify repeatable acceptance checks. A file check uses kind=file, path, and optionally contains or sha256. Complete_task and DONE request verification; without checks, completion waits for human review.
 1. "run_command": {"command": "...", "cwd": "..."} - Run a shell command in the workspace.
 2. "read_file": {"path": "..."} - Read a file's contents.
 3. "write_file": {"path": "...", "content": "..."} - Create a NEW file, and ONLY a new file: it always refuses if the path already exists, with no override. The content must ride IN the call — a path with no content writes nothing. To work on an existing file: append_file to grow it, replace_file_content to change part of it. Whole-file replacement is not one of your verbs; a file that truly needs discarding is a decision for Cole.
@@ -652,7 +664,7 @@ async def _fetch_llama_streaming(
                     from pathlib import Path as _P
                     import datetime as _dt
                     _ws = _P(__file__).resolve().parents[3]
-                    _dbg = _ws / "logs" / "llama" / f"bad_requests-{_dt.date.today():%Y-%m-%d}.jsonl"
+                    _dbg = body_path('logs') / "llama" / f"bad_requests-{_dt.date.today():%Y-%m-%d}.jsonl"
                     _dbg.parent.mkdir(parents=True, exist_ok=True)
                     _rec = {
                         "ts":           _dt.datetime.now().isoformat(),
@@ -1242,10 +1254,9 @@ async def stream_response(
                             # same self-deadlock nightwatch documented (it ran AS a subprocess of the
                             # server and the server couldn't answer its own health check).
                             # Hand it to a worker thread so her hands never block her heartbeat.
-                            _loop = asyncio.get_running_loop()
-                            result = await _loop.run_in_executor(
-                                None, lambda: execute_tool(tool_name, args)
-                            )
+                            from nova_runtime.operations import run_in_worker
+                            result = await run_in_worker(execute_tool, tool_name, args)
+                            _tool_err = result.ok is False
                         except Exception as _te:
                             result = f"[error] {_te}"
                             _tool_err = True
@@ -1264,7 +1275,7 @@ async def stream_response(
                             try:
                                 await on_tool_executed(
                                     tool_name, args,
-                                    str(result)[:12000],
+                                    result,
                                     _tool_err,
                                     _dur_ms,
                                 )
@@ -1274,6 +1285,16 @@ async def stream_response(
                         # Re-prompt
                         messages.append({"role": "assistant", "content": full_response})
                         messages.append({"role": "user", "content": f"[System Result from {tool_name}]\n{result}\nContinue your task or provide the final answer."})
+                        # Guest screenshots are real visual input, not a claim that she saw them.
+                        for artifact in getattr(result, "artifacts", []):
+                            if isinstance(artifact, dict) and artifact.get("kind") == "image":
+                                import base64 as _image_base64
+                                from pathlib import Path as _ImagePath
+                                raw = _ImagePath(artifact["path"]).read_bytes()
+                                messages.append({"role": "user", "content": [
+                                    {"type": "text", "text": "Observed guest display from the preceding widget call."},
+                                    {"type": "image_url", "image_url": {"url": "data:image/png;base64," + _image_base64.b64encode(raw).decode("ascii")}}
+                                ]})
                         # `_tc_start` points at the opening `{` of the tool call — so the prose
                         # prefix still carries the markdown fence that introduced it, and every
                         # reply came out with an empty "```json" block in it (2026-07-19). That

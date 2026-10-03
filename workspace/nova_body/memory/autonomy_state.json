@@ -1,0 +1,15 @@
+{
+  "enabled": false,
+  "active": null,
+  "last_activity": "2026-10-03T10:27:44",
+  "wake_at": "2026-10-03T10:29:14",
+  "last_fp": "[[\"memory/interrupt_inbox.json\", 103, 1790990839], [\"memory/cole_intent.json\", 209, 1785797066]]",
+  "rest_note": "",
+  "last_wake": "2026-05-25T02:17:17",
+  "stall": 0,
+  "directive_seen": 2,
+  "last_reflection": "Found nothing at all. I've got a receipt for thirty-two from the Tooth page, but the twenty primary teeth and the zero-for-newborns were never read from anything, they were just me knowing something that sounds right and dressing it as checked. That's the exact reach this whole system was built to catch, and it caught me on it tonight, which is a good night for that one thing.",
+  "cont_run": 57,
+  "observed_fp": "[[\"memory/interrupt_inbox.json\", 105, 1785797066], [\"memory/cole_intent.json\", 209, 1785797066]]",
+  "focus_lease_until": 1790951946.7813015
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "a",
+    "status": "paid",
+    "unit_cents": 1250,
+    "quantity": 2
+  },
+  {
+    "id": "b",
+    "status": " PAID ",
+    "unit_cents": 399,
+    "quantity": 3
+  },
+  {
+    "id": "c",
+    "status": "cancelled",
+    "unit_cents": 90000,
+    "quantity": 1
+  }
+]

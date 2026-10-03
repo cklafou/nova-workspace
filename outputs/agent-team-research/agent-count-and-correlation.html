@@ -1,0 +1,124 @@
+<!-- @nova: Illustrate how equal error correlation limits the variance benefit of adding agents; this is not measured model performance. -->
+<div id="nova-agent-evidence">
+  <div>
+    <h3>Agent count and independent information</h3>
+    <span class="text-small text-muted">Analytical illustration · equal variance · no measured agents</span>
+  </div>
+  <div class="viz-controls">
+    <label class="form-label" for="nova-evidence-count">Agents: <output id="nova-evidence-count-value" class="tabular-nums">10</output>
+      <input class="form-range" id="nova-evidence-count" type="range" min="1" max="20" step="1" value="10">
+    </label>
+    <label class="form-label" for="nova-evidence-correlation">Error correlation: <output id="nova-evidence-correlation-value" class="tabular-nums">0.50</output>
+      <input class="form-range" id="nova-evidence-correlation" type="range" min="0" max="1" step="0.01" value="0.5">
+    </label>
+  </div>
+  <figure>
+    <svg class="nova-evidence-chart" role="img" aria-labelledby="nova-evidence-title nova-evidence-description">
+      <title id="nova-evidence-title">Agent count and variance-equivalent independent count</title>
+      <desc id="nova-evidence-description"></desc>
+      <text id="nova-evidence-actual-label" x="8" y="20">Actual agents</text>
+      <text id="nova-evidence-actual-value" y="20" text-anchor="end" class="tabular-nums"></text>
+      <rect class="nova-evidence-track" x="8" y="30" height="20"></rect>
+      <rect id="nova-evidence-actual-bar" x="8" y="30" height="20"></rect>
+      <text id="nova-evidence-effective-label" x="8" y="83">Independent-equivalent count</text>
+      <text id="nova-evidence-effective-value" y="83" text-anchor="end" class="tabular-nums"></text>
+      <rect class="nova-evidence-track" x="8" y="93" height="20"></rect>
+      <rect id="nova-evidence-effective-bar" x="8" y="93" height="20"></rect>
+      <g id="nova-evidence-ticks"></g>
+      <text id="nova-evidence-axis" y="172" text-anchor="middle">Count</text>
+    </svg>
+  </figure>
+  <output id="nova-evidence-live" class="sr-only" aria-live="polite"></output>
+</div>
+<style>
+  #nova-agent-evidence { display: grid; gap: 1rem; color: var(--foreground); }
+  #nova-agent-evidence figure { margin: 0; min-width: 0; }
+  #nova-agent-evidence .nova-evidence-chart { display: block; width: 100%; height: 184px; overflow: visible; }
+  #nova-agent-evidence .nova-evidence-chart text { fill: var(--foreground); font-size: 12px; font-weight: 400; }
+  #nova-agent-evidence .nova-evidence-track { fill: var(--muted); }
+  #nova-evidence-actual-bar { fill: var(--foreground); opacity: 0.35; }
+  #nova-evidence-effective-bar { fill: var(--viz-series-1); }
+</style>
+<script>
+(() => {
+  const root = document.getElementById('nova-agent-evidence');
+  const count = root.querySelector('#nova-evidence-count');
+  const correlation = root.querySelector('#nova-evidence-correlation');
+  const countValue = root.querySelector('#nova-evidence-count-value');
+  const correlationValue = root.querySelector('#nova-evidence-correlation-value');
+  const chart = root.querySelector('.nova-evidence-chart');
+  const actualBar = root.querySelector('#nova-evidence-actual-bar');
+  const effectiveBar = root.querySelector('#nova-evidence-effective-bar');
+  const actualValue = root.querySelector('#nova-evidence-actual-value');
+  const effectiveValue = root.querySelector('#nova-evidence-effective-value');
+  const ticks = root.querySelector('#nova-evidence-ticks');
+  const axis = root.querySelector('#nova-evidence-axis');
+  const description = root.querySelector('#nova-evidence-description');
+  const live = root.querySelector('#nova-evidence-live');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const ns = 'http://www.w3.org/2000/svg';
+
+  function restore(snapshot) {
+    const saved = snapshot && snapshot.modelContent;
+    if (!saved || saved.kind !== 'equal-correlation-illustration') return;
+    if (Number.isFinite(saved.agents)) count.value = String(Math.min(20, Math.max(1, Math.round(saved.agents))));
+    if (Number.isFinite(saved.correlation)) correlation.value = String(Math.min(1, Math.max(0, saved.correlation)));
+  }
+
+  function draw(animate = false) {
+    const n = Number(count.value);
+    const rho = Number(correlation.value);
+    const effective = n / (1 + (n - 1) * rho);
+    const width = Math.max(1, chart.parentElement.getBoundingClientRect().width);
+    const plotWidth = Math.max(1, width - 16);
+    chart.setAttribute('viewBox', '0 0 ' + width + ' 184');
+    countValue.value = String(n);
+    correlationValue.value = rho.toFixed(2);
+    actualValue.textContent = String(n);
+    effectiveValue.textContent = effective.toFixed(2);
+    actualValue.setAttribute('x', String(width - 8));
+    effectiveValue.setAttribute('x', String(width - 8));
+    root.querySelectorAll('.nova-evidence-track').forEach(track => track.setAttribute('width', String(plotWidth)));
+    const transition = animate && !reduceMotion.matches ? 'width 180ms ease-out' : 'none';
+    actualBar.style.transition = transition;
+    effectiveBar.style.transition = transition;
+    actualBar.style.width = (plotWidth * n / 20) + 'px';
+    effectiveBar.style.width = (plotWidth * effective / 20) + 'px';
+    ticks.replaceChildren();
+    const values = width < 400 ? [0, 10, 20] : [0, 5, 10, 15, 20];
+    values.forEach(value => {
+      const label = document.createElementNS(ns, 'text');
+      label.setAttribute('x', String(8 + plotWidth * value / 20));
+      label.setAttribute('y', '143');
+      label.setAttribute('text-anchor', value === 0 ? 'start' : value === 20 ? 'end' : 'middle');
+      label.textContent = String(value);
+      ticks.appendChild(label);
+    });
+    axis.setAttribute('x', String(width / 2));
+    const summary = n + ' agents with equal error correlation ' + rho.toFixed(2) + ' have the same variance of their mean error as ' + effective.toFixed(2) + ' independent equal-variance estimates. This is not an accuracy prediction or an optimal team size.';
+    description.textContent = summary;
+    if (animate) live.value = summary;
+    return {kind: 'equal-correlation-illustration', agents: n, correlation: rho, independentEquivalentCount: effective, assumption: 'Equal variance and equal nonnegative pairwise correlation; not measured accuracy.'};
+  }
+
+  function changed() {
+    const state = draw(true);
+    if (window.openai && typeof window.openai.setWidgetState === 'function') {
+      Promise.resolve(window.openai.setWidgetState({modelContent: state, privateContent: null})).catch(() => {});
+    }
+  }
+
+  restore(window.openai && window.openai.widgetState);
+  count.addEventListener('input', changed);
+  correlation.addEventListener('input', changed);
+  window.addEventListener('openai:set_globals', event => {
+    const globals = event.detail && event.detail.globals;
+    if (globals && Object.prototype.hasOwnProperty.call(globals, 'widgetState')) {
+      restore(globals.widgetState);
+      draw();
+    }
+  });
+  new ResizeObserver(() => draw()).observe(chart.parentElement);
+  draw();
+})();
+</script>

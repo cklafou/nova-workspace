@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: Touch — my afferent sense of what is interacting with ME right now: who is
 #        present and watching, what of my body is in use, which of my surfaces are open,
 #        and who recently reached into me. Tools announce themselves through this sense;
@@ -18,6 +18,8 @@ inspection of *how* something uses her code) should attach as a SEPARATE module 
 reads from this baseline, without changing Touch's own function.
 """
 
+from nova_paths import body_path
+
 import os
 import json
 from datetime import datetime
@@ -25,7 +27,7 @@ from pathlib import Path
 
 WORKSPACE_ROOT = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
                   else Path(__file__).resolve().parent.parent.parent)
-_TOUCH = WORKSPACE_ROOT / "memory" / "touch_state.json"
+_TOUCH = body_path('memory') / "touch_state.json"
 _MAX_RECENT = 8
 
 _DEFAULT = {

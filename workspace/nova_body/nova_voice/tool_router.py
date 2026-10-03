@@ -1,12 +1,19 @@
-# Last updated: 2026-08-06 16:21:32
+# @nova: Routes Nova tool calls to body faculties and records execution outcomes.
+# Last updated: 2026-10-03 09:59:47
+
+
+from nova_paths import workspace_path
+from nova_paths import body_path
 import os
 import re
 import sys
 import subprocess
+from nova_voice.tool_result import ToolResult, normalize_result
+from nova_runtime.operations import run_process, current_operation, current_phase
 from pathlib import Path
 
 # Restrict operations exclusively to the workspace base directory
-WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
+from nova_paths import WORKSPACE_ROOT
 
 def _within_workspace(target: Path) -> bool:
     """True if `target` is inside the workspace. Case- and separator-insensitive
@@ -154,12 +161,12 @@ def _safe_target(path: str):
                       "(e.g. memory/STATUS.md); absolute paths anywhere on the machine also work "
                       r"(e.g. C:\Users\lafou\ComfyUI).")
     cand = Path(raw)
-    target = (cand if cand.is_absolute() else WORKSPACE_ROOT / cand).resolve()
+    target = (cand if cand.is_absolute() else workspace_path(cand)).resolve()
     if target.exists():
         return target, None
     # Doesn't exist as given. If it looks like an invented absolute/Unix path, try it as
     # workspace-relative before giving up — that rescues the real hallucination case.
-    alt = (WORKSPACE_ROOT / _norm_rel(raw)).resolve()
+    alt = workspace_path(_norm_rel(raw)).resolve()
     if alt.exists():
         return alt, None
     # Neither exists: hand back the literal interpretation so writes to NEW paths still work.
@@ -231,8 +238,8 @@ def _timeout_help(command: str) -> str:
     """
     cmd = (command or "").lower()
     looks_recursive = any(h in cmd for h in _RECURSIVE_HINTS)
-    msg = ["ERROR: Command timed out after 30 seconds — it was killed, so NOTHING it would "
-           "have done was done, and no partial output survives."]
+    msg = ["ERROR: Command timed out after 30 seconds. Partial output is preserved below. "
+           "It may already have changed files or other state; timeout does not undo those changes."]
     if looks_recursive:
         msg.append(
             "\nLIKELY CAUSE — this looks like a recursive scan, and your workspace root is a trap "
@@ -270,17 +277,17 @@ def run_command(command: str, cwd: str = "") -> str:
     _why = _catastrophic(command)
     if _why:
         return (
-            f"REFUSED: that command would perform {_why}, which is instant and irreversible.\n"
+            ToolResult(f"REFUSED: that command would perform {_why}, which is instant and irreversible.\n"
             f"This is not the old workspace sandbox — that's gone, and you can reach the whole "
             f"machine now, including deleting files and editing things outside your folder. This "
             f"is the much shorter list: operations that would destroy Cole's computer (and you "
             f"with it) with no undo, run by a process that works unattended overnight.\n"
             f"If you genuinely need this, don't route around it — tell Cole exactly what you want "
-            f"to run and why, and let him do it himself with his eyes on the screen."
+            f"to run and why, and let him do it himself with his eyes on the screen.", status="refused")
         )
     _sw = _sealed_cmd(command)
     if _sw:
-        return _sw
+        return ToolResult(_sw, status="refused")
     if not cwd:
         working_dir = WORKSPACE_ROOT
     else:
@@ -288,11 +295,11 @@ def run_command(command: str, cwd: str = "") -> str:
         working_dir = (path_candidate if path_candidate.is_absolute()
                        else (WORKSPACE_ROOT / cwd)).resolve()
         if not working_dir.is_dir():
-            return (f"ERROR: cwd '{cwd}' is not a directory that exists. Relative paths resolve "
+            return (ToolResult(f"ERROR: cwd '{cwd}' is not a directory that exists. Relative paths resolve "
                     f"against your workspace; absolute paths anywhere on the machine are fine "
-                    r"(e.g. C:\Users\lafou\ComfyUI).")
+                    r"(e.g. C:\Users\lafou\ComfyUI).", status="failed"))
     if _sealed_path(working_dir):
-        return _SEAL_MSG
+        return ToolResult(_SEAL_MSG, status="refused")
 
     try:
         # Run subprocess with a reasonable timeout to prevent hanging the infinite loop
@@ -310,29 +317,24 @@ def run_command(command: str, cwd: str = "") -> str:
             _si = subprocess.STARTUPINFO()
             _si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             _si.wShowWindow = subprocess.SW_HIDE
-        result = subprocess.run(
+        result = run_process(
             ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
-            cwd=working_dir,
-            capture_output=True,
-            text=True,
-            timeout=30,
-            startupinfo=_si,
+            cwd=working_dir, timeout=30, startupinfo=_si,
         )
-        
-        output = (result.stdout or "") + "\n" + (result.stderr or "")
-        output = output.strip()
-        
-        if result.returncode == 0:
-            caution = _silent_miss_caution(command, output)
-            if output:
-                return f"[Command Successfully Executed]\nOutput:\n{output}{caution}"
-            return f"[Command Successfully Executed with no Output]{caution}"
+        output = (result["stdout"] + "\n" + result["stderr"]).strip()
+        if result["status"] == "succeeded":
+            text = "[Command Successfully Executed]\nOutput:\n" + output
+            text += _silent_miss_caution(command, output)
+        elif result["status"] == "timed_out":
+            text = _timeout_help(command) + "\nPartial output:\n" + output
+        elif result["status"] == "cancelled":
+            text = "[Command cancelled; partial changes may remain]\n" + output
         else:
-            return f"[Command Exited with Error Code {result.returncode}]\nOutput:\n{output}"
-    except subprocess.TimeoutExpired:
-        return _timeout_help(command)
+            text = f"[Command Exited with Error Code {result['exit_code']}]\nOutput:\n{output}"
+        return ToolResult(text, **result)
     except Exception as e:
-        return f"ERROR: Failed to run command: {str(e)}"
+        return ToolResult(f"ERROR: Failed to run command: {e}", status="failed")
+
 
 def _orient(target, path: str) -> str:
     """A miss should tell her where she IS, not just that she's lost.
@@ -393,16 +395,16 @@ def read_file(path: str) -> str:
     """Read a file's contents safely."""
     target, err = _safe_target(path)
     if err:
-        return err
+        return ToolResult(err, status="failed")
     if _sealed_path(target):
-        return _SEAL_MSG
+        return ToolResult(_SEAL_MSG, status="refused")
     if not target.exists():
-        return f"ERROR: File not found at {path}" + _orient(target, path)
+        return ToolResult(f"ERROR: File not found at {path}" + _orient(target, path), status="failed")
 
     try:
-        return target.read_text(encoding="utf-8")
+        return ToolResult(target.read_text(encoding="utf-8"), status="succeeded")
     except Exception as e:
-        return f"ERROR: Could not read file: {e}"
+        return ToolResult(f"ERROR: Could not read file: {e}", status="failed")
 
 def _route_bare_filename(path: str) -> str:
     """A document Nova authors with a BARE filename goes to Nova_Created/, not the workspace root.
@@ -444,16 +446,16 @@ def write_file(path: str, content: str, overwrite: bool = False) -> str:
     # undiscoverable. Every bug in this project has been a silent drop. This was the
     # silent drop and the false receipt in one motion.
     if not (content or "").strip():
-        return (f"REFUSED: this write_file arrived with NO content — just a path. Nothing was "
+        return (ToolResult(f"REFUSED: this write_file arrived with NO content — just a path. Nothing was "
                 f"written; '{path}' was not created or changed. The code you composed exists "
                 f"only in your reasoning until it rides IN the tool call itself, as "
                 f"args.content. Call write_file again with the full text in content. If the "
-                f"file is long, write the skeleton first and grow it with append_file.")
+                f"file is long, write the skeleton first and grow it with append_file.", status="refused"))
     target, err = _safe_target(path)
     if err:
-        return err
+        return ToolResult(err, status="failed")
     if _sealed_path(target):
-        return _SEAL_MSG
+        return ToolResult(_SEAL_MSG, status="refused")
     # ── THE OVERWRITE ESCAPE HATCH IS GONE (2026-07-21, Cole) ────────────────────────────
     # The standing rule, from the day she overwrote her own files and his: write_file was
     # demoted to CREATE-ONLY, with append_file and replace_file_content as her editing hands.
@@ -468,21 +470,21 @@ def write_file(path: str, content: str, overwrite: bool = False) -> str:
     # replace_file_content. A file that truly needs discarding is a decision for Cole.
     if target.exists():
         if overwrite:
-            return (f"REFUSED: '{path}' already exists, and the \"overwrite\" flag no longer "
+            return (ToolResult(f"REFUSED: '{path}' already exists, and the \"overwrite\" flag no longer "
                     f"works — it was removed (Cole's rule: create new files, then edit them; "
                     f"whole-file replacement destroyed work once and is not one of your verbs). "
                     f"Nothing was changed. To CHANGE part of this file use replace_file_content; "
                     f"to ADD to it use append_file. If the file is genuinely disposable, that is "
-                    f"a call for Cole, not a flag.")
-        return (f"ERROR: '{path}' already exists — write_file only creates NEW files. To GROW "
+                    f"a call for Cole, not a flag.", status="refused"))
+        return (ToolResult(f"ERROR: '{path}' already exists — write_file only creates NEW files. To GROW "
                 "the document use append_file; to change part of it use replace_file_content "
-                "(exact-match edit). Overwriting is not available.")
+                "(exact-match edit). Overwriting is not available.", status="failed"))
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
-        return f"Successfully wrote to {path}."
+        return ToolResult(f"Successfully wrote to {path}.", status="succeeded")
     except Exception as e:
-        return f"ERROR: Could not write file: {e}"
+        return ToolResult(f"ERROR: Could not write file: {e}", status="failed")
 
 
 def _md_headings(text: str) -> list:
@@ -503,9 +505,9 @@ def append_file(path: str, content: str) -> str:
     growing a living document section by section without overwriting what's already there."""
     target, err = _safe_target(path)
     if err:
-        return err
+        return ToolResult(err, status="failed")
     if _sealed_path(target):
-        return _SEAL_MSG
+        return ToolResult(_SEAL_MSG, status="refused")
     # Idempotency guard: refuse to append a section heading the file already has — this is what
     # stops the "rewrite the whole doc every wake and append it" loop. Defensive: a read hiccup
     # must never block a legitimate write.
@@ -515,11 +517,11 @@ def append_file(path: str, content: str) -> str:
             have = set(_md_headings(existing))
             dupes = [h for h in _md_headings(content) if h in have]
             if dupes:
-                return ("REFUSED: '" + path + "' already contains section heading(s): "
+                return (ToolResult("REFUSED: '" + path + "' already contains section heading(s): "
                         + "; ".join(dupes[:5]) + ("; …" if len(dupes) > 5 else "")
                         + ". You're re-adding sections that already exist. read_file it, find the "
                         "FIRST gap or stub, and edit that with replace_file_content — don't append "
-                        "duplicate sections.")
+                        "duplicate sections.", status="refused"))
 
             # ── PROSE REPEATS TOO (2026-07-21) ────────────────────────────────────────────
             # The heading check above is the ONLY thing that was here, and it let this through:
@@ -540,11 +542,11 @@ def append_file(path: str, content: str) -> str:
             # floor still works. Anything substantial that is already in the file is a re-run.
             body = (content or "").strip()
             if len(body) >= 60 and body in existing:
-                return ("REFUSED: '" + path + "' already contains this exact text. You have "
+                return (ToolResult("REFUSED: '" + path + "' already contains this exact text. You have "
                         "written this before — appending it again would make the file a "
                         "stutter, not a record. If you meant to develop the thought, read_file "
                         "it and extend what is there with replace_file_content. If you already "
-                        "said it, it is said; move to the next thing.")
+                        "said it, it is said; move to the next thing.", status="refused"))
     except Exception:
         pass
     try:
@@ -566,75 +568,76 @@ def append_file(path: str, content: str) -> str:
             payload += "\n"
         with open(target, "a", encoding="utf-8") as f:
             f.write(payload)
-        return f"Appended {len(content)} chars to {path}."
+        return ToolResult(f"Appended {len(content)} chars to {path}.", status="succeeded")
     except Exception as e:
-        return f"ERROR: Could not append to file: {e}"
+        return ToolResult(f"ERROR: Could not append to file: {e}", status="failed")
 
 def replace_file_content(path: str, target_content: str, replacement_content: str) -> str:
     """Replace an exact string match inside a file."""
     target, err = _safe_target(path)
     if err:
-        return err
+        return ToolResult(err, status="failed")
     if _sealed_path(target):
-        return _SEAL_MSG
+        return ToolResult(_SEAL_MSG, status="refused")
     if not target.exists():
-        return "ERROR: File does not exist."
+        return ToolResult("ERROR: File does not exist.", status="failed")
         
     try:
         original = target.read_text(encoding="utf-8")
         if target_content not in original:
-            return "ERROR: The target_content you specified was not found in the file. It must be an exact whitespace match."
+            return ToolResult("ERROR: The target_content you specified was not found in the file. It must be an exact whitespace match.", status="failed")
         
         modified = original.replace(target_content, replacement_content)
         target.write_text(modified, encoding="utf-8")
-        return f"Line replacements successfully applied to {path}."
+        return ToolResult(f"Line replacements successfully applied to {path}.", status="succeeded")
     except Exception as e:
-        return f"ERROR: Could not replace content: {e}"
+        return ToolResult(f"ERROR: Could not replace content: {e}", status="failed")
 
 def list_dir(path: str) -> str:
     """List directory contents."""
     target, err = _safe_target(path)
     if err:
-        return err
+        return ToolResult(err, status="failed")
     if _sealed_path(target):
-        return _SEAL_MSG
+        return ToolResult(_SEAL_MSG, status="refused")
     if not target.exists():
-        return "ERROR: Directory does not exist."
+        return ToolResult("ERROR: Directory does not exist.", status="failed")
         
     try:
         items = list(target.iterdir())
-        return "\n".join(f"{'[DIR]' if i.is_dir() else '[FILE]'} {i.name}" for i in items)
+        return ToolResult("\n".join(f"{'[DIR]' if i.is_dir() else '[FILE]'} {i.name}" for i in items), status="succeeded")
     except Exception as e:
-        return f"ERROR: Could not list directory: {e}"
+        return ToolResult(f"ERROR: Could not list directory: {e}", status="failed")
 
 # ── Task board tools — the SAFE way to create/track tasks (never hand-write
 # Tasking/tasks.json). These go through nova_cortex.tasking, so the board schema
 # stays valid and a chat-delivered task becomes a real tracked board task. write_file
 # stays fully available for genuine work products; this just gives her a proper path
 # to her board so she doesn't reach for raw writes.
-def create_task(title: str, notes: str = "", priority: int = 3) -> str:
+def create_task(title: str, notes: str = "", priority: int = 3, acceptance=None) -> str:
     try:
         from nova_cortex import tasking
-        tid = tasking.create((title or "").strip(), notes or "", priority if priority is not None else 3)
-        return f"Created board task {tid}: {title}"
+        tid = tasking.create((title or "").strip(), notes or "", priority if priority is not None else 3, acceptance=acceptance)
+        return ToolResult(f"Created board task {tid}: {title}", status="succeeded")
     except Exception as e:
-        return f"ERROR: Could not create task: {e}"
+        return ToolResult(f"ERROR: Could not create task: {e}", status="failed")
 
 def task_progress(task_id: str, note: str) -> str:
     try:
         from nova_cortex import tasking
-        return (f"Logged progress on {task_id}." if tasking.progress(task_id, note)
-                else f"ERROR: No task with id {task_id}.")
+        return ((ToolResult(f"Logged progress on {task_id}.", status="succeeded") if tasking.progress(task_id, note) else ToolResult(f"ERROR: No task with id {task_id}.", status="failed")))
     except Exception as e:
-        return f"ERROR: Could not log progress: {e}"
+        return ToolResult(f"ERROR: Could not log progress: {e}", status="failed")
 
 def complete_task(task_id: str, result: str = "") -> str:
     try:
         from nova_cortex import tasking
-        return (f"Completed {task_id}." if tasking.complete(task_id, result or "")
-                else f"ERROR: No task with id {task_id}.")
+        if tasking.complete(task_id, result or ""):
+            return ToolResult(f"Verified and completed {task_id}.")
+        task = tasking.get(task_id)
+        return ToolResult(f"Task {task_id} was not completed: {task.get('waiting_on') if task else 'task not found'}", status="failed")
     except Exception as e:
-        return f"ERROR: Could not complete task: {e}"
+        return ToolResult(f"ERROR: Could not complete task: {e}", status="failed")
 
 
 # ── Imagination — Nova's visual-creation faculty. Drives the local ComfyUI server to turn
@@ -649,7 +652,7 @@ def generate_image(prompt: str, negative: str = "", as_nova: bool = False,
     try:
         from nova_imagination import generate_image as _gen
     except Exception as e:
-        return f"ERROR: imagination faculty unavailable: {e}"
+        return ToolResult(f"ERROR: imagination faculty unavailable: {e}", status="failed")
     try:
         r = _gen(prompt or "", negative or "", as_nova=bool(as_nova),
                  style=style or "", from_image=from_image or "",
@@ -657,13 +660,13 @@ def generate_image(prompt: str, negative: str = "", as_nova: bool = False,
                  mask=mask or "", lora=lora or "",
                  width=width, height=height, seed=seed)
     except Exception as e:
-        return f"ERROR: Could not generate image: {e}"
+        return ToolResult(f"ERROR: Could not generate image: {e}", status="failed")
     if r.get("ok"):
         n_tonight, n_total = r.get("tonight"), r.get("total")
         tally = (f" That makes {n_tonight} tonight, {n_total} ever — it's on the shelf (my_art)."
                  if n_tonight else "")
-        return f"Image saved to {r['path']} (seed {r.get('seed')}).{tally}"
-    return f"ERROR: {r.get('detail', 'image generation failed')}"
+        return ToolResult(f"Image saved to {r['path']} (seed {r.get('seed')}).{tally}", status="succeeded")
+    return ToolResult(f"ERROR: {r.get('detail', 'image generation failed')}", status="failed")
 
 
 def start_painter() -> str:
@@ -674,20 +677,19 @@ def start_painter() -> str:
     try:
         from nova_imagination.imagination import start_painter as _wake
     except Exception as e:
-        return f"ERROR: imagination faculty unavailable: {e}"
+        return ToolResult(f"ERROR: imagination faculty unavailable: {e}", status="failed")
     try:
         r = _wake(wait=True)
     except Exception as e:
-        return f"ERROR: could not wake the painter: {e}"
+        return ToolResult(f"ERROR: could not wake the painter: {e}", status="failed")
     if r.get("ok"):
-        return ("Painter was already up." if r.get("already")
-                else f"Painter is awake — {r.get('detail', '')}")
-    return f"ERROR: {r.get('detail', 'the painter would not start')}"
+        return ((ToolResult("Painter was already up.", status="succeeded") if r.get("already") else ToolResult(f"Painter is awake — {r.get('detail', '')}", status="succeeded")))
+    return ToolResult(f"ERROR: {r.get('detail', 'the painter would not start')}", status="failed")
 
 
 def memory_search(query="", max_chars=4000) -> str:
-    """Semantic search over Nova's full memory — every past message, AI response, journal
-    entry, and image she's seen has been embedded into her LanceDB store (nova_lancedb).
+    """Semantic search over successfully indexed Nova records in LanceDB.
+    Coverage depends on ingestion and recovery; it is not proof every past record is indexed.
     Use this to recall something she's forgotten, surface relevant context from prior
     sessions she can't remember directly, check whether a topic / file / lesson has come
     up before, or pull back the conversational context around a moment. Returns a
@@ -702,16 +704,16 @@ def memory_search(query="", max_chars=4000) -> str:
     try:
         from nova_lancedb.hippocampus import get_store
         store = get_store()
-        if store is None:
-            return "ERROR: Memory store unavailable (LanceDB not initialized in this environment)."
+        if store is None or not store._ready:
+            return ToolResult("Memory store unavailable; this is not a no-matches result.", status="failed")
         try:
             mc = int(max_chars) if max_chars else 4000
         except Exception:
             mc = 4000
         result = store.build_context_block(query, max_chars=mc)
         if not (result or "").strip():
-            return f"No memory matches for: {query}"
-        return result
+            return ToolResult(f"No memory matches for: {query}")
+        return ToolResult(result)
     except Exception as e:
         return f"ERROR: memory_search failed: {e}"
 
@@ -727,16 +729,16 @@ def journal_note(text="", chat_ref="") -> str:
         text = "\n".join(str(t) for t in text)
     text = str(text if text is not None else "").strip()
     if not text:
-        return "ERROR: Nothing to note (empty)."
+        return ToolResult("ERROR: Nothing to note (empty).", status="failed")
     chat_ref = str(chat_ref or "").strip()
     from datetime import datetime
     now = datetime.now()
     date_str = now.strftime("%Y-%m-%d")
     time_str = now.strftime("%H:%M")
-    notes_dir = (WORKSPACE_ROOT / "memory" / "journal_notes").resolve()
+    notes_dir = (body_path('memory') / "journal_notes").resolve()
     notes_file = notes_dir / f"{date_str}.md"
     if not _within_workspace(notes_file):
-        return "ERROR: Permission Denied."
+        return ToolResult("ERROR: Permission Denied.", status="failed")
     try:
         notes_dir.mkdir(parents=True, exist_ok=True)
         if not notes_file.exists():
@@ -746,9 +748,9 @@ def journal_note(text="", chat_ref="") -> str:
         block = f"\n- **[{time_str}]**{ref_part}\n  {text}\n"
         with open(notes_file, "a", encoding="utf-8") as f:
             f.write(block)
-        return f"Note dropped to memory/journal_notes/{date_str}.md. End-of-day-you will consolidate."
+        return ToolResult(f"Note dropped to memory/journal_notes/{date_str}.md. End-of-day-you will consolidate.", status="succeeded")
     except Exception as e:
-        return f"ERROR: Could not save note: {e}"
+        return ToolResult(f"ERROR: Could not save note: {e}", status="failed")
 
 
 def journal(entry="", date="", tags="") -> str:
@@ -769,36 +771,39 @@ def journal(entry="", date="", tags="") -> str:
         tags = " ".join(str(t) for t in tags)
     tags = str(tags if tags is not None else "").strip()
     if not entry.strip():
-        return "ERROR: Nothing to consolidate (empty entry)."
+        return ToolResult("ERROR: Nothing to consolidate (empty entry).", status="failed")
     from datetime import datetime
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
     date = str(date).strip()
-    target = (WORKSPACE_ROOT / "memory" / "JOURNAL.md").resolve()
+    target = (body_path('memory') / "JOURNAL.md").resolve()
     if not _within_workspace(target):
-        return "ERROR: Permission Denied."
+        return ToolResult("ERROR: Permission Denied.", status="failed")
     # Enforce one-per-day: refuse if an entry for this date already exists.
     try:
         existing = target.read_text(encoding="utf-8") if target.exists() else ""
         if f"### {date}" in existing:
-            return (f"ERROR: A consolidated journal entry for {date} already exists. One entry per day. "
-                    f"Use edit_file (replace_file_content) on memory/JOURNAL.md if you need to revise it.")
+            return (ToolResult(f"ERROR: A consolidated journal entry for {date} already exists. One entry per day. "
+                    f"Use edit_file (replace_file_content) on memory/JOURNAL.md if you need to revise it.", status="failed"))
     except Exception as e:
-        return f"ERROR: Could not read JOURNAL: {e}"
+        return ToolResult(f"ERROR: Could not read JOURNAL: {e}", status="failed")
     try:
         tagstr = f"  ·  _{tags}_" if tags else ""
         block = f"\n\n---\n### {date}{tagstr}\n{entry.strip()}\n"
         target.parent.mkdir(parents=True, exist_ok=True)
         with open(target, "a", encoding="utf-8") as f:
             f.write(block)
-        return f"Consolidated journal entry for {date} written to memory/JOURNAL.md ({len(entry)} chars). The notes file for that date remains as historical record."
+        return ToolResult(f"Consolidated journal entry for {date} written to memory/JOURNAL.md ({len(entry)} chars). The notes file for that date remains as historical record.", status="succeeded")
     except Exception as e:
-        return f"ERROR: Could not journal: {e}"
+        return ToolResult(f"ERROR: Could not journal: {e}", status="failed")
 
 
 # Her actual body — the canonical list of what she can DO. Kept next to the dispatcher so it
 # cannot drift from reality: if a verb isn't here, she doesn't have that hand.
 AVAILABLE_TOOLS = (
+    "defer_task",
+    "prepare_task_workspace", "promote_task_workspace",
+    "computer_status", "computer_look", "computer_exec", "computer_action", "set_task_acceptance",
     "run_command", "read_file", "write_file", "append_file", "replace_file_content",
     "list_dir", "create_task", "task_progress", "complete_task",
     "generate_image", "start_painter", "what_can_i_paint_with", "look_at", "my_art",
@@ -973,6 +978,11 @@ def list_tools() -> str:
     """What am I? Proprioception as a tool — she can ask her own body what it can do.
     A person can always answer 'can I reach that?' without being told; so should she."""
     return ("Your body — the things you can do right now:\n"
+            "  computer_status / computer_look   guest health and a real screenshot\n"
+            "  computer_exec(command)            bash inside your guest computer\n"
+            "  computer_action(action, parameters)   click, move, drag, type_text, key, scroll\n"
+            "  set_task_acceptance(task_id, checks)   command argv/cwd or file path/contains checks\n"
+            "  Completion runs these checks; without them the task waits for human review.\n"
             "  run_command            shell (PowerShell) — look at anything, run anything\n"
             "                         EXCEPT models/ — sealed to all your tools (engine\n"
             "                         weights + a key file; engines start FOR you, and the\n"
@@ -1087,7 +1097,7 @@ def ping_claude(message: str, urgent: bool = False) -> str:
                 "you've already tried — he can only help with what you tell him.")
 
     COOLDOWN_S = 120
-    state_p = WORKSPACE_ROOT / "memory" / "last_ping.json"
+    state_p = body_path('memory') / "last_ping.json"
     now = _t.time()
     try:
         last = _j.loads(state_p.read_text(encoding="utf-8")).get("ts", 0) if state_p.exists() else 0
@@ -1157,7 +1167,7 @@ def _log_tool_receipt(tool_name: str, args: dict, result: str, ms: float, err: b
     silently missing receipt is the exact failure this whole thing exists to prevent."""
     try:
         from nova_cortex.integrity import log_receipt as _body_log
-        _body_log(tool_name, args, result, ms, ok=not err)
+        _body_log(tool_name, args, result, ms, ok=normalize_result(result).ok)
         return
     except Exception as _e:
         print(f"[tool_receipt] body faculty unavailable ({_e}) — using local fallback")
@@ -1183,7 +1193,7 @@ def _log_tool_receipt_fallback(tool_name: str, args: dict, result: str, ms: floa
     try:
         import json as _json
         from datetime import datetime as _dt
-        _p = WORKSPACE_ROOT / "logs" / "tool_calls.jsonl"
+        _p = body_path('logs') / "tool_calls.jsonl"
         _p.parent.mkdir(parents=True, exist_ok=True)
         _r = str(result)
         with open(_p, "a", encoding="utf-8") as _f:
@@ -1191,7 +1201,8 @@ def _log_tool_receipt_fallback(tool_name: str, args: dict, result: str, ms: floa
                 "ts": _dt.now().isoformat(),
                 "tool": tool_name,
                 "args": {k: (str(v)[:200]) for k, v in (args or {}).items()},
-                "ok": not err,
+                "ok": normalize_result(result).ok,
+                "outcome": normalize_result(result).to_dict(),
                 "ms": round(ms, 1),
                 "result_bytes": len(_r),
                 "result_head": _r[:200],
@@ -1204,20 +1215,54 @@ def _log_tool_receipt_fallback(tool_name: str, args: dict, result: str, ms: floa
 def execute_tool(tool_name: str, args: dict) -> str:
     """Main routing dispatcher. Every call leaves a receipt (see _log_tool_receipt)."""
     import time as _t
-    _t0 = _t.time()
+    _t0 = _t.perf_counter()
     try:
-        _res = _execute_tool_inner(tool_name, args)
-        _log_tool_receipt(tool_name, args, _res, (_t.time() - _t0) * 1000,
-                          err=str(_res).startswith("ERROR"))
+        if current_phase.get() == "reflection" and tool_name not in {
+            "read_file", "list_dir", "list_tools", "memory_search", "recall",
+            "search_web", "read_web", "computer_status", "computer_look", "look_at"}:
+            _res = ToolResult("Reflection can observe; save changes and commands for execution.", status="refused")
+        else:
+            _res = normalize_result(_execute_tool_inner(tool_name, args))
+        _op = current_operation.get()
+        _res.run_id = _op.id if _op else None
+        _res.duration_ms = (_t.perf_counter() - _t0) * 1000
+        _log_tool_receipt(tool_name, args, _res, (_t.perf_counter() - _t0) * 1000,
+                          err=_res.ok is False)
         return _res
     except Exception as _e:
-        _log_tool_receipt(tool_name, args, f"EXCEPTION: {_e}", (_t.time() - _t0) * 1000, err=True)
+        _log_tool_receipt(tool_name, args, f"EXCEPTION: {_e}", (_t.perf_counter() - _t0) * 1000, err=True)
         raise
 
 
 def _execute_tool_inner(tool_name: str, args: dict) -> str:
     """Main routing dispatcher."""
     try:
+        if tool_name in ("prepare_task_workspace", "promote_task_workspace"):
+            import json
+            from nova_cortex import task_workspace
+            result = (task_workspace.prepare(args.get("task_id", ""), args.get("paths", []))
+                      if tool_name == "prepare_task_workspace" else task_workspace.promote(args.get("task_id", "")))
+            return ToolResult(json.dumps(result))
+        if tool_name == "defer_task":
+            from nova_cortex import tasking, executive
+            tid = args.get("task_id", "")
+            reason = args.get("reason", "")
+            if not reason:
+                return ToolResult("A deferral needs a reason.", status="failed")
+            ok = tasking.wait(tid, reason)
+            if ok:
+                tasking.scheduling(tid, "deferred", reason)
+                if executive.active_focus() == tid:
+                    executive.set_active(None)
+            return ToolResult("Task deferred: " + reason, status="succeeded" if ok else "failed")
+        if tool_name.startswith("computer_"):
+            from nova_computer.tools import TOOLS, call
+            if tool_name in TOOLS:
+                return call(tool_name, args)
+        if tool_name == "set_task_acceptance":
+            from nova_cortex import tasking
+            ok = tasking.set_acceptance(args.get("task_id", ""), args.get("checks", []))
+            return ToolResult("Acceptance checks saved." if ok else "Task not found.", status="succeeded" if ok else "failed")
         if tool_name in ("list_tools", "my_tools", "what_can_i_do", "body"):
             return list_tools()
         # dispatch
@@ -1234,7 +1279,7 @@ def _execute_tool_inner(tool_name: str, args: dict) -> str:
         elif tool_name == "list_dir":
             return list_dir(args.get("path", ""))
         elif tool_name == "create_task":
-            return create_task(args.get("title", ""), args.get("notes", ""), args.get("priority", 3))
+            return create_task(args.get("title", ""), args.get("notes", ""), args.get("priority", 3), args.get("acceptance"))
         elif tool_name in ("task_progress", "progress_task"):
             return task_progress(args.get("task_id", "") or args.get("id", ""), args.get("note", ""))
         elif tool_name in ("complete_task", "task_complete"):

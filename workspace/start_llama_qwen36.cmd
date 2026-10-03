@@ -1,5 +1,6 @@
 @echo off
-REM @nova: Qwen 3.6 27B launcher (upgrade from 3.5). Dense + hybrid-thinking + MTP speculative
+REM @nova: Starts Nova's model server (llama.cpp): Qwen 3.6 27B by default, or the model the model updater picked in nova_body\memory.
+REM Qwen 3.6 27B notes (upgrade from 3.5): Dense + hybrid-thinking + MTP speculative
 REM decoding (~1.4-2x faster gen, no accuracy loss). Needs a current llama.cpp build (yours is
 REM b9491 — good). The GGUF carries the MTP head (blk.64.nextn.* / nextn_predict_layers), so
 REM --spec-type draft-mtp is enabled below. If you ever swap to a non-MTP GGUF, remove the two
@@ -13,15 +14,27 @@ REM KEY CHANGES vs 3.5: --jinja is now REQUIRED (3.6 needs its chat template app
 REM over the old "don't add --chat-template" note). Thinking mode is ON by default (good for
 REM autonomy reasoning) — to disable, append: --chat-template-kwargs "{\"enable_thinking\":false}".
 REM Includes the (inert) KoELS --lora hook, so this is also KoELS-ready.
-title llama.cpp Qwen 3.6 27B — Dual GPU (4090 + 3090 eGPU) [MTP]
+title llama.cpp Nova model server — Dual GPU (4090 + 3090 eGPU) [MTP]
 cd /d "%~dp0"
 
-echo [llama.cpp] Starting Qwen 3.6 27B Dense Q6_K_XL + MTP, dual-GPU split...
+REM ── Model + projector (2026-10-04). The model updater (general_tools\nova_updater) writes ONE
+REM ── relative path into nova_body\memory\active_model.txt and active_mmproj.txt ("none" = no
+REM ── vision). Absent -> the Qwen 3.6 files below, so boot is unchanged until an update installs.
+REM ── Both stay off caret-continuation lines except -m, which is quoted and never empty (see 07-14).
+set "NOVA_MODEL=models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf"
+set "NOVA_MMPROJ=models\qwen3.6\mmproj-F16.gguf"
+if exist "nova_body\memory\active_model.txt" set /p NOVA_MODEL=<"nova_body\memory\active_model.txt"
+if exist "nova_body\memory\active_mmproj.txt" set /p NOVA_MMPROJ=<"nova_body\memory\active_mmproj.txt"
+set "NOVA_VISION=--mmproj %NOVA_MMPROJ%"
+if /i "%NOVA_MMPROJ%"=="none" set "NOVA_VISION="
+if not exist "%NOVA_MODEL%" echo [Nova] WARNING: %NOVA_MODEL% is missing - llama-server will fail to load it.
+
+echo [llama.cpp] Starting Nova's model, dual-GPU split...
 echo.
 echo GPU layout: GPU 0 = RTX 4090 Laptop (16GB), GPU 1 = RTX 3090 eGPU (24GB)
 echo Tensor split: 12,28. Q6 is ~24GB so there's comfortable headroom (MTP + KoELS adapters).
-echo Model : models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf  (MTP variant - nextn head present)
-echo Vision: models\qwen3.6\mmproj-F16.gguf
+echo Model : %NOVA_MODEL%
+echo Vision: %NOVA_MMPROJ%
 echo MTP   : ON  --spec-type draft-mtp --spec-draft-n-max 2  (try 1-6, fastest wins; 2 usually best)
 echo Port  : 8080   Context: 32768
 echo.
@@ -33,13 +46,15 @@ REM ── (a ready "--lora-scaled models\...\file.gguf:WEIGHT" line) to pick WH
 REM ── what weight. Absent/empty -> the v2 default below (so boot is unchanged until you pick one).
 REM ── Rides in the BASE command so any KoELS specialist swap stacks ON TOP of her personality. ──
 set "NOVA_CORE="
-if exist "memory\active_lora.txt" set /p NOVA_CORE=<"memory\active_lora.txt"
-if not defined NOVA_CORE if exist "models\qwen3.6\nova_core_v2_e2.gguf" set "NOVA_CORE=--lora-scaled models\qwen3.6\nova_core_v2_e2.gguf:0.6"
+if exist "nova_body\memory\active_lora.txt" set /p NOVA_CORE=<"nova_body\memory\active_lora.txt"
+REM The v2 fallback adapter was trained for Qwen 3.6: apply it only when Qwen 3.6 is the model. "none" = no adapter.
+if not defined NOVA_CORE if /i "%NOVA_MODEL%"=="models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf" if exist "models\qwen3.6\nova_core_v2_e2.gguf" set "NOVA_CORE=--lora-scaled models\qwen3.6\nova_core_v2_e2.gguf:0.6"
+if /i "%NOVA_CORE%"=="none" set "NOVA_CORE="
 if defined NOVA_CORE echo [Nova-core] personality adapter: %NOVA_CORE%
 
 REM ── KoELS: read the runtime-written boot --lora set (empty when Nova-core only) ──
 set "KOELS_LORA="
-if exist "memory\koels_lora_args.txt" set /p KOELS_LORA=<"memory\koels_lora_args.txt"
+if exist "nova_body\memory\koels_lora_args.txt" set /p KOELS_LORA=<"nova_body\memory\koels_lora_args.txt"
 if defined KOELS_LORA echo [KoELS] preloading adapters: %KOELS_LORA%
 
 REM ── 2026-07-14: the adapter args are NO LONGER on caret-continuation lines. ─────────────────
@@ -71,12 +86,11 @@ REM broker can trim it TEMPORARILY (and put it back) if a big draw ever needs mo
 REM q8 cache freed. Absent -> 65536, exactly as before. Cole's rule: only trim when she actually
 REM needs the room.
 set "NOVA_CTX=65536"
-if exist "memory\llama_ctx.txt" set /p NOVA_CTX=<"memory\llama_ctx.txt"
+if exist "nova_body\memory\llama_ctx.txt" set /p NOVA_CTX=<"nova_body\memory\llama_ctx.txt"
 echo [Nova] context: %NOVA_CTX% tokens (KV cache q8_0)
 
 .\llama\llama-server.exe ^
-    -m models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf ^
-    --mmproj models\qwen3.6\mmproj-F16.gguf ^
+    -m "%NOVA_MODEL%" ^
     -ngl 999 ^
     -ts 12,28 ^
     -c %NOVA_CTX% ^
@@ -91,6 +105,6 @@ echo [Nova] context: %NOVA_CTX% tokens (KV cache q8_0)
     -b 2048 ^
     -ub 1024 ^
     --port 8080 ^
-    --host 127.0.0.1 %NOVA_EXTRA%
+    --host 127.0.0.1 %NOVA_VISION% %NOVA_EXTRA%
 
 pause

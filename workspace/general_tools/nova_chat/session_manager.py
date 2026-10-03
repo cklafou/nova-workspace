@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 """
 nova_chat/session_manager.py -- Persistent Session Management
 =============================================================
@@ -11,6 +11,12 @@ Manages multiple chat sessions with compression for inactive ones.
 Only the user (Cole) can switch active sessions.
 Switching: flush active -> compress -> decompress new -> load into memory.
 """
+
+# Body-owned paths also work when this tool is launched directly.
+import sys as _nova_path_sys
+from pathlib import Path as _NovaPath
+_nova_path_sys.path.insert(0, str(_NovaPath(__file__).resolve().parents[2] / 'nova_body'))
+from nova_paths import body_path
 import gzip
 import json
 import os
@@ -26,7 +32,7 @@ WORKSPACE_DIR   = (
     if "NOVA_WORKSPACE" in os.environ
     else Path(__file__).parent.parent.parent
 )
-SESSIONS_DIR    = WORKSPACE_DIR / "logs" / "chat_sessions"
+SESSIONS_DIR    = body_path('logs', workspace=WORKSPACE_DIR) / "chat_sessions"
 INDEX_PATH      = SESSIONS_DIR / "sessions_index.json"
 MAX_NAME_CHARS  = 40
 

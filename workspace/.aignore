@@ -18,3 +18,8 @@ __pycache__
 _build
 nova_memory_db
 prompt_cache
+
+# ── MODEL UPDATER (general_tools/nova_updater, 2026-10-04) ──
+# Runtime state and training scratch: changes here are not source and must not trigger autosave.
+workspace/general_tools/nova_updater/state
+workspace/Temp/updater

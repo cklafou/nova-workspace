@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: Environmental perception — I sense my surroundings: which of my watched places
 #        changed since I last looked, Cole's standing directive (his word = Priority 0),
 #        and whether he's typing. The filesystem is universal, so I read it directly.
@@ -10,6 +10,10 @@ tool, so "did Cole just speak in chat" is supplied to the executive via Capabili
 here we perceive what is on disk: watched-path changes, the mirrored directive, typing.
 """
 
+from nova_paths import workspace_path
+
+from nova_paths import body_path
+
 import os
 import json
 from datetime import datetime
@@ -17,15 +21,15 @@ from pathlib import Path
 
 WORKSPACE_ROOT = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
                   else Path(__file__).resolve().parent.parent.parent)
-_COLE_INTENT = WORKSPACE_ROOT / "memory" / "cole_intent.json"
-_INTERRUPT = WORKSPACE_ROOT / "memory" / "interrupt_inbox.json"
+_COLE_INTENT = body_path('memory') / "cole_intent.json"
+_INTERRUPT = body_path('memory') / "interrupt_inbox.json"
 
 
 def fingerprint(watch_paths) -> tuple:
     """A cheap, comparable snapshot of watched files/dirs. Changes when any is touched."""
     parts = []
     for rel in (watch_paths or []):
-        p = WORKSPACE_ROOT / rel
+        p = workspace_path(rel)
         try:
             if p.is_dir():
                 entries = sorted(q.name for q in p.iterdir())
@@ -42,6 +46,15 @@ def fingerprint(watch_paths) -> tuple:
 
 def changed(prev_fp, watch_paths) -> bool:
     return fingerprint(watch_paths) != prev_fp
+
+
+def directive_is_fresh(max_age_seconds=21600):
+    """Old asks remain available as context but do not repeatedly trigger new wakes."""
+    try:
+        ci = json.loads(_COLE_INTENT.read_text(encoding="utf-8"))
+        return 0 <= (datetime.now()-datetime.fromisoformat(ci["ts"])).total_seconds() < max_age_seconds
+    except (OSError, ValueError, KeyError):
+        return False
 
 
 def cole_directive() -> str:
@@ -63,7 +76,7 @@ def cole_directive() -> str:
     try:
         if _COLE_INTENT.exists():
             ci = json.loads(_COLE_INTENT.read_text(encoding="utf-8"))
-            if ci.get("text") and not ci.get("consumed") and ci.get("speaker") == "Cole":
+            if ci.get("text") and not ci.get("consumed") and ci.get("speaker") == "Cole" and directive_is_fresh():
                 return ci["text"]
     except Exception:
         pass

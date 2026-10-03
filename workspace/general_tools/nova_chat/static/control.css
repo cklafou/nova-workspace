@@ -1,0 +1,12 @@
+/* @nova: Styles the runtime controller widget and task controls. */
+.nc-control{padding:18px;overflow:auto;box-sizing:border-box;color:var(--text);height:100%}
+.ncr-heading strong{font-size:20px;letter-spacing:-.3px}.ncr-heading p,.ncr-task p{color:var(--text-muted);line-height:1.5}
+.ncr-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.ncr-actions button{min-height:38px;padding:8px 12px;font-size:12px}
+.ncr-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-top:18px}
+.ncr-fact,.ncr-task{padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--bg-panel,var(--bg))}
+.ncr-fact span{display:block;color:var(--text-muted);font-size:12px;margin-bottom:6px}.ncr-fact strong{font-size:13px;overflow-wrap:anywhere}
+.ncr-task{margin:10px 0}.ncr-task strong{font-size:14px}.ncr-error,.ncr-notice{color:#efac77;white-space:pre-wrap}
+.ncr-dialog{max-width:680px;width:80vw;background:var(--bg-panel,var(--bg));color:var(--text);border:1px solid var(--border);border-radius:16px;padding:24px}
+.ncr-dialog textarea{width:100%;min-height:240px;box-sizing:border-box;background:var(--bg);color:var(--text);padding:12px}
+.tfi.unknown,.tool-card.unknown{border-left-color:#bd9b66}
+.ncr-task pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:280px;overflow:auto;font-size:12px}.ncr-task summary{cursor:pointer;line-height:1.5;min-height:28px}

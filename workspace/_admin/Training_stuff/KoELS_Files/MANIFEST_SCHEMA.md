@@ -1,5 +1,5 @@
 # KoELS Manifest — The Expert Contract
-_Last updated: 2026-08-02 10:57:33_
+_Last updated: 2026-10-03 04:41:56_
 
 _Defines what one expert loadout IS. Filling this out is how you add an expert — drop a folder with a `manifest.json`, never edit Nova's code. This is the load-bearing piece that makes KoELS a **system** instead of hardcoded specialists._
 

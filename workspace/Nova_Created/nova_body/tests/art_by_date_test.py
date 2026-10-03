@@ -1,7 +1,0 @@
-# Last updated: 2026-08-02 23:08:32
-CASES = [
-    {"name": "finds recent images", "args": {"week": 2}, "expect_contains": "image"},
-    {"name": "returns newest first", "args": {"week": 4}, "expect_contains": ".png"},
-    {"name": "rejects zero weeks", "args": {"week": 0}, "expect_startswith": "ERROR"},
-    {"name": "rejects non-number", "args": {"week": "abc"}, "expect_startswith": "ERROR"},
-]

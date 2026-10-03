@@ -1,25 +1,26 @@
 @echo off
 REM @nova: Pluck test — boots my runtime headless (no chat server) to prove my faculties
-REM        live in my body. Output tees to logs\pluck_<date>.log. Claude/Cole tool.
+REM        live in my body. Output tees to nova_body\logs\pluck_<date>.log. Claude/Cole tool.
 REM @claude 2026-06-10: Step 6c PLUCK TEST — stops the whole stack, then boots Nova
 REM headless (python -m nova_runtime, NO chat server). Output mirrors live here and
-REM appends line-by-line to logs\pluck_2026-06-10.log (UTF8, closed per write so
+REM appends line-by-line to nova_body\logs\pluck_2026-06-10.log (UTF8, closed per write so
 REM Claude's mount can read it). Stop with Ctrl+C or close this window.
 title PLUCK TEST - Nova headless (no chat server)
 cd /d "%~dp0"
 
 call StopNova.cmd
+if not exist "nova_body\logs" mkdir "nova_body\logs"
 
 echo.
 echo ==== PLUCK TEST: nova_runtime headless boot (no chat server) ====
-echo ==== Live output below; also logging to logs\pluck_2026-06-10.log ====
+echo ==== Live output below; also logging to nova_body\logs\pluck_2026-06-10.log ====
 echo.
 
 where py >nul 2>nul
 if %errorlevel%==0 (
-    py -3 -u nova_body\nova_runtime\__main__.py 2>&1 | powershell -NoProfile -Command "$input | ForEach-Object { Write-Host $_; Add-Content -LiteralPath 'logs\pluck_2026-06-10.log' -Value $_ -Encoding UTF8 }"
+    py -3 -u nova_body\nova_runtime\__main__.py 2>&1 | powershell -NoProfile -Command "$input | ForEach-Object { Write-Host $_; Add-Content -LiteralPath 'nova_body\logs\pluck_2026-06-10.log' -Value $_ -Encoding UTF8 }"
 ) else (
-    python -u nova_body\nova_runtime\__main__.py 2>&1 | powershell -NoProfile -Command "$input | ForEach-Object { Write-Host $_; Add-Content -LiteralPath 'logs\pluck_2026-06-10.log' -Value $_ -Encoding UTF8 }"
+    python -u nova_body\nova_runtime\__main__.py 2>&1 | powershell -NoProfile -Command "$input | ForEach-Object { Write-Host $_; Add-Content -LiteralPath 'nova_body\logs\pluck_2026-06-10.log' -Value $_ -Encoding UTF8 }"
 )
 
 echo.

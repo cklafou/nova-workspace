@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """DISCOURSE — what she knows about the conversation, and whether she may speak into it.
 
 WHY THIS MOVED BODY-WARD (2026-07-20)
@@ -36,6 +36,8 @@ WHAT DID NOT MOVE
     is: deciding is hers, displaying is ours.
 """
 from __future__ import annotations
+
+from nova_paths import body_path
 
 import json
 import os
@@ -169,7 +171,7 @@ def tool_calls_since(ts, workspace=None) -> int:
     """How many tools her hands have run since `ts` (a datetime or ISO string)."""
     try:
         ws = pathlib.Path(workspace) if workspace else WORKSPACE_ROOT
-        p = ws / "logs" / "tool_calls.jsonl"
+        p = body_path('logs', workspace=ws) / "tool_calls.jsonl"
         if not p.exists():
             return 0
         cutoff = ts if isinstance(ts, datetime) else datetime.fromisoformat(str(ts))
@@ -337,7 +339,7 @@ def recent_tool_receipts(n: int = 12, window_min: int = 90, workspace=None) -> s
     """
     try:
         ws = pathlib.Path(workspace) if workspace else WORKSPACE_ROOT
-        p = ws / "logs" / "tool_calls.jsonl"
+        p = body_path('logs', workspace=ws) / "tool_calls.jsonl"
         if not p.exists():
             return ""
         cutoff = datetime.now() - timedelta(minutes=window_min)
@@ -408,7 +410,7 @@ def last_perception(workspace=None) -> str:
     """
     try:
         ws = pathlib.Path(workspace) if workspace else WORKSPACE_ROOT
-        p = ws / "logs" / "sight.jsonl"
+        p = body_path('logs', workspace=ws) / "sight.jsonl"
         if not p.exists():
             return ("\n[PERCEPTION: no sight log exists. You have not seen anything. You have no "
                     "camera and no live video — if you find yourself about to say what someone "

@@ -69,7 +69,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $wsRoot = Split-Path -Parent $PSScriptRoot          # ...\workspace
-$logDir = Join-Path $wsRoot 'logs'
+$logDir = Join-Path $wsRoot 'nova_body\logs'
 $log    = Join-Path $logDir 'ping_claude.log'
 $queue  = Join-Path $logDir 'ping_queue.jsonl'
 
@@ -216,7 +216,7 @@ try {
     }
     if ($claudePids.Count -eq 0) {
         QueueIt $text 'claude-desktop-not-running'
-        Write-Output 'QUEUED: Claude Desktop is not running. Your message was saved to logs/ping_queue.jsonl, NOT delivered.'
+        Write-Output 'QUEUED: Claude Desktop is not running. Your message was saved to nova_body/logs/ping_queue.jsonl, NOT delivered.'
         exit 2
     }
 
@@ -234,7 +234,7 @@ try {
     }
     if ($cands.Count -eq 0) {
         QueueIt $text 'claude-running-but-no-visible-window'
-        Write-Output 'QUEUED: Claude Desktop is running but has no visible window (minimised to tray?). Saved to logs/ping_queue.jsonl, NOT delivered.'
+        Write-Output 'QUEUED: Claude Desktop is running but has no visible window (minimised to tray?). Saved to nova_body/logs/ping_queue.jsonl, NOT delivered.'
         exit 2
     }
     Log ('candidates: ' + (($cands | ForEach-Object { $_.Pid.ToString() + ':' + $_.Title }) -join ' ; '))
@@ -474,7 +474,7 @@ try {
                       'after ' + $Attempts + ' attempts across ' + $cands.Count + ' window(s). Nothing was ' +
                       'submitted - deliberately, since pressing Enter into an unknown control is worse ' +
                       'than not sending. Its taskbar button has been flashed. Your message was SAVED to ' +
-                      'logs/ping_queue.jsonl, NOT delivered. Detail in logs/ping_claude.log.')
+                      'nova_body/logs/ping_queue.jsonl, NOT delivered. Detail in nova_body/logs/ping_claude.log.')
         exit 2
     }
 

@@ -30,6 +30,6 @@ if %errorlevel%==0 (
 
 if errorlevel 1 (
     echo.
-    echo Nova launcher exited with an error. See logs\launcher\ for details.
+    echo Nova launcher exited with an error. See nova_body\logs\launcher\ for details.
     pause
 )

@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """
 nova_cortex/nova_status.py -- Nova's live status writer
 ======================================================
@@ -24,6 +24,8 @@ for _p in [str(_ns_ws / 'nova_tools'), str(_ns_ws / 'general_tools')]:
     add_error('vision', 'Element not found: Trade Button (attempt 3/3)')
 """
 
+from nova_paths import body_path
+
 import json
 import sys
 from datetime import datetime, timezone
@@ -32,8 +34,8 @@ from typing import Optional
 
 # Always write to workspace root -- server.py knows where to find it
 WORKSPACE_DIR = Path(__file__).parent.parent.parent
-STATUS_FILE   = WORKSPACE_DIR / "nova_status.json"
-TASKS_FILE    = WORKSPACE_DIR / "tasks" / "active.json"
+STATUS_FILE   = body_path('nova_status.json')
+TASKS_FILE    = body_path("Tasking", "active.json")
 
 
 # ── Schema helpers ────────────────────────────────────────────────────────────

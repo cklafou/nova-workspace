@@ -1,4 +1,4 @@
-﻿# Large binaries — never commit
+# Large binaries — never commit
 *.gguf
 *.dll
 *.exe
@@ -51,3 +51,20 @@ _admin/_archive_2026-05-23/
 # LanceDB store — regenerable data, 1000+ files (2026-07-14)
 nova_memory_db/
 prompt_cache/
+
+# Body-owned state after the portability migration; keep historic exclusions too.
+nova_body/logs/
+nova_body/memory/.auth_token
+nova_body/memory/nova_users.json
+nova_body/nova_memory_db/
+nova_body/nova_config.json
+
+# Runtime work queue: live state holding memory text and images, never source. (2026-10-03)
+nova_body/memory/runtime_work.sqlite3*
+
+# Avatar files are excluded from git (Cole, 2026-10-03). The avatar keeps its own verified
+# checkpoint zips; files tracked before this rule leave the index when _admin/FIX_GIT.cmd runs.
+nova_body/SELF/Avatar/
+
+# Model updater runtime state (decisions, plans, job history). Never source. (2026-10-04)
+general_tools/nova_updater/state/

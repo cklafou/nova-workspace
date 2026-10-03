@@ -1,0 +1,66 @@
+# Last updated: 2026-09-03
+# @nova: A pass over my computer that fixes what is loose and then PROVES it, rather than
+#        assuming. Safe to run any time; every step is idempotent.
+# @claude 2026-09-03: rewritten from a one-shot into a repeatable fix+verify pass, and taught
+# to chase the two noises the first boot left behind:
+#   (a) "Processing /etc/fstab with mount -a failed" on EVERY command -- the drvfs line was
+#       written before the Windows-side NovaDrop folder existed (it exists now).
+#   (b) "CreateProcessCommon:792: chdir(/var/lib/nova) failed 2" -- WSL cannot chdir into the
+#       working directory it was handed (Windows-drive mounts are off by design), so it falls
+#       back to a path that does not exist. We diagnose it, then make the path real.
+# Design_Principles #4: verify against ground truth. Every fix below is followed by a read-back.
+import sys, urllib.request
+sys.stdout.reconfigure(line_buffering=True)
+from nova_computer.computer import NovaComputer
+
+pc = NovaComputer()
+print("backend:", pc.backend.name, "|", pc.where())
+if pc.backend.name != "wsl":
+    print("TUNE_UP_RESULT: SKIPPED - this pass is for the WSL backend only")
+    raise SystemExit(0)
+
+def root(cmd, t=120, label=None):
+    rc, out, err = pc._exec_root(cmd, timeout=t)
+    noise = ("Processing /etc/fstab", "CreateProcessCommon")
+    err_shown = "\n".join(l for l in (err or "").splitlines()
+                          if not any(n in l for n in noise)).strip()
+    print(f"$ {label or cmd}\n  rc={rc} {out} {err_shown}".rstrip())
+    return rc, out
+
+print("\n--- diagnose ---")
+root("getent passwd nova; echo 'root home:'; getent passwd root | cut -d: -f6",
+     label="who is nova and where does she live")
+
+print("\n--- fix ---")
+# (b) give WSL a real directory to land in, whoever asks for it.
+root("mkdir -p /var/lib/nova && chown nova:nova /var/lib/nova && echo landing-dir-ok")
+# (a) the drop folder: one shared path, now that the Windows side exists.
+root("sed -i 's|^C:/Users/lafou/NovaDrop .*|C:/Users/lafou/Project_Nova/NovaDrop /mnt/drop "
+     "drvfs defaults,nofail,uid=1000,gid=1000 0 0|' /etc/fstab; "
+     "mkdir -p /mnt/drop && mount -a 2>/dev/null; mountpoint -q /mnt/drop "
+     "&& echo drop-mounted || echo drop-NOT-mounted")
+# the desktop she is actually watched through
+root("systemctl daemon-reload && systemctl restart nova-vnc && sleep 4 "
+     "&& systemctl restart nova-novnc && sleep 2 && systemctl is-active nova-vnc nova-novnc "
+     "| paste -sd,")
+
+print("\n--- verify (ground truth, not claims) ---")
+rc, ports = root("ss -tlnH | awk '{print $4}' | grep -E ':(5901|6080)$' | paste -sd,",
+                 label="ports actually listening")
+if "5901" not in (ports or ""):
+    print("  !! VNC (5901) is not listening - the viewer page would load but show no desktop.")
+    root("journalctl -u nova-vnc --no-pager -n 12 | tail -12", label="why nova-vnc is unhappy")
+rc, out = pc.bash("echo bash-ok && whoami && pwd")
+print("bash:", rc, out.replace("\n", " | "))
+rc, out = pc.pwsh("'pwsh ' + $PSVersionTable.PSVersion.ToString()")
+print("pwsh:", rc, out)
+rc, out = pc.bash("echo drop-test-$(date +%s) > /mnt/drop/hello_from_nova_computer.txt "
+                  "&& cat /mnt/drop/hello_from_nova_computer.txt")
+print("drop write:", rc, out)
+try:
+    with urllib.request.urlopen("http://localhost:6080/vnc.html", timeout=10) as r:
+        print("viewer HTTP:", r.status, "->", pc.desktop_url)
+except Exception as e:
+    print("viewer HTTP: FAILED", e)
+print("\nstatus:", pc.status())
+print("TUNE_UP_RESULT: DONE")

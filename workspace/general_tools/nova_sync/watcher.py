@@ -1,4 +1,11 @@
-# Last updated: 2026-08-06 16:21:32
+# @nova: Workspace watcher: stamps Last-updated lines, autosaves to git (commit, then push), refreshes Nova's SELF manifest and Orient, mirrors to Google Drive.
+# Last updated: 2026-10-03 10:21:49
+
+# Body-owned paths also work when this tool is launched directly.
+import sys as _nova_path_sys
+from pathlib import Path as _NovaPath
+_nova_path_sys.path.insert(0, str(_NovaPath(__file__).resolve().parents[2] / 'nova_body'))
+from nova_paths import body_path
 import re
 import sys
 import time
@@ -32,8 +39,7 @@ for _p in [str(_ws / "nova_body"), str(_ws / "general_tools")]:
 WORKSPACE_DIR = Path(__file__).resolve().parent.parent.parent
 WATCH_DIR     = WORKSPACE_DIR.parent   # parent of workspace/ (e.g. Project_Nova/)
 SYNC_DIR      = WORKSPACE_DIR / "general_tools" / "nova_sync"
-INDEX_PATH    = SYNC_DIR / "FILE_INDEX.md"
-LINK_PATH     = SYNC_DIR / "FILE_INDEX_LINK.md"
+INDEX_PATH    = WORKSPACE_DIR / "Orient" / "INDEX.md"
 # Quiet period before an autosave commit. 2026-07-21: was 10s, which was tuned back when the
 # workspace only changed when a HUMAN edited something. A running Nova writes autonomy_state,
 # touch_state, drives and tasks every few seconds, so 10s meant the debounce essentially never
@@ -46,8 +52,17 @@ DEBOUNCE_SECONDS = 120
 
 EXCLUDE_DIRS = {
     ".git", "__pycache__", "node_modules", "screenshots",
+    # Google Drive for Desktop backs up Project_Nova and stages uploads in these two folders
+    # (tens of thousands of temp copies). Never source: watching them only queues autosave
+    # cycles, and git must never see them either -- they are in .gitignore (2026-10-02).
+    ".tmp.driveupload", ".tmp.drivedownload",
+    # Nova_Drive/ is the copy Drive for Desktop syncs instead (nova_sync/drive_copy.py). Watching it
+    # would stamp the copies and queue autosaves for files git ignores anyway.
+    "Nova_Drive",
 }
 EXCLUDE_SUBPATHS = set([
+    "Temp/collaboration",  # Private agent transport; never stamp, autosave or audit.
+    "Temp/task-workspaces",  # Task copies staged for verified promotion; never stamp or autosave.
     "logs", "nova_body/backups", "general_tools/backups",
     "agents/main/sessions",
 ])
@@ -68,6 +83,7 @@ EXCLUDE_SUBPATHS = set([
 # These are directories whose contents are machine-managed. A rename inside them is never
 # something to review; it is the machine working.
 AUDIT_EXCLUDE_PREFIXES = (
+    "nova_body/nova_memory_db/", "nova_body/logs/",
     "nova_memory_db/",      # LanceDB internals — 81% of the old queue
     "prompt_cache/",
     "logs/",
@@ -206,138 +222,15 @@ def update_timestamp_in_file(path: Path):
 
 
 def build_file_index(commit_ref=None):
-    current_key = 0
-    if INDEX_PATH.exists():
-        try:
-            existing = INDEX_PATH.read_text(encoding="utf-8")
-            import re as _re
-            match = _re.search(r"_cache_key: (\d+)_", existing)
-            if match:
-                val = int(match.group(1))
-                if val <= 9999999:
-                    current_key = val
-        except Exception:
-            pass
-    cache_key = str(current_key + 1).zfill(7)
-
-    if commit_ref is None:
-        try:
-            hash_result = subprocess.run(
-                ["git", "rev-parse", "HEAD"],
-                cwd=WATCH_DIR, capture_output=True, text=True
-            )
-            commit_ref = hash_result.stdout.strip()
-        except Exception:
-            commit_ref = "main"
-
-    github_base = f"https://raw.githubusercontent.com/cklafou/nova-workspace/{commit_ref}"
-    lines = []
-    lines.append("# FILE_INDEX.md -- Nova Workspace Raw File Index")
-    lines.append("_Auto-generated on boot by nova_sync/watcher.py. Do not edit manually._")
-    lines.append(f"_Last updated: {time.strftime('%Y-%m-%d %H:%M:%S')}_")
-    lines.append(f"_cache_key: {cache_key}_")
-    lines.append("")
-    lines.append("Claude: all URLs below use a commit hash -- they are cache-proof.")
-    lines.append("Fetch any URL directly. No ?t= needed.")
-    lines.append(f"Example: {github_base}/workspace/general_tools/nova_sync/watcher.py")
-    lines.append("")
-
-    sections = {}
-    excluded_dir_seen = set()
-    excluded_subpath_seen = set()
-
-    for path in sorted(WORKSPACE_DIR.rglob("*")):
-        if not path.is_file():
-            continue
-        if path.name in EXCLUDE_FROM_INDEX:
-            continue
-        try:
-            rel_display = str(path.relative_to(WORKSPACE_DIR)).replace("\\", "/")
-            parts_rel = path.relative_to(WORKSPACE_DIR).parts
-        except ValueError:
-            continue
-
-        # Skip the Nova app's per-pid Chrome profile (.nova_app_profile_<pid>): it's
-        # thousands of locked/binary files, never useful in the index, and git ignores it.
-        if any(p.startswith(".nova_app_profile") for p in parts_rel):
-            continue
-
-        section = parts_rel[0] if len(parts_rel) > 1 else "root"
-
-        excluded_dir = next((e for e in EXCLUDE_DIRS if e in path.parts), None)
-        if excluded_dir:
-            try:
-                excl_parts = list(path.relative_to(WORKSPACE_DIR).parts)
-                excl_idx = excl_parts.index(excluded_dir)
-                excl_rel = "/".join(excl_parts[:excl_idx + 1])
-            except (ValueError, IndexError):
-                excl_rel = excluded_dir
-            if excl_rel not in excluded_dir_seen:
-                excluded_dir_seen.add(excl_rel)
-                excl_section = excl_parts[0] if excl_idx > 0 else "root"
-                if excl_section not in sections:
-                    sections[excl_section] = []
-                sections[excl_section].append((f"{excl_rel}/ (excluded)", None))
-            continue
-
-        matched_subpath = next(
-            (sub for sub in EXCLUDE_SUBPATHS if rel_display.startswith(sub)), None
-        )
-        if matched_subpath:
-            if matched_subpath not in excluded_subpath_seen:
-                excluded_subpath_seen.add(matched_subpath)
-                subpath_section = matched_subpath.split("/")[0]
-                if subpath_section not in sections:
-                    sections[subpath_section] = []
-                sections[subpath_section].append((f"{matched_subpath}/ (excluded)", None))
-            continue
-
-        rel_display_encoded = rel_display.replace(" ", "%20")
-        linkable = (
-            path.suffix.lower() in INCLUDE_EXTENSIONS
-            and path.name != "FILE_INDEX.md"
-        )
-
-        if linkable:
-            try:
-                rel = path.relative_to(WATCH_DIR)
-                github_path = str(rel).replace("\\", "/").replace(" ", "%20")
-                entry = (rel_display_encoded, f"{github_base}/{github_path}")
-            except ValueError:
-                entry = (rel_display_encoded, None)
-        else:
-            entry = (rel_display_encoded, None)
-
-        if section not in sections:
-            sections[section] = []
-        sections[section].append(entry)
-
-    if "root" in sections:
-        lines.append("## Root")
-        for rel_path, url in sections["root"]:
-            lines.append(f"- [{rel_path}]({url})" if url else f"- {rel_path}")
-        lines.append("")
-
-    for section in sorted(k for k in sections if k != "root"):
-        lines.append(f"## {section}/")
-        for rel_path, url in sections[section]:
-            lines.append(f"- [{rel_path}]({url})" if url else f"- {rel_path}")
-        lines.append("")
-
-    INDEX_PATH.parent.mkdir(parents=True, exist_ok=True)
-    INDEX_PATH.write_text("\n".join(lines), encoding="utf-8")
-    print(f"[watcher] FILE_INDEX.md updated ({len(sections)} sections, "
-          f"{sum(len(v) for v in sections.values())} files, cache_key={cache_key})")
-
-    if commit_ref and commit_ref != "main":
-        link_url = (
-            f"https://raw.githubusercontent.com/cklafou/nova-workspace/"
-            f"{commit_ref}/workspace/general_tools/nova_sync/FILE_INDEX.md"
-        )
-        LINK_PATH.write_text(link_url + "\n", encoding="utf-8")
-        print(f"[watcher] FILE_INDEX_LINK.md updated -> {commit_ref[:8]}")
-
-
+    """Request project-owned inventory without letting documentation halt autosave."""
+    try:
+        from architecture_map.orient import refresh
+        result = refresh(WORKSPACE_DIR)
+        print(f"[watcher] Orient inventory: {result.get('files', '?')} files, changed={result.get('changed', False)}")
+        return result
+    except Exception as error:
+        print(f"[watcher] Orient refresh failed; autosave continues: {error}")
+        return {"changed": False, "error": str(error)}
 
 
 
@@ -571,6 +464,65 @@ def _clear_stale_git_lock(watch_dir, max_age_s=30):
         print(f"[watcher] could not clear stale git lock: {e}")
 
 
+
+# ── Oversized-file guard (2026-09-07) ─────────────────────────────────────────────────────
+# WHY: `git add .` swept NovaDrop/nova_computer_20260905.tar -- a 5.37 GB `wsl --export` image
+# of Nova's computer -- into three auto-commits on 2026-09-06. GitHub rejects any file over
+# 100 MB, so EVERY push from then on failed while the repo itself looked healthy. The push
+# error was printed and the cycle returned None, so the watcher kept committing into a history
+# that could never leave the machine.
+#
+# Git holds the code. VM images and backups belong on a disk, not in source history. This guard
+# keeps that boundary without needing anyone to notice: anything over the limit is dropped from
+# the index (it stays on disk, untouched) and named loudly in the log.
+GIT_MAX_BLOB = 100 * 1024 * 1024      # GitHub's hard per-file limit
+
+
+def _drop_oversized_from_index(watch_dir):
+    """Unstage/untrack files too big for the remote. Returns the paths it dropped."""
+    dropped = []
+
+    def _untrack(path, size, where):
+        r = subprocess.run(["git", "rm", "--cached", "--quiet", "--", path],
+                           cwd=watch_dir, capture_output=True, text=True)
+        if r.returncode == 0:
+            dropped.append(path)
+            print(f"[{time.strftime('%H:%M:%S')}] OVERSIZED ({size / 1048576:.0f} MB) untracked "
+                  f"from {where}: {path}")
+            print("    it is still on disk. add it to .gitignore so this does not repeat.")
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] could not untrack oversized {path}: "
+                  f"{(r.stderr or '').strip()[:120]}")
+
+    # 1. anything staged this cycle
+    r = subprocess.run(["git", "diff", "--cached", "--name-only"],
+                       cwd=watch_dir, capture_output=True, text=True)
+    for rel in (r.stdout or "").splitlines():
+        rel = rel.strip()
+        if not rel:
+            continue
+        f = Path(watch_dir) / rel
+        try:
+            if f.is_file() and f.stat().st_size > GIT_MAX_BLOB:
+                _untrack(rel, f.stat().st_size, "this commit")
+        except OSError:
+            pass
+
+    # 2. anything already tracked from an earlier commit (the tar got in this way)
+    r = subprocess.run(["git", "ls-tree", "-r", "-l", "HEAD"],
+                       cwd=watch_dir, capture_output=True, text=True)
+    for line in (r.stdout or "").splitlines():
+        parts = line.split(None, 4)
+        if len(parts) == 5 and parts[3].isdigit() and int(parts[3]) > GIT_MAX_BLOB:
+            if parts[4] not in dropped:
+                _untrack(parts[4], int(parts[3]), "earlier history")
+
+    if dropped:
+        print(f"[{time.strftime('%H:%M:%S')}] NOTE: files already committed stay in HISTORY. "
+              "Until those commits are rewritten the push will keep failing -- run "
+              "_admin\\FIX_GIT.cmd once.")
+    return dropped
+
 def git_push(watch_dir):
     # A leftover lock from a prior crashed git blocks this whole cycle. Clear it FIRST so the
     # watcher can always make forward progress; without this, one stale lock froze commits
@@ -579,6 +531,7 @@ def git_push(watch_dir):
     try:
         subprocess.run(["git", "add", "."], cwd=watch_dir, check=True,
                        capture_output=True, text=True)
+        _drop_oversized_from_index(watch_dir)     # never try to push what the remote refuses
         result = subprocess.run(
             ["git", "diff", "--cached", "--quiet"], cwd=watch_dir
         )
@@ -641,7 +594,7 @@ def print_session_urls(commit_hash, copy_url=False):
     if commit_hash:
         session_url = (
             f"https://raw.githubusercontent.com/cklafou/nova-workspace/"
-            f"{commit_hash}/workspace/general_tools/nova_sync/FILE_INDEX.md"
+            f"{commit_hash}/workspace/Orient/INDEX.md"
         )
         print(session_url)
     else:
@@ -649,7 +602,7 @@ def print_session_urls(commit_hash, copy_url=False):
     print("=" * 60)
     print("")
     print("CLAUDE BOOTSTRAP (permanent):")
-    print("https://api.github.com/repos/cklafou/nova-workspace/contents/workspace/general_tools/nova_sync/FILE_INDEX_LINK.md")
+    print("https://api.github.com/repos/cklafou/nova-workspace/contents/workspace/Orient/INDEX.md")
     print("")
     if copy_url and session_url:
         copy_to_clipboard(session_url)
@@ -666,6 +619,19 @@ def run_drive_sync():
         drive.sync_to_drive()
     except Exception as e:
         print(f"[drive] sync skipped (non-fatal): {e}")
+
+
+def run_drive_copy():
+    """Refresh Nova_Drive/read from the last commit (nova_sync/drive_copy.py), so Cole can read Nova
+    from a PC that only reaches Google Drive. Non-fatal, like the mirror above: never blocks a commit."""
+    try:
+        from nova_sync import drive_copy
+        result = drive_copy.export(WATCH_DIR, time_budget=60)
+        if result.get("changed") or result.get("removed"):
+            print(f"[drive-copy] Nova_Drive/read: {result['changed']} updated, {result['removed']} removed"
+                  + ("" if result.get("complete") else " (continuing next cycle)"))
+    except Exception as e:
+        print(f"[drive-copy] skipped (non-fatal): {e}")
 
 
 def run_push_cycle():
@@ -870,7 +836,7 @@ def run_manifest_pass():
         print(f"[manifest] regen error: {e}")
         return
     try:
-        mf = WORKSPACE_DIR / "SELF" / "reference" / "manifest.json"
+        mf = body_path('SELF', workspace=WORKSPACE_DIR) / "reference" / "manifest.json"
         data = _json.loads(mf.read_text(encoding="utf-8"))
         fl = data.get("flags", {})
         und = fl.get("undescribed", [])
@@ -882,7 +848,7 @@ def run_manifest_pass():
         text = (f"Body manifest refreshed: {data.get('part_count')} parts, "
                 f"{len(und)} undescribed, {len(dead)} no-inbound-ref")
         print(f"[manifest] {text}")
-        ev_dir = WORKSPACE_DIR / "logs" / "events"
+        ev_dir = body_path('logs', workspace=WORKSPACE_DIR) / "events"
         ev_dir.mkdir(parents=True, exist_ok=True)
         payload = {"type": "nova_event", "event": "manifest", "text": text,
                    "level": "info",
@@ -909,7 +875,7 @@ def run_audit_pass():
                     capture_output=True, text=True, timeout=180, cwd=str(WORKSPACE_DIR))
         summary = (r.stdout or "").strip() or "audit complete"
         print(f"[audit] {summary}")
-        ev = WORKSPACE_DIR / "logs" / "events"
+        ev = body_path('logs', workspace=WORKSPACE_DIR) / "events"
         ev.mkdir(parents=True, exist_ok=True)
         with open(ev / f"events-{_dt.now().strftime('%Y-%m-%d')}.jsonl", "a",
                   encoding="utf-8") as f:
@@ -935,6 +901,9 @@ class GitAutoCommit(FileSystemEventHandler):
             self._handle(event.src_path)
 
     def _handle(self, src_path: str):
+        # Published docs must never stamp themselves or trigger another sync cycle.
+        if Path(src_path).resolve().is_relative_to((WORKSPACE_DIR / "Orient").resolve()):
+            return
         if ".git" in src_path or "__pycache__" in src_path:
             return
         if src_path.endswith(".pyc"):
@@ -959,6 +928,14 @@ class GitAutoCommit(FileSystemEventHandler):
         if ".nova_app_profile" in src_path:
             return
         path = Path(src_path)
+        try:
+            relative = path.resolve().relative_to(WORKSPACE_DIR.resolve()).as_posix().casefold()
+        except ValueError:
+            relative = ""
+        if any(relative == sub.casefold().rstrip("/")
+               or relative.startswith(sub.casefold().rstrip("/") + "/")
+               for sub in EXCLUDE_SUBPATHS):
+            return
         # SELF/ is generated by run_manifest_pass(). Ignoring it here breaks the
         # watcher<->manifest feedback loop: a regen writes SELF/ files, which the
         # watcher would otherwise see as changes and regen again, forever (and it
@@ -1022,6 +999,7 @@ if __name__ == "__main__":
     print("[watcher] Building initial FILE_INDEX.md...")
     commit_hash = run_push_cycle()
     run_sync_and_backup()
+    run_drive_copy()
     print_session_urls(commit_hash, copy_url=False)
     run_manifest_pass()
     run_audit_pass()
@@ -1044,6 +1022,7 @@ if __name__ == "__main__":
                 # is printed on startup and by --push; reprinting a fresh one every few
                 # seconds was noise wrapped around two unnecessary commits.
                 run_autocommit_cycle()
+                run_drive_copy()
                 run_manifest_pass()
     except KeyboardInterrupt:
         observer.stop()

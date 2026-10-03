@@ -1,9 +1,9 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: nova_cortex/tunables.py — LIVE-TUNABLE knobs. Cole (2026-08-03): "make things that
 #   should be easily changed into adjustable variables, with a tool that adjusts them on the
 #   fly." This is that registry. Any constant Cole might reasonably want to change WITHOUT a
 #   code edit + restart belongs here. get() re-reads the store every call, so a change made in
-#   the Variables panel takes effect on her NEXT turn — no restart. See Orient/TUNABLE_VARIABLES.md.
+#   the Variables panel takes effect on her NEXT turn — no restart. See Orient/OPERATIONS.md#tunable-variables.
 """
 nova_cortex/tunables.py — the one place live-adjustable parameters live.
 
@@ -24,6 +24,8 @@ Design rules (why it is shaped this way):
 """
 from __future__ import annotations
 
+from nova_paths import body_path
+
 import json
 import os
 import time
@@ -31,12 +33,16 @@ from pathlib import Path
 
 _WS = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
        else Path(__file__).resolve().parents[2])
-_STORE = _WS / "_admin" / "tunables.json"
+_STORE = body_path("memory", "tunables.json")
 
 # ── THE REGISTRY ─────────────────────────────────────────────────────────────────────────────
 # Add a knob here the moment you find yourself wanting to change a constant to see what happens.
 # type: "int" | "float" | "bool".  For numbers, min/max bound the panel control and clamp set().
 REGISTRY: dict = {
+    "autonomy_wake_budget_seconds": {
+        "default": 300, "type": "int", "min": 30, "max": 1800, "category": "Autonomy",
+        "label": "Time per autonomous wake",
+        "desc": "Seconds available to reflect, decide and execute before retaining progress and resting."},
     "witness_max_rounds": {
         "default": 20, "type": "int", "min": 1, "max": 40, "category": "Witness",
         "label": "Witness rounds — text",

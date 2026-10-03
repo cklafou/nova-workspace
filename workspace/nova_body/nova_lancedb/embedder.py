@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:11:34
+# Last updated: 2026-10-03 10:59:53
 """
 nova_lancedb/embedder.py
 ========================
@@ -8,8 +8,8 @@ Dual-modal embedding engine for Nova's memory store.
 - Visual: clip-ViT-B-32      (~350MB, 512-dim) — image / screenshot recall
 
 Both models are lazy-loaded on first use and cached for the session.
-If a model fails to load (e.g., no internet, OOM), falls back to a null
-embedding so the rest of the system continues without crashing.
+If an embedding model fails, the caller retains the write for retry. A zero
+vector must never be presented as a successfully indexed memory.
 """
 from __future__ import annotations
 import hashlib
@@ -122,7 +122,7 @@ def embed_text_for_visual(text: str) -> list[float]:
 # ── Utility ──────────────────────────────────────────────────────────────────
 
 def _null_vec(dim: int) -> list[float]:
-    return [0.0] * dim
+    raise RuntimeError(f"The {dim}-dimension embedder is unavailable or failed; no valid vector was produced")
 
 
 def content_hash(content: str) -> str:

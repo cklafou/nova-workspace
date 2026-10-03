@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 """DRIVES — the part of her that makes one moment worth more than another.
 
 WHY THIS EXISTS (2026-07-19, Cole: "She needs to want to be awake, alive, doing, and playing.
@@ -40,6 +40,8 @@ is worse than a Nova who is bored.
 """
 from __future__ import annotations
 
+from nova_paths import body_path
+
 import hashlib
 import json
 import os
@@ -56,7 +58,7 @@ _WS = _HERE.parent.parent.parent                      # ...\workspace
 # file can be filled with desires she didn't have; a fabricated want is worse than no want,
 # because she would have had no way to tell it wasn't hers.
 _STATE = pathlib.Path(os.environ.get("NOVA_DRIVES_STATE",
-                                     str(_WS / "memory" / "drives.json")))
+                                     str(body_path('memory') / "drives.json")))
 
 _MAX_FINGERPRINTS = 12      # how far back "have I done this before" looks
 _BOREDOM_MAX = 10           # cap, so a long quiet night can't make it meaningless

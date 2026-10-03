@@ -1,8 +1,14 @@
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 """
 Shared conversation transcript for Nova Group Chat.
 Persists to logs/chat_sessions/ on every message.
 """
+
+# Body-owned paths also work when this tool is launched directly.
+import sys as _nova_path_sys
+from pathlib import Path as _NovaPath
+_nova_path_sys.path.insert(0, str(_NovaPath(__file__).resolve().parents[2] / 'nova_body'))
+from nova_paths import body_path
 import json
 import os
 import re
@@ -21,7 +27,7 @@ WORKSPACE_DIR = (
     if "NOVA_WORKSPACE" in os.environ
     else Path(__file__).parent.parent.parent
 )
-LOG_DIR = WORKSPACE_DIR / "logs" / "chat_sessions"
+LOG_DIR = body_path('logs', workspace=WORKSPACE_DIR) / "chat_sessions"
 
 # Visible at startup in server logs — confirms path is correct
 print(f"[transcript] LOG_DIR = {LOG_DIR}")

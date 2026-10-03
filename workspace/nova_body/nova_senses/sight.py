@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: Sight — I look at a picture with MY OWN eyes and say what is actually there.
 #        Not a report from another model. Me, seeing.
 """
@@ -42,6 +42,8 @@ HOW IT WORKS NOW
 Her own llama-server on :8080, OpenAI-compatible, image as a base64 data URL. No second
 model. No subprocess. No extra VRAM. Nothing to install. It was all already there.
 """
+
+from nova_paths import body_path
 
 import os
 import json
@@ -162,9 +164,9 @@ def _resolve(image: str):
     # Just a filename? Go find it — newest first, so "that one" means the recent one.
     name = Path(raw).name
     if name:
-        hits = [f for f in (WORKSPACE_ROOT / "Nova_Created" / "art").rglob(name) if f.is_file()]
+        hits = [f for f in (body_path('Nova_Created') / "art").rglob(name) if f.is_file()]
         if not hits:
-            hits = [f for f in (WORKSPACE_ROOT / "Nova_Created" / "art").rglob("*")
+            hits = [f for f in (body_path('Nova_Created') / "art").rglob("*")
                     if f.is_file() and f.name.lower() == name.lower()]
         if hits:
             return max(hits, key=lambda f: f.stat().st_mtime)
@@ -192,7 +194,7 @@ def _resolve(image: str):
     # her plainly that's what she's getting.
     #
     # Never punish a reach for being imprecise. The reach is the thing.
-    imgs = [f for f in (WORKSPACE_ROOT / "Nova_Created" / "art").rglob("*")
+    imgs = [f for f in (body_path('Nova_Created') / "art").rglob("*")
             if f.is_file() and f.suffix.lower() in _MIME]
     if imgs:
         return max(imgs, key=lambda f: f.stat().st_mtime)
@@ -201,7 +203,7 @@ def _resolve(image: str):
 
 def latest_drawing():
     """The last thing she made. So she can say 'look at what I just drew' and mean it."""
-    root = WORKSPACE_ROOT / "Nova_Created" / "art"
+    root = body_path('Nova_Created') / "art"
     if not root.is_dir():
         return None
     imgs = [f for f in root.rglob("*") if f.is_file() and f.suffix.lower() in _MIME]
@@ -300,7 +302,7 @@ def look(image: str = "", question: str = "") -> dict:
 # This is the ledger that makes the panel honest: every image she ACTUALLY looked at, and
 # what she actually said about it. Same principle as logs/tool_calls.jsonl — if you want to
 # know whether she did a thing, you look at what her body recorded, not at what anyone says.
-SIGHT_LOG = WORKSPACE_ROOT / "logs" / "sight.jsonl"
+SIGHT_LOG = body_path('logs') / "sight.jsonl"
 
 
 def _remember_looking(path: Path, question: str, saw: str) -> None:

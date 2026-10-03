@@ -1,0 +1,26 @@
+#!/bin/sh
+# @nova: Keeps Orient current on every commit, from any agent — the watcher, Codex, Claude or Cole.
+#
+# Install: copy this file to .git/hooks/pre-commit in the repository root (no other setup).
+# Skip once: set NOVA_SKIP_ORIENT=1.   Remove: delete .git/hooks/pre-commit.
+#
+# FAIL-OPEN BY DESIGN. Orient is documentation. If the generator breaks, the commit still
+# happens and a single line says so — losing a commit to a doc generator would be the wrong
+# trade, and the watcher commits unattended.
+[ -n "$NOVA_SKIP_ORIENT" ] && exit 0
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+gen="$root/workspace/general_tools/architecture_map/orient.py"
+[ -f "$gen" ] || exit 0
+if command -v py >/dev/null 2>&1; then PY="py -3"
+elif command -v python >/dev/null 2>&1; then PY="python"
+elif command -v python3 >/dev/null 2>&1; then PY="python3"
+else exit 0; fi
+if $PY "$gen" >/dev/null 2>&1; then
+    # Only generator-owned files: never stage an agent's unfinished note or evidence draft.
+    for rel in README.md ARCHITECTURE.md OPERATIONS.md INDEX.md Architecture/inventory.json; do
+        git add -- "$root/workspace/Orient/$rel" >/dev/null 2>&1 || true
+    done
+else
+    echo "[orient] refresh failed; commit continues. Run: python workspace/general_tools/architecture_map/orient.py" >&2
+fi
+exit 0

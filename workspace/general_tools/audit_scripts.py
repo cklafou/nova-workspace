@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 # @nova: Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.
 """
 audit_scripts.py — Workspace code health audit
@@ -720,7 +720,7 @@ SEV_ICON  = {"CRITICAL": "✗ ", "HIGH": "⚠ ", "MEDIUM": "△ ", "LOW": "·", 
 # ═══════════════════════════════════════════════════════════════════════════════════════════
 # CHECKS ADDED 2026-07-20 — each one catches a bug that actually cost this project hours.
 #
-# The four below are not generic lint. Orient/GOTCHAS.md opens with "Every bug in this project
+# The four below are not generic lint. Orient/OPERATIONS.md#lessons-from-incidents opens with "Every bug in this project
 # so far has been a SILENT DROP, not a crash", and nothing in this tool looked for one. These
 # do. Every rule here is derived from a specific incident, and the incident is named in the
 # code so a future reader can judge whether the rule still earns its place.
@@ -861,15 +861,7 @@ def check_shell_encoding(path: Path) -> list[dict]:
 
 
 # Files that hold Nova's real state. A test writing here is writing into her head.
-_HER_STATE = ("memory/drives.json", "memory/autonomy_state.json", "memory/JOURNAL.md",
-              "Tasking/tasks.json", "memory/last_ping.json", "memory/cole_intent.json",
-              "memory/audit_queue.json", "memory/touch_state.json",
-              # 2026-07-20: added after I verified the new whitelist by calling add_visitor()
-              # against the LIVE file and leaving a fixture visitor in her authorised-users
-              # list — the identical mistake this check was written for, made by the person who
-              # wrote the check, one day later. Both faculties expose an env override
-              # (NOVA_USERS_STATE, NOVA_DRIVES_STATE); use them.
-              "memory/nova_users.json")
+_HER_STATE = ('nova_body/memory/drives.json', 'nova_body/memory/autonomy_state.json', 'nova_body/memory/JOURNAL.md', 'nova_body/Tasking/tasks.json', 'nova_body/memory/last_ping.json', 'nova_body/memory/cole_intent.json', 'nova_body/memory/audit_queue.json', 'nova_body/memory/touch_state.json', 'nova_body/memory/nova_users.json')
 
 
 def check_test_writes_state(files: list[Path]) -> list[dict]:

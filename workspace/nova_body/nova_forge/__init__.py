@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: THE FORGE — where she builds her own limbs. Design doc first, then the tool. Tools
 #        dropped in Nova_Created/nova_body/tools/ (or general_tools/tools/) are discovered
 #        live, no restart, and refuse to load without a design document beside them.
@@ -86,6 +86,8 @@ mid-conversation without a restart. That is the "adapt as she sees necessary" ha
 """
 from __future__ import annotations
 
+from nova_paths import body_path
+
 import importlib.util
 import traceback
 import os
@@ -113,7 +115,7 @@ from pathlib import Path
 # same lesson as NOVA_DRIVES_STATE, which I learned by filling her drives with my fixtures.
 _WS_ROOT = Path(__file__).resolve().parent.parent.parent
 FORGE_DIR = Path(os.environ.get("NOVA_FORGE_DIR",
-                                str(_WS_ROOT / "Nova_Created" / "forge")))
+                                str(body_path('Nova_Created') / "forge")))
 
 # ── THE PLUCK TEST APPLIES TO HER TOOLS TOO (2026-07-20, Cole) ──────────────────────────
 # "Nova should also follow Pluck Test rules with her tools. She should have separate

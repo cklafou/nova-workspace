@@ -1,0 +1,185 @@
+# Last updated: 2026-09-03
+# @nova: Her computer — a sandboxed Linux machine (WSL2 distro, hers alone) that she uses
+#        without ever touching Cole's screen, mouse, keyboard, or focus. Body part: stdlib
+#        only, no general_tools, no Windows-side helpers. PLUCK RULE: dropped body-only onto
+#        any Windows host with WSL2, ensure() stands her computer back up from the provision
+#        script that travels inside this package.
+"""
+nova_computer -- Nova's own machine.
+
+    from nova_computer.computer import NovaComputer
+    pc = NovaComputer()
+    pc.ensure()                # provision if absent, boot if asleep (auto, non-interactive)
+    rc, out = pc.bash("uname -a && whoami")
+    rc, out = pc.pwsh("Get-Date")          # she has BOTH registers: bash and pwsh
+    pc.snapshot(r"C:\\Users\\lafou\\NovaDrop\\baseline.tar")
+    pc.status()                # honest ladder: wsl -> registered -> provisioned -> running
+
+Cole can watch/interrupt her desktop at http://localhost:6080/vnc.html (XFCE via noVNC).
+Containment lives in the guest's /etc/wsl.conf (no Windows drives, no interop); the ONE
+shared path is C:\\Users\\lafou\\NovaDrop <-> /mnt/drop.
+SCAFFOLDED (phase 2): in-guest eyes/hands agent (screenshot + input injection) for
+nova_senses.eyes to look through. Exec, provisioning, snapshots are LIVE.
+"""
+from __future__ import annotations
+
+import shutil
+import subprocess
+from pathlib import Path
+
+DISTRO = "Ubuntu-24.04"
+GUEST_USER = "nova"
+DESKTOP_URL = "http://localhost:6080/vnc.html"
+_WSL = shutil.which("wsl") or r"C:\Windows\System32\wsl.exe"
+_PROVISION = Path(__file__).resolve().parent / "provision" / "setup_guest.sh"
+# Never flash a console. This file exists because an invisible scheduled task spent six
+# weeks flashing cmd windows and stealing game focus (2026-09-02). Her body does not flicker.
+_NO_WINDOW = 0x08000000  # CREATE_NO_WINDOW
+
+
+class ComputerUnavailable(RuntimeError):
+    """Raised when her computer cannot be reached and ensure() could not fix it."""
+
+
+def _decode(b: bytes) -> str:
+    """wsl.exe management output is UTF-16LE; guest passthrough is UTF-8. Cope with both."""
+    if not b:
+        return ""
+    if b[1:2] == b"\x00" or b.count(b"\x00") > len(b) // 3:
+        try:
+            return b.decode("utf-16-le", errors="replace").replace("\x00", "").strip()
+        except Exception:
+            pass
+    return b.decode("utf-8", errors="replace").replace("\x00", "").strip()
+
+
+def _wsl(args: list[str], timeout: int = 60, stdin_bytes: bytes | None = None):
+    p = subprocess.run([_WSL] + args, capture_output=True, timeout=timeout,
+                       input=stdin_bytes, creationflags=_NO_WINDOW)
+    return p.returncode, _decode(p.stdout), _decode(p.stderr)
+
+
+class NovaComputer:
+    distro = DISTRO
+    desktop_url = DESKTOP_URL
+
+    # ---- the honest ladder -------------------------------------------------------------
+    def wsl_present(self) -> bool:
+        try:
+            rc, _, _ = _wsl(["--status"], timeout=20)
+            return rc == 0
+        except Exception:
+            return False
+
+    def registered(self) -> bool:
+        try:
+            rc, out, _ = _wsl(["-l", "-q"], timeout=20)
+            return rc == 0 and DISTRO in [l.strip() for l in out.splitlines()]
+        except Exception:
+            return False
+
+    def running(self) -> bool:
+        try:
+            rc, out, _ = _wsl(["-l", "-q", "--running"], timeout=20)
+            return rc == 0 and DISTRO in [l.strip() for l in out.splitlines()]
+        except Exception:
+            return False
+
+    def provisioned(self) -> bool:
+        rc, out, _ = self._exec_root("test -f /etc/systemd/system/nova-vnc.service && echo yes")
+        return rc == 0 and "yes" in out
+
+    def status(self) -> dict:
+        s = {"wsl": self.wsl_present(), "registered": False, "running": False,
+             "provisioned": False, "services": "", "desktop": DESKTOP_URL}
+        if s["wsl"]:
+            s["registered"] = self.registered()
+        if s["registered"]:
+            s["running"] = self.running()
+            s["provisioned"] = self.provisioned()
+        if s["provisioned"]:
+            _, out, _ = self._exec_root(
+                "systemctl is-active nova-vnc nova-novnc 2>/dev/null | paste -sd,")
+            s["services"] = out
+        return s
+
+    # ---- speaking both registers -------------------------------------------------------
+    def bash(self, cmd: str, timeout: int = 120, user: str = GUEST_USER):
+        """Run a bash command inside HER computer. Returns (rc, output)."""
+        rc, out, err = _wsl(["-d", DISTRO, "-u", user, "--exec", "bash", "-lc", cmd],
+                            timeout=timeout)
+        return rc, (out + (("\n" + err) if err else "")).strip()
+
+    def pwsh(self, cmd: str, timeout: int = 120):
+        """Run a PowerShell 7 command inside her computer (pwsh on Linux)."""
+        rc, out, err = _wsl(["-d", DISTRO, "-u", GUEST_USER, "--exec", "pwsh", "-NoProfile",
+                             "-Command", cmd], timeout=timeout)
+        if rc != 0 and "pwsh" in err and "not found" in err:
+            return rc, "pwsh is not installed in the guest yet - re-run provision()"
+        return rc, (out + (("\n" + err) if err else "")).strip()
+
+    def _exec_root(self, cmd: str, timeout: int = 60):
+        try:
+            rc, out, err = _wsl(["-d", DISTRO, "-u", "root", "--exec", "bash", "-lc", cmd],
+                                timeout=timeout)
+            return rc, out, err
+        except Exception as e:
+            return 1, "", str(e)
+
+    # ---- standing herself up -----------------------------------------------------------
+    def register(self, timeout: int = 1800) -> str:
+        """One-time distro download/registration. Non-interactive (--no-launch)."""
+        rc, out, err = _wsl(["--install", "-d", DISTRO, "--no-launch"], timeout=timeout)
+        if rc != 0 and not self.registered():
+            raise ComputerUnavailable(f"could not register {DISTRO}: {err or out}")
+        return out or "registered"
+
+    def provision(self, timeout: int = 1800) -> str:
+        """Stream the packaged setup script into the guest as root (works even with
+        Windows-drive mounts disabled, because it goes via stdin, not /mnt/c)."""
+        if not _PROVISION.exists():
+            raise ComputerUnavailable(f"provision script missing: {_PROVISION}")
+        script = _PROVISION.read_bytes().replace(b"\r\n", b"\n")
+        p = subprocess.run([_WSL, "-d", DISTRO, "-u", "root", "--exec", "bash", "-s"],
+                           input=script, capture_output=True, timeout=timeout,
+                           creationflags=_NO_WINDOW)
+        out = _decode(p.stdout) + "\n" + _decode(p.stderr)
+        if p.returncode != 0:
+            raise ComputerUnavailable(f"provision failed (rc={p.returncode}):\n{out[-2000:]}")
+        _wsl(["--terminate", DISTRO], timeout=30)  # apply /etc/wsl.conf sandbox on next boot
+        return out
+
+    def start(self) -> None:
+        """Boot her computer in the background (systemd services come up with it)."""
+        subprocess.Popen([_WSL, "-d", DISTRO, "--exec", "sleep", "infinity"],
+                         creationflags=_NO_WINDOW,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    def stop(self) -> None:
+        _wsl(["--terminate", DISTRO], timeout=30)
+
+    def snapshot(self, dest: str, timeout: int = 3600) -> str:
+        """Export a baseline image of her computer (do this before autonomous runs)."""
+        rc, out, err = _wsl(["--export", DISTRO, dest], timeout=timeout)
+        if rc != 0:
+            raise ComputerUnavailable(f"snapshot failed: {err or out}")
+        return dest
+
+    def ensure(self, auto_register: bool = True) -> dict:
+        """The pluck path: make her computer exist and answer, or say exactly why not."""
+        if not self.wsl_present():
+            raise ComputerUnavailable(
+                "WSL2 is not available on this host - her computer needs it "
+                "(one-time, admin: wsl --install, then reboot).")
+        if not self.registered():
+            if not auto_register:
+                raise ComputerUnavailable(f"distro {DISTRO} not registered on this host")
+            self.register()
+        if not self.provisioned():
+            self.provision()
+        if not self.running():
+            self.start()
+        rc, out = self.bash("echo alive && uname -r")
+        if rc != 0 or "alive" not in out:
+            raise ComputerUnavailable(f"computer did not answer: {out}")
+        return self.status()

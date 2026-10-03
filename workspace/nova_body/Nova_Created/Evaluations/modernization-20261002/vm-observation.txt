@@ -1,0 +1,5 @@
+Captured the guest desktop with computer_look and inspected the screenshot I received.
+
+The image is completely black: no desktop wallpaper, no window frames, no taskbar, no text, no cursor. Nothing is visibly rendered on the guest screen at this moment. The display server is alive (status reported ready, 1600x900) but it has produced a blank frame.
+
+Retried at 23:38 after re-establishing the VNC socket. The new screenshot shows a live desktop: top panel reads 2026-10-02 23:38 nova, blue mouse logo on topographic-contour wallpaper, five icons on the left (two volumes, Trash, File System, Home), taskbar at bottom with terminal, file manager, browser, search and folder icons. No application windows are open. The temporary file was created via computer_exec in this same session; its contents are not visually verifiable from the screenshot.

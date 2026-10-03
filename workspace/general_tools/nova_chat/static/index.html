@@ -1,11 +1,10 @@
+<!-- @nova: Serve the Nova Chat controller, dockable widgets and separate collaboration workshop. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nova</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════
    DESIGN TOKENS
@@ -1132,7 +1131,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-item" onclick="switchPanel('thoughts')"><span class="dd-icon">🧠</span><span class="dd-label">Thoughts</span><span class="dd-check" id="vchk-thoughts"></span></div>
   <div class="dd-item" onclick="switchPanel('pipeline')"><span class="dd-icon">🛡</span><span class="dd-label">Pipeline</span><span class="dd-check" id="vchk-pipeline"></span></div>
   <div class="dd-item" onclick="switchPanel('variables')"><span class="dd-icon">🎛</span><span class="dd-label">Variables</span><span class="dd-check" id="vchk-variables"></span></div>
-  <div class="dd-item" onclick="switchPanel('tools')">  <span class="dd-icon">⚙</span><span class="dd-label">Tools</span><span class="dd-check" id="vchk-tools"></span></div>
+  <div class="dd-item" onclick="switchPanel('tools')">  <span class="dd-icon">⚙</span><span class="dd-label">Activity</span><span class="dd-check" id="vchk-tools"></span></div>
   <div class="dd-item" onclick="switchPanel('monitor')"><span class="dd-icon">📊</span><span class="dd-label">Monitor</span><span class="dd-check" id="vchk-monitor"></span></div>
   <div class="dd-item" onclick="switchPanel('files')">  <span class="dd-icon">📁</span><span class="dd-label">Files</span><span class="dd-check" id="vchk-files"></span></div>
   <div class="dd-item" onclick="switchPanel('eyes')">     <span class="dd-icon">👁</span><span class="dd-label">Eyes</span><span class="dd-check" id="vchk-eyes"></span></div>
@@ -1155,7 +1154,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div class="dd-item" onclick="toggleWidget('thoughts')"><span class="dd-icon">🧠</span><span class="dd-label">Thoughts</span><span class="dd-check" id="wchk-thoughts"></span></div>
   <div class="dd-item" onclick="toggleWidget('pipeline')"><span class="dd-icon">🛡</span><span class="dd-label">Pipeline</span><span class="dd-check" id="wchk-pipeline"></span></div>
   <div class="dd-item" onclick="toggleWidget('variables')"><span class="dd-icon">🎛</span><span class="dd-label">Variables</span><span class="dd-check" id="wchk-variables"></span></div>
-  <div class="dd-item" onclick="toggleWidget('tools')"><span class="dd-icon">⚙</span><span class="dd-label">Tools</span><span class="dd-check" id="wchk-tools"></span></div>
+  <div class="dd-item" onclick="toggleWidget('tools')"><span class="dd-icon">⚙</span><span class="dd-label">Activity</span><span class="dd-check" id="wchk-tools"></span></div>
   <div class="dd-item" onclick="toggleWidget('monitor')"><span class="dd-icon">📊</span><span class="dd-label">Monitor</span><span class="dd-check" id="wchk-monitor"></span></div>
   <div class="dd-item" onclick="toggleWidget('files')"><span class="dd-icon">📁</span><span class="dd-label">Files</span><span class="dd-check" id="wchk-files"></span></div>
   <div class="dd-item" onclick="toggleWidget('eyes')"><span class="dd-icon">👁</span><span class="dd-label">Eyes</span><span class="dd-check" id="wchk-eyes"></span></div>
@@ -1194,17 +1193,19 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     <div class="dd-srv-dot" id="srv-dot-llama"></div>
     <div class="dd-srv-name">llama.cpp</div>
     <div class="dd-srv-status" id="srv-status-llama">Checking…</div>
-    <button class="dd-srv-btn" id="llama-start-btn" onclick="llamaStart()" title="Launches start_llama.cmd in a new console">Start</button>
-    <button class="dd-srv-btn" id="llama-stop-btn" onclick="llamaStop()" style="margin-left:2px" title="Kill llama-server on port 8080">Stop</button>
+    <button class="dd-srv-btn" id="llama-start-btn" onclick="llamaStart()" title="Start the local model server">Start</button>
+    <button class="dd-srv-btn" id="llama-stop-btn" onclick="llamaStop()" style="margin-left:2px" title="Stop the local model server">Stop</button>
   </div>
   <div class="dd-sep"></div>
-  <div class="dd-item" onclick="pollServices()"><span class="dd-icon">↻</span><span class="dd-label">Refresh Status</span></div>
+  <button type="button" class="dd-item service-action" onclick="pollServices()">↻ Refresh Status</button>
   <div class="dd-sep"></div>
-  <div class="dd-header">Restart</div>
-  <div class="dd-item" onclick="novaRestart('server')"><span class="dd-icon">🧠</span><span class="dd-label">Restart Server</span><span class="dd-key">llama :8080</span></div>
-  <div class="dd-item" onclick="novaRestart('nova')"><span class="dd-icon">✦</span><span class="dd-label">Restart Nova</span><span class="dd-key">mind reload</span></div>
-  <div class="dd-item" onclick="novaRestart('novachat')"><span class="dd-icon">▣</span><span class="dd-label">Restart Nova Chat</span><span class="dd-key">:8765</span></div>
-  <div class="dd-item" onclick="novaRestart('full')"><span class="dd-icon">⟳</span><span class="dd-label">Full Restart</span><span class="dd-key">whole stack</span></div>
+  <div class="dd-header">App and services</div>
+  <button type="button" class="dd-item service-action" onclick="novaRestart('full')">⟳ Restart Nova</button>
+  <button type="button" class="dd-item service-action" onclick="novaRestart('shutdown')">⏻ Shut down Nova</button>
+  <div id="service-action-status" role="status" aria-live="polite" style="padding:12px;white-space:normal"></div>
+  <div class="dd-header">Individual components</div>
+  <button type="button" class="dd-item service-action" onclick="novaRestart('server')">Restart model server</button>
+  <button type="button" class="dd-item service-action" onclick="novaRestart('nova')">Reload Nova’s mind</button>
 </div>
 
 <!-- Model selector dropdown (opens from model pill in tab bar) -->
@@ -1498,7 +1499,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
       if(ev&&ev.stopPropagation) ev.stopPropagation();
       const ep={complete:'/api/queue/complete',cancel:'/api/queue/cancel',delete:'/api/queue/delete'}[action];
       if(!ep) return;
-      try{ await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}); }catch(_){}
+      try{const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});const d=await r.json();if(!r.ok||d.ok===false)throw Error(d.error||d.why||'Task update failed');}catch(error){toast(error.message);return;}
       if(window.refreshBoard) window.refreshBoard();
     };
     function doneRow(t){
@@ -1690,7 +1691,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
          turn (nova.py reads them hot); no restart. Add a knob to the registry → it appears here. -->
     <div class="panel-section" id="panel-variables">
       <div style="font-size:11px;color:var(--text-mute,#8b93a0);margin-bottom:7px;line-height:1.5">
-        Live knobs — changes apply on her next turn, no restart. Stored in <code>_admin/tunables.json</code>.</div>
+        Live knobs — changes apply on her next turn, no restart. Stored in <code>nova_body/memory/tunables.json</code>.</div>
       <div id="vars-body"><div class="panel-empty"><div class="ei">🎛</div>loading knobs…</div></div>
     </div>
 
@@ -1747,10 +1748,10 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
         <span class="ts-now" id="ts-now"></span>
       </div>
       <div id="panel-tools-feed">
-        <div class="panel-empty" id="tools-empty"><div class="ei">⚙</div>No tool calls yet.<br>Executions stream in live.</div>
+        <div class="panel-empty" id="tools-empty"><div class="ei">⚙</div>No widget activity yet.<br>Executions stream in live.</div>
       </div>
       <div id="panel-tools-verbose" style="display:none">
-        <div class="panel-empty" id="verbose-empty"><div class="ei">🔍</div>No tool detail yet.<br>Full inputs and outputs appear here.</div>
+        <div class="panel-empty" id="verbose-empty"><div class="ei">🔍</div>No tool detail yet.<br>Widget inputs and outputs appear here.</div>
       </div>
     </div>
 
@@ -2144,6 +2145,7 @@ function handle(d) {
     case 'processing_start':setProcessing(true); setNovaStatePill('processing'); break;
     case 'processing_end':  setProcessing(false); updateVigilance({state:'sleeping',reason:'Ready'}); hideQueueBadge(); break;
     case 'stopped':         setProcessing(false); updateVigilance({state:'sleeping',reason:'Stopped'}); hideQueueBadge(); break;
+    case 'stop_pending':    updateVigilance({state:'thinking',reason:'Stopping — waiting for running work'}); break;
     case 'blocked':         toast('⏳ AIs are responding — press Stop to interrupt'); break;
     case 'queued':          showQueueBadge(d.count||1); break;
     case 'queue_cleared':   hideQueueBadge(); break;
@@ -2191,6 +2193,7 @@ function onSessionSwitch(d) {
   // (always true for new_session; avoids stale-array bug where new tab never appears)
   if(d.sessions) mergeSessionData(d.sessions);
   activeId = d.session_id;
+  closedConversationTabs.delete(activeId);
   const s = sessions.find(x=>x.session_id===d.session_id);
   const name = s?.name||'Session';
   document.getElementById('sb-session').textContent = name;
@@ -2212,9 +2215,23 @@ function onSessionSwitch(d) {
   setProcessing(false);
 }
 function newSession() { ws?.readyState===1 && ws.send(JSON.stringify({type:'new_session'})); closeDD(); }
-function switchSession(id) { ws?.readyState===1 && ws.send(JSON.stringify({type:'switch_session',session_id:id})); }
+let closedConversationTabs = new Set();
+try { closedConversationTabs = new Set(JSON.parse(localStorage.getItem('nova.closed-conversation-tabs')||'[]')); } catch(_) {}
+function closeConversationTab(id) {
+  closedConversationTabs.add(id);
+  try { localStorage.setItem('nova.closed-conversation-tabs',JSON.stringify([...closedConversationTabs])); } catch(_) {}
+  if(id===activeId){const next=tabOrder.find(x=>x!==id&&!closedConversationTabs.has(x));if(next)switchSession(next);}
+  renderTabs();
+}
+function switchSession(id) {
+  closedConversationTabs.delete(id);
+  try { localStorage.setItem('nova.closed-conversation-tabs',JSON.stringify([...closedConversationTabs])); } catch(_) {}
+  renderTabs();
+  ws?.readyState===1 && ws.send(JSON.stringify({type:'switch_session',session_id:id}));
+}
 
 function renderTabs() {
+  document.body.classList.toggle('nc-no-conversation',closedConversationTabs.has(activeId));
   const bar = document.getElementById('session-tabs');
   const add = bar.querySelector('.stab-add');
   [...bar.querySelectorAll('.stab')].forEach(t=>t.remove());
@@ -2222,11 +2239,11 @@ function renderTabs() {
   // reorders tabs — only drag-and-drop should change their positions.
   tabOrder.forEach(id=>{
     const s = sessions.find(x=>x.session_id===id);
-    if(!s) return;
+    if(!s || closedConversationTabs.has(id)) return;
     const t = document.createElement('div');
     t.className = 'stab'+(s.session_id===activeId?' active':'');
-    t.innerHTML = `<span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name||'Session')}</span><span class="stab-x">✕</span>`;
-    t.querySelector('.stab-x').addEventListener('click', e=>{ e.stopPropagation(); confirmDelete(s); });
+    t.innerHTML = `<span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name||'Session')}</span><button class="stab-x" title="Close conversation tab (keeps history)" aria-label="Close conversation tab">×</button>`;
+    t.querySelector('.stab-x').addEventListener('click', e=>{ e.stopPropagation(); closeConversationTab(s.session_id); });
     t.addEventListener('click', ()=>{ if(s.session_id!==activeId) switchSession(s.session_id); });
     t.addEventListener('dblclick', e=>{ e.stopPropagation(); openRenameModal(s); });
     bar.insertBefore(t, add);
@@ -2257,7 +2274,7 @@ function renderSidebar() {
     const ellipsisBtn = el.querySelector('.s-ellipsis');
     nameEl.addEventListener('dblclick', e=>{ e.stopPropagation(); inlineRename(nameEl, s); });
     ellipsisBtn.addEventListener('click', e=>{ e.stopPropagation(); openCtxMenuAt(ellipsisBtn, s); });
-    el.addEventListener('click',()=>{ if(s.session_id!==activeId) switchSession(s.session_id); });
+    el.addEventListener('click',()=>switchSession(s.session_id));
     el.addEventListener('contextmenu',e=>{ e.preventDefault(); openCtxMenu(e,s); });
     list.appendChild(el);
   });
@@ -2951,7 +2968,7 @@ function _toolGroupAdd(g,name,cls,html){
 function addInlineTool(d) {
   const g=_toolGroup(); if(!g) return;
   const n=_narrate(d);
-  _toolGroupAdd(g, d.tool||'tool', n.status==='ok'?'ok':'err',
+  _toolGroupAdd(g, d.tool||'tool', n.status,
     `<span class="tool-card-icon">${n.icon}</span><span class="tool-card-name">${n.verb}</span><span class="tool-card-res">${n.narr}</span>`);
   scrollBot();
 }
@@ -2965,12 +2982,13 @@ function _dirOf(p){ p=String(p||''); const i=Math.max(p.lastIndexOf('/'),p.lastI
 function _kb(n){ return n>=1024?(n/1024).toFixed(1)+' KB':n+' B'; }
 function _words(s){ const m=String(s||'').trim(); return m?m.split(/\s+/).length:0; }
 function _narrate(d){
-  const t=d.tool||'tool', a=d.input||{}, res=(d.error||d.result||'').toString();
+  const t=d.tool||'tool', a=d.input||{}, res=String(d.result ?? (typeof d.error==='string' ? d.error : ''));
   const path=a.path||'', bn=esc(_base(path)), dir=esc(_dirOf(path));
   const P=`<span class="t-path" title="${esc(path)}">${bn}</span>${dir?` <span class="t-dim">in ${dir}/</span>`:''}`;
-  let status = d.error?'err':'ok';
-  if(/^(REFUSED|HELD)/.test(res)) status='held';
-  else if(/^ERROR/i.test(res)) status='err';
+  const outcome=d.outcome;
+  let status=outcome ? (outcome.ok===true?'ok':outcome.ok===false?'err':'unknown') : (d.error?'err':'unknown');
+  if(outcome?.status==='refused') status='held';
+  if(!outcome && /^(REFUSED|HELD)/.test(res)) status='held';
   let icon=TICONS[t]||TICONS.default, verb=t, narr='', why='';
   const clen = c => (a.content!==undefined? String(a.content).length : 0);
   switch(t){
@@ -3018,8 +3036,13 @@ function _narrate(d){
       if(!(t in TICONS)){ icon='🔨'; verb=`Used her forged tool <span class="t-path">${esc(t)}</span>`; narr=`<span class="t-dim">→ ${_kb(res.length)} result</span>`; }
       else narr=`<span class="t-dim">${esc(res.replace(/\n/g,' ').slice(0,80))}</span>`;
   }
+  if(status==='unknown') { verb='Called '+esc(t); narr=esc(res.slice(0,140)); why='Outcome not reported by this legacy widget'; }
   if(status==='err' && !why) why='❌ '+esc(res.replace(/^ERROR:?\s*/i,'').replace(/\n/g,' ').slice(0,110));
   if(status==='held' && !why) why='✋ '+esc(res.replace(/^(REFUSED|HELD)[:—-]?\s*/i,'').replace(/\n/g,' ').slice(0,110));
+  if(outcome && outcome.status!=='succeeded' && outcome.status!=='unknown') {
+    verb='Attempted '+esc(t);
+    why=esc(outcome.status.replaceAll('_',' '))+(outcome.exit_code!==null?' · exit '+outcome.exit_code:'')+' — '+esc(res.slice(0,160));
+  }
   return {icon, verb, narr, why, status};
 }
 const _TSTATS={cmd:0,read:0,write:0,mem:0,err:0,held:0,last:0};
@@ -3038,7 +3061,7 @@ function addTool(d) {
   const feed=document.getElementById('panel-tools-feed');
   document.getElementById('tools-empty')?.remove();
   const n=_narrate(d);
-  const fullText=(d.error||d.result||'').toString();
+  const fullText=String(d.result ?? (typeof d.error==='string' ? d.error : ''))+(d.outcome?'\n\nOutcome:\n'+JSON.stringify(d.outcome,null,2):'');
   const dur=d.duration_ms?` · ${d.duration_ms}ms`:'';
   const detId=`tdet_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
   _TSTATS.last=Date.now();
@@ -3082,7 +3105,7 @@ function toolsTab(which){
 function verboseClear(){
   const v=document.getElementById('panel-tools-verbose');
   if(!v) return;
-  v.innerHTML='<div class="panel-empty" id="verbose-empty"><div class="ei">🔍</div>No tool detail yet.<br>Full inputs and outputs appear here.</div>';
+  v.innerHTML='<div class="panel-empty" id="verbose-empty"><div class="ei">🔍</div>No tool detail yet.<br>Widget inputs and outputs appear here.</div>';
 }
 function _fmtArgs(input){
   if(input===undefined||input===null) return '(no arguments)';
@@ -3095,11 +3118,11 @@ function addVerbose(d){
   document.getElementById('verbose-empty')?.remove();
   const n=_narrate(d);
   const a=d.input||{};
-  const result=(d.error||d.result||'').toString() || '(no output)';
+  const result=String(d.result ?? (typeof d.error==='string' ? d.error : '')) || '(no output)';
   const dur=d.duration_ms?`${d.duration_ms}ms`:'';
   const id=`vb_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
   const open=document.getElementById('vb-expand')?.checked;
-  const mark = n.status==='ok'?'✅':n.status==='held'?'✋':'❌';
+  const mark = n.status==='ok'?'✅':n.status==='held'?'✋':n.status==='unknown'?'?':'❌';
   // Per-kind sections: show the parts a human actually wants, labeled in plain language.
   let secs='';
   if(d.tool==='replace_file_content'){
@@ -3341,14 +3364,15 @@ function plRender(){
   feed.innerHTML = recent.length? recent.map(_plRenderGroup).join('')
     : '<div class="panel-empty"><div class="ei">🛡</div>No gate events yet.</div>';
 }
+function widgetVisible(id){return window.novaWidgetVisible?window.novaWidgetVisible(id):activePanel===id;}
 async function plPoll(){
   try{
-    const r=await fetch('/api/files/read?path=logs/pipeline.jsonl');
-    if(!r.ok){ const n=document.getElementById('pl-now'); if(n)n.textContent='no events file yet'; return; }
+    const r=await fetch('/api/pipeline');
+    if(!r.ok)throw Error('Pipeline unavailable ('+r.status+')');
     const j=await r.json();
-    const rows=[];
-    for(const ln of (j.content||'').split('\n')){ if(!ln.trim()) continue;
-      try{ rows.push(JSON.parse(ln)); }catch(e){} }
+    const rows=j.events||[];
+    const now=document.getElementById('pl-now');
+    if(now)now.textContent=rows.length?'Recent events · updated '+new Date().toLocaleTimeString():'No pipeline events recorded yet';
     const changed = rows.length!==_plAll.length ||
       (rows.length&&_plAll.length&&rows[rows.length-1].ts!==_plAll[_plAll.length-1].ts);
     if(!changed) return;
@@ -3375,9 +3399,9 @@ async function plPoll(){
     el('pl-hold')&&(el('pl-hold').textContent=_PLSTATS.hold);
     el('pl-err')&&(el('pl-err').textContent=_PLSTATS.err);
     el('pl-now')&&(el('pl-now').textContent='live · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
-  }catch(e){ /* polling must never throw */ }
+  }catch(e){const n=document.getElementById('pl-now');if(n)n.textContent=e.message;} 
 }
-_plTimer=setInterval(plPoll, 3000); setTimeout(plPoll, 1500);
+_plTimer=setInterval(()=>{if(widgetVisible('pipeline'))plPoll();}, 3000); setTimeout(plPoll, 1500);
 
 const _AICONS={write:'💾',exec:'⚡',read:'📄',pause:'⏸',resume:'▶',ncl:'🔗'};
 function _pushToolFeed(iconHtml, name, detail, ok=true) {
@@ -3388,6 +3412,23 @@ function _pushToolFeed(iconHtml, name, detail, ok=true) {
   item.innerHTML=`<div class="tfi-top"><span class="tfi-icon">${iconHtml}</span><span class="tfi-name">${esc(name)}</span><span class="tfi-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span></div><div class="tfi-res">${esc(String(detail||'').slice(0,160))}</div>`;
   feed.insertBefore(item,feed.firstChild);
   while(feed.querySelectorAll('.tfi').length>60) feed.removeChild(feed.lastChild);
+}
+async function refreshActivity(){
+  const feed=document.getElementById('panel-tools-feed');
+  if(!feed)return;
+  try{
+    const response=await fetch('/api/activity/recent');if(!response.ok)throw Error('Activity unavailable');
+    const data=await response.json();
+    feed.querySelectorAll('[data-history]').forEach(n=>n.remove());
+    if(data.receipts?.length)document.getElementById('tools-empty')?.remove();
+    for(const receipt of (data.receipts||[]).slice().reverse()){
+      const item=document.createElement('details');item.className='tfi';item.dataset.history='true';
+      const summary=document.createElement('summary');
+      summary.textContent=(receipt.tool||'Widget')+' · '+(receipt.outcome?.status||(receipt.ok?'completed (legacy receipt)':'failed'))+' · '+new Date(receipt.ts).toLocaleString();
+      const result=document.createElement('pre');result.style.whiteSpace='pre-wrap';result.textContent=receipt.outcome?.stdout||receipt.outcome?.stderr||receipt.result_head||'No output recorded';
+      item.append(summary,result);feed.append(item);
+    }
+  }catch(error){toast(error.message);}
 }
 function addActivityTool(d) {
   _pushToolFeed(_AICONS[d.directive]||'🔧', d.directive||'action', d.detail, true);
@@ -3423,6 +3464,7 @@ function updateThought(d) {
   card.innerHTML=`<div class="tc-header"><span class="tc-name">${esc(d.name||'Thought')}</span><span class="tc-badge p${pNum}">P${pNum}</span></div><div class="tc-summary">${esc(d.summary||'')}</div><div class="tc-progress"><div class="tc-bar" style="width:${prog}%"></div></div><div class="tc-footer"><div class="tc-status ${stCls}"><span class="tc-status-dot"></span>${esc(d.status||'active')}</div>${d.step?`<span class="tc-step">${esc(d.step)}</span>`:''}</div>`;
 }
 async function pollThoughts() {
+  if(window.novaWidgets)return; // Controller has a dedicated Tasks widget.
   try {
     const r=await fetch('/api/queue');
     if(!r.ok) return;
@@ -3449,7 +3491,9 @@ async function pollThoughts() {
 /* ══════════════════════════════════════════════════
    FILES PANEL
 ══════════════════════════════════════════════════ */
+let fileTreeLoading=false;
 async function refreshFiles() {
+  if(fileTreeLoading)return;fileTreeLoading=true;
   _fileTreeTs = Date.now();  // mark refresh time for stale-check logic
   const tree=document.getElementById('file-tree');
   const em  =document.getElementById('files-empty');
@@ -3461,7 +3505,9 @@ async function refreshFiles() {
     // Server returns root dir node {name, type:'dir', children:[]} — use .children
     const items = data.children || data.files || data.tree || (Array.isArray(data)?data:[]);
     buildTree(tree, items, 0);
-  } catch(_) { em.textContent='File tree unavailable'; em.style.display=''; tree.innerHTML=''; }
+    if(!items.length){em.textContent='No files to display';em.style.display='';}
+  } catch(_) { em.textContent='File tree unavailable — use Refresh to retry'; em.style.display=''; tree.innerHTML=''; }
+  finally{fileTreeLoading=false;}
 }
 function buildTree(parent, items, depth) {
   items.forEach(item=>{
@@ -3516,13 +3562,14 @@ function updateMonitor(d) {
   if(d.model)              document.getElementById('mon-model').textContent=d.model;
   if(d.tps!==undefined)  { document.getElementById('mon-tps').textContent=parseFloat(d.tps).toFixed(1); _pushHist('tps',parseFloat(d.tps)); }
   if(d.uptime!==undefined) document.getElementById('mon-uptime').textContent=fmtUp(d.uptime);
-  if(d.active_task)        document.getElementById('mon-task').textContent=d.active_task;
+  if(d.active_task!==undefined) document.getElementById('mon-task').textContent=d.active_task||'None';
+  if(d.state)updateVigilance(d);
   // System metrics from server poll
   if(d.cpu_pct!==undefined){ const v=parseFloat(d.cpu_pct).toFixed(1); document.getElementById('mon-cpu').textContent=v+'%'; _pushHist('cpu',parseFloat(v)); }
   if(d.ram_gb!==undefined) { document.getElementById('mon-ram').textContent=d.ram_gb+' GB'; _pushHist('ram',parseFloat(d.ram_gb)); }
   if(d.vram!==undefined)   { document.getElementById('mon-vram').textContent=d.vram; const m=parseFloat(d.vram); if(!isNaN(m)) _pushHist('vram',m); }
   if(d.ctx_pct!==undefined){ const v=Math.round(d.ctx_pct); document.getElementById('mon-ctx').textContent=v+'%'; _pushHist('ctx',v); }
-  if(d.errors?.length){const el=document.getElementById('error-list');el.innerHTML='';d.errors.slice(-5).forEach(e=>{const en=document.createElement('div');en.className='error-entry';en.textContent=e;el.appendChild(en);});}
+  if(Array.isArray(d.errors)){const el=document.getElementById('error-list');el.innerHTML='';d.errors.slice(-5).forEach(e=>{const en=document.createElement('div');en.className='error-entry';en.textContent=e;el.appendChild(en);});}
 }
 function fmtUp(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h>0?`${h}h ${m}m`:`${m}m`;}
 
@@ -3597,8 +3644,9 @@ async function pollMonitor() {
     if(r.ok){
       const d=await r.json();
       if(d.nova_live) updateMonitor(d.nova_live);
+    }else{throw Error('Status unavailable');
     }
-  } catch(_){}
+  } catch(_){updateVigilance({state:'offline',reason:'Nova Chat disconnected'});}
 }
 
 /* ══════════════════════════════════════════════════
@@ -3787,28 +3835,40 @@ async function llamaStop() {
     toast(d.message||d.error||'Stopping llama…'); setTimeout(pollServices,2000);
   } catch(_){toast('Nova Chat unreachable');}
 }
+let serviceActionPending=false;
 async function novaRestart(kind){
-  const ep={server:'/api/restart/server',nova:'/api/restart/nova',novachat:'/api/restart/novachat',full:'/api/restart/full'}[kind];
-  // ── NO CONFIRM DIALOG (2026-07-19, Cole). ─────────────────────────────────────────────
-  // These used to be gated behind confirm(). Two problems, one of them subtle:
-  //   1. Cole clicks Restart because he wants a restart. The second click was pure friction.
-  //   2. confirm() is a BLOCKING modal — it freezes the renderer until a human clicks it. So
-  //      the button was unusable by anything except a human standing at the machine: an
-  //      automated restart just hung until the tab timed out, which is exactly what happened
-  //      when I tried to apply my own changes and sat there waiting on a dialog only Cole
-  //      could see. A restart control that requires a human present is not a restart control.
-  // The action is announced by a toast and is fully reversible by launching again, so there
-  // is nothing here worth guarding with a prompt.
-  const label={server:'Restarting model server…',nova:"Reloading Nova's mind…",
-               novachat:'Restarting Nova Chat…',full:'Full restart — everything bouncing…'}[kind];
-  if(!ep) return;
-  toast(label||'Restarting…');
+  const ep={server:'/api/restart/server',nova:'/api/restart/nova',novachat:'/api/restart/novachat',full:'/api/restart/full',shutdown:'/api/services/shutdown'}[kind];
+  if(!ep || serviceActionPending)return;
+  serviceActionPending=true;
+  const status=document.getElementById('service-action-status');
+  const report=text=>{if(status)status.textContent=text;toast(text,6000);};
+  const buttons=[...document.querySelectorAll('#dd-services button')];
+  buttons.forEach(b=>b.disabled=true);
+  report(kind==='shutdown'?'Requesting shutdown…':'Requesting restart…');
   try{
-    const r=await fetch(ep,{method:'POST'}); const d=await r.json().catch(()=>({}));
-    toast(d.message||d.error||(d.ok?'Restarting…':'Restart failed'));
-    if(kind==='server') setTimeout(pollServices,3000);
-  }catch(_){ toast(kind+' restart issued — connection may drop, reconnecting…'); }
-  closeDD&&closeDD();
+    const previous=['full','novachat'].includes(kind)?await fetch('/api/version').then(r=>r.json()).catch(()=>null):null;
+    const r=await fetch(ep,{method:'POST'});const d=await r.json();
+    if(!r.ok||!d.ok)throw Error(d.error||'The launcher did not accept the request.');
+    report(d.message||'Request accepted.');
+    if(['full','novachat'].includes(kind)){
+      const deadline=Date.now()+180000;let wentOffline=false;
+      const check=async()=>{
+        try{
+          const response=await fetch('/api/version',{cache:'no-store',signal:AbortSignal.timeout(2000)});
+          if(!response.ok)throw Error('Offline');
+          const current=await response.json();
+          if(wentOffline||(previous&&current.pid!==previous.pid)){location.reload();return;}
+        }catch(_){wentOffline=true;}
+        if(Date.now()<deadline)setTimeout(check,2000);
+        else{report('Restart has not reconnected. Check the launcher log or launch NovaStart.');release();}
+      };
+      setTimeout(check,1000);return;
+    }
+    if(kind==='shutdown'){report('Shutdown accepted. Nova’s app and services are closing. Use NovaStart to start again.');return;}
+    setTimeout(pollServices,2000);
+  }catch(error){report('Action not confirmed: '+error.message);}
+  release();
+  function release(){serviceActionPending=false;buttons.forEach(b=>b.disabled=false);}
 }
 
 /* ══════════════════════════════════════════════════
@@ -4126,6 +4186,7 @@ window.addEventListener('DOMContentLoaded', usersLoad);
 if (document.readyState !== 'loading') usersLoad();
 
 async function sendMsg() {
+  if(document.body.dataset.chatOnly==='true'){toast('Nova is off. Use the Collaboration widget.');return;}
   sendTypingSignal(false);  // cancel any in-flight typing signal immediately
   clearTimeout(_typingTimer);
   const inp=document.getElementById('input');
@@ -4159,7 +4220,7 @@ function setProcessing(on){
   } else {
     btn.innerHTML='↑'; btn.classList.remove('stop-mode');
     btn.title='Send (Enter)';
-    btn.onclick=sendMsg; btn.disabled=false;
+    btn.onclick=sendMsg; btn.disabled=document.body.dataset.chatOnly==='true';
     // Phase 9: clear all thought cards when processing ends
     _activeCards={};
     clearInterval(_cardRefreshTimer); _cardRefreshTimer=null;
@@ -4207,13 +4268,14 @@ function setNovaStatePill(state){
   label.textContent = _STATE_LABELS[state] || state;
 }
 
-function clickAutoToggle(){setAutonomous(!autonomousMode);ws?.readyState===1&&ws.send(JSON.stringify({type:'autonomous_toggle',enabled:autonomousMode}));}
+function clickAutoToggle(){if(ws?.readyState!==1){toast('Nova is disconnected');return;}ws.send(JSON.stringify({type:'autonomous_toggle',enabled:!autonomousMode}));}
 async function wakeNova(){
   const btn=document.getElementById('pb-wake');
   try{
     if(btn){btn.classList.add('waking');btn.disabled=true;}
-    await fetch('/api/wake',{method:'POST'});
-  }catch(_){}
+    const response=await fetch('/api/wake',{method:'POST'});if(!response.ok)throw Error('Wake request failed ('+response.status+')');
+    toast('Wake requested');
+  }catch(error){toast(error.message||'Could not wake Nova');}
   setTimeout(()=>{const b=document.getElementById('pb-wake');if(b){b.classList.remove('waking');b.disabled=false;}},2500);
 }
 // ── Browser Preview widget controls ──
@@ -4284,7 +4346,7 @@ function handlePaste(e){
 }
 (function(){const _inp=document.getElementById('input'); if(_inp)_inp.addEventListener('paste',handlePaste);})();
 function addPending(url){pendingImages.push({dataUrl:url});const s=document.getElementById('pending-images');const w=document.createElement('div');w.className='p-thumb';const i=pendingImages.length-1;w.innerHTML=`<img src="${url}"><button class="p-rm" onclick="rmPending(${i})">✕</button>`;s.appendChild(w);}
-function rmPending(i){pendingImages.splice(i,1);document.getElementById('pending-images').innerHTML='';pendingImages.forEach(x=>addPending(x.dataUrl));}
+function rmPending(i){const remaining=pendingImages.filter((_,index)=>index!==i);pendingImages=[];document.getElementById('pending-images').innerHTML='';remaining.forEach(x=>addPending(x.dataUrl));}
 function openLB(src){document.getElementById('lb-img').src=src;document.getElementById('lightbox').classList.add('open');}
 document.addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('drag-over');});
 document.addEventListener('dragleave',()=>document.body.classList.remove('drag-over'));
@@ -4365,7 +4427,7 @@ async function varSet(key,value,saved,sync){
     const d=await r.json();
     if(d.ok){ if(sync)sync(d.value); if(saved){saved.style.opacity='1';setTimeout(()=>saved.style.opacity='0',1300);} }
     else alert('failed to set '+key+': '+(d.why||'?'));
-  }catch(e){}
+  }catch(e){toast('Variable could not be saved: '+e.message);}
 }
 async function varReset(key){
   try{ await fetch('/api/variables',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,reset:true})}); varsPoll(); }catch(e){}
@@ -4541,7 +4603,7 @@ async function termRefresh() {
   } catch(e){ out.textContent=`Error loading logs: ${e.message}`; }
   // Auto-refresh while terminal is visible
   clearTimeout(_termTimer);
-  if(activePanel==='terminal') _termTimer=setTimeout(termRefresh, 4000);
+  if(widgetVisible('terminal')) _termTimer=setTimeout(termRefresh, 4000);
 }
 
 /* ══════════════════════════════════════════════════
@@ -4766,9 +4828,9 @@ async function refreshFilesIfStale(maxAgeMs=30000) {
 }
 // Auto-refresh file tree when switching to Files tab (already done in switchPanel),
 // and periodically when Files tab is active
-setInterval(()=>{ if(activePanel==='files') refreshFilesIfStale(30000); }, 15000);
+setInterval(()=>{ if(widgetVisible('files')) refreshFilesIfStale(30000); }, 15000);
 // Also refresh when the window regains focus (user switches back from another app)
-window.addEventListener('focus', ()=>{ if(activePanel==='files') refreshFilesIfStale(10000); });
+window.addEventListener('focus', ()=>{ if(widgetVisible('files')) refreshFilesIfStale(10000); });
 
 /* ══════════════════════════════════════════════════
    EXPORT & LOGS
@@ -4779,8 +4841,8 @@ async function showLogs() {
   const ov=document.getElementById('logs-overlay'); const ct=document.getElementById('logs-content');
   ov.classList.add('open'); ct.textContent='Loading…'; closeDD();
   try {
-    let text=null;
-    try{const r=await fetch('/api/logs/list?limit=400');if(r.ok){const d=await r.json();const lg=d.logs||d.lines||d;text=Array.isArray(lg)?lg.join('\n'):String(lg);}}catch(_){}
+    const r=await fetch('/logs/json?n=400');if(!r.ok)throw Error('Log unavailable');
+    const d=await r.json();const text=(d.lines||[]).join('\n');
     ct.textContent=text||'(no logs)'; ct.scrollTop=ct.scrollHeight;
   } catch(_){ct.textContent='(server unreachable)';}
 }
@@ -5437,7 +5499,7 @@ switchPanel('thoughts');
     const d=await get('/api/log?stream='+n+'&since='+(state.since[n]||0));
     if(d&&d.lines&&d.lines.length){
       state.rows[n]=(state.rows[n]||[]).concat(d.lines).slice(-1200);
-      append(d.lines);
+      if(state.active===n)append(d.lines);
       state.since[n]=d.seq;
     }
   }
@@ -5464,7 +5526,7 @@ switchPanel('thoughts');
   document.getElementById('ncOpen').onclick=()=>fetch(HUB+'/api/show',{method:'POST'}).catch(()=>{});
   document.getElementById('ncClear').onclick=()=>{
     bodyEl.innerHTML='';
-    if(state.active){ state.rows[state.active]=[]; state.since[state.active]=0; }
+    if(state.active){ state.rows[state.active]=[]; }
   };
 
   setInterval(tick,1500);
@@ -5517,7 +5579,7 @@ switchPanel('thoughts');
     <button class="nl-min" id="nlMin" title="Collapse">–</button>
   </div>
   <div class="nl-body" id="nlBody">
-    <div class="nl-empty">Waiting for Nova activity…</div>
+    <div class="nl-empty">No recorded activity yet. New events appear here as Nova works.</div>
   </div>
 </div>
 <script>
@@ -5537,7 +5599,7 @@ switchPanel('thoughts');
       return d.toLocaleTimeString([], {hour12:false});}catch(_){return '';}
   }
   function renderClean(){
-    if(!S.entries.length){body.innerHTML='<div class="nl-empty">Waiting for Nova activity…</div>';return;}
+    if(!S.entries.length){body.innerHTML='<div class="nl-empty">No recorded activity yet. New events appear here as Nova works.</div>';return;}
     body.innerHTML='';
     for(const e of S.entries.slice(-250)){
       const row=document.createElement('div');
@@ -5558,6 +5620,16 @@ switchPanel('thoughts');
     if(S.mode==='clean') renderClean();
   };
 
+  window.novaLogRefresh=async()=>{
+    try{
+      const response=await fetch('/api/activity/recent');if(!response.ok)throw Error('Activity history unavailable');
+      const data=await response.json();const unique=new Map();
+      for(const e of [...(data.events||[]),...S.entries])unique.set([e.ts,e.event,e.text].join('|'),e);
+      S.entries=[...unique.values()].sort((a,b)=>String(a.ts).localeCompare(String(b.ts))).slice(-400);
+      if(S.mode==='clean')renderClean();
+    }catch(error){if(!S.entries.length)body.textContent=error.message;}
+  };
+
   function startRaw(){
     body.innerHTML='<div class="nl-empty">Connecting to raw log stream…</div>';
     try{
@@ -5573,7 +5645,7 @@ switchPanel('thoughts');
         while(body.childNodes.length>500) body.removeChild(body.firstChild);
         body.scrollTop=body.scrollHeight;
       };
-      S.raw.onerror=()=>{};
+      S.raw.onerror=()=>{if(first)body.innerHTML='<div class="nl-empty">Log stream disconnected. Reconnecting…</div>';};
     }catch(e){body.innerHTML='<div class="nl-empty">Raw stream unavailable.</div>';}
   }
   function stopRaw(){ if(S.raw){try{S.raw.close();}catch(_){}}S.raw=null; }
@@ -5595,8 +5667,12 @@ switchPanel('thoughts');
 })();
 </script>
 <!-- ══════════ WIDGET DASHBOARD (Gridstack) ══════════ -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/10.3.1/gridstack.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/10.3.1/gridstack-all.min.js"></script>
+<script>
+if(new URLSearchParams(location.search).get('layout')==='legacy'){
+  document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/10.3.1/gridstack.min.css">');
+  document.write('<scr'+'ipt src="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/10.3.1/gridstack-all.min.js"></scr'+'ipt>');
+}
+</script>
 <style>
 #right-panel .panel-tabs{display:none!important;}
 #wdash{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px;}
@@ -5721,6 +5797,7 @@ switchPanel('thoughts');
 </style>
 <script>
 (function(){
+  if (new URLSearchParams(location.search).get('layout') !== 'legacy') return;
   function ce(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstChild;}
   const DEFS={
     tasks:{title:'Tasks',defH:4,make:()=>ce('<div class="tr-body" id="tr-body"></div>'),countId:'tr-count'},
@@ -6080,5 +6157,13 @@ switchPanel('thoughts');
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
+<link rel="stylesheet" href="/static/workspace.css?v=collaboration-2">
+<link rel="stylesheet" href="/static/control.css?v=collaboration-2">
+<script src="/static/control.js?v=collaboration-2"></script>
+<link rel="stylesheet" href="/static/collaboration.css?v=collaboration-2">
+<script src="/static/collaboration.js?v=collaboration-2"></script>
+<link rel="stylesheet" href="/static/vendor/goldenlayout-base.css">
+<script src="/static/vendor/nova-dock.js"></script>
+<script src="/static/workspace.js?v=collaboration-2"></script>
 </body>
 </html>

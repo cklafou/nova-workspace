@@ -1,12 +1,19 @@
-# @nova: Nova's voice — chat server (FastAPI/WebSocket on :8765), cross-AI @mention routing to Claude/Gemini, and the runtime host that fires her body's autonomy faculty (nova_cortex.executive).
-# Last updated: 2026-08-06 16:21:32
+# @nova: Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.
+# Last updated: 2026-10-03 09:45:16
 """
 Nova Group Chat - FastAPI WebSocket Server
 Handles real-time streaming from all three AIs concurrently.
 Nova can POST messages via /nova-message endpoint.
 Context exports available via /export endpoint.
 """
+
+# Body-owned paths also work when this tool is launched directly.
+import sys as _nova_path_sys
+from pathlib import Path as _NovaPath
+_nova_path_sys.path.insert(0, str(_NovaPath(__file__).resolve().parents[2] / 'nova_body'))
+from nova_paths import body_path, workspace_path
 import os
+CHAT_ONLY = os.environ.get("NOVA_CHAT_ONLY", "").strip().lower() in {"1", "true", "yes"}
 import secrets
 import json
 import asyncio
@@ -37,7 +44,10 @@ from nova_chat.workspace_context import WorkspaceContext
 #   • ping_claude — desktop UI automation into an already-open Claude window. Not an API call.
 # The distinction that matters: she can still be TALKED TO by Claude; this server can no longer
 # PAY to talk to Claude.
-import nova_voice.nova as nova_client
+if CHAT_ONLY:
+    nova_client = None
+else:
+    import nova_voice.nova as nova_client
 from nova_chat.nova_bridge import handle_nova_message, parse_actions
 
 # ── In-memory log ring buffer ─────────────────────────────────────────────────
@@ -96,7 +106,40 @@ sys.stderr = _TeeStream(sys.stderr)
 # (`if memory_indexer: memory_indexer.add_message(...)`) keep working unchanged.
 memory_indexer = None
 
+_CHAT_ONLY_MESSAGE = (
+    "Nova is disabled in chat-only mode. Use the Collaboration widget, or close this "
+    "controller and launch NovaStart.cmd to enable Nova."
+)
+
+
+def _chat_only_blocks(path: str, method: str) -> bool:
+    """Keep this controller from activating or modifying Nova while she is off."""
+    if not CHAT_ONLY:
+        return False
+    if path == "/api/lora/available":
+        return True
+    if method.upper() in {"GET", "HEAD", "OPTIONS"}:
+        return path == "/export"
+    exact = {
+        "/nova-message", "/api/inject_message", "/api/reinject_context", "/api/wake",
+        "/api/restart/server", "/api/restart/nova", "/api/nova/bridge",
+        "/api/files/inject", "/api/variables", "/api/eyes/start", "/new-session",
+    }
+    prefixes = ("/api/llama", "/api/lora", "/api/runtime", "/api/queue",
+                "/api/computer", "/sessions")
+    return path in exact or any(path == prefix or path.startswith(prefix + "/")
+                                for prefix in prefixes)
+
+
+def _chat_only_rejection():
+    return JSONResponse({"ok": False, "chat_only": True, "error": _CHAT_ONLY_MESSAGE},
+                        status_code=409)
+
+
+from nova_chat.collaboration import create_router
+
 app = FastAPI()
+app.include_router(create_router())
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -124,7 +167,7 @@ app = FastAPI()
 #    a shell on the desktop. Talking to Nova from a watch does not require the ability to
 #    reformat the machine.
 #
-# See Orient/SECURITY.md for the threat model. Roles live in nova_cortex/principals.py.
+# See Orient/OPERATIONS.md#security-model for the threat model. Roles live in nova_cortex/principals.py.
 # NIST CSF: PR.AC-1, PR.AC-3, PR.AC-4, DE.CM-1.  OWASP LLM08 (excessive agency).
 # ═══════════════════════════════════════════════════════════════════════════════════════════
 
@@ -139,11 +182,11 @@ def _ws_root():
 
 
 def _auth_token_path():
-    return _ws_root() / "memory" / ".auth_token"
+    return body_path('memory', workspace=_ws_root()) / ".auth_token"
 
 
 def _access_log_path():
-    return _ws_root() / "logs" / "access.jsonl"
+    return body_path('logs', workspace=_ws_root()) / "access.jsonl"
 
 # Loopback callers are the owner at the machine. Everything else must prove itself.
 _LOCAL_HOSTS = {"127.0.0.1", "::1", "localhost", "::ffff:127.0.0.1"}
@@ -248,6 +291,9 @@ async def _auth_gate(request: Request, call_next):
     client_ip = (request.client.host if request.client else "") or ""
     path = request.url.path
 
+    if _chat_only_blocks(path, request.method):
+        return _chat_only_rejection()
+
     if client_ip in _LOCAL_HOSTS:
         return await call_next(request)        # the owner, at the machine
 
@@ -276,6 +322,9 @@ async def _auth_gate(request: Request, call_next):
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    if CHAT_ONLY:
+        return
+    await asyncio.to_thread(_rt.stop_computer_session)
     _rt.stop_indexer()
     # Kill llama-server on port 8080 so it doesn't outlive the Nova process
     try:
@@ -293,20 +342,24 @@ async def shutdown_event():
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-try:
-    session_mgr = SessionManager()  # persistent sessions, resumes last
-except Exception as e:
-    print(f"[server] SessionManager init error: {e} -- starting fresh")
-    from nova_chat.session_manager import SessionManager as _SM
-    session_mgr = _SM.__new__(_SM)
-    from nova_chat.session_manager import SESSIONS_DIR
-    SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
-    session_mgr._index = {}
-    session_mgr._active_id = ""
-    session_mgr._active_transcript = None
-    session_mgr.new_session()
+if CHAT_ONLY:
+    session_mgr = None
+    workspace = None
+else:
+    try:
+        session_mgr = SessionManager()  # persistent sessions, resumes last
+    except Exception as e:
+        print(f"[server] SessionManager init error: {e} -- starting fresh")
+        from nova_chat.session_manager import SessionManager as _SM
+        session_mgr = _SM.__new__(_SM)
+        from nova_chat.session_manager import SESSIONS_DIR
+        SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+        session_mgr._index = {}
+        session_mgr._active_id = ""
+        session_mgr._active_transcript = None
+        session_mgr.new_session()
 
-workspace = WorkspaceContext()  # lazy: loads memory/ now, indexes disk on first message
+    workspace = WorkspaceContext()  # lazy: loads memory/ now, indexes disk on first message
 
 # Nova identity (AGENTS.md, NOVA.md, TOOLS.md) is now injected inside
 # workspace_context.build_nova_context_block() so it works for both the live
@@ -316,7 +369,7 @@ workspace = WorkspaceContext()  # lazy: loads memory/ now, indexes disk on first
 # The "adjust things on the fly" tool. GET returns every registered knob (value + metadata);
 # POST sets one. The registry + persistence live in nova_cortex/tunables.py; nova.py reads the
 # values hot, so a change here takes effect on her NEXT turn with no restart. The panel at
-# /variables is a self-contained page (no dashboard surgery). See Orient/TUNABLE_VARIABLES.md.
+# /variables is a self-contained page (no dashboard surgery). See Orient/OPERATIONS.md#tunable-variables.
 @app.get("/api/variables")
 async def api_variables_get():
     try:
@@ -363,9 +416,9 @@ _VARIABLES_HTML = """<!doctype html><html><head><meta charset="utf-8">
  .foot{color:var(--mut);font-size:11px;margin-top:18px;border-top:1px solid var(--bd);padding-top:10px}
 </style></head><body>
  <h1>Variables</h1>
- <div class="sub">Live knobs — changes take effect on Nova's next turn, no restart. Persisted to _admin/tunables.json.</div>
+ <div class="sub">Live knobs — changes take effect on Nova's next turn, no restart. Persisted to nova_body/memory/tunables.json.</div>
  <div id="root">loading…</div>
- <div class="foot">Add knobs in <code>nova_cortex/tunables.py</code>. Convention: <code>Orient/TUNABLE_VARIABLES.md</code>.</div>
+ <div class="foot">Add knobs in <code>nova_cortex/tunables.py</code>. Convention: <code>Orient/OPERATIONS.md#tunable-variables</code>.</div>
 <script>
  const R=document.getElementById('root');
  async function load(){
@@ -548,6 +601,7 @@ nova_status_cache: dict = {"summary": "", "updated_at": 0.0}
 
 # P3 — System metrics cache (CPU, RAM, VRAM) — updated every 10s
 _sys_metrics: dict = {}
+_SERVER_STARTED = __import__("time").monotonic()
 # P4 — User typing state (updated via WS, written to interrupt_inbox.json)
 _user_typing: bool = False
 _user_typing_since: float = 0.0
@@ -567,6 +621,7 @@ nova_throttled:  bool = False       # True = Nova is currently muted by failsafe
 # server is a thin face over them. KoELS self-restart will extend _rt_llama.restart().
 from nova_runtime.llama_control import LlamaControl
 from nova_runtime.model_guard import ModelGuard
+from nova_runtime.operations import operations, supervised, run_in_worker
 _rt_workspace = Path(os.environ.get("NOVA_WORKSPACE") or Path(__file__).resolve().parent.parent.parent)
 _rt_llama = LlamaControl(_rt_workspace, launcher="start_llama_qwen36.cmd")  # Qwen 3.6 + MTP; was start_llama.cmd (3.5)
 _rt_guard = ModelGuard(rate_limit=_NOVA_RATE_LIMIT, rate_window=_NOVA_RATE_WINDOW, error_backoff=_LLAMA_ERROR_BACKOFF)
@@ -577,7 +632,7 @@ _rt_guard = ModelGuard(rate_limit=_NOVA_RATE_LIMIT, rate_window=_NOVA_RATE_WINDO
 from nova_runtime.runtime import get_shared_runtime
 # STEP 6d: attach to the runtime a runtime-primary launcher installed, if any; otherwise this
 # lazily creates its own — byte-identical to the old `_rt = NovaRuntime()` for the default boot.
-_rt = get_shared_runtime()
+_rt = None if CHAT_ONLY else get_shared_runtime()
 
 # ── Autonomous mode + inference params ────────────────────────────────────────
 autonomous_mode:    bool  = False   # OFF by default — Cole enables Autonomous Mode in the UI when ready to let Nova run
@@ -621,20 +676,51 @@ _WS_ROOT_FOR_PROBE = _INBOX_WORKSPACE   # temporary: doubling/free-pass probe (2
 #
 # Found by audit_queue.reconcile() — not by reading, and not by anything failing.
 _CODE_FILES = ("general_tools/nova_chat/server.py",
+               "general_tools/nova_chat/collaboration.py",
+               "general_tools/nova_chat/static/collaboration.js",
+               "general_tools/nova_chat/static/collaboration.css",
+               "general_tools/nova_chat/static/workspace.js",
+               "general_tools/nova_chat/static/index.html",
+               "general_tools/nova_chat/widget_data.py",
+               "general_tools/architecture_map/orient.py",
+               "nova_body/nova_cortex/principals.py",
+               "nova_body/nova_cortex/workspace_context.py",
+               "nova_body/nova_runtime/llama_control.py",
+               "nova_body/nova_runtime/koels_equip.py",
                "nova_body/nova_voice/nova.py",
                "nova_body/nova_voice/tool_router.py",
                "nova_body/nova_cortex/discourse.py",
-               "nova_body/nova_runtime/runtime.py")
+               "nova_body/nova_runtime/runtime.py",
+               "nova_body/nova_runtime/operations.py",
+               "nova_body/nova_runtime/work_queue.py",
+               "nova_body/nova_voice/tool_result.py",
+               "nova_body/nova_cortex/tasking.py",
+               "nova_body/nova_cortex/executive.py",
+               "nova_body/nova_cortex/verification.py",
+               "nova_body/nova_cortex/task_workspace.py",
+               "nova_body/nova_lancedb/indexer.py",
+               "nova_body/nova_lancedb/hippocampus.py",
+               "nova_body/nova_lancedb/embedder.py",
+               "nova_body/nova_computer/tools.py",
+               "nova_body/nova_computer/backends.py",
+               "nova_body/nova_computer/session.py",
+               "nova_body/nova_senses/environment.py",
+               "nova_body/nova_lancedb/backfill.py")
 
 
 def _fingerprint_now() -> dict:
+    """Compare source contents, ignoring only the watcher timestamp and line endings."""
+    import hashlib
+    import re
     fp = {}
     for rel in _CODE_FILES:
         try:
-            st = (_INBOX_WORKSPACE / rel).stat()
-            fp[rel] = {"size": st.st_size, "mtime": int(st.st_mtime)}
+            raw = (_INBOX_WORKSPACE / rel).read_bytes().replace(b"\r\n", b"\n")
+            raw = b"".join(line for i, line in enumerate(raw.splitlines(keepends=True))
+                           if i >= 8 or not re.fullmatch(rb"# Last updated:[^\n]*(?:\n)?", line))
+            fp[rel] = {"sha256": hashlib.sha256(raw).hexdigest()}
         except Exception as e:
-            # LOUD. A file in this tuple that cannot be stat'd means the fingerprint is no
+            # LOUD. A file in this tuple that cannot be read means the fingerprint is no
             # longer watching it, and a silent {"error": ...} is exactly how that went unnoticed
             # for a day. If this prints, fix the path — do not let it scroll past.
             print(f"[fingerprint] CANNOT WATCH {rel}: {e} — staleness detection is now BLIND "
@@ -653,7 +739,7 @@ _BOOT_FINGERPRINT = _fingerprint_now()   # frozen at import = what this process 
 #
 # She should never have to work out who she's talking to. A named speaker is not a UI nicety;
 # it's the difference between a conversation and a hall of mirrors.
-_USERS_FILE = _INBOX_WORKSPACE / "memory" / "chat_users.json"
+_USERS_FILE = body_path('memory', workspace=_INBOX_WORKSPACE) / "chat_users.json"
 _DEFAULT_USERS = {"users": ["Cole", "Cowork Claude"], "active": "Cole"}
 
 
@@ -827,7 +913,7 @@ def _maybe_route_inbox(author: str, content: str) -> None:
         return                     # Not a task response — ignore
 
     task_id = m.group(1)
-    inbox   = _INBOX_WORKSPACE / "Tasking" / "Master_Inbox"
+    inbox   = body_path('Tasking', workspace=_INBOX_WORKSPACE) / "Master_Inbox"
 
     try:
         inbox.mkdir(parents=True, exist_ok=True)
@@ -895,7 +981,13 @@ def _should_agent_respond(agent: str, content: str) -> bool:
 async def startup_event():
     """Trigger workspace index build and background monitors after server is ready."""
     global memory_indexer
+    if CHAT_ONLY:
+        # No body lifecycle, context/indexing, sensors, model or autonomy jobs.
+        asyncio.ensure_future(_window_close_watchdog())
+        print("[controller] Chat-only mode: Nova is disabled; collaboration is available.")
+        return
     _rt.start_indexer()              # runtime owns the indexer; bring it up
+    await asyncio.to_thread(_rt.start_computer_session)
     memory_indexer = _rt.indexer     # alias the module global to it so existing call-sites work
     # STEP 4: hand the model client modules to the body's dispatch faculty. CLIENT_MAP and
     # CLIENT_MAP is module-level (defined below), so it exists by the time startup
@@ -1035,7 +1127,7 @@ async def startup_event():
         await _aio.sleep(5)
         while True:
             try:
-                _sys_metrics.update(_rt.read_system_metrics())   # proprioception now lives in the body
+                _sys_metrics.update(await _aio.to_thread(_rt.read_system_metrics))   # proprioception now lives in the body
             except Exception:
                 pass
             await _aio.sleep(10)
@@ -1051,7 +1143,7 @@ async def startup_event():
         from datetime import date as _date
         from pathlib import Path as _P
         WATCHER_EVENTS = {"manifest", "audit", "drift"}
-        ev_dir = _P(WORKSPACE_ROOT) / "logs" / "events"
+        ev_dir = body_path('logs', workspace=_P(WORKSPACE_ROOT)) / "events"
         cur_name, pos = None, 0
         await _aio.sleep(4)
         while True:
@@ -1100,6 +1192,17 @@ async def startup_event():
             _rt.detach_face(q)
             raise
 
+    async def _bg_orientation_docs():
+        # Optional face-side housekeeping. The generator is independent of cloud sync.
+        from architecture_map.orient import refresh as _refresh_docs
+        while True:
+            try:
+                await asyncio.get_running_loop().run_in_executor(None, _refresh_docs)
+            except Exception as exc:
+                print(f"[Orient] refresh failed: {exc}")
+            await asyncio.sleep(30)
+
+    asyncio.ensure_future(_bg_orientation_docs())
     asyncio.ensure_future(_bg_index())
     asyncio.ensure_future(_bg_eyes_stream())
     asyncio.ensure_future(_bg_nova_status_poll())
@@ -1217,7 +1320,8 @@ async def export_context():
 async def status_endpoint():
     """Check which AIs are online + workspace context summary."""
     status = await get_status()
-    status["workspace_context"] = workspace.get_file_list_summary()
+    status["workspace_context"] = "Nova disabled (chat-only mode)" if CHAT_ONLY else workspace.get_file_list_summary()
+    status["chat_only"] = CHAT_ONLY
     return JSONResponse(status)
 
 
@@ -1307,7 +1411,7 @@ async def api_lora_equip(payload: dict = Body(...)):
     except ValueError:
         return JSONResponse({"ok": False, "error": "adapter must live under models/"}, status_code=400)
     rel_posix = target.relative_to(_rt_workspace).as_posix()     # models/qwen3.6/<file>.gguf
-    mem = _rt_workspace / "memory"
+    mem = body_path('memory', workspace=_rt_workspace)
     try:
         mem.mkdir(parents=True, exist_ok=True)
         (mem / "active_lora.json").write_text(
@@ -1317,13 +1421,15 @@ async def api_lora_equip(payload: dict = Body(...)):
             f"--lora-scaled {rel_posix.replace('/', chr(92))}:{scale}", encoding="utf-8")
     except Exception as e:
         return JSONResponse({"ok": False, "error": f"could not write boot config: {e}"}, status_code=500)
-    res = _rt_llama.restart()   # kill llama-server + relaunch via start_llama_qwen36.cmd (reads the config)
+    res = await asyncio.to_thread(_rt_llama.restart)   # kill llama-server + relaunch via start_llama_qwen36.cmd (reads the config)
     return JSONResponse({"ok": True, "equipped": rel_posix, "scale": scale, "restart": res})
 
 
 @app.get("/sessions")
 async def list_sessions():
     """List all sessions with metadata."""
+    if CHAT_ONLY:
+        return JSONResponse({"sessions": [], "active_id": None, "chat_only": True})
     return JSONResponse({
         "sessions": session_mgr.get_all_meta(),
         "active_id": session_mgr.active_id,
@@ -1427,16 +1533,20 @@ async def archive_session(session_id: str):
 async def stop_endpoint():
     """Cancel all in-flight AI response tasks immediately."""
     global is_processing
+    if CHAT_ONLY:
+        return JSONResponse({"ok": True, "stopped": True, "cancelled": 0,
+                             "chat_only": True, "operations": []})
     _stop_requested.set()          # signal token handlers to abort mid-stream
     cancelled = 0
     for task in active_tasks:
         if not task.done():
             task.cancel()
             cancelled += 1
-    active_tasks.clear()
-    is_processing = False
-    await broadcast({"type": "stopped", "cancelled": cancelled})
-    return JSONResponse({"cancelled": cancelled})
+    state = await operations.stop()
+    active_tasks[:] = [task for task in active_tasks if not task.done()]
+    is_processing = not state["stopped"]
+    await broadcast({"type": "stopped" if state["stopped"] else "stop_pending", "cancelled": cancelled, **state})
+    return JSONResponse({"cancelled": cancelled, **state})
 
 
 @app.post("/new-session")
@@ -1489,7 +1599,7 @@ async def broadcast(data: dict):
 async def get_status() -> dict:
     # Mentors removed 2026-07-19 — reported permanently offline so any surviving caller that
     # gates on status simply never selects them, rather than exploding on a missing key.
-    nova_online = await nova_client.is_available()
+    nova_online = False if CHAT_ONLY else await nova_client.is_available()
     return {
         "Claude": False,
         "Gemini": False,
@@ -1508,7 +1618,7 @@ def _trace_gen(event: str, ai_name: str, msg_id: str, source: str, extra: str = 
     try:
         import json as _tj
         from datetime import datetime as _tdt
-        _tp = Path(WORKSPACE_ROOT) / "logs" / "generation_trace.jsonl"
+        _tp = body_path('logs', workspace=Path(WORKSPACE_ROOT)) / "generation_trace.jsonl"
         with open(_tp, "a", encoding="utf-8") as _tf:
             _tf.write(_tj.dumps({"ts": _tdt.now().isoformat(), "event": event,
                                  "ai": ai_name, "msg_id": msg_id, "source": source,
@@ -1517,6 +1627,7 @@ def _trace_gen(event: str, ai_name: str, msg_id: str, source: str, extra: str = 
         pass
 
 
+@supervised
 async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                           latest_message: str = "",
                           images: list = None,
@@ -1614,7 +1725,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     # write; if it can't log, I want the exception, not silence.
     try:
         from datetime import datetime as _dt
-        _pp = _WS_ROOT_FOR_PROBE / "logs" / "Temp" / "FREE_PASS_PROBE.log"   # Temp/ (2026-07-14)
+        _pp = body_path('logs', workspace=_WS_ROOT_FOR_PROBE) / "Temp" / "FREE_PASS_PROBE.log"   # Temp/ (2026-07-14)
         _pp.parent.mkdir(parents=True, exist_ok=True)
         with open(_pp, "a", encoding="utf-8") as _pf:
             _pf.write(f"{_dt.now().isoformat()} GEN source={source} hb={_is_hb_tick} "
@@ -1666,6 +1777,8 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         await broadcast({"type": _tok_type, "author": ai_name, "token": token, "id": msg_id})
 
     async def on_think_token(token):
+        if _stop_requested.is_set():
+            raise asyncio.CancelledError
         """Broadcasts think_start once, then think_token for each token.
         Only wired for Nova — Claude/Gemini handle their own thinking display.
 
@@ -1936,14 +2049,8 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     async def on_tool_executed_cb(tool_name: str, tool_input: dict,
                                   result: str, is_error: bool, duration_ms: float):
         """Fires tool_executed WS event so the Tools tab shows the call live (Task 2)."""
-        await broadcast({
-            "type":        "tool_executed",
-            "tool":        tool_name,
-            "input":       tool_input,
-            "result":      result,
-            "error":       is_error,
-            "duration_ms": round(duration_ms),
-        })
+        from nova_voice.tool_result import tool_event
+        await broadcast(tool_event(tool_name, tool_input, result, is_error, duration_ms))
 
     # ── WATERMARK: how much of the transcript this generation can possibly have seen. ────────
     # (2026-07-19, fixing my own regression.) The drain's already-answered guard used to ask
@@ -1979,7 +2086,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
 
 # ── Client dispatch map ───────────────────────────────────────────────────────
 # Used by _run_response_queue to look up the right client module by name.
-CLIENT_MAP = {
+CLIENT_MAP = {} if CHAT_ONLY else {
     # Claude and Gemini removed 2026-07-19 (paid APIs). Nova is the only responder this server
     # can drive. Note the knock-on this deliberately creates: the @mention follow-up round in
     # _run_response_queue looks up names in CLIENT_MAP, so an "@Claude" in her text now resolves
@@ -2053,7 +2160,32 @@ TEXT_EXTS      = {".py", ".md", ".json", ".jsonl", ".txt", ".ps1", ".cmd",
                   ".js", ".ts", ".jsx", ".tsx", ".html", ".htm", ".css",
                   ".sh", ".bat", ".xml", ".csv", ".log", ".sql", ".rs", ".go", ".c", ".cpp", ".h"}
 EXCLUDE_DIRS   = {"__pycache__", ".git", "node_modules", ".clawhub",
-                  "backups"}
+                  "backups", "models", "llama", "_build", "prompt_cache", "dist", "build"}
+
+
+@app.get("/api/activity/recent")
+async def activity_recent():
+    from general_tools.nova_chat.widget_data import read_jsonl_tail
+    root = body_path('logs', workspace=WORKSPACE_ROOT)
+    def read():
+        events = []
+        for path in sorted((root / 'events').glob('events-*.jsonl'))[-3:]:
+            events.extend(read_jsonl_tail(path, limit=150))
+        return {"events": events[-250:], "receipts": read_jsonl_tail(root / 'tool_calls.jsonl', limit=30)}
+    try:
+        return await asyncio.to_thread(read)
+    except OSError as error:
+        return JSONResponse({"error": str(error)}, status_code=503)
+
+
+@app.get("/api/pipeline")
+async def pipeline_events():
+    from general_tools.nova_chat.widget_data import read_jsonl_tail
+    try:
+        events = await asyncio.to_thread(read_jsonl_tail, body_path('logs', workspace=WORKSPACE_ROOT) / 'pipeline.jsonl')
+        return {"events": events}
+    except OSError as error:
+        return JSONResponse({"error": str(error)}, status_code=503)
 
 
 @app.get("/api/files/tree")
@@ -2063,7 +2195,7 @@ async def files_tree():
         if depth > 5:
             return None
         name = path.name
-        if name.startswith(".") or name in EXCLUDE_DIRS:
+        if name.startswith(".") or name.lower() in EXCLUDE_DIRS or path.is_symlink():
             return None
         if path.is_dir():
             children = []
@@ -2082,7 +2214,7 @@ async def files_tree():
                     "ext": path.suffix.lower(),
                     "path": str(path.relative_to(WORKSPACE_ROOT)).replace("\\", "/")}
 
-    tree = _build(WORKSPACE_ROOT)
+    tree = await asyncio.to_thread(_build, WORKSPACE_ROOT)
     return JSONResponse(tree or {})
 
 
@@ -2208,8 +2340,15 @@ async def terminal_run(body: dict):
 @app.get("/api/nova/status")
 async def nova_status():
     """Read live Nova status files including nova_status.json."""
+    if CHAT_ONLY:
+        return JSONResponse({"heartbeat": "", "status": "", "timestamp": time.time(),
+                             "chat_only": True, "status_cache": "",
+                             "nova_live": {"state": "offline", "reason": _CHAT_ONLY_MESSAGE,
+                                           "pulse": "Off", "active_task": None,
+                                           "model": "Nova disabled (chat-only)",
+                                           "uptime": time.monotonic() - _SERVER_STARTED}})
     def _read(rel: str) -> str:
-        p = WORKSPACE_ROOT / rel
+        p = workspace_path(rel, workspace=WORKSPACE_ROOT)
         return p.read_text(encoding="utf-8", errors="replace") if p.exists() else ""
 
     import time as _time
@@ -2219,11 +2358,23 @@ async def nova_status():
     # 1.3 -- Include live nova_status.json for the persistent status bar
     live_status = {}
     try:
-        ns_path = WORKSPACE_ROOT / "nova_status.json"
+        ns_path = body_path('nova_status.json', workspace=WORKSPACE_ROOT)
         if ns_path.exists():
             live_status = json.loads(ns_path.read_text(encoding="utf-8"))
     except Exception:
         pass
+
+    # Historical status files do not establish current runtime liveness.
+    from nova_cortex import executive
+    active = operations.snapshot()
+    model_online = (await get_status()).get("Nova", False)
+    state = "working" if active or is_processing else "ready" if model_online else "offline"
+    live_status.update({"state": state,
+                        "reason": "Model connected · autonomy " + ("enabled" if executive.autonomy_enabled() else "paused") if model_online else "Model server unavailable",
+                        "pulse": "Working" if active or is_processing else "Idle",
+                        "active_task": executive.active_focus(),
+                        "model": getattr(nova_client, "model", None) or "Nova (local)",
+                        "uptime": _time.monotonic() - _SERVER_STARTED})
 
     # P3 — Merge live system metrics into nova_live so pollMonitor picks them up
     live_status.update({k: v for k, v in _sys_metrics.items()})
@@ -2253,7 +2404,7 @@ async def logs_stream(
     from fastapi import Request
     import time as _time
 
-    LOG_ROOT = WORKSPACE_ROOT / "logs"
+    LOG_ROOT = body_path('logs', workspace=WORKSPACE_ROOT)
 
     def _resolve_log() -> Path | None:
         if file == "latest":
@@ -2288,10 +2439,17 @@ async def logs_stream(
 
         yield f"data: [streaming: {log_path.relative_to(WORKSPACE_ROOT)}]\n\n"
 
-        # Read existing content first
+        # Bound the initial history; replaying an entire long-running log freezes widgets.
         try:
-            content = log_path.read_text(encoding="utf-8", errors="replace")
-            for line in content.splitlines():
+            with log_path.open("rb") as stream:
+                stream.seek(0, 2)
+                start = max(0, stream.tell() - 256_000)
+                stream.seek(start)
+                if start:
+                    stream.readline()
+                content = stream.read(256_000).decode("utf-8", errors="replace")
+                last_size = stream.tell()
+            for line in content.splitlines()[-300:]:
                 if line.strip():
                     yield f"data: {line}\n\n"
                     await asyncio.sleep(0)
@@ -2299,8 +2457,7 @@ async def logs_stream(
             yield f"data: [read error: {e}]\n\n"
             return
 
-        # Tail the file for new lines
-        last_size = log_path.stat().st_size
+        # Tail the file from the exact offset already delivered.
         while True:
             await asyncio.sleep(0.5)
             try:
@@ -2332,7 +2489,7 @@ async def logs_stream(
 async def logs_list():
     """List available log files (sessions + chat sessions)."""
     import time as _time
-    LOG_ROOT = WORKSPACE_ROOT / "logs"
+    LOG_ROOT = body_path('logs', workspace=WORKSPACE_ROOT)
     files = []
     for p in sorted(LOG_ROOT.rglob("*.jsonl"), key=lambda x: x.stat().st_mtime, reverse=True):
         if "backups" in p.parts:
@@ -2456,7 +2613,8 @@ async def git_branch():
 @app.get("/api/llama/status")
 async def llama_status():
     """Check if the model server is running (delegates to the body's LlamaControl)."""
-    return JSONResponse({"running": _rt_llama.is_running()})
+    return JSONResponse({"running": _rt_llama.is_running(), "chat_only": CHAT_ONLY,
+                         "nova_enabled": not CHAT_ONLY})
 
 
 # ── What Nova ACTUALLY sees. ───────────────────────────────────────────────────────────
@@ -2527,7 +2685,7 @@ async def eyes_stop():
 # ──────────────────────────────────────────────────────────────────────────────
 import time as _time
 
-_COLE_INTENT_FILE = Path(WORKSPACE_ROOT) / "memory" / "cole_intent.json"
+_COLE_INTENT_FILE = body_path('memory', workspace=Path(WORKSPACE_ROOT)) / "cole_intent.json"
 def _mirror_cole_intent(text: str, speaker: str = "Cole") -> None:
     """Persist Cole's last non-trivial instruction so it survives the cold
     context of a heartbeat tick. Written by the WS receive path — which must
@@ -2561,7 +2719,7 @@ async def emit_event(event: str, text: str, level: str = "info", **extra) -> Non
     except Exception:
         pass
     try:
-        ev_dir = Path(WORKSPACE_ROOT) / "logs" / "events"
+        ev_dir = body_path('logs', workspace=Path(WORKSPACE_ROOT)) / "events"
         ev_dir.mkdir(parents=True, exist_ok=True)
         with open(ev_dir / f"events-{datetime.now().strftime('%Y-%m-%d')}.jsonl",
                   "a", encoding="utf-8") as f:
@@ -2749,6 +2907,9 @@ async def autonomy_daemon():
 async def wake_now():
     """Manual wake — Cole forces Nova to run one cognition cycle right now, bypassing
     the should_wake gate and a 'rest' lean. Works even if Autonomous Mode is off."""
+    if operations.snapshot():
+        return JSONResponse({"ok": False, "error": "An operation is still running or stopping"}, status_code=409)
+    _stop_requested.clear()
     _force_wake.set()
     try:
         await emit_event("wake", "Manual wake — Cole pressed Wake Up")
@@ -2772,11 +2933,108 @@ async def queue_get():
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+@app.get("/api/runtime/state")
+async def runtime_state():
+    if CHAT_ONLY:
+        return {"chat_only": True, "nova_enabled": False, "autonomy_enabled": False,
+                "paused": True, "focus": None, "budget_seconds": 0,
+                "events": {"counts": {}}, "memory_queue": {"counts": {}},
+                "memory": {"ready": False, "last_error": None}, "tasks": [],
+                "receipts": [], "computer": {"owner": "human", "available": False},
+                "operations": [], "last_stop": None, "reason": _CHAT_ONLY_MESSAGE}
+    from nova_cortex import executive, tasking, integrity
+    from nova_runtime.work_queue import WorkQueue
+    from nova_lancedb.indexer import get_indexer
+    from nova_lancedb.hippocampus import get_store
+    from nova_computer.tools import handoff
+    def snapshot():
+        store = get_store()
+        return {"autonomy_enabled": executive.autonomy_enabled(),
+                "paused": _stop_requested.is_set(), "focus": executive.active_focus(),
+                "budget_seconds": executive._cfg()["wake_budget_seconds"],
+                "events": WorkQueue().snapshot(), "memory_queue": get_indexer().status(),
+                "memory": {**store.get_stats(), "last_error": store.last_error},
+                "tasks": list(tasking.all_tasks().values()),
+                "receipts": integrity.recent_receipts(limit=12), "computer": handoff()}
+    result = await asyncio.to_thread(snapshot)
+    result["operations"] = operations.snapshot()
+    result["last_stop"] = operations.last_stop
+    return result
+
+
+@app.post("/api/runtime/pause")
+async def runtime_pause():
+    global autonomous_mode
+    from nova_cortex import executive
+    executive.set_autonomy(False)
+    autonomous_mode = False
+    return await stop_endpoint()
+
+
+@app.post("/api/runtime/resume")
+async def runtime_resume():
+    global autonomous_mode
+    if operations.snapshot():
+        return JSONResponse({"error": "Wait for the current operation to stop"}, status_code=409)
+    from nova_cortex import executive
+    _stop_requested.clear()
+    executive.set_autonomy(True)
+    executive.schedule_soon()
+    autonomous_mode = True
+    return {"ok": True}
+
+
+@app.post("/api/runtime/retry-memory")
+async def retry_memory():
+    from nova_lancedb.indexer import get_indexer
+    return {"retried": get_indexer().queue.retry_failed()}
+
+
+@app.post("/api/runtime/recover-memory")
+async def recover_memory():
+    from nova_lancedb.backfill import enqueue_records
+    return await asyncio.to_thread(enqueue_records)
+
+
+@app.post("/api/queue/update")
+@supervised
+async def queue_update(body: dict = Body(...)):
+    from nova_cortex import tasking
+    try:
+        tid = body["id"]
+        if not tasking.get(tid):
+            return JSONResponse({"error": "Task not found"}, status_code=404)
+        if "acceptance" in body:
+            tasking.set_acceptance(tid, body["acceptance"])
+        if body.get("action") == "verify":
+            ok = await run_in_worker(tasking.complete, tid, body.get("result", "Verified through controller"))
+        elif body.get("action") == "resume":
+            ok = tasking.reopen(tid)
+        else:
+            ok = True
+        return {"ok": ok, "task": tasking.get(tid)}
+    except (ValueError, KeyError) as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+
+@app.post("/api/computer/handoff")
+async def computer_handoff(body: dict = Body(...)):
+    from nova_computer.tools import handoff
+    try:
+        owner = body["owner"]
+        state = handoff(owner)
+        if owner == "human":
+            await stop_endpoint()
+        return state
+    except (ValueError, KeyError) as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+
 # ── Profile avatars  (/api/avatars) ────────────────────────────────────────────
 # Per-participant profile pictures, stored server-side as data URLs in
 # memory/avatars.json. Server-side (not localStorage) because the chat app window
 # launches with a fresh browser profile each time, so localStorage wouldn't persist.
-_AVATARS_FILE = WORKSPACE_ROOT / "memory" / "avatars.json"
+_AVATARS_FILE = body_path('memory', workspace=WORKSPACE_ROOT) / "avatars.json"
 _AVATAR_NAMES = {"Nova", "Claude", "Gemini", "Cole"}
 _AVATAR_MAX_BYTES = 2_000_000  # ~2MB cap on a single data URL
 
@@ -2826,7 +3084,7 @@ async def avatars_set(body: dict = Body(...)):
 # The customizable widget dashboard (Gridstack) stores its layout — which widgets
 # are present, their grid positions/sizes, and collapsed state — here. Server-side
 # (not localStorage) so it survives the app window's fresh per-launch profile.
-_LAYOUT_FILE = WORKSPACE_ROOT / "memory" / "ui_layout.json"
+_LAYOUT_FILE = body_path('memory', workspace=WORKSPACE_ROOT) / "ui_layout.json"
 
 @app.get("/api/layout")
 async def layout_get():
@@ -2865,9 +3123,14 @@ async def queue_add(body: dict = Body(...)):
         return JSONResponse({"error": "title required"}, status_code=400)
     try:
         from nova_cortex import tasking
-        tid = tasking.create(title, notes, priority, author=author)
+        tid = tasking.create(title, notes, priority, author=author, acceptance=body.get("acceptance"))
+        from nova_runtime.work_queue import WorkQueue
+        from nova_cortex import executive
+        WorkQueue().put({"kind": "task", "task_id": tid, "author": author}, key="task:"+tid)
+        executive.schedule_soon()
         return JSONResponse({"ok": True, "id": tid, "title": title,
-                             "priority": priority, "author": author})
+                             "priority": priority, "author": author,
+                             "scheduling": tasking.get(tid)["scheduling"]})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
@@ -2878,7 +3141,7 @@ async def queue_complete(body: dict = Body(...)):
     tid = (body.get("id") or body.get("raw") or "").strip()
     try:
         from nova_cortex import tasking
-        return JSONResponse({"ok": tasking.complete(tid, "")})
+        return JSONResponse({"ok": tasking.complete(tid, "Confirmed through controller", manual=True)})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
@@ -2911,14 +3174,14 @@ async def eyes_status():
 @app.post("/api/llama/start")
 async def llama_start():
     """Launch the model server (delegates to the body's LlamaControl)."""
-    res = _rt_llama.start()
+    res = await asyncio.to_thread(_rt_llama.start)
     return JSONResponse(res, status_code=200 if res.get("ok") else 500)
 
 
 @app.post("/api/llama/stop")
 async def llama_stop():
     """Stop the model server (delegates to the body's LlamaControl)."""
-    res = _rt_llama.stop()
+    res = await asyncio.to_thread(_rt_llama.stop)
     return JSONResponse(res, status_code=200 if res.get("ok") else 500)
 
 
@@ -3191,7 +3454,7 @@ async def api_version():
     liveness from behaviour — and inferred wrong, twice, in opposite directions. I decided my
     own patch was dead code when it had simply never been loaded.
 
-    Never infer. Ask. This returns the pid and the mtime/size of the files that matter, so
+    Never infer. Ask. This returns the pid and normalized content hashes of the watched source files, so
     "did my change load?" becomes a fact instead of a guess. Compare it to the file on disk.
     """
     import os as _os
@@ -3199,6 +3462,8 @@ async def api_version():
     stale = [rel for rel in _CODE_FILES if _BOOT_FINGERPRINT.get(rel) != disk.get(rel)]
     return {
         "pid": _os.getpid(),
+        "chat_only": CHAT_ONLY,
+        "nova_enabled": not CHAT_ONLY,
         # THE answer to "did my change actually load?" — compares what this process READ AT BOOT
         # against what is on disk NOW. Non-empty `stale` means: you edited these, and this server
         # is still running the old version of them. Restart properly.
@@ -3277,7 +3542,7 @@ async def api_users_mutate(payload: dict = Body(...)):
 async def restart_server():
     """Restart the model server on :8080 (delegates to the body's LlamaControl — the same
     path KoELS self-restart will extend to relaunch with a chosen loadout)."""
-    res = _rt_llama.restart()
+    res = await asyncio.to_thread(_rt_llama.restart)
     return JSONResponse(res, status_code=200 if res.get("ok") else 500)
 
 
@@ -3314,134 +3579,36 @@ async def restart_nova():
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
 
-@app.post("/api/restart/novachat")
-async def restart_novachat():
-    """Restart the Nova Chat web server (:8765). Detached relauncher waits, frees the
-    port (which drops this process), then relaunches the chat host."""
+async def _launcher_action(action: str):
+    """Only the owning launcher can coordinate app, guardian and service teardown."""
+    import urllib.request
+    import urllib.error
+    def request():
+        req = urllib.request.Request(f"http://127.0.0.1:8799/api/{action}", data=b"{}",
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=5) as response:
+                return json.loads(response.read()), response.status
+        except urllib.error.HTTPError as error:
+            return json.loads(error.read()), error.code
     try:
-        ws = str(WORKSPACE_ROOT)
-        # ── 2026-07-14: THE HALF-RESTART. This cost most of a day. ────────────────────────────
-        # Two defects, both silent:
-        #
-        #   1. We only killed whatever was LISTENING on :8765. A stale chat server that had lost
-        #      the port (or a second one spawned by an earlier racy restart) survived untouched —
-        #      and kept serving. So new code loaded in one process while tool calls executed in
-        #      another, older one.
-        #   2. If the port was STILL held after the 30s wait, the batch called NovaStart.cmd
-        #      anyway. NovaStart sees :8765 busy, concludes "Nova's already running", skips
-        #      launching the chat host — and the OLD process, with the OLD CODE, just keeps going.
-        #      The endpoint returns {"ok": true}. It reports success for having done nothing.
-        #
-        # The symptom was maddening and never looked like a restart bug: guards firing from new
-        # code while receipts were written by old code, probes silent for wakes that demonstrably
-        # happened. I twice concluded my own code was dead when it had simply never been loaded.
-        #
-        # A restart that silently doesn't restart is the worst possible tool, because you reach for
-        # it precisely when you are trying to establish ground truth. Now it kills by port AND by
-        # command line, and REFUSES to relaunch on a port it couldn't free — loudly, rather than
-        # pretending.
-        ps_kill = ('powershell -Command "Get-NetTCPConnection -LocalPort 8765 '
-                   '-ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id '
-                   '$_.OwningProcess -Force -ErrorAction SilentlyContinue }"')
-        # Kill zombies by COMMAND LINE too — a stale server that no longer holds the port is still
-        # stale, and it is exactly what was serving old code all day.
-        ps_kill_stale = (
-            'powershell -NoProfile -Command "Get-CimInstance Win32_Process -ErrorAction '
-            "SilentlyContinue | Where-Object { $_.CommandLine -like '*nova_chat*' -and "
-            "$_.ProcessId -ne " + str(os.getpid()) + " } | ForEach-Object { Stop-Process -Id "
-            '$_.ProcessId -Force -ErrorAction SilentlyContinue }"'
-        )
-        _r = _spawn_detached_cmd([
-            "@echo off",
-            "setlocal enabledelayedexpansion",
-            "timeout /t 2 /nobreak >nul",
-            _PS_CLOSE_APP_WINDOW,            # close the OLD app window (no second window)
-            ps_kill,                         # free :8765 (old chat server)
-            ps_kill_stale,                   # AND kill any zombie chat server still holding old code
-            'cd /d "' + ws + '"',
-            # Wait until :8765 is actually free before relaunch — closing the app window also
-            # triggers the old launcher's graceful shutdown, which races the new start and
-            # makes it skip ('already running'). Cap at ~30s.
-            "set _n=0",
-            ":waitfree",
-            "set /a _n+=1",
-            "timeout /t 1 /nobreak >nul",
-            "set _busy=",
-            'for /f %%P in (\'netstat -ano ^| findstr ":8765 " ^| findstr LISTENING\') do set _busy=1',
-            "if defined _busy if !_n! lss 30 goto waitfree",
-            # FAIL LOUD. Do NOT call NovaStart on a port we could not free: it would see :8765 busy,
-            # decide Nova is already up, skip the chat host — and silently leave the OLD code
-            # serving while telling us the restart worked. That exact behaviour burned a full day.
-            "if defined _busy (",
-            "  echo.",
-            "  echo [restart] FAILED: :8765 is STILL held after 30s. NOT relaunching.",
-            "  echo [restart] Something is clinging to the port. Run StopNova.cmd, then NovaStart.cmd.",
-            "  echo [restart] Refusing to start a second server on top of the first — that gives you",
-            "  echo [restart] two vintages of Nova answering at once, which is how we lost today.",
-            "  echo.",
-            "  pause",
-            ") else (",
-            "  call NovaStart.cmd",          # relaunch — opens exactly one fresh window
-            ")",
-        ])
-        # `ok` now means "the relauncher is PROVEN to be running", not "we called Popen".
-        # This endpoint returned ok:true twice on 2026-07-19 while nothing whatsoever
-        # happened, and Cole had to restart by hand. You reach for a restart precisely
-        # when you are trying to establish ground truth — so it is the last place that
-        # may report an outcome it did not check.
-        if not _r.get("verified"):
-            return JSONResponse({
-                "ok": False,
-                "error": "RESTART DID NOT LAUNCH — nothing was restarted.",
-                "diagnosis": _r.get("diagnosis", ""),
-                "evidence": {"attempts": _r.get("attempts"),
-                             "child_pid": _r.get("child_pid"),
-                             "log_touched": _r.get("log_touched"),
-                             "spawn_receipt": _r.get("log", "").replace(
-                                 "nova_restart.log", "nova_restart_spawn.json")},
-                "do_this": "Run StopNova.cmd then NovaStart.cmd manually.",
-            }, status_code=500)
-        return JSONResponse({"ok": True,
-                             "verified_by": ("child alive" if _r.get("child_alive_after_1.5s")
-                                             else "log file created"),
-                             "child_pid": _r.get("child_pid"),
-                             "message": "Nova Chat restarting — relauncher CONFIRMED running. "
-                                        "Killing by port AND command line, waiting for :8765 to "
-                                        "clear, then relaunching. If the port cannot be freed it "
-                                        "refuses to start rather than leave stale code serving."})
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+        result, code = await asyncio.to_thread(request)
+        return JSONResponse(result, status_code=code)
+    except Exception as error:
+        return JSONResponse({"ok": False, "error": f"Launcher unavailable: {error}. Start Nova with NovaStart."}, status_code=503)
 
 
+@app.post("/api/restart/novachat")
 @app.post("/api/restart/full")
 async def restart_full():
-    """Full stack restart: StopNova (frees all ports) then NovaStart (llama + chat +
-    watcher + window). Detached so it survives this process being killed."""
-    try:
-        ws = str(WORKSPACE_ROOT)
-        _spawn_detached_cmd([
-            "setlocal enabledelayedexpansion",
-            "timeout /t 2 /nobreak >nul",
-            _PS_CLOSE_APP_WINDOW,            # close the OLD app window (no second window)
-            'cd /d "' + ws + '"',
-            "call StopNova.cmd",
-            # CRITICAL: the OLD stack shuts down asynchronously (the window-close watchdog
-            # tears down llama+chat). Wait until BOTH ports are actually free before relaunch,
-            # or the new launcher sees the dying old server, skips ('already running'), and
-            # then the old one dies leaving nothing. Cap at ~30s so we never hang forever.
-            "set _n=0",
-            ":waitfree",
-            "set /a _n+=1",
-            "timeout /t 1 /nobreak >nul",
-            "set _busy=",
-            'for /f %%P in (\'netstat -ano ^| findstr ":8765 " ^| findstr LISTENING\') do set _busy=1',
-            'for /f %%P in (\'netstat -ano ^| findstr ":8080 " ^| findstr LISTENING\') do set _busy=1',
-            "if defined _busy if !_n! lss 30 goto waitfree",
-            "call NovaStart.cmd",
-        ])
-        return JSONResponse({"ok": True, "message": "Full stack restarting — old window closes, one fresh window opens…"})
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    await stop_endpoint()
+    return await _launcher_action("restart")
+
+
+@app.post("/api/services/shutdown")
+async def shutdown_services():
+    await stop_endpoint()
+    return await _launcher_action("shutdown")
 
 
 @app.post("/api/run-tool")
@@ -3652,7 +3819,7 @@ async def reinject_context():
     # voice) is already injected fresh every turn, so here we only surface the
     # on-demand reference layer that isn't normally in context.
     _WORKSPACE = Path(__file__).resolve().parent.parent.parent
-    inject_paths = sorted((_WORKSPACE / "SELF" / "reference").glob("*.md"))
+    inject_paths = sorted((body_path('SELF', workspace=_WORKSPACE) / "reference").glob("*.md"))
 
     # 1) Purge stale CONTEXT REFRESH blocks from history (keep the conversation).
     purged = 0
@@ -3715,13 +3882,8 @@ async def reinject_context():
 
 @app.post("/shutdown")
 async def shutdown_endpoint():
-    """Gracefully shut down the server."""
-    import threading, os, signal
-    def _kill():
-        import time as _t; _t.sleep(0.3)
-        os.kill(os.getpid(), signal.SIGTERM)
-    threading.Thread(target=_kill, daemon=True).start()
-    return JSONResponse({"status": "shutting down"})
+    await stop_endpoint()
+    return await _launcher_action("shutdown")
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
@@ -3746,11 +3908,12 @@ async def websocket_endpoint(ws: WebSocket):
     # Send full sessions list for tab rendering
     await ws.send_text(json.dumps({
         "type": "sessions_init",
-        "sessions": session_mgr.get_all_meta(),
-        "active_id": session_mgr.active_id,
+        "sessions": [] if CHAT_ONLY else session_mgr.get_all_meta(),
+        "active_id": None if CHAT_ONLY else session_mgr.active_id,
+        "chat_only": CHAT_ONLY,
     }))
 
-    for msg in session_mgr.active.get_recent(100):
+    for msg in ([] if CHAT_ONLY else session_mgr.active.get_recent(100)):
         hist_payload = {
             "type": "history",
             "author": msg["author"],
@@ -3766,6 +3929,15 @@ async def websocket_endpoint(ws: WebSocket):
         while True:
             raw = await ws.receive_text()
             data = json.loads(raw)
+
+            if CHAT_ONLY and data.get("type") not in {"ping", "stop"}:
+                # Never store a regular chat message or typing signal in Nova's body.
+                if data.get("type") != "user_typing":
+                    await ws.send_text(json.dumps({"type": "error", "author": "System",
+                                                   "chat_only": True, "message": _CHAT_ONLY_MESSAGE}))
+                    if data.get("type") == "autonomous_toggle":
+                        await ws.send_text(json.dumps({"type": "autonomous_state", "enabled": False}))
+                continue
 
             if data.get("type") == "ping":
                 status = await get_status()
@@ -3799,15 +3971,7 @@ async def websocket_endpoint(ws: WebSocket):
                 continue
 
             if data.get("type") == "stop":
-                _stop_requested.set()  # signal all token handlers to abort
-                cancelled = 0
-                for task in active_tasks:
-                    if not task.done():
-                        task.cancel()
-                        cancelled += 1
-                active_tasks.clear()
-                is_processing = False
-                await broadcast({"type": "stopped", "cancelled": cancelled})
+                await stop_endpoint()
                 continue
 
             if data.get("type") == "new_session":
@@ -3889,7 +4053,7 @@ async def websocket_endpoint(ws: WebSocket):
                 _user_typing       = bool(data.get("typing", False))
                 _user_typing_since = _now_tz if _user_typing else _user_typing_since
                 try:
-                    inbox_path = WORKSPACE_ROOT / "memory" / "interrupt_inbox.json"
+                    inbox_path = body_path('memory', workspace=WORKSPACE_ROOT) / "interrupt_inbox.json"
                     inbox_path.parent.mkdir(parents=True, exist_ok=True)
                     existing = {}
                     if inbox_path.exists():
@@ -4099,7 +4263,7 @@ async def websocket_endpoint(ws: WebSocket):
                             try:
                                 import json as _json
                                 from pathlib import Path as _Path
-                                _runs_dir = _Path(WORKSPACE_ROOT) / "logs" / "autonomy_runs"
+                                _runs_dir = body_path('logs', workspace=_Path(WORKSPACE_ROOT)) / "autonomy_runs"
                                 _runs_dir.mkdir(parents=True, exist_ok=True)
                                 _ts = __import__('datetime').datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
                                 _mode = "auto" if _auto_ticks > 0 else "manual"

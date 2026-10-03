@@ -53,6 +53,11 @@ USAGE:
     Exit codes: 0 = healthy or recovered, 1 = degraded / escalated (needs a human).
 """
 
+import sys as _nova_path_sys
+from pathlib import Path as _NovaPath
+_nova_path_sys.path.insert(0, str(_NovaPath(__file__).resolve().parents[1] / 'nova_body'))
+from nova_paths import body_path
+
 import json
 import re
 import os
@@ -126,7 +131,7 @@ def _basename(p) -> str:
 def _expected_adapter() -> str:
     """The adapter she is SUPPOSED to be wearing, per her own equip config."""
     try:
-        cfg = json.loads((WS / "memory" / "active_lora.json").read_text(encoding="utf-8"))
+        cfg = json.loads((body_path('memory', workspace=WS) / "active_lora.json").read_text(encoding="utf-8"))
         return _basename(cfg.get("rel", ""))
     except Exception:
         return ""

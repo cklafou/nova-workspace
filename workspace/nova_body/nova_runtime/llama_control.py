@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 09:49:51
 # @nova: LlamaControl — runtime/life-support control of her model server (llama.cpp on
 #        :8080): health check, autostart, stop, restart. Bringing her mind up/down is a
 #        bodily I/O act, so it belongs in HER runtime, never in a pluckable chat tool.
@@ -7,16 +7,20 @@
 """
 nova_runtime/llama_control.py — relocated faithfully from general_tools/nova_chat/server.py
 (`/api/llama/start|stop|status`, `/api/restart/server`, `_kill_port`, `_bg_llama_autostart`).
-Behavior is unchanged; it just lives in the body now and returns plain dicts instead of
+Lifecycle now waits for confirmed socket closure before stop/restart succeeds. It returns plain dicts instead of
 FastAPI responses, so a face (or the runtime) can call it and render the result however it likes.
 
 The Windows OS calls (`os.startfile`, PowerShell `Get-NetTCPConnection`) are injectable so the
 decision logic is unit-testable off-Windows; defaults are the real ops.
 """
 
+from nova_paths import body_path
+
 import os
 import sys
 import subprocess
+import socket
+import threading
 import urllib.request
 from datetime import datetime
 from pathlib import Path
@@ -40,6 +44,8 @@ def _hidden_si():
 class LlamaControl:
     def __init__(self, workspace, port: int = 8080, launcher: str = "start_llama_qwen36.cmd",
                  startfile=None, runner=None, health=None):
+        self._lifecycle_lock = threading.RLock()
+        self._pending_start = 0.0
         self.workspace = Path(workspace)
         self.port = port
         self.launcher_path = self.workspace / launcher
@@ -60,25 +66,13 @@ class LlamaControl:
             return False
 
     def _kill_port(self) -> None:
-        # Kill whatever holds the port AND any llama-server by name. The port-only kill
-        # (Get-NetTCPConnection -> Stop-Process by OwningProcess) can miss the real process
-        # on some setups — the restart live-test (2026-06-01) caught it not killing llama —
-        # so we also stop it by name. Belt-and-suspenders, and what KoELS self-restart relies on.
-        # 2026-07-18 (watchdog): kill the LAUNCHER CMD *FIRST*, before its llama-server child.
-        # cmd.exe re-reads its batch file by byte offset whenever a child returns; an orphaned
-        # launcher cmd resuming after we kill llama-server executes garbled line fragments
-        # (receipt in logs/llama/: 'COREKOELS_LORA"' is not recognized...), loses NOVA_EXTRA,
-        # and relaunches llama-server BARE (no --lora) — and its instance binds :8080 before the
-        # legitimate relaunch, which then dies on the busy port. Net effect: every restart
-        # silently stripped her personality adapter (the launcher's "worst class of bug: a
-        # SILENT one", via a second path). Killing the parent cmd first leaves nothing to
-        # resume when the server dies.
+        # Stop only this model port and its specific batch launcher. Killing every
+        # llama-server by name also killed the independent witness on port 8081.
         ps = ("Get-CimInstance Win32_Process -Filter \"Name='cmd.exe'\" | "
               f"Where-Object {{ $_.CommandLine -like '*{self.launcher_path.name}*' }} | "
               "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; "
-              f"Get-NetTCPConnection -LocalPort {self.port} -ErrorAction SilentlyContinue | "
-              "ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; "
-              "Stop-Process -Name llama-server -Force -ErrorAction SilentlyContinue")
+              f"Get-NetTCPConnection -LocalPort {self.port} -State Listen -ErrorAction SilentlyContinue | "
+              "ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }")
         try:
             # Hidden, not console-less. The chat server owns a hidden console; PowerShell inherits
             # it. CREATE_NO_WINDOW would detach it and make its children pop windows instead.
@@ -87,10 +81,38 @@ class LlamaControl:
                 kw["startupinfo"] = _hidden_si()
             self._run(["powershell", "-Command", ps], capture_output=True, text=True,
                       encoding="utf-8", errors="replace", timeout=10, **kw)
-        except Exception:
-            pass
+        except Exception as error:
+            raise RuntimeError(f"Could not stop model server: {error}") from error
+
+    def _wait_stopped(self, timeout=10.0):
+        """A kill request is not proof that the old listening socket has gone away."""
+        import time
+        deadline = time.monotonic() + timeout
+        while True:
+            with socket.socket() as connection:
+                connection.settimeout(0.25)
+                if connection.connect_ex(("127.0.0.1", self.port)) != 0:
+                    return True
+            if time.monotonic() >= deadline:
+                return False
+            time.sleep(0.1)
 
     def start(self) -> dict:
+        import time
+        with self._lifecycle_lock:
+            # A cold model answers /health with 503. A listening socket or a recent
+            # accepted spawn still means Start must not create another instance.
+            with socket.socket() as connection:
+                connection.settimeout(0.25)
+                listening = connection.connect_ex(("127.0.0.1", self.port)) == 0
+            if listening or time.monotonic() - self._pending_start < 90:
+                return {"ok": True, "message": "Model server is already running or starting.", "started": False}
+            result = self._start()
+            if result.get("ok"):
+                self._pending_start = time.monotonic()
+            return result
+
+    def _start(self) -> dict:
         """Launch the llama launcher WITHOUT popping a console window.
 
         Was: os.startfile(...) — literally "double-click it", which spawned a visible cmd window
@@ -99,11 +121,13 @@ class LlamaControl:
         Nova Console tails — so the restart is still fully visible, just in the llama-server tab
         instead of a new window. (self._startfile is kept ONLY as an injection point for tests
         and as a non-Windows fallback.)"""
+        if self.is_running():
+            return {"ok": True, "message": "Model server already running.", "started": False}
         if not self.launcher_path.exists():
             return {"ok": False, "error": f"{self.launcher_path.name} not found at {self.launcher_path}"}
         try:
             if sys.platform == "win32":
-                log_dir = self.workspace / "logs" / "llama"
+                log_dir = body_path('logs', workspace=self.workspace) / "llama"
                 log_dir.mkdir(parents=True, exist_ok=True)
                 stamp = datetime.now().strftime("%Y-%m-%d")
                 lf = open(log_dir / f"llama-{stamp}.log", "a", encoding="utf-8", errors="replace")
@@ -120,13 +144,20 @@ class LlamaControl:
                 self._startfile(str(self.launcher_path))
             else:
                 return {"ok": False, "error": "no way to launch on this platform"}
-            return {"ok": True, "message": f"llama-server starting on port {self.port}…"}
+            return {"ok": True, "started": True, "message": f"llama-server starting on port {self.port}…"}
         except Exception as e:
             return {"ok": False, "error": str(e)}
 
     def stop(self) -> dict:
+        with self._lifecycle_lock:
+            self._pending_start = 0.0
+            return self._stop()
+
+    def _stop(self) -> dict:
         try:
             self._kill_port()
+            if not self._wait_stopped():
+                return {"ok": False, "error": f"Model port {self.port} did not close after stop."}
             return {"ok": True, "message": "llama-server stopped."}
         except Exception as e:
             return {"ok": False, "error": str(e)}
@@ -134,13 +165,27 @@ class LlamaControl:
     def restart(self) -> dict:
         """Kill the model server, then relaunch it. (KoELS self-restart will extend this to
         relaunch with a chosen loadout; for now it relaunches the standard launcher.)"""
-        self._kill_port()
-        return self.start()
+        with self._lifecycle_lock:
+            try:
+                self._pending_start = 0.0
+                self._kill_port()
+                if not self._wait_stopped():
+                    return {"ok": False, "started": False,
+                            "error": f"Model port {self.port} did not close; restart was not performed."}
+                result = self._start()
+                if result.get("ok") and result.get("started") is not False:
+                    import time
+                    self._pending_start = time.monotonic()
+                elif result.get("started") is False:
+                    return {"ok": False, "started": False, "error": "Another model occupied the port before relaunch."}
+                return result
+            except Exception as error:
+                return {"ok": False, "error": str(error)}
 
     def autostart(self) -> dict:
         """Boot-time life-support: start the model server only if it isn't already up."""
         if self.is_running():
             return {"ok": True, "message": "already running", "started": False}
         res = self.start()
-        res["started"] = bool(res.get("ok"))
+        res.setdefault("started", bool(res.get("ok")))
         return res

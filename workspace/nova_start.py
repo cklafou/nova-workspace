@@ -1,5 +1,5 @@
-# Last updated: 2026-08-06 16:21:32
-# @nova: Project Nova startup orchestrator — health-gates llama-server (:8080) then launches Nova; invoked by NovaStart.cmd.
+# @nova: Launch the full Nova stack or an explicit chat-only controller without starting her body.
+# Last updated: 2026-10-03 10:38:38
 """
 nova_start.py  --  Project Nova one-shot launcher / orchestrator
 ================================================================
@@ -9,9 +9,9 @@ Double-click NovaStart.cmd (or, once built, NovaStart.exe) and this script:
      tensor split, logging its output to logs/llama/.
   2. Polls http://127.0.0.1:8080/health until llama-server reports ready.
   3. Starts Nova (general_tools/NovaLauncher.py), which brings up the
-     nova_chat (8765) server and the desktop window.
-  4. Waits for the chat port, then hands off. When the Nova window closes,
-     llama-server is shut down too, so one launch == one clean lifecycle.
+     nova_chat (8765) server.
+  4. Opens NovaController.exe (or the Qt source). Closing hides it to the tray;
+     Quit Nova ends the launcher-owned services in their normal shutdown order.
 
 Everything is logged to logs/launcher/ with timestamps. The console shows a
 clean, human-readable step-by-step so you can see exactly what is happening.
@@ -19,6 +19,7 @@ clean, human-readable step-by-step so you can see exactly what is happening.
 This file is also the PyInstaller entry point for NovaStart.exe (see
 build_nova_start.cmd).
 """
+
 
 import os
 import sys
@@ -34,6 +35,8 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
+CHAT_ONLY = "--chat-only" in sys.argv or os.environ.get("NOVA_CHAT_ONLY", "").strip().lower() in {"1", "true", "yes"}
+
 _SHUTDOWN = threading.Event()      # set by StopNova.cmd via POST :8799/api/shutdown
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -42,6 +45,12 @@ if getattr(sys, "frozen", False):
     WS = Path(sys.executable).resolve().parent
 else:
     WS = Path(__file__).resolve().parent
+
+# Resolve the real workspace before importing body paths, including frozen launchers.
+import os as _path_os
+_path_os.environ.setdefault("NOVA_WORKSPACE", str(WS))
+sys.path.insert(0, str(WS / "nova_body"))
+from nova_paths import body_path
 
 LLAMA_EXE   = WS / "llama" / "llama-server.exe"
 MODEL       = WS / "models" / "qwen3.6" / "Qwen3.6-27B-UD-Q6_K_XL.gguf"   # Qwen 3.6 27B Q6 + MTP (was qwen-27b-q8.gguf, 3.5)
@@ -61,8 +70,8 @@ WITNESS_PORT   = 8081
 WITNESS_HEALTH = f"http://127.0.0.1:{WITNESS_PORT}/health"
 WITNESS_MODELS = WS / "models" / "witness"
 
-LOG_DIR    = WS / "logs" / "launcher"
-LLAMA_LOGS = WS / "logs" / "llama"
+LOG_DIR    = body_path('logs', workspace=WS) / "launcher"
+LLAMA_LOGS = body_path('logs', workspace=WS) / "llama"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LLAMA_LOGS.mkdir(parents=True, exist_ok=True)
 _STAMP   = datetime.now().strftime("%Y-%m-%d")
@@ -249,7 +258,7 @@ def build_llama_cmd() -> list:
     # Rides in the BASE command so any KoELS specialist swap stacks ON TOP of her personality.
     # Conditional on the file existing so a missing adapter never blocks startup (bare base fallback).
     _sel_rel, _sel_scale = "models/qwen3.6/nova_core_v2_e2.gguf", 0.6
-    _active = WS / "memory" / "active_lora.json"
+    _active = body_path('memory', workspace=WS) / "active_lora.json"
     if _active.exists():
         try:
             import json as _json
@@ -268,7 +277,7 @@ def build_llama_cmd() -> list:
         log(f"Nova-core personality adapter: {_rel}:{_sel_scale}")
     # KoELS: preload a persisted boot --lora set if one exists (koels_lora_args.json = clean arg
     # list; mirrors start_llama_qwen36.cmd's %KOELS_LORA% hook). Absent = Nova-core only.
-    _lora_json = WS / "memory" / "koels_lora_args.json"
+    _lora_json = body_path('memory', workspace=WS) / "koels_lora_args.json"
     if _lora_json.exists():
         try:
             import json as _json
@@ -441,7 +450,20 @@ def _pick_python() -> list | None:
 
 
 # ── Step 3 + 4: Nova ───────────────────────────────────────────────────────--
+def _check_controller_mode():
+    """Refuse a mode mismatch before starting any children or claiming this controller."""
+    if port_open(CHAT_PORT):
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{CHAT_PORT}/api/version", timeout=3) as response:
+                running_mode = bool(json.load(response).get("chat_only", False))
+        except Exception as error:
+            raise RuntimeError("Cannot establish the running controller mode; close it before relaunching.") from error
+        if running_mode != CHAT_ONLY:
+            raise RuntimeError("A controller is already running in a different mode. Quit it before changing modes.")
+
+
 def start_nova() -> subprocess.Popen | None:
+    _check_controller_mode()
     if port_open(CHAT_PORT):
         log("Nova chat server already running on :%d — not starting a second one." % CHAT_PORT)
         return None
@@ -462,11 +484,18 @@ def start_nova() -> subprocess.Popen | None:
     # app window (Edge/Chrome --app) and the lifecycle from here.
     env = dict(os.environ)
     env["NOVA_NO_WINDOW"] = "1"
+    env["NOVA_CHAT_ONLY"] = "1" if CHAT_ONLY else "0"
     env["PYTHONUNBUFFERED"] = "1"        # so its output reaches the console live, not in chunks
     # python.exe (NOT pythonw) + a real-but-hidden console. The chat server shells out constantly —
     # Nova's run_command -> PowerShell -> whatever PowerShell spawns. They all inherit this
     # invisible console instead of each popping a visible one. stdout is still piped to the Console.
-    proc = subprocess.Popen(_console_python(py) + [str(NOVA_LAUNCH)], cwd=str(WS),
+    command = _console_python(py) + [str(NOVA_LAUNCH)]
+    if CHAT_ONLY:
+        # Skip NovaLauncher's runtime-primary boot and body log-retention jobs.
+        command = _console_python(py) + ["-m", "uvicorn", "nova_chat.server:app",
+                   "--app-dir", str(WS / "general_tools"), "--host", "127.0.0.1",
+                   "--port", str(CHAT_PORT), "--log-level", "warning"]
+    proc = subprocess.Popen(command, cwd=str(WS),
                             env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             **_hidden_console())
     if HUB:
@@ -545,7 +574,7 @@ def _grant_clipboard(profile: Path, port: int) -> None:
         log(f"Could not pre-grant clipboard permission: {e}", "WARN")
 
 
-def open_app_window():
+def _open_browser_window():
     """Open Nova as a standalone, chromeless app window.
 
     ── 2026-07-14: ONE profile, kept. ──────────────────────────────────────────────────
@@ -613,6 +642,36 @@ def open_app_window():
     except Exception as e:
         log(f"Could not open app window: {e}", "ERROR")
         return None
+
+
+_app_backend = "native"
+
+def open_app_window():
+    """Open the desktop controller; the browser path remains an explicit fallback."""
+    global _app_backend
+    if os.environ.get("NOVA_UI") == "browser":
+        _app_backend = "browser"
+        return _open_browser_window()
+    desktop = WS / "general_tools" / "nova_chat" / "desktop.py"
+    executable = WS / "_build" / "NovaController" / "NovaController.exe"
+    if executable.exists() and executable.stat().st_mtime >= desktop.stat().st_mtime:
+        log("Opening NovaController.exe. Close hides to tray; Quit Nova shuts down.")
+        return subprocess.Popen([str(executable)], cwd=str(WS), creationflags=_NO_WINDOW)
+    candidates = [[sys.executable]] if not getattr(sys, "frozen", False) else []
+    candidates += [["py", "-3.12"], ["py", "-3"], ["python"]]
+    for candidate in candidates:
+        try:
+            probe = subprocess.run(candidate + ["-c", "from PyQt6.QtWebEngineWidgets import QWebEngineView"],
+                                   capture_output=True, timeout=15, creationflags=_NO_WINDOW)
+            if probe.returncode:
+                continue
+            log("Opening Nova desktop controller (Qt). Close hides to tray; Quit Nova shuts down.")
+            return subprocess.Popen(candidate + [str(desktop)], cwd=str(WS), creationflags=_NO_WINDOW)
+        except (OSError, subprocess.TimeoutExpired) as error:
+            log(f"Desktop interpreter unavailable: {error}", "WARN")
+    log("Qt WebEngine unavailable. Install PyQt6 and PyQt6-WebEngine; using browser fallback.", "WARN")
+    _app_backend = "browser"
+    return _open_browser_window()
 
 
 def _shutdown_nova(proc) -> None:
@@ -803,7 +862,8 @@ def start_console() -> subprocess.Popen | None:
         HUB.serve(HUB_PORT)
         # llama is TAILED, not piped: LlamaControl restarts it out of band (LoRA equip /
         # Full Restart), which would kill a pipe. Tailing the log dir survives that.
-        HUB.tail_file("llama", LLAMA_LOGS, "*.log")
+        if not CHAT_ONLY:
+            HUB.tail_file("llama", LLAMA_LOGS, "*.log")
         log(f"Console hub on http://127.0.0.1:{HUB_PORT}")
     except Exception as e:
         log(f"Console hub failed to start: {e}", "WARN")
@@ -823,43 +883,56 @@ def start_console() -> subprocess.Popen | None:
         return None
 
 
-def _watch_for_shutdown(procs) -> None:
-    """StopNova.cmd POSTs :8799/api/shutdown. We own the hub object, so just poll the flag.
+def _wait_for_process(proc):
+    """Keep the owning launcher responsive to its lifecycle hub."""
+    while proc.poll() is None and not _SHUTDOWN.wait(0.25):
+        pass
 
-    Why bother instead of letting StopNova taskkill everything? Because main()'s `finally` block
-    calls stop_watcher(), which sends CTRL_BREAK so the watcher can finish its git push cleanly.
-    A blunt taskkill orphans it mid-commit and leaves a stale .git/index.lock. So: unblock main()
-    by closing the window/process it's waiting on, and let the normal teardown do its job."""
-    def _w():
-        while not _SHUTDOWN.is_set():
-            if HUB and getattr(HUB, "_shutdown_req", False):
+
+def _watch_for_shutdown() -> None:
+    def watch():
+        while not _SHUTDOWN.wait(0.25):
+            if HUB and HUB.lifecycle_ready():
+                log("Launcher lifecycle request accepted; beginning teardown.")
                 _SHUTDOWN.set()
-                log("Shutdown requested (StopNova) — tearing down cleanly.")
-                for p in procs:
-                    try:
-                        if p and p.poll() is None:
-                            p.terminate()      # unblocks whichever wait() main is sitting in
-                    except Exception:
-                        pass
                 return
-            time.sleep(0.5)
-    threading.Thread(target=_w, name="shutdown-watch", daemon=True).start()
+    threading.Thread(target=watch, name="shutdown-watch", daemon=True).start()
+
+
+def _relaunch_after_shutdown() -> None:
+    # A busy port means teardown was incomplete. Do not launch a second generation.
+    ports = (CHAT_PORT, 8799) if CHAT_ONLY else (CHAT_PORT, 8080, 8081, 8799)
+    busy = [port for port in ports if port_open(port)]
+    if busy:
+        log(f"Restart failed: services still listening on {busy}. No replacement launched.", "ERROR")
+        return
+    command = [sys.executable] if getattr(sys, "frozen", False) else [sys.executable, str(Path(__file__).resolve())]
+    if CHAT_ONLY:
+        command.append("--chat-only")
+    try:
+        child = subprocess.Popen(command, cwd=str(WS), creationflags=_NO_WINDOW)
+        log(f"Replacement launcher started: PID {child.pid}.")
+    except Exception as error:
+        log(f"Restart failed: {error}", "ERROR")
 
 
 # ── Main ───────────────────────────────────────────────────────────────────--
 def main() -> None:
+    _check_controller_mode()
     console_proc = start_console()
     banner("PROJECT NOVA  --  one-click launcher")
     log(f"Workspace: {WS}")
 
-    llama_proc = start_llama()
-    if not wait_for_llama():
-        halt("Aborting: model not ready. See the llama-server tab for why.")
-        return
-
-    # Witness engine loads AFTER her 27B is resident (VRAM order matters on CUDA0) and
-    # in parallel with the chat server boot. Fail-open: absence never blocks her.
-    witness_proc = start_witness()
+    llama_proc = witness_proc = None
+    if CHAT_ONLY:
+        log("Chat-only mode: Nova model, witness, autonomy, watcher and guardian stay off.")
+    else:
+        llama_proc = start_llama()
+        if not wait_for_llama():
+            halt("Aborting: model not ready. See the llama-server tab for why.")
+            return
+        # The witness loads after the main model is resident (VRAM order matters).
+        witness_proc = start_witness()
 
     nova_proc = start_nova()
     if not wait_for_nova():
@@ -869,8 +942,8 @@ def main() -> None:
         wait_for_witness()
 
     app_proc = open_app_window()
-    watcher_proc = start_watcher()
-    guardian_proc = start_guardian()
+    watcher_proc = None if CHAT_ONLY else start_watcher()
+    guardian_proc = None if CHAT_ONLY else start_guardian()
 
     # Publish our process tree so the console's stray-window janitor can tell "a console Nova
     # spawned" from "a terminal Cole opened". It only ever hides windows whose ancestry reaches
@@ -880,25 +953,26 @@ def main() -> None:
                     if p is not None] + [os.getpid()]
 
     # StopNova.cmd can now ask for a CLEAN teardown instead of blunt-force killing the watcher.
-    _watch_for_shutdown([app_proc, nova_proc])
+    _watch_for_shutdown()
 
-    banner("Nova is running.  Close the Nova app window (or run StopNova.cmd) to shut down.")
+    banner(("Nova Chat is running; Nova is disabled." if CHAT_ONLY else "Nova is running.")
+           + " Use Quit Nova from the app/tray to shut down.")
 
     # Own the lifecycle: block on the app window; clean up when it closes.
     try:
         if app_proc is not None:
             _t0 = time.time()
-            app_proc.wait()                 # blocks until the app window closes
+            _wait_for_process(app_proc)
             if _SHUTDOWN.is_set():
                 log("Nova app window closed by StopNova.")
-            elif time.time() - _t0 < 5:
+            elif _app_backend == "browser" and time.time() - _t0 < 5:
                 # The browser process exited almost immediately — it handed the
                 # window off to another instance, so the window is actually still
                 # open. Do NOT shut down; keep Nova alive and wait on the server.
                 log("App window handed off to an existing browser — keeping Nova alive. "
                     "Run StopNova.cmd (or use the Console tray) to stop Nova.", "WARN")
                 if nova_proc is not None:
-                    nova_proc.wait()
+                    _wait_for_process(nova_proc)
                 else:
                     # Break on StopNova too — there is no launcher window to Ctrl+C any more.
                     while port_open(CHAT_PORT) and not _SHUTDOWN.is_set():
@@ -906,10 +980,9 @@ def main() -> None:
             else:
                 log("Nova app window closed.")
         elif nova_proc is not None:
-            nova_proc.wait()
+            _wait_for_process(nova_proc)
         else:
-            while True:
-                time.sleep(5)
+            while not _SHUTDOWN.wait(1):
                 if not port_open(CHAT_PORT):
                     log("Nova chat port closed — exiting.")
                     break
@@ -921,14 +994,22 @@ def main() -> None:
         # just asked to stop.
         stop_guardian(guardian_proc)
         stop_watcher(watcher_proc)
+        # A model restarted from Services has a different PID than llama_proc.
+        # Ask its runtime controller to stop that replacement before closing the host.
+        if not CHAT_ONLY and port_open(8080) and (llama_proc is None or llama_proc.poll() is not None):
+            try:
+                request = urllib.request.Request("http://127.0.0.1:8765/api/llama/stop", data=b"{}", method="POST")
+                with urllib.request.urlopen(request, timeout=15) as response:
+                    result = json.load(response)
+                if not result.get("ok"):
+                    log(f"Replacement model stop failed: {result}", "WARN")
+            except Exception as error:
+                log(f"Replacement model stop failed: {error}", "WARN")
         _shutdown_nova(nova_proc)
+        _shutdown_nova(app_proc)
         stop_llama(llama_proc)
         stop_witness(witness_proc)
-        try:
-            if _app_profile_dir:
-                shutil.rmtree(_app_profile_dir, ignore_errors=True)
-        except Exception:
-            pass
+        # The persistent UI profile survives shutdown.
         log("Shutdown complete.")
         # Console viewer last, so the shutdown lines above are actually visible in it.
         try:
@@ -937,8 +1018,12 @@ def main() -> None:
                 HUB.shutdown()
             if console_proc and console_proc.poll() is None:
                 console_proc.terminate()
+                console_proc.wait(timeout=8)
         except Exception:
             pass
+
+    if HUB and HUB._restart_req:
+        _relaunch_after_shutdown()
 
 
 if __name__ == "__main__":

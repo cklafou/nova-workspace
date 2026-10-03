@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 # @nova: Call-ORDER generator — traces execution paths from entry points and renders them as a
 #        visual document (Calls_Order.md). Sibling to calls.py: that one maps who IMPORTS whom
 #        (static structure); this one maps who CALLS whom, in what ORDER (runtime behaviour).
@@ -36,6 +36,7 @@ Usage (from workspace root):
 """
 
 import ast
+import os
 import sys
 from collections import defaultdict
 from datetime import datetime
@@ -46,7 +47,7 @@ GENERAL_TOOLS = _THIS.parent
 WORKSPACE = GENERAL_TOOLS.parent
 # The TOOL lives in general_tools/. The DOCUMENT it produces is something a person (or Claude)
 # reads to orient themselves, so it belongs in Orient/ with the other reference material.
-OUT = WORKSPACE / "Orient" / "Calls_Order.md"
+OUT = WORKSPACE / "Orient" / "Architecture" / "Calls_Order.md"
 DRY = "--dry" in sys.argv
 
 # The paths worth tracing. Each is (title, module_hint, function) — the real doors into Nova.
@@ -68,7 +69,8 @@ ENTRY_POINTS = [
 ]
 
 SCAN_DIRS = [WORKSPACE / "nova_body", WORKSPACE / "general_tools"]
-SKIP_PARTS = {"__pycache__", ".git", "node_modules", "build"}
+SKIP_PARTS = {"__pycache__", ".git", "node_modules", "build", "models", "llama",
+              "SELF", "Nova_Created", "memory", "logs", "Tasking", "KoELS", "nova_memory_db"}
 
 
 def _is_body(rel: str) -> bool:
@@ -80,10 +82,12 @@ def _py_files():
     for root in SCAN_DIRS:
         if not root.exists():
             continue
-        for p in root.rglob("*.py"):
-            if any(part in SKIP_PARTS for part in p.parts):
-                continue
-            yield p
+        for current, dirs, files in os.walk(root, followlinks=False):
+            dirs[:] = [name for name in dirs if name not in SKIP_PARTS
+                       and not (Path(current) / name).is_symlink()]
+            for name in files:
+                if name.endswith('.py'):
+                    yield Path(current) / name
 
 
 def _called_names(node: ast.AST) -> list:

@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:11:34
+# Last updated: 2026-10-03 10:59:53
 # @nova: Generates Nova's Body Manifest — the single derived map of every body part
 #        and tool (SELF/core/03_body_manifest.md + SELF/reference/manifest.json).
 """
@@ -16,6 +16,12 @@ Derives a single source of truth for Nova's architecture and writes it into SELF
 Outputs:  SELF/core/03_body_manifest.md   SELF/reference/manifest.json
 Usage:    python general_tools/build_manifest.py [--dry]
 """
+
+# Body-owned paths also work when this tool is launched directly.
+import sys as _nova_path_sys
+from pathlib import Path as _NovaPath
+_nova_path_sys.path.insert(0, str(_NovaPath(__file__).resolve().parents[1] / 'nova_body'))
+from nova_paths import body_path
 
 import ast, json, re, sys, time
 from datetime import datetime
@@ -37,7 +43,7 @@ def _atomic_write(path, text):
     _os.replace(tmp, path)
 
 NOVA_BODY = WORKSPACE_ROOT / "nova_body"
-SELF_DIR = WORKSPACE_ROOT / "SELF"
+SELF_DIR = body_path('SELF', workspace=WORKSPACE_ROOT)
 CORE_DIR = SELF_DIR / "core"
 REF_DIR = SELF_DIR / "reference"
 DRY_RUN = "--dry" in sys.argv
@@ -189,7 +195,8 @@ def discover() -> list[dict]:
     for root in (NOVA_BODY, GENERAL_TOOLS):
         if root.exists():
             for d in sorted(root.iterdir()):
-                if d.is_dir() and not d.name.startswith(".") and not _excluded(d):
+                if (d.is_dir() and not d.name.startswith(".") and not _excluded(d)
+                        and (root != NOVA_BODY or d.name.startswith("nova_"))):
                     pkg(d, "body_part" if root.name == "nova_body" else "tool")
     for f in sorted(GENERAL_TOOLS.glob("*.py")):
         if not _excluded(f):

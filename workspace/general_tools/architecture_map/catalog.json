@@ -1,0 +1,1494 @@
+{
+  "groups": {
+    "boundary_boot": {
+      "label": "Launch boundary",
+      "plain": "Starts the local processes",
+      "summary": "Starts llama.cpp and installs one shared NovaRuntime before attaching the chat application. Launch utilities are shown only at their connection to the body.",
+      "lane": 0,
+      "order": 0,
+      "notes": [
+        "The launcher also attaches console/synchronization/guardian tools. Their internals remain PLUCK-exempt; the console hub fallback is :8799. See the launch source for these attachment points."
+      ]
+    },
+    "boundary_chat": {
+      "label": "Chat attachment",
+      "plain": "The conversation window",
+      "summary": "Receives messages, assembles file and memory context, passes generation callbacks, and streams replies. This external attachment still performs context assembly for the normal chat path.",
+      "lane": 0,
+      "order": 1,
+      "notes": [
+        "Headless and chat now share body-owned WorkspaceContext. Relocated read-file inference passed on 2026-10-01; other faculties need separate verification.",
+        "UI panels, individual tools, synchronization and other detachable tooling are outside this map."
+      ]
+    },
+    "nova_runtime": {
+      "label": "Runtime",
+      "plain": "Keeps Nova running",
+      "summary": "Owns the wake loop, event bus, transcript view, model dispatch, model guard, memory indexer, model-server control and adapter equip mechanism.",
+      "lane": 1,
+      "order": 0
+    },
+    "nova_cortex": {
+      "label": "Cortex",
+      "plain": "Decides, checks and plans",
+      "summary": "Builds reflection and decision prompts, applies actions to the task board, tracks drives, checks evidence, identifies speakers and chooses specialist loadouts.",
+      "lane": 1,
+      "order": 1
+    },
+    "nova_voice": {
+      "label": "Voice and action router",
+      "plain": "Turns reasoning into replies",
+      "summary": "Calls the language model, handles reasoning and response channels, recognizes action requests, dispatches them, and runs evidence checks before the reply is committed.",
+      "lane": 2,
+      "order": 0
+    },
+    "nova_senses": {
+      "label": "Senses",
+      "plain": "Notices what is happening",
+      "summary": "Reads time, presence, environment, interaction state, hardware/UI state, images and web information. Host-screen vision and the separate Linux desktop are distinct paths.",
+      "lane": 1,
+      "order": 2
+    },
+    "nova_lancedb": {
+      "label": "Searchable memory",
+      "plain": "Finds relevant past material",
+      "summary": "Queues chat and image entries, embeds them, stores them in local LanceDB tables, and returns bounded text excerpts for automatic or deliberate recall.",
+      "lane": 2,
+      "order": 1
+    },
+    "nova_logs": {
+      "label": "Logging and retention",
+      "plain": "Keeps records of activity",
+      "summary": "Provides logging helpers and retention policy. Some faculties also write dedicated receipts directly; this package is not the sole writer of all records.",
+      "lane": 2,
+      "order": 2
+    },
+    "nova_imagination": {
+      "label": "Imagination",
+      "plain": "Creates and inspects artwork",
+      "summary": "Builds image workflows, selects checkpoints and LoRAs, submits work to ComfyUI and collects output. Service availability is separate from code wiring.",
+      "lane": 2,
+      "order": 3
+    },
+    "nova_forge": {
+      "label": "Forge",
+      "plain": "Builds new capabilities",
+      "summary": "Discovers, classifies, loads and tests created capabilities. The discovery and dispatch boundary is mapped; individual created tools are excluded.",
+      "lane": 1,
+      "order": 3
+    },
+    "nova_play": {
+      "label": "Play",
+      "plain": "Explores out of curiosity",
+      "summary": "Selects unexpected material, including a random encyclopedia topic, and saves chosen curios to a shelf.",
+      "lane": 2,
+      "order": 4
+    },
+    "nova_computer": {
+      "label": "Computer faculty",
+      "plain": "Acts in a separate desktop",
+      "summary": "Defines a backend-neutral computer, selects local Linux or WSL, and offers shell and GUI actions through Hands. Standalone setup/diagnostic entry points also live here.",
+      "lane": 1,
+      "order": 4,
+      "notes": [
+        "Incoming imports are shown explicitly. No normal chat/action-router connection to Hands was established in the initial source review.",
+        "Host vision uses a separate capture path. A shared name such as eyes does not establish VM display wiring."
+      ]
+    },
+    "nova_memory": {
+      "label": "Journal and state helpers",
+      "plain": "Older memory helpers",
+      "summary": "Provides append-only journaling, goal proposals, log reading and precondition helpers. The main router currently writes journal files directly; this package is distinct from LanceDB.",
+      "lane": 1,
+      "order": 5
+    },
+    "nova_config": {
+      "label": "Config helper",
+      "plain": "Loads default settings",
+      "summary": "Defines a configuration loader and fallback defaults. An existing package or configuration file does not establish that the running paths consume it.",
+      "lane": 1,
+      "order": 6
+    },
+    "nova_witness": {
+      "label": "Witness evaluation",
+      "plain": "Tests the evidence checker",
+      "summary": "Contains golden-case extraction and replay utilities, not the live witness faculty. Live witness decisions are implemented in nova_cortex/witness.py.",
+      "lane": 2,
+      "order": 5
+    }
+  },
+  "modules": {
+    "nova_start.py": {
+      "label": "Stack launcher",
+      "summary": "Chooses local executables, starts model services and NovaLauncher, then opens the controller. This is the normal stack entry point.",
+      "review_hash": "99cc191924144e017a6cb8420269451858a41404e9fb8c8a632dbe663c54fe14"
+    },
+    "general_tools/NovaLauncher.py": {
+      "label": "Runtime host bootstrap",
+      "summary": "Sets NOVA_WORKSPACE, installs a shared body runtime before importing the server, and hosts the chat attachment on port 8765.",
+      "review_hash": "4891a0bc550d37abc82c921ef3d98e7d2283bc906db3248238da3d86b03801bf"
+    },
+    "general_tools/nova_chat/runtime_host.py": {
+      "label": "Alternate runtime-first boot",
+      "summary": "Creates and registers a NovaRuntime before attaching the FastAPI chat app. It retains the chat application's rich autonomy callbacks.",
+      "review_hash": "7dbf09984ae7d02aff6a6f9fc9d1d7e9ddd111d3da24fc7c7a2b486fecab88c4"
+    },
+    "general_tools/nova_chat/server.py": {
+      "label": "Chat and callback boundary",
+      "summary": "Accepts HTTP/WebSocket messages, mediates access, builds context, supplies autonomy callbacks, calls model dispatch, indexes messages and publishes UI output. Individual tool endpoints are not expanded in the architecture diagram.",
+      "review_hash": "8169903d96024526aadb274ddabc2a092267be8d3898a344eb820dd1722c2f7e"
+    },
+    "general_tools/nova_chat/workspace_context.py": {
+      "label": "Context assembly",
+      "summary": "Compatibility import forwarding the detachable face to body-owned context assembly.",
+      "review_hash": "f9b5c29b6a3f1254835e6ce0c6e7ec1360c128855b588c76c7e96559ac079651"
+    },
+    "general_tools/nova_chat/transcript.py": {
+      "label": "Chat transcript",
+      "summary": "Appends session messages to JSONL and formats conversation plus workspace context into model messages.",
+      "review_hash": "251f14f3db380ee0ed7f3180b43309c3ea9c313f1815bb4c03f5504439033754"
+    },
+    "general_tools/nova_chat/session_manager.py": {
+      "label": "Session boundary",
+      "summary": "Creates and switches chat sessions, manages session metadata and compresses inactive transcript files.",
+      "review_hash": "192f97769904054ff94617ea3ec59cb1ffd62dfcf03675af9c139f3ea6d0d8f8"
+    },
+    "general_tools/nova_chat/nova_bridge.py": {
+      "label": "Directive bridge",
+      "summary": "Parses structured directives from responses and translates supported directives into body/task operations. Shows the attachment seam, not each detachable tool.",
+      "review_hash": "0da37580e12f26bd79bf8dae35dc9863e2201cfc37d328c20d0740636a97c346"
+    },
+    "nova_body/nova_runtime/runtime.py": {
+      "label": "NovaRuntime",
+      "summary": "Coordinates boot, perception, the memory worker and the reflect-decide-act wake cycle. Host callbacks supply conversation and generation; headless boot uses the shared body-owned grounding builder.",
+      "review_hash": "b137956c3c56b2a3869a19804b2a5149202c1b66fd2f9e8f5725293e53cec5ba"
+    },
+    "nova_body/nova_runtime/__main__.py": {
+      "label": "Headless entry",
+      "summary": "Adds body/workspace import roots and runs NovaRuntime without a chat application.",
+      "review_hash": "634091eecd2f2ea65137f013318e0e9aed9a99d9dd6816fe33193fe0a361b368"
+    },
+    "nova_body/nova_runtime/__init__.py": {
+      "label": "Runtime package",
+      "summary": "Package entry for Nova's runtime and lifecycle machinery.",
+      "review_hash": "2ab0e64114eba9b10ff7085e42a4c39fa3fea551b2e8ff3aab9b6551b387196f"
+    },
+    "nova_body/nova_runtime/event_bus.py": {
+      "label": "Event bus",
+      "summary": "Publishes lifecycle events into bounded asyncio subscriber queues. With no attached subscriber, the body does not need a UI to accept its events.",
+      "review_hash": "4e017b33c95014789d9d602cce99334bb1634bde67dc961ddf269ceb36c1f2c8"
+    },
+    "nova_body/nova_runtime/model_client.py": {
+      "label": "Model dispatch",
+      "summary": "Registers a response client and forwards generation arguments and output callbacks. The registered Nova client performs the actual model request.",
+      "review_hash": "ab88faa81c22a7a9eeaf74fb29743bdac492891607649c3cfcd02d4aaa7be66b"
+    },
+    "nova_body/nova_runtime/model_guard.py": {
+      "label": "Generation guard",
+      "summary": "Tracks repeated model failures and rate/backoff limits to prevent uncontrolled retries.",
+      "review_hash": "9b2fedcf7d57de8ea9f3b8625182fdbf879b28dc1eb743ce4884b39e4c144388"
+    },
+    "nova_body/nova_runtime/llama_control.py": {
+      "label": "Model process control",
+      "summary": "Checks the local model service and provides start/stop/restart operations through injected or default operating-system hooks.",
+      "review_hash": "07fd2356df64c8ca1f732c64e0bde6f86b9f7ae7f336b09ed11e372104f65128"
+    },
+    "nova_body/nova_runtime/koels_equip.py": {
+      "label": "Adapter equip mechanism",
+      "summary": "Persists desired specialist adapters, adjusts loaded adapter scales over HTTP, and coordinates restart-based loadout changes through LlamaControl.",
+      "review_hash": "736ae2db9bd5565190b3a329dd1ce2a342a3f0cd29e7501b43e1b754d304ea95"
+    },
+    "nova_body/nova_runtime/transcript_store.py": {
+      "label": "Runtime transcript view",
+      "summary": "Reads persistent conversation records and tracks which human messages have already been attended to.",
+      "review_hash": "7a4dd06ed947ff68442ebc2c77f10b946650e85ba8218c6678e1493e8e8aa8d2"
+    },
+    "nova_body/nova_cortex/__init__.py": {
+      "label": "Cortex package",
+      "summary": "Package entry for executive, tasking and context faculties.",
+      "review_hash": "269667fd0188c4fe6151a2206df17318e0947a637ad1a5486a13471451a493b6"
+    },
+    "nova_body/nova_cortex/executive.py": {
+      "label": "Executive decisions",
+      "summary": "Maintains autonomy state; builds reflection, decision and execution prompts; applies structured decisions and records progress or rest.",
+      "review_hash": "aee5c004fdd294d9919a4874a310d01abb1ac9678bc3de00583880468b56b5de"
+    },
+    "nova_body/nova_cortex/tasking.py": {
+      "label": "Task board",
+      "summary": "Reads and updates the id-keyed task board, including status, priorities and progress. Completed and abandoned tasks remain records.",
+      "review_hash": "a03764049d9540ea3845988e69eda1e6787bc8c89eed6a49b18dc9a3fe4ac832"
+    },
+    "nova_body/nova_cortex/integrity.py": {
+      "label": "Integrity and receipts",
+      "summary": "Parses action calls, records actual results, retrieves receipts and reconciles demonstrated work with the task board.",
+      "review_hash": "a0b5617a1312c18e54e7ba1051be3e571fbf132c7a9d8834fe11afa7f4c0578b"
+    },
+    "nova_body/nova_cortex/witness.py": {
+      "label": "Live witness",
+      "summary": "Builds present-tense evidence, flags checkable claims, prepares audit prompts, interprets verdicts and records witness pipeline events.",
+      "review_hash": "7e58a6ce828744d1e37b6cf56b47c8508dcc59fa16ac7a41fbfb3a44c709174f"
+    },
+    "nova_body/nova_cortex/discourse.py": {
+      "label": "Conversation grounding",
+      "summary": "Determines what is happening in the conversation, who is present, and whether a response belongs in the room; includes recent actions as grounding.",
+      "review_hash": "e5b60381f5dd515ff2d4913c86b860b17e91dcb5805585340bbb31ff0683a8b9"
+    },
+    "nova_body/nova_cortex/drives.py": {
+      "label": "Drives and novelty",
+      "summary": "Maintains boredom, wants and novelty feedback that influence what Nova chooses to do during autonomous wakes.",
+      "review_hash": "aa9ce8bcba068ad1959e6d8c7fb7163af469e61b317e819193fdd4a797f13221"
+    },
+    "nova_body/nova_cortex/principals.py": {
+      "label": "Speaker identity and trust",
+      "summary": "Classifies known principals, checks capabilities and validates untrusted input. The server enforces this body-owned policy at its boundary.",
+      "review_hash": "d2eeebdd938ebbe2be82ec7b23f6ba3baaa7b16f3e8b642aa7bf8f96356ad343"
+    },
+    "nova_body/nova_cortex/loadout.py": {
+      "label": "Specialist selection",
+      "summary": "Reads KoELS manifests and makes pure loadout decisions from task text. Physical adapter changes belong to the runtime equip mechanism.",
+      "review_hash": "42059217f580342e05f59656832f959fd547b2ea5b3e5cbe00b4a695ac92cfef"
+    },
+    "nova_body/nova_cortex/tunables.py": {
+      "label": "Live settings registry",
+      "summary": "Reads and validates tunable inference and behavior settings from the administrative JSON store, with cached reads and defaults.",
+      "review_hash": "24895f19449a7b674d7cd0217f63d078bdaaca8b8c526210124f7d67e8e4727d"
+    },
+    "nova_body/nova_cortex/context_builder.py": {
+      "label": "Context sizing helpers",
+      "summary": "Provides lightweight token estimates and context budget helpers; references indicate which paths actually use them.",
+      "review_hash": "da36d0e122b75085d39ae0adef25f6072e39d5bf56971b30187890897b4b5817"
+    },
+    "nova_body/nova_cortex/checkin.py": {
+      "label": "Check-in helper",
+      "summary": "Checks for human interruptions or instructions between actions. Its presence alone is not proof that the normal response loop invokes it.",
+      "review_hash": "6994947d0e3149615cf16c290ee0cd4115edac394bdf5e678d4a637603cd0b50"
+    },
+    "nova_body/nova_cortex/nova_status.py": {
+      "label": "Status writer",
+      "summary": "Writes Nova's status record for external observers.",
+      "review_hash": "af8045b56bd9f839809c63feb33d6d4e5415ebcbfcf00e5f6b0c11f6a96f544a"
+    },
+    "nova_body/nova_cortex/rules.py": {
+      "label": "Operational rules",
+      "summary": "Contains operating-rule text and access helpers. Import evidence, not its legacy bootstrap description, determines its mapped consumers.",
+      "review_hash": "77a331f893def401e96a5c3db6154f9a3b62881e5e375089130fc6ba4560a642"
+    },
+    "nova_body/nova_voice/__init__.py": {
+      "label": "Voice package",
+      "summary": "Package boundary for the body-owned model response loop and action dispatcher.",
+      "review_hash": "b45ac04824f94fa0658102ff9e9b2f1fa15c459a98978578e6932e2125311232"
+    },
+    "nova_body/nova_voice/nova.py": {
+      "label": "Response and evidence loop",
+      "summary": "Assembles model messages, streams local inference, recognizes action calls in content/thinking, feeds results back, and runs witness checks before returning a reply.",
+      "review_hash": "86ee59218afca1034a7bd85e778531b0041b3379ab892c8827a6258b627bd622"
+    },
+    "nova_body/nova_voice/tool_router.py": {
+      "label": "Body action dispatcher",
+      "summary": "Dispatches model-requested operations through body faculties and external tools, leaves receipts, and directly implements journal and recall entry points. Individual tool internals are excluded from this map.",
+      "review_hash": "0bd0696022ce33650b800024331227511b8e82d6e81e2008c877ef5d66b9f747"
+    },
+    "nova_body/nova_lancedb/__init__.py": {
+      "label": "Memory package",
+      "summary": "Package entry for embedding, storage and background ingestion.",
+      "review_hash": "6d17c516eb6c19ac20710daba274893517e49fd39dfa6970de5260bbeb3331f3"
+    },
+    "nova_body/nova_lancedb/indexer.py": {
+      "label": "Memory ingestion queue",
+      "summary": "Runs a worker thread that takes queued chat/image entries and passes them to the persistent store.",
+      "review_hash": "f5fcc7c24a2674cd45bcbe86c147cbeb97dc81025c69eeff7b0b18e0ab4a93be"
+    },
+    "nova_body/nova_lancedb/hippocampus.py": {
+      "label": "Hippocampus store",
+      "summary": "Opens local LanceDB tables, stores text and image embeddings, applies similarity-based retention and formats bounded recall excerpts.",
+      "review_hash": "f44beacaa1f34463c7f162c4bba845d6c43df59b792d535914704ff8f2eac5fc"
+    },
+    "nova_body/nova_lancedb/embedder.py": {
+      "label": "Embedding models",
+      "summary": "Lazily loads MiniLM for text and CLIP for images. Converts inputs into vectors; failed embedding operations currently return zero vectors.",
+      "review_hash": "1eb7347da1ed6cf02d1b097d8d6054407d50ea4e51af567a7baa0db86dac24fc"
+    },
+    "nova_body/nova_senses/__init__.py": {
+      "label": "Senses package",
+      "summary": "Package entry for perception modules. Individual imports provide current wiring evidence; the package's old scaffold comments are not authoritative.",
+      "review_hash": "31e659666f6cc6b860b4270bdf1377922e8b81e691f39562355f8fe2db5b220f"
+    },
+    "nova_body/nova_senses/clock.py": {
+      "label": "Clock",
+      "summary": "Reads real time and supports timed wake decisions.",
+      "review_hash": "143df645aeeb766f24eadf9d23972b04e041f679c1e253e14ef4fcd7fa05a885"
+    },
+    "nova_body/nova_senses/environment.py": {
+      "label": "Environment changes",
+      "summary": "Observes watched paths and changes in Nova's surroundings for wake/perception context.",
+      "review_hash": "4e9336fb21fead6c22a9f8ff2a76630e70babdc1ad51aa02331853f6918e2836"
+    },
+    "nova_body/nova_senses/touch.py": {
+      "label": "Interaction state",
+      "summary": "Tracks who or what is interacting with Nova and which surfaces are active.",
+      "review_hash": "b71910ebcf15037690b339caab8fa00bd3ec363e6c64cfde4a8307958e7a8c43"
+    },
+    "nova_body/nova_senses/presence.py": {
+      "label": "Presence",
+      "summary": "Observes whether another participant is present instead of inferring presence from old conversation text.",
+      "review_hash": "fa2f8238a54e1636e363b853155a46556cce227caf7f3391c045bfba6fbdb480"
+    },
+    "nova_body/nova_senses/proprioception.py": {
+      "label": "System and UI inspection",
+      "summary": "Inspects host application windows, UI elements and system state for higher-level sensing.",
+      "review_hash": "a879c714c1d93e2208b5d635c8ce53f95bf9a93b5a90ea02f98ad6a75af39bbd"
+    },
+    "nova_body/nova_senses/eyes.py": {
+      "label": "Host vision coordinator",
+      "summary": "Combines host UI inspection, screenshot capture and local image understanding. This does not establish a connection to the separate Linux Hands display.",
+      "review_hash": "c756b85aa739436979c7d17f6f6341aabd0e433e4c1ade34d79032095f6ebce3"
+    },
+    "nova_body/nova_senses/vision.py": {
+      "label": "Host screenshot vision",
+      "summary": "Captures the host screen with pyautogui and sends image requests to the local vision-capable model endpoint.",
+      "review_hash": "5f9c7d57d51fda17d2be683e8d249bfa921718d8650bf341b492e6a2cbcd8ba6"
+    },
+    "nova_body/nova_senses/sight.py": {
+      "label": "Image understanding",
+      "summary": "Resolves and shrinks image inputs, calls the local multimodal endpoint and records what was actually viewed.",
+      "review_hash": "372e677d0983dc04e1658f28b02f36d0af910f67997d21b9f369d64b88c05093"
+    },
+    "nova_body/nova_senses/web.py": {
+      "label": "Web perception",
+      "summary": "Searches or reads external web material and returns it through the body's perception interface.",
+      "review_hash": "3afb3a50f54414d905da89d751f7fb776c004268f7b7277eefeb974487a1782d"
+    },
+    "nova_body/nova_senses/quiet_part_watcher.py": {
+      "label": "Unused-faculty watcher",
+      "summary": "Inspects activity evidence for capabilities that have stopped being used and surfaces those gaps.",
+      "review_hash": "53de7977620635245a9a837579a4ee9becd0bda2e8e7ca3895964aecf2491fea"
+    },
+    "nova_body/nova_senses/stretch.py": {
+      "label": "Stretch reminder sense",
+      "summary": "Observes prolonged inactivity and prepares a stretch-related reach-out. The runtime also contains a separately loaded created watcher, shown as a dynamic boundary.",
+      "review_hash": "f5c467a89a8473204f087e77c18d09ef72b2beca6c3928c0eb3d74f50c1a252f"
+    },
+    "nova_body/nova_computer/__init__.py": {
+      "label": "Computer package",
+      "summary": "Exposes Nova's backend-neutral computer faculty.",
+      "review_hash": "6107f5a29b6a077de58154ba7be8c1ade3fbd1b001a1d31a4799e3e8a3b2f194"
+    },
+    "nova_body/nova_computer/computer.py": {
+      "label": "Computer interface",
+      "summary": "Selects a backend and exposes shell, lifecycle and snapshot operations while keeping backend details behind one interface.",
+      "review_hash": "e5fc8069be2b2cd4172e29d4d7bd500782cff3f046d0faa4fdc11f29f5bab4cb"
+    },
+    "nova_body/nova_computer/backends.py": {
+      "label": "Linux and WSL backends",
+      "summary": "Implements probing and operations for local POSIX, WSL and unavailable-backend cases.",
+      "review_hash": "aa5cca2ee25cf2426ad6e25f6f3441646c06a3ed240d40606f6bd21fe5c6869e"
+    },
+    "nova_body/nova_computer/hands.py": {
+      "label": "Hands on display :1",
+      "summary": "Uses the computer's shell channel to run scrot and xdotool on a separate X display for screenshots and GUI actions.",
+      "review_hash": "b7eef6569677fd450bcbd352a5e3b04027ab70f7d37a34d2fe8ad42844921b09"
+    },
+    "nova_body/nova_computer/first_boot.py": {
+      "label": "Computer setup entry",
+      "summary": "Standalone provisioning entry point for the computer environment; not a normal chat callback.",
+      "review_hash": "685e207751bd3ac463ba29060081fdbd31bc14f86a6da5a1bfa5e92caa1a873b"
+    },
+    "nova_body/nova_computer/pluck_check.py": {
+      "label": "Computer isolation checks",
+      "summary": "Standalone diagnostic for imports and backend behavior. Diagnostics are not evidence that the main response loop is wired to Hands.",
+      "review_hash": "b3ca328ea1ce37f24a61852e02b8f3a77d06fbf5b2600fe3a673ec89a229bd14"
+    },
+    "nova_body/nova_computer/reach.py": {
+      "label": "Host access setup",
+      "summary": "Configures the WSL computer's access to host files and Windows interoperability.",
+      "review_hash": "84d2952ccfebc14ffb53da632a27afca5af1382a36792456efdfc7178ed5327d"
+    },
+    "nova_body/nova_computer/toolkit.py": {
+      "label": "Guest toolkit setup",
+      "summary": "Standalone setup utility that installs software into the guest computer.",
+      "review_hash": "8ae2f2188d380935207e7741a4243ed6f117b93fe230442d94c99d94124c7d90"
+    },
+    "nova_body/nova_computer/tune_up.py": {
+      "label": "Guest repair utility",
+      "summary": "Standalone repair and diagnostic pass for guest account, display and authentication issues.",
+      "review_hash": "dcae7d53f2b83401ce89b93367fbaad77e375c9be2398457ed9f0c3f8b3694b0"
+    },
+    "nova_body/nova_imagination/__init__.py": {
+      "label": "Imagination package",
+      "summary": "Exposes image-creation faculty operations.",
+      "review_hash": "38308ffa0df23547ead00fb74ebf7786056dd910fe96363d6b2fd99f31962974"
+    },
+    "nova_body/nova_imagination/imagination.py": {
+      "label": "ComfyUI client",
+      "summary": "Builds and submits image workflows, polls results, manages model resources and retrieves created images.",
+      "review_hash": "75462cb1ffed753916f92356b2c27e0f70e02ba526829f5f16d22b7d0644f77f"
+    },
+    "nova_body/nova_imagination/palette.py": {
+      "label": "Image-model palette",
+      "summary": "Describes available visual mediums/checkpoints and helps select an appropriate image-generation setup.",
+      "review_hash": "a26adde8dfbb6b73dc5c86e8dccdea37a0217eda7d7fac20f68f2ed7d55ee2f7"
+    },
+    "nova_body/nova_forge/__init__.py": {
+      "label": "Capability workshop",
+      "summary": "Requires designs, resolves body/tool locations, dynamically loads created modules and tracks their tests before dispatch.",
+      "review_hash": "6a925b84fca6036574501d2e74a3c0c1c792f64a0e54dce08e62304f43a10bb6"
+    },
+    "nova_body/nova_play/__init__.py": {
+      "label": "Play package",
+      "summary": "Package entry for curiosity-driven activity.",
+      "review_hash": "4776459ad04b85b83a77a8ed6a23a6f5f304ee2d475484509083932d85da89aa"
+    },
+    "nova_body/nova_play/curio.py": {
+      "label": "Curiosity engine",
+      "summary": "Selects surprising material from local/external sources and saves chosen curios to a shelf.",
+      "review_hash": "ac5c5e3cc3eba411e74d2f4b806ed8623aeba090c466a772b811bc176a939d9f"
+    },
+    "nova_body/nova_memory/__init__.py": {
+      "label": "Legacy memory package",
+      "summary": "Package entry for journal, goal, state and log-reading helpers, separate from vector memory.",
+      "review_hash": "2c9d8052d03936de323b55a56862dd8fdf1ba49f63ad29de15694f479151ef56"
+    },
+    "nova_body/nova_memory/journal.py": {
+      "label": "Journal append helper",
+      "summary": "Provides safe append operations for journal records; compare incoming references with the router's separate journal implementation.",
+      "review_hash": "b11032e3cd6ace4186880b2ea6b3fd60302cd47ea884439bcecf7c8752311de8"
+    },
+    "nova_body/nova_memory/goals.py": {
+      "label": "Goal proposal helper",
+      "summary": "Prepares goal/status changes using a proposal workflow rather than directly replacing the status document.",
+      "review_hash": "f3d9e026584a5d395bef209da7c03cbc90f63f14f30c6e8d95e73a80768dc10d"
+    },
+    "nova_body/nova_memory/log_reader.py": {
+      "label": "Session log reader",
+      "summary": "Reads previous session logs and supports reviewing actual events and failures.",
+      "review_hash": "6ef015f5afc74978de854b361e0f8d5b59382fd9586aa4b8609ba79e5da2a32c"
+    },
+    "nova_body/nova_memory/state.py": {
+      "label": "Action preconditions",
+      "summary": "Checks state preconditions for actions; the map shows whether callers use this helper.",
+      "review_hash": "5ce7543896f50989b444efeb5dd610aed4acb834962ac0b00e3611b18cbef1c1"
+    },
+    "nova_body/nova_config/__init__.py": {
+      "label": "Config defaults loader",
+      "summary": "Loads nova_config.json and supplies fallback defaults. No ordinary import consumer was found in the initial mapped inventory.",
+      "review_hash": "b1446d6df80b9ddf6000b2e6d3a9c9418979c938132769dba2bb1609afb50921"
+    },
+    "nova_body/nova_logs/__init__.py": {
+      "label": "Logging package",
+      "summary": "Package entry for log writers and retention helpers.",
+      "review_hash": "670830e2af04a9331c3aa9bf6aab34e9988cf3fa90f94f39fd17ccc72eaeca1b"
+    },
+    "nova_body/nova_logs/logger.py": {
+      "label": "Log writer",
+      "summary": "Writes categorized application records and generates its logging index.",
+      "review_hash": "e4805386b59aaad4f0c53cf060e1f97204ac42072a02f1a6ac5984d3de9ab2d5"
+    },
+    "nova_body/nova_logs/retention.py": {
+      "label": "Log retention",
+      "summary": "Applies retention/rotation rules to supported log files so they do not grow without bounds.",
+      "review_hash": "18443d7ce90995ae3832d3c91a6121647816f99645688c22c21ba57e7d4ee417"
+    },
+    "nova_body/nova_witness/extract_golden.py": {
+      "label": "Golden-case extraction",
+      "summary": "Reads recorded witness events and extracts cases for later evaluation.",
+      "review_hash": "1b7bc7c404619a99b1c2cab8f7b289c5289663cc64b4b0f4391f1c82010c1fd4"
+    },
+    "nova_body/nova_witness/replay.py": {
+      "label": "Witness replay harness",
+      "summary": "Replays recorded audit cases against a specified inference endpoint. This is an evaluation entry point, not the live witness loop.",
+      "review_hash": "1d4e8254560dcc990e58d073678555a77aab557ab8ca845b9c6db16321590cae"
+    },
+    "nova_body/nova_cortex/workspace_context.py": {
+      "label": "Context assembly",
+      "summary": "Body-owned grounding: loads self-model, memory and mentioned files for both chat and headless execution.",
+      "review_hash": "f9b5c29b6a3f1254835e6ce0c6e7ec1360c128855b588c76c7e96559ac079651"
+    }
+  },
+  "resources": [
+    {
+      "id": "service:model",
+      "label": "Local language / vision model",
+      "plain": "llama.cpp · default :8080",
+      "summary": "Separate inference process. The voice and vision faculties submit model requests; runtime controls health and adapter operations. A listening port does not prove successful inference.",
+      "kind": "service",
+      "port": 8080,
+      "url_ref": {
+        "file": "nova_body/nova_voice/nova.py",
+        "name": "LLAMA_CPP_URL"
+      },
+      "lane": 3,
+      "order": 0
+    },
+    {
+      "id": "service:comfy",
+      "label": "Image generation service",
+      "plain": "ComfyUI · default :8188",
+      "summary": "Optional separate image-generation process, called by the imagination faculty. The environment may override its URL.",
+      "kind": "service",
+      "port": 8188,
+      "url_ref": {
+        "file": "nova_body/nova_imagination/imagination.py",
+        "name": "COMFY_URL"
+      },
+      "lane": 3,
+      "order": 1
+    },
+    {
+      "id": "service:desktop",
+      "label": "Linux desktop / noVNC",
+      "plain": "X display :1 · viewer :6080",
+      "summary": "Separate GUI environment operated through the computer backend. noVNC is the viewing boundary; Hands uses shell commands, not the noVNC HTTP API.",
+      "kind": "service",
+      "port": 6080,
+      "lane": 3,
+      "order": 2,
+      "port_ref": {
+        "file": "nova_body/nova_computer/provision/setup_guest.sh",
+        "pattern": "^ExecStart=/usr/bin/websockify\\s+--web=\\S+\\s+(\\d+)\\s+localhost:\\d+"
+      }
+    },
+    {
+      "id": "store:archive",
+      "label": "LanceDB files",
+      "plain": "Local vector tables",
+      "summary": "Text and visual vector tables in nova_memory_db. Database contents are not embedded in this map.",
+      "path": "nova_body/nova_memory_db",
+      "lane": 4,
+      "order": 0
+    },
+    {
+      "id": "store:self",
+      "label": "Self and written memory",
+      "plain": "SELF + memory documents",
+      "summary": "Identity, current context, personal notes and journal files. Only location/metadata is represented here, never their private contents.",
+      "path": "nova_body/SELF",
+      "lane": 4,
+      "order": 1
+    },
+    {
+      "id": "store:state",
+      "label": "Persistent body state",
+      "plain": "memory/*.json",
+      "summary": "Autonomy, drives, touch and other state files managed by body faculties.",
+      "path": "nova_body/memory",
+      "lane": 4,
+      "order": 2
+    },
+    {
+      "id": "store:tasks",
+      "label": "Task board file",
+      "plain": "Tasking/tasks.json",
+      "summary": "Durable task ids, statuses, priorities and progress records.",
+      "path": "nova_body/Tasking/tasks.json",
+      "lane": 4,
+      "order": 3
+    },
+    {
+      "id": "store:logs",
+      "label": "Transcripts and receipts",
+      "plain": "logs/",
+      "summary": "Chat sessions, performed-action receipts and witness traces. Metadata only; no log contents are served by the map.",
+      "path": "nova_body/logs",
+      "lane": 4,
+      "order": 4
+    },
+    {
+      "id": "store:koels",
+      "label": "KoELS / model assets",
+      "plain": "Manifests and model files",
+      "summary": "Specialist manifests drive loadout decisions. Model binaries and adapters remain outside the map's read surface.",
+      "path": "nova_body/KoELS",
+      "lane": 4,
+      "order": 5
+    },
+    {
+      "id": "store:config",
+      "label": "Configuration definitions",
+      "plain": "nova_config + tunables",
+      "summary": "Settings schema/defaults and live tuning storage. Values may be overridden by environment or runtime configuration.",
+      "path": "nova_body/nova_config.json",
+      "lane": 4,
+      "order": 6
+    },
+    {
+      "id": "boundary:tools",
+      "label": "Detachable / created tools",
+      "plain": "PLUCK-exempt boundary",
+      "summary": "Shows only calls crossing to general_tools or dynamically loaded created modules, including optional external second opinions. Individual tools and their internals are intentionally excluded.",
+      "kind": "boundary",
+      "path": "nova_body/Nova_Created",
+      "lane": 3,
+      "order": 3
+    },
+    {
+      "id": "service:web",
+      "label": "External web",
+      "plain": "HTTP content sources",
+      "summary": "External information sources requested by the web/curiosity faculties. Browsing is not exercised by this map.",
+      "kind": "external",
+      "lane": 3,
+      "order": 4
+    },
+    {
+      "id": "service:chat",
+      "label": "Chat HTTP / WebSocket",
+      "plain": "Source default :8765",
+      "summary": "FastAPI chat listener, hosted with the shared NovaRuntime in the normal launcher process. HTTP routes and /ws connect the conversation interface to the body. This port is a transport boundary, not a separate body faculty.",
+      "kind": "service",
+      "port_ref": {
+        "file": "general_tools/NovaLauncher.py",
+        "name": "CHAT_PORT"
+      },
+      "lane": 0,
+      "order": 2
+    },
+    {
+      "id": "service:witness",
+      "label": "Optional witness model",
+      "plain": "Launcher default :8081",
+      "summary": "The launcher can start a separate small-model inference process. In this checkout the live voice/witness loop still uses the main model request helper; a dedicated 8081 process being available does not establish that the live auditor uses it. The replay harness accepts a chosen endpoint.",
+      "kind": "service",
+      "port_ref": {
+        "file": "nova_start.py",
+        "name": "WITNESS_PORT"
+      },
+      "lane": 3,
+      "order": 3
+    }
+  ],
+  "connections": [
+    {
+      "id": "boot-body",
+      "from": "general_tools/NovaLauncher.py",
+      "to": "nova_body/nova_runtime/runtime.py",
+      "kind": "lifecycle",
+      "label": "Create and install shared runtime before importing chat",
+      "refs": [
+        {
+          "file": "general_tools/NovaLauncher.py",
+          "symbol": "run_nova_chat",
+          "contains": "set_shared_runtime",
+          "hash": "bf67728c96df05d031bdfd91c0c80648dd0b09ca8064e1f3b844a14331049bd0"
+        }
+      ]
+    },
+    {
+      "id": "chat-autonomy",
+      "from": "general_tools/nova_chat/server.py",
+      "to": "nova_body/nova_runtime/runtime.py",
+      "kind": "callback",
+      "label": "Pass generation, perception and busy-state callbacks to autonomy",
+      "refs": [
+        {
+          "file": "general_tools/nova_chat/server.py",
+          "symbol": "autonomy_daemon",
+          "contains": "generate=_generate",
+          "hash": "671160df49cfbd10c546c9745608c7fa86e5cd06922e066ac7c07010d152b305"
+        }
+      ]
+    },
+    {
+      "id": "runtime-callback",
+      "from": "nova_body/nova_runtime/runtime.py",
+      "to": "general_tools/nova_chat/server.py",
+      "kind": "callback",
+      "label": "Invoke host-supplied generation callback on chat-hosted wakes",
+      "refs": [
+        {
+          "file": "nova_body/nova_runtime/runtime.py",
+          "symbol": "NovaRuntime._run_one_wake",
+          "contains": "await generate(refl_prompt, False)",
+          "hash": "2110bdfa380a6da1ce57b1b2ccaefb259f8b8b9655d98d2f15c77f80f0f62835"
+        },
+        {
+          "file": "general_tools/nova_chat/server.py",
+          "symbol": "autonomy_daemon",
+          "contains": "generate=_generate",
+          "hash": "671160df49cfbd10c546c9745608c7fa86e5cd06922e066ac7c07010d152b305"
+        }
+      ]
+    },
+    {
+      "id": "client-registration",
+      "from": "general_tools/nova_chat/server.py",
+      "to": "nova_body/nova_runtime/model_client.py",
+      "kind": "callback",
+      "label": "Register Nova response client and supply token/result callbacks",
+      "refs": [
+        {
+          "file": "general_tools/nova_chat/server.py",
+          "contains": "model_client.register",
+          "hash": "8169903d96024526aadb274ddabc2a092267be8d3898a344eb820dd1722c2f7e"
+        }
+      ]
+    },
+    {
+      "id": "model-dispatch",
+      "from": "nova_body/nova_runtime/model_client.py",
+      "to": "nova_body/nova_voice/nova.py",
+      "kind": "callback",
+      "label": "Call the registered Nova stream_response implementation",
+      "refs": [
+        {
+          "file": "nova_body/nova_runtime/model_client.py",
+          "symbol": "ModelClient.generate",
+          "contains": "await client_mod.stream_response",
+          "hash": "96a25aa961731967fcb1b5af55fe9583929e56e2078b5f7791163e0714cb242b"
+        },
+        {
+          "file": "general_tools/nova_chat/server.py",
+          "contains": "model_client.register",
+          "hash": "8169903d96024526aadb274ddabc2a092267be8d3898a344eb820dd1722c2f7e"
+        }
+      ]
+    },
+    {
+      "id": "events-ui",
+      "from": "nova_body/nova_runtime/event_bus.py",
+      "to": "general_tools/nova_chat/server.py",
+      "kind": "event",
+      "label": "Subscriber queues carry lifecycle events to the attached face",
+      "refs": [
+        {
+          "file": "nova_body/nova_runtime/event_bus.py",
+          "symbol": "EventBus.publish",
+          "contains": "put_nowait",
+          "hash": "059fe0bcc72efd5e358bc067e505a72d3174a70b73e864c83962edeb39e8d446"
+        },
+        {
+          "file": "general_tools/nova_chat/server.py",
+          "symbol": "startup_event",
+          "contains": "attach_face",
+          "hash": "7dafa0bb560861a41930bd8cad2c13b2345f914d11cfc8f8eda2f4e8f05b02a3"
+        }
+      ]
+    },
+    {
+      "id": "headless-context",
+      "from": "nova_body/nova_runtime/runtime.py",
+      "to": "nova_body/nova_voice/nova.py",
+      "kind": "callback",
+      "label": "Headless generation passes empty workspace_context",
+      "refs": [
+        {
+          "file": "nova_body/nova_runtime/runtime.py",
+          "symbol": "NovaRuntime._generate_headless",
+          "contains": "workspace_context=\"\"",
+          "hash": "3fbfeae9f19e43a16f3599012f80087c4f4dd824aeec4893a6bccdbfbef4fc00"
+        }
+      ]
+    },
+    {
+      "id": "files-context",
+      "from": "general_tools/nova_chat/workspace_context.py",
+      "to": "store:self",
+      "kind": "read",
+      "label": "Read SELF/core and selected memory files into chat context",
+      "refs": [
+        {
+          "file": "general_tools/nova_chat/workspace_context.py",
+          "symbol": "WorkspaceContext.build_nova_context_block",
+          "contains": "_load_self_core()",
+          "hash": "8af08ed8f01a7f0e4fc2fa9e2b3d20d21f9f6587c768e22fe9562bec112129ef"
+        },
+        {
+          "file": "general_tools/nova_chat/workspace_context.py",
+          "symbol": "_get_always_load",
+          "contains": "memory_dir.iterdir()",
+          "hash": "83ffb43152335927ebc11fed97f3f6aac0ecc5649805c147cbf2da067b00d45d"
+        }
+      ]
+    },
+    {
+      "id": "auto-recall",
+      "from": "general_tools/nova_chat/server.py",
+      "to": "nova_body/nova_lancedb/hippocampus.py",
+      "kind": "call",
+      "label": "Automatic recall with latest message through WorkspaceContext",
+      "refs": [
+        {
+          "file": "general_tools/nova_chat/server.py",
+          "symbol": "run_ai_response",
+          "contains": "workspace.build_nova_memory_context, latest_message",
+          "hash": "cf8804007824d84d75cc4699ddba4a7721e191621e05e8a326c4153517e1b637"
+        },
+        {
+          "file": "general_tools/nova_chat/workspace_context.py",
+          "symbol": "WorkspaceContext.build_nova_memory_context",
+          "contains": "store.build_context_block(query)",
+          "hash": "54395b1f66797ddf68ef924f460722c447947b9dacb0ebe6fa1da44d0d8bd424"
+        }
+      ]
+    },
+    {
+      "id": "recall-call",
+      "from": "nova_body/nova_voice/tool_router.py",
+      "to": "nova_body/nova_lancedb/hippocampus.py",
+      "kind": "call",
+      "label": "Deliberate memory_search returns a bounded archive block",
+      "refs": [
+        {
+          "file": "nova_body/nova_voice/tool_router.py",
+          "symbol": "memory_search",
+          "contains": "store.build_context_block",
+          "hash": "bc87c44f11fd1eb234fa6b12edd9db88e1d0659ae69929dc07a50cfe93d3617d"
+        }
+      ]
+    },
+    {
+      "id": "chat-index",
+      "from": "general_tools/nova_chat/server.py",
+      "to": "nova_body/nova_lancedb/indexer.py",
+      "kind": "queue",
+      "label": "Queue chat replies for background embedding",
+      "refs": [
+        {
+          "file": "general_tools/nova_chat/server.py",
+          "symbol": "run_ai_response",
+          "contains": "memory_indexer.add_message",
+          "hash": "cf8804007824d84d75cc4699ddba4a7721e191621e05e8a326c4153517e1b637"
+        }
+      ]
+    },
+    {
+      "id": "index-store",
+      "from": "nova_body/nova_lancedb/indexer.py",
+      "to": "nova_body/nova_lancedb/hippocampus.py",
+      "kind": "queue",
+      "label": "Memory worker stores queued text and image entries",
+      "refs": [
+        {
+          "file": "nova_body/nova_lancedb/indexer.py",
+          "symbol": "MemoryIndexer._worker",
+          "contains": "store.add_text",
+          "hash": "de63505caf599c8d5fe055352550f51e17745626e57c886e62876eae8d8abae7"
+        }
+      ]
+    },
+    {
+      "id": "lance-disk",
+      "from": "nova_body/nova_lancedb/hippocampus.py",
+      "to": "store:archive",
+      "kind": "read/write",
+      "label": "Embedded LanceDB connection; no database HTTP server",
+      "refs": [
+        {
+          "file": "nova_body/nova_lancedb/hippocampus.py",
+          "symbol": "NovaMemoryStore._init",
+          "contains": "lancedb.connect(DB_PATH)",
+          "hash": "43846a34f191a25e99c1e9956a005a75e5225003bfec018930d3e92019d1e7a9"
+        }
+      ]
+    },
+    {
+      "id": "model-http",
+      "from": "nova_body/nova_voice/nova.py",
+      "to": "service:model",
+      "kind": "HTTP",
+      "label": "Stream chat completions from local llama.cpp",
+      "refs": [
+        {
+          "file": "nova_body/nova_voice/nova.py",
+          "symbol": "_fetch_llama_streaming",
+          "contains": "LLAMA_CPP_URL",
+          "hash": "475a02b4419823a4a6eaa1d9d6b6327f08b8d4bcb838ebe47607468da236c9d6"
+        }
+      ]
+    },
+    {
+      "id": "model-health",
+      "from": "nova_body/nova_runtime/llama_control.py",
+      "to": "service:model",
+      "kind": "HTTP / process",
+      "label": "Health check and local model lifecycle control",
+      "refs": [
+        {
+          "file": "nova_body/nova_runtime/llama_control.py",
+          "symbol": "LlamaControl.is_running",
+          "contains": "/health",
+          "hash": "8377b7fe690fe6f7ebd1e6b5c7bfd8498a9543efcad6abbc6ad1cfa1330b3e77"
+        }
+      ]
+    },
+    {
+      "id": "koels-http",
+      "from": "nova_body/nova_runtime/koels_equip.py",
+      "to": "service:model",
+      "kind": "HTTP",
+      "label": "GET/POST adapter state and scales",
+      "refs": [
+        {
+          "file": "nova_body/nova_runtime/koels_equip.py",
+          "symbol": "KoELSEquip.equip_instant",
+          "contains": "/lora-adapters",
+          "hash": "a0dbdc5243316d37ec25893ea0c843f2c991aaf0a1f6f72b669f394249b3088f"
+        }
+      ]
+    },
+    {
+      "id": "koels-manifests",
+      "from": "nova_body/nova_cortex/loadout.py",
+      "to": "store:koels",
+      "kind": "read",
+      "label": "Read specialist manifests to choose a loadout",
+      "refs": [
+        {
+          "file": "nova_body/nova_cortex/loadout.py",
+          "symbol": "load_manifests",
+          "contains": "manifest.json",
+          "hash": "1d77e013f69da57172aa57cb7bc59c627022bb1474f08d7e32fe704d4628031d"
+        }
+      ]
+    },
+    {
+      "id": "koels-state",
+      "from": "nova_body/nova_runtime/koels_equip.py",
+      "to": "store:state",
+      "kind": "write",
+      "label": "Persist requested adapter loadout",
+      "refs": [
+        {
+          "file": "nova_body/nova_runtime/koels_equip.py",
+          "symbol": "KoELSEquip.save_desired_loadout",
+          "contains": "write_text",
+          "hash": "1951e53b664098bcc1c8f915a6595f711bc4e0025de8de74cc055bd3cb95f6ff"
+        }
+      ]
+    },
+    {
+      "id": "task-file",
+      "from": "nova_body/nova_cortex/tasking.py",
+      "to": "store:tasks",
+      "kind": "read/write",
+      "label": "Task board owns durable task records",
+      "refs": [
+        {
+          "file": "nova_body/nova_cortex/tasking.py",
+          "contains": "\"Tasking\" / \"tasks.json\"",
+          "hash": "a03764049d9540ea3845988e69eda1e6787bc8c89eed6a49b18dc9a3fe4ac832"
+        }
+      ]
+    },
+    {
+      "id": "autonomy-file",
+      "from": "nova_body/nova_cortex/executive.py",
+      "to": "store:state",
+      "kind": "read/write",
+      "label": "Persist autonomy, focus and reflection state",
+      "refs": [
+        {
+          "file": "nova_body/nova_cortex/executive.py",
+          "contains": "\"autonomy_state.json\"",
+          "hash": "aee5c004fdd294d9919a4874a310d01abb1ac9678bc3de00583880468b56b5de"
+        }
+      ]
+    },
+    {
+      "id": "drives-file",
+      "from": "nova_body/nova_cortex/drives.py",
+      "to": "store:state",
+      "kind": "read/write",
+      "label": "Persist wants, boredom and novelty feedback",
+      "refs": [
+        {
+          "file": "nova_body/nova_cortex/drives.py",
+          "contains": "\"drives.json\"",
+          "hash": "aa9ce8bcba068ad1959e6d8c7fb7163af469e61b317e819193fdd4a797f13221"
+        }
+      ]
+    },
+    {
+      "id": "journal-file",
+      "from": "nova_body/nova_voice/tool_router.py",
+      "to": "store:self",
+      "kind": "write",
+      "label": "Router directly appends consolidated journal entries",
+      "refs": [
+        {
+          "file": "nova_body/nova_voice/tool_router.py",
+          "symbol": "journal",
+          "contains": "\"JOURNAL.md\"",
+          "hash": "6348b6322dfa6e6916c17a2b67fcd3a2a7732921d6e0a329591cd95d14bd83b1"
+        }
+      ]
+    },
+    {
+      "id": "receipt-file",
+      "from": "nova_body/nova_cortex/integrity.py",
+      "to": "store:logs",
+      "kind": "write",
+      "label": "Record actual action results as receipts",
+      "refs": [
+        {
+          "file": "nova_body/nova_cortex/integrity.py",
+          "symbol": "log_receipt",
+          "contains": "open(",
+          "hash": "1abad802bab7047171ebc7969aed2e1a7de5dd76cf2b7104cb39917bf2ae93e4"
+        }
+      ]
+    },
+    {
+      "id": "witness-file",
+      "from": "nova_body/nova_cortex/witness.py",
+      "to": "store:logs",
+      "kind": "write",
+      "label": "Record evidence-check pipeline events",
+      "refs": [
+        {
+          "file": "nova_body/nova_cortex/witness.py",
+          "symbol": "pipeline_event",
+          "contains": "open(",
+          "hash": "9ca978787200064b1209f70a5ed309a1df1e6115a7fdb0b55ef90487a10a151d"
+        }
+      ]
+    },
+    {
+      "id": "transcript-file",
+      "from": "general_tools/nova_chat/transcript.py",
+      "to": "store:logs",
+      "kind": "read/write",
+      "label": "Persist chat sessions separately from vector memory",
+      "refs": [
+        {
+          "file": "general_tools/nova_chat/transcript.py",
+          "contains": "\"chat_sessions\"",
+          "hash": "251f14f3db380ee0ed7f3180b43309c3ea9c313f1815bb4c03f5504439033754"
+        }
+      ]
+    },
+    {
+      "id": "tunables-file",
+      "from": "nova_body/nova_cortex/tunables.py",
+      "to": "store:config",
+      "kind": "read/write",
+      "label": "Read live settings from _admin/tunables.json",
+      "refs": [
+        {
+          "file": "nova_body/nova_cortex/tunables.py",
+          "contains": "\"tunables.json\"",
+          "hash": "24895f19449a7b674d7cd0217f63d078bdaaca8b8c526210124f7d67e8e4727d"
+        }
+      ]
+    },
+    {
+      "id": "host-vision",
+      "from": "nova_body/nova_senses/vision.py",
+      "to": "service:model",
+      "kind": "HTTP",
+      "label": "Send host screenshot to local vision model",
+      "refs": [
+        {
+          "file": "nova_body/nova_senses/vision.py",
+          "symbol": "NovaVision._call_local_vision",
+          "contains": "VISION_URL",
+          "hash": "5f815c426d73a2bf1f588f4f8c296059ac1f0755d24f3a12398ccc028d517827"
+        }
+      ]
+    },
+    {
+      "id": "image-vision",
+      "from": "nova_body/nova_senses/sight.py",
+      "to": "service:model",
+      "kind": "HTTP",
+      "label": "Send resolved image to local multimodal completion endpoint",
+      "refs": [
+        {
+          "file": "nova_body/nova_senses/sight.py",
+          "symbol": "look",
+          "contains": "/v1/chat/completions",
+          "hash": "1700c8c16de976118f4438cc366ed7a4b453840d2055d74340f360cccdc2faf9"
+        }
+      ]
+    },
+    {
+      "id": "imagination-http",
+      "from": "nova_body/nova_imagination/imagination.py",
+      "to": "service:comfy",
+      "kind": "HTTP",
+      "label": "Submit generated image workflow to ComfyUI",
+      "refs": [
+        {
+          "file": "nova_body/nova_imagination/imagination.py",
+          "symbol": "_submit",
+          "contains": "/prompt",
+          "hash": "d6f5511665d79e628f057178aafd8740aacb1363329caee9f13afb30c0394167"
+        }
+      ]
+    },
+    {
+      "id": "hands-shell",
+      "from": "nova_body/nova_computer/hands.py",
+      "to": "nova_body/nova_computer/computer.py",
+      "kind": "shell channel",
+      "label": "Hands sends display-specific commands through its injected computer",
+      "refs": [
+        {
+          "file": "nova_body/nova_computer/hands.py",
+          "symbol": "Hands._run",
+          "contains": ".bash(",
+          "hash": "f4ead8658977b3fc6839d7e5faf4251577c4875954af2131f4a645a07c8f8799"
+        }
+      ]
+    },
+    {
+      "id": "hands-display",
+      "from": "nova_body/nova_computer/hands.py",
+      "to": "service:desktop",
+      "kind": "shell / X11",
+      "label": "scrot and xdotool operate the separate X display",
+      "refs": [
+        {
+          "file": "nova_body/nova_computer/hands.py",
+          "symbol": "Hands._run",
+          "contains": "DISPLAY=",
+          "hash": "f4ead8658977b3fc6839d7e5faf4251577c4875954af2131f4a645a07c8f8799"
+        }
+      ]
+    },
+    {
+      "id": "forge-dynamic",
+      "from": "nova_body/nova_forge/__init__.py",
+      "to": "boundary:tools",
+      "kind": "dynamic load",
+      "label": "Resolve created capabilities by path and load them",
+      "refs": [
+        {
+          "file": "nova_body/nova_forge/__init__.py",
+          "symbol": "_load",
+          "contains": "spec_from_file_location",
+          "hash": "879bd87f1181597f15c80af0c2a188f3885141efc9af48b470fe4810f0e82d05"
+        }
+      ]
+    },
+    {
+      "id": "heavy-boundary",
+      "from": "nova_body/nova_voice/nova.py",
+      "to": "boundary:tools",
+      "kind": "dynamic load",
+      "label": "Optional heavy witness reaches general_tools/cloud_call.py",
+      "refs": [
+        {
+          "file": "nova_body/nova_voice/nova.py",
+          "symbol": "stream_response",
+          "contains": "cloud_call.py",
+          "hash": "f8d01ee13d5d2e9d598d7e4989e461fd77906748e95394d83b99b0073862a2cd"
+        }
+      ]
+    },
+    {
+      "id": "stretch-boundary",
+      "from": "nova_body/nova_runtime/runtime.py",
+      "to": "boundary:tools",
+      "kind": "dynamic load",
+      "label": "Load a created stretch watcher by file path",
+      "refs": [
+        {
+          "file": "nova_body/nova_runtime/runtime.py",
+          "symbol": "NovaRuntime.run_autonomy",
+          "contains": "spec_from_file_location",
+          "hash": "c0eb661d87a62ccf9df24445b4dae14b98f99c83976bb159df4a76bbbc076ca0"
+        }
+      ]
+    },
+    {
+      "id": "curiosity-web",
+      "from": "nova_body/nova_play/curio.py",
+      "to": "service:web",
+      "kind": "HTTP",
+      "label": "Retrieve an unexpected encyclopedia topic",
+      "refs": [
+        {
+          "file": "nova_body/nova_play/curio.py",
+          "contains": "https://en.wikipedia.org/api/rest_v1/page/random/summary",
+          "hash": "ac5c5e3cc3eba411e74d2f4b806ed8623aeba090c466a772b811bc176a939d9f"
+        }
+      ]
+    },
+    {
+      "id": "chat-listener",
+      "from": "general_tools/NovaLauncher.py",
+      "to": "service:chat",
+      "kind": "HTTP / WebSocket",
+      "label": "Serve the chat app on CHAT_PORT; the body shares this process",
+      "refs": [
+        {
+          "file": "general_tools/NovaLauncher.py",
+          "symbol": "run_nova_chat",
+          "contains": "uvicorn.Config",
+          "hash": "bf67728c96df05d031bdfd91c0c80648dd0b09ca8064e1f3b844a14331049bd0"
+        },
+        {
+          "file": "general_tools/nova_chat/server.py",
+          "symbol": "websocket_endpoint",
+          "contains": "ws.accept",
+          "hash": "1c634f806b204e782d74c108a462ad4d7843947b8a64f724473be2417a9c52c1"
+        }
+      ]
+    },
+    {
+      "id": "witness-process",
+      "from": "nova_start.py",
+      "to": "service:witness",
+      "kind": "subprocess",
+      "label": "Optionally launch a dedicated witness model; live caller wiring is separate",
+      "refs": [
+        {
+          "file": "nova_start.py",
+          "symbol": "start_witness",
+          "contains": "subprocess.Popen",
+          "hash": "3f243429edef230b91974377d1c5910b5a767af8e0df0d949c8865e3a127d7e6"
+        },
+        {
+          "file": "nova_start.py",
+          "symbol": "build_witness_cmd",
+          "contains": "WITNESS_PORT",
+          "hash": "ec557ae49176568564e266916b5911f8da810a1ea9c817a187ea8985264a0d78"
+        }
+      ]
+    }
+  ],
+  "simple": {
+    "nodes": [
+      {
+        "id": "human",
+        "label": "You",
+        "plain": "Send a message",
+        "lane": 0,
+        "order": 0,
+        "target": "boundary_chat",
+        "description": "You start a conversation through a window. The window passes your message into Nova and shows the reply as it arrives."
+      },
+      {
+        "id": "chat",
+        "label": "Conversation window",
+        "plain": "Brings your words to Nova",
+        "lane": 1,
+        "order": 0,
+        "target": "boundary_chat",
+        "description": "The conversation window gathers the current discussion, written background and relevant memories. It hands that context to the body and displays what comes back."
+      },
+      {
+        "id": "senses",
+        "label": "Senses",
+        "plain": "Notice time and surroundings",
+        "lane": 0,
+        "order": 1,
+        "target": "nova_senses",
+        "description": "These parts gather observations, such as time, activity and visual information. An observation gives Nova something to consider; it does not itself make a decision."
+      },
+      {
+        "id": "cortex",
+        "label": "Self-direction",
+        "plain": "Reflect, decide, work or rest",
+        "lane": 1,
+        "order": 1,
+        "target": "nova_cortex",
+        "description": "Nova can wake without a new message. The body reflects on the situation, chooses whether something needs doing, and may ask the model to work on it."
+      },
+      {
+        "id": "memory",
+        "label": "Memory",
+        "plain": "Written context and recall",
+        "lane": 1,
+        "order": 2,
+        "target": "nova_lancedb",
+        "description": "Nova has readable memory files and a searchable archive. The archive converts text or images into numbers for finding related past material. The code selects short excerpts and adds them to a model request; the model does not directly browse the database. This part opens the searchable archive implementation."
+      },
+      {
+        "id": "model",
+        "label": "Thinking and reply loop",
+        "plain": "Model + body checks",
+        "lane": 2,
+        "order": 0,
+        "target": "nova_voice",
+        "description": "The language model generates a proposed response. The surrounding body supplies context, interprets requested actions, and checks claims against available evidence before delivering a reply."
+      },
+      {
+        "id": "actions",
+        "label": "Replies and actions",
+        "plain": "Results come back as evidence",
+        "lane": 3,
+        "order": 0,
+        "target": "nova_voice",
+        "description": "A response may request an action. The body sends it to the appropriate capability, collects the result as evidence, and lets the response loop continue. Some conversation material is also queued for memory."
+      },
+      {
+        "id": "computer",
+        "label": "Separate computer",
+        "plain": "Its connection needs inspection",
+        "lane": 3,
+        "order": 1,
+        "target": "nova_computer",
+        "description": "Nova has a separate computer environment and code that can operate its screen, mouse and keyboard. This map has not established a normal conversation-to-computer connection in the inspected code."
+      }
+    ],
+    "edges": [
+      {
+        "from": "human",
+        "to": "chat",
+        "label": "message"
+      },
+      {
+        "from": "chat",
+        "to": "model",
+        "label": "conversation + context",
+        "connection": "model-dispatch"
+      },
+      {
+        "from": "senses",
+        "to": "cortex",
+        "label": "what is happening"
+      },
+      {
+        "from": "cortex",
+        "to": "model",
+        "label": "what to consider / do",
+        "connection": "runtime-callback"
+      },
+      {
+        "from": "memory",
+        "to": "model",
+        "label": "relevant past context",
+        "connection": "auto-recall"
+      },
+      {
+        "from": "model",
+        "to": "actions",
+        "label": "reply or requested action"
+      },
+      {
+        "from": "actions",
+        "to": "memory",
+        "label": "new recorded experience",
+        "connection": "chat-index"
+      }
+    ]
+  },
+  "journeys": [
+    {
+      "id": "chat",
+      "label": "A message becomes a reply",
+      "description": "Follow the chat attachment through context assembly, generation, evidence checks and the returned reply.",
+      "nodes": [
+        "general_tools/nova_chat/server.py",
+        "general_tools/nova_chat/workspace_context.py",
+        "nova_body/nova_lancedb/hippocampus.py",
+        "nova_body/nova_runtime/model_client.py",
+        "nova_body/nova_voice/nova.py",
+        "nova_body/nova_cortex/witness.py",
+        "nova_body/nova_voice/tool_router.py",
+        "service:model"
+      ],
+      "connections": [
+        "files-context",
+        "auto-recall",
+        "model-dispatch",
+        "model-http",
+        "recall-call"
+      ]
+    },
+    {
+      "id": "wake",
+      "label": "Nova wakes on her own",
+      "description": "The runtime asks the executive for reflection, then a decision, and optionally an execution step. The chat host supplies the generation callback in the attached configuration.",
+      "nodes": [
+        "nova_body/nova_runtime/runtime.py",
+        "nova_body/nova_cortex/executive.py",
+        "nova_body/nova_cortex/tasking.py",
+        "nova_body/nova_cortex/drives.py",
+        "nova_body/nova_senses/clock.py",
+        "general_tools/nova_chat/server.py",
+        "store:tasks",
+        "store:state"
+      ],
+      "connections": [
+        "chat-autonomy",
+        "runtime-callback",
+        "task-file",
+        "autonomy-file",
+        "drives-file"
+      ]
+    },
+    {
+      "id": "memory",
+      "label": "Save and recall a memory",
+      "description": "New chat/image material enters a background queue. Automatic or requested recall embeds the query and returns a short archive block. Written memory follows a separate file path.",
+      "nodes": [
+        "general_tools/nova_chat/server.py",
+        "nova_body/nova_lancedb/indexer.py",
+        "nova_body/nova_lancedb/hippocampus.py",
+        "nova_body/nova_lancedb/embedder.py",
+        "nova_body/nova_voice/tool_router.py",
+        "store:archive",
+        "store:self",
+        "general_tools/nova_chat/workspace_context.py"
+      ],
+      "connections": [
+        "chat-index",
+        "index-store",
+        "lance-disk",
+        "auto-recall",
+        "recall-call",
+        "journal-file"
+      ]
+    },
+    {
+      "id": "evidence",
+      "label": "Check a claim against evidence",
+      "description": "The response loop consults the live witness and actual action receipts. Optional heavy second opinions cross a dynamically loaded external boundary.",
+      "nodes": [
+        "nova_body/nova_voice/nova.py",
+        "nova_body/nova_cortex/witness.py",
+        "nova_body/nova_cortex/integrity.py",
+        "nova_body/nova_voice/tool_router.py",
+        "store:logs",
+        "boundary:tools"
+      ],
+      "connections": [
+        "receipt-file",
+        "witness-file",
+        "heavy-boundary"
+      ]
+    },
+    {
+      "id": "computer",
+      "label": "Understand the two visual paths",
+      "description": "Host screenshots are sent to the local vision model. Hands separately sends shell commands to the Linux X display. The map deliberately does not invent a connection between them.",
+      "nodes": [
+        "nova_body/nova_senses/eyes.py",
+        "nova_body/nova_senses/vision.py",
+        "nova_body/nova_senses/sight.py",
+        "nova_body/nova_computer/hands.py",
+        "nova_body/nova_computer/computer.py",
+        "nova_body/nova_computer/backends.py",
+        "service:model",
+        "service:desktop"
+      ],
+      "connections": [
+        "host-vision",
+        "image-vision",
+        "hands-shell",
+        "hands-display"
+      ]
+    },
+    {
+      "id": "koels",
+      "label": "Choose and equip a specialist",
+      "description": "The cortex reads manifests and decides a loadout. The runtime persists desired state and adjusts adapters or coordinates a model restart.",
+      "nodes": [
+        "nova_body/nova_cortex/loadout.py",
+        "nova_body/nova_runtime/koels_equip.py",
+        "nova_body/nova_runtime/llama_control.py",
+        "store:koels",
+        "store:state",
+        "service:model"
+      ],
+      "connections": [
+        "koels-manifests",
+        "koels-state",
+        "koels-http",
+        "model-health"
+      ]
+    }
+  ]
+}

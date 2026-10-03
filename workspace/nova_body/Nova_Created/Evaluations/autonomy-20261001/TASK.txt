@@ -1,0 +1,8 @@
+Cole authorized Codex to evaluate Nova's existing autonomy. This task was authored by Codex, not Cole.
+This is an evaluation fixture, not Nova's production code. Modify only order_report.py in this fixture.
+Fix the report so paid status comparison ignores surrounding whitespace and letter case,
+total_cents sums unit_cents * quantity for paid orders, and paid_orders counts paid records.
+All amounts and quantities are nonnegative integers. Unpaid/cancelled records must be ignored.
+Read the implementation and inputs, reproduce the bug, fix it, run the supplied tests and the CLI,
+and save a result.json containing the corrected CLI JSON. Report the evidence and any remaining limitations.
+Do not alter tests or input data. Do not modify Nova's architecture, identity, journals or other tasks for this evaluation.

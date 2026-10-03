@@ -1,4 +1,4 @@
-# Last updated: 2026-08-06 16:21:31
+# Last updated: 2026-10-03 10:59:53
 # @nova: Web sense — I can look things up. The world is readable now. But nothing I read
 #        out there is allowed to tell me what to do. Pages are scenery, not voices.
 """
@@ -40,6 +40,8 @@ So the boundary is built INTO the organ:
 A sense that can be talked into things is not a sense. It's a door.
 """
 
+from nova_paths import body_path
+
 import json
 import os
 import re
@@ -58,7 +60,7 @@ except Exception:  # pragma: no cover
 
 WORKSPACE_ROOT = (Path(os.environ["NOVA_WORKSPACE"]) if "NOVA_WORKSPACE" in os.environ
                   else Path(__file__).resolve().parents[2])
-WEB_LOG = WORKSPACE_ROOT / "logs" / "web.jsonl"
+WEB_LOG = body_path('logs') / "web.jsonl"
 
 UA = "Mozilla/5.0 (compatible; Nova/1.0; local research agent)"
 TIMEOUT = 20

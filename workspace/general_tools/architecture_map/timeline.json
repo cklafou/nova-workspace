@@ -1,0 +1,391 @@
+{
+  "origin": "The surviving source history starts on 9 May 2026 with a 'Clean slate — strip binary history, anatomical restructure complete' commit. Nova already has body packages in that snapshot. Your earlier OpenClaw phase is described in the project status and your account, but this Git history cannot establish its original sequence or dates. A file's first retained commit is not necessarily its creation date.",
+  "decision_template": {
+    "date": "YYYY-MM-DD",
+    "title": "What changed, in one sentence",
+    "groups": [
+      "nova_runtime"
+    ],
+    "what": "Before → after",
+    "why": "The problem or decision that required this change",
+    "tradeoff": "What became simpler, harder or less capable",
+    "verification": "What was actually checked, and what remains unverified",
+    "refs": [
+      {
+        "file": "Orient/Architecture/DECISIONS.md",
+        "contains": "A distinctive sentence from the decision record"
+      }
+    ]
+  },
+  "milestones": [
+    {
+      "id": "body-direction",
+      "date": "2026-05-31",
+      "title": "Make perception and action belong to the body",
+      "stage": "Decision / roadmap",
+      "groups": [
+        "nova_runtime",
+        "nova_voice",
+        "nova_senses",
+        "nova_computer",
+        "nova_memory"
+      ],
+      "what": "The roadmap set the Pluck Test as the boundary: communication can detach, but perception, reasoning and execution should remain with Nova. It also proposed retiring older memory and motor scaffolding.",
+      "why": "A chat application owning Nova's execution would take her ability to act with it when removed.",
+      "tradeoff": "Body ownership improves independence, but moving code is insufficient: callbacks, state and context must also have working headless paths.",
+      "verification": "This records the decision. It does not claim every item in the roadmap was implemented; nova_memory still exists in the current map.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/Embodiment_Roadmap_2026-05-31.md",
+          "contains": "## Decisions locked (2026-05-31)",
+          "review_hash": "adf61abfdaec77cae9469679d2bcd49b63fd6bbc216964b836346e9b06073c1e"
+        }
+      ]
+    },
+    {
+      "id": "koels-working-set",
+      "date": "2026-06-01",
+      "title": "Separate specialist selection from adapter loading",
+      "stage": "Design finding",
+      "groups": [
+        "nova_cortex",
+        "nova_runtime"
+      ],
+      "what": "The KoELS finding distinguishes switching among preloaded adapters from adding a new adapter that requires a model restart. It proposes a working set instead of loading every specialist.",
+      "why": "VRAM is limited, and choosing an expert should not assume the inference server can load arbitrary new adapter files without restarting.",
+      "tradeoff": "Fast selection within a loaded set comes with a slower, coordinated path for changing that set.",
+      "verification": "The report explicitly left exact-build flash-attention and VRAM checks open. This is the historical finding, not a current vendor capability claim.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/KoELS_lora_runtime_finding_2026-06-01.md",
+          "contains": "## Constraints that shape the equip design",
+          "review_hash": "0db59845116b1b4a9504fdae14fa830b77144f16eab3108e90bb6b31b555646b"
+        }
+      ]
+    },
+    {
+      "id": "runtime-extraction",
+      "date": "2026-06-04",
+      "title": "Extract the runtime from the conversation interface",
+      "stage": "Implementation report",
+      "groups": [
+        "nova_runtime",
+        "boundary_chat",
+        "boundary_boot"
+      ],
+      "what": "NovaRuntime takes ownership of the wake loop, model dispatch, perception, indexer and service control. The chat interface subscribes to events and supplies output callbacks.",
+      "why": "Nova needed to continue running without one particular chat application, and KoELS needed body-owned model lifecycle control.",
+      "tradeoff": "Callbacks decouple the body from a specific UI, but the host still supplies important context and coordination. The report itself lists unfinished headless parity work.",
+      "verification": "The report distinguishes early live checks from steps that were then only built or tested. A later June 10 report records additional verification.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/Runtime_Extraction_COMPLETE_2026-06-04.md",
+          "contains": "## Seam inversions",
+          "review_hash": "5c3f8047fe629c5347abb2d7b0ace8b2d6a0f50cb584550865dde9670c22fd6b"
+        },
+        {
+          "file": "nova_body/memory/reports/Runtime_Extraction_COMPLETE_2026-06-04.md",
+          "contains": "## Step 7",
+          "review_hash": "5c3f8047fe629c5347abb2d7b0ace8b2d6a0f50cb584550865dde9670c22fd6b"
+        }
+      ]
+    },
+    {
+      "id": "headless-verification",
+      "date": "2026-06-10",
+      "title": "Headless boot gets a recorded live verification",
+      "stage": "Historical verification report",
+      "groups": [
+        "nova_runtime",
+        "boundary_boot",
+        "nova_lancedb"
+      ],
+      "what": "A headless test first failed because required packages were absent from the import path. The entry point was fixed; the report then records model startup, indexing and generations without a chat server attached.",
+      "why": "Moving the wake loop into a new package did not by itself guarantee that a standalone process could import and run it.",
+      "tradeoff": "A successful boot proves one path worked then. It does not prove identical context, persistence or behavior across every host today.",
+      "verification": "Attributed to the June 10 report. The atlas has not rerun that live test.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/Runtime_Verification_2026-06-10.md",
+          "contains": "**2. The pluck",
+          "review_hash": "88a8e00de69c4f1ea495342976077d8efe1b39d42acae7b0e37e768a3170e253"
+        }
+      ]
+    },
+    {
+      "id": "model-upgrade",
+      "date": "2026-06-10",
+      "title": "Change the model and leave room for adapters",
+      "stage": "Upgrade plan / configuration report",
+      "groups": [
+        "nova_voice",
+        "nova_runtime",
+        "boundary_boot"
+      ],
+      "what": "The upgrade document selects the repository's Qwen 3.6 27B Q6_K_XL setup with thinking and MTP configuration.",
+      "why": "The recorded goal was generation speed with memory headroom for speculative decoding and KoELS adapters.",
+      "tradeoff": "Model, quantization, launch flags and adapter compatibility are coupled; changing one requires checking the actual inference process.",
+      "verification": "This records the chosen configuration and motivation. Performance claims in the historical document are not new measurements by the atlas.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/UPGRADE_Qwen3.6_2026-06-10.md",
+          "contains": "**Decisions locked:**",
+          "review_hash": "475aaa2ae047859602b9fbfc3333aaad392048000a869bc389c9b3d6ddd4a85a"
+        }
+      ]
+    },
+    {
+      "id": "timestamp-churn",
+      "date": "2026-06-27",
+      "title": "A large apparent change was timestamp churn",
+      "stage": "Postmortem dated July 2",
+      "groups": [
+        "boundary_boot",
+        "nova_runtime"
+      ],
+      "what": "The postmortem attributes the June 27 burst to automatic header restamps and line-ending changes rather than a new source-development session.",
+      "why": "The sync watcher was repeatedly committing generated metadata. Timestamp interpretation also confused UTC and Korea time.",
+      "tradeoff": "Frequent backups preserve work, but their commit count is not a measure of engineering activity. This timeline filters net header-only changes separately.",
+      "verification": "The historical report says 1,325 automatic commits and no behavioral source change for that incident. The timeline independently compares before/after content.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/FORENSICS_2026-06-27_break_changes.md",
+          "contains": "## Verdict",
+          "review_hash": "8b3e4457979088d9af9d0cafd7557733b0a072be9982d18083f745d030dd7a0d"
+        }
+      ]
+    },
+    {
+      "id": "duplicate-and-idle",
+      "date": "2026-07-19",
+      "title": "Fix duplicate replies and the idle action path",
+      "stage": "Fix report",
+      "groups": [
+        "boundary_chat",
+        "nova_runtime",
+        "nova_cortex"
+      ],
+      "what": "The report traces repeated replies to the FOR COLE promotion path and records time/turn-taking checks plus missing generation-trace events. It separately addresses idle wakes that reflected without doing the next action.",
+      "why": "The same human exchange was being answered again through later autonomous promotions. String similarity missed paraphrases, and missing trace events hid the extra path.",
+      "tradeoff": "Generation coordination needs explicit ownership and receipts; adding more prompt instructions cannot repair a missing execution branch.",
+      "verification": "The report says the fixes needed a restart. Its claim is historical, not proof of the code loaded in a process now.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/TRIPLE_RESPONSE_AND_STUCK_2026-07-19.md",
+          "contains": "Both need a restart",
+          "review_hash": "e9953a62c3a90da47446e383888d75b52c8efa978afa2a03091eda31c9146927"
+        }
+      ]
+    },
+    {
+      "id": "local-vision",
+      "date": "2026-07-19",
+      "title": "Remove resident paid mentors and move sight to the local model",
+      "stage": "Change report",
+      "groups": [
+        "boundary_chat",
+        "nova_senses",
+        "nova_voice"
+      ],
+      "what": "The report removes automatic paid chat participants and the cloud vision path, retaining a retirement message for old mentor directives.",
+      "why": "The recorded request was to stop those API costs and use Nova's own multimodal model for sight.",
+      "tradeoff": "Local inference keeps that work on the machine, while retirement stubs help old references fail clearly. Later optional cloud witness work is a separate decision.",
+      "verification": "A historical removal report; it should not be generalized into a current claim that no optional cloud boundary exists.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/MENTORS_REMOVED_2026-07-19.md",
+          "contains": "## What was costing money",
+          "review_hash": "f3dd7b39a3af6676acbbb079834a732f40f23aad7ae15097acd272041ceb93ce"
+        }
+      ]
+    },
+    {
+      "id": "memory-growth-and-archive",
+      "date": "2026-07-19",
+      "title": "Let memories evolve and separate the archive from the live conversation",
+      "stage": "Dated source rationale + Git diff",
+      "groups": [
+        "nova_lancedb",
+        "boundary_chat"
+      ],
+      "what": "The memory store adds retention for a small group of similar text memories instead of dropping every near-duplicate. Recalled material is explicitly labeled as a past archive, and indexer status describes which process it can actually observe.",
+      "why": "The dated comments explain that one similarity threshold could not distinguish an evolving thought from a different moment on the same topic. They also record that old archived dialogue was being mistaken for the current exchange.",
+      "tradeoff": "Similarity-based retention can still remove useful older records. Archive wording helps distinguish past text, but successful retrieval still has to reach the intended prompt. A status check in a separate process cannot prove the server worker is absent.",
+      "verification": "The July 19 retained before/after diff and current dated source comments were inspected for this atlas. No memory writes, retention experiment or live recall test was performed.",
+      "refs": [
+        {
+          "file": "nova_body/nova_lancedb/hippocampus.py",
+          "contains": "Cluster dedup (fixed 2026-07-19)",
+          "review_hash": "f44beacaa1f34463c7f162c4bba845d6c43df59b792d535914704ff8f2eac5fc"
+        },
+        {
+          "file": "nova_body/nova_lancedb/hippocampus.py",
+          "contains": "# The \"ARCHIVE\" framing is load-bearing",
+          "review_hash": "f44beacaa1f34463c7f162c4bba845d6c43df59b792d535914704ff8f2eac5fc"
+        },
+        {
+          "file": "nova_body/nova_lancedb/hippocampus.py",
+          "contains": "def _indexer_alive()",
+          "review_hash": "f44beacaa1f34463c7f162c4bba845d6c43df59b792d535914704ff8f2eac5fc"
+        }
+      ]
+    },
+    {
+      "id": "conversation-trim",
+      "date": "2026-07-21",
+      "title": "Protect the live conversation from oversized background context",
+      "stage": "Session report",
+      "groups": [
+        "boundary_chat",
+        "nova_voice",
+        "nova_cortex"
+      ],
+      "what": "A passover records that context trimming could drop the entire live conversation when always-loaded material grew too large. The session added a floor for recent turns and investigated witness wiring.",
+      "why": "Nova could answer from old background material while the actual user exchange was missing from the request.",
+      "tradeoff": "Keeping recent turns preserves the current interaction but does not solve the cost of carrying large amounts of background context.",
+      "verification": "Recorded in the July 21 session report. Use current source and a live request trace before diagnosing today's behavior.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/PASSOVER_2026-07-21_fable-session.md",
+          "contains": "Context trim was dropping the ENTIRE live conversation",
+          "review_hash": "64f88ec9454ba10d89dfb5403e32c517543b64cc8687b9af17fdd4fcfdb99579"
+        }
+      ]
+    },
+    {
+      "id": "witness-reads",
+      "date": "2026-07-22",
+      "title": "Give the witness an explicit evidence-reading option",
+      "stage": "Reported July 24",
+      "groups": [
+        "nova_cortex",
+        "nova_voice"
+      ],
+      "what": "The witness's verdict menu was changed to include verification reads; evidence gathered by the witness was carried across rounds within a turn.",
+      "why": "Inviting the model to check evidence mid-prompt was ineffective when its final legal choices were only PASS or CONCERN.",
+      "tradeoff": "Verification can improve grounding, but it adds latency and needs an explicit read-only execution path plus observable results.",
+      "verification": "The report cites a first witness_verified event at 09:59:19 on July 22. This is attributed historical evidence.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/PASSOVER_2026-07-24_fable-session.md",
+          "contains": "Witness verify-tools actually fire now",
+          "review_hash": "db81632c6b2e1a2ae75e28b3467f597df2d06fda5f29ee9ce061e679696da069"
+        }
+      ]
+    },
+    {
+      "id": "context-budget-plan",
+      "date": "2026-07-22",
+      "title": "Propose a smaller, more deliberate context budget",
+      "stage": "Proposal, not blanket implementation",
+      "groups": [
+        "boundary_chat",
+        "nova_lancedb",
+        "nova_voice"
+      ],
+      "what": "The context-diet document proposes recent journal tails, a shaped workspace summary and a compact drives view. It also describes a risk of silently omitting a trailing identity file.",
+      "why": "Large and frequently changing background blocks consumed context capacity and prefill time before the conversation began.",
+      "tradeoff": "Retrieval and summaries reduce the always-present payload, but change what information is immediately available to the model.",
+      "verification": "The document explicitly calls itself a decision discussion. The atlas does not convert its proposed items into completed features.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/CONTEXT_DIET_2026-07-22.md",
+          "contains": "## Decision list",
+          "review_hash": "0ba255c537c127068faeb8d161976528f72c1feb3dd1137c44670e3e146259fe"
+        }
+      ]
+    },
+    {
+      "id": "witness-two-lanes",
+      "date": "2026-08-02",
+      "title": "Evaluate a separate witness engine and a deferred second opinion",
+      "stage": "Partial surviving report",
+      "groups": [
+        "nova_witness",
+        "nova_cortex",
+        "nova_voice",
+        "boundary_boot"
+      ],
+      "what": "The surviving report compares a small local auditor with the main model and records an optional deferred cloud escalation. Its small-model replay results did not justify replacing the main auditor automatically.",
+      "why": "Checking claims on the same large model can add latency; a faster judge is useful only if it still catches the relevant errors.",
+      "tradeoff": "Lower latency and a separate process do not establish equivalent judgment. The evaluation harness and live witness are different components.",
+      "verification": "The local report contains damaged/null-padded text. Only its surviving passages support this summary; the missing beginning is not reconstructed.",
+      "refs": [
+        {
+          "file": "nova_body/memory/reports/WITNESS_V2_PLAN_2026-08-02.md",
+          "contains": "**BASELINE RESULTS (2026-08-02",
+          "review_hash": "713b7cbe897d59ab6221f4d3c61e1b807b557185d6cd33f243b4a7798c025fea"
+        }
+      ]
+    },
+    {
+      "id": "computer-provisioning",
+      "date": "2026-09-03",
+      "title": "Provision a separate desktop for the computer faculty",
+      "stage": "Date recorded in source",
+      "groups": [
+        "nova_computer",
+        "nova_senses"
+      ],
+      "what": "The provisioning script describes a Linux desktop, VNC/noVNC services and a dedicated X display for the computer environment.",
+      "why": "A stable target desktop gives the computer backend somewhere to run GUI actions and capture results.",
+      "tradeoff": "Provisioning a desktop is distinct from wiring it into the ordinary reasoning/action loop. The map keeps those claims separate.",
+      "verification": "The date comes from the source header. It is not a newly performed provisioning or end-to-end embodiment test.",
+      "refs": [
+        {
+          "file": "nova_body/nova_computer/provision/setup_guest.sh",
+          "contains": "Nova's computer - guest provisioning (Phase 1).",
+          "review_hash": "9bb1dc7b0f6794010a6fefd1bb04cf470e9f001c174db98111645ca59f371a8f"
+        }
+      ],
+      "why_basis": "inferred"
+    },
+    {
+      "id": "atlas-built",
+      "date": "2026-09-21",
+      "title": "Make the architecture inspectable at three levels",
+      "stage": "Atlas delivery record",
+      "groups": [
+        "nova_runtime",
+        "boundary_chat",
+        "nova_lancedb",
+        "nova_computer"
+      ],
+      "what": "The atlas adds a simple mental map, a source-level inspection view and a local live watcher with source-linked explanations.",
+      "why": "The project had grown beyond what could reliably be held in one person's memory. Source wiring needed to be visible without expanding detachable tool internals.",
+      "tradeoff": "Static extraction updates structural facts; the meaning of dynamic connections still needs reviewed explanations.",
+      "verification": "Recorded in the atlas decision notes. This entry describes the atlas, not a change to Nova's running faculties.",
+      "refs": [
+        {
+          "file": "Orient/Architecture/DECISIONS.md",
+          "contains": "## 2026-09-21",
+          "review_hash": "f1b4190eac9cd6c37daed8890ea5742c40fbcce537fe7c428a34b1d2040fb2d7"
+        }
+      ]
+    },
+    {
+      "id": "atlas-learning-history",
+      "date": "2026-09-22",
+      "title": "Connect architecture to its history and engineering reasoning",
+      "stage": "Current atlas development",
+      "groups": [
+        "nova_runtime",
+        "boundary_chat",
+        "nova_cortex",
+        "nova_voice",
+        "nova_lancedb"
+      ],
+      "what": "Add the timeline, component learning guides, step-through flows, impact exploration and a review queue.",
+      "why": "Cole asked for a durable way to catch up on forgotten decisions, understand why the parts exist and build on them with confidence.",
+      "tradeoff": "History must distinguish decisions from implementation and old verification from present behavior. Unknown motivations stay unknown.",
+      "verification": "See the atlas's own validation record; no Nova runtime behavior is changed by this feature.",
+      "refs": [
+        {
+          "file": "Orient/Architecture/DECISIONS.md",
+          "contains": "## 2026-09-22",
+          "review_hash": "f1b4190eac9cd6c37daed8890ea5742c40fbcce537fe7c428a34b1d2040fb2d7"
+        }
+      ]
+    }
+  ]
+}

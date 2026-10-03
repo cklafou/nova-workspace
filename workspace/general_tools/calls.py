@@ -1,5 +1,5 @@
 # @nova: Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.
-# Last updated: 2026-08-06 16:21:32
+# Last updated: 2026-10-03 10:59:53
 """
 general_tools/calls.py -- Nova Package Call Graph Generator
 ============================================================
@@ -27,7 +27,7 @@ NOVA_TOOLS      = WORKSPACE_ROOT / "nova_body"
 # The TOOL lives in general_tools/. The DOCUMENT it produces is reference material someone reads to
 # orient themselves, so it belongs in Orient/ (2026-07-14). Per-package calls.md files stay next to
 # their code — those describe their own package and are read in place.
-MASTER_INDEX    = WORKSPACE_ROOT / "Orient" / "Calls_Master_Index.md"
+MASTER_INDEX    = WORKSPACE_ROOT / "Orient" / "Architecture" / "Calls_Master_Index.md"
 
 DRY_RUN = "--dry" in sys.argv
 
@@ -40,7 +40,7 @@ def _scan_root(root_dir: Path) -> list[Path]:
         [d for d in root_dir.iterdir()
          if d.is_dir() and d.name.startswith("nova_")
          and not d.name.startswith(".")
-         and d.name != "__pycache__"],
+         and d.name not in {"__pycache__", "nova_memory_db"}],
         key=lambda p: p.name,
     )
 
