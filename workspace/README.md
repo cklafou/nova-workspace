@@ -1,5 +1,5 @@
 # Project Nova
-_Last updated: 2026-10-04 13:57:46_
+_Last updated: 2026-10-04 15:01:24_
 
 Nova is Cole's companion and development partner, built toward increasing autonomy and
 ownership of her environment. Her broad host and VM access is intentional.

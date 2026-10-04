@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-04T14:38:41",
+  "generated": "2026-10-04T15:03:40",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -25,11 +25,12 @@
       "kind": "body_part",
       "path": "nova_body/nova_computer",
       "purpose": "My computer -- somewhere that is MINE to act in, that never reaches across and grabs",
-      "files": 12,
-      "lines": 1637,
+      "files": 13,
+      "lines": 2131,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
+        "5901",
         "6080"
       ],
       "nova_imports": [
@@ -45,8 +46,13 @@
         "base64",
         "getpass",
         "importlib",
+        "pwd",
         "shlex",
+        "signal",
+        "socket",
+        "struct",
         "sysconfig",
+        "tempfile",
         "urllib"
       ],
       "referenced_by": [
@@ -88,7 +94,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Expose Nova's executive faculties, task board, runtime settings and body-owned context assembly.",
       "files": 14,
-      "lines": 5588,
+      "lines": 5635,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -407,7 +413,7 @@
       "path": "nova_body/nova_voice",
       "purpose": "Run Nova's local inference and tool loop with her current capabilities and execution receipts.",
       "files": 4,
-      "lines": 3678,
+      "lines": 3790,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -449,7 +455,7 @@
       "path": "nova_body/nova_witness",
       "purpose": "Witness v2, Step 0 — golden-set harvester. Reads the CURRENT pipeline.jsonl window",
       "files": 2,
-      "lines": 412,
+      "lines": 416,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -637,7 +643,7 @@
       "path": "general_tools/architecture_map",
       "purpose": "Generates Orient documentation and validates source, review and link freshness.",
       "files": 10,
-      "lines": 3037,
+      "lines": 3068,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -860,7 +866,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.",
       "files": 27,
-      "lines": 8953,
+      "lines": 8956,
       "age_days": 0,
       "ports_bind": [
         "8765"

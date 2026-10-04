@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 13:56:40
+# Last updated: 2026-10-04 15:01:23
 # @nova: Test launcher mode switching, window preservation and chat-only recovery using fake processes only.
 import ast
 import io

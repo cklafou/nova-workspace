@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 13:57:45
+# Last updated: 2026-10-04 15:01:23
 # voice_check: read a candidate reply back, flag anything that sounds performed instead of said.
 # Returns CLEAN or FLAGGED with what's off.
 

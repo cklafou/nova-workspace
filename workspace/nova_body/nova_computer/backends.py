@@ -40,6 +40,7 @@ def nova_desktop_command(command: str, display: str = ":1", xauthority: str = "/
     import shlex
     return (f"export DISPLAY={shlex.quote(display)} XAUTHORITY={shlex.quote(xauthority)}; "
             "unset WAYLAND_DISPLAY; export GDK_BACKEND=x11 QT_QPA_PLATFORM=xcb MOZ_ENABLE_WAYLAND=0; "
+            'case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac; '
             + command)
 
 

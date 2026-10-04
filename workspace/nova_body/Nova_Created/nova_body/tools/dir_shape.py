@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 13:57:45
+# Last updated: 2026-10-04 15:01:23
 """dir_shape(path) -> one-paragraph read of what's in a directory."""
 
 import os, json, pathlib

@@ -1,11 +1,9 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-04T05:55:32+00:00 from source (input `0c03117ed738`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T06:02:12+00:00 from source (input `1861129c4944`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `nova_body/nova_voice/nova.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -45,6 +43,11 @@ Host `run_command` is Windows PowerShell. WSLg :0 is another Linux graphical ses
 native Windows desktop. Authorized host reach remains available; tool choice identifies the
 destination. `computer_action` launch/browser helpers retain diagnostics and report the limited
 postcondition they observed; a process or window alone does not prove a page loaded or a video played.
+The guest command environment prefers Nova's per-user `~/.local/bin` tools. On this machine,
+Firefox uses an official Mozilla build under `~/.local/opt`, because the Ubuntu Snap could not
+connect to the authenticated VNC display. Provisioning records the pinned version and checksum;
+the original Snap installation remains available explicitly. Browser data and VNC credentials
+are separate, and a browser repair does not require rotating the desktop password.
 
 Autonomy → cheap wake gate (pending input, unconsumed Cole directive newer than six hours,
 durable watched event or timer) →
@@ -56,8 +59,6 @@ at checkpoints; each wake has a configurable time budget. Stop supervises genera
 and child processes, and reports pending cleanup rather than falsely claiming everything stopped.
 
 ## Body faculties
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `nova_body/nova_computer/backends.py`, `nova_body/nova_computer/computer.py`, `nova_body/nova_computer/hands.py`, `nova_body/nova_computer/tools.py` and 2 more; new `nova_body/nova_computer/set_vnc_password.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py (PURPOSES)`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Body faculties"`.
 
 | Part | Responsibility | Python sources |
 |---|---|---:|
@@ -123,8 +124,6 @@ Drives/wants and the hormone design are not evidence of online weight learning. 
 
 ## Runtime evidence and open modernization work
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `nova_body/nova_computer/backends.py`, `nova_body/nova_computer/computer.py`, `nova_body/nova_computer/hands.py`, `nova_body/nova_computer/tools.py` and 1 more; new `nova_body/nova_computer/set_vnc_password.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
-
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
 tool calls occurred; none operated on the fixture. Session switches/context refresh also occurred,
@@ -166,6 +165,13 @@ checks. Twenty-one layout scenarios and fifteen desktop tests pass; browser fixt
 checks and persisted edits. Native profile migration and live reopen still await the normal user restart.
 The script-retirement pass removed only confirmed obsolete files with hashed recovery copies;
 isolated tests confirm the retired ping aliases cannot spawn host processes.
+The later October 4 computer repair aligns guest execution and screenshots on :1, reports host
+PowerShell separately, and streams per-tool lifecycle events to Pipeline. The whole delivered
+reply and available screenshot pixels reach the inline witness. Incomplete or malformed verdicts
+no longer become approval. Local replay still exposed a semantic miss, so strict parsing is not
+evidence that the model catches every unsupported claim. A direct guest-browser probe opened
+an actual page; an isolated host PowerShell command proved that route without touching host GUI.
+See the computer repair AI Notes for final runtime validation and remaining limits.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 
 ## Nova's shelf

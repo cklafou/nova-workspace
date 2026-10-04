@@ -159,8 +159,9 @@ def main():
     if tools:
         print(f"  doing    : " + ", ".join(f"{t}×{n}" for t, n in tools.most_common(6)))
     # 2026-07-20: her art moved to Nova_Created/art/ (everything she makes lives under
-    # Nova_Created). Old path kept as a fallback so a half-migrated checkout still counts.
-    _art_dir = WS / "Nova_Created" / "art"
+    # Nova_Created). 2026-10-04: that folder lives in her body (nova_body/Nova_Created) since the
+    # 09-30 move; the empty workspace-level copy this used to read was cleared, so count the real one.
+    _art_dir = WS / "nova_body" / "Nova_Created" / "art"
     if not _art_dir.is_dir():
         _art_dir = WS / "nova_art"
     art = len(list(_art_dir.rglob("*.png"))) if _art_dir.is_dir() else 0

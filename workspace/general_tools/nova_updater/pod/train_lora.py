@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 13:57:45
+# Last updated: 2026-10-04 14:59:19
 # @nova: Train text-only assistant-masked LoRA with an architecture-matched loader and frozen vision layers.
 """GPU-pod entry point; importing this module never downloads or loads a model.
 

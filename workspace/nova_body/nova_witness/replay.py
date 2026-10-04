@@ -114,7 +114,8 @@ def run_case(w, endpoint, case, max_tool_rounds=2):
         msgs = w.build_witness(case.get("draft", ""), receipts,
                                thinking=case.get("thinking", ""),
                                prior_concern=case.get("prior_concern", ""),
-                               checks=checks, has_image=_has_image)
+                               checks=checks, has_image=_has_image,
+                               reads_remaining=max_tool_rounds - i)
         verdict, dt = ask(endpoint, msgs, api_key=case.get("_api_key", ""),
                           model=case.get("_model", "nova-witness-heavy"))
         latency += dt

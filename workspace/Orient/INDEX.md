@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-04T05:55:32+00:00 from source (input `0c03117ed738`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T06:02:12+00:00 from source (input `1861129c4944`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -254,8 +254,6 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 ## nova_body/Nova_Created
 
-- [nova_body/Nova_Created/_tmp_clean_queue.py](../nova_body/Nova_Created/_tmp_clean_queue.py)
-- [nova_body/Nova_Created/_tmp_list_pending.py](../nova_body/Nova_Created/_tmp_list_pending.py)
 - [nova_body/Nova_Created/art/2026-07-19/nova_self_033541_66590_Tomboy_Preferred.png](../nova_body/Nova_Created/art/2026-07-19/nova_self_033541_66590_Tomboy_Preferred.png)
 - [nova_body/Nova_Created/art/2026-07-21/nova_art_093402_86277.png](../nova_body/Nova_Created/art/2026-07-21/nova_art_093402_86277.png)
 - [nova_body/Nova_Created/art/2026-07-21/nova_art_130645_68970.png](../nova_body/Nova_Created/art/2026-07-21/nova_art_130645_68970.png)
@@ -287,7 +285,6 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/Nova_Created/art/2026-08-02/nova_art_002441_62915.png](../nova_body/Nova_Created/art/2026-08-02/nova_art_002441_62915.png)
 - [nova_body/Nova_Created/art/2026-08-02/nova_art_003153_54003.png](../nova_body/Nova_Created/art/2026-08-02/nova_art_003153_54003.png)
 - [nova_body/Nova_Created/art/2026-08-02/nova_self_005233_57709.png](../nova_body/Nova_Created/art/2026-08-02/nova_self_005233_57709.png)
-- [nova_body/Nova_Created/check_reach.py](../nova_body/Nova_Created/check_reach.py)
 - [nova_body/Nova_Created/Cole_journal/designs/stretch_watcher.md](../nova_body/Nova_Created/Cole_journal/designs/stretch_watcher.md)
 - [nova_body/Nova_Created/Cole_journal/night_quality.jsonl](../nova_body/Nova_Created/Cole_journal/night_quality.jsonl)
 - [nova_body/Nova_Created/Cole_journal/posture.jsonl](../nova_body/Nova_Created/Cole_journal/posture.jsonl)
@@ -557,6 +554,8 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/SELF/Avatar/Live2D/art/Nova_Front_Art_v01.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Front_Art_v01.png)
 - [nova_body/SELF/Avatar/Live2D/art/Nova_Front_Art_v02.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Front_Art_v02.png)
 - [nova_body/SELF/Avatar/Live2D/art/Nova_Head_Parts_v01.png](../nova_body/SELF/Avatar/Live2D/art/Nova_Head_Parts_v01.png)
+- [nova_body/SELF/Avatar/Live2D/art/v18/Nova_HEAD_master.png](../nova_body/SELF/Avatar/Live2D/art/v18/Nova_HEAD_master.png)
+- [nova_body/SELF/Avatar/Live2D/art/v18/Nova_HEAD_skin.png](../nova_body/SELF/Avatar/Live2D/art/v18/Nova_HEAD_skin.png)
 - [nova_body/SELF/Avatar/Live2D/CALM_v07_VALIDATION.md](../nova_body/SELF/Avatar/Live2D/CALM_v07_VALIDATION.md)
 - [nova_body/SELF/Avatar/Live2D/checkpoints/2026-09-30_183610/manifest.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-09-30_183610/manifest.json)
 - [nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064020/manifest.json](../nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064020/manifest.json)
@@ -1340,18 +1339,17 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/tests/test_computer_launch.py](../nova_body/tests/test_computer_launch.py) — Isolated regression tests for guest desktop routing and honest process/window launch verification.
 - [nova_body/tests/test_koels_launcher.py](../nova_body/tests/test_koels_launcher.py) — Prove KoELS preload arguments survive the real Windows launcher and current llama parser without loading models.
 - [nova_body/tests/test_modernization.py](../nova_body/tests/test_modernization.py) — Isolated runtime contracts; never load a model or write Nova's personal state.
+- [nova_body/tests/test_mozilla_provision.py](../nova_body/tests/test_mozilla_provision.py) — Verify pinned browser provisioning with disposable files and no network, account changes or application launches.
 - [nova_body/tests/test_retired_desktop_ping.py](../nova_body/tests/test_retired_desktop_ping.py) — Keep retired desktop-message aliases unavailable without spawning processes or touching Nova records.
 - [nova_body/tests/test_review_followup.py](../nova_body/tests/test_review_followup.py) — Reproduces lifecycle, outcome and durable-queue edge cases from the shared review.
 - [nova_body/tests/test_staging_location.py](../nova_body/tests/test_staging_location.py) — Guards where task workspaces are staged: under workspace/Temp, outside git, Orient and the sync watcher.
 - [nova_body/tests/test_tool_correlation.py](../nova_body/tests/test_tool_correlation.py) — Verify that tool lifecycle identifiers match canonical receipts on success, refusal and exceptions.
+- [nova_body/tests/test_witness_delivery.py](../nova_body/tests/test_witness_delivery.py) — Exercise full-draft witness delivery and tool observability with isolated providers, receipts and images.
 
 ## Files without a purpose line
 
-The rule (Operations, "File conventions"): every file says what it is for in its first lines. These 73 do not yet. Add a `@nova:` line when you next touch one.
+The rule (Operations, "File conventions"): every file says what it is for in its first lines. These 70 do not yet. Add a `@nova:` line when you next touch one.
 
-- [nova_body/Nova_Created/_tmp_clean_queue.py](../nova_body/Nova_Created/_tmp_clean_queue.py)
-- [nova_body/Nova_Created/_tmp_list_pending.py](../nova_body/Nova_Created/_tmp_list_pending.py)
-- [nova_body/Nova_Created/check_reach.py](../nova_body/Nova_Created/check_reach.py)
 - [nova_body/Nova_Created/Cole_journal/designs/stretch_watcher.md](../nova_body/Nova_Created/Cole_journal/designs/stretch_watcher.md)
 - [nova_body/Nova_Created/Cole_journal/stretch_map.md](../nova_body/Nova_Created/Cole_journal/stretch_map.md)
 - [nova_body/Nova_Created/dead_functions_audit.md](../nova_body/Nova_Created/dead_functions_audit.md)
@@ -1428,6 +1426,3 @@ The rule (Operations, "File conventions"): every file says what it is for in its
 Left beside their originals by earlier edits. Nothing loads them; quarantine them when convenient.
 
 - [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v13.cmo3.preimport.bak](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v13.cmo3.preimport.bak)
-- [nova_body/nova_computer/computer.py.pluck_bak](../nova_body/nova_computer/computer.py.pluck_bak)
-- [nova_body/nova_computer/pluck_check.py.opus_bak](../nova_body/nova_computer/pluck_check.py.opus_bak)
-- [nova_body/nova_computer/tune_up.py.opus_bak](../nova_body/nova_computer/tune_up.py.opus_bak)

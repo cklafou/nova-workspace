@@ -1,0 +1,362 @@
+{
+  "created": "2026-10-04T05:57:08",
+  "by": "Claude (Cowork), asked by Cole",
+  "restore": "Move any 'to' path back to its 'from' path (both relative to workspace/).",
+  "moved": [
+    {
+      "from": "Nova_Created",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/Nova_Created",
+      "kind": "empty folder tree",
+      "why": "Left behind on 2026-09-30 when Nova's files moved into nova_body/Nova_Created. It held 0 files; every live code path uses nova_body/Nova_Created (nova_paths.body_path)."
+    },
+    {
+      "from": "nova_body/nova_computer/tune_up.py.opus_bak",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/nova_computer/tune_up.py.opus_bak",
+      "kind": "stale backup copy",
+      "why": "Backup from 2026-09-02; nothing references it and git history keeps every version.",
+      "sha256": "270eef36fddf5cf307b25c0d73ffb8a6986bce911e75d1b7e91b47cf8b3d7c51",
+      "bytes": 3555
+    },
+    {
+      "from": "nova_body/nova_computer/pluck_check.py.opus_bak",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/nova_computer/pluck_check.py.opus_bak",
+      "kind": "stale backup copy",
+      "why": "Backup from 2026-09-02; nothing references it and git history keeps every version.",
+      "sha256": "22d14571a0fd7adf505412fe2ae0ec2f1f942046ad8cceff39bc4123ec8a3d8c",
+      "bytes": 6172
+    },
+    {
+      "from": "nova_body/nova_computer/computer.py.pluck_bak",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/nova_computer/computer.py.pluck_bak",
+      "kind": "stale backup copy",
+      "why": "Backup from 2026-09-02; nothing references it and git history keeps every version.",
+      "sha256": "6b9d20435c6b6536c0de3fa5f3acba423497383fce0440dd7ac2a39580122b71",
+      "bytes": 8557
+    },
+    {
+      "from": "nova_body/Nova_Created/_tmp_clean_queue.py",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/Nova_Created/_tmp_clean_queue.py",
+      "kind": "July scratch script",
+      "why": "One-off helper from 2026-07-23 (reads audit_queue/tasks once); not imported or run by anything.",
+      "sha256": "91b968166ea2f705989d387d46297fc6100f375b59dcdf555900d99bc731c9a4",
+      "bytes": 789
+    },
+    {
+      "from": "nova_body/Nova_Created/_tmp_list_pending.py",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/Nova_Created/_tmp_list_pending.py",
+      "kind": "July scratch script",
+      "why": "One-off helper from 2026-07-23 (reads audit_queue/tasks once); not imported or run by anything.",
+      "sha256": "065646e25ed887b76dae6ebc32059b211e91e961b5b0a53928685171e5c7f8c4",
+      "bytes": 397
+    },
+    {
+      "from": "nova_body/Nova_Created/check_reach.py",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/Nova_Created/check_reach.py",
+      "kind": "July scratch script",
+      "why": "One-off helper from 2026-07-23 (reads audit_queue/tasks once); not imported or run by anything.",
+      "sha256": "05c255dc481826fe5740f16488e850339b21974c481ec15c6262c751d51a14d6",
+      "bytes": 292
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-03-19",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-03-19",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-03-20",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-03-20",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-03-21",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-03-21",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-03-22",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-03-22",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-03-25",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-03-25",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-03-26",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-03-26",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-03-27",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-03-27",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-03-28",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-03-28",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-03-29",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-03-29",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-03-30",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-03-30",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-06",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-06",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-07",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-07",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-08",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-08",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-09",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-09",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-10",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-10",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-13",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-13",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-23",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-23",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-24",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-24",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-25",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-25",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-26",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-26",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-27",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-27",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-28",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-28",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-29",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-29",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-05-31",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-05-31",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-06-01",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-06-01",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-06-03",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-06-03",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-06-10",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-06-10",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-06-20",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-06-20",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-06-21",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-06-21",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-06-22",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-06-22",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-06-27",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-06-27",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-07-08",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-07-08",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-07-13",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-07-13",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-07-14",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-07-14",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-07-15",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-07-15",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-07-18",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-07-18",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-07-19",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-07-19",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-07-20",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-07-20",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-07-21",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-07-21",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-07-22",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-07-22",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-07-23",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-07-23",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-07-24",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-07-24",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-08-01",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-08-01",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-08-02",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-08-02",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-08-03",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-08-03",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-08-04",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-08-04",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-10-01",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-10-01",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-10-02",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-10-02",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-10-03",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-10-03",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    },
+    {
+      "from": "nova_body/logs/screenshots/2026-10-04",
+      "to": "_admin/Trash/2026-10-04_FolderCleanup/nova_body/logs/screenshots/2026-10-04",
+      "kind": "empty log folder",
+      "why": "Empty daily screenshot folder left after its images were rotated out."
+    }
+  ],
+  "skipped": []
+}

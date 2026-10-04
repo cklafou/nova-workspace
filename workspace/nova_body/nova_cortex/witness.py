@@ -394,7 +394,8 @@ def human_in_room(threshold_min: int = 5) -> bool:
 #   1. facts against receipts        <- "Python 3.12, RTX 4070" (never ran a command)
 #   2. words-in-mouths against wire  <- "Cole said 'how much memory do you have'"
 #   3. answering the room            <- night-watch monologue at a man typing at her
-# Verdict is PASS or REWRITE+text. An unusable verdict lets the draft through — the witness
+# Verdicts distinguish PASS, CONCERN, INCOMPLETE and ERROR. An unfinished audit is visible;
+# the draft remains Nova's own words. The witness
 # must never become a silent drop itself.
 # ═══════════════════════════════════════════════════════════════════════════════════════════
 
@@ -450,6 +451,20 @@ _VERIFY_BLOCK = (
     "  have checked it the first time; do it now instead of rewording yourself.\n"
     "You cannot write, delete, or run commands. If a thing truly cannot be settled by\n"
     "reading, say so plainly in your concern rather than guessing at it.\n")
+
+
+_EVIDENCE_GRADES = (
+    "EVIDENCE LIMITS — split compound claims and verify EACH part. A tool attempt or exit "
+    "code proves only what that tool actually reports, not its intended effect. Search results "
+    "and fetched HTML can establish a link or text, not that its linked page/video was opened, "
+    "watched or assessed. A launched process or application window is not proof of loaded page "
+    "content or playback. A screenshot establishes visible pixels on its labeled target at "
+    "that instant; it cannot establish audio or video playback from a still frame. A failure "
+    "in the guest environment does not establish inability to use the separate Windows host "
+    "tool, and host tool availability does not prove a host action succeeded. Match first-person "
+    "claims such as seeing, watching or checking to the corresponding evidence, not merely to "
+    "a related tool call. Mark unsupported certainty CONCERN when the mismatch is evidenced; "
+    "mark genuinely unsettled evidence INCOMPLETE.\n")
 
 
 def build_witness(draft: str, turn_tools: list, thinking: str = "",
@@ -552,7 +567,7 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "This is the last gate between you and a false statement."},
         {"role": "user", "content":
             f"YOUR DRAFT REPLY:\n{draft}\n"
-            f"{image_block}"
+            f"{image_block}{_EVIDENCE_GRADES}"
             f"{think_block}\n"
             f"WHAT YOUR HANDS DID THIS TURN (the receipt log — your actions in the CURRENT turn "
             f"ONLY; earlier turns are in the session log below):\n{ran}\n"
@@ -642,6 +657,30 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "4. If the evidence is missing or the read budget is spent without a ruling:\n"
             "INCOMPLETE <what remains unverified>. Never label an unfinished audit PASS."},
     ]
+    if reads_remaining == 0:
+        # A final budget is a different protocol: no tool schema, examples or read
+        # invitations. Reusing the earlier menu made the model request a fifth read.
+        final_rule = (
+            "FINAL AUDIT: no tool calls are available. Do not output JSON or request a read. "
+            "Reply with exactly PASS, or CONCERN: <specific contradicted claim and evidence>, "
+            "or INCOMPLETE: <what cannot be verified>. Missing evidence is not proof of "
+            "fabrication and never counts as completed verification.")
+        messages[0]["content"] += " " + final_rule
+        messages[1]["content"] = (
+            f"YOUR COMPLETE DRAFT REPLY:\n{draft}\n\n{image_block}{_EVIDENCE_GRADES}{think_block}\n"
+            f"CURRENT-TURN RECEIPTS (status matters; attempted is not succeeded):\n{ran}\n"
+            f"EARLIER SESSION RECEIPTS:\n{session_tools}\n"
+            f"RECENT CONVERSATION:\n{spoken}\nHUMAN RECORD:\n{humans}\n"
+            f"PRIOR CONCERN:\n{prior_concern}\n"
+            f"AUDITOR READ RESULTS:\n{_checks_block}\n"
+            "Check factual/action claims against actual evidence, attributed human words "
+            "against the record's stated time span, and whether the reply answers the latest "
+            "human message. Earlier-turn receipts count, but a successful command does not "
+            "prove an unstated postcondition. Images prove only what is visible. Honest "
+            "uncertainty, clearly identified memory, feelings, plans and offers do not require "
+            "fresh tool receipts. Do not police tone or rewrite Nova's reply. If a concern "
+            "was raised earlier, judge her complete revised answer on its own evidence.\n\n"
+            + final_rule)
     if evidence:
         content = [{"type": "text", "text": messages[1]["content"]}]
         for item in evidence:

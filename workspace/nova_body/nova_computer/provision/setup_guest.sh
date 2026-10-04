@@ -54,6 +54,69 @@ case "$nova_home" in
     fi
     ;;
 esac
+
+# Snap Firefox cannot reach :1 in some WSLg/private-X11 namespace combinations.
+# Keep Snap installed, and select the official user-local build through the body command PATH.
+# Update this reviewed VERSION/SHA256 pair together; existing versions remain available for rollback.
+# https://support.mozilla.org/en-US/kb/install-firefox-linux#local-firefox-installation-in-users-account
+echo "--- official Mozilla browser for Nova ---"
+runuser -u nova -- python3 - <<'MOZILLA_PY' || echo 'WARN: local Firefox setup failed; inspect its diagnostics before claiming browser readiness'
+import hashlib, json, os, pathlib, shutil, subprocess, tarfile, tempfile, urllib.request, uuid
+VERSION = "157.0"
+SHA256 = "42f2c62a562316982ef5a796738c57602bf84a984f5c616e80bcff4627f78fff"
+home = pathlib.Path.home()
+root = home / ".local/opt"
+target = root / ("mozilla-firefox-" + VERSION)
+link = home / ".local/bin/firefox"
+url = "https://archive.mozilla.org/pub/firefox/releases/" + VERSION + "/linux-x86_64/en-US/firefox-" + VERSION + ".tar.xz"
+
+def owned_launcher():
+    if not link.is_symlink():
+        return False
+    resolved = link.resolve()
+    return (resolved.name == "firefox" and resolved.parent.parent == root
+            and resolved.parent.name.startswith("mozilla-firefox-"))
+
+if link.exists() or link.is_symlink():
+    if not owned_launcher():
+        raise RuntimeError("Preserving existing user Firefox launcher: " + str(link))
+    if link.resolve() == target / "firefox" and (target / "firefox").is_file():
+        print("User Firefox is already selected: " + str(target))
+        raise SystemExit(0)
+if target.exists():
+    raise RuntimeError("Preserving existing unselected Firefox directory: " + str(target))
+root.mkdir(parents=True, exist_ok=True)
+staging = pathlib.Path(tempfile.mkdtemp(prefix=".mozilla-install-", dir=root))
+try:
+    archive = staging / "firefox.tar.xz"
+    with urllib.request.urlopen(url, timeout=60) as response, archive.open("wb") as out:
+        while chunk := response.read(1024 * 1024):
+            out.write(chunk)
+    with archive.open("rb") as stream:
+        actual = hashlib.file_digest(stream, "sha256").hexdigest()
+    if actual != SHA256:
+        raise RuntimeError("Mozilla Firefox archive SHA256 mismatch")
+    with tarfile.open(archive, "r:xz") as bundle:
+        bundle.extractall(staging, filter="data")
+    source = staging / "firefox"
+    check = subprocess.run([str(source / "firefox"), "--version"], capture_output=True, text=True, timeout=20)
+    if check.returncode:
+        raise RuntimeError("Mozilla Firefox version probe failed: " + check.stderr)
+    (source / "nova-install.json").write_text(json.dumps({
+        "@nova": "Verified official Mozilla browser install source; no security settings disabled.",
+        "version": VERSION, "sha256": SHA256, "source": url}, indent=2), encoding="utf-8")
+    source.rename(target)
+    link.parent.mkdir(parents=True, exist_ok=True)
+    # Preserve a launcher changed concurrently while this download was running.
+    if (link.exists() or link.is_symlink()) and not owned_launcher():
+        raise RuntimeError("Installed version retained; preserving changed user launcher")
+    temporary_link = link.with_name(".firefox-" + uuid.uuid4().hex + ".tmp")
+    temporary_link.symlink_to(target / "firefox")
+    os.replace(temporary_link, link)
+    print("Selected " + check.stdout.strip() + " at " + str(link))
+finally:
+    shutil.rmtree(staging)
+MOZILLA_PY
 usermod -aG sudo nova
 echo 'nova ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/nova
 chmod 440 /etc/sudoers.d/nova

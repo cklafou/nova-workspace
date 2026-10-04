@@ -789,6 +789,11 @@ Host `run_command` is Windows PowerShell. WSLg :0 is another Linux graphical ses
 native Windows desktop. Authorized host reach remains available; tool choice identifies the
 destination. `computer_action` launch/browser helpers retain diagnostics and report the limited
 postcondition they observed; a process or window alone does not prove a page loaded or a video played.
+The guest command environment prefers Nova's per-user `~/.local/bin` tools. On this machine,
+Firefox uses an official Mozilla build under `~/.local/opt`, because the Ubuntu Snap could not
+connect to the authenticated VNC display. Provisioning records the pinned version and checksum;
+the original Snap installation remains available explicitly. Browser data and VNC credentials
+are separate, and a browser repair does not require rotating the desktop password.
 
 Autonomy → cheap wake gate (pending input, unconsumed Cole directive newer than six hours,
 durable watched event or timer) →
@@ -895,6 +900,13 @@ checks. Twenty-one layout scenarios and fifteen desktop tests pass; browser fixt
 checks and persisted edits. Native profile migration and live reopen still await the normal user restart.
 The script-retirement pass removed only confirmed obsolete files with hashed recovery copies;
 isolated tests confirm the retired ping aliases cannot spawn host processes.
+The later October 4 computer repair aligns guest execution and screenshots on :1, reports host
+PowerShell separately, and streams per-tool lifecycle events to Pipeline. The whole delivered
+reply and available screenshot pixels reach the inline witness. Incomplete or malformed verdicts
+no longer become approval. Local replay still exposed a semantic miss, so strict parsing is not
+evidence that the model catches every unsupported claim. A direct guest-browser probe opened
+an actual page; an isolated host PowerShell command proved that route without touching host GUI.
+See the computer repair AI Notes for final runtime validation and remaining limits.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 """
     operations = "# Operations and verification\n\n" + evidence + """

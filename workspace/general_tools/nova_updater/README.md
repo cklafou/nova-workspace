@@ -1,3 +1,4 @@
+_Last updated: 2026-10-04 15:01:24_
 <!-- @nova: How Nova's model updater works: startup check, manual search, install with rollback and quarantine, LoRA training, and the Nova Chat contract. -->
 # Nova model updater (`general_tools/nova_updater`)
 

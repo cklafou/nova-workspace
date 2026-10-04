@@ -1,5 +1,5 @@
 # @nova: Launch the full Nova stack or an explicit chat-only controller without starting her body.
-# Last updated: 2026-10-04 13:55:38
+# Last updated: 2026-10-04 14:55:38
 """
 nova_start.py  --  Project Nova one-shot launcher / orchestrator
 ================================================================

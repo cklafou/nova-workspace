@@ -153,6 +153,19 @@ class DesktopContractTests(unittest.TestCase):
         explicit = subprocess.run([bash, '-c', nova_desktop_command('export DISPLAY=:0; printf %s "$DISPLAY"')],
                                   env=env, capture_output=True, text=True, timeout=5)
         self.assertEqual(explicit.stdout, ':0')
+        with tempfile.TemporaryDirectory() as td:
+            local_bin = Path(td) / '.local/bin'
+            local_bin.mkdir(parents=True)
+            executable = local_bin / 'nova-browser-fixture'
+            executable.write_text('#!/bin/sh\nprintf local-browser', encoding='utf-8')
+            if os.name != 'nt':
+                executable.chmod(0o755)
+            home_env = dict(env, HOME=Path(td).as_posix())
+            command = nova_desktop_command(nova_desktop_command('nova-browser-fixture'))
+            resolved = subprocess.run([bash, '-c', command], env=home_env,
+                                      capture_output=True, text=True, timeout=5)
+            self.assertEqual(resolved.returncode, 0, resolved.stderr)
+            self.assertEqual(resolved.stdout, 'local-browser')
 
     def test_tool_preserves_unknown_launch_and_diagnostics(self):
         probe = {'status':'unknown','exit_code':0,'stdout':'wrapper exited','stderr':'diagnostic',

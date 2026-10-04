@@ -819,7 +819,10 @@ def _tool_pipeline_event(stage, tool, operation_id, run_id, *, result=None, dura
             for key in ("shell", "display", "target"):
                 if isinstance(context.get(key), str):
                     fields[key] = context[key][:80]
-    _witness.pipeline_event(stage, f"{str(tool)[:80]}: {fields['status']}", **fields)
+    detail = f"{str(tool)[:80]}: {fields['status']}"
+    if fields["status"] == "cancellation_requested":
+        detail += "; response wait cancelled, worker cleanup may still be pending"
+    _witness.pipeline_event(stage, detail, **fields)
 
 
 async def stream_response(
@@ -866,6 +869,11 @@ async def stream_response(
         messages = transcript.to_messages(
             "Nova", system, workspace_context=workspace_context
         )
+
+        # Echo comparisons use delivered history, never this turn's private tool drafts.
+        _delivered_assistant_history = [m.get("content") for m in messages
+                                        if m.get("role") == "assistant"
+                                        and isinstance(m.get("content"), str)][-5:]
 
         # ── NOW CARD (2026-07-21, from Cole's grounding brainstorm) ──────────────────────
         # Three lines of present tense at the very END of the prompt, where attention is
@@ -981,8 +989,9 @@ async def stream_response(
         # The old model streamed every draft token to chat AS IT GENERATED, so the witness
         # audited a reply already on screen — and tool-call JSON and "[executing…]" scaffolding
         # flashed there too (the thinking-leak). Hold-back buffers the draft AND the whole
-        # turnabout debate: nothing reaches chat until the witness clears it, then only the
-        # resolved answer ships (on_done → message_end, which finalizeMsg renders + cleans).
+        # turnabout debate: draft prose reaches chat only after this bounded audit finishes;
+        # incomplete/error audits preserve her draft with a visible unverified status. The
+        # resulting answer ships (on_done → message_end, which finalizeMsg renders + cleans).
         # Reasoning still streams to the Thoughts pane and tools to the Tools tab, so the
         # screen is never dead. Autonomous/silent ticks are EXEMPT (they stream to the Monitor
         # pane, not chat). Fail-safe: hold_back_streaming=false in _admin/tunables.json
@@ -1299,7 +1308,7 @@ async def stream_response(
                         except asyncio.CancelledError:
                             _tool_pipeline_event("tool_failed", tool_name, _call_id, _run_id,
                                                  duration_ms=(_time.time() - _t0) * 1000,
-                                                 status="cancelled")
+                                                 status="cancellation_requested")
                             raise
                         except Exception as _te:
                             result = ToolResult(f"[error] {_te}", status="failed", operation_id=_call_id)
@@ -1307,8 +1316,9 @@ async def stream_response(
                         _dur_ms = (_time.time() - _t0) * 1000
                         _tool_pipeline_event("tool_failed" if result.ok is False else "tool_completed",
                                              tool_name, _call_id, _run_id, result=result, duration_ms=_dur_ms)
-                        # A failed/unknown call is an observation, not proof the requested action succeeded.
-                        _tools_ran_this_turn = _tools_ran_this_turn or result.ok is True
+                        # A failed/unknown call still ran and produced evidence. Its explicit
+                        # status below prevents confusing that attempt with successful action.
+                        _tools_ran_this_turn = True
                         _observation_meta = {"status": result.status, "ok": result.ok,
                                              "exit_code": result.exit_code,
                                              "environment": result.environment}
@@ -2260,9 +2270,7 @@ async def stream_response(
             try:
                 if _echo_retried == 0 and chat_text.strip():
                     from nova_cortex import discourse as _disc
-                    _prev_assist = [m.get("content") for m in messages
-                                    if m.get("role") == "assistant"
-                                    and isinstance(m.get("content"), str)][-5:]
+                    _prev_assist = list(_delivered_assistant_history)
                     # ── THE OVERRULE IS NOT AN ECHO (2026-07-21, review of the witness
                     # conversation) ─────────────────────────────────────────────────────────
                     # When the witness challenges her, her draft is appended to `messages` as
