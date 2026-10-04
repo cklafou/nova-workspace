@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 13:35:09
+# Last updated: 2026-10-04 14:35:18
 # @nova: Tests the updater's Nova Chat routes: the local-only guard (Host, Origin, client), status, decisions, search filters and confirmations.
 """Run: python -m unittest discover -s general_tools/nova_updater/tests -v (needs fastapi + httpx)."""
 import json

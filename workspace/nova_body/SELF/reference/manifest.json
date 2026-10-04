@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-04T14:30:59",
+  "generated": "2026-10-04T14:38:24",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -560,7 +560,7 @@
       "purpose": "Shutdown — stops the whole Nova stack cleanly.",
       "files": 1,
       "lines": 82,
-      "age_days": 62,
+      "age_days": 63,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -1023,7 +1023,7 @@
       "path": "general_tools/nova_updater",
       "purpose": "Nova's model updater: finds newer dense models, installs them with rollback, and trains LoRAs for installed models.",
       "files": 34,
-      "lines": 6499,
+      "lines": 6500,
       "age_days": 0,
       "ports_bind": [
         "8080"
