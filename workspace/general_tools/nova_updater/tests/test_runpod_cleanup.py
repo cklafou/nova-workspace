@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 14:32:15
 # @nova: Prove irreversible pod cleanup follows verified local adapters and provenance, retaining recovery data on every incomplete outcome.
 from __future__ import annotations
 

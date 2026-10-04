@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "generated_at": "2026-10-04T05:30:44+00:00",
-  "input_sha256": "ce0fea648aabfa4e983aa783b77b24f9a1fbc0f871b61b3984579b87b7cabc6b",
+  "generated_at": "2026-10-04T05:32:45+00:00",
+  "input_sha256": "5e4ccad702132516660020c249c7c92ffd009309f4f4e31e6cf2c93996adf386",
   "files": [
     {
       "path": "NovaChatOnly.cmd",
@@ -686,7 +686,7 @@
     {
       "path": "general_tools/nova_updater/tests/test_runpod_cleanup.py",
       "owner": "detachable tool",
-      "bytes": 12213
+      "bytes": 12478
     },
     {
       "path": "general_tools/nova_updater/tests/test_runpod_delete_http.py",
@@ -6389,7 +6389,7 @@
     "general_tools/nova_updater/tests/test_launcher.py": "da27bacd0dd9917efe59b7581f65e4c87f36116474c9ba53ec93975e72ca90c5",
     "general_tools/nova_updater/tests/test_pod_compat.py": "1b3c2bba24c43d71b834611c6ec7046084b502257c9b999d5165c5002e3e341a",
     "general_tools/nova_updater/tests/test_pod_venv.py": "143322f384818cb4fc8d3f9b6e65e6f35e952d5954f067a66c92621029f57a30",
-    "general_tools/nova_updater/tests/test_runpod_cleanup.py": "ba83adc3da6b6e15e5b8869f3ff94b04db7251fe9558e03f3388d3c9d9481389",
+    "general_tools/nova_updater/tests/test_runpod_cleanup.py": "eaea99523e98cf29689bcaefbc296b1260ef4be0d46000f7051a50efac7fd283",
     "general_tools/nova_updater/tests/test_runpod_delete_http.py": "5f045ef260aff2e41aa0631c104bb2e66654442739ee1ac07db170a7e763f529",
     "general_tools/nova_updater/tests/test_runpod_funding.py": "b635ca1532ed37690ae6cb72877caebf841211123dbb15193ca2f1c0750f1890",
     "general_tools/nova_updater/tests/test_runpod_lifecycle.py": "1d40580ede7d9225d79b9c3adc60427159165947be4a67e20d61b51f885df9cd",
@@ -6499,10 +6499,10 @@
     "start_llama_qwen36.cmd": "3297f9b8977d45d037c3043c9bafccd4c8f6a737a5dae5eb7f88dc171c6a2fb0"
   },
   "document_hashes": {
-    "README.md": "5289baa49b43c44fd43206da2bd71036ee1b66a71288a5a9065a3f4d45875d39",
-    "ARCHITECTURE.md": "4cddd6b805f4fb7ec7fb6ea0c26adc2da8d56b74a61ebe78da47a2149d7778e3",
-    "OPERATIONS.md": "fc74ff8b032a2dbd25860728b245117372fa7e455dbfe4910a54d5c670fa2b56",
-    "INDEX.md": "4927d1457d2ddd14d3c807e6965084b7c29e4dd57ddc6b45233f28f1925bc63d"
+    "README.md": "4ba8d4985486e9f625dd0f788575b9beb388b1b0eaf5f1416c58e75fa6ada60e",
+    "ARCHITECTURE.md": "66e72c281e0b651cf332ef0eeb06471b1c6258c2d8f9555e786ac948e27d10f1",
+    "OPERATIONS.md": "f970e775683f5bfa5dc977e30326974bca153b075ca53b01fff7b85cc1123064",
+    "INDEX.md": "a321f014e05bfc78fcee61f409ce365aec2acbf675d8ba1349a81065b0f3b9f7"
   },
   "review_needed": [
     "ARCHITECTURE.md#Body faculties",
