@@ -1,5 +1,5 @@
 # @nova: Keeps Nova_Drive/read a text copy of the last commit, so Cole can read Nova from a Drive-only PC.
-# Last updated: 2026-10-03 11:20:46
+# Last updated: 2026-10-04 13:57:45
 """Nova_Drive: Nova, readable from a computer that can reach Google Drive and nothing else.
 
 Cole works on Nova from a work PC with only a browser. Google Drive for Desktop used to sync all of

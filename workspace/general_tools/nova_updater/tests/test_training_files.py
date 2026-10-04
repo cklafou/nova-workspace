@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 13:40:00
 # @nova: Verify persistent training-input packages, separate finished adapters and quoted Windows adapter paths using disposable files only.
 import hashlib
 import json

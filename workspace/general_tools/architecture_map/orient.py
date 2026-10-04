@@ -39,7 +39,7 @@ PURPOSES = {
     "nova_config": "Body settings loader. Some execution paths still have independent constants; this is not yet universal configuration.",
     "nova_cortex": "Task board, wake decisions, wants, speaker roles, witness/integrity checks, tunables and shared identity/context loading.",
     "nova_runtime": "Model dispatch, headless autonomy, transcript, event bus, provider lifecycle and KoELS equip operations.",
-    "nova_voice": "Local inference client, parsing/tool loop, shell/file tools and durable execution receipts.",
+    "nova_voice": "Local inference client, parsing/tool loop, shell/file tools and durable execution receipts. The retired host-desktop Claude ping is no longer registered.",
     "nova_senses": "Time, environment changes, presence, touch, sight, web access and proprioception.",
     "nova_lancedb": "Semantic/visual memory store, embeddings and asynchronous indexing; separate from journal files.",
     "nova_memory": "Journal/goals/log-reader helpers. Some overlap with router-owned journaling remains.",
@@ -771,6 +771,9 @@ enters the Nova inference path below. The shared files are transport artifacts u
 Chat input → speaker attribution and screening → conversation/context assembly → body model
 dispatch → `nova_voice.nova` inference/tool loop → `tool_router` → environment result → receipt
 and another model step → response, transcript and asynchronous indexing.
+The retired host-desktop Claude ping and its aliases return an unknown-tool failure rather than
+launching PowerShell. Active instructions no longer advertise it. The private Collaboration room
+remains separate from Nova; asking Cole uses the ordinary conversation.
 
 Autonomy → cheap wake gate (pending input, unconsumed Cole directive newer than six hours,
 durable watched event or timer) →
@@ -872,6 +875,11 @@ and dated history in Live log. Its fixtures cover updater consent and recovery c
 chat-only restart proves controller readiness while the model remains off. KoELS launcher argument
 compatibility was checked through the installed parser without loading weights.
 See `general_tools/nova_chat/CONTROLLER.md` and dated AI Notes for the actual validation scope.
+The later October 4 layout repair adds manual-only saving, one-time screenshot recovery and active-widget
+checks. Sixteen layout scenarios and fifteen desktop tests pass; browser fixture checks confirm widget
+checks and persisted edits. Native profile migration and live reopen still await the normal user restart.
+The script-retirement pass removed only confirmed obsolete files with hashed recovery copies;
+isolated tests confirm the retired ping aliases cannot spawn host processes.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 """
     operations = "# Operations and verification\n\n" + evidence + """
@@ -1035,11 +1043,15 @@ refuse collisions, and never delete personal history. `_admin/Trash/` is a
 short-term holding area that Cole empties; git history is the long-term record. Stop all writers before moving databases
 or transcripts. Hash-check the checkpoint and destination before restarting. Keep rollback copies
 out of active lookup paths so they cannot hide a broken migration.
+The watcher preserves `_admin/Trash/` bytes: timestamp maintenance and PUP replacement skip
+archived originals while normal change/backup queues still work. Dated manifests record source
+paths, reasons and hashes. This October 4 archive is read-only to block the already-running
+older watcher until its next normal restart loads the exclusion.
 
 The pre-October orientation files (GOTCHAS, SECURITY, TUNABLE_VARIABLES, NOVA_CREATED_TOOLS, WIRING,
 TOOLS and others) were folded into these documents on 2026-10-01/02; their original text stays in git
-history on this computer (`git show a8e44727:workspace/Orient/<NAME>.md`; once `_admin/FIX_GIT.cmd`
-has run, that commit is kept on the local branch `backup/before-fix-git`). Do not regenerate them
+history on this computer (`git show a8e44727:workspace/Orient/<NAME>.md`); the completed history repair
+preserved that commit on the local branch `backup/before-fix-git`. Do not regenerate them
 as additional entry documents. Detailed graph assets stay under `Orient/Architecture`.
 Core self-model and personal memory belong in the body, not Orient. Generated documentation must
 not rewrite Nova's identity, infer capabilities from filenames, or copy secrets into an index.

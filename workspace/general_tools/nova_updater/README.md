@@ -194,7 +194,7 @@ python -m nova_updater check --force
 python -m nova_updater candidate Qwen/Qwen3.8-27B
 python -m nova_updater plan Qwen/Qwen3.8-27B --replace models/qwen3.6/Qwen3.6-27B-UD-Q6_K_XL.gguf
 python -m nova_updater install <plan_id> --yes
-python -m nova_updater train-bundle --base unsloth/Qwen3.8-27B --data _admin/Training_stuff/v7/nova_core_v7.jsonl
+python -m nova_updater train-bundle --base unsloth/Qwen3.8-27B --data "models/Training Files/Qwen 3.6 27B Dense/Nova Core v7/nova_core_v7.jsonl"
 ```
 
 Run these from `workspace/general_tools`.

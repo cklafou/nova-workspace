@@ -1,0 +1,369 @@
+{
+  "@nova": "Manifest for reversible script retirement; source paths relative to workspace; hashes must match before and after each move.",
+  "archive": "_admin/Trash/ScriptRetirement_2026-10-04",
+  "status": "complete",
+  "items": [
+    {
+      "source": "general_tools/ping_claude.ps1",
+      "bytes": 27620,
+      "sha256": "b454348f18ead78165c0ad32f48dac05681092a0c975e498273d2dacb4e58c2e",
+      "reason": "Explicitly retired host desktop ping; dispatch aliases and active instructions removed."
+    },
+    {
+      "source": "general_tools/cloud_call.py.turnabout_bak",
+      "bytes": 11085,
+      "sha256": "82e326ec9ec813eb9bdf6b222041d59992f7fbec24fb52c1102fab08af4f1929",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer."
+    },
+    {
+      "source": "general_tools/nova_sync/watcher.py.holdback_bak",
+      "bytes": 45219,
+      "sha256": "faf87c57a42e73e418b4b78b1781c01505bf6cab83f54718bf97cbfdeb1e5635",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer."
+    },
+    {
+      "source": "general_tools/nova_sync/watcher.py.sizeguard_bak",
+      "bytes": 46979,
+      "sha256": "5a73198c2ddbcba13559da268a63ed9b6b552ad402f1f2485b5c0a8fdda70d0c",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer."
+    },
+    {
+      "source": "general_tools/nova_chat/static/index.html.polish_bak",
+      "bytes": 353625,
+      "sha256": "17aba543665d003e16a89e5a676c894cfedfe719feb01b756764866d051af7b5",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer."
+    },
+    {
+      "source": "nova_body/nova_computer/toolkit.py.bak",
+      "bytes": 7019,
+      "sha256": "f7f0c99e400deb697cf10e1760ee5c851ae8c71355f7fcbc4781b456d1132d23",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer."
+    },
+    {
+      "source": "nova_body/nova_cortex/tunables.py.holdback_bak",
+      "bytes": 8090,
+      "sha256": "5d7450ac6ade5d2d22a3fd83127b614e5e98c2d5b6518f82783f645870e3a14f",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer."
+    },
+    {
+      "source": "nova_body/nova_cortex/tunables.py.turnabout_bak",
+      "bytes": 8675,
+      "sha256": "4f2b50c45b35f2aad0451d024ddb9b6f2bb151b3e56bcfaecbed58a05b142296",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer."
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.holdback_bak",
+      "bytes": 146289,
+      "sha256": "364365cffc8ba992c503b0956f7fa981ed9c5ed673cd80d6fe039783000e0236",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer."
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.polish_bak",
+      "bytes": 156015,
+      "sha256": "e2b96fb8a5281087501885e19cd242ae00046834adf60a9f394514e0aa1f0a5a",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer."
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.turnabout_bak",
+      "bytes": 147521,
+      "sha256": "403a7c1c506b2d656748caa56530448200e34189b43628b8bff42307f0045ea1",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer."
+    },
+    {
+      "source": "_admin/capture_app_window.ps1",
+      "bytes": 1616,
+      "sha256": "cfbadaa17be6ee4ab4e359e03b3d67e70e303f7c1ca0a3a2523dd005636c883e",
+      "reason": "One-shot Chrome geometry seeding superseded by persistent desktop host. Legacy app_window.json remains used by browser fallback and is retained."
+    },
+    {
+      "source": "_admin/nw_revive.cmd",
+      "bytes": 2366,
+      "sha256": "5ec9b7082f17f3937de1a1d4ab0e9db91bde1405c675985c0b47224248c61abd",
+      "reason": "Completed July one-shot launcher revival; no current task/hook consumer."
+    },
+    {
+      "source": "_admin/run_baseline_replay.ps1",
+      "bytes": 213,
+      "sha256": "83bfbc704fdbf85dfb84aa8f7e48e52ed610454422b1208d32166957670b17ef",
+      "reason": "Fixed July baseline wrapper with retired paths; maintained nova_witness/replay.py evaluation entry remains."
+    },
+    {
+      "source": "_admin/overnight_review.py",
+      "bytes": 10676,
+      "sha256": "5a643cf1906c2a2033b9c0135140ff7bc154d4c4fcb57387ba7cbb38c06d4486",
+      "reason": "Fixed July v5 experiment with obsolete logs/memory roots; retained as experiment history."
+    },
+    {
+      "source": "_admin/FIX_GIT.cmd",
+      "bytes": 4423,
+      "sha256": "4cab3a44053fa7a2668e99fbeceadebf91c1dc4482ae70c45c85905da9e23700",
+      "reason": "One-time Git history repair already completed (f815639633); backup/before-fix-git exists. Current guard now gives review guidance."
+    },
+    {
+      "source": "_admin/autonomy_watch/nova_recover_llama.cmd",
+      "bytes": 1270,
+      "sha256": "138d5bf472248c98df1b6fdea5347f729d1a427f06c7f6a7d4c02b3ca9b9be85",
+      "reason": "Staged July orphan-process recovery for completed incident; not a general current launcher."
+    },
+    {
+      "source": "_admin/autonomy_watch/REPORT.md",
+      "bytes": 36605,
+      "sha256": "144e610f06ebe07513486d9fb9e069d00214ad63f3b0c7304049f155d51b524f",
+      "reason": "Historical July incident report containing obsolete current-status/recovery directions; retained together with its helper."
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/__init__.py",
+      "bytes": 1081,
+      "sha256": "4efe6bd4630ef4d741aae2fa90aaf71ec220a4d02241448fd65592f517b964fc",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent."
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/decision.py",
+      "bytes": 8153,
+      "sha256": "6e0bb9c9df3e5c24c50546f1a1bfcb78ee0693896637a0b742b7808d4ebd044e",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent."
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/manifest.py",
+      "bytes": 7172,
+      "sha256": "5860c3deee8414ebcb0dabf2d91a8cd0a92c0ac8e0389d9131e54774959e2830",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent."
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/keyword.py",
+      "bytes": 2677,
+      "sha256": "54a5cb70bb7debdd109daf4990031b0c1068775ea843716828e3c032663297b6",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent."
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/test_koels.py",
+      "bytes": 4909,
+      "sha256": "b9434895b467e9ac3e9aebcb5317d93adc14b5b98d38f9f8963d279656f3f29e",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent."
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/mnt/user-data/outputs/koels/strategies/__init__.py",
+      "bytes": 179,
+      "sha256": "b2b4fd0baac7c876ee49550f1a76d548daa38532e7f8d61cd11c21c9af038c03",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent."
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_source_v13.cjs",
+      "bytes": 1247,
+      "sha256": "99997927f31fd3096de3dc7ea6229f15adbbb71d28f7f6292bc1eec091fb4734",
+      "reason": "Hardcoded pre-v17 eye diagnostic with no current caller; keep current v17 validators, their dependencies, and all outputs/assets."
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_lower_lash.cjs",
+      "bytes": 1541,
+      "sha256": "d19fd428dcdcd4e88cc6932f7e5ef3ba69d11754e89fc3c009978637d007bca0",
+      "reason": "Hardcoded pre-v17 eye diagnostic with no current caller; keep current v17 validators, their dependencies, and all outputs/assets."
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_eye_anatomy.cjs",
+      "bytes": 1717,
+      "sha256": "d255669ee3beb4dbc9663d2861d1b36279ceeef0e4864beeb84f34eb746bde36",
+      "reason": "Hardcoded pre-v17 eye diagnostic with no current caller; keep current v17 validators, their dependencies, and all outputs/assets."
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/audit_eye_failure_v16.py",
+      "bytes": 2086,
+      "sha256": "91d81bd94ef7429841202573380f00fa21ea3e28efbd800a88ae238d192d7988",
+      "reason": "Hardcoded pre-v17 eye diagnostic with no current caller; keep current v17 validators, their dependencies, and all outputs/assets."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/deticker.py",
+      "bytes": 3977,
+      "sha256": "af2cfe78f88769457700352d977f5ff899e8405bd9ad50962f92ed3f5f3fa8f5",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/mk_template.py",
+      "bytes": 8107,
+      "sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6.jsonl",
+      "bytes": 251828,
+      "sha256": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6_add.jsonl",
+      "bytes": 15712,
+      "sha256": "d924c58cad24b57a060c33169a730693d8fe92defec4242e9291bc9854a38bb1",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6_base.jsonl",
+      "bytes": 236116,
+      "sha256": "77ff154010fce9565a4d62b8f25627db81925fc90a55ada4d57f7579a9afa012",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/qwen_template_gen.jinja",
+      "bytes": 8305,
+      "sha256": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/RESULTS.md",
+      "bytes": 5739,
+      "sha256": "753c83f0cc90edb7628711c0156b0bc8f42b9375bd8596ace0f22bafe18b4fda",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/run_on_pod.sh",
+      "bytes": 3522,
+      "sha256": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/score_style.py",
+      "bytes": 5589,
+      "sha256": "6bc0ffd2eb311b78981f44f373198cd7f853da77b0741b3a0f003821264eaead",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/train_nova_lora_v6.py",
+      "bytes": 9322,
+      "sha256": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/TRAIN_RUN.md",
+      "bytes": 4664,
+      "sha256": "3445335efa7043f0043496685960a739b592163648fbbe3bfcb164088c11c963",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v6/V6_SPEC.md",
+      "bytes": 6523,
+      "sha256": "56627f52fde3ec136df7e2911330a09f194c0ba89bfbb433bb529b37cb29e714",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/evidence_pipeline_2026-07-23_night.jsonl",
+      "bytes": 44635,
+      "sha256": "f8fdc158620d67d6d8baef1c895bde95fbfddebb845dc0fc95f0cedf1b9c9203",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/MINING_NOTES.md",
+      "bytes": 6920,
+      "sha256": "b79be3b28e6fc1886327aeb2afd263400102d32754c617a40b602771eb1d880a",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/SOURCE_MAP.md",
+      "bytes": 9381,
+      "sha256": "952fdea7dfbe7d015dd8379ad85f229ed80751962e4d4ac4199ccde4c222ce93",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_A_solitude.jsonl",
+      "bytes": 7172,
+      "sha256": "b842c56b03d6aacd059a8c37c4a3891016bb8c0507cc8e723f27d9db2f82a628",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_B_attribution.jsonl",
+      "bytes": 12570,
+      "sha256": "59c870cd0602e211f7351d4278823112be94552fa6c6858c95cb54e5ac12a743",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_C_payload.jsonl",
+      "bytes": 11296,
+      "sha256": "6fc715ebf900e82991e1de8a4d453687132cc871370262c8033e9f550ad456b7",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_D_witness.jsonl",
+      "bytes": 12199,
+      "sha256": "ebe1b79931c20ce343b5c22222cbfea47d45de095f336a0a78eb76bc47bad925",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_E_reach.jsonl",
+      "bytes": 5128,
+      "sha256": "239824766c7fff19f8aab8f15e172d7a5db65814f22372337fcc90df7f70bd8c",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mk_template.py",
+      "bytes": 8107,
+      "sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/nova_core_v7.jsonl",
+      "bytes": 300193,
+      "sha256": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/nova_core_v7_add.jsonl",
+      "bytes": 48365,
+      "sha256": "95b3c6e1f86ade28ae6b093b5d3d9cf6726f9d207a423fd13d38c01a4cdde4db",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/PROBE_BATTERY.md",
+      "bytes": 3925,
+      "sha256": "29607a8adc39cc6363c59e54aa0ec411ae24c02a0c96d70e6fab20fa9fe71a74",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/run_on_pod_v7.sh",
+      "bytes": 3968,
+      "sha256": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/train_nova_lora_v7.py",
+      "bytes": 9500,
+      "sha256": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_REVIEW_2026-07-26.md",
+      "bytes": 7500,
+      "sha256": "b2da84a010e86a1676c2916332de8ea6cb15066cbe64b71f94b5cd8a4c45c08d",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_SPEC.md",
+      "bytes": 5635,
+      "sha256": "eca97d22063e604bbdbb8425018001fde972250d967fa645b3f4410bd88076fc",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_TRAIN_RUNBOOK.md",
+      "bytes": 4477,
+      "sha256": "9bb7fdb8e275ece34cd9ab6f4b69363a14f8667d190ed6377dcb5cf5a554378b",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here."
+    },
+    {
+      "source": "nova_body/nova_cortex/context_builder.py",
+      "bytes": 975,
+      "sha256": "6807fc76e7b4030f3a4e8fef14304e65ee4c53db2f6c5cce83af06ccc99e179b",
+      "reason": "Retired legacy cortex helper with removed consumer and verified replacement in current executive/runtime context and interrupt gates; active references removed; no personal records moved."
+    },
+    {
+      "source": "nova_body/nova_cortex/rules.py",
+      "bytes": 5083,
+      "sha256": "c5fc21603dd9f1cda0f41c67d4dc0cac736b296eff14746b49a3985068a53d25",
+      "reason": "Retired legacy cortex helper with removed consumer and verified replacement in current executive/runtime context and interrupt gates; active references removed; no personal records moved."
+    },
+    {
+      "source": "nova_body/nova_cortex/checkin.py",
+      "bytes": 6057,
+      "sha256": "87731643ec9988e1ab54b83501d7aab86762ce3c0c6b89da7db26bb108a3f616",
+      "reason": "Retired legacy cortex helper with removed consumer and verified replacement in current executive/runtime context and interrupt gates; active references removed; no personal records moved."
+    }
+  ],
+  "started_at": "2026-10-04T14:06:50.7720872+09:00",
+  "completed_at": "2026-10-04T14:12:27.1612184+09:00"
+}

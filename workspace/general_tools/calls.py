@@ -1,5 +1,5 @@
 # @nova: Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 13:57:45
 """
 general_tools/calls.py -- Nova Package Call Graph Generator
 ============================================================
@@ -15,10 +15,25 @@ Usage (from workspace root):
 """
 
 import ast
+import os
+import tempfile
 import sys
 import time
 from pathlib import Path
 from collections import defaultdict
+
+def _atomic_document(path: Path, content: str):
+    """Publish a complete generated document before the sync watcher sees it."""
+    content = "<!-- @nova: Generated source-level call reference; not proof of live execution. -->\n" + content
+    fd, temporary = tempfile.mkstemp(prefix="." + path.name + ".", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
+            stream.write(content)
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
 
 _THIS_FILE      = Path(__file__).resolve()
 GENERAL_TOOLS   = _THIS_FILE.parent                    # workspace/general_tools/
@@ -184,7 +199,7 @@ def write_calls_md(package_dir: Path, scan: dict, dry: bool = False):
         print(f"Would write: {dest}")
         print(content[:500])
     else:
-        dest.write_text(content, encoding="utf-8")
+        _atomic_document(dest, content)
         print(f"[calls] Written: {dest.relative_to(WORKSPACE_ROOT)}")
 
 
@@ -251,7 +266,7 @@ def write_master_index(all_scans: dict[str, dict], dry: bool = False):
         print(content[:800])
     else:
         MASTER_INDEX.parent.mkdir(parents=True, exist_ok=True)   # Orient/ (2026-07-14)
-        MASTER_INDEX.write_text(content, encoding="utf-8")
+        _atomic_document(MASTER_INDEX, content)
         print(f"[calls] Master index: {MASTER_INDEX.relative_to(WORKSPACE_ROOT)}")
 
 

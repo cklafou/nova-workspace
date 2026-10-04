@@ -7,18 +7,25 @@
 <path d="M275,232 C462.5,232 462.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M275,232 C462.5,232 462.5,106 650,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M275,232 C307.5,232 307.5,358 340,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M275,232 C462.5,232 462.5,232 650,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M275,232 C307.5,232 307.5,610 340,610" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M275,106 C462.5,106 462.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M275,106 C307.5,106 307.5,106 340,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M275,106 C327,106 327,232 275,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M275,106 C462.5,106 462.5,358 650,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,610 C637,610 637,106 585,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,610 C617.5,610 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,610 C617.5,610 617.5,106 650,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,862 C617.5,862 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,232 C617.5,232 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,232 C637,232 637,358 585,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,232 C637,232 637,106 585,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,232 C617.5,232 617.5,232 650,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,484 C617.5,484 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M895,484 C947,484 947,862 895,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M895,484 C947,484 947,358 895,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M895,232 C947,232 947,862 895,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M650,232 C617.5,232 617.5,106 585,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M895,358 C947,358 947,862 895,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,736 C617.5,736 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,736 C637,736 637,358 585,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
@@ -27,6 +34,7 @@
 <path d="M895,610 C947,610 947,484 895,484" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,106 C617.5,106 617.5,862 650,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,106 C617.5,106 617.5,232 650,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M585,106 C637,106 637,610 585,610" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,106 C637,106 637,358 585,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,106 C617.5,106 617.5,106 650,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,106 C637,106 637,232 585,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
@@ -35,13 +43,14 @@
 <path d="M895,106 C947,106 947,862 895,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M650,106 C617.5,106 617.5,232 585,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M895,106 C947,106 947,358 895,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M650,106 C617.5,106 617.5,106 585,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M650,106 C617.5,106 617.5,484 585,484" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M895,106 C947,106 947,484 895,484" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M895,106 C947,106 947,232 895,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M895,106 C947,106 947,610 895,610" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M650,106 C617.5,106 617.5,358 585,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
+<path d="M650,106 C617.5,106 617.5,610 585,610" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M895,736 C947,736 947,862 895,862" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
-<path d="M895,232 C1082.5,232 1082.5,106 1270,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,106 C772.5,106 772.5,106 960,106" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,232 C927.5,232 927.5,736 1270,736" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,106 C927.5,106 927.5,358 1270,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
@@ -50,7 +59,6 @@
 <path d="M895,484 C927.5,484 927.5,232 960,232" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,610 C772.5,610 772.5,358 960,358" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M585,484 C772.5,484 772.5,484 960,484" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
-<path d="M895,106 C927.5,106 927.5,484 960,484" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <path d="M275,106 C617.5,106 617.5,610 960,610" fill="none" stroke="#63768f" stroke-opacity=".55" marker-end="url(#arrow)"/>
 <g><rect x="30" y="66" width="245" height="84" rx="9" fill="#142338" stroke="#34475e"/>
 <text x="44" y="94" fill="#edf3fc" font-size="15" font-family="sans-serif">Launch boundary</text>

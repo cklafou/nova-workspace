@@ -1,5 +1,5 @@
 # Nova A2: personality-informed refinement
-_Last updated: 2026-10-04 13:26:26_
+_Last updated: 2026-10-04 13:57:02_
 
 Date: 2026-09-22. Status: **A is the user-selected base; A2 is a proposal for review.**
 

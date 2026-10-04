@@ -1,0 +1,7 @@
+// @nova: Inspect isolated v13 eye artwork at enlarged scale to locate lower lash clipping.
+const fs=require('fs'),path=require('path');const{createCanvas}=require('@napi-rs/canvas');const{readPsd,initializeCanvas}=require('ag-psd');initializeCanvas(createCanvas);
+const root=path.resolve(__dirname,'..'),p=readPsd(fs.readFileSync(path.join(root,'source/Nova_FRONT_v13.psd')),{skipThumbnail:true});let a=[];function flat(ls){for(const l of ls||[])l.children?flat(l.children):a.push(l)}flat(p.children);
+const c=createCanvas(1400,1080),x=c.getContext('2d');x.fillStyle='#777d89';x.fillRect(0,0,c.width,c.height);x.font='20px sans-serif';x.imageSmoothingEnabled=false;
+for(const[si,side]of ['R','L'].entries()){const bx=side==='R'?888:1040,by=284;for(let k=0;k<4;k++){const sx=si*700,sy=k*270;x.fillStyle='white';x.fillText(side+' '+['white + iris + rim','rim only','white only','head only'][k],sx+8,sy+23);for(const kind of k===0?['White','Iris','Rim']:k===1?['Rim']:k===2?['White']:['Head']){const l=a.find(v=>v.name==='FRONT_'+kind+(kind==='Head'?'':side));x.save();x.beginPath();x.rect(sx,sy+30,700,230);x.clip();x.drawImage(l.canvas,sx+(l.left-bx)*4,sy+30+(l.top-by)*3,l.canvas.width*4,l.canvas.height*3);x.restore();}}}
+const dest=path.join(root,'preview/eye_layers_v13_diagnosis.png');fs.writeFileSync(dest+'.tmp',c.toBuffer('image/png'));fs.renameSync(dest+'.tmp',dest);
+console.log(JSON.stringify(a.filter(l=>/Iris|Rim|White|Lid/.test(l.name)).map(l=>({name:l.name,bounds:[l.left,l.top,l.right,l.bottom],hidden:l.hidden})),null,2));

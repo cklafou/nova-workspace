@@ -1,4 +1,4 @@
-# Last updated: 2026-10-03 10:51:13
+# Last updated: 2026-10-04 13:57:45
 # @nova: Behaviour cases for nova_senses/quiet_part_watcher.py: report QUIET only for senses idle past the threshold, never for new ones.
 from nova_body.nova_senses.quiet_part_watcher import check_quiet_parts
 

@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 13:57:45
 # @nova: Command line for the model updater: check, search, inventory, plan, install and training bundles, for testing and for agents.
 """python -m nova_updater <command> [options]
 

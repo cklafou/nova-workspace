@@ -1,0 +1,6 @@
+// @nova: Inspect source eye layers and coverage to diagnose iris overlap without editing artwork.
+const fs=require('fs'),path=require('path');const {createCanvas}=require('@napi-rs/canvas');const {readPsd,initializeCanvas}=require('ag-psd');initializeCanvas(createCanvas);
+const root=path.resolve(__dirname,'..'),p=readPsd(fs.readFileSync(path.join(root,'source/Nova_FRONT_v12.psd')));const a=[];function flat(ls){for(const l of ls)l.children?flat(l.children):a.push(l)}flat(p.children);
+const c=createCanvas(960,640),x=c.getContext('2d');x.fillStyle='#89909a';x.fillRect(0,0,960,640);x.font='20px sans-serif';x.imageSmoothingEnabled=false;
+for(const [si,side]of ['R','L'].entries()){const bx=side==='R'?885:1040,by=276; for(let k=0;k<3;k++){const sx=si*480,sy=k*205;x.fillStyle='white';x.fillText(side+' '+['white + iris + rim','rim only','white only'][k],sx+8,sy+22);for(const kind of k===0?['White','Iris','Rim']:k===1?['Rim']:['White']){const l=a.find(v=>v.name==='FRONT_'+kind+side);x.drawImage(l.canvas,sx+(l.left-bx)*3,sy+28+(l.top-by)*2,l.canvas.width*3,l.canvas.height*2)}}}
+const dest=path.join(root,'preview/eye_layers_v12.png');fs.writeFileSync(dest+'.tmp',c.toBuffer('image/png'));fs.renameSync(dest+'.tmp',dest);console.log(dest);

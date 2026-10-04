@@ -34,18 +34,35 @@ browser fallback. Direct `NovaLauncher.py` startup also uses the Qt face when av
 ## Behavior
 
 - Closing the main desktop window hides it to the tray when a tray is available.
-  **Quit Nova** exits the controller; NovaStart then performs its existing orderly
-  shutdown of the services it owns. Closing a widget popout closes that window.
-- One customizable workspace uses a compact **Layout** selector. Its adjacent **⋯**
-  opens create-empty, rename, duplicate and delete controls. Each named layout saves
-  its widget arrangement automatically; at least one layout remains. Every widget,
+  **Nova → Quit Nova**, or the tray menu's **Quit Nova**, exits the controller; NovaStart
+  then performs its existing orderly shutdown of the services it owns. Closing a
+  widget popout closes that window. **Ctrl+R** reloads the interface; a full quit and
+  relaunch is required to load changes to the native desktop host.
+- One customizable workspace uses a compact **Layout** selector with **Save layout**,
+  **Load layout**, **Revert**, **Undo** and **Redo** beside it. Widget edits are
+  temporary until Save layout captures the live arrangement, divider sizes and
+  popout configuration. Status distinguishes **Unsaved changes**, **Saving…**,
+  **Saved** and **Save failed**. Failure leaves the arrangement open and preserves
+  its saved baseline. Native window size persists separately. Every widget,
   including Conversation and Sessions, can move, resize, stack, close, expand, or
   pop out. An empty layout offers **Browse widgets** to begin arranging it.
+- Selecting a layout name stages a choice; **Load layout** applies it and discards
+  unsaved edits to the departing layout. **Revert** restores the currently loaded
+  layout's last saved baseline, even when a different selector choice is pending.
+  **Undo/Redo** keep up to 100 snapshots in the current session and group a drag or
+  resize as one edit. Revert can be undone. Loading another layout or refreshing
+  clears edit history. Reloading/closing discards unsaved widget changes; changing
+  the dock, switching layouts and page unload never save an arrangement automatically.
+- **⋯** explicitly creates, renames, duplicates or deletes layouts; these management
+  actions persist and keep at least one layout. **Duplicate current** saves the
+  current draft under a new name without overwriting its original saved layout.
 - The single application bar keeps File, View, Agents, Services, Advanced and Widgets
   as anchored dropdowns. **Widgets** and its searchable library explicitly open
   widgets. Services and Advanced remain in their original DOM locations; optional
   Services and Generation widgets mirror their controls and forward their existing
-  handlers. The original control IDs are not duplicated or moved into a dock.
+  handlers. The original control IDs are not duplicated or moved into a dock. Widget
+  menu/library checkmarks include hidden dock tabs and live popouts; selecting an
+  already-open widget focuses it instead of toggling it closed.
 - The conversation-tab × closes the tab while keeping the session in Sessions.
   Session deletion remains a separate existing action.
 - The registry includes Control, Conversation, Collaboration, Model updates,
@@ -63,10 +80,11 @@ browser fallback. Direct `NovaLauncher.py` startup also uses the Qt face when av
 - The Computer widget opens the existing noVNC viewer. Its Connect action requests
   connection with local scaling; it does not provision the VM or change its access.
   Perceptions continues to show images Nova has actually inspected.
-- **Appearance** is an anchored menu for density, accent and resetting the current
-  layout to a starter arrangement. Other named layouts are unaffected.
-- Switching layouts saves and closes the old layout's separate windows before
-  loading the next arrangement. Their widgets return to the original layout's
+- **Appearance** is an anchored menu for density and accent. **Use starter
+  arrangement (unsaved)** creates an undoable draft; Save layout is required to keep
+  it. Other named layouts are unaffected.
+- Loading layouts closes the old layout's separate windows before loading the next
+  arrangement, without automatically saving the departing draft. Their widgets return to the original layout's
   dock when it is restored; stale popout windows are not reopened automatically.
   Choosing a widget already open in a separate window focuses that window.
 - Chat-only mode visibly reads **Nova off · Chat only** in the status bar. The
@@ -85,18 +103,48 @@ controller interaction; `workspace.css` owns its presentation. `index.html`
 continues to contain the existing widgets and protocol handlers. This is a staged
 extraction, not the end of the monolith cleanup.
 
-The desktop profile lives in `%LOCALAPPDATA%/ProjectNova/Controller`. Window geometry
-uses `window.ini`; controller layout, appearance, and closed conversation tabs live
-in the profile's local storage. Browser and desktop profiles are distinct.
+The desktop profile lives in `~/ProjectNovaData/Controller` (on Windows,
+`%USERPROFILE%/ProjectNovaData/Controller`), outside the AppData paths that MSIX can
+virtualize differently for Codex and ordinary launches. Window geometry uses
+`window.ini`; controller layout, appearance, and closed conversation tabs live in
+the persistent renderer `storage/`. Browser and desktop profiles are distinct.
+
+On first launch with no canonical profile, the actual desktop process copies
+`window.ini` and `storage/` from its own view of the previous
+`%LOCALAPPDATA%/ProjectNova/Controller` into a staging directory, then renames the
+complete copy into place. The old profile is preserved and disposable cache is
+omitted. A copy failure shows a native error and aborts instead of starting with
+blank settings. An existing canonical profile wins on subsequent launches.
+Explicit `--profile-dir` previews never import the user's profile.
+
+Move, resize and window-state events persist geometry after a 350 ms debounce,
+without waiting for the window to close. Close-to-tray and application quit flush
+immediately. Minimized windows preserve their last normal geometry; maximized
+state and its restore size persist. Qt adjusts off-screen saved geometry to the
+available screens. Settings write failures remain visible in the native status
+bar. Reloading web content does not replace the running native host or migrate
+its profile; that happens on a full quit and relaunch.
+
 Named layouts use the local-storage key `nova.controller.layouts.v2`, containing
 `version: 2`, `activeId`, `items` and a bounded `deleted` recovery collection. Each
 item has an ID, name, starter seed and Golden Layout configuration, with an update
 time after saving. Existing Together/Observe/Focus configurations migrate to named
 layouts while keeping the selected arrangement. The old `nova.controller.v1` and
 `nova.controller.dock.*` keys remain untouched. An unreadable v2 collection is copied
-to a timestamped `.recovery.*` key before fallback; deleted, reset or unrestorable
-configurations retain up to 20 recovery copies. These copies are not a user-facing
-trash or a substitute for a profile backup.
+to a timestamped `.recovery.*` key before fallback. Deletion retains a recovery
+copy, bounded to 20 records; previous reset/recovery copies stay intact. An
+unrestorable saved configuration is left unchanged. These copies are not a
+user-facing trash or a substitute for a profile backup. Loading a layout alone
+does not persist the selected layout; Save layout commits its arrangement and
+active selection. Explicit named-layout management also persists its own changes.
+
+Cole's October 4 screenshot is available as a separate **Screenshot reference**
+named layout. The one-time `screenshotReference: "2026-10-04"` migration adds that
+option without selecting it, overwriting Default Workspace or resetting the
+active arrangement. Choose its name and Load layout to restore it. Earlier
+recovery copies remain intact. Page teardown only cancels pending in-memory
+history updates; it never writes the unsaved arrangement or an empty dock over
+the last saved configuration.
 
 Existing `/api/layout` data is not overwritten by the new controller. The legacy
 layout is accessible at `http://127.0.0.1:8765/?layout=legacy`.
@@ -122,9 +170,20 @@ For interface-only work, `desktop.py --url <preview-url> --profile-dir <test-dir
 opens an isolated profile without importing Nova's body or loading a model. Tests
 must distinguish simulated UI behavior from live runtime integration.
 
-Three native tests cover menu construction, geometry restoration, and popout profile
-sharing. Browser checks cover tab closing/reopening, widget search, mounting,
-resizing, appearance persistence, and workspace restoration. Live model generation,
+As of the October 4 persistence repair, 15 isolated desktop tests cover menus,
+popout profile sharing, debounced movement/resizing, maximized/minimized state,
+tray/quit flushing, off-screen restore, visible write errors and profile migration.
+A two-process offscreen Qt regression writes geometry, exits without close/quit
+hooks, and restores the same size and position in a fresh process. Twenty-one Node
+scenarios cover manual Save/Load, Revert, Undo/Redo, no unload autosave, screenshot
+reference and widget checkmarks. Live browser checks verified close-widget drafts,
+Undo/Redo, Revert, discard on reload, explicit Save surviving reload, selection
+without loading, explicit screenshot loading and open-widget checks, with no
+browser errors. Earlier browser checks also cover tab closing/reopening, search,
+mounting, resizing and appearance. The user's running native app was not restarted
+and its real profile was not migrated during this repair; native reopen
+confirmation remains separate from those fixtures and browser checks.
+Live model generation,
 service shutdown, adapter changes, and autonomous VM execution require separate
 integration verification; the UI changes do not certify those systems.
 

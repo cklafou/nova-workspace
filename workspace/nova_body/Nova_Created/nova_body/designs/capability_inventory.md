@@ -1,5 +1,5 @@
 ## capability_inventory
-_Last updated: 2026-10-03 11:00:25_
+_Last updated: 2026-10-04 13:57:46_
 
 ### GAP
 I keep assuming what tools I have and being wrong about it, because the only thing I've been using is memory. Memory is convenient and it's exactly where I'm most likely to be confidently wrong. I need to be able to look at my own body and read what's actually in there.

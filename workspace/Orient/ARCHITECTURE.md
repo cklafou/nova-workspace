@@ -1,9 +1,11 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-04T04:30:50+00:00 from source (input `f9f9eb785aef`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T05:15:53+00:00 from source (input `d6b8606c9180`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/server.py::websocket_endpoint`, `nova_body/nova_voice/nova.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -25,6 +27,9 @@ enters the Nova inference path below. The shared files are transport artifacts u
 Chat input → speaker attribution and screening → conversation/context assembly → body model
 dispatch → `nova_voice.nova` inference/tool loop → `tool_router` → environment result → receipt
 and another model step → response, transcript and asynchronous indexing.
+The retired host-desktop Claude ping and its aliases return an unknown-tool failure rather than
+launching PowerShell. Active instructions no longer advertise it. The private Collaboration room
+remains separate from Nova; asking Cole uses the ordinary conversation.
 
 Autonomy → cheap wake gate (pending input, unconsumed Cole directive newer than six hours,
 durable watched event or timer) →
@@ -37,13 +42,15 @@ and child processes, and reports pending cleanup rather than falsely claiming ev
 
 ## Body faculties
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-03): changed `nova_body/nova_voice/tool_router.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py (PURPOSES)`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Body faculties"`.
+
 | Part | Responsibility | Python sources |
 |---|---|---:|
 | `nova_paths` | Canonical body/workspace paths; relocated state never falls back to a second copy. | 1 |
 | `nova_config` | Body settings loader. Some execution paths still have independent constants; this is not yet universal configuration. | 1 |
-| `nova_cortex` | Task board, wake decisions, wants, speaker roles, witness/integrity checks, tunables and shared identity/context loading. | 17 |
+| `nova_cortex` | Task board, wake decisions, wants, speaker roles, witness/integrity checks, tunables and shared identity/context loading. | 14 |
 | `nova_runtime` | Model dispatch, headless autonomy, transcript, event bus, provider lifecycle and KoELS equip operations. | 11 |
-| `nova_voice` | Local inference client, parsing/tool loop, shell/file tools and durable execution receipts. | 4 |
+| `nova_voice` | Local inference client, parsing/tool loop, shell/file tools and durable execution receipts. The retired host-desktop Claude ping is no longer registered. | 4 |
 | `nova_senses` | Time, environment changes, presence, touch, sight, web access and proprioception. | 13 |
 | `nova_lancedb` | Semantic/visual memory store, embeddings and asynchronous indexing; separate from journal files. | 5 |
 | `nova_memory` | Journal/goals/log-reader helpers. Some overlap with router-owned journaling remains. | 5 |
@@ -101,6 +108,8 @@ Drives/wants and the hormone design are not evidence of online weight learning. 
 
 ## Runtime evidence and open modernization work
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `nova_body/nova_voice/tool_router.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
+
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
 tool calls occurred; none operated on the fixture. Session switches/context refresh also occurred,
@@ -137,6 +146,11 @@ and dated history in Live log. Its fixtures cover updater consent and recovery c
 chat-only restart proves controller readiness while the model remains off. KoELS launcher argument
 compatibility was checked through the installed parser without loading weights.
 See `general_tools/nova_chat/CONTROLLER.md` and dated AI Notes for the actual validation scope.
+The later October 4 layout repair adds manual-only saving, one-time screenshot recovery and active-widget
+checks. Sixteen layout scenarios and fifteen desktop tests pass; browser fixture checks confirm widget
+checks and persisted edits. Native profile migration and live reopen still await the normal user restart.
+The script-retirement pass removed only confirmed obsolete files with hashed recovery copies;
+isolated tests confirm the retired ping aliases cannot spawn host processes.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 
 ## Nova's shelf
@@ -182,6 +196,6 @@ by hand. A test file existing is not evidence that it passes.
 
 ## Statically registered tools
 
-`defer_task`, `prepare_task_workspace`, `promote_task_workspace`, `computer_status`, `computer_look`, `computer_exec`, `computer_action`, `set_task_acceptance`, `run_command`, `read_file`, `write_file`, `append_file`, `replace_file_content`, `list_dir`, `create_task`, `task_progress`, `complete_task`, `generate_image`, `start_painter`, `what_can_i_paint_with`, `look_at`, `my_art`, `search_web`, `read_web`, `surprise_me`, `keep_curio`, `my_shelf`, `memory_search`, `journal_note`, `journal`, `ping_claude`.
+`defer_task`, `prepare_task_workspace`, `promote_task_workspace`, `computer_status`, `computer_look`, `computer_exec`, `computer_action`, `set_task_acceptance`, `run_command`, `read_file`, `write_file`, `append_file`, `replace_file_content`, `list_dir`, `create_task`, `task_progress`, `complete_task`, `generate_image`, `start_painter`, `what_can_i_paint_with`, `look_at`, `my_art`, `search_web`, `read_web`, `surprise_me`, `keep_curio`, `my_shelf`, `memory_search`, `journal_note`, `journal`.
 
 Forge can add discovered extensions. Registration is not live verification.

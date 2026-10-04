@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# @nova: Combine host accessibility and local visual models for optional desktop perception.
 # Last updated: 2026-10-03 10:59:53
 """
 nova_eyes.py — Nova's Unified Vision System
@@ -28,8 +29,7 @@ VISION TIER STACK  (Phase 4B — Ollama-free, fully local)
 
   Tier 4: RETIRED 2026-07-19 — was "Claude Sonnet via mentor" for periodic sanity checks.
     → The paid mentor path is gone (Cole: "I don't want the APIs being used"). High-stakes
-      verification now uses Tier 3 like everything else; if she wants a second opinion from
-      Claude she asks for one deliberately with the ping_claude tool.
+      verification now uses Tier 3 like everything else.
 
 Nova should NEVER be blind. If Tier 2 fails, Tier 3 takes over transparently.
 Ollama is no longer required or used anywhere in this file.

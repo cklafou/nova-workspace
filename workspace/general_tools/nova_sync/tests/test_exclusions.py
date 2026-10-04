@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 13:57:45
 # @nova: Guards the watcher and git rules that keep agent transport, task copies, avatar files and the work queue out of autosave.
 """Exclusion rules shared by the sync watcher and workspace/.gitignore (2026-10-03)."""
 from pathlib import Path

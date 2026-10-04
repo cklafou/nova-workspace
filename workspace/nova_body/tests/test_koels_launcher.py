@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 14:00:46
 # @nova: Prove KoELS preload arguments survive the real Windows launcher and current llama parser without loading models.
 import ast
 import json

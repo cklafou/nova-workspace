@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 13:48:50
 # @nova: Test helpers for the updater: a throwaway workspace (launcher, boot files, fake models) and fake catalogs, so tests never touch real models or the network.
 """Shared fixtures. Every test runs inside a temporary workspace set through environment variables."""
 from __future__ import annotations

@@ -6,6 +6,7 @@ import sys as _nova_path_sys
 from pathlib import Path as _NovaPath
 _nova_path_sys.path.insert(0, str(_NovaPath(__file__).resolve().parents[2] / 'nova_body'))
 from nova_paths import body_path
+import os
 import re
 import sys
 import time
@@ -164,8 +165,21 @@ _LAST_STAMP: dict[str, float] = {}
 STAMP_COOLDOWN_S = 30
 
 
+def _is_frozen_file(path: Path) -> bool:
+    """Training packages and retired originals retain exact hashes; never rewrite them."""
+    roots = [WORKSPACE_DIR / "models" / "Training Files", WORKSPACE_DIR / "_admin" / "Trash"]
+    if os.environ.get("NOVA_MODELS_DIR"):
+        roots.append(Path(os.environ["NOVA_MODELS_DIR"]).expanduser() / "Training Files")
+    target = tuple(part.casefold() for part in Path(path).resolve().parts)
+    for root in roots:
+        prefix = tuple(part.casefold() for part in root.resolve().parts)
+        if target[:len(prefix)] == prefix:
+            return True
+    return False
+
+
 def update_timestamp_in_file(path: Path):
-    if path.name in EXCLUDE_FROM_TIMESTAMPS:
+    if _is_frozen_file(path) or path.name in EXCLUDE_FROM_TIMESTAMPS:
         return
     suffix = path.suffix.lower()
     if suffix not in (".py", ".md"):
@@ -518,9 +532,11 @@ def _drop_oversized_from_index(watch_dir):
                 _untrack(parts[4], int(parts[3]), "earlier history")
 
     if dropped:
-        print(f"[{time.strftime('%H:%M:%S')}] NOTE: files already committed stay in HISTORY. "
-              "Until those commits are rewritten the push will keep failing -- run "
-              "_admin\\FIX_GIT.cmd once.")
+        print(f"[{time.strftime('%H:%M:%S')}] NOTE: oversized blobs in unpushed commits remain in HISTORY; "
+              "a later untracking commit does not remove them.")
+        print("    Review unpushed commits: git log --oneline HEAD --not --remotes")
+        print("    Review each reported artifact: git ls-files -- <reported-path>, then check .gitignore.")
+        print("    Preserve existing branches and a backup before choosing a targeted history repair.")
     return dropped
 
 def git_push(watch_dir):
@@ -758,6 +774,7 @@ def run_pup_cycle():
             if p != staged_file
             and p.is_file()
             and len(p.relative_to(WORKSPACE_DIR).parts) > 1
+            and not _is_frozen_file(p)
         ]
 
         if not candidates:

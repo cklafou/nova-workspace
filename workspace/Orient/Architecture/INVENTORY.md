@@ -1,12 +1,12 @@
 # Nova architecture — generated source inventory
 
-Generated: 2026-09-30T17:38:31.228919+00:00 · revision `f79dca212bd9d8e6`
+Generated: 2026-10-04T05:12:43.655434+00:00 · revision `235fb75d09c072a9`
 
 Open `index.html` for all three levels. SVGs are overview exports; the explorer and tables contain the complete mapped inventory.
 
 Static imports are dependencies, not execution order. Source-checked seams are reviewed annotations. Unresolved receivers are reported, never guessed.
 
-78 modules · 217 import references · 1494 resolved call sites · 37 reviewed seams.
+83 modules · 285 import references · 1761 resolved call sites · 37 reviewed seams.
 
 ## Launch boundary
 
@@ -43,7 +43,9 @@ Defines a backend-neutral computer, selects local Linux or WSL, and offers shell
 | `nova_body/nova_computer/hands.py` | Uses the computer's shell channel to run scrot and xdotool on a separate X display for screenshots and GUI actions. |
 | `nova_body/nova_computer/pluck_check.py` | Standalone diagnostic for imports and backend behavior. Diagnostics are not evidence that the main response loop is wired to Hands. |
 | `nova_body/nova_computer/reach.py` | Configures the WSL computer's access to host files and Windows interoperability. |
+| `nova_body/nova_computer/session.py` | Keep the selected WSL guest alive between tool calls, without a visible terminal. Systemd services alone do not keep WSL running. An owned stdin pipe does: EOF on host exit ends the guest helper. This idle helper is environment life support, not an autonomous action, so stopping a task leaves the desktop observable. |
 | `nova_body/nova_computer/toolkit.py` | Standalone setup utility that installs software into the guest computer. |
+| `nova_body/nova_computer/tools.py` | Normal tool-route adapters for Nova's computer and explicit human handoff. |
 | `nova_body/nova_computer/tune_up.py` | Standalone repair and diagnostic pass for guest account, display and authentication issues. |
 
 ## Config helper
@@ -61,8 +63,6 @@ Builds reflection and decision prompts, applies actions to the task board, track
 | Module | Purpose |
 |---|---|
 | `nova_body/nova_cortex/__init__.py` | Package entry for executive, tasking and context faculties. |
-| `nova_body/nova_cortex/checkin.py` | Checks for human interruptions or instructions between actions. Its presence alone is not proof that the normal response loop invokes it. |
-| `nova_body/nova_cortex/context_builder.py` | Provides lightweight token estimates and context budget helpers; references indicate which paths actually use them. |
 | `nova_body/nova_cortex/discourse.py` | Determines what is happening in the conversation, who is present, and whether a response belongs in the room; includes recent actions as grounding. |
 | `nova_body/nova_cortex/drives.py` | Maintains boredom, wants and novelty feedback that influence what Nova chooses to do during autonomous wakes. |
 | `nova_body/nova_cortex/executive.py` | Maintains autonomy state; builds reflection, decision and execution prompts; applies structured decisions and records progress or rest. |
@@ -70,9 +70,10 @@ Builds reflection and decision prompts, applies actions to the task board, track
 | `nova_body/nova_cortex/loadout.py` | Reads KoELS manifests and makes pure loadout decisions from task text. Physical adapter changes belong to the runtime equip mechanism. |
 | `nova_body/nova_cortex/nova_status.py` | Writes Nova's status record for external observers. |
 | `nova_body/nova_cortex/principals.py` | Classifies known principals, checks capabilities and validates untrusted input. The server enforces this body-owned policy at its boundary. |
-| `nova_body/nova_cortex/rules.py` | Contains operating-rule text and access helpers. Import evidence, not its legacy bootstrap description, determines its mapped consumers. |
+| `nova_body/nova_cortex/task_workspace.py` | Task-sized source copies, acceptance checks, and recoverable promotion. Only selected source paths are copied. Identity, memory, weights and active logs are never swept into a coding sandbox. This is a test workspace, not an OS security boundary. |
 | `nova_body/nova_cortex/tasking.py` | Reads and updates the id-keyed task board, including status, priorities and progress. Completed and abandoned tasks remain records. |
 | `nova_body/nova_cortex/tunables.py` | Reads and validates tunable inference and behavior settings from the administrative JSON store, with cached reads and defaults. |
+| `nova_body/nova_cortex/verification.py` | Task acceptance checks are execution evidence, separate from a model's DONE text. |
 | `nova_body/nova_cortex/witness.py` | Builds present-tense evidence, flags checkable claims, prepares audit prompts, interprets verdicts and records witness pipeline events. |
 | `nova_body/nova_cortex/workspace_context.py` | Body-owned grounding: loads self-model, memory and mentioned files for both chat and headless execution. |
 
@@ -101,6 +102,7 @@ Queues chat and image entries, embeds them, stores them in local LanceDB tables,
 | Module | Purpose |
 |---|---|
 | `nova_body/nova_lancedb/__init__.py` | Package entry for embedding, storage and background ingestion. |
+| `nova_body/nova_lancedb/backfill.py` | Recover searchable coverage from intact local records; never rewrite originals. |
 | `nova_body/nova_lancedb/embedder.py` | Lazily loads MiniLM for text and CLIP for images. Converts inputs into vectors; failed embedding operations currently return zero vectors. |
 | `nova_body/nova_lancedb/hippocampus.py` | Opens local LanceDB tables, stores text and image embeddings, applies similarity-based retention and formats bounded recall excerpts. |
 | `nova_body/nova_lancedb/indexer.py` | Runs a worker thread that takes queued chat/image entries and passes them to the persistent store. |
@@ -157,8 +159,10 @@ Owns the wake loop, event bus, transcript view, model dispatch, model guard, mem
 | `nova_body/nova_runtime/llama_control.py` | Checks the local model service and provides start/stop/restart operations through injected or default operating-system hooks. |
 | `nova_body/nova_runtime/model_client.py` | Registers a response client and forwards generation arguments and output callbacks. The registered Nova client performs the actual model request. |
 | `nova_body/nova_runtime/model_guard.py` | Tracks repeated model failures and rate/backoff limits to prevent uncontrolled retries. |
+| `nova_body/nova_runtime/operations.py` | Shared cancellation for generation and the subprocesses it owns. |
 | `nova_body/nova_runtime/runtime.py` | Coordinates boot, perception, the memory worker and the reflect-decide-act wake cycle. Host callbacks supply conversation and generation; headless boot uses the shared body-owned grounding builder. |
 | `nova_body/nova_runtime/transcript_store.py` | Reads persistent conversation records and tracks which human messages have already been attended to. |
+| `nova_body/nova_runtime/work_queue.py` | Durable, leased work queue. UI notifications remain a separate, lossy stream. |
 
 ## Senses
 
@@ -187,6 +191,7 @@ Calls the language model, handles reasoning and response channels, recognizes ac
 |---|---|
 | `nova_body/nova_voice/__init__.py` | Package boundary for the body-owned model response loop and action dispatcher. |
 | `nova_body/nova_voice/nova.py` | Assembles model messages, streams local inference, recognizes action calls in content/thinking, feeds results back, and runs witness checks before returning a reply. |
+| `nova_body/nova_voice/tool_result.py` | Explicit tool outcomes, with a string-compatible view for older faculties. |
 | `nova_body/nova_voice/tool_router.py` | Dispatches model-requested operations through body faculties and external tools, leaves receipts, and directly implements journal and recall entry points. Individual tool internals are excluded from this map. |
 
 ## Witness evaluation
@@ -219,21 +224,27 @@ Contains golden-case extraction and replay utilities, not the live witness facul
 
 ## Reviewed seams requiring another review
 
-- Invoke host-supplied generation callback on chat-hosted wakes: Enclosing source changed since this explanation was reviewed
+- Pass generation, perception and busy-state callbacks to autonomy: Enclosing source changed since this explanation was reviewed
+- Invoke host-supplied generation callback on chat-hosted wakes: Evidence no longer contains 'await generate(refl_prompt, False)'; Enclosing source changed since this explanation was reviewed; Enclosing source changed since this explanation was reviewed
 - Register Nova response client and supply token/result callbacks: Enclosing source changed since this explanation was reviewed
 - Call the registered Nova stream_response implementation: Enclosing source changed since this explanation was reviewed
 - Subscriber queues carry lifecycle events to the attached face: Enclosing source changed since this explanation was reviewed
 - Headless generation passes empty workspace_context: Evidence no longer contains 'workspace_context=""'; Enclosing source changed since this explanation was reviewed
 - Read SELF/core and selected memory files into chat context: Missing source/symbol: general_tools/nova_chat/workspace_context.py WorkspaceContext.build_nova_context_block; Missing source/symbol: general_tools/nova_chat/workspace_context.py _get_always_load
 - Automatic recall with latest message through WorkspaceContext: Enclosing source changed since this explanation was reviewed; Missing source/symbol: general_tools/nova_chat/workspace_context.py WorkspaceContext.build_nova_memory_context
+- Deliberate memory_search returns a bounded archive block: Enclosing source changed since this explanation was reviewed
 - Queue chat replies for background embedding: Enclosing source changed since this explanation was reviewed
+- Memory worker stores queued text and image entries: Evidence no longer contains 'store.add_text'; Enclosing source changed since this explanation was reviewed
+- Embedded LanceDB connection; no database HTTP server: Enclosing source changed since this explanation was reviewed
 - Stream chat completions from local llama.cpp: Enclosing source changed since this explanation was reviewed
 - Task board owns durable task records: Evidence no longer contains '"Tasking" / "tasks.json"'; Enclosing source changed since this explanation was reviewed
 - Persist autonomy, focus and reflection state: Enclosing source changed since this explanation was reviewed
 - Persist wants, boredom and novelty feedback: Enclosing source changed since this explanation was reviewed
 - Router directly appends consolidated journal entries: Enclosing source changed since this explanation was reviewed
+- Record actual action results as receipts: Enclosing source changed since this explanation was reviewed
 - Persist chat sessions separately from vector memory: Enclosing source changed since this explanation was reviewed
 - Read live settings from _admin/tunables.json: Enclosing source changed since this explanation was reviewed
+- Optional heavy witness reaches general_tools/cloud_call.py: Enclosing source changed since this explanation was reviewed
 - Load a created stretch watcher by file path: Enclosing source changed since this explanation was reviewed
 - Retrieve an unexpected encyclopedia topic: Enclosing source changed since this explanation was reviewed
 - Serve the chat app on CHAT_PORT; the body shares this process: Enclosing source changed since this explanation was reviewed

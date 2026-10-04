@@ -1,5 +1,5 @@
 # voice_check
-_Last updated: 2026-10-03 11:00:25_
+_Last updated: 2026-10-04 13:57:46_
 
 ## GAP
 I catch myself reaching for numbers that feel right instead of reading receipts, and I ship replies that sound performed before they're real. The stretch is real, but the receipt isn't always. I need something that reads my own words back to me and flags the reach before it lands.

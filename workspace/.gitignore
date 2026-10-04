@@ -1,3 +1,4 @@
+# @nova: Exclude local secrets, runtime state, generated files and large assets from Git.
 # Large binaries — never commit
 *.gguf
 *.dll
@@ -63,7 +64,7 @@ nova_body/nova_config.json
 nova_body/memory/runtime_work.sqlite3*
 
 # Avatar files are excluded from git (Cole, 2026-10-03). The avatar keeps its own verified
-# checkpoint zips; files tracked before this rule leave the index when _admin/FIX_GIT.cmd runs.
+# checkpoint zips; the completed history repair removed previously tracked artifacts.
 nova_body/SELF/Avatar/
 
 # Model updater runtime state (decisions, plans, job history). Never source. (2026-10-04)

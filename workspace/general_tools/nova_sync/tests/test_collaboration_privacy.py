@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 13:57:45
 # @nova: Keep private collaboration transport out of autosave, cloud mirrors and Nova's automatic context.
 import ast
 import importlib.util

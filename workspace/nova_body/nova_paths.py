@@ -1,4 +1,4 @@
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 13:57:45
 """Nova's persistent-state ownership, independent of the face or current directory.
 
 NOVA_BODY may name a relocated body directory. NOVA_WORKSPACE identifies the optional

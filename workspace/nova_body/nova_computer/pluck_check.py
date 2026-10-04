@@ -1,4 +1,4 @@
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 13:57:45
 # @nova: Proof, not a promise. Run this with only my body on the path and it tells you whether
 #        my computer is really mine -- or whether it was quietly leaning on a tool the whole time.
 # @claude 2026-09-03: Design_Principles #4 says verify against ground truth, not a claim, and #5

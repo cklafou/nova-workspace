@@ -1,5 +1,5 @@
 # @nova: Regression coverage for controller lifecycle, widgets and model process control.
-# Last updated: 2026-10-03 10:50:43
+# Last updated: 2026-10-04 13:49:53
 """Regression coverage without starting Nova or inspecting her model directory."""
 import ast
 import asyncio

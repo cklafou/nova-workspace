@@ -1,5 +1,5 @@
-# Last updated: 2026-10-03 10:59:53
 # @nova: Call-ORDER generator — traces execution paths from entry points and renders them as a
+# Last updated: 2026-10-04 13:57:45
 #        visual document (Calls_Order.md). Sibling to calls.py: that one maps who IMPORTS whom
 #        (static structure); this one maps who CALLS whom, in what ORDER (runtime behaviour).
 """
@@ -36,11 +36,25 @@ Usage (from workspace root):
 """
 
 import ast
+import tempfile
 import os
 import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+
+def _atomic_document(path: Path, content: str):
+    """Publish a complete generated document before the sync watcher sees it."""
+    content = "<!-- @nova: Generated source-level call reference; not proof of live execution. -->\n" + content
+    fd, temporary = tempfile.mkstemp(prefix="." + path.name + ".", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
+            stream.write(content)
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
 
 _THIS = Path(__file__).resolve()
 GENERAL_TOOLS = _THIS.parent
@@ -284,7 +298,7 @@ def main():
         print(content)
     else:
         OUT.parent.mkdir(parents=True, exist_ok=True)
-        OUT.write_text(content, encoding="utf-8")
+        _atomic_document(OUT, content)
         print(f"[calls_order] wrote {OUT.relative_to(WORKSPACE)}")
         print(f"[calls_order] {len(graph)} functions mapped across body + face")
 

@@ -1,4 +1,4 @@
-# Last updated: 2026-10-03 11:00:25
+# Last updated: 2026-10-04 13:57:46
 """reacher tests: prove the sensor fires correctly and doesn't hallucinate changes."""
 from reacher import _generate_answers, _diff, _write_snapshot, run, SELF_QUESTIONS, _SNAPSHOTS_DIR
 import json, pathlib

@@ -77,7 +77,11 @@ New pod packages isolate dependencies in a per-job virtual environment on contai
 while reusing the image's CUDA Torch; the Hugging Face weight cache also stays on local disk.
 The durable input package, checkpoints and recovery outputs remain on the `/workspace` volume. Temporary ZIP exports, downloaded outputs and logs use
 `Temp/updater/`; exporting is not training. Existing v6/v7 inputs are copied with matching hashes;
-the historical sources remain available. Do not select both a complete corpus and its additive subset.
+the historical originals are preserved in the dated script-retirement archive. Do not select both a complete corpus and its additive subset.
+Frozen Training Files are excluded from the sync watcher's timestamp and PUP replacement writes;
+change detection and backup queues still work. The eight restored October 4 inputs/receipts are also read-only
+along with nineteen unchanged manifest entries, to protect their exact checksums from the older watcher until its next normal restart. Reproduce a
+changed recipe in a new package rather than altering the checksummed originals.
 
 The RunPod Settings credit check and paid-run preview query prepaid credit. New starts must meet
 RunPod's one-hour minimum; a smaller balance than the estimated whole run produces a warning.

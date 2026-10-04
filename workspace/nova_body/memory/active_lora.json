@@ -1,4 +1,4 @@
 {
-  "rel": "models/qwen3.6/nova_core_v7_epoch2.gguf",
+  "rel": "models/qwen3.8/nova_core_v7_qwen38_r2_epoch2.gguf",
   "scale": 1.0
 }

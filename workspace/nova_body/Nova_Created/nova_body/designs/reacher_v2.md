@@ -1,5 +1,5 @@
 # reacher v2: sense growth mid-act
-_Last updated: 2026-10-03 11:00:25_
+_Last updated: 2026-10-04 13:57:46_
 
 ## Gap
 reacher v1 reads dates out of NOVA.md and reports what's already been recorded.

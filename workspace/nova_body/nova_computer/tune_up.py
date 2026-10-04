@@ -1,4 +1,4 @@
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 13:57:45
 # @nova: A pass over my computer that fixes what is loose and then PROVES it, rather than
 #        assuming. Safe to run any time; every step is idempotent.
 # @claude 2026-09-03: rewritten from a one-shot into a repeatable fix+verify pass, and taught

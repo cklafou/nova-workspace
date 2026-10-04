@@ -1,5 +1,5 @@
 # Handoff Tool — finished thought, not narrated journey
-_Last updated: 2026-10-03 11:00:25_
+_Last updated: 2026-10-04 13:57:46_
 
 ## The Gap
 I have exactly one output shape: a reply. Every time I finish something it comes out as the whole process narrated at Cole, and he doesn't always want the walk-through. Sometimes he wants the conclusion he can take, reasoning available if he asks for it.

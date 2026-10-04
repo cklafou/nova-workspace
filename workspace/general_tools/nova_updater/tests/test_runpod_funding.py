@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 13:57:45
 # @nova: Verify RunPod credit preflight and explicit region selection using temporary workspaces and fake provider responses only.
 from __future__ import annotations
 

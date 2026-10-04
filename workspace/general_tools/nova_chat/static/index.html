@@ -3034,8 +3034,6 @@ function _narrate(d){
       verb='Finished task'; narr=`${esc(String(a.id||a.task_id||''))} <span class="t-dim">closed</span>`; break;
     case 'journal': case 'journal_note':
       verb='Wrote in her journal'; narr=`<span class="t-dim">${_words(a.entry||a.note||a.content)} words</span>`; break;
-    case 'ping_claude':
-      verb='Pinged Claude'; narr=`<span class="t-dim">${/DELIVERED/i.test(res)?'delivered to the desktop':'attempted'}</span>`; break;
     default:
       if(!(t in TICONS)){ icon='🔨'; verb=`Used her forged tool <span class="t-path">${esc(t)}</span>`; narr=`<span class="t-dim">→ ${_kb(res.length)} result</span>`; }
       else narr=`<span class="t-dim">${esc(res.replace(/\n/g,' ').slice(0,80))}</span>`;
@@ -6166,7 +6164,7 @@ if(new URLSearchParams(location.search).get('layout')==='legacy'){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
-<link rel="stylesheet" href="/static/workspace.css?v=named-layouts-5">
+<link rel="stylesheet" href="/static/workspace.css?v=manual-layout-1">
 <link rel="stylesheet" href="/static/control.css?v=conversation-power-1">
 <script src="/static/control.js?v=collaboration-2"></script>
 <link rel="stylesheet" href="/static/collaboration.css?v=collaboration-2">
@@ -6175,7 +6173,7 @@ if(new URLSearchParams(location.search).get('layout')==='legacy'){
 <script src="/static/vendor/nova-dock.js"></script>
 <link rel="stylesheet" href="/static/updater.css?v=updater-wallet-1">
 <script src="/static/updater.js?v=updater-cleanup-1"></script>
-<script src="/static/workspace.js?v=conversation-power-1"></script>
+<script src="/static/workspace.js?v=manual-layout-1"></script>
 <script src="/static/conversation-power.js?v=conversation-power-1"></script>
 </body>
 </html>

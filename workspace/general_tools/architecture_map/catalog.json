@@ -253,25 +253,10 @@
       "summary": "Reads and validates tunable inference and behavior settings from the administrative JSON store, with cached reads and defaults.",
       "review_hash": "24895f19449a7b674d7cd0217f63d078bdaaca8b8c526210124f7d67e8e4727d"
     },
-    "nova_body/nova_cortex/context_builder.py": {
-      "label": "Context sizing helpers",
-      "summary": "Provides lightweight token estimates and context budget helpers; references indicate which paths actually use them.",
-      "review_hash": "da36d0e122b75085d39ae0adef25f6072e39d5bf56971b30187890897b4b5817"
-    },
-    "nova_body/nova_cortex/checkin.py": {
-      "label": "Check-in helper",
-      "summary": "Checks for human interruptions or instructions between actions. Its presence alone is not proof that the normal response loop invokes it.",
-      "review_hash": "6994947d0e3149615cf16c290ee0cd4115edac394bdf5e678d4a637603cd0b50"
-    },
     "nova_body/nova_cortex/nova_status.py": {
       "label": "Status writer",
       "summary": "Writes Nova's status record for external observers.",
       "review_hash": "af8045b56bd9f839809c63feb33d6d4e5415ebcbfcf00e5f6b0c11f6a96f544a"
-    },
-    "nova_body/nova_cortex/rules.py": {
-      "label": "Operational rules",
-      "summary": "Contains operating-rule text and access helpers. Import evidence, not its legacy bootstrap description, determines its mapped consumers.",
-      "review_hash": "77a331f893def401e96a5c3db6154f9a3b62881e5e375089130fc6ba4560a642"
     },
     "nova_body/nova_voice/__init__.py": {
       "label": "Voice package",

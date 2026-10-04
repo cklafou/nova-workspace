@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 13:57:45
 # @nova: Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.
 """
 audit_scripts.py — Workspace code health audit
@@ -416,7 +416,7 @@ def build_module_map(files: list[Path]) -> set[str]:
     Build a set of all valid dotted module paths that actually exist in the workspace.
 
     Example output entries:
-        "nova_cortex", "nova_cortex.rules", "nova_cortex.prefrontal_cortex",
+        "nova_cortex", "nova_cortex.executive", "nova_cortex.tasking",
         "nova_chat", "nova_chat.server", "nova_lancedb.hippocampus", ...
 
     Used by check_broken_imports to validate that imported modules still exist.

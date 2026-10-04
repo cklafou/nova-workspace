@@ -1,4 +1,4 @@
-/* @nova: Style the dockable Nova controller, compact saved-layout picker and accessible widget surfaces. */
+/* @nova: Style the dockable Nova controller, explicit layout saving and accessible widget surfaces. */
 body.controller{--bg:#101116;--bg-mid:#14151c;--bg-surface:#191a23;--bg-raised:#22232e;--surface-2:#20212b;--border:#2b2c39;--border-med:#3b3c4b;--text:#edecf5;--text-dim:#bab8ca;--text-mute:#9391a6;--nova:#b5a0f6;--menubar-h:30px;--statusbar-h:28px;background:var(--bg);font-size:14px;}
 .controller #app{display:flex;flex-direction:column;height:100vh;}.controller #main-area{flex:1;}.controller #menubar,.controller #statusbar{flex-shrink:0;}.controller #statusbar{height:28px;}
 .controller button,.controller input,.controller select,.controller summary{font:inherit;}
@@ -51,7 +51,7 @@ body.controller{--bg:#101116;--bg-mid:#14151c;--bg-surface:#191a23;--bg-raised:#
 
 .nc-library{width:min(660px,calc(100vw - 32px));max-height:80vh;margin:auto;border:1px solid #51455f;border-radius:16px;background:#191922;color:var(--text);padding:24px;box-shadow:0 20px 100px #0008;}.nc-library::backdrop{background:#09090ec9;backdrop-filter:blur(5px);}.nc-library-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}.nc-library h2{font-size:21px;font-weight:500;}.nc-search{width:100%;padding:12px 14px;background:#111219;border:1px solid var(--border-med);border-radius:8px;color:var(--text);margin-bottom:18px;}.nc-library-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}.nc-library-item{display:flex;flex-direction:column;text-align:left;padding:15px;background:#22222d;color:var(--text);border:1px solid var(--border);border-radius:9px;gap:6px;}.nc-library-item:hover{border-color:#8f74b8;background:#2b2638;}.nc-library-item strong{font-size:13px;font-weight:500;}.nc-library-item span{font-size:11px;color:var(--text-mute);line-height:1.6;}
 .controller #statusbar{background:#101116;border-top:1px solid var(--border);font-size:10px;padding:0 18px;}.controller #statusbar .sb-shortcuts{display:none;}.controller.nc-offline #nova-state-pill{display:none;}.controller.nc-offline .nc-identity .nc-mark{opacity:.65;}
-@media(max-width:1150px){.nc-caption{display:none;}.nc-header{padding:0 16px;}.nc-layout-saved,.nc-layout-label{display:none;}.nc-header{gap:12px;}.nc-header-actions{gap:5px;}}
+@media(max-width:1150px){.nc-caption{display:none;}.nc-header{padding:0 16px;}.nc-layout-label{display:none;}.nc-header{gap:12px;}.nc-header-actions{gap:5px;}}
 @media(max-width:760px){.nc-header{height:108px;flex-wrap:wrap;padding:12px 16px;gap:8px;}.nc-layout-picker{margin-left:auto;}.nc-header-actions{order:3;width:100%;overflow-x:auto;padding-bottom:2px;}.nc-layout-select{max-width:155px;}.controller #menubar [data-dd=view],.controller #menubar [data-dd=agents]{display:none;}.controller #input-area{padding:10px 12px 16px;}.controller #statusbar{overflow:hidden;}.nc-library-grid{grid-template-columns:1fr;}}
 @media(prefers-reduced-motion:reduce){.controller *{animation:none!important;transition:none!important;}}
 .nc-docking{width:100%;height:100%;min-height:0;position:relative;background:var(--bg);padding:0;}
@@ -102,3 +102,27 @@ body.controller{--bg:#101116;--bg-mid:#14151c;--bg-surface:#191a23;--bg-raised:#
 .controller .nc-header,.controller #statusbar{position:relative;z-index:10;}
 .controller .nc-pane-body #novaLog,.controller .nc-pane-body #novaConsole{z-index:auto;}
 .controller #modal-overlay,.controller #logs-overlay,.controller #lora-overlay,.controller #settings-overlay{z-index:3000;}
+
+/* Keep explicit save and its result visible, including on narrow windows. */
+.nc-layout-save{min-height:36px;padding:7px 11px;border-color:var(--nova);color:var(--text);}
+.nc-layout-save:focus-visible{outline:2px solid var(--nova);outline-offset:2px;}
+.nc-layout-save:disabled{opacity:.55;cursor:wait;}
+.nc-layout-saved{min-width:36px;max-width:105px;white-space:normal;line-height:1.3;}
+.nc-layout-saved[data-state="saved"]{color:#94c7ad;}
+.nc-layout-saved[data-state="failed"]{color:#f0aeb4;font-weight:600;}
+.nc-layout-saved[data-state="pending"]{color:#e6c58d;}
+@media(max-width:600px){.nc-layout-picker{flex-wrap:wrap;justify-content:flex-end;}.nc-layout-saved{font-size:11px;}.nc-layout-select{min-width:85px;max-width:120px;}}
+
+/* Open widgets are marked in both entry points, including separate windows. */
+.nc-widget-choice-title{display:flex;align-items:center;gap:7px;}
+.nc-widget-check{display:inline-block;min-width:16px;flex:none;color:var(--nova)!important;font-weight:700;font-size:14px!important;}
+.nc-widget-menu-item[data-open="true"] .nc-widget-choice-title{color:var(--text);}
+.nc-library-item[data-open="true"]{border-color:#6c5a88;background:#262331;}
+
+/* Manual layout controls wrap together on smaller windows. */
+.nc-layout-edit{min-height:36px;padding:7px 9px;}
+.nc-layout-edit:disabled,.nc-layout-save:disabled{opacity:.45;cursor:default;}
+.nc-layout-edit:focus-visible{outline:2px solid var(--nova);outline-offset:2px;}
+.controller .nc-layout-picker{flex-wrap:wrap;gap:5px;}
+@media(max-width:1250px){.controller .nc-layout-picker{order:4;flex-basis:100%;justify-content:flex-end;}.controller .nc-header #menubar{order:initial;flex-basis:auto;}}
+@media(max-width:600px){.controller .nc-layout-picker{justify-content:flex-start;}.nc-layout-edit{padding:7px 8px;}.nc-layout-saved{max-width:none;}}

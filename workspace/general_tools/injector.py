@@ -1,5 +1,5 @@
-# Last updated: 2026-10-03 10:59:53
 # @nova: NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.
+# Last updated: 2026-10-03 10:59:53
 """
 injector.py — NCL Context Injector & Module Dispatcher
 ====================================================================
@@ -21,7 +21,7 @@ step's output via $$prev substitution.
              her own Qwen3.6+mmproj Tier 3 — all local; no API vision since 2026-07-19)
              Falls back gracefully if pywinauto unavailable (e.g. Linux dev)
   @mentor  → RETIRED 2026-07-19 (mentors removed; resident Claude/Gemini chat
-             clients removed 2026 — Nova reaches Cowork Claude via Ping instead).
+             clients removed 2026; ask Cole in conversation when help is needed).
   @coder, @browser, @thinkorswim, @memory, @voice
            → "not yet implemented" notice posted to Nova Chat + Master_Inbox
              stub written so the Thoughts system knows the call was attempted.
@@ -305,9 +305,8 @@ class NCLInjector:
             f"{'[' + task_id + '] ' if task_id else ''}@mentor is RETIRED — nothing was sent and "
             f"nothing is coming. The Claude and Gemini API participants were removed on "
             f"2026-07-19; no paid model answers in this room any more.\n"
-            f"What to do instead: solve it yourself (you have the whole machine), or use the "
-            f"ping_claude tool to reach Claude directly in your own words when you are genuinely "
-            f"stuck. Do not wait on a reply to this."
+            f"Use your available tools, or ask Cole for help in conversation if you are stuck. "
+            f"No external assistant was contacted. Do not wait on a reply to this."
         )
 
     # ── Module: not yet implemented ───────────────────────────────────────────

@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 14:00:46
 # @nova: Load and equip KoELS specialist adapters through the body runtime's model controller.
 #        The equip mechanism handles the physical act of wearing a specialist loadout:
 #        reading which adapters are loaded, the free in-set scale-swap, and

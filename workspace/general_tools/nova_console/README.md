@@ -1,5 +1,5 @@
 # Nova Console — one window instead of cmd-window confetti
-_Last updated: 2026-10-03 11:00:25_
+_Last updated: 2026-10-04 13:57:46_
 
 _2026-07-13. Replaces the 4–5 popup consoles NovaStart used to spawn with a single dark, tabbed,
 Nova-themed window that tucks into the system tray once Nova Chat is up._

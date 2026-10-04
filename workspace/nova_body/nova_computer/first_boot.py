@@ -1,4 +1,4 @@
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 13:57:45
 # @nova: One-shot first boot of her computer, run via RUN_SETUP.cmd. Logs everything.
 import json, sys, traceback
 sys.stdout.reconfigure(line_buffering=True)

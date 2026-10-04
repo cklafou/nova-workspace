@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 13:34:27
 # @nova: Verify private collaboration connector identity, cursor handling, bounds, failures and MCP framing without contacting Nova.
 import importlib.util
 import io

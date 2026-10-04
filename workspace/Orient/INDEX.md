@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-04T04:30:50+00:00 from source (input `f9f9eb785aef`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T05:15:53+00:00 from source (input `d6b8606c9180`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -16,25 +16,6 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [start_llama_qwen36.cmd](../start_llama_qwen36.cmd) — Starts Nova's model server (llama.cpp): Qwen 3.6 27B by default, or the model the model updater picked in nova_body\memory.
 - [StopNova.cmd](../StopNova.cmd) — Shutdown — stops the whole Nova stack cleanly.
 
-## avatar_design/2026-09-22-concepts
-
-- [avatar_design/2026-09-22-concepts/DESIGN_BRIEF.md](../avatar_design/2026-09-22-concepts/DESIGN_BRIEF.md) — Nova avatar concepts — 22 September 2026
-- [avatar_design/2026-09-22-concepts/nova-a-everyday.png](../avatar_design/2026-09-22-concepts/nova-a-everyday.png)
-- [avatar_design/2026-09-22-concepts/nova-a2-personality.png](../avatar_design/2026-09-22-concepts/nova-a2-personality.png)
-- [avatar_design/2026-09-22-concepts/nova-a3-gloves-consistency.png](../avatar_design/2026-09-22-concepts/nova-a3-gloves-consistency.png)
-- [avatar_design/2026-09-22-concepts/nova-b-utility.png](../avatar_design/2026-09-22-concepts/nova-b-utility.png)
-- [avatar_design/2026-09-22-concepts/nova-c-playful.png](../avatar_design/2026-09-22-concepts/nova-c-playful.png)
-- [avatar_design/2026-09-22-concepts/personality-study/a2-prompt.txt](../avatar_design/2026-09-22-concepts/personality-study/a2-prompt.txt)
-- [avatar_design/2026-09-22-concepts/personality-study/a3-prompt.txt](../avatar_design/2026-09-22-concepts/personality-study/a3-prompt.txt)
-- [avatar_design/2026-09-22-concepts/personality-study/A3_REVIEW.md](../avatar_design/2026-09-22-concepts/personality-study/A3_REVIEW.md) — Nova A3: user-directed consistency corrections
-- [avatar_design/2026-09-22-concepts/personality-study/DESIGN_NOTES.md](../avatar_design/2026-09-22-concepts/personality-study/DESIGN_NOTES.md) — Nova A2: personality-informed refinement
-- [avatar_design/2026-09-22-concepts/personality-study/provenance.json](../avatar_design/2026-09-22-concepts/personality-study/provenance.json)
-- [avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_lora_dataset_spec.md](../avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_lora_dataset_spec.md) — Nova-Core LoRA — Dataset Spec (v1 working draft)
-- [avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_v2_character_bible.md](../avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_v2_character_bible.md) — Nova-Core v2 — Character Bible
-- [avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_v2_strengthened_spec.md](../avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_v2_strengthened_spec.md) — Nova-Core LoRA v2 — Strengthened Personality Spec
-- [avatar_design/2026-09-22-concepts/personality-study/sources/nova_lora_dataset_batch5_mischief_decision_solonarration.md](../avatar_design/2026-09-22-concepts/personality-study/sources/nova_lora_dataset_batch5_mischief_decision_solonarration.md) — Nova-Core LoRA Dataset — Batch 5: MISCHIEF + DECISION/REST + SOLO WORK NARRATION
-- [avatar_design/2026-09-22-concepts/prompts.json](../avatar_design/2026-09-22-concepts/prompts.json)
-
 ## general_tools
 
 - [general_tools/audit_queue.py](../general_tools/audit_queue.py) — Persistent audit-review queue — records file-change events (rename/delete/new) for review by audit_scripts/restructure.
@@ -46,7 +27,6 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/injector.py](../general_tools/injector.py) — NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.
 - [general_tools/janitor.py](../general_tools/janitor.py) — Janitor — sweeps temp/scratch files into a local Temp/ beside them, and reports clutter.
 - [general_tools/NovaLauncher.py](../general_tools/NovaLauncher.py) — Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.
-- [general_tools/ping_claude.ps1](../general_tools/ping_claude.ps1) — ping_claude.ps1 - Nova reaching Claude Desktop herself, in her own words.
 - [general_tools/restructure.py](../general_tools/restructure.py) — Restructure checker — detects stale path references after a directory move and offers interactive fixes.
 
 ## general_tools/architecture_map
@@ -85,12 +65,12 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/collaboration.py](../general_tools/nova_chat/collaboration.py) — Local collaboration broker isolated from Nova conversation, memory and autonomy ingestion.
 - [general_tools/nova_chat/context_export.py](../general_tools/nova_chat/context_export.py) — nova_chat/context_export.py -- Chat Context Exporter
 - [general_tools/nova_chat/CONTROLLER.md](../general_tools/nova_chat/CONTROLLER.md) — Documents the Nova desktop controller and its verified behavior.
-- [general_tools/nova_chat/desktop.py](../general_tools/nova_chat/desktop.py) — Nova desktop face: native windows, menus, tray and persistent renderer profile.
+- [general_tools/nova_chat/desktop.py](../general_tools/nova_chat/desktop.py) — Host Nova Chat in persistent native windows with a stable renderer profile and saved window geometry.
 - [general_tools/nova_chat/launch.py](../general_tools/nova_chat/launch.py) — Nova Group Chat - Launcher
 - [general_tools/nova_chat/lifecycle.py](../general_tools/nova_chat/lifecycle.py) — Coordinate Nova on/off with its owning launcher and hold updater work during transitions.
 - [general_tools/nova_chat/nova_bridge.py](../general_tools/nova_chat/nova_bridge.py) — nova_chat/nova_bridge.py -- Bridge: Nova's chat words → real disk actions
 - [general_tools/nova_chat/nova_lang.py](../general_tools/nova_chat/nova_lang.py) — nova_chat/nova_lang.py -- Nova Command Language (NCL) Parser
-- [general_tools/nova_chat/orchestrator.py](../general_tools/nova_chat/orchestrator.py) — Determines who responds to each message and in what order.
+- [general_tools/nova_chat/orchestrator.py](../general_tools/nova_chat/orchestrator.py) — Select Nova responders and route supported command modules for the controller conversation.
 - [general_tools/nova_chat/runtime_host.py](../general_tools/nova_chat/runtime_host.py) — Runtime-primary boot (Step 6d). Nova's RUNTIME is the owned core; the chat server is
 - [general_tools/nova_chat/server.py](../general_tools/nova_chat/server.py) — Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.
 - [general_tools/nova_chat/server_runner.py](../general_tools/nova_chat/server_runner.py) — Starts the Nova Chat server by itself (uvicorn on 127.0.0.1:8765) with nova_body and general_tools importable.
@@ -103,7 +83,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/static/index.html](../general_tools/nova_chat/static/index.html) — Serve Nova Chat with named customizable layouts, model-update controls and a separate collaboration workshop.
 - [general_tools/nova_chat/static/updater.css](../general_tools/nova_chat/static/updater.css) — Style the model updater widget, reviewed install dialogs, training controls and update notification.
 - [general_tools/nova_chat/static/updater.js](../general_tools/nova_chat/static/updater.js) — Present model discovery, reviewed installation, adapter training and recovery without starting work automatically.
-- [general_tools/nova_chat/static/workspace.css](../general_tools/nova_chat/static/workspace.css) — Style the dockable Nova controller, compact saved-layout picker and accessible widget surfaces.
+- [general_tools/nova_chat/static/workspace.css](../general_tools/nova_chat/static/workspace.css) — Style the dockable Nova controller, explicit layout saving and accessible widget surfaces.
 - [general_tools/nova_chat/static/workspace.js](../general_tools/nova_chat/static/workspace.js) — Mount Nova's dockable controller widgets while preserving their handlers and state.
 - [general_tools/nova_chat/tests/test_chat_only.py](../general_tools/nova_chat/tests/test_chat_only.py) — Verify model-off controller launch and prevent chat-only messages from reaching Nova's body.
 - [general_tools/nova_chat/tests/test_collaboration.py](../general_tools/nova_chat/tests/test_collaboration.py) — Verify collaboration isolation, authentication, durable replay and concurrent delivery without starting Nova.
@@ -111,8 +91,9 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/tests/test_collaboration_spool.py](../general_tools/nova_chat/tests/test_collaboration_spool.py) — Verify Cowork shared-folder delivery, crash recovery and bounded replay using disposable collaboration stores.
 - [general_tools/nova_chat/tests/test_controller_repair.py](../general_tools/nova_chat/tests/test_controller_repair.py) — Regression coverage for controller lifecycle, widgets and model process control.
 - [general_tools/nova_chat/tests/test_conversation_power.cjs](../general_tools/nova_chat/tests/test_conversation_power.cjs)
-- [general_tools/nova_chat/tests/test_desktop.py](../general_tools/nova_chat/tests/test_desktop.py) — Run: python -m unittest discover -s general_tools/nova_chat/tests.
+- [general_tools/nova_chat/tests/test_desktop.py](../general_tools/nova_chat/tests/test_desktop.py) — Verify native controller geometry across processes and preserve renderer storage during isolated profile migration.
 - [general_tools/nova_chat/tests/test_launcher_mode.py](../general_tools/nova_chat/tests/test_launcher_mode.py) — Test launcher mode switching, window preservation and chat-only recovery using fake processes only.
+- [general_tools/nova_chat/tests/test_layout_save.cjs](../general_tools/nova_chat/tests/test_layout_save.cjs)
 - [general_tools/nova_chat/tests/test_lifecycle.py](../general_tools/nova_chat/tests/test_lifecycle.py) — Exercise real Nova lifecycle HTTP routes with a fake launcher and isolated updater job manager.
 - [general_tools/nova_chat/tests/test_lifecycle_ack.py](../general_tools/nova_chat/tests/test_lifecycle_ack.py) — Preserve lifecycle HTTP acknowledgement before fast controller teardown without extending grace on retries.
 - [general_tools/nova_chat/tests/test_source_fingerprint.py](../general_tools/nova_chat/tests/test_source_fingerprint.py) — Checks restart reporting against real edits and harmless watcher timestamp changes.
@@ -148,6 +129,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_sync/hooks/pre-push](../general_tools/nova_sync/hooks/pre-push) — Refuses a push GitHub would reject anyway (any file over 100 MB) before uploading anything.
 - [general_tools/nova_sync/tests/test_collaboration_privacy.py](../general_tools/nova_sync/tests/test_collaboration_privacy.py) — Keep private collaboration transport out of autosave, cloud mirrors and Nova's automatic context.
 - [general_tools/nova_sync/tests/test_exclusions.py](../general_tools/nova_sync/tests/test_exclusions.py) — Guards the watcher and git rules that keep agent transport, task copies, avatar files and the work queue out of autosave.
+- [general_tools/nova_sync/tests/test_frozen_training.py](../general_tools/nova_sync/tests/test_frozen_training.py) — Protect frozen training hashes from timestamp maintenance and PUP replacement while preserving sync detection.
 - [general_tools/nova_sync/tests/test_updates.py](../general_tools/nova_sync/tests/test_updates.py) — Tests Drive export, git hooks and collaborator roles in disposable repositories.
 - [general_tools/nova_sync/watcher.py](../general_tools/nova_sync/watcher.py) — Workspace watcher: stamps Last-updated lines, autosaves to git (commit, then push), refreshes Nova's SELF manifest and Orient, mirrors to…
 
@@ -185,6 +167,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_updater/tests/test_launcher.py](../general_tools/nova_updater/tests/test_launcher.py) — Runs the real model launcher on Windows with llama-server swapped for an argument recorder, proving boot files reach llama-server intact.
 - [general_tools/nova_updater/tests/test_pod_compat.py](../general_tools/nova_updater/tests/test_pod_compat.py) — Verify conditional-model loader selection, assistant masking, language-only LoRA and a disposable tiny training checkpoint.
 - [general_tools/nova_updater/tests/test_pod_venv.py](../general_tools/nova_updater/tests/test_pod_venv.py) — Prove the pod bootstrap installs dependencies in a venv while retaining the image Python packages.
+- [general_tools/nova_updater/tests/test_runpod_cleanup.py](../general_tools/nova_updater/tests/test_runpod_cleanup.py) — Prove irreversible pod cleanup follows verified local adapters and provenance, retaining recovery data on every incomplete outcome.
 - [general_tools/nova_updater/tests/test_runpod_delete_http.py](../general_tools/nova_updater/tests/test_runpod_delete_http.py) — Verify RunPod deletion and absence detection through mocked HTTP, without network calls or credentials.
 - [general_tools/nova_updater/tests/test_runpod_funding.py](../general_tools/nova_updater/tests/test_runpod_funding.py) — Verify RunPod credit preflight and explicit region selection using temporary workspaces and fake provider responses only.
 - [general_tools/nova_updater/tests/test_runpod_lifecycle.py](../general_tools/nova_updater/tests/test_runpod_lifecycle.py) — Prove RunPod transfers named persistent training packages, retries SSH readiness and isolates paid attempts using local fake pods.
@@ -249,9 +232,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 ## nova_body/nova_cortex
 
-- [nova_body/nova_cortex/__init__.py](../nova_body/nova_cortex/__init__.py) — Nova's executive cortex — autonomy faculty and task board (executive, tasking), plus status and context assembly (nova_status,…
-- [nova_body/nova_cortex/checkin.py](../nova_body/nova_cortex/checkin.py) — nova_checkin.py -- Cole's Voice Between Nova's Thoughts
-- [nova_body/nova_cortex/context_builder.py](../nova_body/nova_cortex/context_builder.py) — nova_cortex/context_builder.py
+- [nova_body/nova_cortex/__init__.py](../nova_body/nova_cortex/__init__.py) — Expose Nova's executive faculties, task board, runtime settings and body-owned context assembly.
 - [nova_body/nova_cortex/discourse.py](../nova_body/nova_cortex/discourse.py) — DISCOURSE — what she knows about the conversation, and whether she may speak into it.
 - [nova_body/nova_cortex/drives.py](../nova_body/nova_cortex/drives.py) — DRIVES — the part of her that makes one moment worth more than another.
 - [nova_body/nova_cortex/executive.py](../nova_body/nova_cortex/executive.py) — Executive will — my self-direction. When my time-sense stirs me (or my
@@ -259,7 +240,6 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/nova_cortex/loadout.py](../nova_body/nova_cortex/loadout.py) — Loadout-decision faculty — KoELS cognition (layer 1, pure, pluck-safe). Given a task and
 - [nova_body/nova_cortex/nova_status.py](../nova_body/nova_cortex/nova_status.py) — nova_cortex/nova_status.py -- Nova's live status writer
 - [nova_body/nova_cortex/principals.py](../nova_body/nova_cortex/principals.py) — PRINCIPALS — who is allowed to talk to Nova, and how much of her they get.
-- [nova_body/nova_cortex/rules.py](../nova_body/nova_cortex/rules.py) — Nova's Operational Rules and Core Directives
 - [nova_body/nova_cortex/task_workspace.py](../nova_body/nova_cortex/task_workspace.py) — Stages task-sized source copies, gates them on acceptance checks and promotes them with rollback checkpoints.
 - [nova_body/nova_cortex/tasking.py](../nova_body/nova_cortex/tasking.py) — Executive task board — my prefrontal work board. Every task I choose to track,
 - [nova_body/nova_cortex/tunables.py](../nova_body/nova_cortex/tunables.py) — nova_cortex/tunables.py — LIVE-TUNABLE knobs. Cole (2026-08-03): "make things that
@@ -481,7 +461,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/nova_senses/__init__.py](../nova_body/nova_senses/__init__.py) — Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED…
 - [nova_body/nova_senses/clock.py](../nova_body/nova_senses/clock.py) — Chronoception — my sense of time. I read the real clock myself and feel time
 - [nova_body/nova_senses/environment.py](../nova_body/nova_senses/environment.py) — Environmental perception — I sense my surroundings: which of my watched places
-- [nova_body/nova_senses/eyes.py](../nova_body/nova_senses/eyes.py) — nova_eyes.py — Nova's Unified Vision System
+- [nova_body/nova_senses/eyes.py](../nova_body/nova_senses/eyes.py) — Combine host accessibility and local visual models for optional desktop perception.
 - [nova_body/nova_senses/presence.py](../nova_body/nova_senses/presence.py) — Presence sense — am I alone in this room? I read it myself.
 - [nova_body/nova_senses/proprioception.py](../nova_body/nova_senses/proprioception.py) — nova_senses/proprioception.py — Nova's System State Awareness
 - [nova_body/nova_senses/quiet_part_watcher.py](../nova_body/nova_senses/quiet_part_watcher.py) — nova_senses/quiet_part_watcher.py — watches for parts of myself going dark.
@@ -495,7 +475,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 ## nova_body/nova_voice
 
 - [nova_body/nova_voice/__init__.py](../nova_body/nova_voice/__init__.py) — nova_voice — her MOUTH and her HANDS, moved body-ward 2026-07-20.
-- [nova_body/nova_voice/nova.py](../nova_body/nova_voice/nova.py) — Nova (Qwen 3.5 27B Dense) inference client for Nova Group Chat.
+- [nova_body/nova_voice/nova.py](../nova_body/nova_voice/nova.py) — Run Nova's local inference and tool loop with her current capabilities and execution receipts.
 - [nova_body/nova_voice/tool_result.py](../nova_body/nova_voice/tool_result.py) — Explicit tool outcomes, with a string-compatible view for older faculties.
 - [nova_body/nova_voice/tool_router.py](../nova_body/nova_voice/tool_router.py) — Routes Nova tool calls to body faculties and records execution outcomes.
 
@@ -537,6 +517,13 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 ## nova_body/SELF
 
+- [nova_body/SELF/Avatar/2026-09-22-concepts/DESIGN_BRIEF.md](../nova_body/SELF/Avatar/2026-09-22-concepts/DESIGN_BRIEF.md)
+- [nova_body/SELF/Avatar/2026-09-22-concepts/nova-a-everyday.png](../nova_body/SELF/Avatar/2026-09-22-concepts/nova-a-everyday.png)
+- [nova_body/SELF/Avatar/2026-09-22-concepts/nova-a2-personality.png](../nova_body/SELF/Avatar/2026-09-22-concepts/nova-a2-personality.png)
+- [nova_body/SELF/Avatar/2026-09-22-concepts/nova-a3-gloves-consistency.png](../nova_body/SELF/Avatar/2026-09-22-concepts/nova-a3-gloves-consistency.png)
+- [nova_body/SELF/Avatar/2026-09-22-concepts/nova-b-utility.png](../nova_body/SELF/Avatar/2026-09-22-concepts/nova-b-utility.png)
+- [nova_body/SELF/Avatar/2026-09-22-concepts/nova-c-playful.png](../nova_body/SELF/Avatar/2026-09-22-concepts/nova-c-playful.png)
+- [nova_body/SELF/Avatar/2026-09-22-concepts/prompts.json](../nova_body/SELF/Avatar/2026-09-22-concepts/prompts.json)
 - [nova_body/SELF/Avatar/Live2D/art/CALM_head_matte_v07.png](../nova_body/SELF/Avatar/Live2D/art/CALM_head_matte_v07.png)
 - [nova_body/SELF/Avatar/Live2D/art/CALM_hidden_skin_v07.png](../nova_body/SELF/Avatar/Live2D/art/CALM_hidden_skin_v07.png)
 - [nova_body/SELF/Avatar/Live2D/art/CALM_hidden_whites_v07.png](../nova_body/SELF/Avatar/Live2D/art/CALM_hidden_whites_v07.png)
@@ -1263,7 +1250,6 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/SELF/Avatar/Live2D/tooling/assemble_garments_v11.cjs](../nova_body/SELF/Avatar/Live2D/tooling/assemble_garments_v11.cjs)
 - [nova_body/SELF/Avatar/Live2D/tooling/assemble_layers.cjs](../nova_body/SELF/Avatar/Live2D/tooling/assemble_layers.cjs)
 - [nova_body/SELF/Avatar/Live2D/tooling/audit_combinations_v12.py](../nova_body/SELF/Avatar/Live2D/tooling/audit_combinations_v12.py)
-- [nova_body/SELF/Avatar/Live2D/tooling/audit_eye_failure_v16.py](../nova_body/SELF/Avatar/Live2D/tooling/audit_eye_failure_v16.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/audit_face_v12.py](../nova_body/SELF/Avatar/Live2D/tooling/audit_face_v12.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/build_eye_review_v14.py](../nova_body/SELF/Avatar/Live2D/tooling/build_eye_review_v14.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/build_eye_review_v15.py](../nova_body/SELF/Avatar/Live2D/tooling/build_eye_review_v15.py)
@@ -1281,11 +1267,8 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/SELF/Avatar/Live2D/tooling/compare_garments_v11.py](../nova_body/SELF/Avatar/Live2D/tooling/compare_garments_v11.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/finalize_garments_v11.py](../nova_body/SELF/Avatar/Live2D/tooling/finalize_garments_v11.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/finalize_runtime_v06.py](../nova_body/SELF/Avatar/Live2D/tooling/finalize_runtime_v06.py)
-- [nova_body/SELF/Avatar/Live2D/tooling/inspect_eye_anatomy.cjs](../nova_body/SELF/Avatar/Live2D/tooling/inspect_eye_anatomy.cjs)
-- [nova_body/SELF/Avatar/Live2D/tooling/inspect_lower_lash.cjs](../nova_body/SELF/Avatar/Live2D/tooling/inspect_lower_lash.cjs)
 - [nova_body/SELF/Avatar/Live2D/tooling/inspect_reference_eyes.cjs](../nova_body/SELF/Avatar/Live2D/tooling/inspect_reference_eyes.cjs)
 - [nova_body/SELF/Avatar/Live2D/tooling/inspect_registered_parts_v16.cjs](../nova_body/SELF/Avatar/Live2D/tooling/inspect_registered_parts_v16.cjs)
-- [nova_body/SELF/Avatar/Live2D/tooling/inspect_source_v13.cjs](../nova_body/SELF/Avatar/Live2D/tooling/inspect_source_v13.cjs)
 - [nova_body/SELF/Avatar/Live2D/tooling/measure_calm_overlay.py](../nova_body/SELF/Avatar/Live2D/tooling/measure_calm_overlay.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/measure_front_overlay.py](../nova_body/SELF/Avatar/Live2D/tooling/measure_front_overlay.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/package-lock.json](../nova_body/SELF/Avatar/Live2D/tooling/package-lock.json)
@@ -1351,15 +1334,14 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 - [nova_body/tests/test_koels_launcher.py](../nova_body/tests/test_koels_launcher.py) — Prove KoELS preload arguments survive the real Windows launcher and current llama parser without loading models.
 - [nova_body/tests/test_modernization.py](../nova_body/tests/test_modernization.py) — Isolated runtime contracts; never load a model or write Nova's personal state.
+- [nova_body/tests/test_retired_desktop_ping.py](../nova_body/tests/test_retired_desktop_ping.py) — Keep retired desktop-message aliases unavailable without spawning processes or touching Nova records.
 - [nova_body/tests/test_review_followup.py](../nova_body/tests/test_review_followup.py) — Reproduces lifecycle, outcome and durable-queue edge cases from the shared review.
 - [nova_body/tests/test_staging_location.py](../nova_body/tests/test_staging_location.py) — Guards where task workspaces are staged: under workspace/Temp, outside git, Orient and the sync watcher.
 
 ## Files without a purpose line
 
-The rule (Operations, "File conventions"): every file says what it is for in its first lines. These 75 do not yet. Add a `@nova:` line when you next touch one.
+The rule (Operations, "File conventions"): every file says what it is for in its first lines. These 73 do not yet. Add a `@nova:` line when you next touch one.
 
-- [avatar_design/2026-09-22-concepts/personality-study/a2-prompt.txt](../avatar_design/2026-09-22-concepts/personality-study/a2-prompt.txt)
-- [avatar_design/2026-09-22-concepts/personality-study/a3-prompt.txt](../avatar_design/2026-09-22-concepts/personality-study/a3-prompt.txt)
 - [nova_body/Nova_Created/_tmp_clean_queue.py](../nova_body/Nova_Created/_tmp_clean_queue.py)
 - [nova_body/Nova_Created/_tmp_list_pending.py](../nova_body/Nova_Created/_tmp_list_pending.py)
 - [nova_body/Nova_Created/check_reach.py](../nova_body/Nova_Created/check_reach.py)
@@ -1438,17 +1420,7 @@ The rule (Operations, "File conventions"): every file says what it is for in its
 
 Left beside their originals by earlier edits. Nothing loads them; quarantine them when convenient.
 
-- [general_tools/cloud_call.py.turnabout_bak](../general_tools/cloud_call.py.turnabout_bak)
-- [general_tools/nova_chat/static/index.html.polish_bak](../general_tools/nova_chat/static/index.html.polish_bak)
-- [general_tools/nova_sync/watcher.py.holdback_bak](../general_tools/nova_sync/watcher.py.holdback_bak)
-- [general_tools/nova_sync/watcher.py.sizeguard_bak](../general_tools/nova_sync/watcher.py.sizeguard_bak)
 - [nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v13.cmo3.preimport.bak](../nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v13.cmo3.preimport.bak)
 - [nova_body/nova_computer/computer.py.pluck_bak](../nova_body/nova_computer/computer.py.pluck_bak)
 - [nova_body/nova_computer/pluck_check.py.opus_bak](../nova_body/nova_computer/pluck_check.py.opus_bak)
-- [nova_body/nova_computer/toolkit.py.bak](../nova_body/nova_computer/toolkit.py.bak)
 - [nova_body/nova_computer/tune_up.py.opus_bak](../nova_body/nova_computer/tune_up.py.opus_bak)
-- [nova_body/nova_cortex/tunables.py.holdback_bak](../nova_body/nova_cortex/tunables.py.holdback_bak)
-- [nova_body/nova_cortex/tunables.py.turnabout_bak](../nova_body/nova_cortex/tunables.py.turnabout_bak)
-- [nova_body/nova_voice/nova.py.holdback_bak](../nova_body/nova_voice/nova.py.holdback_bak)
-- [nova_body/nova_voice/nova.py.polish_bak](../nova_body/nova_voice/nova.py.polish_bak)
-- [nova_body/nova_voice/nova.py.turnabout_bak](../nova_body/nova_voice/nova.py.turnabout_bak)

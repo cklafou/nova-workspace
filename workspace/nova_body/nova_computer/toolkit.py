@@ -1,4 +1,4 @@
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 13:57:45
 # @nova: Making my computer a WHOLE computer -- one I can extend myself. Cole, 2026-09-04:
 #        "she should primarily have her own applications to run stuff... her VM should be all
 #        the capabilities she needs (including installing apps like ThinkorSwim's Linux App on

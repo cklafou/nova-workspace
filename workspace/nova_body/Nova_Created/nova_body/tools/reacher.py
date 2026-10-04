@@ -1,4 +1,4 @@
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 13:57:45
 """reacher v2: diff opinions across snapshots, and flag sensory reaches (wanting a tool when the sense already has the answer).
 
 v1 read dates out of NOVA.md and reported what was already written down. That's a diary reader.

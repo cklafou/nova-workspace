@@ -68,10 +68,23 @@
   }
   let savedLayouts=readSavedLayouts(),storageWarning=false;
   const currentLayout=()=>savedLayouts.items.find(item=>item.id===savedLayouts.activeId)||savedLayouts.items[0];
-  const hadSavedArrangement=!!currentLayout().config;
+  let hadSavedArrangement=!!currentLayout().config;
+  function setLayoutSaveStatus(state, message){
+    const labels={saved:'Saved',pending:'Unsaved changes',saving:'Saving…',failed:'Save failed'};
+    layoutSaved.textContent=labels[state]||state;
+    layoutSaved.dataset.state=state;
+    layoutSaved.title=message;
+  }
   function saveLayouts(){
-    try{localStorage.setItem(LAYOUTS_KEY,JSON.stringify(savedLayouts));storageWarning=false;layoutSaved.textContent='Saved';layoutSaved.title='Your layouts save automatically on this device.';return true;}
-    catch(error){layoutSaved.textContent='Not saved';layoutSaved.title='Local storage is unavailable or full.';if(!storageWarning){toast('Layout could not be saved. Local storage is unavailable or full.');storageWarning=true;}return false;}
+    try{
+      localStorage.setItem(LAYOUTS_KEY,JSON.stringify(savedLayouts));
+      storageWarning=false;
+      return true;
+    }catch(error){
+      setLayoutSaveStatus('failed','Local storage is unavailable or full. Your current arrangement is still open; try Save layout again.');
+      if(!storageWarning){toast('Layout could not be saved. Local storage is unavailable or full.');storageWarning=true;}
+      return false;
+    }
   }
   document.body.classList.add('controller');
   const main=$('main-area');
@@ -81,14 +94,21 @@
   const modeStatus=el('span','nc-mode-status','Nova off · Chat only');modeStatus.id='nc-mode-status';modeStatus.hidden=true;modeStatus.setAttribute('role','status');modeStatus.title='Only the controller is running. Nova and the model are disabled in chat-only mode.';$('statusbar')?.prepend(modeStatus);
   const identity=el('div','nc-identity'); identity.append(el('span','nc-mark','✦'),el('strong','','Nova'),el('span','nc-caption',document.body.dataset.preview==='true'?'UI preview · simulated data':'Shared workspace'));
   const layoutPicker=el('div','nc-layout-picker');
-  const layoutSelect=el('select','nc-layout-select');layoutSelect.setAttribute('aria-label','Saved layout');layoutSelect.title='Switch saved layout';
+  const layoutSelect=el('select','nc-layout-select');layoutSelect.setAttribute('aria-label','Saved layout');layoutSelect.title='Choose a saved layout, then select Load layout';
   const layoutManage=button('⋯',()=>openLayoutManager(),'nc-action nc-layout-manage');layoutManage.setAttribute('aria-label','Manage layouts');layoutManage.title='Create, rename, duplicate or delete layouts';
-  const layoutSaved=el('span','nc-layout-saved','Saved');layoutSaved.setAttribute('aria-live','polite');
-  layoutPicker.append(el('span','nc-layout-label','Layout'),layoutSelect,layoutManage,layoutSaved);
+  const layoutSave=button('Save layout',()=>persistLayout({manual:true}),'nc-action nc-layout-save');
+  layoutSave.id='save-layout';layoutSave.title='Save the current widget arrangement and sizes now';
+  const layoutLoad=button('Load layout',()=>loadSelectedLayout(),'nc-action nc-layout-edit');layoutLoad.id='load-layout';layoutLoad.title='Load the selected saved layout; discard unsaved changes in the current layout';
+  const layoutRevert=button('Revert',()=>revertLayout(),'nc-action nc-layout-edit');layoutRevert.id='revert-layout';layoutRevert.title='Restore this layout to its last saved arrangement';
+  const layoutUndo=button('Undo',()=>stepLayoutHistory(-1),'nc-action nc-layout-edit');layoutUndo.id='undo-layout';layoutUndo.title='Undo the last layout edit in this session';
+  const layoutRedo=button('Redo',()=>stepLayoutHistory(1),'nc-action nc-layout-edit');layoutRedo.id='redo-layout';layoutRedo.title='Redo the last undone layout edit in this session';
+  const layoutSaved=el('span','nc-layout-saved','Saved');layoutSaved.setAttribute('role','status');layoutSaved.setAttribute('aria-live','polite');layoutSaved.setAttribute('aria-atomic','true');
+  layoutPicker.append(el('span','nc-layout-label','Layout'),layoutSelect,layoutManage,layoutSave,layoutLoad,layoutRevert,layoutUndo,layoutRedo,layoutSaved);
   const actions=el('div','nc-header-actions');
   const menuBar=$('menubar');menuBar.after(header);header.append(identity,menuBar,layoutPicker,actions);
   const workspace=el('div','nc-docking'); main.append(workspace);
-  let layout=null, loadedLayoutId=null, saving=false, chatOnly=false; const containers=new Map();
+  let layout=null, loadedLayoutId=null, saving=false, chatOnly=false, closing=false; const containers=new Map();
+  let layoutHistory=[],layoutHistoryIndex=-1,savedBaseline=null,layoutChangeTimer,layoutGesture=false;
   for(const [id,title,description,nodeId] of definitions){
     let node=nodeId?$(nodeId):null;
     if(id==='tasks'&&!node){node=el('div','tr-body');node.id='tr-body';}
@@ -180,10 +200,96 @@
     const content=mode==='focus'?[chat]:mode==='observe'?[chat,{type:'column',size:'70%',content:[stack(['computer','eyes'],{size:'70%'}),stack(['tools','pipeline','console'],{size:'30%'})]}]:[side,chat,right];
     return {root:{type:'row',content},settings:{popInOnClose:true},dimensions:{borderWidth:8,headerHeight:40,defaultMinItemWidth:'180px',defaultMinItemHeight:'120px'},header:{popout:'Open in a separate window',maximise:'Expand widget',minimise:'Restore widget',close:'Close widget',dock:'Return to main window'}};
   }
-  function persistLayout(){
-    if(!layout||layout.isSubWindow||saving||!loadedLayoutId)return;
-    const item=savedLayouts.items.find(entry=>entry.id===loadedLayoutId);if(!item)return;
-    try{item.config=layout.saveLayout();item.updatedAt=new Date().toISOString();saveLayouts();}catch(error){console.warn('Layout save failed',error);}
+  function screenshotLayout(){
+    const config=starterLayout();
+    config.root={type:'row',content:[
+      {type:'column',size:'24%',content:[stack(['sidebar','tasks'],{size:'50%',activeItemIndex:1}),stack(['logs','tools','monitor'],{size:'50%',activeItemIndex:2})]},
+      stack(['chat','variables','eyes','services','control','editor'],{size:'44%',activeItemIndex:5}),
+      {type:'column',size:'32%',content:[stack(['pipeline','computer','browser'],{size:'60%',activeItemIndex:2}),stack(['thoughts','files','generation'],{size:'40%',activeItemIndex:0})]},
+    ]};
+    return config;
+  }
+  function ensureScreenshotReference(collection){
+    // Keep Cole's supplied arrangement available explicitly, without replacing or
+    // selecting his current Default Workspace or repeating the earlier recovery.
+    const revision='2026-10-04';
+    if(collection.screenshotReference===revision)return false;
+    const base='screenshot-reference-20261004';let id=base,index=1;
+    while(collection.items.some(item=>item.id===id))id=base+'-'+index++;
+    let name='Screenshot reference',suffix=2;
+    while(collection.items.some(item=>item.name.toLowerCase()===name.toLowerCase()))name='Screenshot reference '+suffix++;
+    collection.items.push({id,name,config:NovaDock.LayoutConfig.resolve(screenshotLayout()),updatedAt:new Date().toISOString()});
+    collection.screenshotReference=revision;
+    return true;
+  }
+  function snapshotKey(config){return JSON.stringify(config);}
+  function liveLayout(){return clone(layout.saveLayout());}
+  function updateLayoutControls(snapshot){
+    const unavailable=!layout||layout.isSubWindow||saving||closing||!loadedLayoutId;
+    let current=snapshot;
+    if(!current&&!unavailable)try{current=liveLayout();}catch(_){}
+    const dirty=!!current&&snapshotKey(current)!==snapshotKey(savedBaseline);
+    const pending=!!current&&snapshotKey(current)!==snapshotKey(layoutHistory[layoutHistoryIndex]);
+    layoutSave.disabled=unavailable;
+    layoutSelect.disabled=unavailable;layoutManage.disabled=unavailable;
+    layoutLoad.disabled=unavailable||!savedLayouts.items.some(item=>item.id===layoutSelect.value);
+    layoutRevert.disabled=unavailable||!dirty;
+    layoutUndo.disabled=unavailable||!(layoutHistoryIndex>0||pending);
+    layoutRedo.disabled=unavailable||pending||layoutHistoryIndex>=layoutHistory.length-1;
+    if(!unavailable)setLayoutSaveStatus(dirty?'pending':'saved',dirty?'Changes are not saved. Save layout keeps them; Load layout or Revert discards them.':'This arrangement matches the last saved layout.');
+  }
+  function resetLayoutHistory(){
+    clearTimeout(layoutChangeTimer);
+    const snapshot=liveLayout();savedBaseline=clone(snapshot);
+    layoutHistory=[snapshot];layoutHistoryIndex=0;
+    updateLayoutControls(snapshot);
+  }
+  function recordLayoutChange(){
+    clearTimeout(layoutChangeTimer);
+    if(!layout||layout.isSubWindow||saving||closing||!loadedLayoutId)return false;
+    const snapshot=liveLayout();
+    if(snapshotKey(snapshot)!==snapshotKey(layoutHistory[layoutHistoryIndex])){
+      layoutHistory=layoutHistory.slice(0,layoutHistoryIndex+1);
+      layoutHistory.push(snapshot);
+      if(layoutHistory.length>100)layoutHistory.shift();
+      layoutHistoryIndex=layoutHistory.length-1;
+    }
+    updateLayoutControls(snapshot);
+    return true;
+  }
+  function queueLayoutChange(){
+    if(layout.isSubWindow||saving||closing||!loadedLayoutId)return;
+    updateLayoutControls();
+    clearTimeout(layoutChangeTimer);
+    // A drag/resize is one edit; incidental state events settle into one snapshot.
+    if(!layoutGesture)layoutChangeTimer=setTimeout(recordLayoutChange,250);
+  }
+  function persistLayout({manual=false}={}){
+    // No lifecycle event or dock mutation may write a layout. Explicit Save is
+    // the sole arrangement commit; named-layout management saves only on clicks.
+    if(!manual)return false;
+    if(!layout||layout.isSubWindow||saving||closing||!loadedLayoutId){
+      setLayoutSaveStatus('failed','Wait for the main layout to finish loading, then try again.');
+      toast('Layout is not ready to save yet.');return false;
+    }
+    const item=savedLayouts.items.find(entry=>entry.id===loadedLayoutId);
+    if(!item){setLayoutSaveStatus('failed','The current named layout could not be found.');return false;}
+    const previous=clone(item),previousActive=savedLayouts.activeId;
+    setLayoutSaveStatus('saving','Saving the current widget arrangement and sizes…');
+    try{
+      recordLayoutChange();
+      item.config=liveLayout();item.updatedAt=new Date().toISOString();savedLayouts.activeId=loadedLayoutId;
+      if(!saveLayouts()){
+        Object.keys(item).forEach(key=>delete item[key]);Object.assign(item,previous);savedLayouts.activeId=previousActive;return false;
+      }
+      savedBaseline=clone(item.config);updateLayoutControls(item.config);
+      toast('Saved layout “'+item.name+'” — widget arrangement and sizes.');return true;
+    }catch(error){
+      Object.keys(item).forEach(key=>delete item[key]);Object.assign(item,previous);savedLayouts.activeId=previousActive;
+      console.warn('Layout save failed',error);
+      setLayoutSaveStatus('failed','Could not capture the current dock. Try Save layout again.');
+      toast('Layout could not be captured. Your current arrangement has not been reset.');return false;
+    }
   }
   function refreshLayoutPicker(){
     layoutSelect.replaceChildren();
@@ -197,39 +303,69 @@
     if(returned.length)config.root={type:'row',content:[...(config.root?[config.root]:[]),...returned]};
     return config;
   }
-  async function render(){
-    if(!layout)return;
-    refreshLayoutPicker();
-    if(layout.isSubWindow)return;
-    const item=currentLayout();
-    if(loadedLayoutId!==item.id){
-      persistLayout();saving=true;
+  async function applyLayoutConfig(config){
+    if(!layout||layout.isSubWindow||saving||closing)return false;
+    clearTimeout(layoutChangeTimer);saving=true;updateLayoutControls();
+    try{
       if(layout.openPopouts.length){
-        // Golden Layout schedules window.close(); loading immediately lets the old
-        // window's unload callback pop its widget into the newly selected layout.
         const windows=layout.openPopouts.map(popout=>popout.getWindow());
-        layoutSelect.disabled=true;layoutManage.disabled=true;
         layout.layoutConfig.settings.popInOnClose=false;layout.closeAllOpenPopouts();
         const closed=await new Promise(resolve=>{
           const deadline=Date.now()+3000;
           const check=()=>{if(windows.every(child=>child.closed))resolve(true);else if(Date.now()>=deadline)resolve(false);else setTimeout(check,20);};check();
         });
-        layoutSelect.disabled=false;layoutManage.disabled=false;
-        if(!closed){saving=false;savedLayouts.activeId=loadedLayoutId;refreshLayoutPicker();toast('Close the separate widget windows before switching layouts.');return false;}
+        if(!closed){layout.layoutConfig.settings.popInOnClose=true;toast('Close the separate widget windows before changing layouts.');return false;}
         layout.layoutConfig.openPopouts=[];
       }
-      try{layout.loadLayout(layoutConfig(item));}
-      catch(error){savedLayouts.deleted=[...(savedLayouts.deleted||[]),{...clone(item),deletedAt:new Date().toISOString(),reason:'restore-failed'}].slice(-20);console.warn('Saved layout could not be restored',error);toast('This layout could not be restored. Its original saved data is preserved.');layout.loadLayout(starterLayout());}
-      loadedLayoutId=item.id;saving=false;
-    }
-    saveLayouts();layout.setSize(workspace.clientWidth,workspace.clientHeight);syncEmptyDock();return true;
+      layout.loadLayout(config);
+      layout.setSize(workspace.clientWidth,workspace.clientHeight);
+      syncEmptyDock();syncWidgetChecks();return true;
+    }catch(error){
+      console.warn('Saved layout could not be restored',error);
+      toast('This layout could not be restored. Its saved data has not been changed.');return false;
+    }finally{saving=false;updateLayoutControls();}
   }
-  layoutSelect.onchange=()=>{if(saving)return;persistLayout();savedLayouts.activeId=layoutSelect.value;render();};
+  async function render({force=false}={}){
+    if(!layout||layout.isSubWindow)return false;
+    const item=currentLayout();
+    if(loadedLayoutId!==item.id||force){
+      if(!await applyLayoutConfig(layoutConfig(item)))return false;
+      loadedLayoutId=item.id;resetLayoutHistory();
+    }
+    refreshLayoutPicker();updateLayoutControls();return true;
+  }
+  async function loadSelectedLayout(){
+    if(saving||!savedLayouts.items.some(item=>item.id===layoutSelect.value))return false;
+    const previousId=savedLayouts.activeId;
+    savedLayouts.activeId=layoutSelect.value;
+    if(!await render({force:true})){savedLayouts.activeId=previousId;refreshLayoutPicker();return false;}
+    toast('Loaded “'+currentLayout().name+'”. Changes are saved only with Save layout.');return true;
+  }
+  async function restoreLayoutSnapshot(snapshot){
+    return applyLayoutConfig(layoutConfig({config:snapshot}));
+  }
+  async function revertLayout(){
+    if(saving||!savedBaseline)return false;
+    recordLayoutChange();
+    if(!await restoreLayoutSnapshot(clone(savedBaseline)))return false;
+    savedBaseline=liveLayout();recordLayoutChange();toast('Reverted to the last saved arrangement.');return true;
+  }
+  async function stepLayoutHistory(direction){
+    if(saving)return false;
+    recordLayoutChange();
+    const next=layoutHistoryIndex+direction;
+    if(next<0||next>=layoutHistory.length)return false;
+    if(!await restoreLayoutSnapshot(clone(layoutHistory[next])))return false;
+    layoutHistoryIndex=next;
+    // Saved popouts return to the dock on restore; remember their normalized shape.
+    layoutHistory[next]=liveLayout();updateLayoutControls(layoutHistory[next]);return true;
+  }
+  layoutSelect.onchange=()=>updateLayoutControls();
   const layoutManager=el('dialog','nc-library nc-layout-dialog');layoutManager.setAttribute('aria-label','Manage layouts');
   const managerHead=el('header','nc-library-header');managerHead.append(el('h2','','Saved layouts'),button('Close',()=>layoutManager.close()));
-  const managerHelp=el('p','nc-custom-help','Arrange any widgets, resize the dividers, or open separate windows. Changes save automatically on this device.');
+  const managerHelp=el('p','nc-custom-help','Arrange widgets and resize dividers freely. Only Save layout keeps changes. Choose a name and Load layout to open its saved arrangement; Revert restores the current saved layout. Undo and Redo work on layout edits in this session. Restored popouts return to the main dock.');
   const renameLabel=el('label','','Current layout name');const renameInput=el('input','nc-search');renameInput.maxLength=48;renameInput.setAttribute('aria-label','Current layout name');
-  const renameButton=button('Rename',()=>{const name=checkName(renameInput.value,currentLayout().id);if(!name)return;currentLayout().name=name;saveLayouts();refreshLayoutPicker();managerError.textContent='';toast('Layout renamed');});
+  const renameButton=button('Rename',()=>{const name=checkName(renameInput.value,currentLayout().id);if(!name)return;const previous=currentLayout().name;currentLayout().name=name;if(!saveLayouts()){currentLayout().name=previous;return;}refreshLayoutPicker();updateLayoutControls();managerError.textContent='';toast('Layout renamed');});
   const newLabel=el('label','','New layout name');const newInput=el('input','nc-search');newInput.maxLength=48;newInput.placeholder='For example, Research';newInput.setAttribute('aria-label','New layout name');
   const managerError=el('p','nc-layout-error');managerError.setAttribute('role','alert');
   function checkName(value,excludeId){
@@ -241,24 +377,26 @@
   async function createLayout(duplicate){
     if(saving)return;
     const name=checkName(newInput.value);if(!name){newInput.focus();return;}
-    persistLayout();
+    const previous=clone(savedLayouts);
     const id='layout-'+(globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
     const blank=starterLayout();delete blank.root;
-    const config=duplicate?clone(layout.saveLayout()):null;
+    const config=duplicate?liveLayout():NovaDock.LayoutConfig.resolve(blank);
     const item={id,name,seed:duplicate?currentLayout().seed:'blank',config};
-    savedLayouts.items.push(item);savedLayouts.activeId=id;if(!await render())return;
-    if(!duplicate){saving=true;layout.loadLayout(blank);saving=false;persistLayout();}
-    layoutManager.close();toast(duplicate?'Layout duplicated':'Empty layout created. Add widgets to make it yours.');
+    savedLayouts.items.push(item);savedLayouts.activeId=id;
+    if(!saveLayouts()){savedLayouts=previous;return;}
+    if(!await render()){savedLayouts.activeId=loadedLayoutId;return;}
+    layoutManager.close();toast(duplicate?'Current arrangement saved as a new layout. The original layout was not changed.':'Empty layout created. Add widgets, then Save layout to keep them.');
   }
   const createActions=el('div','nc-layout-actions');createActions.append(button('Create empty',()=>createLayout(false)),button('Duplicate current',()=>createLayout(true)));
   let deleteConfirmed=false;
   const deleteLayout=button('Delete this layout',async()=>{
     if(saving||savedLayouts.items.length<2)return;
     if(!deleteConfirmed){deleteConfirmed=true;deleteLayout.textContent='Confirm delete “'+currentLayout().name+'”';return;}
-    persistLayout();const removed=currentLayout(),remaining=savedLayouts.items.filter(item=>item.id!==removed.id);
-    savedLayouts.activeId=remaining[0].id;if(!await render())return;
+    const previous=clone(savedLayouts),removed=currentLayout(),remaining=savedLayouts.items.filter(item=>item.id!==removed.id);
+    savedLayouts.activeId=remaining[0].id;if(!await render()){savedLayouts.activeId=previous.activeId;refreshLayoutPicker();return;}
     savedLayouts.items=remaining;savedLayouts.deleted=[...(savedLayouts.deleted||[]),{...removed,deletedAt:new Date().toISOString()}].slice(-20);
-    refreshLayoutPicker();saveLayouts();layoutManager.close();toast('Layout deleted');
+    if(!saveLayouts()){savedLayouts=previous;savedLayouts.activeId=loadedLayoutId;refreshLayoutPicker();return;}
+    refreshLayoutPicker();updateLayoutControls();layoutManager.close();toast('Layout deleted');
   },'nc-action nc-layout-delete');
   layoutManager.append(managerHead,managerHelp,renameLabel,renameInput,renameButton,el('hr','nc-layout-divider'),newLabel,newInput,createActions,managerError,deleteLayout);document.body.append(layoutManager);
   layoutManager.onclick=event=>{if(event.target===layoutManager)layoutManager.close();};
@@ -275,16 +413,45 @@
   const libraryHeader=el('header','nc-library-header');libraryHeader.append(el('h2','','Widgets'),button('Close',()=>library.close()));
   const search=el('input','nc-search');search.placeholder='Find a widget…';search.setAttribute('aria-label','Find a widget');
   const results=el('div','nc-library-grid');
+  function openWidgetIds(){
+    const ids=new Set(containers.keys());
+    const visit=node=>{if(!node)return;if(node.componentState?.id)ids.add(node.componentState.id);for(const child of node.content||[])visit(child);};
+    if(!layout)return ids;
+    try{visit(layout.saveLayout().root);}catch(_){}
+    for(const popout of layout.openPopouts||[]){
+      try{if(!popout.getWindow().closed)visit(popout.getGlInstance()?.saveLayout().root||popout.toConfig?.().root);}catch(_){}
+    }
+    return ids;
+  }
+  function syncWidgetChecks(){
+    const open=openWidgetIds();
+    const entries=[...(widgetsDropdown?.querySelectorAll('[data-widget-choice]')||[]),...results.querySelectorAll('[data-widget-choice]')];
+    for(const entry of entries){
+      const item=registry.get(entry.dataset.widgetChoice);if(!item)continue;
+      const active=open.has(item.id);entry.dataset.open=String(active);
+      entry.querySelector('.nc-widget-check').textContent=active?'✓':'';
+      entry.setAttribute('aria-label',item.title+(active?' — open. Focus widget.':' — closed. Open widget.'));
+      entry.title=item.description+(active?' Already open in this layout or a separate window.':' Open this widget.');
+    }
+  }
+  function widgetChoice(item,action,libraryCard=false){
+    const entry=button('',action,libraryCard?'nc-library-item':'dd-item nc-widget-menu-item');entry.dataset.widgetChoice=item.id;
+    const heading=el(libraryCard?'strong':'span','nc-widget-choice-title');
+    const check=el('span','nc-widget-check');check.setAttribute('aria-hidden','true');
+    heading.append(check,el('span','',item.title));entry.append(heading);
+    if(libraryCard)entry.append(el('span','',item.description));
+    return entry;
+  }
   const fill=()=>{results.replaceChildren();for(const item of registry.values()){
     if(!(item.title+' '+item.description).toLowerCase().includes(search.value.toLowerCase()))continue;
-    const b=button('',()=>showWidget(item.id),'nc-library-item');b.append(el('strong','',item.title),el('span','',item.description));results.append(b);
-  }if(!results.children.length)results.append(el('p','nc-no-results','No matching widgets.'));};
+    results.append(widgetChoice(item,()=>showWidget(item.id),true));
+  }if(!results.children.length)results.append(el('p','nc-no-results','No matching widgets.'));syncWidgetChecks();};
   search.oninput=fill;library.append(libraryHeader,search,results);document.body.append(library);
   library.onclick=e=>{if(e.target===library)library.close();};
   function openLibrary(){search.value='';fill();library.showModal();search.focus();}
   window.novaWidgets=openLibrary;
   const widgetsDropdown=$('dd-widgets');
-  if(widgetsDropdown){widgetsDropdown.replaceChildren(el('div','dd-header','Open a widget'));for(const item of registry.values()){const entry=button(item.title,()=>{showWidget(item.id);window.closeDD?.();},'dd-item nc-widget-menu-item');entry.title=item.description;widgetsDropdown.append(entry);}widgetsDropdown.append(button('Browse widget library…',()=>{window.closeDD?.();openLibrary();},'dd-item nc-widget-menu-item'));}
+  if(widgetsDropdown){widgetsDropdown.replaceChildren(el('div','dd-header','Open a widget'));for(const item of registry.values()){widgetsDropdown.append(widgetChoice(item,()=>{showWidget(item.id);window.closeDD?.();}));}widgetsDropdown.append(button('Browse widget library…',()=>{window.closeDD?.();openLibrary();},'dd-item nc-widget-menu-item'));}
   const viewDropdown=$('dd-view');if(viewDropdown){viewDropdown.replaceChildren(button('Manage saved layouts…',()=>{window.closeDD?.();openLayoutManager();},'dd-item nc-widget-menu-item'),button('Appearance…',()=>{window.closeDD?.();openAppearance();},'dd-item nc-widget-menu-item'),button('Reload interface',()=>location.reload(),'dd-item nc-widget-menu-item'));}
   for(const trigger of menuBar.querySelectorAll('[data-dd]')){trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','dd-'+trigger.dataset.dd);}
 
@@ -330,25 +497,38 @@
   new MutationObserver(enhanceDockControls).observe(workspace,{childList:true,subtree:true});
   enhanceDockControls();
   if(layout.isSubWindow){document.body.classList.add('nc-popout');}
-  let layoutSaveTimer;
-  layout.on('stateChanged',()=>{enhanceDockControls();syncEmptyDock();clearTimeout(layoutSaveTimer);layoutSaveTimer=setTimeout(persistLayout,250);});
-  // Save popouts before the library tears down. Its unload closes child windows;
-  // those must not try to bind components back into an already destroyed layout.
-  window.addEventListener('beforeunload',()=>{
-    persistLayout();
+  layout.on('stateChanged',()=>{enhanceDockControls();syncEmptyDock();syncWidgetChecks();queueLayoutChange();});
+  layout.on('windowOpened',()=>{syncWidgetChecks();queueLayoutChange();});
+  layout.on('windowClosed',()=>{syncWidgetChecks();queueLayoutChange();});
+  document.addEventListener('pointerdown',event=>{
+    if(!event.target.closest?.('.lm_splitter,.lm_tab,.lm_header'))return;
+    recordLayoutChange();layoutGesture=true;
+  },true);
+  const finishLayoutGesture=()=>{if(layoutGesture){layoutGesture=false;queueLayoutChange();}};
+  document.addEventListener('pointerup',finishLayoutGesture,true);
+  document.addEventListener('pointercancel',finishLayoutGesture,true);
+  // Unloading discards the draft. Destruction events cannot rewrite saved data.
+  function discardLayoutBeforeUnload(){
+    clearTimeout(layoutChangeTimer);closing=true;
     if(!layout.isSubWindow)layout.layoutConfig.settings.popInOnClose=false;
-  },{capture:true});
+  }
+  window.addEventListener('beforeunload',discardLayoutBeforeUnload,{capture:true});
+  window.addEventListener('pageshow',()=>{closing=false;updateLayoutControls();});
   new ResizeObserver(()=>layout.setSize(workspace.clientWidth,workspace.clientHeight)).observe(workspace);
   const appearanceButton=button('Appearance ▾',()=>openAppearance(),'menu-trigger');appearanceButton.dataset.dd='appearance';appearanceButton.setAttribute('aria-haspopup','true');appearanceButton.setAttribute('aria-controls','dd-appearance');appearanceButton.setAttribute('aria-expanded','false');actions.append(appearanceButton);
   const customize=el('div','dropdown nc-appearance-menu');customize.id='dd-appearance';customize.setAttribute('aria-label','Appearance');customize.close=()=>window.closeDD?.();
   function openAppearance(){window.toggleDD?.('appearance',appearanceButton);}
-  const ch=el('header','nc-library-header');ch.append(el('h2','','Appearance'),button('Close',()=>customize.close()));customize.append(ch,el('p','nc-custom-help','Drag widget tabs to reorder, stack, or split. Drag the dividers to resize. Use a widget’s popout control to move it into its own window. Each named layout remembers its arrangement.'));
+  const ch=el('header','nc-library-header');ch.append(el('h2','','Appearance'),button('Close',()=>customize.close()));customize.append(ch,el('p','nc-custom-help','Drag widget tabs to reorder, stack, or split. Drag the dividers to resize. Use a widget’s popout control to move it into its own window. Save layout keeps your arrangement. Changes are otherwise temporary.'));
   const density=el('select','nc-search');density.setAttribute('aria-label','Interface density');for(const [v,t] of [['comfortable','Comfortable'],['compact','Compact']]){const o=el('option','',t);o.value=v;density.append(o);}
   const accent=el('input','nc-search');accent.type='color';accent.setAttribute('aria-label','Accent color');
   let appearance={density:'comfortable',accent:'#b5a0f6'};try{appearance={...appearance,...JSON.parse(localStorage.getItem('nova.controller.appearance')||'{}')};}catch(_){}
   function style(){document.body.dataset.density=appearance.density;document.body.style.setProperty('--nova',appearance.accent);try{localStorage.setItem('nova.controller.appearance',JSON.stringify(appearance));}catch(_){}}
   density.value=appearance.density;accent.value=appearance.accent;density.onchange=()=>{appearance.density=density.value;style();};accent.oninput=()=>{appearance.accent=accent.value;style();};style();
-  customize.append(el('label','','Density'),density,el('label','','Accent'),accent,button('Reset this layout to a starter arrangement',async()=>{if(saving)return;persistLayout();const item=currentLayout();savedLayouts.deleted=[...(savedLayouts.deleted||[]),{...clone(item),deletedAt:new Date().toISOString(),reason:'before-reset'}].slice(-20);item.config=null;item.seed='together';loadedLayoutId=null;if(await render())persistLayout();customize.close();}));document.body.append(customize);
+  customize.append(el('label','','Density'),density,el('label','','Accent'),accent,button('Use starter arrangement (unsaved)',async()=>{
+    if(saving)return;recordLayoutChange();
+    if(await applyLayoutConfig(starterLayout()))recordLayoutChange();customize.close();
+  }));document.body.append(customize);
+  if(!layout.isSubWindow&&ensureScreenshotReference(savedLayouts))saveLayouts();
   render();
   if(!layout.isSubWindow)window.initNovaUpdaterNotifications?.({showWidget});
   const chatOnlyReason='Nova is off. Use Start Nova in Conversation to enable her, or use Collaboration while she stays off.';

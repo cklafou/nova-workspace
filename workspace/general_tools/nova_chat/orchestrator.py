@@ -1,4 +1,5 @@
-# Last updated: 2026-10-03 10:59:53
+# @nova: Select Nova responders and route supported command modules for the controller conversation.
+# Last updated: 2026-10-04 13:34:27
 """
 Determines who responds to each message and in what order.
 
@@ -91,8 +92,7 @@ from typing import Optional
 # resolves to nobody and costs nothing, instead of erroring or (worse) silently paying.
 #
 # "Cowork Claude" still appears in this room as a SPEAKER — that is a human-driven session, not
-# an API, and it is how she gets reviewed. She also reaches out herself via the ping_claude tool
-# (desktop automation, not a paid call). She can still be talked to; the server can no longer pay.
+# an API. Nova can receive that speaker’s messages; this roster does not contact external assistants.
 PARTICIPANTS = ["Nova"]
 
 # Role aliases — map role name to list of participant names
@@ -122,7 +122,7 @@ _MODULE_REGISTRY_DEFAULTS: dict[str, dict] = {
     },
     "mentor": {
         "description": "RETIRED 2026-07-19 — mentors removed; resident Claude/Gemini clients "
-                       "removed 2026. Nova reaches Cowork Claude deliberately via Ping.",
+                       "removed 2026. Ask Cole in conversation when assistance is needed.",
         "local_model":  None,
         "api_fallback": None,
         "status":       "active",   # value unchanged (consumer semantics unverified); text is the truth

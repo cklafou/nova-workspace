@@ -1,5 +1,5 @@
 # Nova A3: user-directed consistency corrections
-_Last updated: 2026-10-04 13:26:26_
+_Last updated: 2026-10-04 13:57:02_
 
 Date: 2026-09-22. Status: revised concept for user review.
 

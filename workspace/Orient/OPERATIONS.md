@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-04T04:30:50+00:00 from source (input `f9f9eb785aef`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T05:15:53+00:00 from source (input `d6b8606c9180`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -124,8 +124,6 @@ disk rather than a slow network mount.
 
 ## Test meaningful behavior
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/tests/test_updater_ui.cjs`; new `general_tools/nova_updater/tests/test_runpod_lifecycle.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
-
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
 3. Check reproduction, actual tool results, file changes, tests, final artifact and board transition.
@@ -159,17 +157,23 @@ disk rather than a slow network mount.
 
 ## Files and recovery
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-02): new `general_tools/nova_sync/hooks/pre-push`, `general_tools/nova_sync/watcher.py::_is_frozen_file`, `general_tools/nova_sync/watcher.py::run_pup_cycle`, `general_tools/nova_sync/watcher.py::update_timestamp_in_file`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Files and recovery"`.
+
 Temporary diagnostics belong in `Temp/` beside their owner. Retired files go to
 `_admin/Trash/<change>_<date>/` with a manifest and `WHY.md`; preserve original relative paths,
 refuse collisions, and never delete personal history. `_admin/Trash/` is a
 short-term holding area that Cole empties; git history is the long-term record. Stop all writers before moving databases
 or transcripts. Hash-check the checkpoint and destination before restarting. Keep rollback copies
 out of active lookup paths so they cannot hide a broken migration.
+The watcher preserves `_admin/Trash/` bytes: timestamp maintenance and PUP replacement skip
+archived originals while normal change/backup queues still work. Dated manifests record source
+paths, reasons and hashes. This October 4 archive is read-only to block the already-running
+older watcher until its next normal restart loads the exclusion.
 
 The pre-October orientation files (GOTCHAS, SECURITY, TUNABLE_VARIABLES, NOVA_CREATED_TOOLS, WIRING,
 TOOLS and others) were folded into these documents on 2026-10-01/02; their original text stays in git
-history on this computer (`git show a8e44727:workspace/Orient/<NAME>.md`; once `_admin/FIX_GIT.cmd`
-has run, that commit is kept on the local branch `backup/before-fix-git`). Do not regenerate them
+history on this computer (`git show a8e44727:workspace/Orient/<NAME>.md`); the completed history repair
+preserved that commit on the local branch `backup/before-fix-git`. Do not regenerate them
 as additional entry documents. Detailed graph assets stay under `Orient/Architecture`.
 Core self-model and personal memory belong in the body, not Orient. Generated documentation must
 not rewrite Nova's identity, infer capabilities from filenames, or copy secrets into an index.
@@ -198,6 +202,8 @@ notes), which Orient lists but never quotes; backups; and formats without commen
 A generated file gets its purpose line from the code that writes it.
 
 ## Security model
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/server.py::websocket_endpoint`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
 
 Nova's reach is intentional — Cole: *"My machine is her body. If she can't use it fully, she is
 crippled."* Every control here is about **who can reach her from outside**, not what she may do
@@ -414,7 +420,7 @@ its temp folder stopped autosave (lesson 7 above).
 
 ## Controller menus and layouts
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/static/index.html`. Re-read it against the code, update it in `general_tools/architecture_map/notes/controller_layouts.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Controller menus and layouts"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/static/index.html`, `general_tools/nova_chat/static/workspace.css`, `general_tools/nova_chat/static/workspace.js`; new `general_tools/nova_chat/desktop.py`, `general_tools/nova_chat/tests/test_desktop.py`, `general_tools/nova_chat/tests/test_layout_save.cjs`. Re-read it against the code, update it in `general_tools/architecture_map/notes/controller_layouts.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Controller menus and layouts"`.
 
 Nova Chat has one workspace. The top application bar contains expandable menus; opening Services,
 Advanced or Appearance leaves the dock arrangement alone. Widgets opens the widget choices, including
@@ -433,16 +439,60 @@ unsent text, selection, attached images and mentioned files. A draft-storage fai
 of silently discarding the draft. Older launchers show a restart instruction rather than a working
 button. This control differs from stopping the current reply, muting Nova or closing a conversation.
 
-The small Layout selector switches named arrangements. Its adjacent management control creates an empty
-layout, duplicates the current one, renames it or deletes it while keeping at least one. Drag widget tabs
-to reorder, stack or split; drag dividers to resize; the popout control opens a separate window. Changes
-save automatically in the current browser/app profile. A failure to save is shown as Not saved.
+Widget layouts save **manually**. Drag tabs to reorder, stack or split, resize dividers, or pop widgets
+into separate windows; these edits stay temporary until **Save layout** captures the live arrangement,
+split sizes and popouts. The status distinguishes **Unsaved changes**, **Saving…**, **Saved** and
+**Save failed**. Save success requires a successful local-storage write; failure keeps the arrangement
+open without changing its last saved copy. Native window size persists separately.
+
+Choose a name in the Layout selector, then **Load layout** to apply it. Selecting alone does nothing;
+Load discards the departing layout's unsaved edits and does not automatically save its arrangement or
+selected layout. **Revert** restores the currently loaded layout's last saved baseline, regardless of
+which name is pending in the selector. **Undo** and **Redo** traverse up to 100 layout snapshots in the
+current session, with a drag/resize treated as one edit; Revert is itself undoable. Loading another
+layout or reloading the page resets that edit history. Reload/close discards unsaved widget edits;
+no dock-change, switch or unload handler automatically saves them.
+
+The management control explicitly creates, renames, duplicates or deletes named layouts, keeping at
+least one. Those button actions persist their intended change. **Duplicate current** saves the draft
+as a new named layout without overwriting the original. Appearance's **Use starter arrangement
+(unsaved)** is an undoable draft change and needs Save layout to persist. Widget menu/library checkmarks
+include hidden dock tabs and live popouts. Choosing an open widget focuses it; choosing a closed widget
+opens it.
 
 Storage is `nova.controller.layouts.v2` in that profile's local storage. The previous mode selection and
 saved Together/Observe/Focus layouts migrate into editable named layouts; the old keys remain intact.
-The last twenty deleted/reset/unrestorable layouts are retained as recovery records in the collection.
-Saved popouts return to the main dock on restore. Switching arrangements closes their old popouts before
-loading the next layout. A native Nova Chat window and a separate browser have independent layout profiles.
+Deletion retains a recovery copy, bounded to twenty records; older reset/recovery records remain available.
+An unrestorable saved layout is left unchanged. Saved popouts return to the main dock on restore.
+Loading another arrangement closes the old popouts before loading, without saving the departing draft.
+A native Nova Chat window and a separate browser have independent layout profiles.
+
+The October 4 screenshot is available as a separate **Screenshot reference** named layout. A one-time
+`screenshotReference: "2026-10-04"` migration adds it without selecting it or replacing Default Workspace.
+Select it and choose Load layout to use it. Existing layouts and prior recovery copies remain intact;
+there is no second automatic active-layout reset.
+
+The native profile now lives at `~/ProjectNovaData/Controller` (`%USERPROFILE%/ProjectNovaData/Controller`
+on Windows), outside AppData virtualization. On the first actual desktop launch, if that destination does
+not yet exist, the app stages a copy of the caller's old `%LOCALAPPDATA%/ProjectNova/Controller/window.ini`
+and `storage/`, then publishes the complete profile. The legacy profile stays intact; disposable cache
+is not copied. Migration failure displays an error and exits rather than silently opening a blank
+profile. An existing new profile is authoritative; explicit `--profile-dir` previews stay isolated.
+
+Native movement, resizing and window-state changes save after a 350 ms debounce; tray-close and
+application quit flush immediately. Minimized windows retain their last normal geometry, maximized
+state is restored, and Qt clamps a saved window to available screens. A settings-write failure appears
+in the native status bar. Closing the main window hides it when a tray is available; **Nova → Quit Nova**
+or the tray's **Quit Nova** exits the app. **Ctrl+R** reloads renderer changes only; desktop Python changes
+and profile migration require a full quit and relaunch.
+
+Verification for this persistence repair: 15 isolated desktop tests passed, including resize/move
+restoration between two fresh offscreen Qt processes and migration success/failure fixtures. Twenty-one
+Node scenarios cover manual saving/loading, Revert, Undo/Redo, screenshot reference and widget checks.
+Live browser checks verified draft discard on reload, Undo/Redo, Revert, explicit Save surviving reload,
+select-then-Load behavior, screenshot reconstruction and open-widget checks, with no browser errors.
+The user's running native app was not restarted or its real profile migrated during this repair;
+native reopening remains a separate verification.
 
 Live log includes recorded history as well as new events. Earlier dates are displayed beside the time;
 event labels distinguish scheduled reminders from model responses. A `stretch_nudge` comes from the
@@ -451,7 +501,7 @@ inference. Its posture record freshness is a separate runtime issue; the control
 
 ## Model updates
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/static/updater.js`, `general_tools/nova_updater/train.py`; new `general_tools/nova_updater/net.py`, `general_tools/nova_updater/runpod.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/model_updates.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Model updates"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): new `general_tools/nova_sync/tests/test_frozen_training.py`, `general_tools/nova_sync/watcher.py::_is_frozen_file`, `general_tools/nova_sync/watcher.py::run_pup_cycle`, `general_tools/nova_sync/watcher.py::update_timestamp_in_file`. Re-read it against the code, update it in `general_tools/architecture_map/notes/model_updates.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Model updates"`.
 
 `general_tools/nova_updater/` is a general tool; its README has the full route contract. At each Nova
 Chat start one cached catalog query looks for a newer dense Qwen of 27-32B with a permissive license,
@@ -524,7 +574,11 @@ New pod packages isolate dependencies in a per-job virtual environment on contai
 while reusing the image's CUDA Torch; the Hugging Face weight cache also stays on local disk.
 The durable input package, checkpoints and recovery outputs remain on the `/workspace` volume. Temporary ZIP exports, downloaded outputs and logs use
 `Temp/updater/`; exporting is not training. Existing v6/v7 inputs are copied with matching hashes;
-the historical sources remain available. Do not select both a complete corpus and its additive subset.
+the historical originals are preserved in the dated script-retirement archive. Do not select both a complete corpus and its additive subset.
+Frozen Training Files are excluded from the sync watcher's timestamp and PUP replacement writes;
+change detection and backup queues still work. The eight restored October 4 inputs/receipts are also read-only
+along with nineteen unchanged manifest entries, to protect their exact checksums from the older watcher until its next normal restart. Reproduce a
+changed recipe in a new package rather than altering the checksummed originals.
 
 The RunPod Settings credit check and paid-run preview query prepaid credit. New starts must meet
 RunPod's one-hour minimum; a smaller balance than the estimated whole run produces a warning.
@@ -658,6 +712,6 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Dangling references:** none.
 
-**Files without a purpose line:** 75, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
+**Files without a purpose line:** 73, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Model updates`, `OPERATIONS.md#Test meaningful behavior`.
+**Sections awaiting review:** `ARCHITECTURE.md#Body faculties`, `ARCHITECTURE.md#Execution path`, `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Files and recovery`, `OPERATIONS.md#Model updates`, `OPERATIONS.md#Security model`.

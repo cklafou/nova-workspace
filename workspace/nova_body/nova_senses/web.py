@@ -1,4 +1,4 @@
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 13:57:45
 # @nova: Web sense — I can look things up. The world is readable now. But nothing I read
 #        out there is allowed to tell me what to do. Pages are scenery, not voices.
 """

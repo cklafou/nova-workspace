@@ -2,7 +2,7 @@
 # Last updated: 2026-10-03 09:45:16
 """
 Nova Group Chat - FastAPI WebSocket Server
-Handles real-time streaming from all three AIs concurrently.
+Handles Nova response streaming and the separate controller collaboration feed.
 Nova can POST messages via /nova-message endpoint.
 Context exports available via /export endpoint.
 """
@@ -41,7 +41,6 @@ from nova_chat.workspace_context import WorkspaceContext
 # What is NOT affected, and is deliberately kept:
 #   • "Cowork Claude" as a SPEAKER — that is a human-driven session typing into her chat. It
 #     costs this project nothing and it is how she gets reviewed.
-#   • ping_claude — desktop UI automation into an already-open Claude window. Not an API call.
 # The distinction that matters: she can still be TALKED TO by Claude; this server can no longer
 # PAY to talk to Claude.
 if CHAT_ONLY:
@@ -4143,7 +4142,7 @@ async def websocket_endpoint(ws: WebSocket):
 
             if data.get("type") == "user_typing":
                 # P4 — Cole is typing a response; write state to interrupt_inbox.json
-                # so checkin.py can warn Nova to pause before her next action tick.
+                # so environment.cole_typing can defer the executive's next wake.
                 global _user_typing, _user_typing_since
                 import time as _tz
                 _now_tz            = _tz.time()
@@ -4159,7 +4158,7 @@ async def websocket_endpoint(ws: WebSocket):
                     existing["is_typing"]     = _user_typing
                     existing["typing_since"]  = _user_typing_since
                     # last_typed_at persists even after debounce clears is_typing,
-                    # giving checkin.py a 30s window to detect recent typing activity.
+                    # giving environment.cole_typing a 30s window to detect recent activity.
                     if _user_typing:
                         existing["last_typed_at"] = _now_tz
                     # Atomic write: write to .tmp then rename, so readers never see
