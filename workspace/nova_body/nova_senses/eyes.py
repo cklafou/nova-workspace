@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # @nova: Combine host accessibility and local visual models for optional desktop perception.
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 14:39:57
 """
 nova_eyes.py — Nova's Unified Vision System
 ==============================================

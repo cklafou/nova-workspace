@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 13:40:00
+# Last updated: 2026-10-04 14:40:27
 # @nova: Runs the real model launcher on Windows with llama-server swapped for an argument recorder, proving boot files reach llama-server intact.
 """Windows only (needs cmd.exe); skipped elsewhere. No model file is read and nothing is started.
 

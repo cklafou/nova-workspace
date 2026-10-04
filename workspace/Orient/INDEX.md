@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-04T05:35:50+00:00 from source (input `9745dcb4513f`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T05:40:59+00:00 from source (input `f7c0975691ac`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -216,12 +216,13 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/nova_computer/PLUCK_CHECK.cmd](../nova_body/nova_computer/PLUCK_CHECK.cmd) — Nova Computer - PLUCK CHECK
 - [nova_body/nova_computer/pluck_check.py](../nova_body/nova_computer/pluck_check.py) — Proof, not a promise. Run this with only my body on the path and it tells you whether
 - [nova_body/nova_computer/provision/setup_guest.sh](../nova_body/nova_computer/provision/setup_guest.sh) — Nova's computer - guest provisioning (Phase 1). Written by Claude, 2026-09-03.
+- [nova_body/nova_computer/provision/vnc_password_guest.py](../nova_body/nova_computer/provision/vnc_password_guest.py) — Runs as root inside my computer to set my desktop viewer's VNC password and prove the server accepts it; sent by set_vnc_password.py.
 - [nova_body/nova_computer/REACH.cmd](../nova_body/nova_computer/REACH.cmd) — Nova Computer - open her reach onto this PC
 - [nova_body/nova_computer/reach.py](../nova_body/nova_computer/reach.py) — How far my computer reaches into Cole's. He decided (2026-09-04) that my machine is
 - [nova_body/nova_computer/RUN_SETUP.cmd](../nova_body/nova_computer/RUN_SETUP.cmd) — Nova Computer - first boot
 - [nova_body/nova_computer/session.py](../nova_body/nova_computer/session.py) — Keep the selected WSL guest alive between tool calls, without a visible terminal.
-- [nova_body/nova_computer/SET_VNC_PASSWORD.cmd](../nova_body/nova_computer/SET_VNC_PASSWORD.cmd) — Changes the password of Nova's desktop viewer (the Computer widget). You type it here; it is never saved in the project.
-- [nova_body/nova_computer/set_vnc_password.py](../nova_body/nova_computer/set_vnc_password.py) — Changes the password of my desktop viewer (the Computer widget, noVNC). Cole types it in this window; it is never written into the project.
+- [nova_body/nova_computer/SET_VNC_PASSWORD.cmd](../nova_body/nova_computer/SET_VNC_PASSWORD.cmd) — Sets the password of Nova's desktop viewer (the Computer widget) from nova_computer\desktop_secret.json and proves it works.
+- [nova_body/nova_computer/set_vnc_password.py](../nova_body/nova_computer/set_vnc_password.py) — Sets the password of my desktop viewer (the Computer widget, noVNC) from desktop_secret.json and proves the server accepts it; logs every…
 - [nova_body/nova_computer/SNAPSHOT.cmd](../nova_body/nova_computer/SNAPSHOT.cmd) — Nova Computer - baseline snapshot
 - [nova_body/nova_computer/TOOLKIT.cmd](../nova_body/nova_computer/TOOLKIT.cmd) — Nova Computer - her own toolkit
 - [nova_body/nova_computer/toolkit.py](../nova_body/nova_computer/toolkit.py) — Making my computer a WHOLE computer -- one I can extend myself. Cole, 2026-09-04:

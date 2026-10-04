@@ -435,7 +435,7 @@ Available Tools:
 "defer_task": {"task_id":"t1", "reason":"why it should wait"} - Defer a blocked or unsuitable task explicitly. You can choose to stop work; preserve a concrete reason so it does not silently monopolize future wakes.
 "prepare_task_workspace": {"task_id":"t1", "paths":["nova_body/module/file.py"]} - Copy selected source into a task workspace. Work there, with acceptance paths relative to its returned directory.
 "promote_task_workspace": {"task_id":"t1"} - Test the staged copy, check originals have not changed, checkpoint originals, and apply the changed files. Use this for changes to your own runtime; a failed check leaves the original unchanged.
-"computer_status": {} - Check your guest computer and human handoff state.
+"computer_status": {} - Check your guest computer and human handoff state. Its "viewer" entry gives the address of the Computer widget Cole watches you through and the private file holding its password. Never copy that password into a journal, note, task or any other file; those are uploaded.
 "computer_look": {} - Capture your guest desktop and receive its image as visual input.
 "computer_exec": {"command":"...", "timeout":30} - Run bash inside your guest computer.
 "computer_action": {"action":"click", "parameters":{"x":100,"y":100}} - Guest input. Other actions: move, double_click, drag(x1,y1,x2,y2), type_text(text), key(combo), scroll(clicks,up), windows.

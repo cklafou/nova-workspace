@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 14:40:28
 # @nova: Keep retired desktop-message aliases unavailable without spawning processes or touching Nova records.
 import sys
 from pathlib import Path

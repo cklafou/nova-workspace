@@ -28,7 +28,8 @@ def call(tool,args):
     if tool=='computer_status':
         # Probing the guest can start WSL, so collect status after the probe.
         available=hands.available()
-        data={**pc.status(),'hands':available,'control':handoff(),'session':session}
+        data={**pc.status(),'hands':available,'control':handoff(),'session':session,
+              'viewer':{'url':'http://127.0.0.1:6080/vnc.html','password_file':'nova_body/nova_computer/desktop_secret.json'}}
         return ToolResult(json.dumps(data), status='succeeded' if data['hands']['ready'] else 'failed')
     if tool=='computer_look':
         image=hands.look()
