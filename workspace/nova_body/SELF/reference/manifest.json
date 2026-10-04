@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-04T15:03:54",
+  "generated": "2026-10-04T15:10:48",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -26,7 +26,7 @@
       "path": "nova_body/nova_computer",
       "purpose": "My computer -- somewhere that is MINE to act in, that never reaches across and grabs",
       "files": 13,
-      "lines": 2131,
+      "lines": 2156,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -643,7 +643,7 @@
       "path": "general_tools/architecture_map",
       "purpose": "Generates Orient documentation and validates source, review and link freshness.",
       "files": 10,
-      "lines": 3068,
+      "lines": 3075,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
