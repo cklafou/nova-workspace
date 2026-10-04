@@ -906,7 +906,14 @@ reply and available screenshot pixels reach the inline witness. Incomplete or ma
 no longer become approval. Local replay still exposed a semantic miss, so strict parsing is not
 evidence that the model catches every unsupported claim. A direct guest-browser probe opened
 an actual page; an isolated host PowerShell command proved that route without touching host GUI.
-See the computer repair AI Notes for final runtime validation and remaining limits.
+A normal Nova Chat test at 15:04 completed in 198 seconds: eight guest tool calls produced
+eight matching start/end/receipt IDs. Four screenshot observations showed search results, an
+opened Short with different video frames, and the player mute icon. The entire 1,709-character
+delivered draft was audited with the latest three frames (one earlier frame disclosed as omitted).
+The verdict remained INCOMPLETE, without a false PASS. A subsequent direct probe verified
+existing-Firefox handoff through executable identity after its initial name-only probe returned
+unknown. Host browser opening, audio output measurement and general witness accuracy remain
+unverified. See the computer repair AI Notes for receipts and reload evidence.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 """
     operations = "# Operations and verification\n\n" + evidence + """

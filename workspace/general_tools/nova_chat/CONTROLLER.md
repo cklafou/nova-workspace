@@ -352,3 +352,5 @@ simulated services completed off -> on -> off (button labels Start -> Stop -> St
 and produced exactly one start and one stop request with no browser errors. That fixture does not
 prove a live model start or Qt window continuity. The real Nova and native window were left untouched
 while Cole was gaming; the first full native service cycle remains to be checked after restart.
+
+Cancellation requested is a pending cleanup state, not confirmation that a worker or application stopped. Pipeline keeps that distinction visible on the correlated tool row.

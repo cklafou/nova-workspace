@@ -235,6 +235,7 @@ def _launch_probe(argv, wait):
     import os
     from pathlib import Path
     import signal
+    import shutil
     import subprocess
     import tempfile
     import time
@@ -276,6 +277,31 @@ def _launch_probe(argv, wait):
                 pass
         return parents, names
 
+    # Firefox's official launcher execs the adjacent firefox-bin. A process Name is
+    # mutable/truncated and does not identify its executable; compare actual file IDs.
+    executable_files = []
+    selected = shutil.which(argv[0])
+    if selected:
+        resolved = Path(selected).resolve()
+        executable_files.append(resolved)
+        if resolved.name == "firefox":
+            executable_files.append(resolved.with_name("firefox-bin"))
+    executable_ids = set()
+    for candidate in executable_files:
+        try:
+            info = candidate.stat()
+            if candidate.is_file():
+                executable_ids.add((info.st_dev, info.st_ino))
+        except OSError:
+            pass
+
+    def owns_requested_executable(pid):
+        try:
+            info = (Path("/proc") / str(pid) / "exe").stat()
+            return (info.st_dev, info.st_ino) in executable_ids
+        except OSError:
+            return False
+
     rc, geometry, error = query(["xdotool", "getdisplaygeometry"])
     base = {"stdout": "", "stderr": error, "exit_code": None, "display": os.environ.get("DISPLAY"),
             "verification": "application_window", "page_verified": False, "playback_verified": False}
@@ -307,13 +333,12 @@ def _launch_probe(argv, wait):
         after, after_error = windows()
         # Existing browser instances may receive --new-window and let the launcher exit.
         # Accept only a newly observed window owned by the requested executable in that case.
-        executable = Path(argv[0]).name.lower()
         running = set(parents)
         if proc.poll() is None:
             running.add(proc.pid)
         matched = [row for row in after if row["pid"] in running and
                    (row["pid"] in tracked or
-                    (row["id"] not in initial_ids and names.get(row["pid"]) == executable))]
+                    (row["id"] not in initial_ids and owns_requested_executable(row["pid"])))]
         if matched or proc.poll() is not None and proc.returncode != 0 or time.monotonic() >= deadline:
             break
         time.sleep(min(0.25, max(0, deadline - time.monotonic())))

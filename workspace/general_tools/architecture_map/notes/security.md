@@ -1,5 +1,5 @@
 <!-- @nova: Explain Nova access boundaries, identity and known exposure gaps. -->
-_Last updated: 2026-10-04 14:06:13_
+_Last updated: 2026-10-04 15:06:16_
 ---
 doc: OPERATIONS.md
 order: 10

@@ -46,6 +46,14 @@ for(const [status,label,color] of [['failed','Failed','err'],['partial','Partial
 }
 assert.equal(api.status(event('tool_failed',{status:'succeeded',ok:false})).color,'err','Failure event cannot be made green by contradictory status');cases++;
 
+const cancelling=event('tool_failed',{status:'cancellation_requested',detail:'Stop requested'});
+assert.equal(api.status(cancelling).color,'neutral');
+rendered=api.render({turn:'turn1',events:[started,cancelling]});
+assert.match(rendered,/Cancellation requested/);assert.match(rendered,/worker cleanup may still be pending/);
+assert.ok(!rendered.includes('Cancelled'));assert.ok(!rendered.includes('pl-badge err'));
+assert.equal(api.steps([started,cancelling]).length,1);
+assert.equal(api.steps([started,cancelling,completed])[0].event.stage,'tool_completed');cases++;
+
 const second=event('tool_started',{operation_id:'call2',tool:'computer_look'});
 assert.equal(api.steps([started,completed,second]).length,2,'Repeated tools retain distinct operation IDs');
 assert.equal(api.steps([completed,started])[0].event.stage,'tool_completed','Late duplicate start does not resurrect a completed call');cases++;

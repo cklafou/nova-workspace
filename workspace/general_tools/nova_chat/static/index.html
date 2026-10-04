@@ -3276,6 +3276,7 @@ function _plNormalizeEvent(event){
 function _plToolStatus(event){
   const status=String(event.status||'').toLowerCase();
   if(event.stage==='tool_started')return {key:'running',label:'Running',color:'running'};
+  if(status==='cancellation_requested')return {key:status,label:'Cancellation requested',color:'neutral'};
   const outcomes={failed:['Failed','err'],partial:['Partial','held'],refused:['Refused','held'],cancelled:['Cancelled','held'],canceled:['Cancelled','held'],timeout:['Timed out','err'],timed_out:['Timed out','err']};
   if(outcomes[status])return {key:status,label:outcomes[status][0],color:outcomes[status][1]};
   if(event.stage==='tool_failed'||event.ok===false)return {key:'failed',label:'Failed',color:'err'};
@@ -3311,10 +3312,11 @@ function _plToolRows(events){
       elapsed=duration<1000?Math.round(duration)+' ms':(duration/1000).toFixed(1)+' s';
     }
     const place={guest:'Guest',host:'Host',local:'Local'}[event.environment]||'';
+    const detail=status.key==='cancellation_requested'?'Response stopped waiting; worker cleanup may still be pending. Tool stop is not confirmed.':event.detail||status.label;
     return `<li class="pl-tool-step ${status.color}" data-operation="${_plAttr(step.id)}">`+
       `<span class="pl-tool-clock">${_plEsc(String(start||'').slice(11,19))}</span>`+
       `<span class="pl-tool-name">${_plEsc(event.tool||'Tool')}${place?`<small>${place}</small>`:''}</span>`+
-      `<span class="pl-tool-state" title="${status.key==='running'?'Last reported status; awaiting a completion event':_plAttr(event.detail||status.label)}">${status.label}</span>`+
+      `<span class="pl-tool-state" title="${status.key==='running'?'Last reported status; awaiting a completion event':_plAttr(detail)}">${status.label}</span>`+
       `<span class="pl-tool-duration">${_plEsc(elapsed)}</span></li>`;
   }).join('')+'</ol>';
 }

@@ -25,11 +25,18 @@ class LaunchProbeTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         (self.root / 'logs').mkdir()
 
-    def run_probe(self, *, code=None, window_pid=None, before=False, process_name='firefox', display_ok=True):
+    def run_probe(self, *, code=None, window_pid=None, before=False, process_name='firefox', display_ok=True, executable=None):
         owner = window_pid or 321
         proc_dir = self.root / str(owner)
         proc_dir.mkdir()
         (proc_dir / 'status').write_text('Name:\t'+process_name+'\nPPid:\t1\n')
+        application = self.root / 'application'
+        application.mkdir()
+        for name in ('firefox', 'firefox-bin', 'unrelated'):
+            (application / name).write_text('fixture executable: ' + name)
+        executable = executable or (process_name if process_name in {'firefox', 'firefox-bin'} else 'unrelated')
+        if executable != 'unreadable':
+            os.link(application / executable, proc_dir / 'exe')
         count = 0
         def run(argv, **kwargs):
             nonlocal count
@@ -52,9 +59,16 @@ class LaunchProbeTests(unittest.TestCase):
             kwargs['stdout'].write(b'launcher output\n');kwargs['stdout'].flush()
             kwargs['stderr'].write(b'Snap diagnostic preserved\n');kwargs['stderr'].flush()
             return process
+        original_stat = Path.stat
+        def fixture_stat(path, *a, **kw):
+            if path == Path('/proc') / str(owner) / 'exe':
+                path = proc_dir / 'exe'
+            return original_stat(path, *a, **kw)
         with patch('subprocess.run', side_effect=run), patch('subprocess.Popen', side_effect=popen) as spawn, \
              patch('tempfile.mkdtemp', return_value=str(self.root/'logs')), \
              patch.object(Path, 'iterdir', return_value=iter([proc_dir])), \
+             patch('shutil.which', return_value=str(application / 'firefox')), \
+             patch.object(Path, 'stat', fixture_stat), \
              patch('signal.signal'):
             result = _launch_probe(['firefox', '--new-window', 'https://example.com'], 0)
         return result, spawn
@@ -101,6 +115,23 @@ class LaunchProbeTests(unittest.TestCase):
         self.assertEqual(result['status'], 'succeeded')
         self.assertFalse(result['process_running'])
         self.assertTrue(result['window_processes_running'])
+
+    def test_firefox_bin_handoff_matches_exact_adjacent_binary(self):
+        result, _ = self.run_probe(code=0, window_pid=999, process_name='firefox-bin')
+        self.assertEqual(result['status'], 'succeeded')
+        self.assertFalse(result['page_verified'])
+
+    def test_mutable_process_name_does_not_prevent_exact_binary_handoff(self):
+        result, _ = self.run_probe(code=0, window_pid=999, process_name='MainThread', executable='firefox-bin')
+        self.assertEqual(result['status'], 'succeeded')
+
+    def test_matching_process_name_with_different_binary_is_not_accepted(self):
+        result, _ = self.run_probe(code=0, window_pid=999, process_name='firefox', executable='unrelated')
+        self.assertEqual(result['status'], 'unknown')
+
+    def test_unreadable_executable_identity_does_not_guess_from_name(self):
+        result, _ = self.run_probe(code=0, window_pid=999, process_name='firefox-bin', executable='unreadable')
+        self.assertEqual(result['status'], 'unknown')
 
     def test_preexisting_browser_window_cannot_prove_new_launch(self):
         result, _ = self.run_probe(code=0, window_pid=999, before=True)

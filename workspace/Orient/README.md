@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-04T06:02:12+00:00 from source (input `1861129c4944`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T06:10:46+00:00 from source (input `44a2b436340f`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
@@ -49,7 +49,7 @@ watcher reports that error and continues autosave; documentation failure must no
 
 The [interactive explorer](Architecture/index.html) and the call-order pages under `Architecture/`
 are rebuilt on demand (`Architecture/REBUILD_MAP.cmd`, `python general_tools/calls_order.py`).
-Last built 2026-10-04 05:12 UTC; as of this generation, 175 source file(s) had been modified since.
+Last built 2026-10-04 05:12 UTC; as of this generation, 177 source file(s) had been modified since.
 
 **AI notes.** Claude, Codex and the other agents leave a note in [AI Notes](AI%20Notes/ReadMeBeforeNoteTaking.md) after each session: what changed, why, and what is still open. Read the rules once, then every note since your own last one. Newest first:
 

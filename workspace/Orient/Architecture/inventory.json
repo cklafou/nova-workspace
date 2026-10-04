@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "generated_at": "2026-10-04T06:02:12+00:00",
-  "input_sha256": "1861129c4944c049bade6a1864993ec6d4ffd812b37df9238f79b5aecea2d90c",
+  "generated_at": "2026-10-04T06:10:46+00:00",
+  "input_sha256": "44a2b436340f436290686cb80f4ce1893156c4482ecf2c6f5aa5e27c72905d07",
   "files": [
     {
       "path": "NovaChatOnly.cmd",
@@ -111,7 +111,7 @@
     {
       "path": "general_tools/architecture_map/orient.py",
       "owner": "detachable tool",
-      "bytes": 77129
+      "bytes": 77780
     },
     {
       "path": "general_tools/architecture_map/reviews.json",
@@ -211,7 +211,7 @@
     {
       "path": "general_tools/nova_chat/CONTROLLER.md",
       "owner": "detachable tool",
-      "bytes": 23843
+      "bytes": 24018
     },
     {
       "path": "general_tools/nova_chat/build_desktop.py",
@@ -306,7 +306,7 @@
     {
       "path": "general_tools/nova_chat/static/index.html",
       "owner": "detachable tool",
-      "bytes": 374895
+      "bytes": 368875
     },
     {
       "path": "general_tools/nova_chat/static/updater.css",
@@ -386,7 +386,7 @@
     {
       "path": "general_tools/nova_chat/tests/test_pipeline_ui.cjs",
       "owner": "detachable tool",
-      "bytes": 7901
+      "bytes": 8387
     },
     {
       "path": "general_tools/nova_chat/tests/test_source_fingerprint.py",
@@ -1787,6 +1787,126 @@
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/Nova_HEAD_skin.png",
       "owner": "body",
       "bytes": 563545
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/Nova_IRIS_round.png",
+      "owner": "body",
+      "bytes": 726672
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_ArtNeck.png",
+      "owner": "body",
+      "bytes": 150857
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_BlinkL.png",
+      "owner": "body",
+      "bytes": 6933
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_BlinkR.png",
+      "owner": "body",
+      "bytes": 7010
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_BrowL.png",
+      "owner": "body",
+      "bytes": 11238
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_BrowR.png",
+      "owner": "body",
+      "bytes": 12154
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_CollarBack.png",
+      "owner": "body",
+      "bytes": 166764
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_CollarFront.png",
+      "owner": "body",
+      "bytes": 250244
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_EarL.png",
+      "owner": "body",
+      "bytes": 73112
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_EarR.png",
+      "owner": "body",
+      "bytes": 106934
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_HairForelock.png",
+      "owner": "body",
+      "bytes": 116617
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_HairFringe.png",
+      "owner": "body",
+      "bytes": 205234
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_HairRear.png",
+      "owner": "body",
+      "bytes": 483543
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_HairSideL.png",
+      "owner": "body",
+      "bytes": 91879
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_HairSideR.png",
+      "owner": "body",
+      "bytes": 138409
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_Head.png",
+      "owner": "body",
+      "bytes": 331332
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_IrisL.png",
+      "owner": "body",
+      "bytes": 20536
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_IrisR.png",
+      "owner": "body",
+      "bytes": 20493
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_MouthClosed.png",
+      "owner": "body",
+      "bytes": 6978
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_Nose.png",
+      "owner": "body",
+      "bytes": 8801
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_RimL.png",
+      "owner": "body",
+      "bytes": 13327
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_RimR.png",
+      "owner": "body",
+      "bytes": 12917
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_WhiteL.png",
+      "owner": "body",
+      "bytes": 8160
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_WhiteR.png",
+      "owner": "body",
+      "bytes": 8366
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/checkpoints/2026-09-30_183610/manifest.json",
@@ -3769,6 +3889,26 @@
       "bytes": 984
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/head-validation-v17.json",
+      "owner": "body",
+      "bytes": 2043917
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/source-face.png",
+      "owner": "body",
+      "bytes": 962510
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/source-full.png",
+      "owner": "body",
+      "bytes": 2158639
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/source-layers.png",
+      "owner": "body",
+      "bytes": 738536
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/rig/Nova_CALM_v07.cmo3",
       "owner": "body",
       "bytes": 15133945
@@ -5029,6 +5169,11 @@
       "bytes": 455
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/source/FRONT_v18_layers.json",
+      "owner": "body",
+      "bytes": 7052
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/source/Nova_CALM_v07.psd",
       "owner": "body",
       "bytes": 11982880
@@ -5077,6 +5222,11 @@
       "path": "nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v17.psd",
       "owner": "body",
       "bytes": 7231906
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v18.psd",
+      "owner": "body",
+      "bytes": 13092733
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/source/Nova_Layer_Assembly_Preview_v01.png",
@@ -5242,6 +5392,11 @@
       "path": "nova_body/SELF/Avatar/Live2D/tooling/assemble_garments_v11.cjs",
       "owner": "body",
       "bytes": 10004
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/assemble_head_v18.cjs",
+      "owner": "body",
+      "bytes": 12190
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/tooling/assemble_layers.cjs",
@@ -5539,6 +5694,11 @@
       "bytes": 3972
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/validate_head_v18.py",
+      "owner": "body",
+      "bytes": 18852
+    },
+    {
       "path": "nova_body/SELF/Avatar/Nova_Avatar_Front_Reference.png",
       "owner": "body",
       "bytes": 977436
@@ -5691,7 +5851,7 @@
     {
       "path": "nova_body/nova_computer/hands.py",
       "owner": "body",
-      "bytes": 19404
+      "bytes": 20699
     },
     {
       "path": "nova_body/nova_computer/pluck_check.py",
@@ -6236,7 +6396,7 @@
     {
       "path": "nova_body/tests/test_computer_launch.py",
       "owner": "body",
-      "bytes": 10307
+      "bytes": 12142
     },
     {
       "path": "nova_body/tests/test_koels_launcher.py",
@@ -6299,7 +6459,7 @@
     "general_tools/architecture_map/atlas_history.py": "3e2976780c6e6f72a66047d3e161903f0acfe27f718943976f6460f1ad5a4bb6",
     "general_tools/architecture_map/build.py": "582d9c2129953e60e632ade53c949b768614ca077e939a8d61c312ba9fd6153c",
     "general_tools/architecture_map/experience.js": "ed3dbaf90ce9743729a82d61ab25e96afc9d8d30c54d739956e986aed039fa46",
-    "general_tools/architecture_map/orient.py": "bdf19254b18f05ced20784c2ed937edf1d59e6c6dc51e7f8bf5595cbe6f1ba4d",
+    "general_tools/architecture_map/orient.py": "60a6ebe01c398b4c2df9c0fa0f8f702feaa1cf61f7286a3512ead96c278cdfa0",
     "general_tools/architecture_map/serve.py": "dc9340f05e7ad159ddd89fdc8bd81945c320422ae88c8bfe071a491d4d1e3ef4",
     "general_tools/architecture_map/test_architecture.py": "b84106cfa4c1543c63361f2f0f3d078744545f572603a96e52e04e2cb63c989c",
     "general_tools/architecture_map/test_history.py": "331cf2bb2840ca0b5b1bb35d43a72260a36ff4424006644cab3fcf00b02d67cc",
@@ -6335,7 +6495,7 @@
     "general_tools/nova_chat/static/control.css": "665eadf73f12b98ee74bb1af70373a0cfecaeaef5eabfe87871a81b29224c1d4",
     "general_tools/nova_chat/static/control.js": "c315005fa5e6533c529196cc9537f898d2b65f0d87eaf4758c0931f6ee640457",
     "general_tools/nova_chat/static/conversation-power.js": "07a039944f313a362483523fbe4f9363528e531616cb4e0ca2687c1a41a49b3a",
-    "general_tools/nova_chat/static/index.html": "0719992f64bbbda69b23eeb4a8dd145efa4acd9e8da87810cf18816323472544",
+    "general_tools/nova_chat/static/index.html": "72f68b481a9b37000c55f526f9dab0c6afe1cd01afab8e44220c1dfead507268",
     "general_tools/nova_chat/static/updater.css": "486381d3320d9fabda76e6af9dc450ae39b4a606246c0113e3049b3690f8d134",
     "general_tools/nova_chat/static/updater.js": "ad9794687a76ef86b2c76c5f450b090d6d8ec7d8ae58999bdeb78f2fec8338c6",
     "general_tools/nova_chat/static/workspace.css": "6299ae7acd33eb8b30553768dc733d2bcb26a8dfba01ea0f1580cc469341a3e0",
@@ -6397,14 +6557,14 @@
     "general_tools/nova_updater/tests/test_check_and_naming.py": "c283978c8a45e5b362463248fddcbc7940fd2a48dbafc4632500ce10c6707c0b",
     "general_tools/nova_updater/tests/test_install.py": "5fdb0c560e5a56a77bca431f05ddedc5949b47c50a1314706d2c5b423dfc11a5",
     "general_tools/nova_updater/tests/test_launcher.py": "4c9ad7e6b5e0da279a6e554a7fe9b40720cd8471833701e2e4897332544bf834",
-    "general_tools/nova_updater/tests/test_pod_compat.py": "1b3c2bba24c43d71b834611c6ec7046084b502257c9b999d5165c5002e3e341a",
+    "general_tools/nova_updater/tests/test_pod_compat.py": "98603836e503e86d28298f30167249e293e26dbbc006eb2df7145c68edfabbf9",
     "general_tools/nova_updater/tests/test_pod_venv.py": "143322f384818cb4fc8d3f9b6e65e6f35e952d5954f067a66c92621029f57a30",
     "general_tools/nova_updater/tests/test_runpod_cleanup.py": "eaea99523e98cf29689bcaefbc296b1260ef4be0d46000f7051a50efac7fd283",
     "general_tools/nova_updater/tests/test_runpod_delete_http.py": "5f045ef260aff2e41aa0631c104bb2e66654442739ee1ac07db170a7e763f529",
     "general_tools/nova_updater/tests/test_runpod_funding.py": "61302753ae9c581d7be74d06282b28e80aa0c4230aa7fd410a5e82505e711d27",
     "general_tools/nova_updater/tests/test_runpod_lifecycle.py": "1d40580ede7d9225d79b9c3adc60427159165947be4a67e20d61b51f885df9cd",
     "general_tools/nova_updater/tests/test_train.py": "bd70396e2e1f25c5d99ef8cf7b7d7ae833a3b73dc6a149ea79090c6c16611b47",
-    "general_tools/nova_updater/tests/test_training_details.py": "7f37883d6bd24a4af4dbfcee33c4895a2117482c2b2324685ab60c2c092118e6",
+    "general_tools/nova_updater/tests/test_training_details.py": "f46b08150d07e7b747c37edd15300c916b6875c0b5e698bf1de6b4f1b791cbe6",
     "general_tools/nova_updater/tests/test_training_files.py": "34db291f71bd4e257f6f129eedf619b5600cc95c1e267dbb30bfac844de3282b",
     "general_tools/nova_updater/train.py": "556d842e0b605fa0f7e5ca2a3419a92f32594465195b1351dac444d5595b05b7",
     "general_tools/restructure.py": "6b87d65ad01998a7e89de9600d2cb401ddd7bcecc826380f104cb6819edfe7fd",
@@ -6429,7 +6589,7 @@
     "nova_body/nova_computer/backends.py": "6063c47d0c822a7d891988d235da413736d4b43b1e08146d16164a40832b259b",
     "nova_body/nova_computer/computer.py": "4d12d2b8efd18a62cb42eeba13f844cdad75fc53fd74aea11189df9a1d23d3ac",
     "nova_body/nova_computer/first_boot.py": "92ad5cf9d95a981cce85f62b3dbc73461fb4af7d6d2a35c6790334b0b4ec2bf6",
-    "nova_body/nova_computer/hands.py": "bc8e9474e123d2e1ae25a89d32181a3c4b0e78823cd4f69d1fdbc5a785fa95d3",
+    "nova_body/nova_computer/hands.py": "c27b19373ed10115825575090f37069749c18c01c91717a65d2275260ba45b6b",
     "nova_body/nova_computer/pluck_check.py": "06066c66bfe3229d166a88c76431a3403054f1e82906a579aeb5dc036b198f53",
     "nova_body/nova_computer/provision/setup_guest.sh": "fc0f68f8bd1385eeb2bbfde13bbb229bea72a330207541a9fe5be59752a596e2",
     "nova_body/nova_computer/provision/vnc_password_guest.py": "0aed94c90277771069db485f7fb3914023cdc40f1f543b25845d44da22911c0c",
@@ -6510,10 +6670,10 @@
     "start_llama_qwen36.cmd": "3297f9b8977d45d037c3043c9bafccd4c8f6a737a5dae5eb7f88dc171c6a2fb0"
   },
   "document_hashes": {
-    "README.md": "f06ec67ed03614231ff7844025cc55f2f0ee2d5f660b57bc0ef9f0ca57710e50",
-    "ARCHITECTURE.md": "63c14ad215aec3f4769a438bb65d9c9e8b3be85b063acb17332dfd7935928726",
-    "OPERATIONS.md": "ea0a34e4c0f93ae804c7fea6d2bb1eff5397b50cd29be4769c629eaa4846b0bd",
-    "INDEX.md": "cc94308da75832baf074c49acce26f972fa82168b58d2545a85845ff23dd8df6"
+    "README.md": "2d843e016cd149fbb2856b1c04edc47b81c1a68373072c16180524d47bb0e446",
+    "ARCHITECTURE.md": "18f0f7a94031aee62edfd9ea4e0e08773a4cf196a4c01ce56d546636fa591124",
+    "OPERATIONS.md": "90a1d82c85924e4f2aeb214fbabff301b730ddf11d9e8f1b61f483dc4ed23e31",
+    "INDEX.md": "5fb24fcd4bc6b68bc5ea791f4445b849eb88890e365ee3383d7e0878d03d3ea7"
   },
   "review_needed": [],
   "unknown_review_sections": [],
