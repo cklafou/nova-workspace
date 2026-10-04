@@ -58,7 +58,7 @@ def make_guard(allowed_clients=LOOPBACK_CLIENTS):
 def _fail(error: Exception) -> JSONResponse:
     if isinstance(error, net.NetError):
         return JSONResponse({"ok": False, "error": str(error)}, status_code=502)
-    if isinstance(error, RuntimeError) and "still running" in str(error):
+    if isinstance(error, jobs.Conflict):
         return JSONResponse({"ok": False, "error": str(error)}, status_code=409)
     return JSONResponse({"ok": False, "error": str(error)}, status_code=400)
 
@@ -67,9 +67,14 @@ EXPECTED = (ValueError, net.NetError, plan.PlanError, train.TrainError, install.
             runpod.RunPodError, RuntimeError, FileNotFoundError)
 
 
-def create_router(restart_model=None, allowed_clients=LOOPBACK_CLIENTS) -> APIRouter:
+def create_router(restart_model=None, allowed_clients=LOOPBACK_CLIENTS, lifecycle_pending=None) -> APIRouter:
     """`restart_model()` restarts llama-server and returns {'ok': bool, ...}; None = apply at next start."""
-    router = APIRouter(prefix="/api/updater", dependencies=[Depends(make_guard(allowed_clients))])
+    def stable_controller(request: Request):
+        if (request.method not in {"GET", "HEAD", "OPTIONS"}
+                and lifecycle_pending and lifecycle_pending()):
+            raise HTTPException(409, "Wait for Nova to finish starting or stopping before changing updater settings or jobs.")
+
+    router = APIRouter(prefix="/api/updater", dependencies=[Depends(make_guard(allowed_clients)), Depends(stable_controller)])
 
     async def call(fn, *args, **kwargs):
         try:
@@ -178,7 +183,7 @@ def create_router(restart_model=None, allowed_clients=LOOPBACK_CLIENTS) -> APIRo
     @router.post("/train/preview")
     async def train_preview(body: dict = Body(...)):
         def work():
-            spec = train.prepare_spec(body.get("spec") or {})
+            spec = train.preview(body.get("spec") or {})  # remembers exactly what was reviewed
             if spec["runner"] == "runpod":
                 spec["cost"] = runpod.RunPodRunner.from_credentials(spec).estimate(spec)
             return spec
@@ -186,8 +191,8 @@ def create_router(restart_model=None, allowed_clients=LOOPBACK_CLIENTS) -> APIRo
 
     @router.post("/train")
     async def start_training(body: dict = Body(...)):
-        def work():
-            return train.start(body.get("spec") or {}, body.get("confirm")).to_dict()
+        def work():  # only a reviewed run starts; data changed since the preview -> 409
+            return train.start(body.get("review_id"), body.get("confirm")).to_dict()
         return await call(work)
 
     @router.post("/train/install")
@@ -204,10 +209,14 @@ def create_router(restart_model=None, allowed_clients=LOOPBACK_CLIENTS) -> APIRo
     @router.post("/lora/activate")
     async def activate(body: dict = Body(...)):
         def work():
-            line = train.activate_lora(str(body.get("path") or ""), float(body.get("scale", 1.0)))
-            restarted = restart_model() if (restart_model and body.get("restart")) else None
-            return {"ok": True, "boot_line": line, "restart": restarted}
+            result = train.activate(str(body.get("path") or ""), float(body.get("scale", 1.0)),
+                                    restart=restart_model if body.get("restart") else None)
+            return result if result.get("ok") else JSONResponse(result, status_code=502)
         return await call(work)
+
+    @router.get("/funding")
+    async def funding(required_usd: float | None = None, per_hour: float | None = None):
+        return await call(runpod.funding_status, required_usd=required_usd, per_hour=per_hour)
 
     @router.get("/credentials")
     async def get_credentials():
@@ -228,11 +237,13 @@ def _training_chain(confirm):
             return train.export(spec)
         if not result.get("installed"):
             return {"skipped": "model files were not installed"}
+        try:
+            train.confirm_paid_training(confirm)
+        except train.TrainError as error:
+            return {"skipped": str(error)}
         runner = runpod.RunPodRunner.from_credentials(spec)
-        estimate = runner.estimate(spec)
-        if not isinstance(confirm, dict) or float(confirm.get("max_cost_usd", -1)) < estimate["cost_usd"]:
-            return {"skipped": f"training needs a confirmed cost ceiling of at least ${estimate['cost_usd']:.2f}"}
-        runner.max_cost_usd = float(confirm["max_cost_usd"])
+        runner.estimate(spec)
+        runner.paid_confirmed = True
         outcome = train.run(spec, job, runner)
         if spec.get("activate") and outcome.get("pick"):
             outcome["boot_line"] = train.activate_lora(outcome["pick"], spec.get("scale", 1.0))

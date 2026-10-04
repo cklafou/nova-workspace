@@ -24,7 +24,7 @@ import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import catalog, current, inventory, naming, net, paths, store
+from . import catalog, current, gguf, inventory, naming, net, paths, store
 
 PUBLISHER_ORDER = ("unsloth", "ggml-org", "Qwen", "bartowski", "lmstudio-community")
 MARGIN_BYTES = 5 * 1024 ** 3
@@ -81,16 +81,29 @@ def gguf_options(files) -> dict:
     return {"quants": quants, "projectors": projectors}
 
 
-def pick_projector(projectors, preferred: str | None = None):
-    """The vision projector to pair with the model: the same file name as today, else F16 > BF16 > Q8_0."""
+def pick_projector(projectors, preferred: str | None = None, exact: bool = False):
+    """The vision projector to pair with the model.
+
+    `exact`: the user picked a catalog path in the dialog. That exact path wins (subfolders count),
+    then a unique file name; anything else is None, so the plan cannot silently swap their choice.
+    Otherwise `preferred` is today's projector file name: same name first, else F16 > BF16 > Q8_0."""
     if not projectors:
         return None
-    names = {p.path.split("/")[-1].lower(): p for p in projectors}
-    if preferred and preferred.lower() in names:
-        return names[preferred.lower()]
+    ordered = sorted(projectors, key=lambda p: p.path.lower())
+    if preferred:
+        want = preferred.replace("\\", "/").strip("/").lower()
+        for proj in ordered:
+            if proj.path.lower() == want:
+                return proj
+        base = want.split("/")[-1]
+        same = [proj for proj in ordered if proj.path.split("/")[-1].lower() == base]
+        if same and (len(same) == 1 or not exact):
+            return same[0]
+    if exact:
+        return None
     for ending in ("-f16.gguf", "-bf16.gguf", "-q8_0.gguf"):
-        for name, proj in sorted(names.items()):
-            if name.endswith(ending):
+        for proj in ordered:
+            if proj.path.lower().endswith(ending):
                 return proj
     return max(projectors, key=lambda p: p.size or 0)
 
@@ -156,6 +169,49 @@ def _inside(path: Path, root: Path) -> bool:
         return False
 
 
+def path_key(value: str) -> str:
+    """Compare launcher-relative and absolute paths without Windows case/separator drift."""
+    path = Path(str(value).replace("\\", "/"))
+    return (path if path.is_absolute() else paths.workspace() / path).resolve().as_posix().casefold()
+
+
+def selected_for_replacement(replacements, selected) -> list:
+    """Reject replacing a selected file, including a directory containing it."""
+    selected_keys = [(entry["path"], path_key(entry["path"])) for entry in selected]
+    return [name for name, key in selected_keys
+            if any(key == path_key(replacement) or key.startswith(path_key(replacement).rstrip("/") + "/")
+                   for replacement in replacements or [])]
+
+
+def retained_adapters(target_family: str, mode: str) -> list:
+    """Mirror _switch_boot: keep personality only for 'keep'; old-family KoELS is cleared."""
+    old_folder = current.active_model().get("folder") or ""
+    return [entry for entry in current.active_loras()
+            if (entry.get("role") == "personality" and mode == "keep")
+            or (entry.get("role") == "koels" and target_family == old_folder)]
+
+
+def adapter_problems(target_family: str, replacements, selected, inv: dict | None = None) -> list:
+    """Validate retained/actual selections using only their headers; never scan model weights."""
+    problems = [f"{name} is still selected for startup and cannot be quarantined. Disable it or remove it from replacements."
+                for name in selected_for_replacement(replacements, selected)]
+    known = {path_key(entry["path"]): entry for entry in (inv or {}).get("loras", [])}
+    for selection in selected:
+        entry = known.get(path_key(selection["path"]))
+        if entry is None:
+            path = Path(selection["path"].replace("\\", "/"))
+            try:
+                entry = inventory.describe_adapter(path if path.is_absolute() else paths.workspace() / path)
+            except (OSError, ValueError, gguf.GGUFError) as error:
+                problems.append(f"Cannot validate selected adapter {selection['path']}: {error}. Choose 'train' or 'none'.")
+                continue
+        bound = entry.get("bound_to")
+        if bound and bound.casefold() != target_family.casefold():
+            problems.append(f"{selection['path']} was trained for another base model ({bound}), not {target_family}. "
+                            "Choose 'train' or 'none'; keeping it cannot migrate its training.")
+    return problems
+
+
 def build(request: dict, src=None, inv: dict | None = None, disk_usage=shutil.disk_usage) -> dict:
     source = request.get("source") or "huggingface"
     src = src or catalog.source(source)
@@ -184,9 +240,13 @@ def build(request: dict, src=None, inv: dict | None = None, disk_usage=shutil.di
     if want_proj is None:
         want_proj = bool(running.get("mmproj_path"))
     projector = None
-    if want_proj:
-        preferred = want_proj if isinstance(want_proj, str) else Path(running.get("mmproj_path") or "").name or None
-        projector = pick_projector(grouped["projectors"], preferred)
+    if isinstance(want_proj, str):
+        projector = pick_projector(grouped["projectors"], want_proj, exact=True)
+        if projector is None:
+            raise PlanError(f"{gguf_repo} has no projector {want_proj}. Available: "
+                            + (", ".join(p.path for p in grouped["projectors"]) or "none"))
+    elif want_proj:
+        projector = pick_projector(grouped["projectors"], Path(running.get("mmproj_path") or "").name or None)
     models_root = paths.models_root()
     target_dir = models_root / (request.get("folder") or parsed.slug)
     if not _inside(target_dir, models_root):
@@ -202,6 +262,10 @@ def build(request: dict, src=None, inv: dict | None = None, disk_usage=shutil.di
     need = sum((d["size"] or 0) for d in downloads if not d["present"])
     free = disk_usage(models_root if models_root.exists() else models_root.parent).free
     blocking, warnings = [], []
+    for d in downloads:
+        problem = paths.launcher_problem(d["dest"])
+        if problem:
+            blocking.append(problem + "; choose an install folder without those characters.")
     if need + MARGIN_BYTES > free:
         blocking.append(f"Needs {need / 1024**3:.1f} GiB plus a 5 GiB margin; only {free / 1024**3:.1f} GiB free.")
     if any(d["sha256"] is None for d in downloads):
@@ -223,17 +287,15 @@ def build(request: dict, src=None, inv: dict | None = None, disk_usage=shutil.di
     lora = request.get("lora") or {"mode": "none"}
     if lora.get("mode") not in ("none", "keep", "train"):
         raise PlanError("lora.mode must be none, keep or train")
-    if activate and lora["mode"] == "keep":
-        stale = [l for l in invalid if l["active"] and l["kind"] == "lora"]
-        if stale:
-            warnings.append("The active personality LoRA was trained for another base model; keeping it "
-                            "would load without error and behave wrongly. Choose 'train' or 'none'.")
+    if activate:
+        blocking.extend(adapter_problems(parsed.slug, replace, retained_adapters(parsed.slug, lora["mode"]), inv))
     training = None
     if lora["mode"] == "train":
         from . import train
         spec = dict(lora.get("train") or {})
         spec.setdefault("base_model_id", train.training_base_for(model_id, src))
         spec["base_family"] = parsed.slug
+        spec["output_directory"] = paths.display(target_dir)
         training = train.prepare_spec(spec)
     compat = _compatibility(src, model_id, running, request.get("check_config", True))
     if compat.get("warning"):

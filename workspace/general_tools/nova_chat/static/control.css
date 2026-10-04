@@ -1,4 +1,4 @@
-/* @nova: Styles the runtime controller widget and task controls. */
+/* @nova: Style runtime widgets and the accessible Conversation start/stop control. */
 .nc-control{padding:18px;overflow:auto;box-sizing:border-box;color:var(--text);height:100%}
 .ncr-heading strong{font-size:20px;letter-spacing:-.3px}.ncr-heading p,.ncr-task p{color:var(--text-muted);line-height:1.5}
 .ncr-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.ncr-actions button{min-height:38px;padding:8px 12px;font-size:12px}
@@ -10,3 +10,11 @@
 .ncr-dialog textarea{width:100%;min-height:240px;box-sizing:border-box;background:var(--bg);color:var(--text);padding:12px}
 .tfi.unknown,.tool-card.unknown{border-left-color:#bd9b66}
 .ncr-task pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:280px;overflow:auto;font-size:12px}.ncr-task summary{cursor:pointer;line-height:1.5;min-height:28px}
+
+.nc-conversation-power{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border);flex:none;min-width:0;}
+.nc-conversation-power [role="status"]{font-size:12px;color:var(--text-dim);line-height:1.5;overflow-wrap:anywhere;}
+#conversation-nova-toggle{flex:none;min-height:38px;padding:8px 14px;border:1px solid var(--nova);border-radius:9px;background:var(--nova-dim,#332942);color:var(--text);font:inherit;font-size:13px;cursor:pointer;}
+#conversation-nova-toggle[data-state="on"]{border-color:#95627a;background:#33212c;}
+#conversation-nova-toggle:focus-visible{outline:2px solid var(--nova);outline-offset:3px;}
+#conversation-nova-toggle:disabled{opacity:.65;cursor:wait;}
+@media(max-width:540px){.nc-conversation-power{padding:8px 12px;gap:8px;flex-wrap:wrap;}.nc-conversation-power [role="status"]{flex:1;min-width:130px;}}

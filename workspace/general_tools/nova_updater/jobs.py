@@ -8,6 +8,7 @@ updater state so the widget can still show them after a restart.
 from __future__ import annotations
 
 from collections import deque
+from contextlib import contextmanager
 import threading
 import time
 import uuid
@@ -21,6 +22,10 @@ class Cancelled(Exception):
     pass
 
 
+class Conflict(RuntimeError):
+    """The request clashes with work in progress or with what the user reviewed (HTTP 409)."""
+
+
 class Job:
     def __init__(self, kind: str, title: str):
         self.id = uuid.uuid4().hex[:12]
@@ -29,6 +34,7 @@ class Job:
         self.done, self.total = 0, 0
         self.log = deque(maxlen=400)
         self.result, self.error = None, None
+        self.runpod_cost = None
         self.started = self.finished = None
         self.cancel_event = threading.Event()
         self._lock = threading.Lock()
@@ -54,6 +60,11 @@ class Job:
             if total is not None:
                 self.total = int(total)
 
+    def set_runpod_cost(self, cost: dict) -> None:
+        """Keep live wallet/GPU estimates in snapshots and final history, including failed jobs."""
+        with self._lock:
+            self.runpod_cost = dict(cost)
+
     def check_cancel(self) -> None:
         if self.cancel_event.is_set():
             raise Cancelled("Cancelled by the user")
@@ -64,7 +75,8 @@ class Job:
                     "step": self.step, "done": self.done, "total": self.total,
                     "percent": round(100.0 * self.done / self.total, 1) if self.total else None,
                     "log": list(self.log)[-log_lines:], "result": self.result, "error": self.error,
-                    "started": self.started, "finished": self.finished}
+                    "started": self.started, "finished": self.finished,
+                    "runpod_cost": dict(self.runpod_cost) if self.runpod_cost is not None else None}
 
 
 class Jobs:
@@ -81,7 +93,7 @@ class Jobs:
         job = Job(kind, title)
         with self._guard:
             if exclusive and self._busy is not None:
-                raise RuntimeError(f"'{self._busy.title}' is still running; wait for it or cancel it first.")
+                raise Conflict(f"'{self._busy.title}' is still running; wait for it or cancel it first.")
             if exclusive:
                 self._busy = job
             self._jobs[job.id] = job
@@ -108,6 +120,24 @@ class Jobs:
         else:
             run()
         return job
+
+    @contextmanager
+    def exclusive(self, title: str):
+        """Hold the one-at-a-time slot for a short synchronous step (finish, rollback). The busy check
+        and taking the slot are one atomic step, so the step can neither run beside a live install
+        nor let an install start halfway through it."""
+        holder = Job("recovery", title)
+        holder.state, holder.started = "running", store.now_iso()
+        with self._guard:
+            if self._busy is not None:
+                raise Conflict(f"'{self._busy.title}' is still running; wait for it or cancel it first.")
+            self._busy = holder
+        try:
+            yield holder
+        finally:
+            with self._guard:
+                if self._busy is holder:
+                    self._busy = None
 
     def _remember(self, job: Job) -> None:
         summary = job.to_dict(log_lines=40)

@@ -1,9 +1,9 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-03T19:16:29+00:00 from source (input `f36e6af11693`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T04:23:28+00:00 from source (input `f465743fc9e9`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
-Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and sealed weights are omitted. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
+Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
 
 ## Project entry points
@@ -40,6 +40,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/architecture_map/hooks/pre-commit](../general_tools/architecture_map/hooks/pre-commit) — Keeps Orient current on every commit, from any agent — the watcher, Codex, Claude or Cole.
 - [general_tools/architecture_map/learning.json](../general_tools/architecture_map/learning.json)
 - [general_tools/architecture_map/notes/away.md](../general_tools/architecture_map/notes/away.md) — Explain the remote reading copy and its exclusions.
+- [general_tools/architecture_map/notes/controller_layouts.md](../general_tools/architecture_map/notes/controller_layouts.md) — Explain the desktop controller menus, widgets and saved layouts published in Operations.
 - [general_tools/architecture_map/notes/conventions.md](../general_tools/architecture_map/notes/conventions.md) — Orient note: the file conventions every person and agent follows, published in OPERATIONS.md.
 - [general_tools/architecture_map/notes/lessons.md](../general_tools/architecture_map/notes/lessons.md) — Explain incident lessons and evidence needed to verify Nova repairs.
 - [general_tools/architecture_map/notes/model_updates.md](../general_tools/architecture_map/notes/model_updates.md) — Orient note: how Nova's model updater checks, installs, rolls back and trains LoRAs, published in OPERATIONS.md.
@@ -53,6 +54,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/architecture_map/test_history.py](../general_tools/architecture_map/test_history.py) — Real disposable Git histories exercise noise filtering, cache refresh and diffs.
 - [general_tools/architecture_map/test_orient.py](../general_tools/architecture_map/test_orient.py) — Publishing checks using isolated files; no Nova model or personal state imported.
 - [general_tools/architecture_map/test_review_registry.py](../general_tools/architecture_map/test_review_registry.py) — Ensures corrupted review metadata cannot silently certify Orient.
+- [general_tools/architecture_map/test_updater_routes.py](../general_tools/architecture_map/test_updater_routes.py) — Verify that Orient publishes updater route prefixes from source without importing its runtime.
 - [general_tools/architecture_map/timeline.json](../general_tools/architecture_map/timeline.json)
 - [general_tools/architecture_map/viewer.css](../general_tools/architecture_map/viewer.css) — Learning, project history and change planning.
 - [general_tools/architecture_map/viewer.html](../general_tools/architecture_map/viewer.html) — Nova · Architecture atlas
@@ -66,6 +68,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/CONTROLLER.md](../general_tools/nova_chat/CONTROLLER.md) — Documents the Nova desktop controller and its verified behavior.
 - [general_tools/nova_chat/desktop.py](../general_tools/nova_chat/desktop.py) — Nova desktop face: native windows, menus, tray and persistent renderer profile.
 - [general_tools/nova_chat/launch.py](../general_tools/nova_chat/launch.py) — Nova Group Chat - Launcher
+- [general_tools/nova_chat/lifecycle.py](../general_tools/nova_chat/lifecycle.py) — Coordinate Nova on/off with its owning launcher and hold updater work during transitions.
 - [general_tools/nova_chat/nova_bridge.py](../general_tools/nova_chat/nova_bridge.py) — nova_chat/nova_bridge.py -- Bridge: Nova's chat words → real disk actions
 - [general_tools/nova_chat/nova_lang.py](../general_tools/nova_chat/nova_lang.py) — nova_chat/nova_lang.py -- Nova Command Language (NCL) Parser
 - [general_tools/nova_chat/orchestrator.py](../general_tools/nova_chat/orchestrator.py) — Determines who responds to each message and in what order.
@@ -75,19 +78,27 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/session_manager.py](../general_tools/nova_chat/session_manager.py) — nova_chat/session_manager.py -- Persistent Session Management
 - [general_tools/nova_chat/static/collaboration.css](../general_tools/nova_chat/static/collaboration.css) — Style the separate development collaboration widget and its connection, participant and message states.
 - [general_tools/nova_chat/static/collaboration.js](../general_tools/nova_chat/static/collaboration.js) — Display the isolated workshop feed for Cole, Codex and Cowork without sending messages to Nova.
-- [general_tools/nova_chat/static/control.css](../general_tools/nova_chat/static/control.css) — Styles the runtime controller widget and task controls.
+- [general_tools/nova_chat/static/control.css](../general_tools/nova_chat/static/control.css) — Style runtime widgets and the accessible Conversation start/stop control.
 - [general_tools/nova_chat/static/control.js](../general_tools/nova_chat/static/control.js) — Runtime controls use body state. Every action is acknowledged by the server.
-- [general_tools/nova_chat/static/index.html](../general_tools/nova_chat/static/index.html) — Serve the Nova Chat controller, dockable widgets and separate collaboration workshop.
-- [general_tools/nova_chat/static/workspace.css](../general_tools/nova_chat/static/workspace.css) — Controller surfaces: quiet violet, readable controls, predictable panes.
+- [general_tools/nova_chat/static/conversation-power.js](../general_tools/nova_chat/static/conversation-power.js) — Start and stop Nova through the owning launcher while preserving the controller, composer draft and layout.
+- [general_tools/nova_chat/static/index.html](../general_tools/nova_chat/static/index.html) — Serve Nova Chat with named customizable layouts, model-update controls and a separate collaboration workshop.
+- [general_tools/nova_chat/static/updater.css](../general_tools/nova_chat/static/updater.css) — Style the model updater widget, reviewed install dialogs, training controls and update notification.
+- [general_tools/nova_chat/static/updater.js](../general_tools/nova_chat/static/updater.js) — Present model discovery, reviewed installation, adapter training and recovery without starting work automatically.
+- [general_tools/nova_chat/static/workspace.css](../general_tools/nova_chat/static/workspace.css) — Style the dockable Nova controller, compact saved-layout picker and accessible widget surfaces.
 - [general_tools/nova_chat/static/workspace.js](../general_tools/nova_chat/static/workspace.js) — Mount Nova's dockable controller widgets while preserving their handlers and state.
 - [general_tools/nova_chat/tests/test_chat_only.py](../general_tools/nova_chat/tests/test_chat_only.py) — Verify model-off controller launch and prevent chat-only messages from reaching Nova's body.
 - [general_tools/nova_chat/tests/test_collaboration.py](../general_tools/nova_chat/tests/test_collaboration.py) — Verify collaboration isolation, authentication, durable replay and concurrent delivery without starting Nova.
 - [general_tools/nova_chat/tests/test_collaboration_bridge.py](../general_tools/nova_chat/tests/test_collaboration_bridge.py) — Verify private collaboration connector identity, cursor handling, bounds, failures and MCP framing without contacting Nova.
 - [general_tools/nova_chat/tests/test_collaboration_spool.py](../general_tools/nova_chat/tests/test_collaboration_spool.py) — Verify Cowork shared-folder delivery, crash recovery and bounded replay using disposable collaboration stores.
 - [general_tools/nova_chat/tests/test_controller_repair.py](../general_tools/nova_chat/tests/test_controller_repair.py) — Regression coverage for controller lifecycle, widgets and model process control.
+- [general_tools/nova_chat/tests/test_conversation_power.cjs](../general_tools/nova_chat/tests/test_conversation_power.cjs)
 - [general_tools/nova_chat/tests/test_desktop.py](../general_tools/nova_chat/tests/test_desktop.py) — Run: python -m unittest discover -s general_tools/nova_chat/tests.
+- [general_tools/nova_chat/tests/test_launcher_mode.py](../general_tools/nova_chat/tests/test_launcher_mode.py) — Test launcher mode switching, window preservation and chat-only recovery using fake processes only.
+- [general_tools/nova_chat/tests/test_lifecycle.py](../general_tools/nova_chat/tests/test_lifecycle.py) — Exercise real Nova lifecycle HTTP routes with a fake launcher and isolated updater job manager.
 - [general_tools/nova_chat/tests/test_lifecycle_ack.py](../general_tools/nova_chat/tests/test_lifecycle_ack.py) — Preserve lifecycle HTTP acknowledgement before fast controller teardown without extending grace on retries.
 - [general_tools/nova_chat/tests/test_source_fingerprint.py](../general_tools/nova_chat/tests/test_source_fingerprint.py) — Checks restart reporting against real edits and harmless watcher timestamp changes.
+- [general_tools/nova_chat/tests/test_updater_integration.py](../general_tools/nova_chat/tests/test_updater_integration.py) — Verify updater routing and cancellable controller metadata checks using temporary models and fake catalogs only.
+- [general_tools/nova_chat/tests/test_updater_ui.cjs](../general_tools/nova_chat/tests/test_updater_ui.cjs)
 - [general_tools/nova_chat/transcript.py](../general_tools/nova_chat/transcript.py) — Shared conversation transcript for Nova Group Chat.
 - [general_tools/nova_chat/widget_data.py](../general_tools/nova_chat/widget_data.py) — Bounded reads for frequently refreshed controller widgets.
 - [general_tools/nova_chat/workspace_context.py](../general_tools/nova_chat/workspace_context.py) — Compatibility import: the body owns Nova's context in chat and headless runs.
@@ -103,6 +114,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_console/__init__.py](../general_tools/nova_console/__init__.py) — Nova Console — one window instead of the cmd-window confetti.
 - [general_tools/nova_console/console_app.py](../general_tools/nova_console/console_app.py) — Nova Console — the single window that replaces every popup cmd window.
 - [general_tools/nova_console/hub.py](../general_tools/nova_console/hub.py) — Nova Console — the log hub. Captures every child process's output into in-memory
+- [general_tools/nova_console/lifecycle.py](../general_tools/nova_console/lifecycle.py) — Queue acknowledged Nova mode changes and replace owned services while keeping the controller window and console alive.
 - [general_tools/nova_console/plainspeak.py](../general_tools/nova_console/plainspeak.py) — Plain-speak — turns machine log spew into a sentence a human can read.
 - [general_tools/nova_console/README.md](../general_tools/nova_console/README.md) — Nova Console — one window instead of cmd-window confetti
 - [general_tools/nova_console/stray_janitor.py](../general_tools/nova_console/stray_janitor.py) — Stray-console janitor — the safety net under the Nova Console.
@@ -139,9 +151,11 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_updater/pod/__init__.py](../general_tools/nova_updater/pod/__init__.py) — Marks pod/ as a package so tests can import template_gen; the pod scripts themselves run standalone on the GPU machine.
 - [general_tools/nova_updater/pod/run_on_pod.sh](../general_tools/nova_updater/pod/run_on_pod.sh) — The whole LoRA training pipeline ON the pod, one command: verify inputs, prove the mask, train, convert every epoch to GGUF, checksum.
 - [general_tools/nova_updater/pod/template_gen.py](../general_tools/nova_updater/pod/template_gen.py) — Builds a loss-masking chat template for LoRA training from the base model's own template, refusing to train if it cannot prove the mask.
-- [general_tools/nova_updater/pod/train_lora.py](../general_tools/nova_updater/pod/train_lora.py) — Trains one LoRA on the pod from job.json, keeping v7's proven recipe and its hard mask gate; generalised for any base model.
+- [general_tools/nova_updater/pod/train_lora.py](../general_tools/nova_updater/pod/train_lora.py) — Train text-only assistant-masked LoRA with an architecture-matched loader and frozen vision layers.
 - [general_tools/nova_updater/README.md](../general_tools/nova_updater/README.md) — How Nova's model updater works: startup check, manual search, install with rollback and quarantine, LoRA training, and the Nova Chat…
 - [general_tools/nova_updater/runpod.py](../general_tools/nova_updater/runpod.py) — Runs a training bundle on the user's RunPod pod: start it, upload over SSH, train, download, verify, and always stop (never terminate) the…
+- [general_tools/nova_updater/state/runpod_known_hosts](../general_tools/nova_updater/state/runpod_known_hosts)
+- [general_tools/nova_updater/state/updater_state.json](../general_tools/nova_updater/state/updater_state.json)
 - [general_tools/nova_updater/store.py](../general_tools/nova_updater/store.py) — Keeps the updater's small persistent state (last check, remembered decisions, plans, jobs) in one atomic JSON file.
 - [general_tools/nova_updater/tests/fixtures/qwen3.6-27b.chat_template.jinja](../general_tools/nova_updater/tests/fixtures/qwen3.6-27b.chat_template.jinja)
 - [general_tools/nova_updater/tests/fixtures/qwen3.8-27b.chat_template.jinja](../general_tools/nova_updater/tests/fixtures/qwen3.8-27b.chat_template.jinja)
@@ -149,7 +163,14 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_updater/tests/test_api.py](../general_tools/nova_updater/tests/test_api.py) — Tests the updater's Nova Chat routes: the local-only guard (Host, Origin, client), status, decisions, search filters and confirmations.
 - [general_tools/nova_updater/tests/test_check_and_naming.py](../general_tools/nova_updater/tests/test_check_and_naming.py) — Tests model-name parsing and the startup update check: candidates, remembered decisions, caching and offline behaviour.
 - [general_tools/nova_updater/tests/test_install.py](../general_tools/nova_updater/tests/test_install.py) — Tests GGUF header reading, the installed-file inventory, install plans, verified downloads, the load check with rollback, and trash…
+- [general_tools/nova_updater/tests/test_launcher.py](../general_tools/nova_updater/tests/test_launcher.py) — Runs the real model launcher on Windows with llama-server swapped for an argument recorder, proving boot files reach llama-server intact.
+- [general_tools/nova_updater/tests/test_pod_compat.py](../general_tools/nova_updater/tests/test_pod_compat.py) — Verify conditional-model loader selection, assistant masking, language-only LoRA and a disposable tiny training checkpoint.
+- [general_tools/nova_updater/tests/test_pod_venv.py](../general_tools/nova_updater/tests/test_pod_venv.py) — Prove the pod bootstrap installs dependencies in a venv while retaining the image Python packages.
+- [general_tools/nova_updater/tests/test_runpod_funding.py](../general_tools/nova_updater/tests/test_runpod_funding.py) — Verify RunPod credit preflight and explicit region selection using temporary workspaces and fake provider responses only.
+- [general_tools/nova_updater/tests/test_runpod_lifecycle.py](../general_tools/nova_updater/tests/test_runpod_lifecycle.py) — Prove RunPod transfers named persistent training packages, retries SSH readiness and isolates paid attempts using local fake pods.
 - [general_tools/nova_updater/tests/test_train.py](../general_tools/nova_updater/tests/test_train.py) — Tests LoRA training jobs: data checks, bundles and checksums, the loss-mask template patch on real Qwen templates, and RunPod runs that…
+- [general_tools/nova_updater/tests/test_training_details.py](../general_tools/nova_updater/tests/test_training_details.py) — Verify that actual GPU-run reproducibility details are checksummed, bounded and retained with training inputs.
+- [general_tools/nova_updater/tests/test_training_files.py](../general_tools/nova_updater/tests/test_training_files.py) — Verify persistent training-input packages, separate finished adapters and quoted Windows adapter paths using disposable files only.
 - [general_tools/nova_updater/train.py](../general_tools/nova_updater/train.py) — LoRA training for new or installed models: job specs with Nova's proven defaults, verified training bundles, and RunPod or export runners.
 
 ## general_tools/voice_gateway
@@ -426,7 +447,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/nova_runtime/__init__.py](../nova_body/nova_runtime/__init__.py) — nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer
 - [nova_body/nova_runtime/__main__.py](../nova_body/nova_runtime/__main__.py) — Headless runtime entry-point — `python -m nova_runtime` boots Nova with NO chat
 - [nova_body/nova_runtime/event_bus.py](../nova_body/nova_runtime/event_bus.py) — Runtime event bus — the runtime PUBLISHES lifecycle/token events; faces
-- [nova_body/nova_runtime/koels_equip.py](../nova_body/nova_runtime/koels_equip.py) — KoELS equip mechanism — runtime / life-support (layer 2). The PHYSICAL act of wearing a
+- [nova_body/nova_runtime/koels_equip.py](../nova_body/nova_runtime/koels_equip.py) — Load and equip KoELS specialist adapters through the body runtime's model controller.
 - [nova_body/nova_runtime/llama_control.py](../nova_body/nova_runtime/llama_control.py) — LlamaControl — runtime/life-support control of her model server (llama.cpp on
 - [nova_body/nova_runtime/model_client.py](../nova_body/nova_runtime/model_client.py) — ModelClient — the act of generation as a body faculty (layer 2). It owns HOW Nova
 - [nova_body/nova_runtime/model_guard.py](../nova_body/nova_runtime/model_guard.py) — ModelGuard — runtime guard on her model-calling. Two failsafes, both body-owned
@@ -1306,6 +1327,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 ## nova_body/tests
 
+- [nova_body/tests/test_koels_launcher.py](../nova_body/tests/test_koels_launcher.py) — Prove KoELS preload arguments survive the real Windows launcher and current llama parser without loading models.
 - [nova_body/tests/test_modernization.py](../nova_body/tests/test_modernization.py) — Isolated runtime contracts; never load a model or write Nova's personal state.
 - [nova_body/tests/test_review_followup.py](../nova_body/tests/test_review_followup.py) — Reproduces lifecycle, outcome and durable-queue edge cases from the shared review.
 - [nova_body/tests/test_staging_location.py](../nova_body/tests/test_staging_location.py) — Guards where task workspaces are staged: under workspace/Temp, outside git, Orient and the sync watcher.

@@ -3,7 +3,7 @@
 import unittest
 
 from support import FakeSource, Workspace, hit  # noqa: F401  (support sets sys.path)
-from nova_updater import check, current, naming
+from nova_updater import check, current, naming, store
 
 
 class Naming(unittest.TestCase):
@@ -69,6 +69,19 @@ class StartupCheck(Workspace):
         self.assertFalse(check.record_decision(["Qwen/Qwen3.8-27B"], "decline", remember=False)["notify"])
         check._session_declined.clear()  # a new Nova Chat start
         self.assertTrue(check.status()["notify"])
+
+    def test_status_uses_fresh_boot_configuration_without_rewriting_cached_comparison(self):
+        check.run_check(force=True, src=FakeSource(HITS))
+        before = store.load()
+        self.boot("active_model.txt", "models/qwen3.8/Qwen3.8-27B-UD-Q6_K_XL.gguf")
+        result = check.status()
+        self.assertEqual(result["current"]["label"], "Qwen3.8-27B")
+        self.assertEqual(result["current"]["source"], "boot file")
+        self.assertEqual(result["checked_current"]["label"], "Qwen3.6-27B")
+        self.assertTrue(result["catalog_stale"])
+        self.assertFalse(result["notify"])
+        self.assertEqual(result["pending"], [])
+        self.assertEqual(store.load(), before)
 
     def test_cache_means_one_request_per_ttl(self):
         source = FakeSource(HITS)

@@ -1,0 +1,1 @@
+models\qwen3.8\Qwen3.8-27B-UD-Q6_K_XL.gguf

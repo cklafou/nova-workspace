@@ -63,6 +63,19 @@ class Workspace(unittest.TestCase):
         (self.ws / "nova_body" / "memory" / name).write_text(text, encoding="utf-8", newline="")
 
 
+def wait_remembered(job, timeout: float = 5.0) -> None:
+    """Wait until a background job has finished AND written its summary to the updater state, so
+    nothing writes there after the test's temporary workspace (and its env override) is gone."""
+    import time
+    from nova_updater import store
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if any(j.get("id") == job.id for j in store.load().get("jobs") or []):
+            return
+        time.sleep(0.01)
+    raise AssertionError(f"job {job.id} did not finish within {timeout} s")
+
+
 def hit(model_id, params=None, license="apache-2.0", pipeline="image-text-to-text", created="2026-08-05T00:00:00Z",
         formats=None, downloads=0):
     return catalog.Hit(source="huggingface", id=model_id, created=created, license=license, pipeline=pipeline,

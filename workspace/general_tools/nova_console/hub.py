@@ -87,6 +87,7 @@ class LogHub:
         self._restart_req = False
         self._lifecycle_lock = threading.Lock()
         self._lifecycle_ready_at = None
+        self._nova_mode = None
         # PIDs of Nova's process tree roots. The console app's stray-window janitor asks for these
         # so it can tell "a console owned by Nova" from "Cole's own terminal" — we must never hide
         # a window that isn't ours.
@@ -95,6 +96,8 @@ class LogHub:
     def request_lifecycle(self, action: str):
         """Acknowledge one pending action; repeated clicks cannot race shutdown/restart."""
         with self._lifecycle_lock:
+            if self._nova_mode is not None and self._nova_mode.snapshot()["pending"]:
+                return {"ok": False, "error": "A Nova mode change is pending."}, 409
             pending = "restart" if self._restart_req else "shutdown" if self._shutdown_req else None
             if pending and pending != action:
                 return {"ok": False, "error": f"{pending} is already pending"}, 409
@@ -107,6 +110,31 @@ class LogHub:
             self._shutdown_req = True
             return {"ok": True, "accepted": True, "action": action,
                     "message": f"Launcher accepted {action}; app and services will stop together."}, 202
+
+    def configure_nova(self, chat_only, handler):
+        from .lifecycle import NovaModeState
+        with self._lifecycle_lock:
+            self._nova_mode = NovaModeState(chat_only, handler)
+
+    def nova_status(self):
+        if self._nova_mode is None:
+            return {"ok": False, "state": "error", "pending": False, "target": None,
+                    "chat_only": None, "message": "Launcher mode control is not ready.",
+                    "error": "Launcher mode control is not ready."}
+        return self._nova_mode.snapshot()
+
+    def request_nova(self, action):
+        if action not in ("start", "stop"):
+            return {"ok": False, "error": "Unknown Nova lifecycle action."}, 400
+        with self._lifecycle_lock:
+            if self._shutdown_req or self._restart_req:
+                return {"ok": False, "error": "App shutdown or restart is already pending."}, 409
+            if self._nova_mode is None:
+                return self.nova_status(), 503
+            return self._nova_mode.request(action == "stop")
+
+    def process_nova_request(self):
+        return self._nova_mode.process() if self._nova_mode is not None else False
 
     def lifecycle_ready(self) -> bool:
         """A pending action may tear down after its original acknowledgement grace."""
@@ -227,6 +255,17 @@ class LogHub:
 
             def do_POST(self):
                 u = urlparse(self.path)
+                if u.path in ("/api/nova/start", "/api/nova/stop"):
+                    # The same-origin Nova Chat proxy is the public entry point. Do not
+                    # expose a cross-site form/JavaScript path that starts GPU services.
+                    host = self.headers.get("Host", "").lower()
+                    allowed = {f"127.0.0.1:{self.server.server_port}", f"localhost:{self.server.server_port}"}
+                    if self.client_address[0] != "127.0.0.1" or host not in allowed or self.headers.get("Origin") \
+                            or any(self.headers.get(key) for key in ("Forwarded", "X-Forwarded-For", "X-Forwarded-Host")) \
+                            or self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower() != "application/json":
+                        return self._send({"ok": False, "error": "Use Nova Chat's local lifecycle controls."}, 403)
+                    result, code = hub.request_nova(u.path.rsplit("/", 1)[-1])
+                    return self._send(result, code)
                 if u.path == "/api/show":
                     hub._show_req = True
                     return self._send({"ok": True})
@@ -248,6 +287,8 @@ class LogHub:
             def do_GET(self):
                 u = urlparse(self.path)
                 q = parse_qs(u.query)
+                if u.path == "/api/nova/status":
+                    return self._send(hub.nova_status(), 200 if hub._nova_mode is not None else 503)
                 if u.path == "/health":
                     return self._send({"ok": True})
                 if u.path == "/api/show-pending":

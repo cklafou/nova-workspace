@@ -1,15 +1,14 @@
-# Last updated: 2026-10-03 09:59:47
-# @nova: KoELS equip mechanism — runtime / life-support (layer 2). The PHYSICAL act of wearing a
-#        specialist loadout: reading which adapters are loaded, the free in-set scale-swap, and
+# @nova: Load and equip KoELS specialist adapters through the body runtime's model controller.
+#        The equip mechanism handles the physical act of wearing a specialist loadout:
+#        reading which adapters are loaded, the free in-set scale-swap, and
 #        the heavy self-restart that rotates which adapters are loaded at boot. Bytes→GPU is a
 #        bodily act, so it lives in HER runtime, never in a pluckable chat tool — and delegating
 #        it here is how KoELS passes the pluck test (spec §3). Composes LlamaControl (the model
 #        server) and reads the cognition loadout faculty's decisions; it only ACTS.
 #
-#        SKELETON STATUS: the pure logic + injectable I/O below are built and unit-tested. The
-#        ONE step that touches her real model launch — the launcher consuming the boot --lora
-#        args this writes — is LIVE-GATED (needs the quick -fa + per-adapter-VRAM check on her
-#        exact build, which needs a real GGUF adapter to exist). Flagged at self_restart_with_loadout.
+#        The launcher consumes koels_lora_args.txt; disposable launcher/parser tests prove
+#        argument serialization. Actual adapter loading, application alongside Nova-core, and
+#        per-adapter VRAM behavior remain unverified with real adapters on her installed build.
 """
 nova_runtime/koels_equip.py — the equip mechanism (skeleton).
 
@@ -35,7 +34,7 @@ class KoELSEquip:
         self.llama = llama                      # LlamaControl — composition, not inheritance
         self.port = port
         self.state_path = body_path('memory', workspace=self.workspace) / "koels_loadout.json"   # desired set (persisted)
-        self.args_path = body_path('memory', workspace=self.workspace) / "koels_lora_args.json"  # boot --lora the launcher reads
+        self.args_path = body_path('memory', workspace=self.workspace) / "koels_lora_args.json"  # structured boot arguments; launcher reads the adjacent .txt
         self._http_get = http_get or self._default_get      # injectable for tests
         self._http_post = http_post or self._default_post
 
@@ -43,24 +42,25 @@ class KoELSEquip:
     @staticmethod
     def build_lora_args(adapter_paths) -> list:
         """Flags to PRELOAD a set of adapters INACTIVE at boot (per the finding):
-            --lora-scaled <p> 0.0  (xN)  then  --lora-init-without-apply
+            --lora-scaled <p>:0.0  (xN)  then  --lora-init-without-apply
         Equip then activates them at runtime via /lora-adapters. Pure → unit-testable; the
         launcher consumes these. Empty set → no flags (Nova-core only)."""
         args: list = []
         for p in adapter_paths or []:
-            args += ["--lora-scaled", str(p), "0.0"]
+            args += ["--lora-scaled", f"{p}:0.0"]
         if args:
             args.append("--lora-init-without-apply")
         return args
 
     @staticmethod
     def build_lora_args_line(adapter_paths) -> str:
-        """Same preload flags as build_lora_args, but a single batch-ready line with quoted paths
-        for a launcher to read via `set /p` (e.g. start_llama_koels.cmd). Empty string when no
-        loadout (Nova-core only) → the launcher adds no --lora."""
+        """Same preload flags as build_lora_args, but a batch-ready line quoting each path:scale token
+        for a launcher to read via `set /p` (start_llama_qwen36.cmd). Empty string when no
+        loadout (Nova-core only) → the launcher adds no --lora. The scale must be part of
+        the same argument as its path; current llama-server rejects a separate scale token."""
         parts: list = []
         for p in adapter_paths or []:
-            parts += ["--lora-scaled", f'"{p}"', "0.0"]
+            parts += ["--lora-scaled", f'"{p}:0.0"']
         if parts:
             parts.append("--lora-init-without-apply")
         return " ".join(parts)
@@ -123,17 +123,17 @@ class KoELSEquip:
         writes the boot --lora args, then cycles the model server (LlamaControl owns the physical
         down→up; KoELS owns the policy).
 
-        LIVE-GATED: the launcher actually CONSUMING koels_lora_args.json to add --lora to her
-        boot is the one step that touches her real model launch — wire it after the quick -fa +
-        per-adapter-VRAM check on her build (needs a real GGUF adapter). Until then this persists
-        the intent + cycles, and the args sit ready for the launcher to pick up."""
+        start_llama_qwen36.cmd consumes koels_lora_args.txt at boot; the JSON file is a
+        structured copy. Disposable tests prove the command reaches the installed parser.
+        Real adapter loading, application alongside Nova-core and VRAM use still need a
+        separate live check; accepting a restart does not establish those outcomes."""
         if desired_names is not None:
             self.save_desired_loadout(desired_names)
         args = self.build_lora_args(adapter_paths)
         try:
             self.args_path.parent.mkdir(parents=True, exist_ok=True)
             self.args_path.write_text(json.dumps({"args": args}, indent=2), encoding="utf-8")
-            # batch-ready line the launcher (start_llama_koels.cmd) reads via `set /p`
+            # batch-ready line the launcher (start_llama_qwen36.cmd) reads via `set /p`
             (body_path('memory', workspace=self.workspace) / "koels_lora_args.txt").write_text(
                 self.build_lora_args_line(adapter_paths), encoding="utf-8")
         except Exception as e:

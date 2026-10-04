@@ -9,11 +9,12 @@ from the header when the converter recorded it, otherwise from the folder they s
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 
 from . import current, gguf, naming, paths
 
-SKIP_DIRS = {".incoming", "__pycache__", ".git"}
+SKIP_DIRS = {".incoming", "__pycache__", ".git", "Training Files"}
 
 
 def _family_of(text: str) -> str | None:
@@ -21,11 +22,28 @@ def _family_of(text: str) -> str | None:
     if not text:
         return None
     tail = str(text).rstrip("/").split("/")[-1]
-    parsed = naming.parse(tail)
+    normalized = re.sub(r"^([A-Za-z]+)\s+(\d+(?:\.\d+)*)(?=\s)", r"\1\2", tail)
+    parsed = naming.parse(re.sub(r"\s+", "-", normalized))
     if parsed:
         return parsed.slug
     lowered = tail.lower()
     return lowered if any(ch.isdigit() for ch in lowered) else None
+
+
+
+def describe_adapter(path: Path, metadata: dict | None = None) -> dict:
+    """Read one selected adapter's header and binding; never scan a model directory."""
+    path = Path(path)
+    if not path.is_absolute():
+        path = paths.workspace() / path
+    meta = gguf.read_metadata(path) if metadata is None else metadata
+    if gguf.classify(meta) != "lora":
+        raise gguf.GGUFError(f"{paths.display(path)} is not a LoRA adapter")
+    base = gguf.base_model(meta)
+    bound = _family_of(base.get("name") or base.get("repo_url") or "") if base else None
+    return {"path": paths.display(path), "kind": "lora", "base": base,
+            "bound_to": bound or _family_of(path.parent.name), "bound_by": "header" if bound else "folder",
+            "alpha": meta.get("adapter.lora.alpha")}
 
 
 def _group_splits(files):
@@ -72,12 +90,8 @@ def scan(root: Path | None = None, max_depth: int = 4) -> dict:
                  "folder": first.parent.name, "quant": naming.parse_gguf_filename(first.name)["quant"],
                  "active": rel in active_paths or rel in lora_paths}
         if kind == "lora":
-            base = gguf.base_model(meta)
-            bound = _family_of(base.get("name") or base.get("repo_url") or "") if base else None
-            entry.update({"base": base, "bound_to": bound or _family_of(first.parent.name),
-                          "bound_by": "header" if bound else "folder",
-                          "alpha": meta.get("adapter.lora.alpha"),
-                          "role": (lora_paths.get(rel) or {}).get("role")})
+            entry.update(describe_adapter(first, meta))
+            entry["role"] = (lora_paths.get(rel) or {}).get("role")
             result["loras"].append(entry)
         elif kind == "projector":
             entry["bound_to"] = _family_of(first.parent.name)

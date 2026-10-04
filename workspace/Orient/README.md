@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-03T19:16:29+00:00 from source (input `f36e6af11693`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T04:23:28+00:00 from source (input `f465743fc9e9`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
@@ -25,7 +25,10 @@ Launch the normal stack with `NovaStart.cmd`, or the controller alone with `Nova
 for the private Codex/Cowork Collaboration room while Nova stays off. For changes, identify the running code with
 `GET http://127.0.0.1:8765/api/version`; then compare receipts and actual artifacts. Preserve Nova's
 personal records. Quarantine retired material with its original path and a reason; never flatten
-archives or overwrite existing destinations. `models/` is sealed: do not read or enumerate it.
+archives or overwrite existing destinations. Cole grants access to all Project Nova subdirectories
+and related directories, including `models/`. Avoid broad model-binary reads to save context, tokens
+and time; use targeted listings, metadata, headers and checksums as the task needs. This is an
+efficiency rule, not a permission restriction.
 
 
 **How these stay current.** Facts — inventory, routes, tools, faculty counts, tunables, Nova's
@@ -46,12 +49,12 @@ watcher reports that error and continues autosave; documentation failure must no
 
 The [interactive explorer](Architecture/index.html) and the call-order pages under `Architecture/`
 are rebuilt on demand (`Architecture/REBUILD_MAP.cmd`, `python general_tools/calls_order.py`).
-Last built 2026-09-30 17:38 UTC; as of this generation, 182 source file(s) had been modified since.
+Last built 2026-09-30 17:38 UTC; as of this generation, 198 source file(s) had been modified since.
 
 **AI notes.** Claude, Codex and the other agents leave a note in [AI Notes](AI%20Notes/ReadMeBeforeNoteTaking.md) after each session: what changed, why, and what is still open. Read the rules once, then every note since your own last one. Newest first:
 
-- [2026-10-04_0413_Claude_UpdaterGuardAndRollback.md](AI%20Notes/2026-10-04_0413_Claude_UpdaterGuardAndRollback.md)
-- [2026-10-04_0346_Codex_ProfileProductFeedback.md](AI%20Notes/2026-10-04_0346_Codex_ProfileProductFeedback.md)
-- [2026-10-04_0345_Claude_ModelUpdater.md](AI%20Notes/2026-10-04_0345_Claude_ModelUpdater.md)
-- [2026-10-04_0331_Codex_PersonalizedCollaboration.md](AI%20Notes/2026-10-04_0331_Codex_PersonalizedCollaboration.md)
-- [2026-10-04_0326_Codex_AgentTeamResearch.md](AI%20Notes/2026-10-04_0326_Codex_AgentTeamResearch.md)
+- [2026-10-04_1305_Codex_ConversationPower.md](AI%20Notes/2026-10-04_1305_Codex_ConversationPower.md)
+- [2026-10-04_1235_Codex_Qwen38TrainingComplete.md](AI%20Notes/2026-10-04_1235_Codex_Qwen38TrainingComplete.md)
+- [2026-10-04_1147_Codex_TrainingPreparation.md](AI%20Notes/2026-10-04_1147_Codex_TrainingPreparation.md)
+- [2026-10-04_0909_Codex_ControllerMenusUpdater.md](AI%20Notes/2026-10-04_0909_Codex_ControllerMenusUpdater.md)
+- [2026-10-04_0850_Claude_UpdaterRound3.md](AI%20Notes/2026-10-04_0850_Claude_UpdaterRound3.md)

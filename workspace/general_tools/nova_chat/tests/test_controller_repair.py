@@ -178,7 +178,7 @@ class ControllerRepairTests(unittest.TestCase):
         events = []
         signal = threading.Event(); signal.set()
         hub = types.SimpleNamespace(_restart_req=True, shutdown=lambda:events.append('hub'))
-        ns = {'CHAT_ONLY':False, '_check_controller_mode':lambda:None, 'HUB':hub, '_SHUTDOWN':signal, 'WS':ROOT, 'CHAT_PORT':8765, '_app_backend':'qt',
+        ns = {'CHAT_ONLY':False, '_check_controller_mode':lambda:None, '_configure_nova_mode':lambda *args:None, 'HUB':hub, '_SHUTDOWN':signal, 'WS':ROOT, 'CHAT_PORT':8765, '_app_backend':'qt',
               'os':types.SimpleNamespace(getpid=lambda:1), 'time':types.SimpleNamespace(time=lambda:0, sleep=lambda _:None),
               'banner':lambda _:None, 'log':lambda *args:None, '_watch_for_shutdown':lambda:None,
               '_wait_for_process':lambda _:None, 'port_open':lambda _:False,

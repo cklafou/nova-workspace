@@ -107,14 +107,14 @@ sys.stderr = _TeeStream(sys.stderr)
 memory_indexer = None
 
 _CHAT_ONLY_MESSAGE = (
-    "Nova is disabled in chat-only mode. Use the Collaboration widget, or close this "
-    "controller and launch NovaStart.cmd to enable Nova."
+    "Nova is off. Use Start Nova in the Conversation tab to turn her on, "
+    "or use the Collaboration widget while she is off."
 )
 
 
-def _chat_only_blocks(path: str, method: str) -> bool:
+def _chat_only_blocks(path: str, method: str, force: bool = False) -> bool:
     """Keep this controller from activating or modifying Nova while she is off."""
-    if not CHAT_ONLY:
+    if not CHAT_ONLY and not force:
         return False
     if path == "/api/lora/available":
         return True
@@ -293,6 +293,9 @@ async def _auth_gate(request: Request, call_next):
 
     if _chat_only_blocks(path, request.method):
         return _chat_only_rejection()
+    if (getattr(globals().get("_nova_lifecycle"), "pending", False)
+            and _chat_only_blocks(path, request.method, force=True)):
+        return JSONResponse({"ok": False, "error": "Nova is starting or stopping. Wait for the transition to finish."}, status_code=409)
 
     if client_ip in _LOCAL_HOSTS:
         return await call_next(request)        # the owner, at the machine
@@ -322,6 +325,7 @@ async def _auth_gate(request: Request, call_next):
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    await _stop_updater_check()
     if CHAT_ONLY:
         return
     await asyncio.to_thread(_rt.stop_computer_session)
@@ -523,6 +527,8 @@ async def _drain_cole_queue() -> None:
     pileup drains to empty instead of exactly one), and the daemon's set_busy(False).
     """
     global is_processing
+    if getattr(globals().get("_nova_lifecycle"), "pending", False):
+        return
     if is_processing or not _cole_message_queue:
         if not _cole_message_queue:
             await broadcast({"type": "queue_cleared"})
@@ -624,6 +630,50 @@ from nova_runtime.model_guard import ModelGuard
 from nova_runtime.operations import operations, supervised, run_in_worker
 _rt_workspace = Path(os.environ.get("NOVA_WORKSPACE") or Path(__file__).resolve().parent.parent.parent)
 _rt_llama = LlamaControl(_rt_workspace, launcher="start_llama_qwen36.cmd")  # Qwen 3.6 + MTP; was start_llama.cmd (3.5)
+
+# The updater belongs to the controller. Chat-only installs prepare the next boot;
+# only the normal host supplies a model restart callback.
+from nova_updater.api import create_router as create_updater_router
+from nova_updater import check as updater_check
+app.include_router(create_updater_router(restart_model=None if CHAT_ONLY else _rt_llama.restart,
+                                        lifecycle_pending=lambda: _nova_lifecycle.pending))
+from nova_chat.lifecycle import NovaLifecycle
+_nova_lifecycle = NovaLifecycle(chat_only=CHAT_ONLY, before_stop=lambda: _prepare_nova_off(),
+                                quiesce=lambda: _quiesce_nova_worker())
+app.include_router(_nova_lifecycle.router)
+
+_updater_check_task = None
+
+
+async def _updater_startup_check(delay: float = 3.0):
+    try:
+        await asyncio.sleep(delay)
+        # Catalog HTTP has its own backend timeout. Cancelling this task stops a
+        # pending check, but an in-flight worker finishes under that timeout.
+        await asyncio.to_thread(updater_check.run_check)
+    except asyncio.CancelledError:
+        raise
+    except Exception as error:
+        print(f"[updater] Startup metadata check failed: {error}")
+
+
+def _start_updater_check():
+    global _updater_check_task
+    if _updater_check_task is None:
+        _updater_check_task = asyncio.create_task(_updater_startup_check(), name="updater-startup-check")
+
+
+async def _stop_updater_check():
+    global _updater_check_task
+    task, _updater_check_task = _updater_check_task, None
+    if task is not None:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+
 _rt_guard = ModelGuard(rate_limit=_NOVA_RATE_LIMIT, rate_window=_NOVA_RATE_WINDOW, error_backoff=_LLAMA_ERROR_BACKOFF)
 
 # STEP 3: the unified runtime body — owns the memory indexer + proprioception (and, from
@@ -679,6 +729,28 @@ _CODE_FILES = ("general_tools/nova_chat/server.py",
                "general_tools/nova_chat/collaboration.py",
                "general_tools/nova_chat/static/collaboration.js",
                "general_tools/nova_chat/static/collaboration.css",
+               "general_tools/nova_chat/lifecycle.py",
+               "general_tools/nova_updater/api.py",
+               "general_tools/nova_updater/catalog.py",
+               "general_tools/nova_updater/check.py",
+               "general_tools/nova_updater/current.py",
+               "general_tools/nova_updater/gguf.py",
+               "general_tools/nova_updater/install.py",
+               "general_tools/nova_updater/inventory.py",
+               "general_tools/nova_updater/jobs.py",
+               "general_tools/nova_updater/naming.py",
+               "general_tools/nova_updater/net.py",
+               "general_tools/nova_updater/paths.py",
+               "general_tools/nova_updater/plan.py",
+               "general_tools/nova_updater/runpod.py",
+               "general_tools/nova_updater/store.py",
+               "general_tools/nova_updater/train.py",
+               "general_tools/nova_updater/pod/run_on_pod.sh",
+               "general_tools/nova_updater/pod/template_gen.py",
+               "general_tools/nova_updater/pod/train_lora.py",
+               "general_tools/nova_chat/static/updater.js",
+               "general_tools/nova_chat/static/updater.css",
+               "general_tools/nova_chat/static/workspace.css",
                "general_tools/nova_chat/static/workspace.js",
                "general_tools/nova_chat/static/index.html",
                "general_tools/nova_chat/widget_data.py",
@@ -981,6 +1053,7 @@ def _should_agent_respond(agent: str, content: str) -> bool:
 async def startup_event():
     """Trigger workspace index build and background monitors after server is ready."""
     global memory_indexer
+    _start_updater_check()
     if CHAT_ONLY:
         # No body lifecycle, context/indexing, sensors, model or autonomy jobs.
         asyncio.ensure_future(_window_close_watchdog())
@@ -1549,6 +1622,27 @@ async def stop_endpoint():
     return JSONResponse({"cancelled": cancelled, **state})
 
 
+async def _prepare_nova_off():
+    """Drain tracked work and persist the session before the launcher retires this worker."""
+    response = await stop_endpoint()
+    state = json.loads(response.body)
+    if state.get("stopped") and not CHAT_ONLY and session_mgr.active:
+        await asyncio.to_thread(session_mgr.active.flush_all)
+    return response
+
+
+async def _quiesce_nova_worker():
+    """Finish body cleanup after launcher acceptance, before its owned worker exits."""
+    response = await _prepare_nova_off()
+    state = json.loads(response.body)
+    if not state.get("stopped"):
+        return JSONResponse({"ok": False, **state}, status_code=409)
+    if not CHAT_ONLY:
+        await asyncio.to_thread(_rt.stop_computer_session)
+        await asyncio.to_thread(_rt.stop_indexer)
+    return JSONResponse({"ok": True, **state})
+
+
 @app.post("/new-session")
 async def new_session_endpoint():
     """Clear the current transcript and start a fresh session."""
@@ -1651,6 +1745,8 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             If False, this is a silent work tick — reply goes to autonomy log only.
     auto_log_path: pathlib.Path to the daily autonomy tick log file.
     """
+    if _nova_lifecycle.pending:
+        return ""
     # Determine the transcript object to use (ephemeral HB ctx vs full session)
     _transcript = hb_ctx if hb_ctx is not None else session_mgr.active
     _is_hb_tick = hb_ctx is not None
@@ -2863,7 +2959,7 @@ async def autonomy_daemon():
     # startup exactly as before; her loop, our clock + voice. (Step 6c gives it a headless
     # launcher with runtime-native hooks so it runs with no server at all.)
     def _get_busy() -> bool:
-        return is_processing
+        return is_processing or _nova_lifecycle.pending
 
     def _set_busy(v: bool) -> None:
         global is_processing
@@ -3930,11 +4026,12 @@ async def websocket_endpoint(ws: WebSocket):
             raw = await ws.receive_text()
             data = json.loads(raw)
 
-            if CHAT_ONLY and data.get("type") not in {"ping", "stop"}:
+            transitioning = getattr(globals().get("_nova_lifecycle"), "pending", False)
+            if (CHAT_ONLY or transitioning) and data.get("type") not in {"ping", "stop"}:
                 # Never store a regular chat message or typing signal in Nova's body.
                 if data.get("type") != "user_typing":
                     await ws.send_text(json.dumps({"type": "error", "author": "System",
-                                                   "chat_only": True, "message": _CHAT_ONLY_MESSAGE}))
+                                                   "chat_only": CHAT_ONLY, "message": ("Nova is starting or stopping." if transitioning else _CHAT_ONLY_MESSAGE)}))
                     if data.get("type") == "autonomous_toggle":
                         await ws.send_text(json.dumps({"type": "autonomous_state", "enabled": False}))
                 continue

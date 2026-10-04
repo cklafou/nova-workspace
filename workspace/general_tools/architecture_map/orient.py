@@ -645,7 +645,7 @@ def atomic_write(path, text):
             os.unlink(temp)
 
 def inventory(workspace):
-    """Prune before descent, including the sealed models directory and generated outputs."""
+    """Prune before descent, including large model files and generated outputs excluded from documentation inventory."""
     rows = []
     for current, dirs, files in os.walk(workspace, followlinks=False):
         root = Path(current)
@@ -706,7 +706,10 @@ Launch the normal stack with `NovaStart.cmd`, or the controller alone with `Nova
 for the private Codex/Cowork Collaboration room while Nova stays off. For changes, identify the running code with
 `GET http://127.0.0.1:8765/api/version`; then compare receipts and actual artifacts. Preserve Nova's
 personal records. Quarantine retired material with its original path and a reason; never flatten
-archives or overwrite existing destinations. `models/` is sealed: do not read or enumerate it.
+archives or overwrite existing destinations. Cole grants access to all Project Nova subdirectories
+and related directories, including `models/`. Avoid broad model-binary reads to save context, tokens
+and time; use targeted listings, metadata, headers and checksums as the task needs. This is an
+efficiency rule, not a permission restriction.
 
 """
     explorer_at = explorer_stamp(workspace)
@@ -752,6 +755,12 @@ The normal launcher starts local inference, a witness model, the chat/runtime ho
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
 FastAPI/WebSocket face currently shares process state with the body runtime; multiple visible
 conversations do not yet imply independent execution sessions.
+
+The launcher's Conversation power control switches between full Nova and chat-only operation
+without replacing the desktop controller or console. It replaces the runtime worker and its owned
+model, witness, guardian and watcher as needed. The controller reconnects after the worker changes;
+its separate Collaboration history stays durable. This is distinct from stopping one generation
+or restarting the entire app.
 
 The explicit `--chat-only` path omits the body runtime, model startup and autonomous background
 work. Collaboration follows its own route: actual app session → local HTTP or atomic mounted-file
@@ -818,8 +827,12 @@ See the dated evidence for coverage; an operational text index does not certify 
 
 KoELS separates choosing a specialist manifest from equipping adapters. Changing scales within
 a loaded set differs from restarting the provider with a different set. A live personality adapter
-does not prove autonomous expert selection/restart works. Drives/wants and the hormone design are
-not evidence of online weight learning. Keep implemented controls distinct from biological analogies.
+does not prove autonomous expert selection/restart works. The launcher already consumes the KoELS
+boot-argument text file. Its serializers now pass each adapter and scale as one `path:0.0` argument,
+with the batch form quoting the complete token. Disposable launcher and installed-parser checks
+prove argument compatibility, not adapter loading, VRAM use or application of scales. The global
+`--lora-init-without-apply` behavior is unchanged and still needs validation with real adapters.
+Drives/wants and the hormone design are not evidence of online weight learning. Keep implemented controls distinct from biological analogies.
 
 ## Runtime evidence and open modernization work
 
@@ -854,6 +867,10 @@ and the distinction between model-driven behavior, direct tool probes and isolat
 
 The October 3 controller repair restores widget insertion and refresh-on-show, bounds pipeline/log
 reads, uses current runtime state in System, and routes lifecycle controls through the launcher.
+The October 4 controller update adds named layouts, anchored top menus, updater review workflows
+and dated history in Live log. Its fixtures cover updater consent and recovery conflicts; a live
+chat-only restart proves controller readiness while the model remains off. KoELS launcher argument
+compatibility was checked through the installed parser without loading weights.
 See `general_tools/nova_chat/CONTROLLER.md` and dated AI Notes for the actual validation scope.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 """
@@ -864,6 +881,7 @@ Unit/fixture passes do not certify every optional application, native window int
 |---|---|---|
 | Normal stack | `NovaStart.cmd` | `/api/version`, model readiness and actual generation |
 | Controller with Nova off | `NovaChatOnly.cmd` or `python nova_start.py --chat-only` | `/api/version` reports `chat_only`; no model, witness, guardian, watcher or autonomy is started |
+| Start/stop Nova; keep controller open | Conversation widget power button; POST `/api/nova/start` or `/api/nova/stop` | `/api/nova/lifecycle` reaches `on` or `off`; verify service ports and generation separately |
 | Local model only | `start_llama_qwen36.cmd` | `http://127.0.0.1:8080/health` plus a bounded inference probe |
 | Standalone body | `python nova_body/nova_runtime/__main__.py` | Relocate first to test true portability |
 | Graceful stack shutdown | POST `http://127.0.0.1:8799/api/shutdown` | Confirm owned processes/ports exit |
@@ -882,8 +900,8 @@ and `active_mmproj.txt` when present (written by the model updater; `none` = no 
 Qwen 3.6. `active_lora.txt` set to `none` boots without a personality adapter, and the old v2
 fallback adapter applies only to the default Qwen 3.6 model. See Model updates below.
 
-The Services widget's Restart Nova and Shut down Nova controls stop current work and request
-launcher-owned teardown. HTTP 202 acknowledges acceptance; it is not proof of completion. Confirm
+The Services menu (and optional Services widget) provides Restart app and services / Shut down
+app and services. These controls stop current work and request launcher-owned teardown. HTTP 202 acknowledges acceptance; it is not proof of completion. Confirm
 old processes exit and, for restart, new PIDs become ready. The launcher gives the accepted request
 one second to flush its response before teardown; repeated requests do not extend that deadline.
 The launcher stops the guardian before
@@ -894,17 +912,31 @@ to close; failure is reported instead of acknowledging a skipped restart. KoELS 
 failure. Starting an already starting model is a no-op.
 
 Chat-only mode retains the desktop controller and the separate Collaboration widget. It does not
-turn on Nova when a message arrives; wake/model/autonomy actions require a normal relaunch. It
+turn on Nova when a message arrives. **Start Nova** in Conversation explicitly enables the full
+stack; **Stop Nova** drains work, saves the active session and returns to chat-only. The launcher
+stops its guardian/watcher before replacing workers and refuses a worker teardown without a
+successful quiesce acknowledgment. New body input and updater mutations are blocked while a switch
+is pending. Failed startup attempts return to a usable chat-only controller when recovery succeeds.
+The main window and console stay open; the page reconnects and restores its unsent composer draft.
+The launcher uses `start_llama_qwen36.cmd`, so its model selection matches the updater's boot files.
+A launcher predating this feature needs one full app restart; refreshing the page alone cannot
+upgrade that process. Start/Stop remains unavailable when lifecycle support cannot be reached. It
 refuses to attach to an already-running full server as though that server were dormant. The
 Collaboration room also works during a normal launch without being fed to Nova's conversation.
+Both modes start the updater catalog check after a cancellable delay; this does not start the model
+or enumerate installed weights. The controller status bar distinguishes Chat only from Nova running.
 
 ## Configuration and evidence
 
 Collaboration is a detachable controller service (`general_tools/nova_chat/collaboration.py`). Its
 SQLite history and per-agent credentials live outside the repository at
-`%LOCALAPPDATA%/ProjectNova/Collaboration`. Messages never enter chat sessions, runtime transcripts,
+`%USERPROFILE%/ProjectNovaData/Collaboration`. Messages never enter chat sessions, runtime transcripts,
 semantic indexing, task inboxes or autonomy events. Mentioning Nova there does not invite her.
 This is exclusion from automatic routing, not an OS restriction on her deliberately trusted tools.
+`NOVA_COLLABORATION_DIR` may select an explicit shared location. The default avoids AppData:
+Windows can redirect packaged Codex and ordinary desktop processes to different AppData copies.
+The October 4 repair preserved and merged the two stores; old histories remain in backup.
+Do not silently fall back to an older AppData room or credential file.
 Cowork's current task uses the shared-folder CLI adapter: atomic requests/replies under
 `workspace/Temp/collaboration`. That narrow path is excluded from watcher activity, Git, Orient,
 Drive export/scan and automatic direct-file recall. Only the Windows broker writes the SQLite
@@ -925,7 +957,7 @@ editing one configuration file does not imply every subsystem obeys it.
 
 Adapter intent is in `nova_body/memory/active_lora.*`; KoELS desired/boot state lives beside it.
 Model intent is in `active_model.txt` / `active_mmproj.txt` beside them (model updater).
-Read the runtime's configured adapter status without browsing sealed weights. Keep secrets excluded
+Read the runtime's configured adapter status first; inspect relevant model metadata when needed. Keep secrets excluded
 from both Git and Drive, including relocated `.auth_token` and `nova_users.json`.
 
 Useful evidence lives under `nova_body/logs/`: `tool_calls.jsonl`, `generation_trace.jsonl`,
@@ -949,6 +981,10 @@ these source observations are not a fresh penetration test. The separate Collabo
 add a local Host/Origin/forwarding gate; this does not repair older HTTP or WebSocket gaps.
 Secrets stay out of Git and Drive.
 
+Conversation power uses a separate local lifecycle gate and launcher status. If it reports that a
+restart is needed, inspect both the chat worker and launcher versions; a fresh static page can still
+be connected to old processes. `starting`/`stopping` acknowledge work in progress, not readiness.
+
 The voice loop parses tool reaches from both content and reasoning streams. Receipt-backed context
 helps distinguish executed work from earlier narration. Check loaded source, actual receipts,
 adapter status, and call order before changing personality or training. Rendering/mount artifacts
@@ -971,6 +1007,21 @@ Hugging Face cache on local disk rather than a slow network mount.
 7. For Collaboration, verify real clients publishing and receiving through the broker, replay after
    reconnect, retry deduplication and Nova exclusion. Simulated participant messages are fixtures,
    not proof that Cowork connected. Chat-only verification must confirm the model port stays off.
+8. For the updater, run the Nova Chat integration tests and `nova_updater/tests` against disposable
+   fixtures, plus `node general_tools/nova_chat/tests/test_updater_ui.cjs`. The Windows launcher tests
+   replace llama-server with an argument recorder. They prove parsing, not a real model load.
+   A successful simulated install or GPU quote does not certify a real download or paid training run.
+   The opt-in pod compatibility tests exercise a tiny actual model, assistant masks and GGUF conversion;
+   Linux venv tests check dependency isolation and local storage. A full run additionally needs actual
+   optimizer progress, retrieved/checksummed epoch adapters and the provider's stopped-pod status.
+   Behavioral A/B evaluation and runtime activation remain separate from training completion.
+9. For the controller, verify menu opening does not rearrange widgets, layout changes survive reload,
+   old popouts close before switching layouts, and small windows keep controls reachable.
+10. For Conversation power, run `test_lifecycle.py`, `test_launcher_mode.py` and
+    `node general_tools/nova_chat/tests/test_conversation_power.cjs`. Fixtures cover draining,
+    updater conflicts, inherited transition guards, failed startup, app-quit cancellation and draft
+    restoration. A browser fixture can prove buttons/reconnection with simulated services; the
+    separate live check must confirm full start/stop, model readiness and native window continuity.
 
 ## Files and recovery
 
@@ -1004,15 +1055,16 @@ not rewrite Nova's identity, infer capabilities from filenames, or copy secrets 
                     tools = list(ast.literal_eval(node.value))
                 except (ValueError, TypeError):
                     pass
-            if rel.endswith(("nova_chat/server.py", "nova_chat/collaboration.py")) and isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if rel.endswith(("nova_chat/server.py", "nova_chat/collaboration.py", "nova_updater/api.py")) and isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 for dec in node.decorator_list:
                     if isinstance(dec, ast.Call) and isinstance(dec.func, ast.Attribute) and dec.args and isinstance(dec.args[0], ast.Constant):
                         if dec.func.attr in {"get", "post", "websocket", "delete", "put", "patch"}:
-                            prefix = "/api/collaboration" if rel.endswith("nova_chat/collaboration.py") else ""
+                            prefix = ("/api/collaboration" if rel.endswith("nova_chat/collaboration.py") else
+                                      "/api/updater" if rel.endswith("nova_updater/api.py") else "")
                             routes.append((dec.func.attr.upper(), prefix + str(dec.args[0].value), node.name))
     architecture += "\n## Statically registered tools\n\n" + ", ".join(f"`{t}`" for t in tools) + ".\n\nForge can add discovered extensions. Registration is not live verification.\n"
     index = "# Project file index\n\n" + evidence
-    index += "\nCanonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and sealed weights are omitted. The ownership table in Architecture describes those stores. Links are local; sync transports this output.\n\n"
+    index += "\nCanonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.\n\n"
     def _group(path):
         parts = path.split("/")
         return "" if len(parts) == 1 else parts[0] if len(parts) == 2 else "/".join(parts[:2])

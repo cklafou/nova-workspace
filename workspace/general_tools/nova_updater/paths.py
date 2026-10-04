@@ -17,6 +17,32 @@ def models_root() -> Path:
     return Path(os.environ.get("NOVA_MODELS_DIR") or workspace() / "models")
 
 
+
+def training_root() -> Path:
+    """Persistent datasets and recipes, separate from finished adapters beside their model."""
+    return models_root() / "Training Files"
+
+
+def training_model_name(base_model_id: str) -> str:
+    """A readable, launcher-safe base name, e.g. Qwen 3.8 27B Dense."""
+    from . import naming
+    import re
+    model = naming.parse(base_model_id)
+    if model is None:
+        raise ValueError("A recognized base model is required for the training folder.")
+    parts = [model.family, model.version_text, f"{model.size_b:g}B"]
+    parts.append(f"MoE A{model.active_b:g}B" if model.moe else "Dense")
+    parts.extend(re.sub(r"[^A-Za-z0-9._ -]", "", token.replace("_", " ")).title()
+                 for token in model.variant)
+    if model.revision:
+        parts.append(model.revision)
+    return " ".join(part for part in parts if part)
+
+
+def training_model_dir(base_model_id: str) -> Path:
+    return training_root() / training_model_name(base_model_id)
+
+
 def body_root() -> Path:
     return Path(os.environ.get("NOVA_BODY") or workspace() / "nova_body")
 
@@ -50,13 +76,31 @@ def staging_dir() -> Path:
 
 
 def credentials_path() -> Path:
-    """Local-only secrets (RunPod key, optional HF token). Never inside the project folder."""
+    """Local-only secrets (RunPod key, optional HF token). Never inside the project folder.
+
+    They sit beside the collaboration room's data in the user profile, not in AppData: Windows gives
+    each MSIX-packaged launcher its own private AppData, which split the room in two (2026-10-04), so
+    a key saved from one launcher would be missing in another."""
     override = os.environ.get("NOVA_UPDATER_CREDENTIALS")
     if override:
         return Path(override)
-    base = os.environ.get("LOCALAPPDATA")
-    root = Path(base) if base else Path.home() / ".config"
-    return root / "ProjectNova" / "Updater" / "credentials.json"
+    return Path.home() / "ProjectNovaData" / "Updater" / "credentials.json"
+
+
+# The launcher reads boot files with `set /p` (console code page) and echoes or expands them outside
+# quotes in places, so only plain ASCII without cmd's special characters reaches llama-server
+# intact. Adapter serializers quote the complete path:scale token, so spaces are supported.
+CMD_SPECIAL = frozenset('"%!^&|<>()')
+
+
+def launcher_problem(path: str, spaces: bool = True) -> str | None:
+    """Why the launcher could not pass this path to llama-server intact, or None if it can."""
+    bad = sorted({ch for ch in str(path) if ch in CMD_SPECIAL or not (ch.isascii() and ch.isprintable())
+                  or (ch == " " and not spaces)})
+    if not bad:
+        return None
+    shown = ", ".join("a space" if ch == " " else repr(ch) for ch in bad)
+    return f"{path} contains {shown}, which the launcher cannot pass to llama-server intact"
 
 
 def display(path: Path) -> str:

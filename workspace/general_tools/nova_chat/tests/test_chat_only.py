@@ -31,12 +31,15 @@ class ChatOnlyTests(unittest.TestCase):
         rt = Mock()
         fake_async = types.SimpleNamespace(ensure_future=scheduled.append)
         ns = {"CHAT_ONLY": True, "asyncio": fake_async, "_rt": rt,
-              "_window_close_watchdog": lambda: "window-lifecycle-only"}
+              "_window_close_watchdog": lambda: "window-lifecycle-only",
+              "_start_updater_check": Mock(), "_stop_updater_check": AsyncMock()}
         extract(SERVER, {"startup_event", "shutdown_event"}, ns)
         asyncio.run(ns["startup_event"]())
         asyncio.run(ns["shutdown_event"]())
         self.assertEqual(scheduled, ["window-lifecycle-only"])
         self.assertEqual(rt.mock_calls, [])
+        ns["_start_updater_check"].assert_called_once()
+        ns["_stop_updater_check"].assert_awaited_once()
 
     def test_model_off_status_does_not_query_body_or_provider(self):
         client = types.SimpleNamespace(is_available=AsyncMock())
@@ -94,7 +97,7 @@ class ChatOnlyTests(unittest.TestCase):
         signal = threading.Event(); signal.set()
         events = []
         ns = {"CHAT_ONLY": True, "HUB": None, "_SHUTDOWN": signal, "WS": ROOT,
-              "_check_controller_mode": lambda: None, "CHAT_PORT": 8765, "_app_backend": "qt",
+              "_check_controller_mode": lambda: None, "_configure_nova_mode": lambda *args: None, "CHAT_PORT": 8765, "_app_backend": "qt",
               "time": types.SimpleNamespace(time=lambda: 0), "banner": Mock(), "log": Mock(),
               "_watch_for_shutdown": Mock(), "_wait_for_process": Mock(),
               "wait_for_nova": lambda: True, "_shutdown_nova": Mock()}

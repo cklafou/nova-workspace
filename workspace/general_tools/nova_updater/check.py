@@ -153,8 +153,14 @@ def start_background_check(delay: float = 3.0) -> threading.Thread:
 def status() -> dict:
     data = store.load()
     result = dict(data.get("check") or {"state": "never-checked", "candidates": []})
-    result.setdefault("current", current.active_model())
+    checked_current = result.get("current")
+    result["current"] = current.active_model()
+    result["checked_current"] = checked_current
+    result["catalog_stale"] = bool(checked_current and checked_current.get("label") != result["current"].get("label"))
     out = _with_decisions(result, data.get("decisions") or {})
+    if out["catalog_stale"]:
+        # A cached comparison is not evidence that the newly configured model needs updating.
+        out["notify"], out["pending"] = False, []
     if store.problem():
         out["warning"] = store.problem()
     return out

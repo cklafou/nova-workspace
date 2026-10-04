@@ -1,5 +1,5 @@
-_Last updated: 2026-10-03 10:58:22_
 <!-- @nova: Standing rules for AI coding agents (Codex, Claude) working in Project Nova. -->
+_Last updated: 2026-10-03 10:58:22_
 # Rules for coding agents
 
 Start by reading `workspace/Orient/README.md`, then every note in `workspace/Orient/AI Notes/` written
@@ -15,7 +15,10 @@ source of truth for how Nova is built and run; if this file and Orient ever disa
 3. **Keep Orient honest.** When you change what an Orient section describes, update its
    explanation (the `edit` path in `workspace/general_tools/architecture_map/reviews.json`), then
    run `python workspace/general_tools/architecture_map/orient.py --mark-reviewed "<DOC>#<Heading>"`.
-4. **Sealed and owned.** Never read or list `workspace/models/`. Never commit secrets. Never
+4. **Access and ownership.** Cole grants access to all Project Nova subdirectories and related
+   directories, including `workspace/models/`. Avoid broad reads of large model binaries because
+   they waste context, tokens and time; use targeted listings, metadata, headers or checksums when
+   relevant. This is an efficiency rule, not a permission restriction. Never commit secrets. Never
    hand-edit Nova's state (her memory, tasks or journal): she owns it.
 5. **Notes from away.** Cole's notes written away from this PC arrive in `Nova_Drive/inbox/` at the
    repository root; read them when he mentions them. `Nova_Drive/read/` is a generated copy

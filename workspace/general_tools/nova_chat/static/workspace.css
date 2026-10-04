@@ -1,4 +1,4 @@
-/* Controller surfaces: quiet violet, readable controls, predictable panes. */
+/* @nova: Style the dockable Nova controller, compact saved-layout picker and accessible widget surfaces. */
 body.controller{--bg:#101116;--bg-mid:#14151c;--bg-surface:#191a23;--bg-raised:#22232e;--surface-2:#20212b;--border:#2b2c39;--border-med:#3b3c4b;--text:#edecf5;--text-dim:#bab8ca;--text-mute:#9391a6;--nova:#b5a0f6;--menubar-h:30px;--statusbar-h:28px;background:var(--bg);font-size:14px;}
 .controller #app{display:flex;flex-direction:column;height:100vh;}.controller #main-area{flex:1;}.controller #menubar,.controller #statusbar{flex-shrink:0;}.controller #statusbar{height:28px;}
 .controller button,.controller input,.controller select,.controller summary{font:inherit;}
@@ -15,8 +15,12 @@ body.controller{--bg:#101116;--bg-mid:#14151c;--bg-surface:#191a23;--bg-raised:#
 .nc-header{height:74px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 24px;border-bottom:1px solid var(--border);background:var(--bg);}
 .nc-identity{display:flex;align-items:center;gap:11px;white-space:nowrap;}.nc-mark{display:grid;place-items:center;width:34px;height:34px;border:1px solid #5e507b;border-radius:11px;color:#d2bbff;background:#2a223c;font-size:25px;}
 .nc-identity strong{font-size:20px;font-weight:600;letter-spacing:-.6px;}.nc-caption{border-left:1px solid var(--border);padding-left:14px;font-size:12px;color:var(--text-mute);margin-left:4px;}
-.nc-modes{display:flex;gap:3px;padding:4px;background:#191a22;border:1px solid var(--border);border-radius:10px;}
-.nc-mode{background:transparent;border:0;border-radius:6px;padding:7px 16px;color:var(--text-mute);font-size:12px!important;}.nc-mode:hover{color:var(--text);}.nc-mode.active{background:#30303f;color:#e0d5ff;box-shadow:0 1px 4px #0004;}
+.nc-layout-picker{display:flex;align-items:center;gap:6px;min-width:0;margin-left:auto;}
+.nc-layout-label,.nc-layout-saved{font-size:10px;color:var(--text-mute);}.nc-layout-saved{min-width:30px;}
+.nc-layout-select{max-width:170px;min-width:100px;min-height:32px;border:1px solid var(--border);border-radius:7px;background:#191a22;color:var(--text-dim);font-size:12px!important;padding:5px 7px;text-overflow:ellipsis;}
+.nc-layout-manage{padding:3px 9px!important;min-height:32px;font-size:20px!important;line-height:1;}
+.nc-layout-dialog{max-width:480px;}.nc-layout-dialog .nc-search{margin-bottom:10px;}.nc-layout-actions{display:flex;gap:8px;flex-wrap:wrap;}.nc-layout-divider{border:0;border-top:1px solid var(--border);margin:20px 0;}.nc-layout-delete{color:#e3a7af!important;max-width:100%;white-space:normal!important;margin-top:12px;}.nc-layout-error{color:#f0aeb4;font-size:12px;min-height:1em;margin-top:12px;}
+
 .nc-header-actions{display:flex;gap:8px;}.nc-action{background:#22222e;color:var(--text-dim);border:1px solid var(--border-med);border-radius:7px;padding:7px 12px;font-size:12px!important;white-space:nowrap;}.nc-action:hover{background:#302b40;color:var(--text);}
 .controller #main-area{min-height:0;display:flex;overflow:hidden;}
 .controller #sidebar{width:auto!important;min-width:0!important;max-width:none!important;border-right:1px solid var(--border);background:var(--bg);padding-top:16px;}
@@ -47,8 +51,8 @@ body.controller{--bg:#101116;--bg-mid:#14151c;--bg-surface:#191a23;--bg-raised:#
 
 .nc-library{width:min(660px,calc(100vw - 32px));max-height:80vh;margin:auto;border:1px solid #51455f;border-radius:16px;background:#191922;color:var(--text);padding:24px;box-shadow:0 20px 100px #0008;}.nc-library::backdrop{background:#09090ec9;backdrop-filter:blur(5px);}.nc-library-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}.nc-library h2{font-size:21px;font-weight:500;}.nc-search{width:100%;padding:12px 14px;background:#111219;border:1px solid var(--border-med);border-radius:8px;color:var(--text);margin-bottom:18px;}.nc-library-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}.nc-library-item{display:flex;flex-direction:column;text-align:left;padding:15px;background:#22222d;color:var(--text);border:1px solid var(--border);border-radius:9px;gap:6px;}.nc-library-item:hover{border-color:#8f74b8;background:#2b2638;}.nc-library-item strong{font-size:13px;font-weight:500;}.nc-library-item span{font-size:11px;color:var(--text-mute);line-height:1.6;}
 .controller #statusbar{background:#101116;border-top:1px solid var(--border);font-size:10px;padding:0 18px;}.controller #statusbar .sb-shortcuts{display:none;}.controller.nc-offline #nova-state-pill{display:none;}.controller.nc-offline .nc-identity .nc-mark{opacity:.65;}
-@media(max-width:1150px){.nc-caption{display:none;}.nc-header{padding:0 16px;}.nc-mode{padding:7px 10px;}}
-@media(max-width:760px){.nc-header{height:108px;flex-wrap:wrap;padding:12px 16px;gap:8px;}.nc-modes{order:3;width:100%;justify-content:center;}.nc-mode{flex:1;}.controller #menubar [data-dd=view],.controller #menubar [data-dd=agents]{display:none;}.controller #input-area{padding:10px 12px 16px;}.controller #statusbar{overflow:hidden;}.nc-library-grid{grid-template-columns:1fr;}}
+@media(max-width:1150px){.nc-caption{display:none;}.nc-header{padding:0 16px;}.nc-layout-saved,.nc-layout-label{display:none;}.nc-header{gap:12px;}.nc-header-actions{gap:5px;}}
+@media(max-width:760px){.nc-header{height:108px;flex-wrap:wrap;padding:12px 16px;gap:8px;}.nc-layout-picker{margin-left:auto;}.nc-header-actions{order:3;width:100%;overflow-x:auto;padding-bottom:2px;}.nc-layout-select{max-width:155px;}.controller #menubar [data-dd=view],.controller #menubar [data-dd=agents]{display:none;}.controller #input-area{padding:10px 12px 16px;}.controller #statusbar{overflow:hidden;}.nc-library-grid{grid-template-columns:1fr;}}
 @media(prefers-reduced-motion:reduce){.controller *{animation:none!important;transition:none!important;}}
 .nc-docking{width:100%;height:100%;min-height:0;position:relative;background:var(--bg);padding:0;}
 .controller .lm_goldenlayout{background:var(--bg);}.controller .lm_content{background:var(--bg-surface);border:1px solid var(--border);border-radius:0 0 10px 10px;box-sizing:border-box;}
@@ -57,7 +61,7 @@ body.controller{--bg:#101116;--bg-mid:#14151c;--bg-surface:#191a23;--bg-raised:#
 .controller .lm_splitter{background:#101116;opacity:1;}.controller .lm_splitter:hover,.controller .lm_splitter.lm_dragging{background:#8973ba;}.controller .lm_dropTargetIndicator{outline:2px solid var(--nova);background:#b5a0f622;}.controller .lm_dragProxy{box-shadow:0 16px 50px #0008;}.controller .lm_maximised{z-index:100;}
 .controller .lm_content>.nc-pane-body{height:100%;padding:12px;overflow:auto;}.controller .lm_content>.nc-pane-body[data-widget=chat],.controller .lm_content>.nc-pane-body[data-widget=sidebar]{padding:0;}.controller .lm_content #chat-main,.controller .lm_content #sidebar{height:100%;width:100%!important;display:flex!important;}.controller .lm_content .panel-section{height:100%;}
 .controller .lm_content #session-tabs{overflow-x:auto;flex-shrink:0;}.controller .stab{height:36px;min-width:110px;font-size:12px;padding:0 6px 0 12px;}.controller .stab-x{display:grid;place-items:center;width:30px;height:30px;font-size:16px;opacity:.85;}.controller .stab-add{min-width:32px;min-height:32px;}
-.controller .nc-custom-help{font-size:13px;line-height:1.7;color:var(--text-dim);margin-bottom:20px;}.controller .nc-library label{display:block;margin-bottom:8px;font-size:12px;}.controller input[type=color]{height:44px;padding:4px;}.controller[data-density=compact] .nc-header{height:56px;}.controller[data-density=compact] .nc-pane-body{padding:6px;}
+.controller .nc-custom-help{font-size:13px;line-height:1.7;color:var(--text-dim);margin-bottom:20px;}.controller .nc-library label{display:block;margin-bottom:8px;font-size:12px;}.controller input[type=color]{height:44px;padding:4px;}.controller[data-density=compact] .nc-header{min-height:56px;height:auto;padding-top:10px;padding-bottom:10px;}.controller[data-density=compact] .nc-pane-body{padding:6px;}
 .controller.nc-popout #menubar,.controller.nc-popout .nc-header,.controller.nc-popout #statusbar{display:none;}.controller.nc-popout #main-area{height:100vh;}.controller.nc-popout #app{height:100vh;}.controller.nc-popout .nc-docking{height:100vh;}
 .controller .nc-pane-body button{min-height:28px;}.controller .nc-pane-body input:not([type=checkbox]):not([type=range]){min-height:30px;}
 .controller .stab-x{background:transparent;border:0;color:inherit;cursor:pointer;}.controller.nc-no-conversation #chat,.controller.nc-no-conversation #input-area,.controller.nc-no-conversation #participant-bar{display:none;}.controller.nc-no-conversation #chat-main:after{content:'Conversation closed. Reopen it from Sessions, or start a new conversation with +.';display:grid;place-items:center;flex:1;padding:48px;color:var(--text-mute);text-align:center;font-size:14px;}
@@ -71,3 +75,30 @@ body.controller{--bg:#101116;--bg-mid:#14151c;--bg-surface:#191a23;--bg-raised:#
 .service-action{width:100%;min-height:42px;background:transparent;border:0;color:inherit;text-align:left;font:inherit;cursor:pointer;white-space:normal}
 .service-action:focus-visible{outline:2px solid var(--nova);outline-offset:-2px}
 .service-action:disabled{opacity:.55;cursor:wait}
+
+/* One aligned application bar; its menus never become docked content. */
+.controller .nc-header{min-height:62px;height:auto;padding:10px 18px;gap:14px;flex-wrap:wrap;}
+.controller .nc-header #menubar{height:36px;min-height:36px;padding:0;background:transparent;flex:1;gap:1px;min-width:0;overflow:visible;}
+.controller .nc-header #menubar .menu-right{display:none;}.controller #menubar [data-dd=widgets]{display:flex;}
+.controller .nc-header .menu-trigger{height:34px;font-size:12px;border-radius:6px;padding:0 9px;color:var(--text-dim);}
+.controller .nc-header .nc-caption{display:none;}.controller .nc-header .nc-mark{width:30px;height:30px;border-radius:9px;font-size:21px;}.controller .nc-header .nc-identity strong{font-size:18px;}
+.controller .nc-header-actions{flex:none;}.controller .nc-header-actions .menu-trigger{border:1px solid var(--border);}
+.controller .dropdown{max-width:calc(100vw - 20px);max-height:calc(100vh - 90px);overflow:auto;z-index:1200;}
+.controller .dropdown .dd-item,.controller .nc-menu-mirror .dd-item{min-height:36px;line-height:1.4;}.controller .dropdown button.dd-item{width:100%;border:0;text-align:left;background:transparent;color:var(--text-dim);font:inherit;font-size:12px;}
+.controller .dropdown button.dd-item:hover{background:var(--bg-hover);color:var(--text);}.nc-widget-menu-item{display:block!important;padding:9px 14px!important;white-space:normal;}
+.nc-appearance-menu{width:330px;padding:18px;}.nc-appearance-menu .nc-library-header{margin-bottom:12px;}.nc-appearance-menu h2{font-size:17px;font-weight:500;}.nc-appearance-menu .nc-custom-help{font-size:11px;line-height:1.5;margin-bottom:12px;}.nc-appearance-menu label{display:block;font-size:12px;margin-bottom:6px;}.nc-appearance-menu .nc-search{margin-bottom:12px;}.nc-appearance-menu>button{white-space:normal;text-align:left;line-height:1.4;}
+.nc-menu-mirror{display:block;position:static;width:100%;padding:0;background:transparent;}.nc-menu-mirror .dd-slider-row{flex-wrap:wrap;}.nc-menu-mirror .dd-slider-row input{min-width:80px;}
+@media(max-width:1050px){.controller .nc-header{gap:8px;}.controller .nc-header #menubar{order:4;flex-basis:100%;}.controller .nc-layout-picker{margin-left:auto;}.controller .nc-header-actions{order:initial;width:auto;overflow:visible;padding:0;}.controller #menubar [data-dd=view],.controller #menubar [data-dd=agents]{display:flex;}}
+@media(max-width:480px){.controller .nc-header{padding:8px;}.controller .nc-header .nc-identity strong{display:none;}.nc-layout-select{max-width:130px;}.controller .nc-header .menu-trigger{padding:0 7px;font-size:11px;}}
+
+.nc-layout-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;gap:14px;color:var(--text-dim);}.nc-layout-empty h2{font-size:23px;font-weight:500;color:var(--text);}.nc-layout-empty p{max-width:350px;font-size:13px;line-height:1.6;}
+
+/* Keep controller-only mode visible even when other status details overflow. */
+.controller #statusbar{gap:12px;}.controller #statusbar .nc-mode-status{flex:none;white-space:nowrap;color:#d8c7fc;font-size:11px;}.controller #statusbar .sb-left{flex:1;min-width:0;overflow:hidden;white-space:nowrap;}.controller #statusbar .sb-right{min-width:0;overflow:hidden;white-space:nowrap;}
+
+/* Docked legacy panels cannot paint or intercept input above application overlays.
+   Static flex children still create stacking contexts when they retain z-index. */
+.controller #main-area{position:relative;z-index:0;isolation:isolate;}
+.controller .nc-header,.controller #statusbar{position:relative;z-index:10;}
+.controller .nc-pane-body #novaLog,.controller .nc-pane-body #novaConsole{z-index:auto;}
+.controller #modal-overlay,.controller #logs-overlay,.controller #lora-overlay,.controller #settings-overlay{z-index:3000;}

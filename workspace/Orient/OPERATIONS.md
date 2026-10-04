@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-03T19:16:29+00:00 from source (input `f36e6af11693`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T04:23:28+00:00 from source (input `f465743fc9e9`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -9,6 +9,7 @@ _Facts regenerated 2026-10-03T19:16:29+00:00 from source (input `f36e6af11693`).
 |---|---|---|
 | Normal stack | `NovaStart.cmd` | `/api/version`, model readiness and actual generation |
 | Controller with Nova off | `NovaChatOnly.cmd` or `python nova_start.py --chat-only` | `/api/version` reports `chat_only`; no model, witness, guardian, watcher or autonomy is started |
+| Start/stop Nova; keep controller open | Conversation widget power button; POST `/api/nova/start` or `/api/nova/stop` | `/api/nova/lifecycle` reaches `on` or `off`; verify service ports and generation separately |
 | Local model only | `start_llama_qwen36.cmd` | `http://127.0.0.1:8080/health` plus a bounded inference probe |
 | Standalone body | `python nova_body/nova_runtime/__main__.py` | Relocate first to test true portability |
 | Graceful stack shutdown | POST `http://127.0.0.1:8799/api/shutdown` | Confirm owned processes/ports exit |
@@ -27,8 +28,8 @@ and `active_mmproj.txt` when present (written by the model updater; `none` = no 
 Qwen 3.6. `active_lora.txt` set to `none` boots without a personality adapter, and the old v2
 fallback adapter applies only to the default Qwen 3.6 model. See Model updates below.
 
-The Services widget's Restart Nova and Shut down Nova controls stop current work and request
-launcher-owned teardown. HTTP 202 acknowledges acceptance; it is not proof of completion. Confirm
+The Services menu (and optional Services widget) provides Restart app and services / Shut down
+app and services. These controls stop current work and request launcher-owned teardown. HTTP 202 acknowledges acceptance; it is not proof of completion. Confirm
 old processes exit and, for restart, new PIDs become ready. The launcher gives the accepted request
 one second to flush its response before teardown; repeated requests do not extend that deadline.
 The launcher stops the guardian before
@@ -39,19 +40,31 @@ to close; failure is reported instead of acknowledging a skipped restart. KoELS 
 failure. Starting an already starting model is a no-op.
 
 Chat-only mode retains the desktop controller and the separate Collaboration widget. It does not
-turn on Nova when a message arrives; wake/model/autonomy actions require a normal relaunch. It
+turn on Nova when a message arrives. **Start Nova** in Conversation explicitly enables the full
+stack; **Stop Nova** drains work, saves the active session and returns to chat-only. The launcher
+stops its guardian/watcher before replacing workers and refuses a worker teardown without a
+successful quiesce acknowledgment. New body input and updater mutations are blocked while a switch
+is pending. Failed startup attempts return to a usable chat-only controller when recovery succeeds.
+The main window and console stay open; the page reconnects and restores its unsent composer draft.
+The launcher uses `start_llama_qwen36.cmd`, so its model selection matches the updater's boot files.
+A launcher predating this feature needs one full app restart; refreshing the page alone cannot
+upgrade that process. Start/Stop remains unavailable when lifecycle support cannot be reached. It
 refuses to attach to an already-running full server as though that server were dormant. The
 Collaboration room also works during a normal launch without being fed to Nova's conversation.
+Both modes start the updater catalog check after a cancellable delay; this does not start the model
+or enumerate installed weights. The controller status bar distinguishes Chat only from Nova running.
 
 ## Configuration and evidence
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-03): changed `general_tools/nova_chat/collaboration.py`, `general_tools/nova_collaboration/bridge.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Configuration and evidence"`.
-
 Collaboration is a detachable controller service (`general_tools/nova_chat/collaboration.py`). Its
 SQLite history and per-agent credentials live outside the repository at
-`%LOCALAPPDATA%/ProjectNova/Collaboration`. Messages never enter chat sessions, runtime transcripts,
+`%USERPROFILE%/ProjectNovaData/Collaboration`. Messages never enter chat sessions, runtime transcripts,
 semantic indexing, task inboxes or autonomy events. Mentioning Nova there does not invite her.
 This is exclusion from automatic routing, not an OS restriction on her deliberately trusted tools.
+`NOVA_COLLABORATION_DIR` may select an explicit shared location. The default avoids AppData:
+Windows can redirect packaged Codex and ordinary desktop processes to different AppData copies.
+The October 4 repair preserved and merged the two stores; old histories remain in backup.
+Do not silently fall back to an older AppData room or credential file.
 Cowork's current task uses the shared-folder CLI adapter: atomic requests/replies under
 `workspace/Temp/collaboration`. That narrow path is excluded from watcher activity, Git, Orient,
 Drive export/scan and automatic direct-file recall. Only the Windows broker writes the SQLite
@@ -72,7 +85,7 @@ editing one configuration file does not imply every subsystem obeys it.
 
 Adapter intent is in `nova_body/memory/active_lora.*`; KoELS desired/boot state lives beside it.
 Model intent is in `active_model.txt` / `active_mmproj.txt` beside them (model updater).
-Read the runtime's configured adapter status without browsing sealed weights. Keep secrets excluded
+Read the runtime's configured adapter status first; inspect relevant model metadata when needed. Keep secrets excluded
 from both Git and Drive, including relocated `.auth_token` and `nova_users.json`.
 
 Useful evidence lives under `nova_body/logs/`: `tool_calls.jsonl`, `generation_trace.jsonl`,
@@ -96,6 +109,10 @@ these source observations are not a fresh penetration test. The separate Collabo
 add a local Host/Origin/forwarding gate; this does not repair older HTTP or WebSocket gaps.
 Secrets stay out of Git and Drive.
 
+Conversation power uses a separate local lifecycle gate and launcher status. If it reports that a
+restart is needed, inspect both the chat worker and launcher versions; a fresh static page can still
+be connected to old processes. `starting`/`stopping` acknowledge work in progress, not readiness.
+
 The voice loop parses tool reaches from both content and reasoning streams. Receipt-backed context
 helps distinguish executed work from earlier narration. Check loaded source, actual receipts,
 adapter status, and call order before changing personality or training. Rendering/mount artifacts
@@ -104,8 +121,6 @@ On remote training hosts, stop a RunPod rather than terminating its retained vol
 Hugging Face cache on local disk rather than a slow network mount.
 
 ## Test meaningful behavior
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-03): changed `general_tools/nova_chat/tests/test_collaboration.py`, `general_tools/nova_chat/tests/test_collaboration_bridge.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -120,6 +135,21 @@ Hugging Face cache on local disk rather than a slow network mount.
 7. For Collaboration, verify real clients publishing and receiving through the broker, replay after
    reconnect, retry deduplication and Nova exclusion. Simulated participant messages are fixtures,
    not proof that Cowork connected. Chat-only verification must confirm the model port stays off.
+8. For the updater, run the Nova Chat integration tests and `nova_updater/tests` against disposable
+   fixtures, plus `node general_tools/nova_chat/tests/test_updater_ui.cjs`. The Windows launcher tests
+   replace llama-server with an argument recorder. They prove parsing, not a real model load.
+   A successful simulated install or GPU quote does not certify a real download or paid training run.
+   The opt-in pod compatibility tests exercise a tiny actual model, assistant masks and GGUF conversion;
+   Linux venv tests check dependency isolation and local storage. A full run additionally needs actual
+   optimizer progress, retrieved/checksummed epoch adapters and the provider's stopped-pod status.
+   Behavioral A/B evaluation and runtime activation remain separate from training completion.
+9. For the controller, verify menu opening does not rearrange widgets, layout changes survive reload,
+   old popouts close before switching layouts, and small windows keep controls reachable.
+10. For Conversation power, run `test_lifecycle.py`, `test_launcher_mode.py` and
+    `node general_tools/nova_chat/tests/test_conversation_power.cjs`. Fixtures cover draining,
+    updater conflicts, inherited transition guards, failed startup, app-quit cancellation and draft
+    restoration. A browser fixture can prove buttons/reconnection with simulated services; the
+    separate live check must confirm full start/stop, model readiness and native window continuity.
 
 ## Files and recovery
 
@@ -162,8 +192,6 @@ notes), which Orient lists but never quotes; backups; and formats without commen
 A generated file gets its purpose line from the code that writes it.
 
 ## Security model
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-03): changed `general_tools/nova_chat/collaboration.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
 
 Nova's reach is intentional — Cole: *"My machine is her body. If she can't use it fully, she is
 crippled."* Every control here is about **who can reach her from outside**, not what she may do
@@ -221,6 +249,16 @@ automatic-context exclusions. The existing mount capability is its authority; lo
 writers can impersonate that adapter, just as they could use local credentials. It always labels
 its posts as Claude and cannot accept a payload claiming Cole or Codex. It does not copy tokens.
 This route-specific gate does not close the older HTTP/WebSocket gaps described above.
+
+### Conversation lifecycle boundary
+
+`nova_chat/lifecycle.py` shares the updater's loopback, literal Host, same-Origin, no-forwarding and
+JSON-write checks. It proxies mode requests to the launcher hub. The hub's new mode POST routes
+require direct loopback JSON requests without browser Origin or forwarding headers; browser clients
+use the guarded chat route. Pending transitions reject new body operations over HTTP and WebSocket
+and block updater mutations. This is lifecycle coordination, not a repair of the older transport
+identity gaps. Quiesce is accepted only during a pending transition and must acknowledge drained
+operations and saved session state before the owned worker is terminated.
 
 ### Who is speaking — `nova_cortex/principals.py`
 
@@ -353,7 +391,7 @@ nothing, reported success, and Nova took the blame — her personality, her trai
 ## Working away from this PC
 
 Google Drive for Desktop must sync `Project_Nova/Nova_Drive/` only, never the repository: it cannot
-skip subfolders, so syncing the repository uploaded `.git`, the sealed weights and token files, and
+skip subfolders, so syncing the repository uploaded `.git`, large model weights and token files, and
 its temp folder stopped autosave (lesson 7 above).
 
 - `Nova_Drive/read/` holds the text files of the last commit under `workspace/`, plus `AGENTS.md`:
@@ -368,31 +406,129 @@ its temp folder stopped autosave (lesson 7 above).
 
 `Nova_Drive/` is ignored by git and by the watcher, and Orient does not index it.
 
-## Model updates
+## Controller menus and layouts
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-03): changed `general_tools/nova_updater/install.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/model_updates.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Model updates"`.
+Nova Chat has one workspace. The top application bar contains expandable menus; opening Services,
+Advanced or Appearance leaves the dock arrangement alone. Widgets opens the widget choices, including
+Collaboration and Model updates. The optional Services and Generation widgets mirror the original menu
+controls and forward their actions; the menu controls keep their unique IDs and existing handlers.
+The dock contains legacy panel layers, so Live log and Console cannot cover menus or intercept
+their clicks. Dialogs and updater notifications remain above docked content.
+Services calls the chat server Controller. The status bar explicitly shows Nova off / Chat only
+when Nova is not running, separately from controller connectivity.
+
+Conversation has its own **Start Nova / Stop Nova** control below the session tabs, including when
+all conversation tabs are closed. It reports starting/stopping and disables competing actions until
+the launcher resolves the transition. Stopping keeps the controller window and Collaboration usable;
+starting uses the configured model. The page reconnects after the runtime worker changes and preserves
+unsent text, selection, attached images and mentioned files. A draft-storage failure is shown instead
+of silently discarding the draft. Older launchers show a restart instruction rather than a working
+button. This control differs from stopping the current reply, muting Nova or closing a conversation.
+
+The small Layout selector switches named arrangements. Its adjacent management control creates an empty
+layout, duplicates the current one, renames it or deletes it while keeping at least one. Drag widget tabs
+to reorder, stack or split; drag dividers to resize; the popout control opens a separate window. Changes
+save automatically in the current browser/app profile. A failure to save is shown as Not saved.
+
+Storage is `nova.controller.layouts.v2` in that profile's local storage. The previous mode selection and
+saved Together/Observe/Focus layouts migrate into editable named layouts; the old keys remain intact.
+The last twenty deleted/reset/unrestorable layouts are retained as recovery records in the collection.
+Saved popouts return to the main dock on restore. Switching arrangements closes their old popouts before
+loading the next layout. A native Nova Chat window and a separate browser have independent layout profiles.
+
+Live log includes recorded history as well as new events. Earlier dates are displayed beside the time;
+event labels distinguish scheduled reminders from model responses. A `stretch_nudge` comes from the
+existing shelf watcher called at autonomy startup: its canned wording does not demonstrate fresh model
+inference. Its posture record freshness is a separate runtime issue; the controller does not alter it.
+
+## Model updates
 
 `general_tools/nova_updater/` is a general tool; its README has the full route contract. At each Nova
 Chat start one cached catalog query looks for a newer dense Qwen of 27-32B with a permissive license,
 and Nova Chat offers Update / Decline / "Remember my decision". The manual widget searches Hugging Face
 and ModelScope (installable) and the Ollama library (link only).
 
+Open **Widgets → Model updates** for Updates, Find models, Train adapters and Settings. The
+notification's Update action opens the same installation review. Select a build, quantization,
+projector and optional replacements, build a dry-run plan, review its disk/compatibility warnings,
+then explicitly confirm it. Projector choices resolve an exact catalog path first, or a unique
+filename; unknown or ambiguous choices fail. Changing choices discards the previous review. Jobs displays progress,
+cancellation and separate recovery outcomes. Startup/status read configuration and catalog metadata;
+installed-file inventory is requested only when entering an install or adapter workflow.
+
+The router is attached in normal and chat-only launches. Its catalog check runs after a cancellable
+three-second startup delay, outside the event loop; a catalog failure cannot block startup. Shutdown
+cancels the task, while any already-running network request finishes under the catalog timeout.
+Chat-only installs prepare the next model start and never invoke a model restart callback.
+Nova start/stop transitions share the updater's exclusive-operation guard; updater writes return 409
+until the launcher resolves the switch, including when a replacement worker inherits that switch.
+When a displayed job finishes, the widget refreshes status once so completed work cannot leave a
+stale busy flag disabling recovery controls.
+
+Status reads the current boot selection on every request; a cached catalog result keeps its own
+checked selection and is marked stale when those differ. Neither is proof that llama-server is running.
+
+Training starts from a stored preview. Its `review_id` binds the start request to the reviewed
+parameters and dataset checksums; changed input files require a new preview (HTTP 409).
+Export creates training inputs only; it does not produce a finished adapter. Keeping an adapter means
+no copy, conversion or retraining. A known cross-base adapter cannot be kept, and selected adapters
+cannot also be quarantined. The installer rechecks those conditions before writing boot settings
+and before finishing a pending switch. A second activation cannot overwrite a pending rollback snapshot.
+RunPod requires explicit consent to the reviewed paid run (`paid: true`), with no per-run spending cutoff. Credentials are entered in Settings; blank fields leave saved values unchanged and
+explicit clear checkboxes remove them. Secret values are not returned or saved in browser storage.
+
 Installing never edits the launcher. It writes boot files that `start_llama_qwen36.cmd` reads from
 `nova_body/memory/`: `active_model.txt`, `active_mmproj.txt` (`none` = no vision) and `active_lora.txt`
-(`none` = no adapter); absent files mean the Qwen 3.6 defaults. The install saves the old boot files,
-restarts the model, confirms llama-server loaded the NEW file (`/props`, not just `/health`) and rolls
-back if not. Only then are replaced files moved to `_admin/Trash/<stamp>_model_update/` with a manifest.
-In chat-only mode the switch completes after the next model start (`POST /api/updater/finish`).
+(`none` = no adapter); absent files mean the Qwen 3.6 defaults. The exact old boot files are saved to
+the updater state BEFORE the first write, so a crash mid-switch is undone with `POST /api/updater/rollback`
+(`/finish` refuses an interrupted switch). The install restarts the model and confirms llama-server
+loaded the NEW file (`/props`, not just `/health`). If the restart fails, the file never loads, or the
+user cancels while it loads, it restores the old boot files and restarts the previous model. The job
+result keeps three facts apart: boot files restored, restart accepted, and the previous model confirmed
+running again at `/props`. Only after a verified load are replaced files moved to
+`_admin/Trash/<stamp>_model_update/` with a manifest. In chat-only mode the switch completes after the
+next model start (`POST /api/updater/finish`). Finish and rollback take the same exclusive job
+slot as installation and training; either returns HTTP 409 while another job holds it.
 
-A LoRA trained for one base loads on another without error and behaves wrongly, so a switch sets the
-personality LoRA to `none` and clears KoELS adapters for the old base until new ones exist. Training
+A LoRA trained for another base may fail to load or behave incorrectly. Choose no adapter or retrain
+for the new base; the updater clears incompatible old KoELS selections. Keep is permitted only when
+no known incompatibility or replacement conflict exists. Training
 (`pod/`) generalises the v7 pipeline: inputs checksummed, the loss-mask template rebuilt from the new
 model's own chat template and proven (GATE A/B) before training, every epoch converted. New adapters
-are installed but not activated: A/B the epochs first. RunPod runs need a confirmed cost ceiling and
-always stop, never terminate, the pod.
+are installed but not activated: A/B the epochs first. Activation with a restart is proven at
+llama-server's `/lora-adapters`; running without the adapter counts as failure and restores the previous
+adapter line (HTTP 502). RunPod runs request a pod stop after completion, failure or cancellation;
+they never terminate it. A failed stop is reported explicitly and requires action in RunPod.
+
+Final training inputs live in `models/Training Files/<friendly base-model name>/<training name>/`: a
+frozen dataset, recipe, scripts, checksums and short README. Completed runs also retain checksummed
+`Run Details/<job id>/` receipts for the exact base revision, tokenizer loss-mask audit, model config
+and Python environment. Finished GGUF adapters live beside the base model, outside Training Files.
+New pod packages isolate dependencies in a per-job virtual environment on container-local storage
+while reusing the image's CUDA Torch; the Hugging Face weight cache also stays on local disk.
+The durable input package, checkpoints and recovery outputs remain on the `/workspace` volume. Temporary ZIP exports, downloaded outputs and logs use
+`Temp/updater/`; exporting is not training. Existing v6/v7 inputs are copied with matching hashes;
+the historical sources remain available. Do not select both a complete corpus and its additive subset.
+
+The RunPod Settings credit check and paid-run preview query prepaid credit. New starts must meet
+RunPod's one-hour minimum; a smaller balance than the estimated whole run produces a warning.
+The prepaid wallet is the funding limit. Nova never adds funds automatically and has no separate
+per-run spending cutoff. During training, the app refreshes wallet credit and shows the actual
+pod hourly rate, elapsed time and estimated GPU spend; a manual top-up appears on a later refresh.
+Low-credit warnings do not themselves stop an active run. Provider-enforced credit exhaustion is
+separate from Nova's controls. Completed, failed and cancelled jobs retain their cost summary and
+pod-stop outcome. Estimated GPU spend excludes storage and is not a provider invoice.
+Google browser sign-in does not configure the updater API key. New pods default to Japan
+(`AP-JP-1`) near Korea; unavailability does not silently select a distant datacenter.
 
 State lives in `general_tools/nova_updater/state/` (git-ignored), scratch in `Temp/updater/`, secrets in
-`%LOCALAPPDATA%\ProjectNova\Updater\credentials.json`.
+`%USERPROFILE%\ProjectNovaData\Updater\credentials.json` beside the collaboration room's data. Not in
+AppData: each MSIX-packaged launcher gets its own private AppData, which once split the room in two.
+
+The launcher quotes the model and projector paths, so spaces work there. Boot-file paths must be plain
+ASCII without cmd's special characters. Adapter paths with spaces are supported by quoting the
+complete `path:scale` token; unsupported shell characters are refused. On Windows the
+updater tests run the real launcher with llama-server replaced by an argument recorder.
 
 ## Declared interface routes
 
@@ -422,6 +558,15 @@ Generated from decorators; authentication and behavior must be read/tested separ
 | GET | `/api/runtime/state` | `runtime_state` |
 | GET | `/api/sight/image` | `sight_image` |
 | GET | `/api/sight/recent` | `sight_recent` |
+| GET | `/api/updater/candidate` | `candidate` |
+| GET | `/api/updater/credentials` | `get_credentials` |
+| GET | `/api/updater/funding` | `funding` |
+| GET | `/api/updater/inventory` | `get_inventory` |
+| GET | `/api/updater/jobs` | `list_jobs` |
+| GET | `/api/updater/jobs/{job_id}` | `get_job` |
+| GET | `/api/updater/search` | `search` |
+| GET | `/api/updater/sources` | `sources` |
+| GET | `/api/updater/status` | `status` |
 | GET | `/api/users` | `api_users_list` |
 | GET | `/api/variables` | `api_variables_get` |
 | GET | `/api/version` | `api_version` |
@@ -462,6 +607,20 @@ Generated from decorators; authentication and behavior must be read/tested separ
 | POST | `/api/runtime/retry-memory` | `retry_memory` |
 | POST | `/api/services/shutdown` | `shutdown_services` |
 | POST | `/api/terminal/run` | `terminal_run` |
+| POST | `/api/updater/check` | `run_check` |
+| POST | `/api/updater/credentials` | `set_credentials` |
+| POST | `/api/updater/decision` | `decision` |
+| POST | `/api/updater/finish` | `finish` |
+| POST | `/api/updater/forget` | `forget` |
+| POST | `/api/updater/install` | `start_install` |
+| POST | `/api/updater/jobs/{job_id}/cancel` | `cancel_job` |
+| POST | `/api/updater/lora/activate` | `activate` |
+| POST | `/api/updater/plan` | `make_plan` |
+| POST | `/api/updater/rollback` | `rollback` |
+| POST | `/api/updater/settings` | `settings` |
+| POST | `/api/updater/train` | `start_training` |
+| POST | `/api/updater/train/install` | `install_trained` |
+| POST | `/api/updater/train/preview` | `train_preview` |
 | POST | `/api/users` | `api_users_mutate` |
 | POST | `/api/variables` | `api_variables_set` |
 | POST | `/api/wake` | `wake_now` |
@@ -483,4 +642,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 73, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `ARCHITECTURE.md#Execution path`, `OPERATIONS.md#Configuration and evidence`, `OPERATIONS.md#Model updates`, `OPERATIONS.md#Security model`, `OPERATIONS.md#Test meaningful behavior`.
+**Sections awaiting review:** none.

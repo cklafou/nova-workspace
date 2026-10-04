@@ -19,17 +19,18 @@ from . import naming, paths
 MODEL_ARG = re.compile(r"(?:^|\s)-m\s+\"?(?P<path>[^\"\s^]+\.gguf)", re.I)
 MMPROJ_ARG = re.compile(r"--mmproj\s+\"?(?P<path>[^\"\s^]+\.gguf)", re.I)
 SET_DEFAULT = re.compile(r'set\s+"(?P<var>NOVA_MODEL|NOVA_MMPROJ)=(?P<path>[^"]+)"', re.I)
-LORA_ARG = re.compile(r"--lora(?:-scaled)?\s+\"?(?P<path>[^\"\s:]+(?::[\\/][^\"\s:]*)?\.gguf)(?::(?P<scale>[0-9.]+))?", re.I)
+LORA_ARG = re.compile(r'--lora(?:-scaled)?\s+(?:"(?P<quoted>[^"]+)"|(?P<bare>[^\s"]+))', re.I)
+LORA_VALUE = re.compile(r"^(?P<path>.+\.gguf)(?::(?P<scale>[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)))?$", re.I)
 
 
-def _first_line(path: Path) -> str | None:
+def _first_line(path: Path, strip_quotes: bool = True) -> str | None:
     try:
         text = path.read_text(encoding="utf-8-sig", errors="replace")
     except OSError:
         return None
     for line in text.splitlines():
         if line.strip():
-            return line.strip().strip('"')
+            return line.strip().strip('"') if strip_quotes else line.strip()
     return ""
 
 
@@ -82,17 +83,19 @@ def current_name() -> naming.ModelName | None:
 
 
 def active_loras() -> list:
+    """Read both legacy bare tokens and quoted path:scale tokens with spaces."""
     out = []
-    personality = _first_line(paths.boot_file("active_lora.txt"))
-    if personality and personality.lower() != "none":
-        for m in LORA_ARG.finditer(personality):
-            out.append({"role": "personality", "path": norm(m.group("path")),
-                        "scale": float(m.group("scale")) if m.group("scale") else 1.0})
-    koels = _first_line(paths.boot_file("koels_lora_args.txt"))
-    if koels:
-        for m in LORA_ARG.finditer(koels):
-            out.append({"role": "koels", "path": norm(m.group("path")),
-                        "scale": float(m.group("scale")) if m.group("scale") else 1.0})
+    for filename, role in (("active_lora.txt", "personality"), ("koels_lora_args.txt", "koels")):
+        line = _first_line(paths.boot_file(filename), strip_quotes=False)
+        if not line or line.lower() == "none":
+            continue
+        for argument in LORA_ARG.finditer(line):
+            value = argument.group("quoted") or argument.group("bare")
+            for token in value.split(","):
+                match = LORA_VALUE.fullmatch(token)
+                if match:
+                    out.append({"role": role, "path": norm(match.group("path")),
+                                "scale": float(match.group("scale")) if match.group("scale") else 1.0})
     return out
 
 

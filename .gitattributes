@@ -1,0 +1,2 @@
+# @nova: Keep Linux GPU training entry scripts in LF format when checked out on Windows.
+workspace/general_tools/nova_updater/pod/*.sh text eol=lf

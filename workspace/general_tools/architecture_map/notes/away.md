@@ -8,7 +8,7 @@ order: 40
 ## Working away from this PC
 
 Google Drive for Desktop must sync `Project_Nova/Nova_Drive/` only, never the repository: it cannot
-skip subfolders, so syncing the repository uploaded `.git`, the sealed weights and token files, and
+skip subfolders, so syncing the repository uploaded `.git`, large model weights and token files, and
 its temp folder stopped autosave (lesson 7 above).
 
 - `Nova_Drive/read/` holds the text files of the last commit under `workspace/`, plus `AGENTS.md`:

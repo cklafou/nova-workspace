@@ -1,16 +1,20 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-03T19:16:29+00:00 from source (input `f36e6af11693`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T04:23:28+00:00 from source (input `f465743fc9e9`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-03): changed `general_tools/nova_chat/collaboration.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
 FastAPI/WebSocket face currently shares process state with the body runtime; multiple visible
 conversations do not yet imply independent execution sessions.
+
+The launcher's Conversation power control switches between full Nova and chat-only operation
+without replacing the desktop controller or console. It replaces the runtime worker and its owned
+model, witness, guardian and watcher as needed. The controller reconnects after the worker changes;
+its separate Collaboration history stays durable. This is distinct from stopping one generation
+or restarting the entire app.
 
 The explicit `--chat-only` path omits the body runtime, model startup and autonomous background
 work. Collaboration follows its own route: actual app session → local HTTP or atomic mounted-file
@@ -88,8 +92,12 @@ See the dated evidence for coverage; an operational text index does not certify 
 
 KoELS separates choosing a specialist manifest from equipping adapters. Changing scales within
 a loaded set differs from restarting the provider with a different set. A live personality adapter
-does not prove autonomous expert selection/restart works. Drives/wants and the hormone design are
-not evidence of online weight learning. Keep implemented controls distinct from biological analogies.
+does not prove autonomous expert selection/restart works. The launcher already consumes the KoELS
+boot-argument text file. Its serializers now pass each adapter and scale as one `path:0.0` argument,
+with the batch form quoting the complete token. Disposable launcher and installed-parser checks
+prove argument compatibility, not adapter loading, VRAM use or application of scales. The global
+`--lora-init-without-apply` behavior is unchanged and still needs validation with real adapters.
+Drives/wants and the hormone design are not evidence of online weight learning. Keep implemented controls distinct from biological analogies.
 
 ## Runtime evidence and open modernization work
 
@@ -124,6 +132,10 @@ and the distinction between model-driven behavior, direct tool probes and isolat
 
 The October 3 controller repair restores widget insertion and refresh-on-show, bounds pipeline/log
 reads, uses current runtime state in System, and routes lifecycle controls through the launcher.
+The October 4 controller update adds named layouts, anchored top menus, updater review workflows
+and dated history in Live log. Its fixtures cover updater consent and recovery conflicts; a live
+chat-only restart proves controller readiness while the model remains off. KoELS launcher argument
+compatibility was checked through the installed parser without loading weights.
 See `general_tools/nova_chat/CONTROLLER.md` and dated AI Notes for the actual validation scope.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 

@@ -64,6 +64,16 @@ writers can impersonate that adapter, just as they could use local credentials. 
 its posts as Claude and cannot accept a payload claiming Cole or Codex. It does not copy tokens.
 This route-specific gate does not close the older HTTP/WebSocket gaps described above.
 
+### Conversation lifecycle boundary
+
+`nova_chat/lifecycle.py` shares the updater's loopback, literal Host, same-Origin, no-forwarding and
+JSON-write checks. It proxies mode requests to the launcher hub. The hub's new mode POST routes
+require direct loopback JSON requests without browser Origin or forwarding headers; browser clients
+use the guarded chat route. Pending transitions reject new body operations over HTTP and WebSocket
+and block updater mutations. This is lifecycle coordination, not a repair of the older transport
+identity gaps. Quiesce is accepted only during a pending transition and must acknowledge drained
+operations and saved session state before the owned worker is terminated.
+
 ### Who is speaking — `nova_cortex/principals.py`
 
 This lives in her body, not the server, because who someone is to her is part of how she thinks.

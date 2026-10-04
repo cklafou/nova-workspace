@@ -21,13 +21,19 @@ REM ── Model + projector (2026-10-04). The model updater (general_tools\nova
 REM ── relative path into nova_body\memory\active_model.txt and active_mmproj.txt ("none" = no
 REM ── vision). Absent -> the Qwen 3.6 files below, so boot is unchanged until an update installs.
 REM ── Both stay off caret-continuation lines except -m, which is quoted and never empty (see 07-14).
+REM ── Both paths are quoted where they are used, so a folder name may contain spaces (2026-10-04,
+REM ── found by Codex: the projector used to split into two arguments). Quotes inside a boot file
+REM ── are dropped first, or they would double up.
 set "NOVA_MODEL=models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf"
 set "NOVA_MMPROJ=models\qwen3.6\mmproj-F16.gguf"
 if exist "nova_body\memory\active_model.txt" set /p NOVA_MODEL=<"nova_body\memory\active_model.txt"
 if exist "nova_body\memory\active_mmproj.txt" set /p NOVA_MMPROJ=<"nova_body\memory\active_mmproj.txt"
-set "NOVA_VISION=--mmproj %NOVA_MMPROJ%"
+set "NOVA_MODEL=%NOVA_MODEL:"=%"
+set "NOVA_MMPROJ=%NOVA_MMPROJ:"=%"
+set "NOVA_VISION=--mmproj "%NOVA_MMPROJ%""
 if /i "%NOVA_MMPROJ%"=="none" set "NOVA_VISION="
 if not exist "%NOVA_MODEL%" echo [Nova] WARNING: %NOVA_MODEL% is missing - llama-server will fail to load it.
+if defined NOVA_VISION if not exist "%NOVA_MMPROJ%" echo [Nova] WARNING: projector %NOVA_MMPROJ% is missing - llama-server will fail to start.
 
 echo [llama.cpp] Starting Nova's model, dual-GPU split...
 echo.
@@ -49,7 +55,9 @@ set "NOVA_CORE="
 if exist "nova_body\memory\active_lora.txt" set /p NOVA_CORE=<"nova_body\memory\active_lora.txt"
 REM The v2 fallback adapter was trained for Qwen 3.6: apply it only when Qwen 3.6 is the model. "none" = no adapter.
 if not defined NOVA_CORE if /i "%NOVA_MODEL%"=="models\qwen3.6\Qwen3.6-27B-UD-Q6_K_XL.gguf" if exist "models\qwen3.6\nova_core_v2_e2.gguf" set "NOVA_CORE=--lora-scaled models\qwen3.6\nova_core_v2_e2.gguf:0.6"
-if /i "%NOVA_CORE%"=="none" set "NOVA_CORE="
+REM "none" is found with findstr, not by comparing NOVA_CORE in an if: a quoted adapter path inside
+REM the line would upset that comparison. A missing file makes findstr fail, so the set is skipped.
+findstr /i /x /c:"none" "nova_body\memory\active_lora.txt" >nul 2>&1 && set "NOVA_CORE="
 if defined NOVA_CORE echo [Nova-core] personality adapter: %NOVA_CORE%
 
 REM ── KoELS: read the runtime-written boot --lora set (empty when Nova-core only) ──

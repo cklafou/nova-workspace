@@ -1,4 +1,4 @@
-<!-- @nova: Serve the Nova Chat controller, dockable widgets and separate collaboration workshop. -->
+<!-- @nova: Serve Nova Chat with named customizable layouts, model-update controls and a separate collaboration workshop. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1182,10 +1182,10 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
 <!-- Services -->
 <div id="dd-services" class="dropdown">
   <div class="dd-header">Services</div>
-  <!-- "Nova" = the Nova chat server -->
+  <!-- The controller server runs independently of Nova and the model. -->
   <div class="dd-srv-row">
     <div class="dd-srv-dot" id="srv-dot-chat"></div>
-    <div class="dd-srv-name">Nova</div>
+    <div class="dd-srv-name">Controller</div>
     <div class="dd-srv-status" id="srv-status-chat">—</div>
   </div>
   <!-- llama.cpp: optional local inference — real Start/Stop controls -->
@@ -1200,8 +1200,8 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <button type="button" class="dd-item service-action" onclick="pollServices()">↻ Refresh Status</button>
   <div class="dd-sep"></div>
   <div class="dd-header">App and services</div>
-  <button type="button" class="dd-item service-action" onclick="novaRestart('full')">⟳ Restart Nova</button>
-  <button type="button" class="dd-item service-action" onclick="novaRestart('shutdown')">⏻ Shut down Nova</button>
+  <button type="button" class="dd-item service-action" onclick="novaRestart('full')">⟳ Restart app and services</button>
+  <button type="button" class="dd-item service-action" onclick="novaRestart('shutdown')">⏻ Shut down app and services</button>
   <div id="service-action-status" role="status" aria-live="polite" style="padding:12px;white-space:normal"></div>
   <div class="dd-header">Individual components</div>
   <button type="button" class="dd-item service-action" onclick="novaRestart('server')">Restart model server</button>
@@ -2086,15 +2086,19 @@ function toggleDD(name, btn) {
   _openDD = name;
   // Position below button
   const r = btn.getBoundingClientRect();
-  dd.style.left = r.left + 'px';
-  dd.style.top  = (r.bottom + 2) + 'px';
   dd.classList.add('open');
-  btn.classList.add('open');
+  const top=Math.min(r.bottom+4,window.innerHeight-80);
+  dd.style.left=Math.max(8,Math.min(r.left,window.innerWidth-dd.getBoundingClientRect().width-8))+'px';
+  dd.style.top=top+'px';
+  dd.style.maxHeight=Math.max(60,window.innerHeight-top-10)+'px';
+  btn.classList.add('open');btn.setAttribute('aria-expanded','true');
+  if(name==='services')pollServices();
 }
 function closeDD() {
   if (!_openDD) return;
   document.getElementById('dd-'+_openDD)?.classList.remove('open');
-  document.querySelector(`.menu-trigger[data-dd="${_openDD}"]`)?.classList.remove('open');
+  const trigger=document.querySelector(`.menu-trigger[data-dd="${_openDD}"]`);
+  trigger?.classList.remove('open');trigger?.setAttribute('aria-expanded','false');
   _openDD = null;
 }
 document.addEventListener('click', e => {
@@ -5556,7 +5560,8 @@ switchPanel('thoughts');
 #novaLog.collapsed .nl-body{display:none;}
 #novaLog .nl-row{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.03);
   white-space:pre-wrap;word-break:break-word;line-height:1.45;}
-#novaLog .nl-time{color:#5d6080;margin-right:6px;}
+#novaLog .nl-time{color:#85829b;margin-right:6px;}
+#novaLog .nl-source{color:#ada6c0;font-size:10px;margin-right:6px;}
 #novaLog .nl-row.wake .nl-msg{color:#7fd0ff;}
 #novaLog .nl-row.engage .nl-msg{color:#ffd479;}
 #novaLog .nl-row.observe .nl-msg{color:#c9a0ff;}
@@ -5595,8 +5600,10 @@ switchPanel('thoughts');
                  reflect:'💭'};
 
   function fmtTime(iso){
-    try{const d=iso?new Date(iso):new Date();
-      return d.toLocaleTimeString([], {hour12:false});}catch(_){return '';}
+    if(!iso)return 'Time unknown';
+    const d=new Date(iso);if(Number.isNaN(d.getTime()))return 'Time unknown';
+    const now=new Date(),time=d.toLocaleTimeString([], {hour12:false});
+    return d.toDateString()===now.toDateString()?time:d.toLocaleDateString([], {year:'numeric',month:'short',day:'numeric'})+' '+time;
   }
   function renderClean(){
     if(!S.entries.length){body.innerHTML='<div class="nl-empty">No recorded activity yet. New events appear here as Nova works.</div>';return;}
@@ -5604,8 +5611,10 @@ switchPanel('thoughts');
     for(const e of S.entries.slice(-250)){
       const row=document.createElement('div');
       row.className='nl-row '+(e.event||'info');
+      row.title='Event: '+(e.event||'info')+' · Recorded: '+(e.ts||'unknown');
       const g=GLYPH[e.event]||GLYPH.info;
-      row.innerHTML='<span class="nl-time">'+fmtTime(e.ts)+'</span>'+
+      const source=e.event==='stretch_nudge'?'<span class="nl-source">Scheduled reminder</span>':'';
+      row.innerHTML='<span class="nl-time">'+fmtTime(e.ts)+'</span>'+source+
         '<span class="nl-msg">'+g+' '+escapeHtml(e.text||'')+'</span>';
       body.appendChild(row);
     }
@@ -6157,13 +6166,16 @@ if(new URLSearchParams(location.search).get('layout')==='legacy'){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
-<link rel="stylesheet" href="/static/workspace.css?v=collaboration-2">
-<link rel="stylesheet" href="/static/control.css?v=collaboration-2">
+<link rel="stylesheet" href="/static/workspace.css?v=named-layouts-5">
+<link rel="stylesheet" href="/static/control.css?v=conversation-power-1">
 <script src="/static/control.js?v=collaboration-2"></script>
 <link rel="stylesheet" href="/static/collaboration.css?v=collaboration-2">
 <script src="/static/collaboration.js?v=collaboration-2"></script>
 <link rel="stylesheet" href="/static/vendor/goldenlayout-base.css">
 <script src="/static/vendor/nova-dock.js"></script>
-<script src="/static/workspace.js?v=collaboration-2"></script>
+<link rel="stylesheet" href="/static/updater.css?v=updater-wallet-1">
+<script src="/static/updater.js?v=updater-wallet-1"></script>
+<script src="/static/workspace.js?v=conversation-power-1"></script>
+<script src="/static/conversation-power.js?v=conversation-power-1"></script>
 </body>
 </html>

@@ -14,8 +14,10 @@ structure instead, then PROVES the result before any GPU time is spent:
 Any mismatch exits non-zero with the reason. There is no fallback: a misplaced marker would
 train the model on user turns or fabricated tool results.
 
-Usage:  python template_gen.py BASE_MODEL_ID OUT.jinja [--trust-remote-code]
+Usage:  python template_gen.py BASE_MODEL_ID OUT.jinja
 """
+import json
+from pathlib import Path
 import re
 import sys
 
@@ -129,8 +131,14 @@ def main(argv):
     if len(argv) < 3:
         print(__doc__)
         return 2
-    from transformers import AutoTokenizer
-    tok = AutoTokenizer.from_pretrained(argv[1], trust_remote_code="--trust-remote-code" in argv)
+    from transformers import AutoConfig, AutoTokenizer
+    # Resolve one immutable HF revision for template, tokenizer, weights and conversion config.
+    from huggingface_hub import model_info
+    revision = model_info(argv[1]).sha
+    config = AutoConfig.from_pretrained(argv[1], revision=revision, trust_remote_code=False)
+    if not revision:
+        raise ValueError("Unable to pin the base model revision")
+    tok = AutoTokenizer.from_pretrained(argv[1], revision=revision, trust_remote_code=False)
     official = tok.chat_template
     if not official:
         print("FATAL: the tokenizer has no chat template", file=sys.stderr)
@@ -143,6 +151,10 @@ def main(argv):
         return 1
     with open(argv[2], "w", encoding="utf-8") as fh:
         fh.write(marked)
+    Path("base_config").mkdir(exist_ok=True)
+    config.save_pretrained("base_config")
+    Path("base_source.json").write_text(json.dumps({"model_id": argv[1], "revision": revision,
+        "model_type": config.model_type, "architectures": config.architectures}, indent=2) + "\n", encoding="utf-8")
     print(report)
     print(f"wrote {argv[2]}")
     return 0
