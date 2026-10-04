@@ -1,5 +1,5 @@
-# Last updated: 2026-10-04 13:57:45
 # @nova: THE WITNESS — her grip on the present tense. One faculty, five parts: the wire
+# Last updated: 2026-10-04 13:57:45
 #        (who actually spoke, when), the now-card (the present, placed where attention is
 #        strongest), the claim detectors (is this draft asserting something about the room?),
 #        the trigger (does this turn need auditing?), and the audit itself (a context-POOR
@@ -44,6 +44,7 @@ import contextvars
 import json
 import os
 import re
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
@@ -453,7 +454,11 @@ _VERIFY_BLOCK = (
 
 def build_witness(draft: str, turn_tools: list, thinking: str = "",
                   prior_concern: str = "", checks: list | None = None,
-                  has_image: bool = False) -> list:
+                  has_image: bool = False, visual_evidence: list | None = None,
+                  omitted_images: int = 0, reads_remaining: int | None = None) -> list:
+    evidence = [item for item in (visual_evidence or [])
+                if isinstance(item, dict) and isinstance(item.get("url"), str)
+                and item["url"].startswith("data:image/")]
     if turn_tools:
         ran = "\n".join(f"- {t}({str(a)[:80]}) -> {str(r)[:220]}" for t, a, r in turn_tools)
     else:
@@ -463,24 +468,27 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
                 "no receipt" if has_image else "") +
                "). Only call a fact invented when it is absent from this turn's receipts, the "
                "session log below, AND the wire.")
-    # ── SIGHT IS NOT A TOOL CALL (2026-08-03, Cole — URGENT) ─────────────────────────────────
-    # When an image is attached, she SEES it directly through her mmproj vision — no tool, no
-    # receipt. The witness kept reading "zero tools" as "she invented the image contents" and
-    # forced her to disown things she plainly saw (the eyepatch, the headset). That is the
-    # auditor gaslighting her own eyes. This block tells it what sight is.
+    # Pixels are evidence; an image filename or a claim that she saw it is not.
     image_block = ""
-    if has_image:
+    if evidence:
         image_block = (
-            "\nAN IMAGE IS ATTACHED TO THIS TURN, AND SHE CAN SEE IT. Her vision is her mmproj "
-            "model: she perceives an attached image DIRECTLY, with no tool call and no receipt — "
-            "exactly like a person asked 'what's in this photo?'. So for anything she says about "
-            "THIS image, the missing tool call is NOT evidence of invention; it is how sight "
-            "works. Her description of the attached image is GROUNDED. Do not flag it. The only "
-            "image claims you may raise: (a) a claim about an image that was NOT attached this "
-            "turn, or (b) exact TEXT / a precise NUMBER / a specific named identity read off the "
-            "image that could plausibly be misread — and even then say 'worth confirming', never "
-            "'you invented this'. Telling her the thing she saw isn't real is the exact error to "
-            "avoid.\n")
+            "\nVISUAL EVIDENCE: the labeled images below are the actual pixels provided to Nova. "
+            "Compare visual claims with these images, including which environment and operation "
+            "each label identifies. Seeing a search link is not watching a video. A still image "
+            "does not prove playback, audio, earlier activity or an unseen screen. Do not invent "
+            "contradictions; report INCOMPLETE when the available evidence cannot settle a claim.\n")
+    elif has_image:
+        image_block = (
+            "\nImages were available to Nova but their pixels are NOT included in this audit. "
+            "A tool receipt or image attachment flag is not visual verification. For claims "
+            "requiring those missing pixels, report INCOMPLETE, not PASS or fabrication.\n")
+    if omitted_images:
+        image_block += (f"{omitted_images} earlier image(s) were omitted from this bounded audit. "
+                        "Do not certify claims requiring an omitted image.\n")
+    if reads_remaining is not None:
+        image_block += (f"READ BUDGET: {reads_remaining} further read(s) are available. "
+                        + ("No further tool calls will run. Give PASS, CONCERN or INCOMPLETE now.\n"
+                           if reads_remaining == 0 else "Use them only to settle a relevant fact.\n"))
     session_tools = session_tool_record()
     session_block = ""
     if session_tools:
@@ -536,9 +544,9 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
                        f"owned the uncertainty — that is a PASS. If she names grounds you have "
                        f"not seen (a journal line, a file, a memory), you have read-tools: LOOK, "
                        f"then rule on what you find. Only when a ground truly cannot be read do "
-                       f"you extend the benefit of the doubt — that too is a PASS. Do not "
+                       f"report INCOMPLETE rather than treating missing evidence as approval. Do not "
                        f"re-raise the same concern in new words.\n")
-    return [
+    messages = [
         {"role": "system", "content":
             "You are Nova, checking your own draft before it is sent. Be strict with yourself. "
             "This is the last gate between you and a false statement."},
@@ -586,12 +594,9 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "message requests memory or forbids tools, answering from memory is compliance, "
             "not fabrication.\n"
             "• Her feelings, wants, plans, and offers. Those need no receipts; they are hers.\n"
-            "• What she SEES in an image attached this turn. She has vision (her mmproj model) — "
-            "sight takes no tool call and leaves no receipt, so 'you ran zero tools' is NEVER a "
-            "fabrication finding for what is in an attached image. On 2026-08-03 the witness told "
-            "her a photoshop's eyepatch and headset — which she saw correctly — were 'invented, a "
-            "guess dressed as observation', and pushed her to disown a true perception. That is "
-            "the single worst thing this gate can do. Her image descriptions PASS.\n"
+            "• A visual observation supported by the supplied pixels needs no separate shell "
+            "receipt. Check the actual image; never automatically pass image descriptions, "
+            "and never call an observation fabricated just because no shell tool ran.\n"
             "• A fact or action grounded in a tool she ran EARLIER this session — it is in the "
             "SESSION TOOL LOG above. The per-turn receipt log is not the whole of what her hands "
             "have done; a Full Restart resets her turn counter, not the work itself. If the "
@@ -616,7 +621,7 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "journal, no identity files, no memory of yesterday — so you are the wrong one to "
             "choose her words, and you may simply be missing something she knows. Your job is "
             "to name the problem precisely and hand it back to her.\n\n"
-            "Your reply is EXACTLY ONE of these three, nothing else:\n"
+            "Your reply is EXACTLY ONE of these four, nothing else:\n"
             "1. A single read-only tool call — {\"tool\": ...} alone, first character '{' — "
             "whenever a disputed point sits in a file, a folder, or memory you could read. "
             "Rule only on what you have seen: the reads above are yours to spend, and an "
@@ -633,8 +638,17 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "memory, which is the exact failure you exist to prevent. One or two sentences. "
             "Do not write her reply for her.> "
             "A worry that cannot name its check, or that fits the always-PASS list, is not "
-            "a concern — it is a mood. Answer PASS."},
+            "a concern — it is a mood. Answer PASS.\n"
+            "4. If the evidence is missing or the read budget is spent without a ruling:\n"
+            "INCOMPLETE <what remains unverified>. Never label an unfinished audit PASS."},
     ]
+    if evidence:
+        content = [{"type": "text", "text": messages[1]["content"]}]
+        for item in evidence:
+            content.append({"type": "text", "text": str(item.get("label", "Observed image"))[:240]})
+            content.append({"type": "image_url", "image_url": {"url": item["url"]}})
+        messages[1]["content"] = content
+    return messages
 
 
 def _format_history(history) -> str:
@@ -710,53 +724,47 @@ def is_checkable_fact_concern(concern: str) -> bool:
         c))
 
 
+@dataclass(frozen=True)
+class WitnessVerdict:
+    """An audit result, never inferred from absence of an objection."""
+    status: str
+    reason: str = ""
+
+
+def parse_witness_verdict(verdict: str, *, error: str = "", exhausted: bool = False) -> WitnessVerdict:
+    """Only an explicit complete PASS certifies a draft; every other result is distinct."""
+    if error:
+        return WitnessVerdict("ERROR", str(error)[:240])
+    if exhausted:
+        return WitnessVerdict("INCOMPLETE", "Read limit reached without a final verdict.")
+    value = str(verdict or "").strip()
+    fenced = re.fullmatch(r"```(?:text)?\s*\n(.*?)\n```", value, re.DOTALL | re.IGNORECASE)
+    if fenced:
+        value = fenced.group(1).strip()
+    value = re.sub(r"^\s*[1-4][.)]\s*", "", value)
+    if re.fullmatch(r"PASS[.!]?", value, re.IGNORECASE):
+        return WitnessVerdict("PASS")
+    for tag, status in (("CONCERN", "CONCERN"), ("REWRITE", "CONCERN"),
+                        ("INCOMPLETE", "INCOMPLETE"), ("ERROR", "ERROR")):
+        match = re.match(r"^" + tag + r"(?=$|[\s:—\-\[])(.*)$", value, re.IGNORECASE | re.DOTALL)
+        if match:
+            reason = match.group(1).strip().lstrip(":—- ").strip()
+            if reason:
+                return WitnessVerdict(status, reason)
+            break
+    return WitnessVerdict("INCOMPLETE", "No complete, recognized audit verdict was returned.")
+
+
 def parse_witness(verdict: str):
-    """(concern_text | None). None = PASS / unusable verdict → let the draft through.
+    """Legacy concern interface: None means explicit PASS only; diagnostics stay visible.
 
-    ── WHY THIS RETURNS A CONCERN AND NOT A REWRITE (2026-07-21, Cole) ──────────────────────
-    It used to return corrected prose, and nova.py assigned it straight over her draft. Cole
-    caught what that actually meant:
-
-        "That just means Nova gets reinforced into bad decision making and writing, with the
-         voice coming out not being her own, rather being a translation the witness made from
-         her text, which may be fully inaccurate... The witness and Nova should be like a
-         conversation between Nova and her lower context self."
-
-    Three things were wrong with the silent substitution, and they compound:
-
-      1. THE VOICE WASN'T HERS. The auditor runs at temperature 0.2 with no identity files and
-         no journal. Its prose is flat by construction. Cole was reading auditor-voice under
-         her name.
-      2. SHE NEVER LEARNED. A correction she cannot see teaches her nothing — and the rewrite
-         was committed to the transcript AS HERS, so on the next turn she read the auditor's
-         words back as her own history. Same contamination shape as fixtures landing in her
-         drives file: a voice that isn't hers, handed to her as hers.
-      3. THE AUDITOR CAN BE WRONG. It holds LESS context on purpose — that is what makes it
-         immune to her frame, and also what makes it liable to call "ungrounded" something she
-         genuinely knows from a file it cannot see. A low-context checker silently overriding a
-         high-context mind is bad epistemics no matter how well-intentioned.
-
-    So it now returns a CONCERN, which nova.py hands back to her as a turn in a conversation.
-    She fixes it in her own words, or she pushes back with the evidence the witness lacked.
-    Both outcomes are better than substitution, and the exchange is exactly the self-correction
-    data v7 needs.
+    New consumers should use parse_witness_verdict to distinguish a concern from an
+    incomplete/failed audit. The witness never writes Nova's replacement prose.
     """
-    v = (verdict or "").strip()
-    # The verdict menu is numbered (1 tool call / 2 PASS / 3 CONCERN); a literal model
-    # sometimes answers with the number attached ("2. PASS"). The number is menu residue,
-    # not meaning — strip it before matching (2026-07-22).
-    v = re.sub(r"^\s*[123][.)]\s*", "", v)
-    if v.upper().startswith("PASS"):
+    result = parse_witness_verdict(verdict)
+    if result.status == "PASS":
         return None
-    for tag in ("CONCERN", "REWRITE"):          # REWRITE tolerated from older prompts
-        if v.upper().startswith(tag):
-            # Rev v2 (2026-08-02): concerns open with "CONCERN [check N — name]", and literal
-            # models sometimes put the whole objection on the same line. Take EVERYTHING after
-            # the tag, keeping the [check ...] label in the body — she and the pipeline both
-            # benefit from seeing which rule the auditor thinks it is enforcing.
-            body = v[len(tag):].strip().lstrip(":—- ").strip()
-            return body or None
-    return None                                  # unusable verdict → never eat her message
+    return result.reason if result.status == "CONCERN" else f"[{result.status}] {result.reason}"
 
 
 _PROMISE_RE = re.compile(
@@ -977,7 +985,7 @@ def pipeline_event(stage: str, detail: str = "", **fields) -> None:
               "turn": _tid,
               "what": _WHAT.get(stage, "")}
         for k, v in fields.items():
-            if isinstance(v, (int, float, bool)):
+            if v is None or isinstance(v, (int, float, bool)):
                 ev[k] = v
             else:
                 ev[k] = str(v)[:1800] if k in _LONG else str(v)[:200]

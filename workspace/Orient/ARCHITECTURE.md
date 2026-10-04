@@ -1,7 +1,7 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-04T05:40:59+00:00 from source (input `f7c0975691ac`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T05:55:32+00:00 from source (input `0c03117ed738`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
 
@@ -31,6 +31,21 @@ The retired host-desktop Claude ping and its aliases return an unknown-tool fail
 launching PowerShell. Active instructions no longer advertise it. The private Collaboration room
 remains separate from Nova; asking Cole uses the ordinary conversation.
 
+Tool starts and outcomes also enter Pipeline, correlated with the canonical receipt's operation
+and run IDs. Human-facing final prose may remain buffered while actions are visible. The inline
+witness uses Nova's main local model endpoint in a separate context; the separately launched 8081
+server is not automatically the inline auditor. It checks the assembled delivered candidate,
+including earlier tool-loop commentary, and receives available screenshot pixels with their
+observation context. An explicit approval is distinct from a concern, an incomplete check or an
+execution error. Incomplete/error checks remain visible and do not certify the draft. A concern
+returns to Nova to revise in her own words; the auditor does not silently replace her voice.
+
+Guest Bash (`computer_exec`), screenshots and hands target Nova's authenticated :1 display.
+Host `run_command` is Windows PowerShell. WSLg :0 is another Linux graphical session, not the
+native Windows desktop. Authorized host reach remains available; tool choice identifies the
+destination. `computer_action` launch/browser helpers retain diagnostics and report the limited
+postcondition they observed; a process or window alone does not prove a page loaded or a video played.
+
 Autonomy → cheap wake gate (pending input, unconsumed Cole directive newer than six hours,
 durable watched event or timer) →
 bounded task selection → execution → acceptance checks and reconciliation. An accepted concrete
@@ -42,7 +57,7 @@ and child processes, and reports pending cleanup rather than falsely claiming ev
 
 ## Body faculties
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `nova_body/nova_computer/tools.py`; new `nova_body/nova_computer/set_vnc_password.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py (PURPOSES)`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Body faculties"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `nova_body/nova_computer/backends.py`, `nova_body/nova_computer/computer.py`, `nova_body/nova_computer/hands.py`, `nova_body/nova_computer/tools.py` and 2 more; new `nova_body/nova_computer/set_vnc_password.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py (PURPOSES)`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Body faculties"`.
 
 | Part | Responsibility | Python sources |
 |---|---|---:|
@@ -108,7 +123,7 @@ Drives/wants and the hormone design are not evidence of online weight learning. 
 
 ## Runtime evidence and open modernization work
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `nova_body/nova_computer/tools.py`; new `nova_body/nova_computer/set_vnc_password.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `nova_body/nova_computer/backends.py`, `nova_body/nova_computer/computer.py`, `nova_body/nova_computer/hands.py`, `nova_body/nova_computer/tools.py` and 1 more; new `nova_body/nova_computer/set_vnc_password.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
 
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen

@@ -1,7 +1,5 @@
+# @nova: See and control Nova's authenticated desktop; verify application launches with process, window and diagnostic evidence.
 # Last updated: 2026-10-04 13:57:45
-# @nova: My hands. Not Cole's borrowed ones -- mine, on my own screen. Look, move, click, type,
-#        drag, scroll, raise a window, start an app. Everything happens on MY display, so
-#        nothing I do can take his mouse, his keyboard or his focus away from him.
 # @claude 2026-09-04: this is the piece that makes her computer a CONTROLLER instead of a
 # room she cannot use. Cole: "a viable virtual environment she can fully control, rather than
 # needing to use my peripherals through remote control."
@@ -35,6 +33,12 @@ throws in the middle of her reaching for something is worse than one that says "
 from __future__ import annotations
 
 import base64
+import inspect
+import json
+import math
+from urllib.parse import urlparse
+
+from nova_computer.backends import nova_desktop_command
 import shlex
 import sys
 
@@ -55,9 +59,7 @@ class Hands:
     # ---- plumbing ----------------------------------------------------------------------
     def _run(self, cmd: str, timeout: int = 60):
         """Everything she does goes through her body's existing channel, on her display."""
-        return self.pc.bash(
-            f"export DISPLAY={self.display}; "
-            f"export XAUTHORITY=${{XAUTHORITY:-{XAUTHORITY}}}; {cmd}", timeout=timeout)
+        return self.pc.bash(nova_desktop_command(cmd, self.display, XAUTHORITY), timeout=timeout)
 
     def _put(self, text: str, path: str) -> tuple[int, str]:
         """Land arbitrary text inside her computer without it passing through a parser.
@@ -180,14 +182,156 @@ class Hands:
     def focus(self, window_id: str):
         return self._run(f"xdotool windowactivate {shlex.quote(str(window_id))}")
 
-    def launch(self, command: str, wait: int = 2):
-        """Start something on HER screen. Detached, so her hands are free immediately."""
-        # "started" used to be printed whether or not the thing survived. Check the pid.
-        rc, out = self._run(
-            f"nohup {command} >/dev/null 2>&1 & p=$!; sleep {int(wait)}; "
-            "if kill -0 $p 2>/dev/null; then echo running pid=$p; "
-            "else echo 'exited immediately - it did not stay up'; exit 1; fi")
-        return rc, out
+    def launch(self, command: str, wait: float = 3):
+        """Launch one guest executable and verify a visible application window, not an echo.
+
+        Success proves a matching window exists, never that its page loaded or playback began.
+        Shell pipelines/redirection belong in computer_exec. Diagnostics stay in guest temp logs.
+        """
+        try:
+            if not isinstance(command, str) or not command.strip():
+                raise ValueError("Provide an executable command as text.")
+            argv = shlex.split(command)
+            seconds = float(wait)
+            if not argv or not math.isfinite(seconds) or not 0 <= seconds <= 20:
+                raise ValueError("Provide an executable command and a wait between 0 and 20 seconds.")
+            if any(token in {";", "|", "||", "&&", "&", ">", "2>&1"} for token in argv):
+                raise ValueError("Launch takes an executable plus arguments, not shell operators. Use computer_exec for shell scripts.")
+            if argv[0].lower().endswith((".exe", ".cmd", ".bat")):
+                raise ValueError("This action observes Nova's Linux desktop. Use run_command for an intentional Windows application launch.")
+            source = inspect.getsource(_launch_probe)
+            script = source + "\nimport json\nprint(json.dumps(_launch_probe(" + repr(argv) + ", " + repr(seconds) + ")))"
+            rc, out = self._run("python3 -c " + shlex.quote(script), timeout=int(seconds) + 30)
+            if rc != 0:
+                return {"status": "timed_out" if rc == 124 else "cancelled" if rc == 130 else "failed",
+                        "exit_code": rc, "stderr": out, "stdout": "", "display": self.display,
+                        "message": "The application verifier could not finish; no launch success is claimed."}
+            result = json.loads(out)
+            if not isinstance(result, dict) or result.get("status") not in {"succeeded", "failed", "unknown"}:
+                raise ValueError("Invalid application-verifier response")
+            result["display"] = self.display
+            return result
+        except (ValueError, TypeError) as error:
+            return {"status": "failed", "exit_code": None, "stdout": "", "stderr": str(error),
+                    "display": self.display, "message": "Application launch was not verified."}
+
+    def open_url(self, url: str, browser: str = "firefox", wait: float = 3):
+        """Open an HTTP(S) page in a new guest browser window; navigation remains unverified."""
+        parsed = urlparse(str(url))
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            return {"status": "failed", "exit_code": None, "stdout": "", "stderr": "Use a complete http:// or https:// URL.",
+                    "display": self.display, "message": "Browser launch was not attempted."}
+        if browser not in {"firefox", "chromium", "chromium-browser", "google-chrome"}:
+            return {"status": "failed", "exit_code": None, "stdout": "", "stderr": "Choose firefox, chromium, chromium-browser or google-chrome.",
+                    "display": self.display, "message": "Browser launch was not attempted."}
+        result = self.launch(shlex.join([browser, "--new-window", str(url)]), wait=wait)
+        result.update(url=str(url), page_verified=False, playback_verified=False)
+        return result
+
+
+def _launch_probe(argv, wait):
+    """Runs inside the guest. Keep self-contained so its exact source can cross the backend."""
+    import json
+    import os
+    from pathlib import Path
+    import signal
+    import subprocess
+    import tempfile
+    import time
+
+    def query(arguments):
+        try:
+            p = subprocess.run(arguments, capture_output=True, text=True, timeout=3)
+            return p.returncode, p.stdout.strip(), p.stderr.strip()
+        except (OSError, subprocess.TimeoutExpired) as error:
+            return 127, "", str(error)
+
+    def windows():
+        rc, ids, error = query(["xdotool", "search", "--onlyvisible", "--name", "."])
+        if rc not in (0, 1):
+            return [], error or ids or "Could not enumerate X11 windows"
+        rows = []
+        for window in ids.splitlines()[:80]:
+            if not window.isdecimal():
+                continue
+            _, title, _ = query(["xdotool", "getwindowname", window])
+            _, owner, _ = query(["xdotool", "getwindowpid", window])
+            rows.append({"id": window, "title": title, "pid": int(owner) if owner.isdecimal() else None})
+        return rows, ""
+
+    def process_info():
+        parents, names = {}, {}
+        try:
+            entries = list(Path("/proc").iterdir())
+        except OSError:
+            entries = []
+        for entry in entries:
+            if not entry.name.isdecimal():
+                continue
+            try:
+                status = dict(line.split(":", 1) for line in (entry / "status").read_text().splitlines() if ":" in line)
+                parents[int(entry.name)] = int(status.get("PPid", "0"))
+                names[int(entry.name)] = status.get("Name", "").strip().lower()
+            except (OSError, ValueError):
+                pass
+        return parents, names
+
+    rc, geometry, error = query(["xdotool", "getdisplaygeometry"])
+    base = {"stdout": "", "stderr": error, "exit_code": None, "display": os.environ.get("DISPLAY"),
+            "verification": "application_window", "page_verified": False, "playback_verified": False}
+    if rc != 0:
+        return dict(base, status="failed", message="Nova's authenticated display is unavailable; no application was launched.", exit_code=rc)
+    before, before_error = windows()
+    initial_ids = {row["id"] for row in before}
+    log_dir = Path(tempfile.mkdtemp(prefix="nova-launch-"))
+    stdout_path, stderr_path = log_dir / "stdout.log", log_dir / "stderr.log"
+    # Remain in the tool operation's process group, so cancellation can still clean it up.
+    # Ignore terminal hangup only; a completed GUI tool intentionally leaves its application open.
+    if hasattr(signal, "SIGHUP"):
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    try:
+        with stdout_path.open("wb") as stdout_file, stderr_path.open("wb") as stderr_file:
+            proc = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=stdout_file, stderr=stderr_file)
+    except OSError as error:
+        return dict(base, status="failed", exit_code=127, stderr=str(error), message="The guest executable could not be started.")
+    tracked = {proc.pid}
+    deadline = time.monotonic() + wait
+    matched, after_error = [], ""
+    while True:
+        parents, names = process_info()
+        changed = True
+        while changed:
+            expanded = tracked | {pid for pid, parent in parents.items() if parent in tracked}
+            changed = expanded != tracked
+            tracked = expanded
+        after, after_error = windows()
+        # Existing browser instances may receive --new-window and let the launcher exit.
+        # Accept only a newly observed window owned by the requested executable in that case.
+        executable = Path(argv[0]).name.lower()
+        running = set(parents)
+        if proc.poll() is None:
+            running.add(proc.pid)
+        matched = [row for row in after if row["pid"] in running and
+                   (row["pid"] in tracked or
+                    (row["id"] not in initial_ids and names.get(row["pid"]) == executable))]
+        if matched or proc.poll() is not None and proc.returncode != 0 or time.monotonic() >= deadline:
+            break
+        time.sleep(min(0.25, max(0, deadline - time.monotonic())))
+    def tail(path):
+        with path.open("rb") as stream:
+            stream.seek(max(0, path.stat().st_size - 12000))
+            return stream.read(12000).decode("utf-8", errors="replace")
+    code = proc.poll()
+    base.update(pid=proc.pid, process_running=code is None, exit_code=code, windows=matched,
+                window_processes_running=bool(matched),
+                stdout=tail(stdout_path), stderr=tail(stderr_path),
+                log_paths={"stdout": str(stdout_path), "stderr": str(stderr_path)},
+                window_probe_error=before_error or after_error, geometry=geometry)
+    if code is not None and code != 0:
+        return dict(base, status="failed", message="The application process exited with an error; diagnostics are preserved.")
+    if matched:
+        return dict(base, status="succeeded", message="A matching application window is visible on Nova's desktop. Page content and playback still require observation.")
+    return dict(base, status="unknown", message="No matching application window was verified. A running process or exit code 0 alone is not GUI success.")
 
 
 def _selftest() -> int:

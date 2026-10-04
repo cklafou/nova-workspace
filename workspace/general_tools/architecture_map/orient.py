@@ -775,6 +775,21 @@ The retired host-desktop Claude ping and its aliases return an unknown-tool fail
 launching PowerShell. Active instructions no longer advertise it. The private Collaboration room
 remains separate from Nova; asking Cole uses the ordinary conversation.
 
+Tool starts and outcomes also enter Pipeline, correlated with the canonical receipt's operation
+and run IDs. Human-facing final prose may remain buffered while actions are visible. The inline
+witness uses Nova's main local model endpoint in a separate context; the separately launched 8081
+server is not automatically the inline auditor. It checks the assembled delivered candidate,
+including earlier tool-loop commentary, and receives available screenshot pixels with their
+observation context. An explicit approval is distinct from a concern, an incomplete check or an
+execution error. Incomplete/error checks remain visible and do not certify the draft. A concern
+returns to Nova to revise in her own words; the auditor does not silently replace her voice.
+
+Guest Bash (`computer_exec`), screenshots and hands target Nova's authenticated :1 display.
+Host `run_command` is Windows PowerShell. WSLg :0 is another Linux graphical session, not the
+native Windows desktop. Authorized host reach remains available; tool choice identifies the
+destination. `computer_action` launch/browser helpers retain diagnostics and report the limited
+postcondition they observed; a process or window alone does not prove a page loaded or a video played.
+
 Autonomy → cheap wake gate (pending input, unconsumed Cole directive newer than six hours,
 durable watched event or timer) →
 bounded task selection → execution → acceptance checks and reconciliation. An accepted concrete
@@ -974,7 +989,11 @@ source before changing prompts. `/api/version` compares normalized content hashe
 sources against startup, ignoring watcher header timestamps and line endings. This detects even
 same-size edits with unchanged timestamps; it is not a census of every imported module.
 New structured receipts distinguish success, failure, refusal,
-timeout, cancellation and unknown. Historical receipts retain their original values; older
+timeout, cancellation and unknown. Guest receipts include their shell/display context. Pipeline
+shows tool start and terminal outcomes rather than only witness work; its operation IDs link to
+the tool ledger. Witness incomplete/error statuses are unverified, never approval. Historical
+Pipeline rows whose recorded approval contains a tool request are shown as incomplete by the
+controller without rewriting the original log. Historical receipts retain their original values; older
 `ok: true` entries can mislabel nonzero exits. Validate their artifacts independently. A running
 port does not prove successful inference. The Control widget exposes task scheduling, verification,
 stop/resume, memory ingestion health and VM handoff through `/api/runtime/state` and related routes.

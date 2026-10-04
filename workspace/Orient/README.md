@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-04T05:40:59+00:00 from source (input `f7c0975691ac`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T05:55:32+00:00 from source (input `0c03117ed738`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
@@ -49,12 +49,12 @@ watcher reports that error and continues autosave; documentation failure must no
 
 The [interactive explorer](Architecture/index.html) and the call-order pages under `Architecture/`
 are rebuilt on demand (`Architecture/REBUILD_MAP.cmd`, `python general_tools/calls_order.py`).
-Last built 2026-10-04 05:12 UTC; as of this generation, 84 source file(s) had been modified since.
+Last built 2026-10-04 05:12 UTC; as of this generation, 100 source file(s) had been modified since.
 
 **AI notes.** Claude, Codex and the other agents leave a note in [AI Notes](AI%20Notes/ReadMeBeforeNoteTaking.md) after each session: what changed, why, and what is still open. Read the rules once, then every note since your own last one. Newest first:
 
+- [2026-10-04_1455_Codex_ComputerRepairsInProgress.md](AI%20Notes/2026-10-04_1455_Codex_ComputerRepairsInProgress.md)
 - [2026-10-04_1435_Codex_ComputerTestReview.md](AI%20Notes/2026-10-04_1435_Codex_ComputerTestReview.md)
 - [2026-10-04_1416_Codex_ManualLayoutsAndRetirement.md](AI%20Notes/2026-10-04_1416_Codex_ManualLayoutsAndRetirement.md)
 - [2026-10-04_1333_Codex_DisposableTrainingPods.md](AI%20Notes/2026-10-04_1333_Codex_DisposableTrainingPods.md)
 - [2026-10-04_1305_Codex_ConversationPower.md](AI%20Notes/2026-10-04_1305_Codex_ConversationPower.md)
-- [2026-10-04_1235_Codex_Qwen38TrainingComplete.md](AI%20Notes/2026-10-04_1235_Codex_Qwen38TrainingComplete.md)

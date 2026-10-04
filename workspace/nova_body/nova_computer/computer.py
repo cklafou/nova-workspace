@@ -1,8 +1,5 @@
+# @nova: Body-owned computer facade for guest commands, intentional host reach and observable desktop actions.
 # Last updated: 2026-10-04 13:57:45
-# @nova: My computer -- somewhere that is mine to act in, where nothing I do reaches across
-#        and grabs Cole's screen, mouse, keyboard or focus. On his Windows box that is a
-#        sandboxed Linux machine (WSL2, hers alone). Dropped somewhere else, it is whatever
-#        that place offers. Body part: stdlib only, never imports general_tools.
 # @claude 2026-09-03: PLUCK PASS. This file used to BE the WSL implementation. Now it is the
 # faculty, and backends.py holds the machines. Design_Principles #2: the body must never
 # depend on a specific tool -- and by the same logic it must not depend on a specific HOST.
@@ -69,7 +66,10 @@ class NovaComputer:
 
     # ---- speaking both registers -------------------------------------------------------
     def bash(self, cmd: str, timeout: int = 120, user: str = GUEST_USER):
-        """Run a shell command in HER computer. Returns (rc, output)."""
+        """Run Bash in her computer; WSL defaults to her authenticated :1 X11 desktop.
+
+        Explicit DISPLAY overrides remain possible. Returns (rc, combined output).
+        """
         be = self.backend
         if isinstance(be, WSLBackend):
             return be.shell(cmd, timeout=timeout, user=user)

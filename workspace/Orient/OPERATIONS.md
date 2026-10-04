@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-04T05:40:59+00:00 from source (input `f7c0975691ac`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T05:55:32+00:00 from source (input `0c03117ed738`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -56,6 +56,8 @@ or enumerate installed weights. The controller status bar distinguishes Chat onl
 
 ## Configuration and evidence
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-03): changed `nova_body/nova_voice/tool_result.py`, `nova_body/nova_voice/tool_router.py::execute_tool`, `nova_body/nova_voice/tool_router.py::run_command`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Configuration and evidence"`.
+
 Collaboration is a detachable controller service (`general_tools/nova_chat/collaboration.py`). Its
 SQLite history and per-agent credentials live outside the repository at
 `%USERPROFILE%/ProjectNovaData/Collaboration`. Messages never enter chat sessions, runtime transcripts,
@@ -94,7 +96,11 @@ source before changing prompts. `/api/version` compares normalized content hashe
 sources against startup, ignoring watcher header timestamps and line endings. This detects even
 same-size edits with unchanged timestamps; it is not a census of every imported module.
 New structured receipts distinguish success, failure, refusal,
-timeout, cancellation and unknown. Historical receipts retain their original values; older
+timeout, cancellation and unknown. Guest receipts include their shell/display context. Pipeline
+shows tool start and terminal outcomes rather than only witness work; its operation IDs link to
+the tool ledger. Witness incomplete/error statuses are unverified, never approval. Historical
+Pipeline rows whose recorded approval contains a tool request are shown as incomplete by the
+controller without rewriting the original log. Historical receipts retain their original values; older
 `ok: true` entries can mislabel nonzero exits. Validate their artifacts independently. A running
 port does not prove successful inference. The Control widget exposes task scheduling, verification,
 stop/resume, memory ingestion health and VM handoff through `/api/runtime/state` and related routes.
@@ -416,6 +422,8 @@ its temp folder stopped autosave (lesson 7 above).
 
 ## Controller menus and layouts
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/static/index.html`. Re-read it against the code, update it in `general_tools/architecture_map/notes/controller_layouts.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Controller menus and layouts"`.
+
 Nova Chat has one workspace. The top application bar contains expandable menus; opening Services,
 Advanced or Appearance leaves the dock arrangement alone. Widgets opens the widget choices, including
 Collaboration and Model updates. The optional Services and Generation widgets mirror the original menu
@@ -706,4 +714,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 73, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `ARCHITECTURE.md#Body faculties`, `ARCHITECTURE.md#Execution path`, `ARCHITECTURE.md#Runtime evidence and open modernization work`.
+**Sections awaiting review:** `ARCHITECTURE.md#Body faculties`, `ARCHITECTURE.md#Execution path`, `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Configuration and evidence`, `OPERATIONS.md#Controller menus and layouts`.

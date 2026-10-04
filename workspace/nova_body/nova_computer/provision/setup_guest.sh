@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
+# @nova: Provision Nova's guest desktop, browser compatibility and intentionally enabled Windows access.
 # Nova's computer - guest provisioning (Phase 1). Written by Claude, 2026-09-03.
 # Run as root INSIDE the Ubuntu-24.04 WSL distro:
-#   wsl -d Ubuntu-24.04 -u root -- bash /mnt/c/Users/lafou/Project_Nova/workspace/_admin/nova_computer/setup_guest.sh
+#   wsl -d Ubuntu-24.04 -u root -- bash /mnt/c/Users/lafou/Project_Nova/workspace/nova_body/nova_computer/provision/setup_guest.sh
 # Idempotent: safe to re-run. Log: /var/log/nova_setup.log
 set -uo pipefail
 exec > >(tee -a /var/log/nova_setup.log) 2>&1
@@ -32,6 +33,27 @@ if ! id -u nova >/dev/null 2>&1; then useradd -m -s /bin/bash nova; fi
 systemctl stop nova-vnc nova-novnc 2>/dev/null; pkill -u nova 2>/dev/null; sleep 1
 usermod -d /home/nova nova || echo 'WARN: usermod refused - her processes still running'
 mkdir -p /home/nova && chown -R nova:nova /home/nova
+
+# If an existing account kept a nonstandard home, Snap Firefox needs its real
+# parent registered. Preserve other homedirs; do not move account data to fix a browser.
+# snapd >= 2.59: https://snapcraft.io/docs/explanation/how-snaps-work/home-outside-home/
+nova_home=$(getent passwd nova | cut -d: -f6)
+case "$nova_home" in
+  /home/*) ;;  # Snap already supports ordinary /home users.
+  /*)
+    if command -v snap >/dev/null 2>&1; then
+      nova_home_parent=$(dirname "$nova_home")
+      nova_snap_homes=$(snap get system homedirs 2>/dev/null || true)
+      if [ "$nova_home_parent" != / ]; then
+        case ",$nova_snap_homes," in
+          *",$nova_home_parent,"*) ;;
+          *) snap set system homedirs="${nova_snap_homes:+$nova_snap_homes,}$nova_home_parent" \
+               || echo 'WARN: Snap home configuration failed; check firefox --version before using the browser' ;;
+        esac
+      fi
+    fi
+    ;;
+esac
 usermod -aG sudo nova
 echo 'nova ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/nova
 chmod 440 /etc/sudoers.d/nova

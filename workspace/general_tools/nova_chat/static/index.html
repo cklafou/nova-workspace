@@ -827,6 +827,22 @@ a:hover { text-decoration: underline; }
   font-size: 8px; color: var(--text-mute); margin-right: 5px; }
 .pl-fact { font-size: 9.5px; color: var(--text-mute); line-height: 1.5; margin-top: 5px;
   padding-left: 8px; border-left: 2px dotted var(--border); }
+/* Live Pipeline rows stay visible even while audit evidence is collapsed. */
+#pl-strip{flex-wrap:wrap;}
+.pl-row{width:100%;min-height:36px;border:0;background:transparent;text-align:left;color:var(--text);font:inherit;}
+.pl-row:focus-visible{outline:2px solid var(--nova);outline-offset:-2px;}
+.pl-badge{white-space:normal;overflow-wrap:anywhere;}
+.pl-badge.neutral{color:var(--text-dim);}.pl-badge.running{color:#82cafa;}
+.pl-tool-list{list-style:none;margin:0 6px 9px;padding:0;}
+.pl-tool-step{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 8px;padding:8px;border-left:2px solid var(--border);background:var(--bg-surface);margin-top:3px;font-size:11px;line-height:1.4;}
+.pl-tool-clock{font-family:var(--mono);font-size:10px;color:var(--text-mute);}
+.pl-tool-name{overflow-wrap:anywhere;color:var(--text);}.pl-tool-name small{display:block;color:var(--text-mute);font:inherit;font-size:10px;}
+.pl-tool-state{font-weight:600;}.pl-tool-duration{grid-column:2/4;color:var(--text-mute);font-size:10px;}
+.pl-tool-step.ok{border-color:var(--green);}.pl-tool-step.ok .pl-tool-state{color:var(--green);}
+.pl-tool-step.err{border-color:var(--red);}.pl-tool-step.err .pl-tool-state{color:var(--red);}
+.pl-tool-step.held{border-color:var(--yellow);}.pl-tool-step.held .pl-tool-state{color:var(--yellow);}
+.pl-tool-step.running{border-color:#82cafa;}.pl-tool-step.running .pl-tool-state{color:#82cafa;}
+.pl-audit-notice{font-size:11px;line-height:1.5;margin:0 8px 9px;color:var(--yellow);overflow-wrap:anywhere;}.pl-audit-notice.err{color:var(--red);}
 /* Tools panel sub-tabs (Feed | Verbose) — 2026-07-19 */
 .ttab-btn { background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-mute); font-size: 10px; padding: 2px 10px; cursor: pointer; font-family: inherit; }
 .ttab-btn:hover { color: var(--text); border-color: var(--nova); }
@@ -1596,7 +1612,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
   <div id="right-panel">
     <div class="panel-tabs" id="panel-tabs-bar">
       <div class="ptab active" data-tab="thoughts" draggable="true" onclick="switchPanel('thoughts')" data-tooltip="Nova's reasoning — extended thinking tokens shown here as she works through problems">Thoughts</div>
-      <div class="ptab" data-tab="pipeline" draggable="true" onclick="switchPanel('pipeline')" data-tooltip="Her gates, live — every witness check, rewrite, hold, echo retry and context trim as it happens">Pipeline</div>
+      <div class="ptab" data-tab="pipeline" draggable="true" onclick="switchPanel('pipeline')" data-tooltip="Live tool progress and witness checks, including failures and incomplete audits">Pipeline</div>
       <div class="ptab" data-tab="variables" draggable="true" onclick="switchPanel('variables')" data-tooltip="Live knobs — witness rounds, deadlock threshold, tool-chain depth, cloud-witness on/off. Changes take effect on her next turn, no restart.">Variables</div>
       <div class="ptab" data-tab="tools"    draggable="true" onclick="switchPanel('tools')"    data-tooltip="Tool calls — every file read, write, shell command, and web fetch Nova executes">Tools</div>
       <div class="ptab" data-tab="monitor"  draggable="true" onclick="switchPanel('monitor')"  data-tooltip="Live system metrics — Nova's CPU, memory, active goals, and sleep/wake state">Monitor</div>
@@ -1667,21 +1683,23 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
     </div>
 
     <!-- ── PIPELINE (2026-07-21, Cole: "I can't see the way witness.py is affecting her live") ──
-         Her gates narrating themselves: every witness check/pass/rewrite, premise hold, echo
-         retry, context trim and assertion challenge, streamed from logs/pipeline.jsonl. -->
+         Live tool start/result/failure events and witness outcomes from logs/pipeline.jsonl.
+         Audit evidence is expandable; incomplete checks are never presented as passes. -->
     <div class="panel-section" id="panel-pipeline">
       <div class="tstrip" id="pl-strip">
-        <span title="witness passed the draft unchanged">✅<b id="pl-pass">0</b></span>
+        <span title="Tool calls represented in recent Pipeline history">🛠 <b id="pl-tools">0</b></span>
+        <span title="Explicit witness PASS verdicts">✅<b id="pl-pass">0</b></span>
+        <span class="ts-held" title="Incomplete witness audits — no valid verdict">◷<b id="pl-incomplete">0</b></span>
         <span title="witness objected — handed back to her">❓<b id="pl-concern">0</b></span>
         <span title="she answered and revised in her own words">💬<b id="pl-answered">0</b></span>
         <span class="ts-held" title="she overruled the witness and kept her position">🙅<b id="pl-over">0</b></span>
         <span class="ts-held" title="still disputed after one round — shipped anyway">⚖<b id="pl-unres">0</b></span>
         <span class="ts-held" title="tools held on a false premise">✋<b id="pl-hold">0</b></span>
-        <span class="ts-err" title="errors: gates offline, trim overrides, exhausted turns">⚠<b id="pl-err">0</b></span>
+        <span class="ts-err" title="Tool failures, audit errors, gates offline, trim overrides and exhausted turns">⚠<b id="pl-err">0</b></span>
         <span class="ts-now" id="pl-now">watching…</span>
       </div>
       <div id="pl-feed">
-        <div class="panel-empty" id="pl-empty"><div class="ei">🛡</div>No gate events yet.<br>Her witness, holds and trims appear here as they fire.</div>
+        <div class="panel-empty" id="pl-empty"><div class="ei">🛡</div>No Pipeline events yet.<br>Tool progress and witness checks appear here as they happen.</div>
       </div>
     </div>
 
@@ -3156,7 +3174,7 @@ function addVerbose(d){
   while(v.querySelectorAll('.vbi').length>80) v.removeChild(v.lastChild);
 }
 
-/* ══ PIPELINE TAB (2026-07-21) — her gates, live ═══════════════════════════════════════ */
+/* ══ PIPELINE TAB — live tool progress and evidence-based audit outcomes ═════════════ */
 // Every stage her body can emit needs an entry here, or it renders as raw snake_case with a
 // generic dot — which is exactly the vagueness this tab exists to eliminate. (2026-07-21: the
 // witness-conversation stages shipped backend-only and rendered as "·witness_concern" for an
@@ -3167,6 +3185,11 @@ const _PL_META={
   GATES_OFFLINE:      {i:'🚨', t:'GATES OFFLINE',          c:'err'},
   witness_check:      {i:'🛡', t:'Witness engaged',        c:''},
   witness_pass:       {i:'✅', t:'Witness: PASS',           c:'ok'},
+  witness_incomplete: {i:'◷', t:'Audit incomplete',          c:'held'},
+  witness_error:      {i:'⚠', t:'Audit error',               c:'err'},
+  tool_started:       {i:'◌', t:'Tool running',              c:'running'},
+  tool_completed:     {i:'✓', t:'Tool completed',            c:'ok'},
+  tool_failed:        {i:'×', t:'Tool failed',               c:'err'},
   witness_concern:    {i:'❓', t:'Witness objected',        c:'held'},
   witness_answered:   {i:'💬', t:'She answered & revised',  c:'ok'},
   witness_overruled:  {i:'🙅', t:'She overruled it',        c:'held'},
@@ -3193,8 +3216,8 @@ const _PL_META={
 function _plTitle(stage){
   return String(stage||'event').replace(/_/g,' ').replace(/^\w/,c=>c.toUpperCase());
 }
-let _plTimer=null, _plAll=[], _plOpen={};
-const _PLSTATS={pass:0,concern:0,answered:0,over:0,unres:0,hold:0,err:0};
+let _plTimer=null, _plAll=[], _plOpen=Object.create(null), _plFingerprint='', _plPolling=false;
+const _PLSTATS={tools:0,pass:0,incomplete:0,concern:0,answered:0,over:0,unres:0,hold:0,err:0};
 
 // ── TURNS, NOT EVENTS (2026-07-21, Cole: "help me understand the process better") ─────────
 // A flat reverse-chron list makes the reader reconstruct the story: four rows that are really
@@ -3203,12 +3226,14 @@ const _PLSTATS={pass:0,concern:0,answered:0,over:0,unres:0,hold:0,err:0};
 // with a shared turn id, so this renders one turn as one row: a flow of stages, an outcome
 // badge, and the whole exchange underneath when you open it.
 const _PL_OUTCOME={
-  witness_pass:      {t:'CLEAN',            c:'ok',   d:'Audited and everything checked out.'},
+  witness_pass:      {t:'WITNESS: PASS',    c:'ok',   d:'The witness returned an explicit PASS for the submitted draft.'},
+  witness_incomplete:{t:'AUDIT INCOMPLETE', c:'held', d:'The audit ended without a valid verdict. This is not a pass.'},
+  witness_error:     {t:'AUDIT ERROR',      c:'err',  d:'The audit failed. The draft has not been certified by this check.'},
   witness_answered:  {t:'SHE FIXED IT',     c:'ok',   d:'Her witness objected; she answered and revised in her own words.'},
   witness_overruled: {t:'SHE OVERRULED',    c:'held', d:'Her witness objected; she disagreed and kept her position. She holds more context than it does.'},
   witness_unresolved:{t:'STILL DISPUTED',   c:'held', d:'She revised and the witness still objects. Her words shipped anyway — one round only.'},
   witness_check:     {t:'AUDITING…',        c:'',     d:'Her witness is reading this draft right now. The outcome lands in a moment.'},
-  witness_verified:  {t:'WITNESS VERIFIED',  c:'', d:'Her witness read the evidence itself before ruling.'},
+  witness_verified:  {t:'READ CHECKS RETURNED', c:'neutral', d:'Read-only tool results returned. This alone is not a verdict.'},
   promise_unkept:    {t:'PROMISED, DIDN\'T CHECK', c:'held', d:'She said she would verify, then answered anyway. Asked for the tool call and nothing else.'},
   witness_concern:   {t:'OBJECTED — awaiting her answer', c:'held', d:'The witness has objected and is waiting on her answer.'},
   witness_skip:      {t:'NOT AUDITED',      c:'',     d:'Sent without an audit — nothing triggered one.'},
@@ -3231,6 +3256,79 @@ const _PL_OUTCOME={
 function _plTitle(stage){ return String(stage||'event').replace(/_/g,' ').replace(/^\w/,c=>c.toUpperCase()); }
 function _plEsc(v){ return esc(String(v==null?'':v)); }
 
+function _plAttr(v){return _plEsc(v).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function _plExplicitPass(verdict){
+  let text=String(verdict||'').trim();
+  const fence=text.match(/^```(?:text)?\s*\n([\s\S]*?)\n```$/i);
+  if(fence)text=fence[1].trim();
+  text=text.replace(/^[1-4][.)]\s*/, '');
+  return /^PASS[.!]?$/i.test(text);
+}
+function _plNormalizeEvent(event){
+  // Old logs can say witness_pass while retaining a JSON read request as their
+  // verdict. Correct its presentation without rewriting Nova's historical record.
+  if(['witness_pass','witness_answered'].includes(event.stage)&&!_plExplicitPass(event.verdict)){
+    return {...event,original_stage:event.stage,stage:'witness_incomplete',status:'INCOMPLETE',
+      reason:'This historical audit was marked successful without an explicit PASS verdict.'};
+  }
+  return event;
+}
+function _plToolStatus(event){
+  const status=String(event.status||'').toLowerCase();
+  if(event.stage==='tool_started')return {key:'running',label:'Running',color:'running'};
+  const outcomes={failed:['Failed','err'],partial:['Partial','held'],refused:['Refused','held'],cancelled:['Cancelled','held'],canceled:['Cancelled','held'],timeout:['Timed out','err'],timed_out:['Timed out','err']};
+  if(outcomes[status])return {key:status,label:outcomes[status][0],color:outcomes[status][1]};
+  if(event.stage==='tool_failed'||event.ok===false)return {key:'failed',label:'Failed',color:'err'};
+  if(event.stage==='tool_completed'&&(status==='succeeded'||(!status&&event.ok===true)))return {key:'succeeded',label:'Completed',color:'ok'};
+  return {key:'unknown',label:'Outcome unknown',color:'neutral'};
+}
+function _plToolSteps(events){
+  const steps=[],byId=new Map();
+  for(const event of events){
+    if(!['tool_started','tool_completed','tool_failed'].includes(event.stage))continue;
+    const id=event.operation_id?String(event.operation_id):'unpaired-'+steps.length;
+    let step=byId.get(id);
+    if(!step){step={id,started:null,event};steps.push(step);byId.set(id,step);}
+    if(event.stage==='tool_started'){
+      step.started=event;
+      if(!step.ended)step.event=event;
+    }else{step.event=event;step.ended=true;}
+  }
+  return steps;
+}
+function _plToolRows(events){
+  const steps=_plToolSteps(events);
+  if(!steps.length)return '';
+  return '<ol class="pl-tool-list" aria-label="Tool progress">'+steps.map(step=>{
+    const event=step.event,status=_plToolStatus(event);
+    const start=step.started?.ts||event.ts;
+    const duration=Number(event.duration_ms);
+    let elapsed='';
+    if(status.key==='running'){
+      const seconds=Math.max(0,Math.floor((Date.now()-Date.parse(start))/1000));
+      if(Number.isFinite(seconds))elapsed=seconds+'s since start';
+    }else if(event.duration_ms!=null&&Number.isFinite(duration)&&duration>=0){
+      elapsed=duration<1000?Math.round(duration)+' ms':(duration/1000).toFixed(1)+' s';
+    }
+    const place={guest:'Guest',host:'Host',local:'Local'}[event.environment]||'';
+    return `<li class="pl-tool-step ${status.color}" data-operation="${_plAttr(step.id)}">`+
+      `<span class="pl-tool-clock">${_plEsc(String(start||'').slice(11,19))}</span>`+
+      `<span class="pl-tool-name">${_plEsc(event.tool||'Tool')}${place?`<small>${place}</small>`:''}</span>`+
+      `<span class="pl-tool-state" title="${status.key==='running'?'Last reported status; awaiting a completion event':_plAttr(event.detail||status.label)}">${status.label}</span>`+
+      `<span class="pl-tool-duration">${_plEsc(elapsed)}</span></li>`;
+  }).join('')+'</ol>';
+}
+function _plGroups(events){
+  const groups=new Map();
+  events.forEach((event,index)=>{
+    const key=event.turn||event.run_id||('_solo_'+event.ts+event.stage);
+    if(!groups.has(key))groups.set(key,{turn:key,events:[],latest:index});
+    const group=groups.get(key);group.events.push(event);group.latest=index;
+  });
+  // A still-running turn that receives a new result returns to the top.
+  return [...groups.values()].sort((a,b)=>b.latest-a.latest).slice(0,60);
+}
+
 function _plRenderGroup(g){
   // ── A TURN IS A CONVERSATION, SO RENDER ONE (2026-07-21, Cole: "'the reply'? whose reply?
   // what? when? how? why?") ────────────────────────────────────────────────────────────────
@@ -3240,13 +3338,17 @@ function _plRenderGroup(g){
   // actually happened is a dialogue: she wrote something, her witness objected, she answered,
   // it resolved. So build that dialogue — numbered, timestamped, attributed — and dedupe the
   // repeats (the same draft rides along on several events).
-  const evs=g.events;
+  const evs=g.events.map(_plNormalizeEvent);
   const last=evs[evs.length-1];
-  const oc=_PL_OUTCOME[last.stage]||{t:_plTitle(last.stage),c:'',d:last.what||''};
+  const toolStage=['tool_started','tool_completed','tool_failed'].includes(last.stage);
+  const toolStatus=toolStage?_plToolStatus(last):null;
+  const oc=toolStage?{t:toolStatus.label+' · '+(last.tool||'Tool'),c:toolStatus.color,d:last.detail||'Tool progress; full inputs and output are in Activity.'}
+    :(_PL_OUTCOME[last.stage]||{t:_plTitle(last.stage),c:'neutral',d:last.what||last.detail||'No interpretation is registered for this event.'});
   const m=_PL_META[last.stage]||{i:'•'};
   const t0=String(evs[0].ts||'').slice(11,16);
   const open=!!_plOpen[g.turn];
-  const steps=evs.length>1?`<span class="pl-n">${evs.length} steps</span>`:'';
+  const toolCount=_plToolSteps(evs).length;
+  const steps=`<span class="pl-n">${toolCount?toolCount+' tools · ':''}${evs.length} events</span>`;
 
   let body='';
   if(open){
@@ -3261,6 +3363,10 @@ function _plRenderGroup(g){
                           // attempt — labelling both "wrote this" made the exchange unreadable
     for(const e of evs){
       const T=e.ts;
+      if(e.stage==='witness_incomplete'||e.stage==='witness_error'){
+        push('system',e.stage==='witness_error'?'audit failed — no valid verdict':'audit incomplete — not a pass',e.reason||e.detail,T);
+        if(e.verdict)push('witness','raw audit output (not a verdict)',e.verdict,T);
+      }
       if(e.stage==='witness_verified')    push('witness','went and checked this itself before ruling', (e.args||'')+'\n'+(e.verdict||''), T);
       if(e.stage==='promise_unkept')      push('system','she said she would check, then didn\'t — asked for the tool call only', e.concern, T, 'del');
       if(e.stage==='witness_check')
@@ -3322,7 +3428,7 @@ function _plRenderGroup(g){
     const lh=any('last_human_min'), tt=any('tools_this_turn'), tg=any('trigger');
     if(tg) facts+=`<div class="pl-fact">Why it was audited at all: ${_plEsc(tg)}.</div>`;
     if(lh!==undefined&&lh>=0) facts+=`<div class="pl-fact">A person had last spoken ${lh} minute${lh===1?'':'s'} before this.</div>`;
-    if(tt!==undefined) facts+=`<div class="pl-fact">She ran ${tt} tool${tt===1?'':'s'} this turn — that is all the evidence her witness had about her actions.</div>`;
+    if(tt!==undefined) facts+=`<div class="pl-fact">The audit received ${tt} tool receipt${tt===1?'':'s'} from this turn.</div>`;
     const rr=any('rounds'); const dl=any('deadlocked');
     if(rr) facts+=`<div class="pl-fact">They went back and forth ${rr} time${rr===1?'':'s'} before this settled${dl?', and stopped because the same objection kept returning with nothing new checked':''}.</div>`;
     // Cloud heavy-witness context — what the second opinion was actually given, and where to
@@ -3340,13 +3446,14 @@ function _plRenderGroup(g){
       dialogue + facts +
     `</div>`;
   }
-  return `<div class="pl-turn ${oc.c||'ok'}">`+
-    `<div class="pl-row" onclick="plToggle('${g.turn}')">`+
+  const notice=['witness_incomplete','witness_error'].includes(last.stage)?`<p class="pl-audit-notice ${oc.c}">${_plEsc(last.reason||last.detail||oc.d)}</p>`:'';
+  return `<div class="pl-turn ${oc.c||'neutral'}">`+
+    `<button type="button" class="pl-row" data-pl-turn="${_plAttr(g.turn)}" aria-expanded="${open}" onclick="plToggle(this.dataset.plTurn)">`+
       `<span class="pl-car">${open?'▾':'▸'}</span>`+
       `<span class="pl-time">${t0}</span>`+
-      `<span class="pl-badge ${oc.c||'ok'}">${m.i} ${_plEsc(oc.t)}</span>`+
+      `<span class="pl-badge ${oc.c||'neutral'}">${m.i} ${_plEsc(oc.t)}</span>`+
       steps+
-    `</div>`+ body +
+    `</button>`+ notice + _plToolRows(evs) + body +
   `</div>`;
 }
 window.plToggle=function(turn){
@@ -3355,53 +3462,50 @@ window.plToggle=function(turn){
 };
 function plRender(){
   const feed=document.getElementById('pl-feed'); if(!feed) return;
-  // group by turn id, preserving arrival order inside each turn
-  const groups=[]; const idx={};
-  for(const d of _plAll){
-    const key=d.turn||('_solo_'+d.ts+d.stage);
-    if(idx[key]===undefined){ idx[key]=groups.length; groups.push({turn:key, events:[]}); }
-    groups[idx[key]].events.push(d);
-  }
-  const recent=groups.slice(-60).reverse();
-  feed.innerHTML = recent.length? recent.map(_plRenderGroup).join('')
-    : '<div class="panel-empty"><div class="ei">🛡</div>No gate events yet.</div>';
+  const recent=_plGroups(_plAll);
+  feed.innerHTML=recent.length?recent.map(_plRenderGroup).join('')
+    :'<div class="panel-empty"><div class="ei">🛠</div>No Pipeline events yet.<br>Tool progress and witness checks appear here.</div>';
 }
 function widgetVisible(id){return window.novaWidgetVisible?window.novaWidgetVisible(id):activePanel===id;}
 async function plPoll(){
+  if(_plPolling)return;
+  _plPolling=true;
   try{
-    const r=await fetch('/api/pipeline');
+    const r=await fetch('/api/pipeline',{cache:'no-store'});
     if(!r.ok)throw Error('Pipeline unavailable ('+r.status+')');
     const j=await r.json();
-    const rows=j.events||[];
-    const now=document.getElementById('pl-now');
-    if(now)now.textContent=rows.length?'Recent events · updated '+new Date().toLocaleTimeString():'No pipeline events recorded yet';
-    const changed = rows.length!==_plAll.length ||
-      (rows.length&&_plAll.length&&rows[rows.length-1].ts!==_plAll[_plAll.length-1].ts);
-    if(!changed) return;
-    if(rows.length>_plAll.length && _plAll.length && activePanel!=='pipeline')
-      document.querySelector('.ptab[data-tab="pipeline"]')?.classList.add('has-new');
-    _plAll=rows;
-    for(const k in _PLSTATS)_PLSTATS[k]=0;
-    for(const d of rows){
-      if(d.stage==='witness_pass')_PLSTATS.pass++;
-      else if(d.stage==='witness_concern')_PLSTATS.concern++;
-      else if(d.stage==='witness_answered')_PLSTATS.answered++;
-      else if(d.stage==='witness_overruled')_PLSTATS.over++;
-      else if(d.stage==='witness_unresolved')_PLSTATS.unres++;
-      else if(d.stage==='premise_hold')_PLSTATS.hold++;
-      else if(d.stage==='trim_override'||d.stage==='GATES_OFFLINE'||d.stage==='loop_exhausted')_PLSTATS.err++;
+    const rows=(Array.isArray(j.events)?j.events:[]).filter(event=>event&&typeof event==='object').map(_plNormalizeEvent);
+    // The writer may trim an old record while appending a new one in the same
+    // second. Length + last timestamp misses that real update; compare the payload.
+    const fingerprint=JSON.stringify(rows),changed=fingerprint!==_plFingerprint;
+    if(changed){
+      if(_plAll.length&&!widgetVisible('pipeline'))document.querySelector('.ptab[data-tab="pipeline"]')?.classList.add('has-new');
+      _plAll=rows;_plFingerprint=fingerprint;
+      for(const key in _PLSTATS)_PLSTATS[key]=0;
+      for(const event of rows){
+        if(event.stage==='witness_pass')_PLSTATS.pass++;
+        else if(event.stage==='witness_incomplete')_PLSTATS.incomplete++;
+        else if(event.stage==='witness_concern')_PLSTATS.concern++;
+        else if(event.stage==='witness_answered')_PLSTATS.answered++;
+        else if(event.stage==='witness_overruled')_PLSTATS.over++;
+        else if(event.stage==='witness_unresolved')_PLSTATS.unres++;
+        else if(event.stage==='premise_hold')_PLSTATS.hold++;
+        else if(['witness_error','trim_override','GATES_OFFLINE','loop_exhausted'].includes(event.stage))_PLSTATS.err++;
+      }
+      for(const group of _plGroups(rows))for(const step of _plToolSteps(group.events)){
+        _PLSTATS.tools++;if(_plToolStatus(step.event).color==='err')_PLSTATS.err++;
+      }
+      for(const [key,value] of Object.entries(_PLSTATS)){
+        const node=document.getElementById('pl-'+key);if(node)node.textContent=value;
+      }
     }
-    plRender();
-    const el=id=>document.getElementById(id);
-    el('pl-pass')&&(el('pl-pass').textContent=_PLSTATS.pass);
-    el('pl-concern')&&(el('pl-concern').textContent=_PLSTATS.concern);
-    el('pl-answered')&&(el('pl-answered').textContent=_PLSTATS.answered);
-    el('pl-over')&&(el('pl-over').textContent=_PLSTATS.over);
-    el('pl-unres')&&(el('pl-unres').textContent=_PLSTATS.unres);
-    el('pl-hold')&&(el('pl-hold').textContent=_PLSTATS.hold);
-    el('pl-err')&&(el('pl-err').textContent=_PLSTATS.err);
-    el('pl-now')&&(el('pl-now').textContent='live · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
-  }catch(e){const n=document.getElementById('pl-now');if(n)n.textContent=e.message;} 
+    const running=_plGroups(rows).some(group=>_plToolSteps(group.events).some(step=>_plToolStatus(step.event).key==='running'));
+    if(changed||running)plRender();
+    const now=document.getElementById('pl-now');
+    if(now)now.textContent=rows.length?'Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'No Pipeline events recorded yet';
+  }catch(error){
+    const now=document.getElementById('pl-now');if(now)now.textContent=error.message+' · last received events retained';
+  }finally{_plPolling=false;}
 }
 _plTimer=setInterval(()=>{if(widgetVisible('pipeline'))plPoll();}, 3000); setTimeout(plPoll, 1500);
 

@@ -1,3 +1,4 @@
+# @nova: Preserve explicit tool outcomes, operation identity and execution environment alongside their text view.
 # Last updated: 2026-10-04 14:28:11
 """Explicit tool outcomes, with a string-compatible view for older faculties."""
 from __future__ import annotations
@@ -14,7 +15,7 @@ class ToolResult(str):
     """
 
     def __new__(cls, text="", *, status="succeeded", exit_code=None, stdout="",
-                stderr="", operation_id=None, duration_ms=0, artifacts=()):
+                stderr="", operation_id=None, duration_ms=0, artifacts=(), environment=None):
         if status not in {"succeeded", "failed", "refused", "timed_out", "cancelled", "unknown"}:
             raise ValueError(f"Invalid tool status: {status}")
         obj = super().__new__(cls, str(text))
@@ -23,6 +24,7 @@ class ToolResult(str):
         obj.operation_id = operation_id or uuid.uuid4().hex
         obj.duration_ms = duration_ms
         obj.artifacts = list(artifacts)
+        obj.environment = dict(environment or {})
         obj.run_id = None
         return obj
 
@@ -39,6 +41,7 @@ class ToolResult(str):
             "output_truncated": len(self.stdout) > limit or len(self.stderr) > limit,
             "timed_out": self.status == "timed_out", "cancelled": self.status == "cancelled",
             "duration_ms": round(self.duration_ms, 1), "artifacts": self.artifacts,
+            "environment": dict(self.environment),
         }
 
 

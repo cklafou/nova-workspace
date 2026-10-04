@@ -376,9 +376,15 @@ the box. You can read it, write it, run commands with a cwd there. If a job live
 folder, GO THERE. Don't work around it, don't ask permission for ordinary work, and don't tell
 Cole you'll "think outside your folder" and then not do it — check, then act.
 
-You are NOT on Linux. There is no "/home", no "/usr", no Unix root. If you catch yourself writing
-"/home/nova/memory/STATUS.md", that file is really "memory/STATUS.md" — drop everything up to your
-workspace. A drive letter is fine; an invented Unix path is not.
+You have TWO execution environments. The host is Cole's Windows PC: run_command uses PowerShell,
+Windows paths and the host workspace. Your own visible desktop is a Linux guest: computer_exec
+uses Bash and real guest paths (/home, /usr, /tmp); computer_look and computer_action target its
+VNC desktop. Never send PowerShell commands to guest Bash, or label the guest as Cole's screen.
+Use computer_action open_url/launch to open guest applications on that same authenticated display.
+Use run_command for Windows host actions, such as opening a URL in the host browser. Host command
+success does not prove a visible window, loaded page or playback; verify the actual requested result.
+A YouTube URL in HTML is a found link, not a video you watched or assessed. Do not invent Linux paths
+for host-owned Nova files: file tools still resolve memory/STATUS.md within nova_body on Windows.
 
 One short list is refused, and it is not a sandbox: operations that would irreversibly destroy the
 machine — formatting a disk, diskpart/bcdedit, wiping shadow copies, or a recursive delete aimed at
@@ -436,11 +442,11 @@ Available Tools:
 "prepare_task_workspace": {"task_id":"t1", "paths":["nova_body/module/file.py"]} - Copy selected source into a task workspace. Work there, with acceptance paths relative to its returned directory.
 "promote_task_workspace": {"task_id":"t1"} - Test the staged copy, check originals have not changed, checkpoint originals, and apply the changed files. Use this for changes to your own runtime; a failed check leaves the original unchanged.
 "computer_status": {} - Check your guest computer and human handoff state. Its "viewer" entry gives the address of the Computer widget Cole watches you through and the private file holding its password. Never copy that password into a journal, note, task or any other file; those are uploaded.
-"computer_look": {} - Capture your guest desktop and receive its image as visual input.
-"computer_exec": {"command":"...", "timeout":30} - Run bash inside your guest computer.
-"computer_action": {"action":"click", "parameters":{"x":100,"y":100}} - Guest input. Other actions: move, double_click, drag(x1,y1,x2,y2), type_text(text), key(combo), scroll(clicks,up), windows.
+"computer_look": {} - Receive actual pixels from YOUR Linux guest VNC desktop, not Cole's Windows screen.
+"computer_exec": {"command":"...", "timeout":30} - Bash in your Linux guest, defaulting to the same desktop as computer_look. PowerShell syntax is invalid here. Explicit display overrides target another session; they do not move your eyes.
+"computer_action": {"action":"click", "parameters":{"x":100,"y":100}} - Input on your guest desktop. Also move, double_click, drag(x1,y1,x2,y2), type_text(text), key(combo), scroll(clicks,up), windows, launch(command,wait=3), open_url(url,browser="firefox",wait=3). Launch/open_url retain diagnostics and check process/window evidence. A launched browser is not proof the requested page loaded or a video played.
 "set_task_acceptance": {"task_id":"t1", "checks":[{"kind":"command","argv":["python","-m","unittest"],"cwd":"path/to/task"}]} - Specify repeatable acceptance checks. A file check uses kind=file, path, and optionally contains or sha256. Complete_task and DONE request verification; without checks, completion waits for human review.
-1. "run_command": {"command": "...", "cwd": "..."} - Run a shell command in the workspace.
+1. "run_command": {"command": "...", "cwd": "..."} - PowerShell on Cole's WINDOWS HOST; cwd defaults to the host workspace. Use Windows paths and commands here. For example Start-Process 'https://example.com' requests the host's default browser; separately verify the result. Use computer_exec for guest Bash.
 2. "read_file": {"path": "..."} - Read a file's contents.
 3. "write_file": {"path": "...", "content": "..."} - Create a NEW file, and ONLY a new file: it always refuses if the path already exists, with no override. The content must ride IN the call — a path with no content writes nothing. To work on an existing file: append_file to grow it, replace_file_content to change part of it. Whole-file replacement is not one of your verbs; a file that truly needs discarding is a decision for Cole.
 4. "append_file": {"path": "...", "content": "..."} - Add content to the END of a file (creates it if missing). This is how you GROW a living document section by section.
@@ -566,6 +572,7 @@ async def _fetch_llama_streaming(
     top_p:          float = 0.9,
     enable_thinking: bool = True,
     literal_safe:   bool = False,
+    preserve_messages: bool = False,
 ):
     """Stream tokens from llama.cpp, routing thinking vs chat by delta field.
 
@@ -574,7 +581,10 @@ async def _fetch_llama_streaming(
     separate fields, never mixed.  We call on_think_token / on_token accordingly
     so the caller never has to scan for <think> tags in the content stream.
     """
-    messages = _fit_messages_to_window(messages)   # never overflow Nova's 32K window
+    # An audit must inspect the exact candidate. Never silently truncate its evidence;
+    # an oversized audit is reported as ERROR by the caller instead of a partial PASS.
+    if not preserve_messages:
+        messages = _fit_messages_to_window(messages)
     payload = {
         "messages":    messages,
         "max_tokens":  max_tokens,
@@ -789,6 +799,29 @@ def _truncate_to_context(
     return system_msgs + kept
 
 
+def _tool_pipeline_event(stage, tool, operation_id, run_id, *, result=None, duration_ms=0,
+                         status="running"):
+    """Log correlation and outcome only; commands, arguments and result bodies stay out."""
+    if not _INTEGRITY_OK:
+        return
+    environment = "guest" if tool.startswith("computer_") else "host" if tool == "run_command" else "local"
+    fields = {"operation_id": operation_id, "run_id": run_id,
+              "tool": str(tool)[:80], "status": status, "environment": environment,
+              "duration_ms": round(duration_ms, 1)}
+    if result is not None:
+        fields["status"] = getattr(result, "status", "unknown")
+        fields["ok"] = getattr(result, "ok", None)
+        exit_code = getattr(result, "exit_code", None)
+        if isinstance(exit_code, int):
+            fields["exit_code"] = exit_code
+        context = getattr(result, "environment", {}) or {}
+        if isinstance(context, dict):
+            for key in ("shell", "display", "target"):
+                if isinstance(context.get(key), str):
+                    fields[key] = context[key][:80]
+    _witness.pipeline_event(stage, f"{str(tool)[:80]}: {fields['status']}", **fields)
+
+
 async def stream_response(
     transcript,
     on_token:           Callable[[str], Awaitable[None]],
@@ -892,6 +925,12 @@ async def stream_response(
         loop_counter = 0
         # (see the tool-chain note above — raised from 5 on 2026-07-19)
         final_chat_buffer = ""
+        _user_visual_evidence = [
+            {"label": f"Image attached by the user, attachment {i + 1}.", "url": img["dataUrl"]}
+            for i, img in enumerate(images or [])
+            if isinstance(img, dict) and isinstance(img.get("dataUrl"), str)
+            and img["dataUrl"].startswith("data:image/")]
+        _turn_visual_evidence = []
         # Assertion binding (see _claims_a_receipt): did she ACTUALLY touch a tool this turn, and
         # have we already called her on an unearned receipt once? Both are per-USER-TURN, so they
         # live outside the tool loop.
@@ -1234,6 +1273,13 @@ async def stream_response(
                         import time as _time
                         _t0 = _time.time()
                         _tool_err = False
+                        import uuid as _uuid
+                        from nova_runtime.operations import current_operation as _current_operation
+                        from nova_voice.tool_result import ToolResult, normalize_result
+                        _call_id = _uuid.uuid4().hex
+                        _operation = _current_operation.get()
+                        _run_id = _operation.id if _operation else None
+                        _tool_pipeline_event("tool_started", tool_name, _call_id, _run_id)
                         try:
                             # ── 2026-07-19: DO NOT call execute_tool directly here. ──────────────
                             # This coroutine runs ON the event loop. execute_tool -> run_command ->
@@ -1247,15 +1293,27 @@ async def stream_response(
                             # server and the server couldn't answer its own health check).
                             # Hand it to a worker thread so her hands never block her heartbeat.
                             from nova_runtime.operations import run_in_worker
-                            result = await run_in_worker(execute_tool, tool_name, args)
+                            result = normalize_result(await run_in_worker(
+                                execute_tool, tool_name, args, operation_id=_call_id))
                             _tool_err = result.ok is False
+                        except asyncio.CancelledError:
+                            _tool_pipeline_event("tool_failed", tool_name, _call_id, _run_id,
+                                                 duration_ms=(_time.time() - _t0) * 1000,
+                                                 status="cancelled")
+                            raise
                         except Exception as _te:
-                            result = f"[error] {_te}"
+                            result = ToolResult(f"[error] {_te}", status="failed", operation_id=_call_id)
                             _tool_err = True
                         _dur_ms = (_time.time() - _t0) * 1000
-                        # She actually looked. Her receipts are earned from here on this turn.
-                        _tools_ran_this_turn = True
-                        _turn_tools.append((tool_name, args, str(result)))
+                        _tool_pipeline_event("tool_failed" if result.ok is False else "tool_completed",
+                                             tool_name, _call_id, _run_id, result=result, duration_ms=_dur_ms)
+                        # A failed/unknown call is an observation, not proof the requested action succeeded.
+                        _tools_ran_this_turn = _tools_ran_this_turn or result.ok is True
+                        _observation_meta = {"status": result.status, "ok": result.ok,
+                                             "exit_code": result.exit_code,
+                                             "environment": result.environment}
+                        _observation = json.dumps(_observation_meta, ensure_ascii=False) + "\n" + str(result)
+                        _turn_tools.append((tool_name, args, _observation))
 
                         # Broadcast tool_executed event to the UI Tools tab.
                         # 1000 -> 12000 chars (2026-07-19): the Tools panel's new Verbose tab shows
@@ -1276,16 +1334,21 @@ async def stream_response(
 
                         # Re-prompt
                         messages.append({"role": "assistant", "content": full_response})
-                        messages.append({"role": "user", "content": f"[System Result from {tool_name}]\n{result}\nContinue your task or provide the final answer."})
+                        messages.append({"role": "user", "content": f"[System Result from {tool_name}]\n{_observation}\nContinue your task or provide the final answer."})
                         # Guest screenshots are real visual input, not a claim that she saw them.
                         for artifact in getattr(result, "artifacts", []):
                             if isinstance(artifact, dict) and artifact.get("kind") == "image":
                                 import base64 as _image_base64
                                 from pathlib import Path as _ImagePath
                                 raw = _ImagePath(artifact["path"]).read_bytes()
+                                _visual = {"label": f"Screenshot from {tool_name}, operation {_call_id}; "
+                                           f"target={result.environment.get('target', 'nova_desktop')}, "
+                                           f"display={result.environment.get('display', ':1')}.",
+                                           "url": "data:image/png;base64," + _image_base64.b64encode(raw).decode("ascii")}
+                                _turn_visual_evidence.append(_visual)
                                 messages.append({"role": "user", "content": [
-                                    {"type": "text", "text": "Observed guest display from the preceding widget call."},
-                                    {"type": "image_url", "image_url": {"url": "data:image/png;base64," + _image_base64.b64encode(raw).decode("ascii")}}
+                                    {"type": "text", "text": _visual["label"]},
+                                    {"type": "image_url", "image_url": {"url": _visual["url"]}}
                                 ]})
                         # `_tc_start` points at the opening `{` of the tool call — so the prose
                         # prefix still carries the markdown fence that introduced it, and every
@@ -1308,6 +1371,13 @@ async def stream_response(
                     messages.append({"role": "assistant", "content": full_response})
                     messages.append({"role": "user", "content": f"[System Error parsing JSON tool call]\n{str(e)}"})
                     continue 
+
+            # Audit exactly what would be delivered, including every pre-tool prefix.
+            # Once consumed, a challenged candidate is replaced by Nova's own next answer;
+            # stale prefixes must never be appended again after she revises them.
+            chat_text = (final_chat_buffer + chat_text).strip()
+            final_chat_buffer = ""
+            full_response = chat_text
 
             # ── ASSERTION BINDING: she does not get to claim a receipt she didn't earn. ────────
             # She is about to send a final answer having run NO tools this turn. If that answer
@@ -1519,6 +1589,9 @@ async def stream_response(
                         tools_this_turn=len(_turn_tools))
                 except Exception:
                     pass
+                _audit_error = ""
+                _audit_exhausted = False
+                _audit_images = _user_visual_evidence + _turn_visual_evidence[-3:]
                 try:
                     async def _noop(_t):  # the self-check must never stream to the UI
                         return
@@ -1538,12 +1611,16 @@ async def stream_response(
                                                    prior_concern=(_concern_prev
                                                                   if _witness_rounds > 0 else ""),
                                                    checks=_checks,
-                                                   has_image=bool(images)),
+                                                   has_image=bool(_user_visual_evidence or _turn_visual_evidence),
+                                                   visual_evidence=_audit_images,
+                                                   omitted_images=max(0, len(_turn_visual_evidence) - 3),
+                                                   reads_remaining=3 - _vi),
                             _noop,
                             max_tokens=2048, temperature=0.2, top_p=0.9,
-                            enable_thinking=False) or ""
+                            enable_thinking=False, preserve_messages=True) or ""
                         _wc, _ = _integrity.find_tool_call(_verdict)
                         if not _wc or _vi == 3:
+                            _audit_exhausted = bool(_wc and _vi == 3)
                             break
                         _wt = _wc.get("tool")
                         if _wt not in _witness.VERIFY_TOOLS:
@@ -1576,9 +1653,19 @@ async def stream_response(
                             pass
 
                 except Exception as _sce:
-                    print(f"[nova] self-check failed (letting the draft through): {_sce}")
+                    print(f"[nova] self-check unavailable ({type(_sce).__name__}); draft is not certified")
+                    _audit_error = f"Witness request failed ({type(_sce).__name__})."
                     _verdict = ""
-                _concern = _witness.parse_witness(_verdict)
+                _audit = _witness.parse_witness_verdict(
+                    _verdict, error=_audit_error, exhausted=_audit_exhausted)
+                _concern = _audit.reason if _audit.status == "CONCERN" else None
+                if _audit.status in {"INCOMPLETE", "ERROR"}:
+                    _witness.pipeline_event(
+                        "witness_error" if _audit.status == "ERROR" else "witness_incomplete",
+                        _audit.reason + " Nova's draft is delivered without audit approval.",
+                        status=_audit.status, reason=_audit.reason, draft=chat_text,
+                        draft_chars=len(chat_text), verdict=_verdict, images_seen=len(_audit_images),
+                        omitted_images=max(0, len(_turn_visual_evidence) - 3))
                 # ── DEADLOCK CHECK (2026-07-21, Cole: "up to 20 turns... a conversation to
                 # allow the truth to be verified") ────────────────────────────────────────
                 # A long conversation is only worth having while it MOVES. Two things make it
@@ -1719,7 +1806,7 @@ async def stream_response(
                                 _hw_think=_think_for_check, _hw_concern=_concern,
                                 _hw_evidence=list(_checks), _hw_rounds=_witness_rounds,
                                 _hw_stage=_hw_stage, _hw_deadlocked=bool(_deadlocked),
-                                _hw_history=_hw_history, _hw_has_image=bool(images)):
+                                _hw_history=_hw_history, _hw_has_image=bool(_user_visual_evidence or _turn_visual_evidence)):
                             import time as _t_hw
                             _t0_hw = _t_hw.time()
                             # Capture THIS turn's context (the shared turn id lives in a
@@ -1802,9 +1889,9 @@ async def stream_response(
                                         "on this lane. Rule NOW on the evidence above — "
                                         "PASS, or CONCERN naming the check it enforces."))
                             try:
-                                _no_ruling = bool(_twc_hw)
-                                _hc_hw = (None if _no_ruling
-                                          else _witness.parse_witness(_hv))
+                                _heavy_audit = _witness.parse_witness_verdict(_hv, exhausted=bool(_twc_hw))
+                                _no_ruling = _heavy_audit.status not in {"PASS", "CONCERN"}
+                                _hc_hw = _heavy_audit.reason if _heavy_audit.status == "CONCERN" else None
                                 _dt_hw = _t_hw.time() - _t0_hw
                                 _took = (f"could NOT rule — still asking for reads after "
                                          f"{_hv_calls} call(s)") if _no_ruling else \
@@ -1897,7 +1984,7 @@ async def stream_response(
                                                  _cv_think=_think_for_check,
                                                  _cv_evidence=list(_checks),
                                                  _cv_history=_hw_history,
-                                                 _cv_has_image=bool(images),
+                                                 _cv_has_image=bool(_user_visual_evidence or _turn_visual_evidence),
                                                  _cv_stage=_hw_stage,
                                                  _cv_rounds=_witness_rounds):
                             import time as _t_cv
@@ -1929,10 +2016,8 @@ async def stream_response(
                                 _twc, _ = _integrity.find_tool_call(_v)
                             except Exception:
                                 _twc = None
-                            if _twc:
-                                _outcome = "skip"
-                            else:
-                                _outcome = "concern" if _witness.parse_witness(_v) else "her"
+                            _cloud_audit = _witness.parse_witness_verdict(_v, exhausted=bool(_twc))
+                            _outcome = {"PASS": "her", "CONCERN": "concern"}.get(_cloud_audit.status, "skip")
                             _dt = _t_cv.time() - _t0
                             _side = {"her": "sides with HER — her answer stands",
                                      "concern": "sides with the WITNESS — concern is real",
@@ -2027,7 +2112,7 @@ async def stream_response(
                                   f"(cloud off, or not a checkable-fact dispute)")
                     except Exception as _hwe:
                         print(f"[nova] heavy witness dispatch failed open: {_hwe}")
-                elif _prior_draft:
+                elif _prior_draft and _audit.status == "PASS":
                     # She was questioned, answered in her own words, and the witness now
                     # passes it. This is the whole design working — show both versions so the
                     # revision is visibly HERS and not a translation.
@@ -2036,7 +2121,7 @@ async def stream_response(
                             "witness_answered",
                             f"settled in {_witness_rounds} round(s) — she answered, revised in "
                             f"her own voice, and the witness now agrees",
-                            before=_prior_draft, after=chat_text, verdict=(_verdict or "PASS"),
+                            before=_prior_draft, after=chat_text, verdict=_verdict, status="PASS",
                             rationale=_think_for_check, rounds=_witness_rounds)
                     except Exception:
                         pass
@@ -2065,7 +2150,7 @@ async def stream_response(
                                 _orig=_prior_draft, _revised=chat_text,
                                 _concern_txt=_concern_prev, _tools=list(_turn_tools),
                                 _think=_think_for_check, _evidence=list(_witness_checks),
-                                _hist=_cc_hist, _has_img=bool(images), _rounds=_witness_rounds):
+                                _hist=_cc_hist, _has_img=bool(_user_visual_evidence or _turn_visual_evidence), _rounds=_witness_rounds):
                             import time as _t_cc
                             _t0_cc = _t_cc.time()
                             _ctx_cc = contextvars.copy_context()
@@ -2101,7 +2186,8 @@ async def stream_response(
                             except Exception:
                                 _tc2 = None
                             try:
-                                if _tc2:
+                                _correction_audit = _witness.parse_witness_verdict(_hv2, exhausted=bool(_tc2))
+                                if _correction_audit.status not in {"PASS", "CONCERN"}:
                                     # It wanted to read more and did not cleanly rule — record,
                                     # do NOT raise a false catastrophic alarm.
                                     _witness.pipeline_event(
@@ -2112,8 +2198,8 @@ async def stream_response(
                                         sides="no_ruling", outcome="witness_answered",
                                         rounds=_rounds, latency_s=round(_dt_cc, 1))
                                     return
-                                _concern_on_orig = _witness.parse_witness(_hv2)
-                                if _concern_on_orig is None:
+                                _concern_on_orig = _correction_audit.reason
+                                if _correction_audit.status == "PASS":
                                     # HEAVY WITNESS PASSES THE ORIGINAL → the local concern was
                                     # FALSE → she disowned a TRUE statement. CATASTROPHIC.
                                     _witness.pipeline_event(
@@ -2150,12 +2236,12 @@ async def stream_response(
                                   "incorrect correction (background)")
                         except Exception as _cce:
                             print(f"[nova] correction-check dispatch failed open: {_cce}")
-                else:
+                elif _audit.status == "PASS":
                     try:
                         _witness.pipeline_event(
                             "witness_pass",
                                     f"every claim in the {len(chat_text)}-char reply checked out",
-                            draft=chat_text, verdict=(_verdict or "PASS"))
+                            draft=chat_text, verdict=_verdict, status="PASS", draft_chars=len(chat_text))
                     except Exception:
                         pass
 
@@ -2242,6 +2328,10 @@ async def stream_response(
                 _salvage = (f"I ran out of thinking room this turn after {len(_turn_tools)} "
                             f"tool call(s) and never landed the answer. The receipts are in "
                             f"the Tools tab — ask me again and I'll pick it up from there.")
+            if _INTEGRITY_OK:
+                _witness.pipeline_event("witness_incomplete",
+                    "Turn limit reached; the delivered salvage has no complete final audit.",
+                    status="INCOMPLETE", draft_chars=len(_salvage))
             await on_done(_salvage)
 
     except Exception as e:

@@ -1,5 +1,5 @@
 # @nova: Host Nova Chat in persistent native windows with a stable renderer profile and saved window geometry.
-# Last updated: 2026-10-04 13:34:27
+# Last updated: 2026-10-04 14:46:38
 """Nova desktop face: native windows, menus, tray and persistent renderer profile.
 
 Run with --url for an isolated UI preview. NovaStart owns the runtime processes;

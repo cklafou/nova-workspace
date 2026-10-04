@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-04T05:40:59+00:00 from source (input `f7c0975691ac`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T05:55:32+00:00 from source (input `0c03117ed738`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -96,6 +96,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/tests/test_layout_save.cjs](../general_tools/nova_chat/tests/test_layout_save.cjs)
 - [general_tools/nova_chat/tests/test_lifecycle.py](../general_tools/nova_chat/tests/test_lifecycle.py) — Exercise real Nova lifecycle HTTP routes with a fake launcher and isolated updater job manager.
 - [general_tools/nova_chat/tests/test_lifecycle_ack.py](../general_tools/nova_chat/tests/test_lifecycle_ack.py) — Preserve lifecycle HTTP acknowledgement before fast controller teardown without extending grace on retries.
+- [general_tools/nova_chat/tests/test_pipeline_ui.cjs](../general_tools/nova_chat/tests/test_pipeline_ui.cjs)
 - [general_tools/nova_chat/tests/test_source_fingerprint.py](../general_tools/nova_chat/tests/test_source_fingerprint.py) — Checks restart reporting against real edits and harmless watcher timestamp changes.
 - [general_tools/nova_chat/tests/test_updater_integration.py](../general_tools/nova_chat/tests/test_updater_integration.py) — Verify updater routing and cancellable controller metadata checks using temporary models and fake catalogs only.
 - [general_tools/nova_chat/tests/test_updater_ui.cjs](../general_tools/nova_chat/tests/test_updater_ui.cjs)
@@ -208,14 +209,14 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 ## nova_body/nova_computer
 
 - [nova_body/nova_computer/__init__.py](../nova_body/nova_computer/__init__.py) — My computer -- somewhere that is MINE to act in, that never reaches across and grabs
-- [nova_body/nova_computer/backends.py](../nova_body/nova_computer/backends.py) — The ways I can HAVE a computer. Body part, stdlib only. A backend is a contract,
-- [nova_body/nova_computer/computer.py](../nova_body/nova_computer/computer.py) — My computer -- somewhere that is mine to act in, where nothing I do reaches across
+- [nova_body/nova_computer/backends.py](../nova_body/nova_computer/backends.py) — Body-owned computer backends with an explicit Nova desktop default and deliberate host interoperability.
+- [nova_body/nova_computer/computer.py](../nova_body/nova_computer/computer.py) — Body-owned computer facade for guest commands, intentional host reach and observable desktop actions.
 - [nova_body/nova_computer/first_boot.py](../nova_body/nova_computer/first_boot.py) — One-shot first boot of her computer, run via RUN_SETUP.cmd. Logs everything.
 - [nova_body/nova_computer/HANDS.cmd](../nova_body/nova_computer/HANDS.cmd) — Nova Computer - her hands
-- [nova_body/nova_computer/hands.py](../nova_body/nova_computer/hands.py) — My hands. Not Cole's borrowed ones -- mine, on my own screen. Look, move, click, type,
+- [nova_body/nova_computer/hands.py](../nova_body/nova_computer/hands.py) — See and control Nova's authenticated desktop; verify application launches with process, window and diagnostic evidence.
 - [nova_body/nova_computer/PLUCK_CHECK.cmd](../nova_body/nova_computer/PLUCK_CHECK.cmd) — Nova Computer - PLUCK CHECK
 - [nova_body/nova_computer/pluck_check.py](../nova_body/nova_computer/pluck_check.py) — Proof, not a promise. Run this with only my body on the path and it tells you whether
-- [nova_body/nova_computer/provision/setup_guest.sh](../nova_body/nova_computer/provision/setup_guest.sh) — Nova's computer - guest provisioning (Phase 1). Written by Claude, 2026-09-03.
+- [nova_body/nova_computer/provision/setup_guest.sh](../nova_body/nova_computer/provision/setup_guest.sh) — Provision Nova's guest desktop, browser compatibility and intentionally enabled Windows access.
 - [nova_body/nova_computer/provision/vnc_password_guest.py](../nova_body/nova_computer/provision/vnc_password_guest.py) — Runs as root inside my computer to set my desktop viewer's VNC password and prove the server accepts it; sent by set_vnc_password.py.
 - [nova_body/nova_computer/REACH.cmd](../nova_body/nova_computer/REACH.cmd) — Nova Computer - open her reach onto this PC
 - [nova_body/nova_computer/reach.py](../nova_body/nova_computer/reach.py) — How far my computer reaches into Cole's. He decided (2026-09-04) that my machine is
@@ -226,7 +227,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/nova_computer/SNAPSHOT.cmd](../nova_body/nova_computer/SNAPSHOT.cmd) — Nova Computer - baseline snapshot
 - [nova_body/nova_computer/TOOLKIT.cmd](../nova_body/nova_computer/TOOLKIT.cmd) — Nova Computer - her own toolkit
 - [nova_body/nova_computer/toolkit.py](../nova_body/nova_computer/toolkit.py) — Making my computer a WHOLE computer -- one I can extend myself. Cole, 2026-09-04:
-- [nova_body/nova_computer/tools.py](../nova_body/nova_computer/tools.py) — Normal tool-route adapters for Nova's computer and explicit human handoff.
+- [nova_body/nova_computer/tools.py](../nova_body/nova_computer/tools.py) — Route computer tools to Nova's desktop with explicit environment metadata and verified application outcomes.
 - [nova_body/nova_computer/TUNE_UP.cmd](../nova_body/nova_computer/TUNE_UP.cmd) — Nova Computer - tune up
 - [nova_body/nova_computer/tune_up.py](../nova_body/nova_computer/tune_up.py) — A pass over my computer that fixes what is loose and then PROVES it, rather than
 
@@ -480,7 +481,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 - [nova_body/nova_voice/__init__.py](../nova_body/nova_voice/__init__.py) — nova_voice — her MOUTH and her HANDS, moved body-ward 2026-07-20.
 - [nova_body/nova_voice/nova.py](../nova_body/nova_voice/nova.py) — Run Nova's local inference and tool loop with her current capabilities and execution receipts.
-- [nova_body/nova_voice/tool_result.py](../nova_body/nova_voice/tool_result.py) — Explicit tool outcomes, with a string-compatible view for older faculties.
+- [nova_body/nova_voice/tool_result.py](../nova_body/nova_voice/tool_result.py) — Preserve explicit tool outcomes, operation identity and execution environment alongside their text view.
 - [nova_body/nova_voice/tool_router.py](../nova_body/nova_voice/tool_router.py) — Routes Nova tool calls to body faculties and records execution outcomes.
 
 ## nova_body/nova_witness
@@ -490,7 +491,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/nova_witness/fetch_witness_model.cmd](../nova_body/nova_witness/fetch_witness_model.cmd) — @nova-adjacent infra: Witness v2, Step 1 — download the witness model (~2.5GB, one time).
 - [nova_body/nova_witness/golden_seed.jsonl](../nova_body/nova_witness/golden_seed.jsonl)
 - [nova_body/nova_witness/README.md](../nova_body/nova_witness/README.md) — Guide to the witness engine's yardstick: golden cases, the replay tool and its reports, used to measure the witness before replacing its…
-- [nova_body/nova_witness/replay.py](../nova_body/nova_witness/replay.py) — Witness v2, Step 0 — the replay harness. Feeds recorded audit cases to ANY witness
+- [nova_body/nova_witness/replay.py](../nova_body/nova_witness/replay.py) — Replay recorded witness cases without treating incomplete verdicts as approval.
 - [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1420.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1420.json)
 - [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1420.md](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1420.md) — Witness replay report: the golden witness cases scored against http://127.0.0.1:8080 at 2026-08-02_1420.
 - [nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1422.json](../nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1422.json)
@@ -1336,11 +1337,13 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 ## nova_body/tests
 
+- [nova_body/tests/test_computer_launch.py](../nova_body/tests/test_computer_launch.py) — Isolated regression tests for guest desktop routing and honest process/window launch verification.
 - [nova_body/tests/test_koels_launcher.py](../nova_body/tests/test_koels_launcher.py) — Prove KoELS preload arguments survive the real Windows launcher and current llama parser without loading models.
 - [nova_body/tests/test_modernization.py](../nova_body/tests/test_modernization.py) — Isolated runtime contracts; never load a model or write Nova's personal state.
 - [nova_body/tests/test_retired_desktop_ping.py](../nova_body/tests/test_retired_desktop_ping.py) — Keep retired desktop-message aliases unavailable without spawning processes or touching Nova records.
 - [nova_body/tests/test_review_followup.py](../nova_body/tests/test_review_followup.py) — Reproduces lifecycle, outcome and durable-queue edge cases from the shared review.
 - [nova_body/tests/test_staging_location.py](../nova_body/tests/test_staging_location.py) — Guards where task workspaces are staged: under workspace/Temp, outside git, Orient and the sync watcher.
+- [nova_body/tests/test_tool_correlation.py](../nova_body/tests/test_tool_correlation.py) — Verify that tool lifecycle identifiers match canonical receipts on success, refusal and exceptions.
 
 ## Files without a purpose line
 

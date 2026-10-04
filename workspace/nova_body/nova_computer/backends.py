@@ -1,8 +1,5 @@
+# @nova: Body-owned computer backends with an explicit Nova desktop default and deliberate host interoperability.
 # Last updated: 2026-10-04 14:28:11
-# @nova: The ways I can HAVE a computer. Body part, stdlib only. A backend is a contract,
-#        not a machine: "somewhere I can run a command and see what happened." WSL is one
-#        answer on Cole's Windows box; a plain Linux host is another; "nowhere" is a third,
-#        and it is an honest answer, not a crash.
 # @claude 2026-09-03: PLUCK FIX. computer.py used to BE the WSL implementation -- module-level
 # wsl.exe path, Windows-only creationflags passed unconditionally. Dropped body-only onto a
 # Linux host it did not degrade, it EXPLODED: subprocess raises ValueError for creationflags
@@ -36,6 +33,14 @@ _IS_WINDOWS = os.name == "nt"
 # not flicker (2026-09-02: a zombie scheduled task flashed cmd windows for six weeks and stole
 # game focus), but "no window" must never become "no faculty" on a machine that has no windows.
 _NO_WINDOW = {"creationflags": 0x08000000} if _IS_WINDOWS else {}
+
+
+def nova_desktop_command(command: str, display: str = ":1", xauthority: str = "/home/nova/.Xauthority") -> str:
+    """Select Nova's X11 desktop without changing the user's account or host permissions."""
+    import shlex
+    return (f"export DISPLAY={shlex.quote(display)} XAUTHORITY={shlex.quote(xauthority)}; "
+            "unset WAYLAND_DISPLAY; export GDK_BACKEND=x11 QT_QPA_PLATFORM=xcb MOZ_ENABLE_WAYLAND=0; "
+            + command)
 
 
 class ComputerUnavailable(RuntimeError):
@@ -137,11 +142,10 @@ class LocalPosixBackend(Backend):
 
 
 class WSLBackend(Backend):
-    """Windows host: her own Linux machine inside it, sandboxed, hers alone.
+    """Windows host: Nova's Linux guest with intentional Windows drive/interop access.
 
-    Containment lives in the guest's /etc/wsl.conf (no Windows drives, no interop); the ONE
-    shared path is <host NovaDrop> <-> /mnt/drop. She never touches Cole's screen, mouse,
-    keyboard or focus -- that is the whole reason this exists (see ping_claude's retirement).
+    Guest Bash defaults to the same authenticated X11 desktop as Hands. Explicit command
+    environment overrides remain available; native Windows applications use host interop.
     """
     name = "wsl"
     provisions = True
@@ -222,6 +226,9 @@ class WSLBackend(Backend):
     def shell(self, cmd: str, timeout: int = 120, user: str = GUEST_USER):
         from nova_runtime.operations import current_operation
         import shlex, uuid
+        # Applied inside the login shell, after profile scripts can reset WSLg defaults.
+        # Commands may explicitly override DISPLAY for WSLg; ordinary GUI work belongs on :1.
+        cmd = nova_desktop_command(cmd)
         op=current_operation.get()
         marker='/tmp/nova_operation_'+uuid.uuid4().hex+'.pid'
         if op:

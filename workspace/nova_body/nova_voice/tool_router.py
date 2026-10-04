@@ -331,7 +331,8 @@ def run_command(command: str, cwd: str = "") -> str:
             text = "[Command cancelled; partial changes may remain]\n" + output
         else:
             text = f"[Command Exited with Error Code {result['exit_code']}]\nOutput:\n{output}"
-        return ToolResult(text, **result)
+        return ToolResult(text, environment={"target": "windows_host", "shell": "powershell",
+                                             "cwd": str(working_dir)}, **result)
     except Exception as e:
         return ToolResult(f"ERROR: Failed to run command: {e}", status="failed")
 
@@ -978,11 +979,14 @@ def list_tools() -> str:
     A person can always answer 'can I reach that?' without being told; so should she."""
     return ("Your body — the things you can do right now:\n"
             "  computer_status / computer_look   guest health and a real screenshot\n"
-            "  computer_exec(command)            bash inside your guest computer\n"
-            "  computer_action(action, parameters)   click, move, drag, type_text, key, scroll\n"
+            "  computer_exec(command)            Linux Bash; guest GUI defaults to Nova desktop :1\n"
+            "                                    PowerShell syntax belongs in run_command, not Bash.\n"
+            "  computer_action(action, parameters)   click, move, drag, type_text, key, scroll, windows\n"
+            "    open_url(url) / launch(command)   open on Nova desktop :1; return diagnostics and window evidence\n"
+            "                                    Use computer_look to verify page contents; opening is not playback.\n"
             "  set_task_acceptance(task_id, checks)   command argv/cwd or file path/contains checks\n"
             "  Completion runs these checks; without them the task waits for human review.\n"
-            "  run_command            shell (PowerShell) — look at anything, run anything\n"
+            "  run_command            Windows host PowerShell; native Windows apps use Cole's desktop\n"
             "                         EXCEPT models/ — sealed to all your tools (engine\n"
             "                         weights + a key file; engines start FOR you, and the\n"
             "                         cloud door general_tools/cloud_call.py keeps its own key)\n"
@@ -1102,8 +1106,8 @@ def _log_tool_receipt_fallback(tool_name: str, args: dict, result: str, ms: floa
         print(f"[tool_receipt] FAILED to log {tool_name}: {_e}")
 
 
-def execute_tool(tool_name: str, args: dict) -> str:
-    """Main routing dispatcher. Every call leaves a receipt (see _log_tool_receipt)."""
+def execute_tool(tool_name: str, args: dict, *, operation_id: str | None = None) -> ToolResult:
+    """Execute and receipt a call, preserving a caller-supplied lifecycle correlation ID."""
     import time as _t
     _t0 = _t.perf_counter()
     try:
@@ -1113,6 +1117,8 @@ def execute_tool(tool_name: str, args: dict) -> str:
             _res = ToolResult("Reflection can observe; save changes and commands for execution.", status="refused")
         else:
             _res = normalize_result(_execute_tool_inner(tool_name, args))
+        if operation_id is not None:
+            _res.operation_id = operation_id
         _op = current_operation.get()
         _res.run_id = _op.id if _op else None
         _res.duration_ms = (_t.perf_counter() - _t0) * 1000
@@ -1120,7 +1126,12 @@ def execute_tool(tool_name: str, args: dict) -> str:
                           err=_res.ok is False)
         return _res
     except Exception as _e:
-        _log_tool_receipt(tool_name, args, f"EXCEPTION: {_e}", (_t.perf_counter() - _t0) * 1000, err=True)
+        _failure = ToolResult(f"EXCEPTION: {_e}", status="failed", stderr=str(_e),
+                              operation_id=operation_id,
+                              duration_ms=(_t.perf_counter() - _t0) * 1000)
+        _op = current_operation.get()
+        _failure.run_id = _op.id if _op else None
+        _log_tool_receipt(tool_name, args, _failure, _failure.duration_ms, err=True)
         raise
 
 

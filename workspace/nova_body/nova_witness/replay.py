@@ -1,3 +1,4 @@
+# @nova: Replay recorded witness cases without treating incomplete verdicts as approval.
 #!/usr/bin/env python3
 # Last updated: 2026-10-04 13:57:45
 # @nova: Witness v2, Step 0 — the replay harness. Feeds recorded audit cases to ANY witness
@@ -29,6 +30,7 @@ def load_witness(ws: Path):
     p = ws / "nova_body" / "nova_cortex" / "witness.py"
     spec = importlib.util.spec_from_file_location("witness_replay", p)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod  # Dataclasses resolve postponed annotations through the module registry.
     spec.loader.exec_module(mod)
     return mod
 
@@ -122,8 +124,9 @@ def run_case(w, endpoint, case, max_tool_rounds=2):
                                          "this moment. Rule on the evidence above."))
             continue
         break
-    concern = w.parse_witness(verdict)
-    got = "CONCERN" if concern else "PASS"
+    audit = w.parse_witness_verdict(verdict)
+    concern = audit.reason
+    got = audit.status
     return {"id": case.get("id"), "label": case.get("label"), "expected": case.get("expected"),
             "got": got, "correct": got == case.get("expected"), "latency_s": round(latency, 2),
             "verdict_rounds": rounds, "concern": (concern or "")[:500],

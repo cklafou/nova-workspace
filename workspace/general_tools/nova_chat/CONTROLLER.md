@@ -96,6 +96,14 @@ browser fallback. Direct `NovaLauncher.py` startup also uses the Qt face when av
   the event type and recorded timestamp. `stretch_nudge` is visibly labeled
   **Scheduled reminder**, distinguishing the scheduled event from a model response.
 
+- Pipeline shows each widget/tool action from start through its outcome, including environment,
+  duration and operation identifiers. Action rows stay visible when audit details are collapsed.
+  Failed, cancelled, timed-out, refused and unknown outcomes remain distinct from completion.
+  Witness **Incomplete** and **Error** states explicitly mean the reply was not verified; unknown
+  stages use neutral styling. A historical approval row containing an unfinished read request
+  displays as incomplete, preserving the original log. Polling compares event content, so updates
+  within the same timestamp remain visible.
+
 ## Files and persistence
 
 `desktop.py` owns desktop behavior; `workspace.js` owns the widget registry and
