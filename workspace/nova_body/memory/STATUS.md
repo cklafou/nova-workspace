@@ -1,5 +1,5 @@
 # STATUS.md — Project Nova Current State
-_Last updated: 2026-10-03 10:57:44_
+_Last updated: 2026-10-04 14:23:30_
 _Technical runtime sections updated: 2026-10-02; older background notes retain their dates._
 
 _Prior revision 2026-05-25 — reflects the body-relocation + dead-code cleanup. Earlier

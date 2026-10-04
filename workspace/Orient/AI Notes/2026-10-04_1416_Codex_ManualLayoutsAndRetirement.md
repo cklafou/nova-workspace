@@ -34,3 +34,5 @@ The folder audit archived 60 confirmed obsolete files, preserving exact bytes an
 
 Follow manual layout saving; do not reintroduce autosave. Do not edit frozen training inputs or archived originals in place.
 Use the archive manifest for recovery, not old helper instructions. All work kept Nova running and avoided native desktop input.
+
+**Correction (2026-10-04 1421):** The final sync suite now has 24 passing tests after two pure Gemini-index regressions. The local mirror index was regenerated without authentication/upload and omits all 60 retired search keys, Trash and Temp; cloud backup eligibility is unchanged. Orient is current with zero dangling references. Two architecture review flags concern a concurrently added set_vnc_password.py outside this task; those flags were deliberately retained rather than certifying another agent's unreviewed work.
