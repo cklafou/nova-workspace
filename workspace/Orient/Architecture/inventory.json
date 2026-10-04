@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "generated_at": "2026-10-04T04:23:28+00:00",
-  "input_sha256": "f465743fc9e9a283bfaf7825ec78c45fe47dfadeb2f573bfeb8710131ff71d6e",
+  "generated_at": "2026-10-04T04:23:37+00:00",
+  "input_sha256": "1017150b70cd1a3b1a8ad5ff81b3f9af293b62d1aa6f9ccc02d5533919836f2b",
   "files": [
     {
       "path": "NovaChatOnly.cmd",
@@ -326,7 +326,7 @@
     {
       "path": "general_tools/nova_chat/static/updater.js",
       "owner": "detachable tool",
-      "bytes": 70149
+      "bytes": 74754
     },
     {
       "path": "general_tools/nova_chat/static/workspace.css",
@@ -401,7 +401,7 @@
     {
       "path": "general_tools/nova_chat/tests/test_updater_ui.cjs",
       "owner": "detachable tool",
-      "bytes": 24611
+      "bytes": 28483
     },
     {
       "path": "general_tools/nova_chat/transcript.py",
@@ -6332,7 +6332,7 @@
     "general_tools/nova_chat/static/conversation-power.js": "07a039944f313a362483523fbe4f9363528e531616cb4e0ca2687c1a41a49b3a",
     "general_tools/nova_chat/static/index.html": "0c35f997bc64a747f098a59e497bed6b152f1ce49a3bce5c4eab5043c216b2c6",
     "general_tools/nova_chat/static/updater.css": "486381d3320d9fabda76e6af9dc450ae39b4a606246c0113e3049b3690f8d134",
-    "general_tools/nova_chat/static/updater.js": "4227bd3e616ae1581d52c711ec887531b45d9577a8a0f157d471fd5216c9d3a8",
+    "general_tools/nova_chat/static/updater.js": "1843ba7f8b793deec918a92ec5735434b32541f951c7062ca83eb31be8fea855",
     "general_tools/nova_chat/static/workspace.css": "1d7d3e22afe3d8a94ad1068cf6e6e2f641606c02ddf51dd8e8796b001c6c711c",
     "general_tools/nova_chat/static/workspace.js": "1776845e0df000d9cb98a3b7ed6c020597803a62eab4c58681d189619d2c47ea",
     "general_tools/nova_chat/tests/test_chat_only.py": "f4a5f0bd90f36bbe1c44e3bda16c3b0f5e99fccaf4543e981789e8230451a77e",
@@ -6502,12 +6502,15 @@
     "start_llama_qwen36.cmd": "3297f9b8977d45d037c3043c9bafccd4c8f6a737a5dae5eb7f88dc171c6a2fb0"
   },
   "document_hashes": {
-    "README.md": "828e253c0b516b4957df44637d2a2e93c737be91712086aaeb7602ee3beca3d2",
-    "ARCHITECTURE.md": "4fa96d0c977d7a1e51f2b0b2d7319c30a03812423bc020085e54c67ad4257441",
-    "OPERATIONS.md": "3d95d75ed82019bbb78e2ffa749c967a44ab2a00867f0007f6402c1a278a0c77",
-    "INDEX.md": "1bede9168358be5e7ad616a0e5ae3a7b39f117db43ef48e9c805a035e2985b9e"
+    "README.md": "9c7912f15a838ade4377f2f9be5323d99a3c9e6d9165016af24a90e6950a21ed",
+    "ARCHITECTURE.md": "8a971e7b3ad149df3a76acdb83424555218b02b2850443af99c26ee58816b052",
+    "OPERATIONS.md": "8f258f945a4b9794991ca36016dfbf5ab4e7f7c97a8a1ac55b6ff49acdc7ffe4",
+    "INDEX.md": "c3a50a85bfe0bd49b70f64e3ec14bf571fee4038a8c1695d47036eabbafbfc65"
   },
-  "review_needed": [],
+  "review_needed": [
+    "OPERATIONS.md#Model updates",
+    "OPERATIONS.md#Test meaningful behavior"
+  ],
   "unknown_review_sections": [],
   "dangling": []
 }

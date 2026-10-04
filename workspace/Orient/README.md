@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-04T04:23:28+00:00 from source (input `f465743fc9e9`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T04:23:37+00:00 from source (input `1017150b70cd`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
