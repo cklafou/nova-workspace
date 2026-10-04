@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "generated_at": "2026-10-04T05:15:53+00:00",
-  "input_sha256": "d6b8606c9180508f264a9fe16de03d4baa9bcf70396af41b1304c6b7d277c368",
+  "generated_at": "2026-10-04T05:18:24+00:00",
+  "input_sha256": "25bd2345a7e5e68852bbf7e93399e659a8d89a2a162a0dab94fadd0010224e44",
   "files": [
     {
       "path": "NovaChatOnly.cmd",
@@ -111,12 +111,12 @@
     {
       "path": "general_tools/architecture_map/orient.py",
       "owner": "detachable tool",
-      "bytes": 74379
+      "bytes": 74382
     },
     {
       "path": "general_tools/architecture_map/reviews.json",
       "owner": "detachable tool",
-      "bytes": 36254
+      "bytes": 37680
     },
     {
       "path": "general_tools/architecture_map/serve.py",
@@ -266,7 +266,7 @@
     {
       "path": "general_tools/nova_chat/server.py",
       "owner": "detachable tool",
-      "bytes": 215624
+      "bytes": 215470
     },
     {
       "path": "general_tools/nova_chat/server_runner.py",
@@ -306,7 +306,7 @@
     {
       "path": "general_tools/nova_chat/static/index.html",
       "owner": "detachable tool",
-      "bytes": 367215
+      "bytes": 361036
     },
     {
       "path": "general_tools/nova_chat/static/updater.css",
@@ -481,7 +481,7 @@
     {
       "path": "general_tools/nova_sync/drive.py",
       "owner": "detachable tool",
-      "bytes": 28475
+      "bytes": 29460
     },
     {
       "path": "general_tools/nova_sync/drive_copy.py",
@@ -507,6 +507,11 @@
       "path": "general_tools/nova_sync/tests/test_frozen_training.py",
       "owner": "detachable tool",
       "bytes": 5968
+    },
+    {
+      "path": "general_tools/nova_sync/tests/test_gemini_index.py",
+      "owner": "detachable tool",
+      "bytes": 3546
     },
     {
       "path": "general_tools/nova_sync/tests/test_updates.py",
@@ -676,7 +681,7 @@
     {
       "path": "general_tools/nova_updater/tests/test_pod_venv.py",
       "owner": "detachable tool",
-      "bytes": 4631
+      "bytes": 4743
     },
     {
       "path": "general_tools/nova_updater/tests/test_runpod_cleanup.py",
@@ -5571,7 +5576,7 @@
     {
       "path": "nova_body/SELF/core/03_body_manifest.md",
       "owner": "body",
-      "bytes": 9366
+      "bytes": 9339
     },
     {
       "path": "nova_body/SELF/core/04_tools_and_voice.md",
@@ -5596,7 +5601,7 @@
     {
       "path": "nova_body/SELF/reference/manifest.json",
       "owner": "body",
-      "bytes": 27742
+      "bytes": 27748
     },
     {
       "path": "nova_body/SELF/reference/ncl_master.md",
@@ -5642,6 +5647,11 @@
       "path": "nova_body/nova_computer/RUN_SETUP.cmd",
       "owner": "body",
       "bytes": 403
+    },
+    {
+      "path": "nova_body/nova_computer/SET_VNC_PASSWORD.cmd",
+      "owner": "body",
+      "bytes": 266
     },
     {
       "path": "nova_body/nova_computer/SNAPSHOT.cmd",
@@ -5712,6 +5722,11 @@
       "path": "nova_body/nova_computer/session.py",
       "owner": "body",
       "bytes": 1467
+    },
+    {
+      "path": "nova_body/nova_computer/set_vnc_password.py",
+      "owner": "body",
+      "bytes": 3247
     },
     {
       "path": "nova_body/nova_computer/toolkit.py",
@@ -6274,7 +6289,7 @@
     "general_tools/architecture_map/atlas_history.py": "64ef9f3afafb6caf753e27fadbbe5b95bdb31c57c2163237a1b0feeb40cb6920",
     "general_tools/architecture_map/build.py": "e0f1c672ef96f654718f3aa1647ce1d55c5b03c79139394419e78a8728484932",
     "general_tools/architecture_map/experience.js": "ed3dbaf90ce9743729a82d61ab25e96afc9d8d30c54d739956e986aed039fa46",
-    "general_tools/architecture_map/orient.py": "bf42bf2ca97899a0feab79a9c91bc1f00412b67b5678ac155292c76af6111713",
+    "general_tools/architecture_map/orient.py": "7a779181c21cde39fd5340bc2f6c6a8454d10723a20b2741ed968926065bcbd7",
     "general_tools/architecture_map/serve.py": "f5b559f8f259069548806276163b3250e9a9e3efb0b336bc0ca327050ad0e671",
     "general_tools/architecture_map/test_architecture.py": "d1c5fb803a2fa1f797d69637f099a1d7fe9e9e591391c0b02295ef2830b0a51d",
     "general_tools/architecture_map/test_history.py": "62a898efc2821eca9bf93e3238f16022908868fd42abbb8340f2457cc8bf6da0",
@@ -6302,7 +6317,7 @@
     "general_tools/nova_chat/nova_lang.py": "9b038acf43022ca85c4dc4113464d4c37e0bf2424bec71cfc57fc4f124eaa8d7",
     "general_tools/nova_chat/orchestrator.py": "1f068106d23b4f6382e584e84f52ea1b6036dcc87a14372a55774e1cb9e32520",
     "general_tools/nova_chat/runtime_host.py": "b47d44d8d2997d56e618090e6e385e8c487959eafe65b57107706d25762e6753",
-    "general_tools/nova_chat/server.py": "09df67797325b6eb7d54b57b7a1c7bd06c6f450c5760f04efd300f88940cd2e7",
+    "general_tools/nova_chat/server.py": "fca8f369aba8f7e3fc449d5b8d3e70f3c4f114a227ff091a1aa4868b8217a9e6",
     "general_tools/nova_chat/server_runner.py": "247ff8e910b14c328e689b2d4ff4736184701839a8c9d661a67573b00baf4f55",
     "general_tools/nova_chat/session_manager.py": "fc84a15fe877623793567361c6d4bc52e9d4852b0199003c89e7fe0e91ecc8f8",
     "general_tools/nova_chat/static/collaboration.css": "b631b717a09e0895dc3f468ef2d926e79df8bf7edb12563322db86d9ca3a1317",
@@ -6310,7 +6325,7 @@
     "general_tools/nova_chat/static/control.css": "665eadf73f12b98ee74bb1af70373a0cfecaeaef5eabfe87871a81b29224c1d4",
     "general_tools/nova_chat/static/control.js": "c315005fa5e6533c529196cc9537f898d2b65f0d87eaf4758c0931f6ee640457",
     "general_tools/nova_chat/static/conversation-power.js": "07a039944f313a362483523fbe4f9363528e531616cb4e0ca2687c1a41a49b3a",
-    "general_tools/nova_chat/static/index.html": "9a3a4a6d20a98a8dffc704d57628e58cd83ba670c93470462d3189eddab03606",
+    "general_tools/nova_chat/static/index.html": "73d09f6c5479e9f35ce63d7e7fff5354ccc19b0fe4a98810b00568b19c94983a",
     "general_tools/nova_chat/static/updater.css": "486381d3320d9fabda76e6af9dc450ae39b4a606246c0113e3049b3690f8d134",
     "general_tools/nova_chat/static/updater.js": "ad9794687a76ef86b2c76c5f450b090d6d8ec7d8ae58999bdeb78f2fec8338c6",
     "general_tools/nova_chat/static/workspace.css": "6299ae7acd33eb8b30553768dc733d2bcb26a8dfba01ea0f1580cc469341a3e0",
@@ -6339,11 +6354,12 @@
     "general_tools/nova_sync/__init__.py": "69756bcb1dfdb2352a5c153c41e05c5e8156ea2a78c4ed01218a9472b0fee80a",
     "general_tools/nova_sync/backup.py": "f2b7b55b8abd68cd394b11647b62dfd6bed42c58171f03480a6f632a924d53d7",
     "general_tools/nova_sync/dir_patch.py": "92289f7a04ea7373ebf98ae01da1a307f87eb32e879129e4959d33c4963f0bfc",
-    "general_tools/nova_sync/drive.py": "1c8f40d205ec9e2fe8edb2defc8b19151d48475bd399deadf759bce6e2afe8bb",
+    "general_tools/nova_sync/drive.py": "6205561561ecbf53e1bfdd93fa5ccd448f496f96d35df74f72fc888df41dfa70",
     "general_tools/nova_sync/drive_copy.py": "501d17139a5a4651e55850620ed76beccbe9cff4c916f760f32efc826bcc0702",
     "general_tools/nova_sync/tests/test_collaboration_privacy.py": "6411bf3df8f03991ee0ab4b4f2eb685616a4f52425202cac8f8efb833dab758d",
     "general_tools/nova_sync/tests/test_exclusions.py": "bf34a7d6e80f3d46466a27f56147ff26ee8385d2a4a10978acc2ecc82b946ab9",
     "general_tools/nova_sync/tests/test_frozen_training.py": "606d99b48a44af0a91156ac5e191c79fb3cce723083f977e7cbcea48503629b6",
+    "general_tools/nova_sync/tests/test_gemini_index.py": "173a49fb2bcb6ff98f1812ce75cc0bdd4636ca11fe2b047b268cd61fa641504f",
     "general_tools/nova_sync/tests/test_updates.py": "feed9610ece692f1d1e3d407f284ff63a86ab3d144aafe0d7685cbf3ccc99af7",
     "general_tools/nova_sync/watcher.py": "258786e21c7c09a1585c79075793b3ac81af3c97d59eddb2352f53bf3da7d25a",
     "general_tools/nova_updater/__init__.py": "5c0ff23df12470af5d2d928d38657b0c2e6a25b917a42a6d1b758bbec6f8400b",
@@ -6372,7 +6388,7 @@
     "general_tools/nova_updater/tests/test_install.py": "d5c4ac1158f468649af75a2555183603839934a3c4abbdf39c70b67d43356af0",
     "general_tools/nova_updater/tests/test_launcher.py": "da27bacd0dd9917efe59b7581f65e4c87f36116474c9ba53ec93975e72ca90c5",
     "general_tools/nova_updater/tests/test_pod_compat.py": "1b3c2bba24c43d71b834611c6ec7046084b502257c9b999d5165c5002e3e341a",
-    "general_tools/nova_updater/tests/test_pod_venv.py": "b044f1d59e28593b7c2deb44fb0d4f68c1f3ff6f6c950afcd7eaf024bb87e027",
+    "general_tools/nova_updater/tests/test_pod_venv.py": "143322f384818cb4fc8d3f9b6e65e6f35e952d5954f067a66c92621029f57a30",
     "general_tools/nova_updater/tests/test_runpod_cleanup.py": "ba83adc3da6b6e15e5b8869f3ff94b04db7251fe9558e03f3388d3c9d9481389",
     "general_tools/nova_updater/tests/test_runpod_delete_http.py": "5f045ef260aff2e41aa0631c104bb2e66654442739ee1ac07db170a7e763f529",
     "general_tools/nova_updater/tests/test_runpod_funding.py": "b635ca1532ed37690ae6cb72877caebf841211123dbb15193ca2f1c0750f1890",
@@ -6395,6 +6411,7 @@
     "nova_body/nova_computer/PLUCK_CHECK.cmd": "5b086764d4c0583a97ce96d917257732df198121f2ee118d63d7ab7a8773ab78",
     "nova_body/nova_computer/REACH.cmd": "7f57c786e7501f8bfbc7725a9fec3bccda1d22407ef9671cd435f38c9a7bfa46",
     "nova_body/nova_computer/RUN_SETUP.cmd": "99bc8231408309e197fd7c99e72a50dc910e1ea45670d1bdc8ae4e4b1aaf6fab",
+    "nova_body/nova_computer/SET_VNC_PASSWORD.cmd": "cc176f2b64b865771ee7df361dd1ace8e8dee75f12cea106dfe96197c82bc28b",
     "nova_body/nova_computer/SNAPSHOT.cmd": "4acdf8740d11a1e0e28ab5ab0e1c4034cc6449a0b66c5ca68d6164b649b749cc",
     "nova_body/nova_computer/TOOLKIT.cmd": "36707b705f302565379f5b7cb5d4c5d38e416545f9dd6829728a5d0a59a084b8",
     "nova_body/nova_computer/TUNE_UP.cmd": "3c82c049051c6207d6a6609108d59be05e24d27c100ea0477bcb7f2c87fa55bf",
@@ -6407,6 +6424,7 @@
     "nova_body/nova_computer/provision/setup_guest.sh": "929dec27ee6bc6659d81465e4f95077a4d3949ab8a4f243742c1524e97fc428c",
     "nova_body/nova_computer/reach.py": "9de4f118a8f26b95689f83ecd2bc63049b3e6e8841361b60d61eb6442658c598",
     "nova_body/nova_computer/session.py": "3bebf19119a2075be6fc489b86c94a8cc3060b04d70cd2c4b69bf47d0a179e19",
+    "nova_body/nova_computer/set_vnc_password.py": "5d17b5427aea5261b61b989423df817669b296ed2013e6c9419bd32b83e04e23",
     "nova_body/nova_computer/toolkit.py": "5ae71049b2799d6f4085f0bf86148b34586ae26311c4297fd1cd871b129c2652",
     "nova_body/nova_computer/tools.py": "161c51227ad21ff691915f8f9d4d4f0be161c31e8c953473c4b906b34d5b75f1",
     "nova_body/nova_computer/tune_up.py": "0904a422439eeef61ef6d4e07b60b3709dba552b37228bb06407e279a79b75e0",
@@ -6481,19 +6499,14 @@
     "start_llama_qwen36.cmd": "3297f9b8977d45d037c3043c9bafccd4c8f6a737a5dae5eb7f88dc171c6a2fb0"
   },
   "document_hashes": {
-    "README.md": "f8a019fbc2334026cd6f8fd491e2a8e9c86c8a5c4d75b012f7c2b7bcdca5c2b7",
-    "ARCHITECTURE.md": "13a683b084b771c1ca3ebbd92cb7e5d44ca61e8a3777d8a396ce277668e064d9",
-    "OPERATIONS.md": "65a9215958339f80fff8f1362fb0fd0e0002806b99df8fd803ddb8439e48d17d",
-    "INDEX.md": "00227b32cdf04f3862f3f4f23c863693168425dabd1bef18836d7439456b391e"
+    "README.md": "c82f4f104753ce3fb12e1910f4b8a29dfddafdbd89305d5b1452ff069e053323",
+    "ARCHITECTURE.md": "1f42670ef1e62a1f34263762e7a86fe843c3b5e49962f43ef80302f2aef5a663",
+    "OPERATIONS.md": "118d2edf85dbcba2e66b1a5f02369e5da6af4bff502b8bbfb079f3dd3db319bd",
+    "INDEX.md": "1ba0956ddf127b141efd499b35333c354c0ee57e3ab5d095eb1a9dac9d7e43e8"
   },
   "review_needed": [
     "ARCHITECTURE.md#Body faculties",
-    "ARCHITECTURE.md#Execution path",
-    "ARCHITECTURE.md#Runtime evidence and open modernization work",
-    "OPERATIONS.md#Controller menus and layouts",
-    "OPERATIONS.md#Files and recovery",
-    "OPERATIONS.md#Model updates",
-    "OPERATIONS.md#Security model"
+    "ARCHITECTURE.md#Runtime evidence and open modernization work"
   ],
   "unknown_review_sections": [],
   "dangling": []

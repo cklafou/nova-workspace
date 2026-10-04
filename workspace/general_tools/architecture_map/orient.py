@@ -876,7 +876,7 @@ chat-only restart proves controller readiness while the model remains off. KoELS
 compatibility was checked through the installed parser without loading weights.
 See `general_tools/nova_chat/CONTROLLER.md` and dated AI Notes for the actual validation scope.
 The later October 4 layout repair adds manual-only saving, one-time screenshot recovery and active-widget
-checks. Sixteen layout scenarios and fifteen desktop tests pass; browser fixture checks confirm widget
+checks. Twenty-one layout scenarios and fifteen desktop tests pass; browser fixture checks confirm widget
 checks and persisted edits. Native profile migration and live reopen still await the normal user restart.
 The script-retirement pass removed only confirmed obsolete files with hashed recovery copies;
 isolated tests confirm the retired ping aliases cannot spawn host processes.

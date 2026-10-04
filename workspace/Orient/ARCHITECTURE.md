@@ -1,11 +1,9 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-04T05:15:53+00:00 from source (input `d6b8606c9180`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T05:18:24+00:00 from source (input `25bd2345a7e5`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/server.py::websocket_endpoint`, `nova_body/nova_voice/nova.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -42,7 +40,7 @@ and child processes, and reports pending cleanup rather than falsely claiming ev
 
 ## Body faculties
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-03): changed `nova_body/nova_voice/tool_router.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py (PURPOSES)`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Body faculties"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): new `nova_body/nova_computer/set_vnc_password.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py (PURPOSES)`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Body faculties"`.
 
 | Part | Responsibility | Python sources |
 |---|---|---:|
@@ -56,7 +54,7 @@ and child processes, and reports pending cleanup rather than falsely claiming ev
 | `nova_memory` | Journal/goals/log-reader helpers. Some overlap with router-owned journaling remains. | 5 |
 | `nova_logs` | Log paths, thought/action records and retention. Historical receipts remain evidence, not proof of current behavior. | 3 |
 | `nova_forge` | Discovery, classification and testing of Nova-authored extensions on her shelf. | 1 |
-| `nova_computer` | VM observation, command and input tools in the normal voice router; explicit human handoff pauses actions. | 11 |
+| `nova_computer` | VM observation, command and input tools in the normal voice router; explicit human handoff pauses actions. | 12 |
 | `nova_imagination` | Image generation and art workflow; uses optional external ComfyUI services. | 3 |
 | `nova_play` | Curiosity and saved discoveries, including the curio shelf. | 2 |
 | `nova_witness` | Witness model launch, evaluation and training utilities; the live auditing faculty is in cortex/voice. | 2 |
@@ -108,7 +106,7 @@ Drives/wants and the hormone design are not evidence of online weight learning. 
 
 ## Runtime evidence and open modernization work
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `nova_body/nova_voice/tool_router.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): new `nova_body/nova_computer/set_vnc_password.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
 
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
@@ -147,7 +145,7 @@ chat-only restart proves controller readiness while the model remains off. KoELS
 compatibility was checked through the installed parser without loading weights.
 See `general_tools/nova_chat/CONTROLLER.md` and dated AI Notes for the actual validation scope.
 The later October 4 layout repair adds manual-only saving, one-time screenshot recovery and active-widget
-checks. Sixteen layout scenarios and fifteen desktop tests pass; browser fixture checks confirm widget
+checks. Twenty-one layout scenarios and fifteen desktop tests pass; browser fixture checks confirm widget
 checks and persisted edits. Native profile migration and live reopen still await the normal user restart.
 The script-retirement pass removed only confirmed obsolete files with hashed recovery copies;
 isolated tests confirm the retired ping aliases cannot spawn host processes.

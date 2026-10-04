@@ -1,0 +1,497 @@
+{
+  "_purpose": "@nova: Record read-only retirement evidence for avatar tooling, frozen training inputs, model helpers and architecture wrappers; no files moved.",
+  "generated_local": "2026-10-04T13:42:24",
+  "root": "C:\\Users\\lafou\\Project_Nova",
+  "changes": "Only this report was created atomically; no scripts/assets/state/services were changed.",
+  "reviewed_folders": [
+    {
+      "path": "workspace/avatar_design",
+      "decision": "keep",
+      "evidence": "Targeted script/README scan including ignored files found no local scripts; concept artwork is preserved."
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar",
+      "decision": "keep assets and active/dependency tooling; four diagnostic candidates below",
+      "script_count": 64,
+      "scope": "Code/tooling only; no personal records or art/checkpoint binaries read."
+    },
+    {
+      "path": "workspace/models",
+      "decision": "keep all 12 discovered frozen training scripts and their packages",
+      "scope": "Targeted script/README paths and legacy manifest/hash comparison only; no weights read/listed."
+    },
+    {
+      "path": "workspace/llama",
+      "decision": "keep vendor runtime",
+      "evidence": "Targeted script/README scan found no local helper candidate. Vendor binary contents were not inspected."
+    },
+    {
+      "path": "workspace/Orient/Architecture",
+      "decision": "keep RUN_MAP.cmd, STOP_MAP.cmd, REBUILD_MAP.cmd",
+      "evidence": "REBUILD line3 invokes current general_tools/architecture_map/build.py; RUN/STOP lines3-4 invoke current serve.py --open/--stop."
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/v6",
+      "decision": "Historical archive candidate; retain originals because canonical Python comments drifted during audit."
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/v7",
+      "decision": "Historical archive candidate; retain originals because canonical Python comments drifted during audit."
+    }
+  ],
+  "archive_script_candidates": [
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/inspect_source_v13.cjs",
+      "classification": "historical_one_off_diagnostic",
+      "sha256": "99997927f31fd3096de3dc7ea6229f15adbbb71d28f7f6292bc1eec091fb4734",
+      "evidence": "Hardcoded v12 PSD diagnosis for iris overlap; writes only preview/eye_layers_v12.png.",
+      "source_lines": "3-6",
+      "replacement": [
+        "workspace/nova_body/SELF/Avatar/Live2D/tooling/review_eyes_v17.py",
+        "workspace/nova_body/SELF/Avatar/Live2D/tooling/validate_eye_repair_v17.py"
+      ],
+      "active_named_callers": [],
+      "historical_output_preserved": "preview/eye_layers_v12.png",
+      "output_exists": true,
+      "archive_note": "Archive only this script; retain its artwork/output and all checkpoint archives. Restore to original path to rerun historical diagnosis."
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/inspect_lower_lash.cjs",
+      "classification": "historical_one_off_diagnostic",
+      "sha256": "d19fd428dcdcd4e88cc6932f7e5ef3ba69d11754e89fc3c009978637d007bca0",
+      "evidence": "Hardcoded v13 PSD diagnosis for lower-lash clipping; writes only preview/eye_layers_v13_diagnosis.png.",
+      "source_lines": "3-7",
+      "replacement": [
+        "workspace/nova_body/SELF/Avatar/Live2D/tooling/review_eyes_v17.py",
+        "workspace/nova_body/SELF/Avatar/Live2D/tooling/validate_eye_repair_v17.py"
+      ],
+      "active_named_callers": [],
+      "historical_output_preserved": "preview/eye_layers_v13_diagnosis.png",
+      "output_exists": true,
+      "archive_note": "Archive only this script; retain its artwork/output and all checkpoint archives. Restore to original path to rerun historical diagnosis."
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/inspect_eye_anatomy.cjs",
+      "classification": "historical_one_off_diagnostic",
+      "sha256": "d255669ee3beb4dbc9663d2861d1b36279ceeef0e4864beeb84f34eb746bde36",
+      "evidence": "Hardcoded v14 PSD isolated-eye diagnosis; writes only preview/v14/isolated_eye_layers.png.",
+      "source_lines": "2-4",
+      "replacement": [
+        "workspace/nova_body/SELF/Avatar/Live2D/tooling/review_eyes_v17.py",
+        "workspace/nova_body/SELF/Avatar/Live2D/tooling/validate_eye_repair_v17.py"
+      ],
+      "active_named_callers": [],
+      "historical_output_preserved": "preview/v14/isolated_eye_layers.png",
+      "output_exists": true,
+      "archive_note": "Archive only this script; retain its artwork/output and all checkpoint archives. Restore to original path to rerun historical diagnosis."
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/audit_eye_failure_v16.py",
+      "classification": "historical_one_off_diagnostic",
+      "sha256": "91d81bd94ef7429841202573380f00fa21ea3e28efbd800a88ae238d192d7988",
+      "evidence": "Hardcodes NOVA_RENDER_VERSION=v15 to diagnose the pre-v16 eye defect; writes only preview/v16-audit diagnostics.",
+      "source_lines": "6-28",
+      "replacement": [
+        "workspace/nova_body/SELF/Avatar/Live2D/tooling/review_eyes_v17.py",
+        "workspace/nova_body/SELF/Avatar/Live2D/tooling/validate_eye_repair_v17.py"
+      ],
+      "active_named_callers": [],
+      "historical_output_preserved": "preview/v16-audit/geometry_audit.json",
+      "output_exists": true,
+      "archive_note": "Archive only this script; retain its artwork/output and all checkpoint archives. Restore to original path to rerun historical diagnosis."
+    }
+  ],
+  "archive_training_tree_candidates": [
+    {
+      "path": "workspace/_admin/Training_stuff/v6",
+      "classification": "superseded_original_training_tree",
+      "file_count": 12,
+      "canonical_directory": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v6",
+      "canonical_proofs": [
+        {
+          "original": "workspace/_admin/Training_stuff/v6/nova_core_v6.jsonl",
+          "canonical": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v6/nova_core_v6.jsonl",
+          "bytes": 251828,
+          "sha256": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc",
+          "canonical_identical": true,
+          "manifest_matches": true,
+          "canonical_sha256": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc"
+        },
+        {
+          "original": "workspace/_admin/Training_stuff/v6/train_nova_lora_v6.py",
+          "canonical": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v6/train_nova_lora_v6.py",
+          "bytes": 9322,
+          "sha256": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+          "canonical_identical": false,
+          "manifest_matches": true,
+          "canonical_sha256": "746b2e75c935cd92b8e4e6bb656cefed809d7fc09a3ad8ff13344d0c87082d9d",
+          "diff": [
+            "@@ -2 +2 @@\n",
+            "-# Last updated: 2026-08-02 10:57:33",
+            "+# Last updated: 2026-10-04 13:39:43"
+          ]
+        },
+        {
+          "original": "workspace/_admin/Training_stuff/v6/mk_template.py",
+          "canonical": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v6/mk_template.py",
+          "bytes": 8107,
+          "sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+          "canonical_identical": false,
+          "manifest_matches": true,
+          "canonical_sha256": "205aebeaecddd984f3604b490837bd62595e192c9ed85bea9d9a744e9564f63b",
+          "diff": [
+            "@@ -2 +2 @@\n",
+            "-# Last updated: 2026-08-02 10:57:33",
+            "+# Last updated: 2026-10-04 13:39:43"
+          ]
+        },
+        {
+          "original": "workspace/_admin/Training_stuff/v6/run_on_pod.sh",
+          "canonical": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v6/run_on_pod.sh",
+          "bytes": 3522,
+          "sha256": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c",
+          "canonical_identical": true,
+          "manifest_matches": true,
+          "canonical_sha256": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c"
+        },
+        {
+          "original": "workspace/_admin/Training_stuff/v6/qwen_template_gen.jinja",
+          "canonical": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v6/qwen_template_gen.jinja",
+          "bytes": 8305,
+          "sha256": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139",
+          "canonical_identical": true,
+          "manifest_matches": true,
+          "canonical_sha256": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139"
+        }
+      ],
+      "preserve_all_historical_files": [
+        "deticker.py",
+        "mk_template.py",
+        "nova_core_v6.jsonl",
+        "nova_core_v6_add.jsonl",
+        "nova_core_v6_base.jsonl",
+        "qwen_template_gen.jinja",
+        "RESULTS.md",
+        "run_on_pod.sh",
+        "score_style.py",
+        "train_nova_lora_v6.py",
+        "TRAIN_RUN.md",
+        "V6_SPEC.md"
+      ],
+      "instruction": "Archive historical tree intact only after recording canonical checksum drift; do not discard originals, which still match frozen manifests. Current canonical Python comment timestamps differ. Cleanup is paused for urgent UI work."
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/v7",
+      "classification": "superseded_original_training_tree",
+      "file_count": 17,
+      "canonical_directory": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v7",
+      "canonical_proofs": [
+        {
+          "original": "workspace/_admin/Training_stuff/v7/nova_core_v7.jsonl",
+          "canonical": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v7/nova_core_v7.jsonl",
+          "bytes": 300193,
+          "sha256": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+          "canonical_identical": true,
+          "manifest_matches": true,
+          "canonical_sha256": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9"
+        },
+        {
+          "original": "workspace/_admin/Training_stuff/v7/train_nova_lora_v7.py",
+          "canonical": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v7/train_nova_lora_v7.py",
+          "bytes": 9500,
+          "sha256": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+          "canonical_identical": false,
+          "manifest_matches": true,
+          "canonical_sha256": "7816a0ce2e8e02ba92d21c164fded04869bf34c81a6ca6fe9038ee594437cb62",
+          "diff": [
+            "@@ -4 +4 @@\n",
+            "-# Last updated: 2026-08-02 10:57:33",
+            "+# Last updated: 2026-10-04 13:39:43"
+          ]
+        },
+        {
+          "original": "workspace/_admin/Training_stuff/v7/mk_template.py",
+          "canonical": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v7/mk_template.py",
+          "bytes": 8107,
+          "sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+          "canonical_identical": false,
+          "manifest_matches": true,
+          "canonical_sha256": "205aebeaecddd984f3604b490837bd62595e192c9ed85bea9d9a744e9564f63b",
+          "diff": [
+            "@@ -2 +2 @@\n",
+            "-# Last updated: 2026-08-02 10:57:33",
+            "+# Last updated: 2026-10-04 13:39:43"
+          ]
+        },
+        {
+          "original": "workspace/_admin/Training_stuff/v7/run_on_pod_v7.sh",
+          "canonical": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v7/run_on_pod_v7.sh",
+          "bytes": 3968,
+          "sha256": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458",
+          "canonical_identical": true,
+          "manifest_matches": true,
+          "canonical_sha256": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458"
+        }
+      ],
+      "preserve_all_historical_files": [
+        "mined/evidence_pipeline_2026-07-23_night.jsonl",
+        "mined/MINING_NOTES.md",
+        "mined/SOURCE_MAP.md",
+        "mined/v7_candidates_A_solitude.jsonl",
+        "mined/v7_candidates_B_attribution.jsonl",
+        "mined/v7_candidates_C_payload.jsonl",
+        "mined/v7_candidates_D_witness.jsonl",
+        "mined/v7_candidates_E_reach.jsonl",
+        "mk_template.py",
+        "nova_core_v7.jsonl",
+        "nova_core_v7_add.jsonl",
+        "PROBE_BATTERY.md",
+        "run_on_pod_v7.sh",
+        "train_nova_lora_v7.py",
+        "V7_REVIEW_2026-07-26.md",
+        "V7_SPEC.md",
+        "V7_TRAIN_RUNBOOK.md"
+      ],
+      "instruction": "Archive historical tree intact only after recording canonical checksum drift; do not discard originals, which still match frozen manifests. Current canonical Python comment timestamps differ. Cleanup is paused for urgent UI work."
+    }
+  ],
+  "reference_updates": [
+    {
+      "path": "workspace/general_tools/nova_updater/README.md",
+      "line": 197,
+      "old": "_admin/Training_stuff/v7/nova_core_v7.jsonl",
+      "new": "\"models/Training Files/Qwen 3.6 27B Dense/Nova Core v7/nova_core_v7.jsonl\"",
+      "kind": "active CLI example"
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v6/README.md",
+      "kind": "historical-location note",
+      "action": "Frozen package says historical notes are under old Training_stuff path. Preserve package bytes; record old-to-archive mapping in archive manifest/current external documentation."
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v7/README.md",
+      "kind": "historical-location note",
+      "action": "Same as v6; do not rewrite immutable provenance source fields."
+    }
+  ],
+  "reference_search_evidence": "No named callers of four diagnostic candidates in active workspace Python/CJS/JS/CMD/PS1/SH source, nor authored general_tools/Orient/Avatar docs; excluded generated inventories, checkpoint archives, caches/vendor and personal records. Training_stuff active code references outside historical trees are temporary test fixtures or audit_queue documentation examples, not runtime consumers.",
+  "important_keep_dependencies": [
+    "package_front_v17.py:4 imports package_front_v09.py; all v11-v17 package scripts use its helpers.",
+    "review_eyes_v17.py:7 and render_eye_review_v17.py:8 import render_showcase.py; validate_eye_repair_v17.py:6-7 imports it and check_front_animation.py.",
+    "render_showcase.py:5 imports check_front_animation.py and chooses runtime version from NOVA_RENDER_VERSION.",
+    "package_front_v17.py:5-12 consumes v16 runtime motions/expressions/config; prepare_blink_v17.cjs:7 consumes v16 layered source. Preserve older source/runtime assets.",
+    "checkpoint_v17.py:121-124 dynamically includes tooling in a new archive; it does not require these four historical diagnostic filenames. Existing immutable checkpoints must remain untouched."
+  ],
+  "tooling_dependency_edges": [
+    {
+      "source": "audit_combinations_v12.py",
+      "dependency": "check_front_animation.py"
+    },
+    {
+      "source": "audit_eye_failure_v16.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "audit_face_v12.py",
+      "dependency": "check_front_animation.py"
+    },
+    {
+      "source": "build_review_v12.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "checkpoint_v12.py",
+      "dependency": "save_session_checkpoint.py"
+    },
+    {
+      "source": "checkpoint_v16.py",
+      "dependency": "prepare_eye_layers_v16.cjs"
+    },
+    {
+      "source": "checkpoint_v17.py",
+      "dependency": "prepare_blink_v17.cjs"
+    },
+    {
+      "source": "package_front_v11.py",
+      "dependency": "package_front_v09.py"
+    },
+    {
+      "source": "package_front_v12.py",
+      "dependency": "package_front_v09.py"
+    },
+    {
+      "source": "package_front_v13.py",
+      "dependency": "package_front_v09.py"
+    },
+    {
+      "source": "package_front_v14.py",
+      "dependency": "package_front_v09.py"
+    },
+    {
+      "source": "package_front_v15.py",
+      "dependency": "package_front_v09.py"
+    },
+    {
+      "source": "package_front_v16.py",
+      "dependency": "package_front_v09.py"
+    },
+    {
+      "source": "package_front_v17.py",
+      "dependency": "package_front_v09.py"
+    },
+    {
+      "source": "render_eye_review_v16.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "render_eye_review_v17.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "render_showcase.py",
+      "dependency": "check_front_animation.py"
+    },
+    {
+      "source": "render_showcase_v12.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "review_eye_layers_v15.py",
+      "dependency": "check_front_animation.py"
+    },
+    {
+      "source": "review_eye_layers_v15.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "review_eyes_v16.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "review_eyes_v17.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "review_face_v12.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "review_face_v13.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "review_garments_v11.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "review_lower_lash_v14.py",
+      "dependency": "check_front_animation.py"
+    },
+    {
+      "source": "review_lower_lash_v14.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "showcase_v13.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "validate_eye_repair_v16.py",
+      "dependency": "check_front_animation.py"
+    },
+    {
+      "source": "validate_eye_repair_v16.py",
+      "dependency": "render_showcase.py"
+    },
+    {
+      "source": "validate_eye_repair_v17.py",
+      "dependency": "check_front_animation.py"
+    },
+    {
+      "source": "validate_eye_repair_v17.py",
+      "dependency": "render_showcase.py"
+    }
+  ],
+  "kept_uncertain_tooling": [
+    "assemble_calm_v07.cjs",
+    "assemble_front_v08.cjs",
+    "assemble_garments_v11.cjs",
+    "assemble_layers.cjs",
+    "audit_combinations_v12.py",
+    "audit_face_v12.py",
+    "build_eye_review_v14.py",
+    "build_eye_review_v15.py",
+    "build_review_v12.py",
+    "build_review_v13.py",
+    "check_calm_geometry.py",
+    "check_front_animation.py",
+    "check_front_geometry.py",
+    "checkpoint_v12.py",
+    "checkpoint_v13.py",
+    "checkpoint_v14.py",
+    "checkpoint_v15.py",
+    "checkpoint_v16.py",
+    "checkpoint_v17.py",
+    "compare_garments_v11.py",
+    "finalize_garments_v11.py",
+    "finalize_runtime_v06.py",
+    "inspect_reference_eyes.cjs",
+    "inspect_registered_parts_v16.cjs",
+    "measure_calm_overlay.py",
+    "measure_front_overlay.py",
+    "package_front_v09.py",
+    "package_front_v11.py",
+    "package_front_v12.py",
+    "package_front_v13.py",
+    "package_front_v14.py",
+    "package_front_v15.py",
+    "package_front_v16.py",
+    "package_front_v17.py",
+    "package_runtime.py",
+    "prepare_blink_v17.cjs",
+    "prepare_eye_layers_v15.cjs",
+    "prepare_eye_layers_v16.cjs",
+    "prepare_eyes_v12.cjs",
+    "prepare_face_v10.cjs",
+    "prepare_lower_lash_v14.cjs",
+    "prepare_speech_v13.cjs",
+    "publish_front_v09.py",
+    "render_eye_review_v16.py",
+    "render_eye_review_v17.py",
+    "render_showcase.py",
+    "render_showcase_v12.py",
+    "replace_face_art_v05.cjs",
+    "replace_face_art_v06.cjs",
+    "review_eye_layers_v15.py",
+    "review_eyes_v16.py",
+    "review_eyes_v17.py",
+    "review_face_v12.py",
+    "review_face_v13.py",
+    "review_garments_v11.py",
+    "review_lower_lash_v14.py",
+    "save_session_checkpoint.py",
+    "showcase_v13.py",
+    "validate_eye_repair_v16.py",
+    "validate_eye_repair_v17.py"
+  ],
+  "uncertain_reasons": "Older source preparation, packaging, geometry, review and checkpoint scripts are construction/reproduction history. Version age alone is insufficient evidence of obsolescence. inspect_reference_eyes and inspect_registered_parts_v16 still inspect currently used reference/source plates. No broader avatar retirement is proposed.",
+  "documentation_drift": "Live2D/README.md still leads with v09 as current, while the current v17 checkpoint/validation/package tooling and dated repair note establish v17. Correct current entrypoint documentation separately; do not infer v09 shared helper is obsolete.",
+  "limitations": "Static/reference audit only; no scripts imported/executed, live controls, asset/weight reads or archive moves. Parent owns central archive and final active-reference check, including any pending updater plan/review paths outside this read-only source scope.",
+  "critical_new_finding": "During this read-only audit four canonical frozen Python inputs changed only in their Last updated comment to 2026-10-04 13:39:43. Initial comparison found all 9 canonical files byte-identical; final comparison found only 5. Original _admin copies still match all 9 recorded training-manifest hashes. Preserve originals and fix frozen-package timestamp watcher policy before claiming current canonical integrity.",
+  "cleanup_status": "PAUSED: user urgent layout/window repair takes priority; no archive/moves performed.",
+  "frozen_training_integrity_report": "workspace/Temp/script-retirement-audit/frozen_training_integrity.json",
+  "frozen_training_integrity_summary": {
+    "manifests_checked": 5,
+    "inputs_checked": 21,
+    "runtime_provenance_checked": 6,
+    "drift": 5,
+    "legacy_python_drifts": 4,
+    "failed_qwen38_readme_drift": 1,
+    "successful_qwen38_r2_drift": 0,
+    "source_guard_tests": "20 nova_sync tests passed",
+    "repair_performed": false,
+    "required_before_repair": "Running watcher must use corrected source, or parent must authorize independently verified write protection."
+  },
+  "frozen_training_repair": "workspace/Temp/script-retirement-audit/frozen_training_repair.json",
+  "frozen_training_repair_status": "Complete: eight timestamp/newline-only drifts restored to exact manifest hashes; all27 inputs/receipts read-only, verified after live watcher PermissionError receipts. Historical audit drift fields retain before-repair evidence."
+}

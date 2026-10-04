@@ -1303,14 +1303,9 @@ class NovaMessage(BaseModel):
 @app.post("/nova-message")
 async def nova_message(msg: NovaMessage):
     """
-    Nova's autonomy loop calls this endpoint when she needs help.
-    Usage from nova_motor/motor_cortex.py:
-        import requests
-        requests.post("http://127.0.0.1:8765/nova-message", json={
-            "content": "Stuck on 'Trade Button' after 3 attempts. Screen shows...",
-            "directed_at": ["Claude"]  # or [] for all
-        })
-    Returns the first complete AI response as JSON.
+    Legacy local message-ingestion endpoint: records and broadcasts the submitted message.
+    External mentor responders were removed; responses/responders remain empty.
+    This endpoint does not contact Claude or the private Collaboration room.
     """
     content = msg.content.strip()
     if not content:

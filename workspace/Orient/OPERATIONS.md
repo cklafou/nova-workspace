@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-04T05:15:53+00:00 from source (input `d6b8606c9180`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T05:18:24+00:00 from source (input `25bd2345a7e5`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -157,8 +157,6 @@ disk rather than a slow network mount.
 
 ## Files and recovery
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-02): new `general_tools/nova_sync/hooks/pre-push`, `general_tools/nova_sync/watcher.py::_is_frozen_file`, `general_tools/nova_sync/watcher.py::run_pup_cycle`, `general_tools/nova_sync/watcher.py::update_timestamp_in_file`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Files and recovery"`.
-
 Temporary diagnostics belong in `Temp/` beside their owner. Retired files go to
 `_admin/Trash/<change>_<date>/` with a manifest and `WHY.md`; preserve original relative paths,
 refuse collisions, and never delete personal history. `_admin/Trash/` is a
@@ -202,8 +200,6 @@ notes), which Orient lists but never quotes; backups; and formats without commen
 A generated file gets its purpose line from the code that writes it.
 
 ## Security model
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/server.py::websocket_endpoint`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
 
 Nova's reach is intentional — Cole: *"My machine is her body. If she can't use it fully, she is
 crippled."* Every control here is about **who can reach her from outside**, not what she may do
@@ -420,8 +416,6 @@ its temp folder stopped autosave (lesson 7 above).
 
 ## Controller menus and layouts
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/static/index.html`, `general_tools/nova_chat/static/workspace.css`, `general_tools/nova_chat/static/workspace.js`; new `general_tools/nova_chat/desktop.py`, `general_tools/nova_chat/tests/test_desktop.py`, `general_tools/nova_chat/tests/test_layout_save.cjs`. Re-read it against the code, update it in `general_tools/architecture_map/notes/controller_layouts.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Controller menus and layouts"`.
-
 Nova Chat has one workspace. The top application bar contains expandable menus; opening Services,
 Advanced or Appearance leaves the dock arrangement alone. Widgets opens the widget choices, including
 Collaboration and Model updates. The optional Services and Generation widgets mirror the original menu
@@ -500,8 +494,6 @@ existing shelf watcher called at autonomy startup: its canned wording does not d
 inference. Its posture record freshness is a separate runtime issue; the controller does not alter it.
 
 ## Model updates
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): new `general_tools/nova_sync/tests/test_frozen_training.py`, `general_tools/nova_sync/watcher.py::_is_frozen_file`, `general_tools/nova_sync/watcher.py::run_pup_cycle`, `general_tools/nova_sync/watcher.py::update_timestamp_in_file`. Re-read it against the code, update it in `general_tools/architecture_map/notes/model_updates.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Model updates"`.
 
 `general_tools/nova_updater/` is a general tool; its README has the full route contract. At each Nova
 Chat start one cached catalog query looks for a newer dense Qwen of 27-32B with a permissive license,
@@ -714,4 +706,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 73, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `ARCHITECTURE.md#Body faculties`, `ARCHITECTURE.md#Execution path`, `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Files and recovery`, `OPERATIONS.md#Model updates`, `OPERATIONS.md#Security model`.
+**Sections awaiting review:** `ARCHITECTURE.md#Body faculties`, `ARCHITECTURE.md#Runtime evidence and open modernization work`.

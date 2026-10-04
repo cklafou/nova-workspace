@@ -361,15 +361,37 @@ FILE_DESCRIPTIONS = {
 }
 
 
+def _gemini_index_paths():
+    """Walk the active-file index only; cloud backup eligibility is unchanged."""
+    import os
+
+    for folder, directories, filenames in os.walk(WORKSPACE_DIR):
+        root = Path(folder)
+        kept = []
+        for name in directories:
+            rel = (root / name).relative_to(WORKSPACE_DIR)
+            parts = tuple(part.casefold() for part in rel.parts)
+            if name in EXCLUDE_DIRS or name.startswith(EXCLUDE_DIR_PREFIXES):
+                continue
+            if "temp" in parts or parts[:2] == ("_admin", "trash"):
+                continue
+            if any(rel.as_posix().startswith(sub.rstrip("/")) for sub in EXCLUDE_SUBPATHS):
+                continue
+            kept.append(name)
+        directories[:] = sorted(kept)
+        for name in sorted(filenames):
+            yield root / name
+
+
 def _build_gemini_index_content() -> str:
     """
     Build the GEMINI_INDEX.md content as a manifest table.
     Uses full relative paths (workspace/...) as deterministic search keys.
-    Also writes a local copy to nova_sync/ for backup and Claude visibility.
+    Returns text only; the caller handles local persistence and any cloud upload.
     """
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    lines = []
+    lines = ["<!-- @nova: Generated search-key index of active workspace files, excluding archived trash and temporary work. -->"]
     lines.append("# GEMINI_INDEX.md -- Nova Workspace Session Manifest")
     lines.append(f"_Last updated: {timestamp}_")
     lines.append("")
@@ -398,7 +420,7 @@ def _build_gemini_index_content() -> str:
     # Build full manifest table by scanning workspace
     sections = {}
 
-    for path in sorted(WORKSPACE_DIR.rglob("*")):
+    for path in sorted(_gemini_index_paths()):
         if not path.is_file():
             continue
         try:

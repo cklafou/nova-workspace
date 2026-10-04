@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-04T05:15:53+00:00 from source (input `d6b8606c9180`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T05:18:24+00:00 from source (input `25bd2345a7e5`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -130,6 +130,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_sync/tests/test_collaboration_privacy.py](../general_tools/nova_sync/tests/test_collaboration_privacy.py) — Keep private collaboration transport out of autosave, cloud mirrors and Nova's automatic context.
 - [general_tools/nova_sync/tests/test_exclusions.py](../general_tools/nova_sync/tests/test_exclusions.py) — Guards the watcher and git rules that keep agent transport, task copies, avatar files and the work queue out of autosave.
 - [general_tools/nova_sync/tests/test_frozen_training.py](../general_tools/nova_sync/tests/test_frozen_training.py) — Protect frozen training hashes from timestamp maintenance and PUP replacement while preserving sync detection.
+- [general_tools/nova_sync/tests/test_gemini_index.py](../general_tools/nova_sync/tests/test_gemini_index.py) — Verify local Gemini index pruning without cloud authentication, content reads or changed backup eligibility.
 - [general_tools/nova_sync/tests/test_updates.py](../general_tools/nova_sync/tests/test_updates.py) — Tests Drive export, git hooks and collaborator roles in disposable repositories.
 - [general_tools/nova_sync/watcher.py](../general_tools/nova_sync/watcher.py) — Workspace watcher: stamps Last-updated lines, autosaves to git (commit, then push), refreshes Nova's SELF manifest and Orient, mirrors to…
 
@@ -219,6 +220,8 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/nova_computer/reach.py](../nova_body/nova_computer/reach.py) — How far my computer reaches into Cole's. He decided (2026-09-04) that my machine is
 - [nova_body/nova_computer/RUN_SETUP.cmd](../nova_body/nova_computer/RUN_SETUP.cmd) — Nova Computer - first boot
 - [nova_body/nova_computer/session.py](../nova_body/nova_computer/session.py) — Keep the selected WSL guest alive between tool calls, without a visible terminal.
+- [nova_body/nova_computer/SET_VNC_PASSWORD.cmd](../nova_body/nova_computer/SET_VNC_PASSWORD.cmd) — Changes the password of Nova's desktop viewer (the Computer widget). You type it here; it is never saved in the project.
+- [nova_body/nova_computer/set_vnc_password.py](../nova_body/nova_computer/set_vnc_password.py) — Changes the password of my desktop viewer (the Computer widget, noVNC). Cole types it in this window; it is never written into the project.
 - [nova_body/nova_computer/SNAPSHOT.cmd](../nova_body/nova_computer/SNAPSHOT.cmd) — Nova Computer - baseline snapshot
 - [nova_body/nova_computer/TOOLKIT.cmd](../nova_body/nova_computer/TOOLKIT.cmd) — Nova Computer - her own toolkit
 - [nova_body/nova_computer/toolkit.py](../nova_body/nova_computer/toolkit.py) — Making my computer a WHOLE computer -- one I can extend myself. Cole, 2026-09-04:

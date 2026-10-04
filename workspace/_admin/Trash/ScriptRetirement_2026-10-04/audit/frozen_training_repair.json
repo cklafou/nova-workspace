@@ -1,0 +1,957 @@
+{
+  "_purpose": "@nova: Exact-hash repairs and read-only protection for frozen training inputs changed by the old watcher.",
+  "started_at": "2026-10-04T14:02:42.090405+09:00",
+  "status": "complete",
+  "repairs": [
+    {
+      "target": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\train_nova_lora_v6.py",
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\train_nova_lora_v6.py",
+      "before_sha256": "746b2e75c935cd92b8e4e6bb656cefed809d7fc09a3ad8ff13344d0c87082d9d",
+      "after_sha256": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+      "expected_sha256": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+      "original": "workspace\\_admin\\Training_stuff\\v6\\train_nova_lora_v6.py",
+      "strategy": "Exact verified historical original",
+      "readonly_before_publish": true,
+      "readonly_after_publish": true
+    },
+    {
+      "target": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\mk_template.py",
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\mk_template.py",
+      "before_sha256": "205aebeaecddd984f3604b490837bd62595e192c9ed85bea9d9a744e9564f63b",
+      "after_sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "expected_sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "original": "workspace\\_admin\\Training_stuff\\v6\\mk_template.py",
+      "strategy": "Exact verified historical original",
+      "readonly_before_publish": true,
+      "readonly_after_publish": true
+    },
+    {
+      "target": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\train_nova_lora_v7.py",
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\train_nova_lora_v7.py",
+      "before_sha256": "7816a0ce2e8e02ba92d21c164fded04869bf34c81a6ca6fe9038ee594437cb62",
+      "after_sha256": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+      "expected_sha256": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+      "original": "workspace\\_admin\\Training_stuff\\v7\\train_nova_lora_v7.py",
+      "strategy": "Exact verified historical original",
+      "readonly_before_publish": true,
+      "readonly_after_publish": true
+    },
+    {
+      "target": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\mk_template.py",
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\mk_template.py",
+      "before_sha256": "205aebeaecddd984f3604b490837bd62595e192c9ed85bea9d9a744e9564f63b",
+      "after_sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "expected_sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "original": "workspace\\_admin\\Training_stuff\\v7\\mk_template.py",
+      "strategy": "Exact verified historical original",
+      "readonly_before_publish": true,
+      "readonly_after_publish": true
+    },
+    {
+      "target": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\README.md",
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\README.md",
+      "before_sha256": "19d03d4edf5a6c39bc2f72cbad1cc3413a80f264624aca867e62bde36de6a450",
+      "after_sha256": "c2b55e3235aef07cbde5ab9a998a60b6fb21e57328c77775189d73de92807554",
+      "expected_sha256": "c2b55e3235aef07cbde5ab9a998a60b6fb21e57328c77775189d73de92807554",
+      "original": null,
+      "strategy": "Remove watcher timestamp and restore LF",
+      "readonly_before_publish": true,
+      "readonly_after_publish": true
+    },
+    {
+      "target": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\template_gen.py",
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\template_gen.py",
+      "before_sha256": "6dee8af79c60b294eb554f318f76147df7e3cb286428c9e873788ae701957080",
+      "after_sha256": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "expected_sha256": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "original": null,
+      "strategy": "Remove only watcher-added first timestamp line and restore LF; exact manifest SHA256 verified before publication",
+      "readonly_before_publish": true,
+      "readonly_after_publish": true
+    },
+    {
+      "target": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\train_lora.py",
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\train_lora.py",
+      "before_sha256": "474eeda1ab39088de873a8589bcd3ec9520f9a66e6eb0fd2914f404df0b75be6",
+      "after_sha256": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "expected_sha256": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "original": null,
+      "strategy": "Remove only watcher-added first timestamp line and restore LF; exact manifest SHA256 verified before publication",
+      "readonly_before_publish": true,
+      "readonly_after_publish": true
+    },
+    {
+      "target": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\README.md",
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\README.md",
+      "before_sha256": "bca423dd734e17d0764c29914f953ba71c51f4f272f5a653785f390bda2a0ffc",
+      "after_sha256": "4405dcdd32fa14fc55de72261cf95c73fc6fff2880a65ea067035514297e8643",
+      "expected_sha256": "4405dcdd32fa14fc55de72261cf95c73fc6fff2880a65ea067035514297e8643",
+      "original": null,
+      "strategy": "Remove only watcher-added first timestamp line and restore LF; exact manifest SHA256 verified before publication",
+      "readonly_before_publish": true,
+      "readonly_after_publish": true
+    }
+  ],
+  "before_checks": [
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\nova_core_v6.jsonl",
+      "expected": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc",
+      "actual": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\train_nova_lora_v6.py",
+      "expected": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+      "actual": "746b2e75c935cd92b8e4e6bb656cefed809d7fc09a3ad8ff13344d0c87082d9d",
+      "matches": false
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\mk_template.py",
+      "expected": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "actual": "205aebeaecddd984f3604b490837bd62595e192c9ed85bea9d9a744e9564f63b",
+      "matches": false
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\run_on_pod.sh",
+      "expected": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c",
+      "actual": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\qwen_template_gen.jinja",
+      "expected": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139",
+      "actual": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\nova_core_v7.jsonl",
+      "expected": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "actual": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\train_nova_lora_v7.py",
+      "expected": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+      "actual": "7816a0ce2e8e02ba92d21c164fded04869bf34c81a6ca6fe9038ee594437cb62",
+      "matches": false
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\mk_template.py",
+      "expected": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "actual": "205aebeaecddd984f3604b490837bd62595e192c9ed85bea9d9a744e9564f63b",
+      "matches": false
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\run_on_pod_v7.sh",
+      "expected": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458",
+      "actual": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\README.md",
+      "expected": "c2b55e3235aef07cbde5ab9a998a60b6fb21e57328c77775189d73de92807554",
+      "actual": "19d03d4edf5a6c39bc2f72cbad1cc3413a80f264624aca867e62bde36de6a450",
+      "matches": false
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\job.json",
+      "expected": "dd37dff1e160dacd0cf18c0f11b3d808a11552d55c3a83a3ddb216ef3e8e46f6",
+      "actual": "dd37dff1e160dacd0cf18c0f11b3d808a11552d55c3a83a3ddb216ef3e8e46f6",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\nova_core_v7.jsonl",
+      "expected": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "actual": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\run_on_pod.sh",
+      "expected": "8393b6ea7406640c8f8656b8d58935eb45ed3c02ae3dfd29f9b1ab8a107a8323",
+      "actual": "8393b6ea7406640c8f8656b8d58935eb45ed3c02ae3dfd29f9b1ab8a107a8323",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\template_gen.py",
+      "expected": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "actual": "6dee8af79c60b294eb554f318f76147df7e3cb286428c9e873788ae701957080",
+      "matches": false
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\train_lora.py",
+      "expected": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "actual": "474eeda1ab39088de873a8589bcd3ec9520f9a66e6eb0fd2914f404df0b75be6",
+      "matches": false
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\README.md",
+      "expected": "05a5c3229f0fa25c96ef504b1c18d407036f0a09a9cdc188ebb86d0c2fba355f",
+      "actual": "05a5c3229f0fa25c96ef504b1c18d407036f0a09a9cdc188ebb86d0c2fba355f",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\job.json",
+      "expected": "01bf43a6aa0fae7dcf5fc08a49f2a655339a283f2d7798302c6166b2825e7242",
+      "actual": "01bf43a6aa0fae7dcf5fc08a49f2a655339a283f2d7798302c6166b2825e7242",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\nova_core_v7.jsonl",
+      "expected": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "actual": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\run_on_pod.sh",
+      "expected": "eb12768cbf0de10a3a799c58397da722714c3d0c03a33c12b14cb895c3fa0186",
+      "actual": "eb12768cbf0de10a3a799c58397da722714c3d0c03a33c12b14cb895c3fa0186",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\template_gen.py",
+      "expected": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "actual": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\train_lora.py",
+      "expected": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "actual": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\README.md",
+      "expected": "4405dcdd32fa14fc55de72261cf95c73fc6fff2880a65ea067035514297e8643",
+      "actual": "bca423dd734e17d0764c29914f953ba71c51f4f272f5a653785f390bda2a0ffc",
+      "matches": false
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\base_config\\config.json",
+      "expected": "77fd80c1974b5b1a05473a0cc6b8125a42dded63aa0339bd5f27d7d83f4ed3c8",
+      "actual": "77fd80c1974b5b1a05473a0cc6b8125a42dded63aa0339bd5f27d7d83f4ed3c8",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\base_source.json",
+      "expected": "ddef31d7b2f39b7b1bfd56fd43e11d6683d09aec9a21fa2fc8ae9683bf026053",
+      "actual": "ddef31d7b2f39b7b1bfd56fd43e11d6683d09aec9a21fa2fc8ae9683bf026053",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\chat_template.gen.jinja",
+      "expected": "f2b049b46655f9c9ea377fb6a9470bf0fe1d0a42568defe54ec33bd6df8f6b0f",
+      "actual": "f2b049b46655f9c9ea377fb6a9470bf0fe1d0a42568defe54ec33bd6df8f6b0f",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\environment.txt",
+      "expected": "d74c29c669750b43115fba4a615c9cedf76586d8350511b11413be1041392bee",
+      "actual": "d74c29c669750b43115fba4a615c9cedf76586d8350511b11413be1041392bee",
+      "matches": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\tokenization_report.json",
+      "expected": "fe8c1e6b733d1b5aaa15bbaf12b39dcca97ab45198f4386b6a5502284bd1f174",
+      "actual": "fe8c1e6b733d1b5aaa15bbaf12b39dcca97ab45198f4386b6a5502284bd1f174",
+      "matches": true
+    }
+  ],
+  "watcher_seq_before": 334,
+  "protection": "Read-only attributes applied to same-folder temporary replacements before atomic publication, intentionally preventing the running old watcher from timestamp rewriting. Corrected watcher exclusions apply next normal startup. Before-repair backups are also read-only.",
+  "services_restarted": false,
+  "manifests_changed": false,
+  "additional_drift": "Three additional timestamp/newline-only drifts were restored under expanded authorization; all 27 manifest-listed entries are intentionally read-only.",
+  "immediate_checks": [
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\nova_core_v6.jsonl",
+      "expected": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc",
+      "actual": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\train_nova_lora_v6.py",
+      "expected": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+      "actual": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\mk_template.py",
+      "expected": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "actual": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\run_on_pod.sh",
+      "expected": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c",
+      "actual": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\qwen_template_gen.jinja",
+      "expected": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139",
+      "actual": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\nova_core_v7.jsonl",
+      "expected": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "actual": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\train_nova_lora_v7.py",
+      "expected": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+      "actual": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\mk_template.py",
+      "expected": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "actual": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\run_on_pod_v7.sh",
+      "expected": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458",
+      "actual": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\README.md",
+      "expected": "c2b55e3235aef07cbde5ab9a998a60b6fb21e57328c77775189d73de92807554",
+      "actual": "c2b55e3235aef07cbde5ab9a998a60b6fb21e57328c77775189d73de92807554",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\job.json",
+      "expected": "dd37dff1e160dacd0cf18c0f11b3d808a11552d55c3a83a3ddb216ef3e8e46f6",
+      "actual": "dd37dff1e160dacd0cf18c0f11b3d808a11552d55c3a83a3ddb216ef3e8e46f6",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\nova_core_v7.jsonl",
+      "expected": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "actual": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\run_on_pod.sh",
+      "expected": "8393b6ea7406640c8f8656b8d58935eb45ed3c02ae3dfd29f9b1ab8a107a8323",
+      "actual": "8393b6ea7406640c8f8656b8d58935eb45ed3c02ae3dfd29f9b1ab8a107a8323",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\template_gen.py",
+      "expected": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "actual": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\train_lora.py",
+      "expected": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "actual": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\README.md",
+      "expected": "05a5c3229f0fa25c96ef504b1c18d407036f0a09a9cdc188ebb86d0c2fba355f",
+      "actual": "05a5c3229f0fa25c96ef504b1c18d407036f0a09a9cdc188ebb86d0c2fba355f",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\job.json",
+      "expected": "01bf43a6aa0fae7dcf5fc08a49f2a655339a283f2d7798302c6166b2825e7242",
+      "actual": "01bf43a6aa0fae7dcf5fc08a49f2a655339a283f2d7798302c6166b2825e7242",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\nova_core_v7.jsonl",
+      "expected": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "actual": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\run_on_pod.sh",
+      "expected": "eb12768cbf0de10a3a799c58397da722714c3d0c03a33c12b14cb895c3fa0186",
+      "actual": "eb12768cbf0de10a3a799c58397da722714c3d0c03a33c12b14cb895c3fa0186",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\template_gen.py",
+      "expected": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "actual": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\train_lora.py",
+      "expected": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "actual": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\README.md",
+      "expected": "4405dcdd32fa14fc55de72261cf95c73fc6fff2880a65ea067035514297e8643",
+      "actual": "4405dcdd32fa14fc55de72261cf95c73fc6fff2880a65ea067035514297e8643",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\base_config\\config.json",
+      "expected": "77fd80c1974b5b1a05473a0cc6b8125a42dded63aa0339bd5f27d7d83f4ed3c8",
+      "actual": "77fd80c1974b5b1a05473a0cc6b8125a42dded63aa0339bd5f27d7d83f4ed3c8",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\base_source.json",
+      "expected": "ddef31d7b2f39b7b1bfd56fd43e11d6683d09aec9a21fa2fc8ae9683bf026053",
+      "actual": "ddef31d7b2f39b7b1bfd56fd43e11d6683d09aec9a21fa2fc8ae9683bf026053",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\chat_template.gen.jinja",
+      "expected": "f2b049b46655f9c9ea377fb6a9470bf0fe1d0a42568defe54ec33bd6df8f6b0f",
+      "actual": "f2b049b46655f9c9ea377fb6a9470bf0fe1d0a42568defe54ec33bd6df8f6b0f",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\environment.txt",
+      "expected": "d74c29c669750b43115fba4a615c9cedf76586d8350511b11413be1041392bee",
+      "actual": "d74c29c669750b43115fba4a615c9cedf76586d8350511b11413be1041392bee",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\tokenization_report.json",
+      "expected": "fe8c1e6b733d1b5aaa15bbaf12b39dcca97ab45198f4386b6a5502284bd1f174",
+      "actual": "fe8c1e6b733d1b5aaa15bbaf12b39dcca97ab45198f4386b6a5502284bd1f174",
+      "matches": true,
+      "readonly": true
+    }
+  ],
+  "restored_at": "2026-10-04T14:02:42.200343+09:00",
+  "attribute_only_checks": [
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\nova_core_v6.jsonl",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\train_nova_lora_v6.py",
+      "changed_to_readonly": false,
+      "content_changed": false,
+      "sha256": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\mk_template.py",
+      "changed_to_readonly": false,
+      "content_changed": false,
+      "sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\run_on_pod.sh",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\qwen_template_gen.jinja",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\nova_core_v7.jsonl",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\train_nova_lora_v7.py",
+      "changed_to_readonly": false,
+      "content_changed": false,
+      "sha256": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\mk_template.py",
+      "changed_to_readonly": false,
+      "content_changed": false,
+      "sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\run_on_pod_v7.sh",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\README.md",
+      "changed_to_readonly": false,
+      "content_changed": false,
+      "sha256": "c2b55e3235aef07cbde5ab9a998a60b6fb21e57328c77775189d73de92807554"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\job.json",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "dd37dff1e160dacd0cf18c0f11b3d808a11552d55c3a83a3ddb216ef3e8e46f6"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\nova_core_v7.jsonl",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\run_on_pod.sh",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "8393b6ea7406640c8f8656b8d58935eb45ed3c02ae3dfd29f9b1ab8a107a8323"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\README.md",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "05a5c3229f0fa25c96ef504b1c18d407036f0a09a9cdc188ebb86d0c2fba355f"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\job.json",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "01bf43a6aa0fae7dcf5fc08a49f2a655339a283f2d7798302c6166b2825e7242"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\nova_core_v7.jsonl",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\run_on_pod.sh",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "eb12768cbf0de10a3a799c58397da722714c3d0c03a33c12b14cb895c3fa0186"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\template_gen.py",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\train_lora.py",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\base_config\\config.json",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "77fd80c1974b5b1a05473a0cc6b8125a42dded63aa0339bd5f27d7d83f4ed3c8"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\base_source.json",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "ddef31d7b2f39b7b1bfd56fd43e11d6683d09aec9a21fa2fc8ae9683bf026053"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\chat_template.gen.jinja",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "f2b049b46655f9c9ea377fb6a9470bf0fe1d0a42568defe54ec33bd6df8f6b0f"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\environment.txt",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "d74c29c669750b43115fba4a615c9cedf76586d8350511b11413be1041392bee"
+    },
+    {
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\tokenization_report.json",
+      "changed_to_readonly": true,
+      "content_changed": false,
+      "sha256": "fe8c1e6b733d1b5aaa15bbaf12b39dcca97ab45198f4386b6a5502284bd1f174"
+    }
+  ],
+  "unrecovered": [],
+  "all_frozen_entries_readonly": true,
+  "content_restorations": 8,
+  "attribute_only_changes": 19,
+  "frozen_entries_total": 27,
+  "protected_at": "2026-10-04T14:04:20.977192+09:00",
+  "post_event_checks": [
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\nova_core_v6.jsonl",
+      "expected": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc",
+      "actual": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\train_nova_lora_v6.py",
+      "expected": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+      "actual": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\mk_template.py",
+      "expected": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "actual": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\run_on_pod.sh",
+      "expected": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c",
+      "actual": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\qwen_template_gen.jinja",
+      "expected": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139",
+      "actual": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\nova_core_v7.jsonl",
+      "expected": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "actual": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\train_nova_lora_v7.py",
+      "expected": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+      "actual": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\mk_template.py",
+      "expected": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "actual": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\training-manifest.json",
+      "file": "workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\run_on_pod_v7.sh",
+      "expected": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458",
+      "actual": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\README.md",
+      "expected": "c2b55e3235aef07cbde5ab9a998a60b6fb21e57328c77775189d73de92807554",
+      "actual": "c2b55e3235aef07cbde5ab9a998a60b6fb21e57328c77775189d73de92807554",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\job.json",
+      "expected": "dd37dff1e160dacd0cf18c0f11b3d808a11552d55c3a83a3ddb216ef3e8e46f6",
+      "actual": "dd37dff1e160dacd0cf18c0f11b3d808a11552d55c3a83a3ddb216ef3e8e46f6",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\nova_core_v7.jsonl",
+      "expected": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "actual": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\run_on_pod.sh",
+      "expected": "8393b6ea7406640c8f8656b8d58935eb45ed3c02ae3dfd29f9b1ab8a107a8323",
+      "actual": "8393b6ea7406640c8f8656b8d58935eb45ed3c02ae3dfd29f9b1ab8a107a8323",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\template_gen.py",
+      "expected": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "actual": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\train_lora.py",
+      "expected": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "actual": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\README.md",
+      "expected": "05a5c3229f0fa25c96ef504b1c18d407036f0a09a9cdc188ebb86d0c2fba355f",
+      "actual": "05a5c3229f0fa25c96ef504b1c18d407036f0a09a9cdc188ebb86d0c2fba355f",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\job.json",
+      "expected": "01bf43a6aa0fae7dcf5fc08a49f2a655339a283f2d7798302c6166b2825e7242",
+      "actual": "01bf43a6aa0fae7dcf5fc08a49f2a655339a283f2d7798302c6166b2825e7242",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\nova_core_v7.jsonl",
+      "expected": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "actual": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\run_on_pod.sh",
+      "expected": "eb12768cbf0de10a3a799c58397da722714c3d0c03a33c12b14cb895c3fa0186",
+      "actual": "eb12768cbf0de10a3a799c58397da722714c3d0c03a33c12b14cb895c3fa0186",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\template_gen.py",
+      "expected": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "actual": "c5dfa83fc6dd373858064a68fa05de569f0229566fa84acdf1ab0782c77a6dd1",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\inputs.sha256",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\train_lora.py",
+      "expected": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "actual": "46aef944cdd84fc8691b6d26058c10568975c4e0488a314229089497c8070512",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\README.md",
+      "expected": "4405dcdd32fa14fc55de72261cf95c73fc6fff2880a65ea067035514297e8643",
+      "actual": "4405dcdd32fa14fc55de72261cf95c73fc6fff2880a65ea067035514297e8643",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\base_config\\config.json",
+      "expected": "77fd80c1974b5b1a05473a0cc6b8125a42dded63aa0339bd5f27d7d83f4ed3c8",
+      "actual": "77fd80c1974b5b1a05473a0cc6b8125a42dded63aa0339bd5f27d7d83f4ed3c8",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\base_source.json",
+      "expected": "ddef31d7b2f39b7b1bfd56fd43e11d6683d09aec9a21fa2fc8ae9683bf026053",
+      "actual": "ddef31d7b2f39b7b1bfd56fd43e11d6683d09aec9a21fa2fc8ae9683bf026053",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\chat_template.gen.jinja",
+      "expected": "f2b049b46655f9c9ea377fb6a9470bf0fe1d0a42568defe54ec33bd6df8f6b0f",
+      "actual": "f2b049b46655f9c9ea377fb6a9470bf0fe1d0a42568defe54ec33bd6df8f6b0f",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\environment.txt",
+      "expected": "d74c29c669750b43115fba4a615c9cedf76586d8350511b11413be1041392bee",
+      "actual": "d74c29c669750b43115fba4a615c9cedf76586d8350511b11413be1041392bee",
+      "matches": true,
+      "readonly": true
+    },
+    {
+      "manifest": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\SHA256SUMS.txt",
+      "file": "workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\tokenization_report.json",
+      "expected": "fe8c1e6b733d1b5aaa15bbaf12b39dcca97ab45198f4386b6a5502284bd1f174",
+      "actual": "fe8c1e6b733d1b5aaa15bbaf12b39dcca97ab45198f4386b6a5502284bd1f174",
+      "matches": true,
+      "readonly": true
+    }
+  ],
+  "backup_checks": [
+    {
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\train_nova_lora_v6.py",
+      "matches_before_sha256": true,
+      "readonly": true
+    },
+    {
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v6\\mk_template.py",
+      "matches_before_sha256": true,
+      "readonly": true
+    },
+    {
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\train_nova_lora_v7.py",
+      "matches_before_sha256": true,
+      "readonly": true
+    },
+    {
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.6 27B Dense\\Nova Core v7\\mk_template.py",
+      "matches_before_sha256": true,
+      "readonly": true
+    },
+    {
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\README.md",
+      "matches_before_sha256": true,
+      "readonly": true
+    },
+    {
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\template_gen.py",
+      "matches_before_sha256": true,
+      "readonly": true
+    },
+    {
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38\\train_lora.py",
+      "matches_before_sha256": true,
+      "readonly": true
+    },
+    {
+      "backup": "workspace\\Temp\\script-retirement-audit\\frozen-before-repair\\workspace\\models\\Training Files\\Qwen 3.8 27B Dense\\nova_core_v7_qwen38_r2\\Run Details\\7e4c3f79ab5b\\README.md",
+      "matches_before_sha256": true,
+      "readonly": true
+    }
+  ],
+  "watcher_event_evidence": {
+    "alive": true,
+    "seq_after": 339,
+    "blocked_timestamp_writes": [
+      {
+        "seq": 335,
+        "ts": "14:04:20",
+        "text": "[watcher] Could not update timestamp in README.md: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\models\\\\Training Files\\\\Qwen 3.8 27B Dense\\\\nova_core_v7_qwen38_r2\\\\README.md'",
+        "plain": null
+      },
+      {
+        "seq": 336,
+        "ts": "14:04:20",
+        "text": "[watcher] Could not update timestamp in template_gen.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\models\\\\Training Files\\\\Qwen 3.8 27B Dense\\\\nova_core_v7_qwen38_r2\\\\template_gen.py'",
+        "plain": null
+      },
+      {
+        "seq": 337,
+        "ts": "14:04:20",
+        "text": "[watcher] Could not update timestamp in train_lora.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\models\\\\Training Files\\\\Qwen 3.8 27B Dense\\\\nova_core_v7_qwen38_r2\\\\train_lora.py'",
+        "plain": null
+      }
+    ],
+    "scope": "Live watcher log confirms blocked writes for these recorded paths; every listed frozen file independently rehashed and checked read-only afterward."
+  },
+  "completed_at": "2026-10-04T14:05:38.770756+09:00",
+  "summary": {
+    "content_restorations": 8,
+    "attribute_only_changes": 19,
+    "total_readonly_frozen_files": 27,
+    "manifest_input_checks": 21,
+    "runtime_provenance_checks": 6,
+    "all_checks_match": true,
+    "before_repair_backups": 8
+  }
+}

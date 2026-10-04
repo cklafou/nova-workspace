@@ -1,0 +1,3170 @@
+{
+  "@nova": "Record active-folder script inventory and audit exclusions before reversible retirement.",
+  "excluded_folder_names": [
+    ".git",
+    ".tmp.drivedownload",
+    ".tmp.driveupload",
+    ".venv",
+    "Temp",
+    "Trash",
+    "__pycache__",
+    "_build",
+    "node_modules",
+    "prompt_cache",
+    "site-packages",
+    "venv"
+  ],
+  "excluded_generated_copy": "Nova_Drive/read",
+  "folders": {
+    ".": {
+      "scripts": 0,
+      "files": 4
+    },
+    "logs": {
+      "scripts": 0,
+      "files": 0
+    },
+    "logs/llama": {
+      "scripts": 0,
+      "files": 2
+    },
+    "NovaDrop": {
+      "scripts": 0,
+      "files": 2
+    },
+    "Nova_Drive": {
+      "scripts": 0,
+      "files": 1
+    },
+    "Nova_Drive/inbox": {
+      "scripts": 0,
+      "files": 0
+    },
+    "outputs": {
+      "scripts": 0,
+      "files": 0
+    },
+    "outputs/agent-team-research": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace": {
+      "scripts": 6,
+      "files": 9
+    },
+    "workspace/avatar_design": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/avatar_design/2026-09-22-concepts": {
+      "scripts": 0,
+      "files": 7
+    },
+    "workspace/avatar_design/2026-09-22-concepts/personality-study": {
+      "scripts": 0,
+      "files": 5
+    },
+    "workspace/avatar_design/2026-09-22-concepts/personality-study/sources": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/general_tools": {
+      "scripts": 12,
+      "files": 12
+    },
+    "workspace/general_tools/architecture_map": {
+      "scripts": 12,
+      "files": 18
+    },
+    "workspace/general_tools/architecture_map/hooks": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/general_tools/architecture_map/notes": {
+      "scripts": 0,
+      "files": 8
+    },
+    "workspace/general_tools/nova_chat": {
+      "scripts": 16,
+      "files": 18
+    },
+    "workspace/general_tools/nova_chat/clients": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/general_tools/nova_chat/static": {
+      "scripts": 6,
+      "files": 11
+    },
+    "workspace/general_tools/nova_chat/static/vendor": {
+      "scripts": 1,
+      "files": 4
+    },
+    "workspace/general_tools/nova_chat/tests": {
+      "scripts": 13,
+      "files": 13
+    },
+    "workspace/general_tools/nova_collaboration": {
+      "scripts": 1,
+      "files": 3
+    },
+    "workspace/general_tools/nova_collaboration/.claude-plugin": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/general_tools/nova_collaboration/commands": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/general_tools/nova_console": {
+      "scripts": 6,
+      "files": 8
+    },
+    "workspace/general_tools/nova_sync": {
+      "scripts": 7,
+      "files": 11
+    },
+    "workspace/general_tools/nova_sync/hooks": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/general_tools/nova_sync/tests": {
+      "scripts": 3,
+      "files": 3
+    },
+    "workspace/general_tools/nova_updater": {
+      "scripts": 17,
+      "files": 18
+    },
+    "workspace/general_tools/nova_updater/pod": {
+      "scripts": 4,
+      "files": 4
+    },
+    "workspace/general_tools/nova_updater/state": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/general_tools/nova_updater/tests": {
+      "scripts": 14,
+      "files": 14
+    },
+    "workspace/general_tools/nova_updater/tests/fixtures": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/general_tools/voice_gateway": {
+      "scripts": 9,
+      "files": 12
+    },
+    "workspace/llama": {
+      "scripts": 0,
+      "files": 55
+    },
+    "workspace/models": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/models/.incoming": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/models/qwen3.8": {
+      "scripts": 0,
+      "files": 5
+    },
+    "workspace/models/Training Files": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/models/Training Files/Qwen 3.6 27B Dense": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v6": {
+      "scripts": 3,
+      "files": 7
+    },
+    "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v7": {
+      "scripts": 3,
+      "files": 6
+    },
+    "workspace/models/Training Files/Qwen 3.8 27B Dense": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/models/Training Files/Qwen 3.8 27B Dense/nova_core_v7_qwen38": {
+      "scripts": 3,
+      "files": 7
+    },
+    "workspace/models/Training Files/Qwen 3.8 27B Dense/nova_core_v7_qwen38_r2": {
+      "scripts": 3,
+      "files": 8
+    },
+    "workspace/models/Training Files/Qwen 3.8 27B Dense/nova_core_v7_qwen38_r2/Run Details": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/models/Training Files/Qwen 3.8 27B Dense/nova_core_v7_qwen38_r2/Run Details/7e4c3f79ab5b": {
+      "scripts": 0,
+      "files": 9
+    },
+    "workspace/models/Training Files/Qwen 3.8 27B Dense/nova_core_v7_qwen38_r2/Run Details/7e4c3f79ab5b/base_config": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/models/witness": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body": {
+      "scripts": 1,
+      "files": 3
+    },
+    "workspace/nova_body/KoELS": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/KoELS/coder": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/KoELS/gaming": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs": {
+      "scripts": 2,
+      "files": 62
+    },
+    "workspace/nova_body/logs/Archive": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/Archive/rotation": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/Archive/rotation/nova_body": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/Archive/rotation/nova_body/logs": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/Archive/rotation/nova_body/logs/llama": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/autonomy_runs": {
+      "scripts": 0,
+      "files": 277
+    },
+    "workspace/nova_body/logs/backups": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/backups/sessions": {
+      "scripts": 0,
+      "files": 30
+    },
+    "workspace/nova_body/logs/backups/weekly": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/nova_body/logs/chat_sessions": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/chat_sessions/archive": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/logs/chat_sessions/exports": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/nova_body/logs/comfy": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/computer": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/nova_body/logs/events": {
+      "scripts": 0,
+      "files": 29
+    },
+    "workspace/nova_body/logs/heavy_witness": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/launcher": {
+      "scripts": 0,
+      "files": 32
+    },
+    "workspace/nova_body/logs/llama": {
+      "scripts": 0,
+      "files": 21
+    },
+    "workspace/nova_body/logs/runtime": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/screenshots": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-03-19": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-03-20": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-03-21": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-03-22": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-03-25": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-03-26": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-03-27": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-03-28": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-03-29": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-03-30": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-06": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-07": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-08": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-09": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-10": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-13": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-23": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-24": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-25": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-26": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-27": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-28": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-29": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-05-31": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-06-01": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-06-03": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-06-10": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-06-20": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-06-21": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-06-22": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-06-27": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-07-08": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-07-13": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-07-14": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-07-15": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-07-18": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-07-19": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-07-20": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-07-21": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-07-22": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-07-23": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-07-24": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-08-01": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-08-02": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-08-03": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-08-04": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-10-01": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-10-02": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-10-03": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/screenshots/2026-10-04": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/sessions": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/sessions/2026-03-19": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-03-20": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/sessions/2026-03-21": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/sessions/2026-03-22": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-03-25": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-03-26": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/sessions/2026-03-27": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/sessions/2026-03-28": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-03-29": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/sessions/2026-03-30": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/sessions/2026-05-06": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/sessions/2026-05-07": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-05-08": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-05-09": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-05-10": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-05-13": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-05-23": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-05-24": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-05-25": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-05-26": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-05-27": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-05-28": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/sessions/2026-05-29": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-05-31": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-06-01": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-06-03": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-06-10": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-06-20": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/sessions/2026-06-21": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-06-22": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-06-27": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/sessions/2026-07-08": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-07-13": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/logs/sessions/2026-07-14": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/logs/sessions/2026-07-15": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/logs/sessions/2026-07-18": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/logs/sessions/2026-07-19": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/logs/sessions/2026-07-20": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/sessions/2026-07-21": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/logs/sessions/2026-07-22": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/sessions/2026-07-23": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/sessions/2026-07-24": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/sessions/2026-08-01": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/sessions/2026-08-02": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/logs/sessions/2026-08-03": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-08-04": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-10-01": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-10-02": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-10-03": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/logs/sessions/2026-10-04": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/memory": {
+      "scripts": 0,
+      "files": 26
+    },
+    "workspace/nova_body/memory/archive": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/memory/avatar": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/memory/creative": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/memory/decisions": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/memory/journal_notes": {
+      "scripts": 0,
+      "files": 15
+    },
+    "workspace/nova_body/memory/reports": {
+      "scripts": 0,
+      "files": 60
+    },
+    "workspace/nova_body/memory/scratch": {
+      "scripts": 2,
+      "files": 13
+    },
+    "workspace/nova_body/memory/self_model": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/memory/shape_history": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/nova_computer": {
+      "scripts": 19,
+      "files": 23
+    },
+    "workspace/nova_body/nova_computer/provision": {
+      "scripts": 1,
+      "files": 6
+    },
+    "workspace/nova_body/nova_config": {
+      "scripts": 1,
+      "files": 2
+    },
+    "workspace/nova_body/nova_cortex": {
+      "scripts": 19,
+      "files": 20
+    },
+    "workspace/nova_body/Nova_Created": {
+      "scripts": 3,
+      "files": 5
+    },
+    "workspace/nova_body/Nova_Created/art": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/Nova_Created/art/2026-07-19": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/Nova_Created/art/2026-07-21": {
+      "scripts": 0,
+      "files": 12
+    },
+    "workspace/nova_body/Nova_Created/art/2026-07-22": {
+      "scripts": 0,
+      "files": 7
+    },
+    "workspace/nova_body/Nova_Created/art/2026-07-23": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/nova_body/Nova_Created/art/2026-07-24": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/Nova_Created/art/2026-08-01": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/Nova_Created/art/2026-08-02": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/Nova_Created/Cole_journal": {
+      "scripts": 3,
+      "files": 6
+    },
+    "workspace/nova_body/Nova_Created/Cole_journal/designs": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/Nova_Created/Evaluations": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/Nova_Created/Evaluations/autonomy-20261001": {
+      "scripts": 2,
+      "files": 5
+    },
+    "workspace/nova_body/Nova_Created/Evaluations/modernization-20261002": {
+      "scripts": 2,
+      "files": 4
+    },
+    "workspace/nova_body/Nova_Created/Evaluations/post-cutover": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/Nova_Created/general_tools": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/Nova_Created/general_tools/designs": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/Nova_Created/general_tools/tests": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/Nova_Created/general_tools/tools": {
+      "scripts": 1,
+      "files": 1
+    },
+    "workspace/nova_body/Nova_Created/nova_body": {
+      "scripts": 1,
+      "files": 2
+    },
+    "workspace/nova_body/Nova_Created/nova_body/designs": {
+      "scripts": 0,
+      "files": 27
+    },
+    "workspace/nova_body/Nova_Created/nova_body/senses": {
+      "scripts": 2,
+      "files": 3
+    },
+    "workspace/nova_body/Nova_Created/nova_body/tests": {
+      "scripts": 36,
+      "files": 36
+    },
+    "workspace/nova_body/Nova_Created/nova_body/tests/.test_logs": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/Nova_Created/nova_body/tools": {
+      "scripts": 30,
+      "files": 31
+    },
+    "workspace/nova_body/Nova_Created/nova_memory_db": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/Nova_Created/nova_memory_db/nova_text.lance": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/Nova_Created/nova_memory_db/nova_text.lance/data": {
+      "scripts": 0,
+      "files": 1132
+    },
+    "workspace/nova_body/Nova_Created/nova_memory_db/nova_text.lance/_transactions": {
+      "scripts": 0,
+      "files": 281
+    },
+    "workspace/nova_body/Nova_Created/nova_memory_db/nova_text.lance/_versions": {
+      "scripts": 0,
+      "files": 281
+    },
+    "workspace/nova_body/Nova_Created/nova_memory_db/nova_visual.lance": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/Nova_Created/nova_memory_db/nova_visual.lance/data": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/Nova_Created/nova_memory_db/nova_visual.lance/_transactions": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/Nova_Created/nova_memory_db/nova_visual.lance/_versions": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/Nova_Created/nova_night_notes": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/nova_forge": {
+      "scripts": 1,
+      "files": 3
+    },
+    "workspace/nova_body/nova_imagination": {
+      "scripts": 3,
+      "files": 4
+    },
+    "workspace/nova_body/nova_lancedb": {
+      "scripts": 5,
+      "files": 6
+    },
+    "workspace/nova_body/nova_logs": {
+      "scripts": 3,
+      "files": 5
+    },
+    "workspace/nova_body/nova_memory": {
+      "scripts": 5,
+      "files": 6
+    },
+    "workspace/nova_body/nova_memory_db": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/nova_memory_db/nova_text.lance": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/nova_memory_db/nova_text.lance/data": {
+      "scripts": 0,
+      "files": 122
+    },
+    "workspace/nova_body/nova_memory_db/nova_text.lance/_transactions": {
+      "scripts": 0,
+      "files": 123
+    },
+    "workspace/nova_body/nova_memory_db/nova_text.lance/_versions": {
+      "scripts": 0,
+      "files": 123
+    },
+    "workspace/nova_body/nova_memory_db/nova_visual.lance": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/nova_memory_db/nova_visual.lance/_transactions": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/nova_memory_db/nova_visual.lance/_versions": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/nova_play": {
+      "scripts": 2,
+      "files": 3
+    },
+    "workspace/nova_body/nova_runtime": {
+      "scripts": 11,
+      "files": 12
+    },
+    "workspace/nova_body/nova_senses": {
+      "scripts": 12,
+      "files": 13
+    },
+    "workspace/nova_body/nova_senses/tests": {
+      "scripts": 1,
+      "files": 1
+    },
+    "workspace/nova_body/nova_voice": {
+      "scripts": 7,
+      "files": 8
+    },
+    "workspace/nova_body/nova_witness": {
+      "scripts": 4,
+      "files": 7
+    },
+    "workspace/nova_body/nova_witness/cases": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/nova_witness/reports": {
+      "scripts": 0,
+      "files": 26
+    },
+    "workspace/nova_body/SELF": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D": {
+      "scripts": 0,
+      "files": 12
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/art": {
+      "scripts": 0,
+      "files": 28
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/checkpoints": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/checkpoints/2026-09-30_183610": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064020": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_064554": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_091519": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_094039": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_101724": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_131423": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_131912": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_144816": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/preview": {
+      "scripts": 0,
+      "files": 97
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/preview/v12": {
+      "scripts": 0,
+      "files": 18
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/preview/v12/preclosure": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/preview/v13": {
+      "scripts": 0,
+      "files": 21
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/preview/v14": {
+      "scripts": 0,
+      "files": 17
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/preview/v15": {
+      "scripts": 0,
+      "files": 75
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/preview/v16": {
+      "scripts": 0,
+      "files": 78
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/preview/v16-audit": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/preview/v17": {
+      "scripts": 0,
+      "files": 74
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/rig": {
+      "scripts": 0,
+      "files": 30
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime": {
+      "scripts": 0,
+      "files": 7
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07": {
+      "scripts": 0,
+      "files": 5
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_CALM_v07/Nova_CALM_v07.4096": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08": {
+      "scripts": 0,
+      "files": 5
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v08/Nova_FRONT_v08.4096": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09": {
+      "scripts": 0,
+      "files": 5
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/motions": {
+      "scripts": 0,
+      "files": 6
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v09/Nova_FRONT_v09.4096": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11": {
+      "scripts": 0,
+      "files": 6
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/motions": {
+      "scripts": 0,
+      "files": 7
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v11/Nova_FRONT_v11.4096": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12": {
+      "scripts": 0,
+      "files": 6
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/expressions": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/motions": {
+      "scripts": 0,
+      "files": 9
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v12/Nova_FRONT_v12.4096": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13": {
+      "scripts": 0,
+      "files": 7
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/expressions": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/motions": {
+      "scripts": 0,
+      "files": 9
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v13/Nova_FRONT_v13.4096": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14": {
+      "scripts": 0,
+      "files": 7
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/expressions": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/motions": {
+      "scripts": 0,
+      "files": 13
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v14/Nova_FRONT_v14.4096": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15": {
+      "scripts": 0,
+      "files": 7
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/expressions": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/motions": {
+      "scripts": 0,
+      "files": 17
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v15/Nova_FRONT_v15.4096": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16": {
+      "scripts": 0,
+      "files": 7
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/expressions": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/motions": {
+      "scripts": 0,
+      "files": 18
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v16/Nova_FRONT_v16.4096": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17": {
+      "scripts": 0,
+      "files": 7
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/expressions": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/motions": {
+      "scripts": 0,
+      "files": 19
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v17/Nova_FRONT_v17.4096": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_v01": {
+      "scripts": 0,
+      "files": 5
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/motions": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.4096": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/showcase": {
+      "scripts": 0,
+      "files": 13
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/source": {
+      "scripts": 0,
+      "files": 33
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/source/v10_parts": {
+      "scripts": 0,
+      "files": 12
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/source/v11_parts": {
+      "scripts": 0,
+      "files": 7
+    },
+    "workspace/nova_body/SELF/Avatar/Live2D/tooling": {
+      "scripts": 64,
+      "files": 66
+    },
+    "workspace/nova_body/SELF/Avatar/Outdated Concept Art": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/SELF/core": {
+      "scripts": 0,
+      "files": 5
+    },
+    "workspace/nova_body/SELF/portrait": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/nova_body/SELF/reference": {
+      "scripts": 0,
+      "files": 5
+    },
+    "workspace/nova_body/Tasking": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/nova_body/tests": {
+      "scripts": 5,
+      "files": 5
+    },
+    "workspace/Nova_Created": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/art": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/Cole_journal": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/Cole_journal/designs": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/Evaluations": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/Evaluations/autonomy-20261001": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/general_tools": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/general_tools/designs": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/general_tools/tests": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/general_tools/tools": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_body": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_body/designs": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_body/nova_memory_db": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_body/senses": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_body/tests": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_body/tests/.test_logs": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_body/tools": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_memory_db": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_memory_db/nova_text.lance": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_memory_db/nova_text.lance/data": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_memory_db/nova_text.lance/_transactions": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_memory_db/nova_text.lance/_versions": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_memory_db/nova_visual.lance": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_memory_db/nova_visual.lance/data": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_memory_db/nova_visual.lance/_transactions": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_memory_db/nova_visual.lance/_versions": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Nova_Created/nova_night_notes": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/Orient": {
+      "scripts": 0,
+      "files": 4
+    },
+    "workspace/Orient/AI Notes": {
+      "scripts": 0,
+      "files": 27
+    },
+    "workspace/Orient/Architecture": {
+      "scripts": 3,
+      "files": 13
+    },
+    "workspace/Orient/Architecture/evidence": {
+      "scripts": 0,
+      "files": 2
+    },
+    "workspace/_admin": {
+      "scripts": 16,
+      "files": 18
+    },
+    "workspace/_admin/autonomy_watch": {
+      "scripts": 1,
+      "files": 5
+    },
+    "workspace/_admin/autonomy_watch/recovery": {
+      "scripts": 0,
+      "files": 3
+    },
+    "workspace/_admin/Training_stuff": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/_admin/Training_stuff/KoELS_Files": {
+      "scripts": 5,
+      "files": 21
+    },
+    "workspace/_admin/Training_stuff/KoELS_Files/mnt": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/_admin/Training_stuff/KoELS_Files/mnt/user-data": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/_admin/Training_stuff/KoELS_Files/mnt/user-data/outputs": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/_admin/Training_stuff/KoELS_Files/mnt/user-data/outputs/koels": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/_admin/Training_stuff/KoELS_Files/mnt/user-data/outputs/koels/strategies": {
+      "scripts": 1,
+      "files": 1
+    },
+    "workspace/_admin/Training_stuff/v6": {
+      "scripts": 5,
+      "files": 12
+    },
+    "workspace/_admin/Training_stuff/v7": {
+      "scripts": 3,
+      "files": 9
+    },
+    "workspace/_admin/Training_stuff/v7/mined": {
+      "scripts": 0,
+      "files": 8
+    },
+    "workspace/_admin/witness_v2": {
+      "scripts": 0,
+      "files": 1
+    },
+    "workspace/_admin/witness_v2/cases": {
+      "scripts": 0,
+      "files": 0
+    },
+    "workspace/_admin/witness_v2/reports": {
+      "scripts": 0,
+      "files": 0
+    }
+  },
+  "scripts": [
+    {
+      "path": "workspace/NovaChatOnly.cmd",
+      "bytes": 501
+    },
+    {
+      "path": "workspace/NovaStart.cmd",
+      "bytes": 1311
+    },
+    {
+      "path": "workspace/nova_start.py",
+      "bytes": 53977
+    },
+    {
+      "path": "workspace/RUN_PLUCK.cmd",
+      "bytes": 1389
+    },
+    {
+      "path": "workspace/start_llama_qwen36.cmd",
+      "bytes": 7248
+    },
+    {
+      "path": "workspace/StopNova.cmd",
+      "bytes": 5049
+    },
+    {
+      "path": "workspace/general_tools/audit_queue.py",
+      "bytes": 30697
+    },
+    {
+      "path": "workspace/general_tools/audit_scripts.py",
+      "bytes": 52735
+    },
+    {
+      "path": "workspace/general_tools/build_manifest.py",
+      "bytes": 13791
+    },
+    {
+      "path": "workspace/general_tools/calls.py",
+      "bytes": 10262
+    },
+    {
+      "path": "workspace/general_tools/calls_order.py",
+      "bytes": 13936
+    },
+    {
+      "path": "workspace/general_tools/cloud_call.py",
+      "bytes": 12793
+    },
+    {
+      "path": "workspace/general_tools/cloud_call.py.turnabout_bak",
+      "bytes": 11085
+    },
+    {
+      "path": "workspace/general_tools/injector.py",
+      "bytes": 20325
+    },
+    {
+      "path": "workspace/general_tools/janitor.py",
+      "bytes": 7770
+    },
+    {
+      "path": "workspace/general_tools/NovaLauncher.py",
+      "bytes": 10507
+    },
+    {
+      "path": "workspace/general_tools/ping_claude.ps1",
+      "bytes": 27620
+    },
+    {
+      "path": "workspace/general_tools/restructure.py",
+      "bytes": 22073
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/atlas_history.py",
+      "bytes": 15221
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/build.py",
+      "bytes": 32685
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/experience.js",
+      "bytes": 24371
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/orient.py",
+      "bytes": 73226
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/serve.py",
+      "bytes": 14729
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/test_architecture.py",
+      "bytes": 11615
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/test_history.py",
+      "bytes": 6299
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/test_orient.py",
+      "bytes": 16809
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/test_review_registry.py",
+      "bytes": 863
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/test_updater_routes.py",
+      "bytes": 1059
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/viewer.js",
+      "bytes": 36583
+    },
+    {
+      "path": "workspace/general_tools/architecture_map/__init__.py",
+      "bytes": 121
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/build_desktop.py",
+      "bytes": 1530
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/collaboration.py",
+      "bytes": 14226
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/context_export.py",
+      "bytes": 5748
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/desktop.py",
+      "bytes": 7886
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/launch.py",
+      "bytes": 5636
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/lifecycle.py",
+      "bytes": 7946
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/nova_bridge.py",
+      "bytes": 5740
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/nova_lang.py",
+      "bytes": 14100
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/orchestrator.py",
+      "bytes": 14268
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/runtime_host.py",
+      "bytes": 2060
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/server.py",
+      "bytes": 220023
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/server_runner.py",
+      "bytes": 652
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/session_manager.py",
+      "bytes": 11573
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/transcript.py",
+      "bytes": 14213
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/widget_data.py",
+      "bytes": 920
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/workspace_context.py",
+      "bytes": 186
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/static/collaboration.js",
+      "bytes": 10311
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/static/control.js",
+      "bytes": 7485
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/static/conversation-power.js",
+      "bytes": 11143
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/static/index.html.polish_bak",
+      "bytes": 353625
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/static/updater.js",
+      "bytes": 73145
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/static/workspace.js",
+      "bytes": 33910
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/static/vendor/nova-dock.js",
+      "bytes": 128399
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_chat_only.py",
+      "bytes": 7420
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_collaboration.py",
+      "bytes": 7861
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_collaboration_bridge.py",
+      "bytes": 12829
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_collaboration_spool.py",
+      "bytes": 9267
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_controller_repair.py",
+      "bytes": 10606
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_conversation_power.cjs",
+      "bytes": 12509
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_desktop.py",
+      "bytes": 2340
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_launcher_mode.py",
+      "bytes": 13508
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_lifecycle.py",
+      "bytes": 10797
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_lifecycle_ack.py",
+      "bytes": 3028
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_source_fingerprint.py",
+      "bytes": 1456
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_updater_integration.py",
+      "bytes": 9286
+    },
+    {
+      "path": "workspace/general_tools/nova_chat/tests/test_updater_ui.cjs",
+      "bytes": 28268
+    },
+    {
+      "path": "workspace/general_tools/nova_collaboration/bridge.py",
+      "bytes": 19543
+    },
+    {
+      "path": "workspace/general_tools/nova_console/console_app.py",
+      "bytes": 13578
+    },
+    {
+      "path": "workspace/general_tools/nova_console/hub.py",
+      "bytes": 15796
+    },
+    {
+      "path": "workspace/general_tools/nova_console/lifecycle.py",
+      "bytes": 5985
+    },
+    {
+      "path": "workspace/general_tools/nova_console/plainspeak.py",
+      "bytes": 7953
+    },
+    {
+      "path": "workspace/general_tools/nova_console/stray_janitor.py",
+      "bytes": 5622
+    },
+    {
+      "path": "workspace/general_tools/nova_console/__init__.py",
+      "bytes": 371
+    },
+    {
+      "path": "workspace/general_tools/nova_sync/backup.py",
+      "bytes": 7834
+    },
+    {
+      "path": "workspace/general_tools/nova_sync/dir_patch.py",
+      "bytes": 16543
+    },
+    {
+      "path": "workspace/general_tools/nova_sync/drive.py",
+      "bytes": 27826
+    },
+    {
+      "path": "workspace/general_tools/nova_sync/drive_copy.py",
+      "bytes": 6714
+    },
+    {
+      "path": "workspace/general_tools/nova_sync/watcher.py",
+      "bytes": 46594
+    },
+    {
+      "path": "workspace/general_tools/nova_sync/watcher.py.holdback_bak",
+      "bytes": 45219
+    },
+    {
+      "path": "workspace/general_tools/nova_sync/__init__.py",
+      "bytes": 545
+    },
+    {
+      "path": "workspace/general_tools/nova_sync/tests/test_collaboration_privacy.py",
+      "bytes": 5305
+    },
+    {
+      "path": "workspace/general_tools/nova_sync/tests/test_exclusions.py",
+      "bytes": 967
+    },
+    {
+      "path": "workspace/general_tools/nova_sync/tests/test_updates.py",
+      "bytes": 6650
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/api.py",
+      "bytes": 11524
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/catalog.py",
+      "bytes": 11911
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/check.py",
+      "bytes": 8449
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/current.py",
+      "bytes": 4877
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/gguf.py",
+      "bytes": 5067
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/install.py",
+      "bytes": 21098
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/inventory.py",
+      "bytes": 5626
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/jobs.py",
+      "bytes": 6567
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/naming.py",
+      "bytes": 5212
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/net.py",
+      "bytes": 4517
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/paths.py",
+      "bytes": 4351
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/plan.py",
+      "bytes": 17422
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/runpod.py",
+      "bytes": 29977
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/store.py",
+      "bytes": 2480
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/train.py",
+      "bytes": 32818
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/__init__.py",
+      "bytes": 553
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/__main__.py",
+      "bytes": 4873
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/pod/run_on_pod.sh",
+      "bytes": 6921
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/pod/template_gen.py",
+      "bytes": 7889
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/pod/train_lora.py",
+      "bytes": 7957
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/pod/__init__.py",
+      "bytes": 129
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/support.py",
+      "bytes": 5531
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_api.py",
+      "bytes": 10202
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_check_and_naming.py",
+      "bytes": 5703
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_install.py",
+      "bytes": 27808
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_launcher.py",
+      "bytes": 4572
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_pod_compat.py",
+      "bytes": 9010
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_pod_venv.py",
+      "bytes": 4631
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_runpod_cleanup.py",
+      "bytes": 12213
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_runpod_delete_http.py",
+      "bytes": 4156
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_runpod_funding.py",
+      "bytes": 10128
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_runpod_lifecycle.py",
+      "bytes": 11448
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_train.py",
+      "bytes": 15904
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_training_details.py",
+      "bytes": 1793
+    },
+    {
+      "path": "workspace/general_tools/nova_updater/tests/test_training_files.py",
+      "bytes": 8248
+    },
+    {
+      "path": "workspace/general_tools/voice_gateway/committer.py",
+      "bytes": 8440
+    },
+    {
+      "path": "workspace/general_tools/voice_gateway/config.py",
+      "bytes": 5328
+    },
+    {
+      "path": "workspace/general_tools/voice_gateway/fetch_models.cmd",
+      "bytes": 1533
+    },
+    {
+      "path": "workspace/general_tools/voice_gateway/gateway.py",
+      "bytes": 7557
+    },
+    {
+      "path": "workspace/general_tools/voice_gateway/nova_link.py",
+      "bytes": 3003
+    },
+    {
+      "path": "workspace/general_tools/voice_gateway/stt.py",
+      "bytes": 5639
+    },
+    {
+      "path": "workspace/general_tools/voice_gateway/test_committer.py",
+      "bytes": 3588
+    },
+    {
+      "path": "workspace/general_tools/voice_gateway/tts.py",
+      "bytes": 6558
+    },
+    {
+      "path": "workspace/general_tools/voice_gateway/__init__.py",
+      "bytes": 213
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v6/mk_template.py",
+      "bytes": 8107
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v6/run_on_pod.sh",
+      "bytes": 3522
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v6/train_nova_lora_v6.py",
+      "bytes": 9322
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v7/mk_template.py",
+      "bytes": 8107
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v7/run_on_pod_v7.sh",
+      "bytes": 3968
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.6 27B Dense/Nova Core v7/train_nova_lora_v7.py",
+      "bytes": 9500
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.8 27B Dense/nova_core_v7_qwen38/run_on_pod.sh",
+      "bytes": 5591
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.8 27B Dense/nova_core_v7_qwen38/template_gen.py",
+      "bytes": 7889
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.8 27B Dense/nova_core_v7_qwen38/train_lora.py",
+      "bytes": 7957
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.8 27B Dense/nova_core_v7_qwen38_r2/run_on_pod.sh",
+      "bytes": 6175
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.8 27B Dense/nova_core_v7_qwen38_r2/template_gen.py",
+      "bytes": 7889
+    },
+    {
+      "path": "workspace/models/Training Files/Qwen 3.8 27B Dense/nova_core_v7_qwen38_r2/train_lora.py",
+      "bytes": 7957
+    },
+    {
+      "path": "workspace/nova_body/nova_paths.py",
+      "bytes": 2307
+    },
+    {
+      "path": "workspace/nova_body/logs/_cowork_checkpoint.cmd",
+      "bytes": 787
+    },
+    {
+      "path": "workspace/nova_body/logs/_cowork_go.cmd",
+      "bytes": 101
+    },
+    {
+      "path": "workspace/nova_body/memory/scratch/count_calls.py",
+      "bytes": 219
+    },
+    {
+      "path": "workspace/nova_body/memory/scratch/dead_audit.py",
+      "bytes": 1648
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/backends.py",
+      "bytes": 17638
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/computer.py",
+      "bytes": 8705
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/first_boot.py",
+      "bytes": 1118
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/HANDS.cmd",
+      "bytes": 436
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/hands.py",
+      "bytes": 11495
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/PLUCK_CHECK.cmd",
+      "bytes": 478
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/pluck_check.py",
+      "bytes": 7194
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/REACH.cmd",
+      "bytes": 578
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/reach.py",
+      "bytes": 5879
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/RUN_SETUP.cmd",
+      "bytes": 403
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/session.py",
+      "bytes": 1467
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/SNAPSHOT.cmd",
+      "bytes": 543
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/TOOLKIT.cmd",
+      "bytes": 578
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/toolkit.py",
+      "bytes": 10726
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/toolkit.py.bak",
+      "bytes": 7019
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/tools.py",
+      "bytes": 3024
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/TUNE_UP.cmd",
+      "bytes": 500
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/tune_up.py",
+      "bytes": 7225
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/__init__.py",
+      "bytes": 1668
+    },
+    {
+      "path": "workspace/nova_body/nova_computer/provision/setup_guest.sh",
+      "bytes": 5830
+    },
+    {
+      "path": "workspace/nova_body/nova_config/__init__.py",
+      "bytes": 5595
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/checkin.py",
+      "bytes": 6057
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/context_builder.py",
+      "bytes": 975
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/discourse.py",
+      "bytes": 27035
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/drives.py",
+      "bytes": 12447
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/executive.py",
+      "bytes": 75935
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/integrity.py",
+      "bytes": 25897
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/loadout.py",
+      "bytes": 4839
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/nova_status.py",
+      "bytes": 10660
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/principals.py",
+      "bytes": 13499
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/rules.py",
+      "bytes": 5083
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/tasking.py",
+      "bytes": 13471
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/task_workspace.py",
+      "bytes": 5656
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/tunables.py",
+      "bytes": 9819
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/tunables.py.holdback_bak",
+      "bytes": 8090
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/tunables.py.turnabout_bak",
+      "bytes": 8675
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/verification.py",
+      "bytes": 2809
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/witness.py",
+      "bytes": 65189
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/workspace_context.py",
+      "bytes": 29665
+    },
+    {
+      "path": "workspace/nova_body/nova_cortex/__init__.py",
+      "bytes": 1153
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/check_reach.py",
+      "bytes": 292
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/_tmp_clean_queue.py",
+      "bytes": 789
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/_tmp_list_pending.py",
+      "bytes": 397
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/Cole_journal/posture_log.py",
+      "bytes": 637
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/Cole_journal/stretch_watcher.py",
+      "bytes": 5338
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/Cole_journal/tenderizer.py",
+      "bytes": 2402
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/Evaluations/autonomy-20261001/order_report.py",
+      "bytes": 435
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/Evaluations/autonomy-20261001/test_order_report.py",
+      "bytes": 486
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/Evaluations/modernization-20261002/report.py",
+      "bytes": 376
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/Evaluations/modernization-20261002/test_report.py",
+      "bytes": 506
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/general_tools/tools/self_memory.py",
+      "bytes": 1451
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/__init__.py",
+      "bytes": 90
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/senses/brand_new_sense.py",
+      "bytes": 65
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/senses/quiet_part_watcher.py",
+      "bytes": 3355
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/art_by_date_test.py",
+      "bytes": 405
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/capability_inventory.py",
+      "bytes": 557
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/comfy_inspect.py",
+      "bytes": 3320
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/cwd_probe.py",
+      "bytes": 219
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/dir_shape.py",
+      "bytes": 833
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/dir_shape_health.py",
+      "bytes": 4046
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/dir_shape_health_v2.py",
+      "bytes": 39
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/dir_shape_history.py",
+      "bytes": 3905
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/handoff.py",
+      "bytes": 487
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/memory_reach.py",
+      "bytes": 615
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/quiet_part_watcher.py",
+      "bytes": 984
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/quiet_part_watcher_test.py",
+      "bytes": 865
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/reacher.py",
+      "bytes": 893
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/reach_back.py",
+      "bytes": 1112
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/reach_watcher.py",
+      "bytes": 777
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/reach_watcher_test.py",
+      "bytes": 1262
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/run_reach.py",
+      "bytes": 954
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/self_gauge.py",
+      "bytes": 414
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/self_memory.py",
+      "bytes": 41
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/self_memory_test.py",
+      "bytes": 972
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/self_voice.py",
+      "bytes": 477
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/silence_detector.py",
+      "bytes": 385
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/stretch_reacher.py",
+      "bytes": 923
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/test_dir_shape.py",
+      "bytes": 932
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/test_quiet_part_watcher.py",
+      "bytes": 3255
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/test_reacher.py",
+      "bytes": 1923
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/test_reach_watcher.py",
+      "bytes": 794
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/test_self_comparison.py",
+      "bytes": 544
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/test_self_delta.py",
+      "bytes": 629
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/test_self_memory.py",
+      "bytes": 875
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/test_todo_scan.py",
+      "bytes": 557
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/test_voice_preview.py",
+      "bytes": 1039
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/voice_check.py",
+      "bytes": 1142
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/voice_preview.py",
+      "bytes": 1116
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/want.py",
+      "bytes": 575
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tests/__init__.py",
+      "bytes": 54
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/art_by_date.py",
+      "bytes": 1815
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/capability_inventory.py",
+      "bytes": 1537
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/comfy_inspect.py",
+      "bytes": 3585
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/cwd_probe.py",
+      "bytes": 552
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/dir_shape.py",
+      "bytes": 1863
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/dir_shape_health.py",
+      "bytes": 6653
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/dir_shape_history.py",
+      "bytes": 3497
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/function_count.py",
+      "bytes": 1266
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/handoff.py",
+      "bytes": 1258
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/memory_reach.py",
+      "bytes": 2009
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/nightly_self_snapshot.py",
+      "bytes": 1114
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/ordered_reads.py",
+      "bytes": 2361
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/quiet_part_watcher.py",
+      "bytes": 3483
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/reacher.py",
+      "bytes": 6551
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/reach_back.py",
+      "bytes": 3654
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/reach_watcher.py",
+      "bytes": 2965
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/self_comparison.py",
+      "bytes": 2469
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/self_comparison_OLD.py",
+      "bytes": 1912
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/self_delta.py",
+      "bytes": 1362
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/self_gauge.py",
+      "bytes": 1814
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/self_memory.py",
+      "bytes": 1898
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/self_voice.py",
+      "bytes": 2370
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/silence_detector.py",
+      "bytes": 1150
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/stretch_reacher.py",
+      "bytes": 1018
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/todo_scan.py",
+      "bytes": 1000
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/tts_stub.py",
+      "bytes": 1142
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/voice_check.py",
+      "bytes": 1920
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/voice_preview.py",
+      "bytes": 2489
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/want.py",
+      "bytes": 2094
+    },
+    {
+      "path": "workspace/nova_body/Nova_Created/nova_body/tools/__init__.py",
+      "bytes": 97
+    },
+    {
+      "path": "workspace/nova_body/nova_forge/__init__.py",
+      "bytes": 25195
+    },
+    {
+      "path": "workspace/nova_body/nova_imagination/imagination.py",
+      "bytes": 35510
+    },
+    {
+      "path": "workspace/nova_body/nova_imagination/palette.py",
+      "bytes": 7397
+    },
+    {
+      "path": "workspace/nova_body/nova_imagination/__init__.py",
+      "bytes": 1037
+    },
+    {
+      "path": "workspace/nova_body/nova_lancedb/backfill.py",
+      "bytes": 2606
+    },
+    {
+      "path": "workspace/nova_body/nova_lancedb/embedder.py",
+      "bytes": 4910
+    },
+    {
+      "path": "workspace/nova_body/nova_lancedb/hippocampus.py",
+      "bytes": 23843
+    },
+    {
+      "path": "workspace/nova_body/nova_lancedb/indexer.py",
+      "bytes": 3516
+    },
+    {
+      "path": "workspace/nova_body/nova_lancedb/__init__.py",
+      "bytes": 321
+    },
+    {
+      "path": "workspace/nova_body/nova_logs/logger.py",
+      "bytes": 10884
+    },
+    {
+      "path": "workspace/nova_body/nova_logs/retention.py",
+      "bytes": 9658
+    },
+    {
+      "path": "workspace/nova_body/nova_logs/__init__.py",
+      "bytes": 130
+    },
+    {
+      "path": "workspace/nova_body/nova_memory/goals.py",
+      "bytes": 2049
+    },
+    {
+      "path": "workspace/nova_body/nova_memory/journal.py",
+      "bytes": 5951
+    },
+    {
+      "path": "workspace/nova_body/nova_memory/log_reader.py",
+      "bytes": 6596
+    },
+    {
+      "path": "workspace/nova_body/nova_memory/state.py",
+      "bytes": 4925
+    },
+    {
+      "path": "workspace/nova_body/nova_memory/__init__.py",
+      "bytes": 630
+    },
+    {
+      "path": "workspace/nova_body/nova_play/curio.py",
+      "bytes": 13402
+    },
+    {
+      "path": "workspace/nova_body/nova_play/__init__.py",
+      "bytes": 843
+    },
+    {
+      "path": "workspace/nova_body/nova_runtime/event_bus.py",
+      "bytes": 3237
+    },
+    {
+      "path": "workspace/nova_body/nova_runtime/koels_equip.py",
+      "bytes": 10033
+    },
+    {
+      "path": "workspace/nova_body/nova_runtime/llama_control.py",
+      "bytes": 9742
+    },
+    {
+      "path": "workspace/nova_body/nova_runtime/model_client.py",
+      "bytes": 5044
+    },
+    {
+      "path": "workspace/nova_body/nova_runtime/model_guard.py",
+      "bytes": 3494
+    },
+    {
+      "path": "workspace/nova_body/nova_runtime/operations.py",
+      "bytes": 6765
+    },
+    {
+      "path": "workspace/nova_body/nova_runtime/runtime.py",
+      "bytes": 42812
+    },
+    {
+      "path": "workspace/nova_body/nova_runtime/transcript_store.py",
+      "bytes": 8280
+    },
+    {
+      "path": "workspace/nova_body/nova_runtime/work_queue.py",
+      "bytes": 5019
+    },
+    {
+      "path": "workspace/nova_body/nova_runtime/__init__.py",
+      "bytes": 775
+    },
+    {
+      "path": "workspace/nova_body/nova_runtime/__main__.py",
+      "bytes": 1444
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/clock.py",
+      "bytes": 2352
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/environment.py",
+      "bytes": 5464
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/eyes.py",
+      "bytes": 20610
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/presence.py",
+      "bytes": 2059
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/proprioception.py",
+      "bytes": 17253
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/quiet_part_watcher.py",
+      "bytes": 4895
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/sight.py",
+      "bytes": 18548
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/stretch.py",
+      "bytes": 4214
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/touch.py",
+      "bytes": 5451
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/vision.py",
+      "bytes": 15525
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/web.py",
+      "bytes": 13860
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/__init__.py",
+      "bytes": 701
+    },
+    {
+      "path": "workspace/nova_body/nova_senses/tests/test_quiet_part_watcher.py",
+      "bytes": 889
+    },
+    {
+      "path": "workspace/nova_body/nova_voice/nova.py",
+      "bytes": 156599
+    },
+    {
+      "path": "workspace/nova_body/nova_voice/nova.py.holdback_bak",
+      "bytes": 146289
+    },
+    {
+      "path": "workspace/nova_body/nova_voice/nova.py.polish_bak",
+      "bytes": 156015
+    },
+    {
+      "path": "workspace/nova_body/nova_voice/nova.py.turnabout_bak",
+      "bytes": 147521
+    },
+    {
+      "path": "workspace/nova_body/nova_voice/tool_result.py",
+      "bytes": 2856
+    },
+    {
+      "path": "workspace/nova_body/nova_voice/tool_router.py",
+      "bytes": 74877
+    },
+    {
+      "path": "workspace/nova_body/nova_voice/__init__.py",
+      "bytes": 1430
+    },
+    {
+      "path": "workspace/nova_body/nova_witness/extract_golden.py",
+      "bytes": 8152
+    },
+    {
+      "path": "workspace/nova_body/nova_witness/fetch_witness_model.cmd",
+      "bytes": 1610
+    },
+    {
+      "path": "workspace/nova_body/nova_witness/replay.py",
+      "bytes": 11973
+    },
+    {
+      "path": "workspace/nova_body/nova_witness/start_witness.cmd",
+      "bytes": 2051
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/assemble_calm_v07.cjs",
+      "bytes": 8364
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/assemble_front_v08.cjs",
+      "bytes": 8677
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/assemble_garments_v11.cjs",
+      "bytes": 10004
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/assemble_layers.cjs",
+      "bytes": 5525
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/audit_combinations_v12.py",
+      "bytes": 1828
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/audit_eye_failure_v16.py",
+      "bytes": 2086
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/audit_face_v12.py",
+      "bytes": 2734
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/build_eye_review_v14.py",
+      "bytes": 4001
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/build_eye_review_v15.py",
+      "bytes": 5418
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/build_review_v12.py",
+      "bytes": 7949
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/build_review_v13.py",
+      "bytes": 8728
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v12.py",
+      "bytes": 6787
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v13.py",
+      "bytes": 8465
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v14.py",
+      "bytes": 6955
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v15.py",
+      "bytes": 6559
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v16.py",
+      "bytes": 8133
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v17.py",
+      "bytes": 8614
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/check_calm_geometry.py",
+      "bytes": 3308
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/check_front_animation.py",
+      "bytes": 5903
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/check_front_geometry.py",
+      "bytes": 3372
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/compare_garments_v11.py",
+      "bytes": 3524
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/finalize_garments_v11.py",
+      "bytes": 3607
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/finalize_runtime_v06.py",
+      "bytes": 3162
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/inspect_eye_anatomy.cjs",
+      "bytes": 1717
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/inspect_lower_lash.cjs",
+      "bytes": 1541
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/inspect_reference_eyes.cjs",
+      "bytes": 734
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/inspect_registered_parts_v16.cjs",
+      "bytes": 1603
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/inspect_source_v13.cjs",
+      "bytes": 1247
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/measure_calm_overlay.py",
+      "bytes": 5086
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/measure_front_overlay.py",
+      "bytes": 4866
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/package_front_v09.py",
+      "bytes": 4599
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/package_front_v11.py",
+      "bytes": 1924
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/package_front_v12.py",
+      "bytes": 5687
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/package_front_v13.py",
+      "bytes": 5949
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/package_front_v14.py",
+      "bytes": 2451
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/package_front_v15.py",
+      "bytes": 2457
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/package_front_v16.py",
+      "bytes": 2571
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/package_front_v17.py",
+      "bytes": 3138
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/package_runtime.py",
+      "bytes": 6348
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/prepare_blink_v17.cjs",
+      "bytes": 3200
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/prepare_eyes_v12.cjs",
+      "bytes": 2729
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/prepare_eye_layers_v15.cjs",
+      "bytes": 3521
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/prepare_eye_layers_v16.cjs",
+      "bytes": 8922
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/prepare_face_v10.cjs",
+      "bytes": 8836
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/prepare_lower_lash_v14.cjs",
+      "bytes": 4464
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/prepare_speech_v13.cjs",
+      "bytes": 5326
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/publish_front_v09.py",
+      "bytes": 6386
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/render_eye_review_v16.py",
+      "bytes": 4091
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/render_eye_review_v17.py",
+      "bytes": 4132
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/render_showcase.py",
+      "bytes": 6406
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/render_showcase_v12.py",
+      "bytes": 2791
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/replace_face_art_v05.cjs",
+      "bytes": 3819
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/replace_face_art_v06.cjs",
+      "bytes": 3253
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/review_eyes_v16.py",
+      "bytes": 3153
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/review_eyes_v17.py",
+      "bytes": 3153
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/review_eye_layers_v15.py",
+      "bytes": 6483
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/review_face_v12.py",
+      "bytes": 1536
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/review_face_v13.py",
+      "bytes": 3482
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/review_garments_v11.py",
+      "bytes": 3194
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/review_lower_lash_v14.py",
+      "bytes": 4777
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/save_session_checkpoint.py",
+      "bytes": 3737
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/showcase_v13.py",
+      "bytes": 2543
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/validate_eye_repair_v16.py",
+      "bytes": 3479
+    },
+    {
+      "path": "workspace/nova_body/SELF/Avatar/Live2D/tooling/validate_eye_repair_v17.py",
+      "bytes": 3972
+    },
+    {
+      "path": "workspace/nova_body/tests/test_koels_launcher.py",
+      "bytes": 5548
+    },
+    {
+      "path": "workspace/nova_body/tests/test_modernization.py",
+      "bytes": 18442
+    },
+    {
+      "path": "workspace/nova_body/tests/test_retired_desktop_ping.py",
+      "bytes": 1962
+    },
+    {
+      "path": "workspace/nova_body/tests/test_review_followup.py",
+      "bytes": 3546
+    },
+    {
+      "path": "workspace/nova_body/tests/test_staging_location.py",
+      "bytes": 1562
+    },
+    {
+      "path": "workspace/Orient/Architecture/REBUILD_MAP.cmd",
+      "bytes": 88
+    },
+    {
+      "path": "workspace/Orient/Architecture/RUN_MAP.cmd",
+      "bytes": 459
+    },
+    {
+      "path": "workspace/Orient/Architecture/STOP_MAP.cmd",
+      "bytes": 459
+    },
+    {
+      "path": "workspace/_admin/capture_app_window.ps1",
+      "bytes": 1616
+    },
+    {
+      "path": "workspace/_admin/downloads.py",
+      "bytes": 5021
+    },
+    {
+      "path": "workspace/_admin/fetch_checkpoints.cmd",
+      "bytes": 1545
+    },
+    {
+      "path": "workspace/_admin/fetch_checkpoints.py",
+      "bytes": 5034
+    },
+    {
+      "path": "workspace/_admin/FIX_GIT.cmd",
+      "bytes": 4423
+    },
+    {
+      "path": "workspace/_admin/hallucination_gate.py",
+      "bytes": 11337
+    },
+    {
+      "path": "workspace/_admin/mtp_ab_test.py",
+      "bytes": 14051
+    },
+    {
+      "path": "workspace/_admin/nightwatch.py",
+      "bytes": 8961
+    },
+    {
+      "path": "workspace/_admin/nova_guardian.py",
+      "bytes": 23010
+    },
+    {
+      "path": "workspace/_admin/nw_revive.cmd",
+      "bytes": 2366
+    },
+    {
+      "path": "workspace/_admin/overnight_review.py",
+      "bytes": 10676
+    },
+    {
+      "path": "workspace/_admin/referent_check.py",
+      "bytes": 7518
+    },
+    {
+      "path": "workspace/_admin/RunGuardian.cmd",
+      "bytes": 294
+    },
+    {
+      "path": "workspace/_admin/run_baseline_replay.ps1",
+      "bytes": 213
+    },
+    {
+      "path": "workspace/_admin/run_nova_painter.bat",
+      "bytes": 1293
+    },
+    {
+      "path": "workspace/_admin/setup_comfyui.cmd",
+      "bytes": 4334
+    },
+    {
+      "path": "workspace/_admin/autonomy_watch/nova_recover_llama.cmd",
+      "bytes": 1270
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/KoELS_Files/decision.py",
+      "bytes": 8153
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/KoELS_Files/keyword.py",
+      "bytes": 2677
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/KoELS_Files/manifest.py",
+      "bytes": 7172
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/KoELS_Files/test_koels.py",
+      "bytes": 4909
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/KoELS_Files/__init__.py",
+      "bytes": 1081
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/KoELS_Files/mnt/user-data/outputs/koels/strategies/__init__.py",
+      "bytes": 179
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/v6/deticker.py",
+      "bytes": 3977
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/v6/mk_template.py",
+      "bytes": 8107
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/v6/run_on_pod.sh",
+      "bytes": 3522
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/v6/score_style.py",
+      "bytes": 5589
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/v6/train_nova_lora_v6.py",
+      "bytes": 9322
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/v7/mk_template.py",
+      "bytes": 8107
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/v7/run_on_pod_v7.sh",
+      "bytes": 3968
+    },
+    {
+      "path": "workspace/_admin/Training_stuff/v7/train_nova_lora_v7.py",
+      "bytes": 9500
+    }
+  ]
+}

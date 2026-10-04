@@ -1,0 +1,1846 @@
+{
+  "_purpose": "@nova: Exact-hash recovery of retired scripts corrupted by the still-running old timestamp watcher; archive manifest remains unchanged.",
+  "started_at": "2026-10-04T14:09:14.954883+09:00",
+  "archive": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04",
+  "manifest_sha256": "c39349a314e7c36ad8f5cee6af8db376c5a23abe3f85b5b09fd4513fd5af3e87",
+  "status": "complete",
+  "entries": [
+    {
+      "source": "general_tools/ping_claude.ps1",
+      "bytes": 27620,
+      "sha256": "b454348f18ead78165c0ad32f48dac05681092a0c975e498273d2dacb4e58c2e",
+      "reason": "Explicitly retired host desktop ping; dispatch aliases and active instructions removed.",
+      "actual_sha256": "b454348f18ead78165c0ad32f48dac05681092a0c975e498273d2dacb4e58c2e",
+      "actual_bytes": 27620,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "general_tools/cloud_call.py.turnabout_bak",
+      "bytes": 11085,
+      "sha256": "82e326ec9ec813eb9bdf6b222041d59992f7fbec24fb52c1102fab08af4f1929",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer.",
+      "actual_sha256": "82e326ec9ec813eb9bdf6b222041d59992f7fbec24fb52c1102fab08af4f1929",
+      "actual_bytes": 11085,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "general_tools/nova_sync/watcher.py.holdback_bak",
+      "bytes": 45219,
+      "sha256": "faf87c57a42e73e418b4b78b1781c01505bf6cab83f54718bf97cbfdeb1e5635",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer.",
+      "actual_sha256": "faf87c57a42e73e418b4b78b1781c01505bf6cab83f54718bf97cbfdeb1e5635",
+      "actual_bytes": 45219,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "general_tools/nova_sync/watcher.py.sizeguard_bak",
+      "bytes": 46979,
+      "sha256": "5a73198c2ddbcba13559da268a63ed9b6b552ad402f1f2485b5c0a8fdda70d0c",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer.",
+      "actual_sha256": "5a73198c2ddbcba13559da268a63ed9b6b552ad402f1f2485b5c0a8fdda70d0c",
+      "actual_bytes": 46979,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "general_tools/nova_chat/static/index.html.polish_bak",
+      "bytes": 353625,
+      "sha256": "17aba543665d003e16a89e5a676c894cfedfe719feb01b756764866d051af7b5",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer.",
+      "actual_sha256": "17aba543665d003e16a89e5a676c894cfedfe719feb01b756764866d051af7b5",
+      "actual_bytes": 353625,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "nova_body/nova_computer/toolkit.py.bak",
+      "bytes": 7019,
+      "sha256": "f7f0c99e400deb697cf10e1760ee5c851ae8c71355f7fcbc4781b456d1132d23",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer.",
+      "actual_sha256": "f7f0c99e400deb697cf10e1760ee5c851ae8c71355f7fcbc4781b456d1132d23",
+      "actual_bytes": 7019,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "nova_body/nova_cortex/tunables.py.holdback_bak",
+      "bytes": 8090,
+      "sha256": "5d7450ac6ade5d2d22a3fd83127b614e5e98c2d5b6518f82783f645870e3a14f",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer.",
+      "actual_sha256": "5d7450ac6ade5d2d22a3fd83127b614e5e98c2d5b6518f82783f645870e3a14f",
+      "actual_bytes": 8090,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "nova_body/nova_cortex/tunables.py.turnabout_bak",
+      "bytes": 8675,
+      "sha256": "4f2b50c45b35f2aad0451d024ddb9b6f2bb151b3e56bcfaecbed58a05b142296",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer.",
+      "actual_sha256": "4f2b50c45b35f2aad0451d024ddb9b6f2bb151b3e56bcfaecbed58a05b142296",
+      "actual_bytes": 8675,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.holdback_bak",
+      "bytes": 146289,
+      "sha256": "364365cffc8ba992c503b0956f7fa981ed9c5ed673cd80d6fe039783000e0236",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer.",
+      "actual_sha256": "364365cffc8ba992c503b0956f7fa981ed9c5ed673cd80d6fe039783000e0236",
+      "actual_bytes": 146289,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.polish_bak",
+      "bytes": 156015,
+      "sha256": "e2b96fb8a5281087501885e19cd242ae00046834adf60a9f394514e0aa1f0a5a",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer.",
+      "actual_sha256": "e2b96fb8a5281087501885e19cd242ae00046834adf60a9f394514e0aa1f0a5a",
+      "actual_bytes": 156015,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.turnabout_bak",
+      "bytes": 147521,
+      "sha256": "403a7c1c506b2d656748caa56530448200e34189b43628b8bff42307f0045ea1",
+      "reason": "Named revision backup with maintained canonical sibling and no active source consumer.",
+      "actual_sha256": "403a7c1c506b2d656748caa56530448200e34189b43628b8bff42307f0045ea1",
+      "actual_bytes": 147521,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/capture_app_window.ps1",
+      "bytes": 1616,
+      "sha256": "cfbadaa17be6ee4ab4e359e03b3d67e70e303f7c1ca0a3a2523dd005636c883e",
+      "reason": "One-shot Chrome geometry seeding superseded by persistent desktop host. Legacy app_window.json remains used by browser fallback and is retained.",
+      "actual_sha256": "cfbadaa17be6ee4ab4e359e03b3d67e70e303f7c1ca0a3a2523dd005636c883e",
+      "actual_bytes": 1616,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/nw_revive.cmd",
+      "bytes": 2366,
+      "sha256": "5ec9b7082f17f3937de1a1d4ab0e9db91bde1405c675985c0b47224248c61abd",
+      "reason": "Completed July one-shot launcher revival; no current task/hook consumer.",
+      "actual_sha256": "5ec9b7082f17f3937de1a1d4ab0e9db91bde1405c675985c0b47224248c61abd",
+      "actual_bytes": 2366,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/run_baseline_replay.ps1",
+      "bytes": 213,
+      "sha256": "83bfbc704fdbf85dfb84aa8f7e48e52ed610454422b1208d32166957670b17ef",
+      "reason": "Fixed July baseline wrapper with retired paths; maintained nova_witness/replay.py evaluation entry remains.",
+      "actual_sha256": "83bfbc704fdbf85dfb84aa8f7e48e52ed610454422b1208d32166957670b17ef",
+      "actual_bytes": 213,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/overnight_review.py",
+      "bytes": 10676,
+      "sha256": "5a643cf1906c2a2033b9c0135140ff7bc154d4c4fcb57387ba7cbb38c06d4486",
+      "reason": "Fixed July v5 experiment with obsolete logs/memory roots; retained as experiment history.",
+      "actual_sha256": "8dbd2bd69c05373826b55a021101a3b0eb9d3093ed1c95f4fed589ee15f82fef",
+      "actual_bytes": 10676,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\overnight_review.py"
+    },
+    {
+      "source": "_admin/FIX_GIT.cmd",
+      "bytes": 4423,
+      "sha256": "4cab3a44053fa7a2668e99fbeceadebf91c1dc4482ae70c45c85905da9e23700",
+      "reason": "One-time Git history repair already completed (f815639633); backup/before-fix-git exists. Current guard now gives review guidance.",
+      "actual_sha256": "4cab3a44053fa7a2668e99fbeceadebf91c1dc4482ae70c45c85905da9e23700",
+      "actual_bytes": 4423,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/autonomy_watch/nova_recover_llama.cmd",
+      "bytes": 1270,
+      "sha256": "138d5bf472248c98df1b6fdea5347f729d1a427f06c7f6a7d4c02b3ca9b9be85",
+      "reason": "Staged July orphan-process recovery for completed incident; not a general current launcher.",
+      "actual_sha256": "138d5bf472248c98df1b6fdea5347f729d1a427f06c7f6a7d4c02b3ca9b9be85",
+      "actual_bytes": 1270,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/autonomy_watch/REPORT.md",
+      "bytes": 36605,
+      "sha256": "144e610f06ebe07513486d9fb9e069d00214ad63f3b0c7304049f155d51b524f",
+      "reason": "Historical July incident report containing obsolete current-status/recovery directions; retained together with its helper.",
+      "actual_sha256": "8b507862c2580ea36f46c8f0039406395f8d8093ea668b7fcdcc069b9ae01580",
+      "actual_bytes": 36605,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\autonomy_watch\\REPORT.md"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/__init__.py",
+      "bytes": 1081,
+      "sha256": "4efe6bd4630ef4d741aae2fa90aaf71ec220a4d02241448fd65592f517b964fc",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent.",
+      "actual_sha256": "d32efc3852c12014b8fe502b6de9a0aadc5e3ae25abcefdb0c1e5d62bb9056fb",
+      "actual_bytes": 1081,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\__init__.py"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/decision.py",
+      "bytes": 8153,
+      "sha256": "6e0bb9c9df3e5c24c50546f1a1bfcb78ee0693896637a0b742b7808d4ebd044e",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent.",
+      "actual_sha256": "695e29633f1fe412e004497c44d19214700783b707472a069581781f504b3d05",
+      "actual_bytes": 8153,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\decision.py"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/manifest.py",
+      "bytes": 7172,
+      "sha256": "5860c3deee8414ebcb0dabf2d91a8cd0a92c0ac8e0389d9131e54774959e2830",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent.",
+      "actual_sha256": "c44c8312304756340ec6f4bcfc64883c7a2cd9cccf81b700afb5686591166b55",
+      "actual_bytes": 7172,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\manifest.py"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/keyword.py",
+      "bytes": 2677,
+      "sha256": "54a5cb70bb7debdd109daf4990031b0c1068775ea843716828e3c032663297b6",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent.",
+      "actual_sha256": "336e3ac3064d28d1b4f4b312bd6b422d5017f07dfe4758dad89e51f9d8de4379",
+      "actual_bytes": 2677,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\keyword.py"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/test_koels.py",
+      "bytes": 4909,
+      "sha256": "b9434895b467e9ac3e9aebcb5317d93adc14b5b98d38f9f8963d279656f3f29e",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent.",
+      "actual_sha256": "c7f1699fba80d8c63c9edbb6e879816cb39fdc4869287e8385246992d75dd3ca",
+      "actual_bytes": 4909,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\test_koels.py"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/mnt/user-data/outputs/koels/strategies/__init__.py",
+      "bytes": 179,
+      "sha256": "b2b4fd0baac7c876ee49550f1a76d548daa38532e7f8d61cd11c21c9af038c03",
+      "reason": "Detached unpacked KoELS prototype with broken package layout; preserve design history. Current body is not API equivalent.",
+      "actual_sha256": "2abbbda3e261de174ed6924b2b327248922e1ae10636f1c665c246da3e63cb5c",
+      "actual_bytes": 179,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\mnt\\user-data\\outputs\\koels\\strategies\\__init__.py"
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_source_v13.cjs",
+      "bytes": 1247,
+      "sha256": "99997927f31fd3096de3dc7ea6229f15adbbb71d28f7f6292bc1eec091fb4734",
+      "reason": "Hardcoded pre-v17 eye diagnostic with no current caller; keep current v17 validators, their dependencies, and all outputs/assets.",
+      "actual_sha256": "99997927f31fd3096de3dc7ea6229f15adbbb71d28f7f6292bc1eec091fb4734",
+      "actual_bytes": 1247,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_lower_lash.cjs",
+      "bytes": 1541,
+      "sha256": "d19fd428dcdcd4e88cc6932f7e5ef3ba69d11754e89fc3c009978637d007bca0",
+      "reason": "Hardcoded pre-v17 eye diagnostic with no current caller; keep current v17 validators, their dependencies, and all outputs/assets.",
+      "actual_sha256": "d19fd428dcdcd4e88cc6932f7e5ef3ba69d11754e89fc3c009978637d007bca0",
+      "actual_bytes": 1541,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_eye_anatomy.cjs",
+      "bytes": 1717,
+      "sha256": "d255669ee3beb4dbc9663d2861d1b36279ceeef0e4864beeb84f34eb746bde36",
+      "reason": "Hardcoded pre-v17 eye diagnostic with no current caller; keep current v17 validators, their dependencies, and all outputs/assets.",
+      "actual_sha256": "d255669ee3beb4dbc9663d2861d1b36279ceeef0e4864beeb84f34eb746bde36",
+      "actual_bytes": 1717,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/audit_eye_failure_v16.py",
+      "bytes": 2086,
+      "sha256": "91d81bd94ef7429841202573380f00fa21ea3e28efbd800a88ae238d192d7988",
+      "reason": "Hardcoded pre-v17 eye diagnostic with no current caller; keep current v17 validators, their dependencies, and all outputs/assets.",
+      "actual_sha256": "91d81bd94ef7429841202573380f00fa21ea3e28efbd800a88ae238d192d7988",
+      "actual_bytes": 2086,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/deticker.py",
+      "bytes": 3977,
+      "sha256": "af2cfe78f88769457700352d977f5ff899e8405bd9ad50962f92ed3f5f3fa8f5",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "d6349bfb471e857af5f05115935c6923bc165b64953ee3bb5459c69a4c670301",
+      "actual_bytes": 3977,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\deticker.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/mk_template.py",
+      "bytes": 8107,
+      "sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "72afb120db0bc2d8d0a1841385143617906a619f213e984b0e35944de9da52df",
+      "actual_bytes": 8107,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\mk_template.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6.jsonl",
+      "bytes": 251828,
+      "sha256": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "2ca2b03a7e84e11eeeb4e72a7f5ee75186450df9d0ad0226fa3863e1493562cc",
+      "actual_bytes": 251828,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6_add.jsonl",
+      "bytes": 15712,
+      "sha256": "d924c58cad24b57a060c33169a730693d8fe92defec4242e9291bc9854a38bb1",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "d924c58cad24b57a060c33169a730693d8fe92defec4242e9291bc9854a38bb1",
+      "actual_bytes": 15712,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6_base.jsonl",
+      "bytes": 236116,
+      "sha256": "77ff154010fce9565a4d62b8f25627db81925fc90a55ada4d57f7579a9afa012",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "77ff154010fce9565a4d62b8f25627db81925fc90a55ada4d57f7579a9afa012",
+      "actual_bytes": 236116,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/qwen_template_gen.jinja",
+      "bytes": 8305,
+      "sha256": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "7abf9e4a8c2f3f191dc4b910dfdad07a2d2028e70191865e79c17f1612aba139",
+      "actual_bytes": 8305,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/RESULTS.md",
+      "bytes": 5739,
+      "sha256": "753c83f0cc90edb7628711c0156b0bc8f42b9375bd8596ace0f22bafe18b4fda",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "81a31eb361f1e4e88a7a79a57ced0a1d6b3b9a9d112fc7a83b8eb1b24bf89f57",
+      "actual_bytes": 5739,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\RESULTS.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/run_on_pod.sh",
+      "bytes": 3522,
+      "sha256": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "617a9b4d68c4280f2c2a1c7596d40e22221a635efcf9aef4a57db3174970f47c",
+      "actual_bytes": 3522,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/score_style.py",
+      "bytes": 5589,
+      "sha256": "6bc0ffd2eb311b78981f44f373198cd7f853da77b0741b3a0f003821264eaead",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "9ec6e671fc43dbdaf3b357f84cfab7126cd5975ee0398afb2e3781a17a671282",
+      "actual_bytes": 5589,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\score_style.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/train_nova_lora_v6.py",
+      "bytes": 9322,
+      "sha256": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "57d4786c0aaf02838dae8d006cff1faa2ded498eeb62ebe82d5914ad77f2951c",
+      "actual_bytes": 9322,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\train_nova_lora_v6.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/TRAIN_RUN.md",
+      "bytes": 4664,
+      "sha256": "3445335efa7043f0043496685960a739b592163648fbbe3bfcb164088c11c963",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "949008088f79c7d3cd98992b8b0217d2dd0c926cff8a86670edbaf3201b227b6",
+      "actual_bytes": 4664,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\TRAIN_RUN.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/V6_SPEC.md",
+      "bytes": 6523,
+      "sha256": "56627f52fde3ec136df7e2911330a09f194c0ba89bfbb433bb529b37cb29e714",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "a60d1d0c51cb041c734c6b301760a665cecc1e409d7678993eb6b7372dc17391",
+      "actual_bytes": 6523,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\V6_SPEC.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/evidence_pipeline_2026-07-23_night.jsonl",
+      "bytes": 44635,
+      "sha256": "f8fdc158620d67d6d8baef1c895bde95fbfddebb845dc0fc95f0cedf1b9c9203",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "f8fdc158620d67d6d8baef1c895bde95fbfddebb845dc0fc95f0cedf1b9c9203",
+      "actual_bytes": 44635,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/MINING_NOTES.md",
+      "bytes": 6920,
+      "sha256": "b79be3b28e6fc1886327aeb2afd263400102d32754c617a40b602771eb1d880a",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "e9058b3a61dec74cfe63cf2903235efed9a27b350db989b7dd60d889a6ffd08f",
+      "actual_bytes": 6920,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\mined\\MINING_NOTES.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/SOURCE_MAP.md",
+      "bytes": 9381,
+      "sha256": "952fdea7dfbe7d015dd8379ad85f229ed80751962e4d4ac4199ccde4c222ce93",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "c0954a213a92baf58d34f6a1188a9180a1c81533eb9bbc57b0ef6e0badd14f44",
+      "actual_bytes": 9381,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\mined\\SOURCE_MAP.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_A_solitude.jsonl",
+      "bytes": 7172,
+      "sha256": "b842c56b03d6aacd059a8c37c4a3891016bb8c0507cc8e723f27d9db2f82a628",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "b842c56b03d6aacd059a8c37c4a3891016bb8c0507cc8e723f27d9db2f82a628",
+      "actual_bytes": 7172,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_B_attribution.jsonl",
+      "bytes": 12570,
+      "sha256": "59c870cd0602e211f7351d4278823112be94552fa6c6858c95cb54e5ac12a743",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "59c870cd0602e211f7351d4278823112be94552fa6c6858c95cb54e5ac12a743",
+      "actual_bytes": 12570,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_C_payload.jsonl",
+      "bytes": 11296,
+      "sha256": "6fc715ebf900e82991e1de8a4d453687132cc871370262c8033e9f550ad456b7",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "6fc715ebf900e82991e1de8a4d453687132cc871370262c8033e9f550ad456b7",
+      "actual_bytes": 11296,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_D_witness.jsonl",
+      "bytes": 12199,
+      "sha256": "ebe1b79931c20ce343b5c22222cbfea47d45de095f336a0a78eb76bc47bad925",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "ebe1b79931c20ce343b5c22222cbfea47d45de095f336a0a78eb76bc47bad925",
+      "actual_bytes": 12199,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_E_reach.jsonl",
+      "bytes": 5128,
+      "sha256": "239824766c7fff19f8aab8f15e172d7a5db65814f22372337fcc90df7f70bd8c",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "239824766c7fff19f8aab8f15e172d7a5db65814f22372337fcc90df7f70bd8c",
+      "actual_bytes": 5128,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mk_template.py",
+      "bytes": 8107,
+      "sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "72afb120db0bc2d8d0a1841385143617906a619f213e984b0e35944de9da52df",
+      "actual_bytes": 8107,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\mk_template.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/nova_core_v7.jsonl",
+      "bytes": 300193,
+      "sha256": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "5dee4bcaedca559ee7d1b39d61ff7912460956f8b91cd835e30a031ccaaa78f9",
+      "actual_bytes": 300193,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/nova_core_v7_add.jsonl",
+      "bytes": 48365,
+      "sha256": "95b3c6e1f86ade28ae6b093b5d3d9cf6726f9d207a423fd13d38c01a4cdde4db",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "95b3c6e1f86ade28ae6b093b5d3d9cf6726f9d207a423fd13d38c01a4cdde4db",
+      "actual_bytes": 48365,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/PROBE_BATTERY.md",
+      "bytes": 3925,
+      "sha256": "29607a8adc39cc6363c59e54aa0ec411ae24c02a0c96d70e6fab20fa9fe71a74",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "1391aef4cadd2190f063f46db6c659912b2bf18483d53fb756f3aacdd764685d",
+      "actual_bytes": 3925,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\PROBE_BATTERY.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/run_on_pod_v7.sh",
+      "bytes": 3968,
+      "sha256": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "2eff4d10f8b4601c6ebaebc297f4817c51f5474f657a2a5b843b521555df6458",
+      "actual_bytes": 3968,
+      "readonly": true,
+      "matches": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/train_nova_lora_v7.py",
+      "bytes": 9500,
+      "sha256": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "69229a0a8639011729e4a17b409a92941ec64b2795781f5ea17761b7a1de5a3b",
+      "actual_bytes": 9500,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\train_nova_lora_v7.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_REVIEW_2026-07-26.md",
+      "bytes": 7500,
+      "sha256": "b2da84a010e86a1676c2916332de8ea6cb15066cbe64b71f94b5cd8a4c45c08d",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "53cb7d47ddee33654e302f0ef7dfae35a53c1eecfe4862bd6b5391ff79a4c670",
+      "actual_bytes": 7500,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\V7_REVIEW_2026-07-26.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_SPEC.md",
+      "bytes": 5635,
+      "sha256": "eca97d22063e604bbdbb8425018001fde972250d967fa645b3f4410bd88076fc",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "36c5e6e017ba39bd67bef89ffc6acea50340f5a0f2f24c67305c382e01f6ffce",
+      "actual_bytes": 5635,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\V7_SPEC.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_TRAIN_RUNBOOK.md",
+      "bytes": 4477,
+      "sha256": "9bb7fdb8e275ece34cd9ab6f4b69363a14f8667d190ed6377dcb5cf5a554378b",
+      "reason": "Original historical training package; canonical reproduction inputs verified in models/Training Files. Extra design/experiment records retained here.",
+      "actual_sha256": "417f43a937e82b89501080d10d854413c0c6b06f49885991fff554fac5cb9aac",
+      "actual_bytes": 4477,
+      "readonly": true,
+      "matches": false,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\V7_TRAIN_RUNBOOK.md"
+    }
+  ],
+  "source_files_readonly": 57,
+  "drifted": 23,
+  "services_restarted": false,
+  "watcher_seq_before_restore": 387,
+  "git_recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+  "repairs": [
+    {
+      "source": "_admin/overnight_review.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\overnight_review.py",
+      "recovery_git_path": "workspace/_admin/overnight_review.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "5a643cf1906c2a2033b9c0135140ff7bc154d4c4fcb57387ba7cbb38c06d4486",
+      "published_sha256": "5a643cf1906c2a2033b9c0135140ff7bc154d4c4fcb57387ba7cbb38c06d4486",
+      "bytes": 10676,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\overnight_review.py"
+    },
+    {
+      "source": "_admin/autonomy_watch/REPORT.md",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\autonomy_watch\\REPORT.md",
+      "recovery_git_path": "workspace/_admin/autonomy_watch/REPORT.md",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "144e610f06ebe07513486d9fb9e069d00214ad63f3b0c7304049f155d51b524f",
+      "published_sha256": "144e610f06ebe07513486d9fb9e069d00214ad63f3b0c7304049f155d51b524f",
+      "bytes": 36605,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\autonomy_watch\\REPORT.md"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/__init__.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\__init__.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/KoELS_Files/__init__.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "4efe6bd4630ef4d741aae2fa90aaf71ec220a4d02241448fd65592f517b964fc",
+      "published_sha256": "4efe6bd4630ef4d741aae2fa90aaf71ec220a4d02241448fd65592f517b964fc",
+      "bytes": 1081,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\__init__.py"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/decision.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\decision.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/KoELS_Files/decision.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "6e0bb9c9df3e5c24c50546f1a1bfcb78ee0693896637a0b742b7808d4ebd044e",
+      "published_sha256": "6e0bb9c9df3e5c24c50546f1a1bfcb78ee0693896637a0b742b7808d4ebd044e",
+      "bytes": 8153,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\decision.py"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/manifest.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\manifest.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/KoELS_Files/manifest.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "5860c3deee8414ebcb0dabf2d91a8cd0a92c0ac8e0389d9131e54774959e2830",
+      "published_sha256": "5860c3deee8414ebcb0dabf2d91a8cd0a92c0ac8e0389d9131e54774959e2830",
+      "bytes": 7172,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\manifest.py"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/keyword.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\keyword.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/KoELS_Files/keyword.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "54a5cb70bb7debdd109daf4990031b0c1068775ea843716828e3c032663297b6",
+      "published_sha256": "54a5cb70bb7debdd109daf4990031b0c1068775ea843716828e3c032663297b6",
+      "bytes": 2677,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\keyword.py"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/test_koels.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\test_koels.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/KoELS_Files/test_koels.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "b9434895b467e9ac3e9aebcb5317d93adc14b5b98d38f9f8963d279656f3f29e",
+      "published_sha256": "b9434895b467e9ac3e9aebcb5317d93adc14b5b98d38f9f8963d279656f3f29e",
+      "bytes": 4909,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\test_koels.py"
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/mnt/user-data/outputs/koels/strategies/__init__.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\mnt\\user-data\\outputs\\koels\\strategies\\__init__.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/KoELS_Files/mnt/user-data/outputs/koels/strategies/__init__.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "b2b4fd0baac7c876ee49550f1a76d548daa38532e7f8d61cd11c21c9af038c03",
+      "published_sha256": "b2b4fd0baac7c876ee49550f1a76d548daa38532e7f8d61cd11c21c9af038c03",
+      "bytes": 179,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\KoELS_Files\\mnt\\user-data\\outputs\\koels\\strategies\\__init__.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/deticker.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\deticker.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v6/deticker.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "af2cfe78f88769457700352d977f5ff899e8405bd9ad50962f92ed3f5f3fa8f5",
+      "published_sha256": "af2cfe78f88769457700352d977f5ff899e8405bd9ad50962f92ed3f5f3fa8f5",
+      "bytes": 3977,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\deticker.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/mk_template.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\mk_template.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v6/mk_template.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "published_sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "bytes": 8107,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\mk_template.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/RESULTS.md",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\RESULTS.md",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v6/RESULTS.md",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "753c83f0cc90edb7628711c0156b0bc8f42b9375bd8596ace0f22bafe18b4fda",
+      "published_sha256": "753c83f0cc90edb7628711c0156b0bc8f42b9375bd8596ace0f22bafe18b4fda",
+      "bytes": 5739,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\RESULTS.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/score_style.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\score_style.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v6/score_style.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "6bc0ffd2eb311b78981f44f373198cd7f853da77b0741b3a0f003821264eaead",
+      "published_sha256": "6bc0ffd2eb311b78981f44f373198cd7f853da77b0741b3a0f003821264eaead",
+      "bytes": 5589,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\score_style.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/train_nova_lora_v6.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\train_nova_lora_v6.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v6/train_nova_lora_v6.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+      "published_sha256": "30b665b9d7f29d035d458de58e68b3eb29e39c59a928cd3882636878f38d4844",
+      "bytes": 9322,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\train_nova_lora_v6.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/TRAIN_RUN.md",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\TRAIN_RUN.md",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v6/TRAIN_RUN.md",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "3445335efa7043f0043496685960a739b592163648fbbe3bfcb164088c11c963",
+      "published_sha256": "3445335efa7043f0043496685960a739b592163648fbbe3bfcb164088c11c963",
+      "bytes": 4664,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\TRAIN_RUN.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v6/V6_SPEC.md",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\V6_SPEC.md",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v6/V6_SPEC.md",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "56627f52fde3ec136df7e2911330a09f194c0ba89bfbb433bb529b37cb29e714",
+      "published_sha256": "56627f52fde3ec136df7e2911330a09f194c0ba89bfbb433bb529b37cb29e714",
+      "bytes": 6523,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v6\\V6_SPEC.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/MINING_NOTES.md",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\mined\\MINING_NOTES.md",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v7/mined/MINING_NOTES.md",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "b79be3b28e6fc1886327aeb2afd263400102d32754c617a40b602771eb1d880a",
+      "published_sha256": "b79be3b28e6fc1886327aeb2afd263400102d32754c617a40b602771eb1d880a",
+      "bytes": 6920,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\mined\\MINING_NOTES.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/SOURCE_MAP.md",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\mined\\SOURCE_MAP.md",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v7/mined/SOURCE_MAP.md",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "952fdea7dfbe7d015dd8379ad85f229ed80751962e4d4ac4199ccde4c222ce93",
+      "published_sha256": "952fdea7dfbe7d015dd8379ad85f229ed80751962e4d4ac4199ccde4c222ce93",
+      "bytes": 9381,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\mined\\SOURCE_MAP.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mk_template.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\mk_template.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v7/mk_template.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "published_sha256": "3b616902da54a1310b59c6159812ad21aec36f4596621433b136187ece9854ee",
+      "bytes": 8107,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\mk_template.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/PROBE_BATTERY.md",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\PROBE_BATTERY.md",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v7/PROBE_BATTERY.md",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "29607a8adc39cc6363c59e54aa0ec411ae24c02a0c96d70e6fab20fa9fe71a74",
+      "published_sha256": "29607a8adc39cc6363c59e54aa0ec411ae24c02a0c96d70e6fab20fa9fe71a74",
+      "bytes": 3925,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\PROBE_BATTERY.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/train_nova_lora_v7.py",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\train_nova_lora_v7.py",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v7/train_nova_lora_v7.py",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+      "published_sha256": "ff06baaaba7cc4c3e3453bf5c1389ff2fca899afc05c27f9cb56e4f27f7ccdf7",
+      "bytes": 9500,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\train_nova_lora_v7.py"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_REVIEW_2026-07-26.md",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\V7_REVIEW_2026-07-26.md",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v7/V7_REVIEW_2026-07-26.md",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "b2da84a010e86a1676c2916332de8ea6cb15066cbe64b71f94b5cd8a4c45c08d",
+      "published_sha256": "b2da84a010e86a1676c2916332de8ea6cb15066cbe64b71f94b5cd8a4c45c08d",
+      "bytes": 7500,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\V7_REVIEW_2026-07-26.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_SPEC.md",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\V7_SPEC.md",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v7/V7_SPEC.md",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "eca97d22063e604bbdbb8425018001fde972250d967fa645b3f4410bd88076fc",
+      "published_sha256": "eca97d22063e604bbdbb8425018001fde972250d967fa645b3f4410bd88076fc",
+      "bytes": 5635,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\V7_SPEC.md"
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_TRAIN_RUNBOOK.md",
+      "archive_file": "workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\V7_TRAIN_RUNBOOK.md",
+      "recovery_git_path": "workspace/_admin/Training_stuff/v7/V7_TRAIN_RUNBOOK.md",
+      "recovery_commit": "7fb16f516552cd87011c927d3a9c134c25f26ff1",
+      "newline_variant": "CRLF",
+      "expected_sha256": "9bb7fdb8e275ece34cd9ab6f4b69363a14f8667d190ed6377dcb5cf5a554378b",
+      "published_sha256": "9bb7fdb8e275ece34cd9ab6f4b69363a14f8667d190ed6377dcb5cf5a554378b",
+      "bytes": 4477,
+      "readonly": true,
+      "before_backup": "workspace\\Temp\\script-retirement-audit\\archive-before-repair\\workspace\\_admin\\Trash\\ScriptRetirement_2026-10-04\\_admin\\Training_stuff\\v7\\V7_TRAIN_RUNBOOK.md"
+    }
+  ],
+  "immediate_checks": [
+    {
+      "source": "general_tools/ping_claude.ps1",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "general_tools/cloud_call.py.turnabout_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "general_tools/nova_sync/watcher.py.holdback_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "general_tools/nova_sync/watcher.py.sizeguard_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "general_tools/nova_chat/static/index.html.polish_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_computer/toolkit.py.bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_cortex/tunables.py.holdback_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_cortex/tunables.py.turnabout_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.holdback_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.polish_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.turnabout_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/capture_app_window.ps1",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/nw_revive.cmd",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/run_baseline_replay.ps1",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/overnight_review.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/FIX_GIT.cmd",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/autonomy_watch/nova_recover_llama.cmd",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/autonomy_watch/REPORT.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/__init__.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/decision.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/manifest.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/keyword.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/test_koels.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/mnt/user-data/outputs/koels/strategies/__init__.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_source_v13.cjs",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_lower_lash.cjs",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_eye_anatomy.cjs",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/audit_eye_failure_v16.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/deticker.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/mk_template.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6_add.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6_base.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/qwen_template_gen.jinja",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/RESULTS.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/run_on_pod.sh",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/score_style.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/train_nova_lora_v6.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/TRAIN_RUN.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/V6_SPEC.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/evidence_pipeline_2026-07-23_night.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/MINING_NOTES.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/SOURCE_MAP.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_A_solitude.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_B_attribution.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_C_payload.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_D_witness.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_E_reach.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mk_template.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/nova_core_v7.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/nova_core_v7_add.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/PROBE_BATTERY.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/run_on_pod_v7.sh",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/train_nova_lora_v7.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_REVIEW_2026-07-26.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_SPEC.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_TRAIN_RUNBOOK.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    }
+  ],
+  "restored_at": "2026-10-04T14:11:10.482495+09:00",
+  "summary": {
+    "files_total": 57,
+    "content_restorations": 23,
+    "protected_without_content_change": 34,
+    "unrecoverable": 0,
+    "all_original_hashes_and_sizes_match": true,
+    "all_readonly": true
+  },
+  "watcher_observation": {
+    "alive": true,
+    "seq_after": 410,
+    "blocked_timestamp_writes": [
+      {
+        "seq": 388,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in overnight_review.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\overnight_review.py'",
+        "plain": null
+      },
+      {
+        "seq": 389,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in REPORT.md: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\autonomy_watch\\\\REPORT.md'",
+        "plain": null
+      },
+      {
+        "seq": 390,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in __init__.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\KoELS_Files\\\\__init__.py'",
+        "plain": null
+      },
+      {
+        "seq": 391,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in decision.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\KoELS_Files\\\\decision.py'",
+        "plain": null
+      },
+      {
+        "seq": 392,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in manifest.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\KoELS_Files\\\\manifest.py'",
+        "plain": null
+      },
+      {
+        "seq": 393,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in keyword.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\KoELS_Files\\\\keyword.py'",
+        "plain": null
+      },
+      {
+        "seq": 394,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in test_koels.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\KoELS_Files\\\\test_koels.py'",
+        "plain": null
+      },
+      {
+        "seq": 395,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in __init__.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\KoELS_Files\\\\mnt\\\\user-data\\\\outputs\\\\koels\\\\strategies\\\\__init__.py'",
+        "plain": null
+      },
+      {
+        "seq": 396,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in deticker.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v6\\\\deticker.py'",
+        "plain": null
+      },
+      {
+        "seq": 397,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in mk_template.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v6\\\\mk_template.py'",
+        "plain": null
+      },
+      {
+        "seq": 398,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in RESULTS.md: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v6\\\\RESULTS.md'",
+        "plain": null
+      },
+      {
+        "seq": 399,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in score_style.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v6\\\\score_style.py'",
+        "plain": null
+      },
+      {
+        "seq": 400,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in train_nova_lora_v6.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v6\\\\train_nova_lora_v6.py'",
+        "plain": null
+      },
+      {
+        "seq": 401,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in TRAIN_RUN.md: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v6\\\\TRAIN_RUN.md'",
+        "plain": null
+      },
+      {
+        "seq": 402,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in V6_SPEC.md: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v6\\\\V6_SPEC.md'",
+        "plain": null
+      },
+      {
+        "seq": 403,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in MINING_NOTES.md: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v7\\\\mined\\\\MINING_NOTES.md'",
+        "plain": null
+      },
+      {
+        "seq": 404,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in SOURCE_MAP.md: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v7\\\\mined\\\\SOURCE_MAP.md'",
+        "plain": null
+      },
+      {
+        "seq": 405,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in mk_template.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v7\\\\mk_template.py'",
+        "plain": null
+      },
+      {
+        "seq": 406,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in PROBE_BATTERY.md: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v7\\\\PROBE_BATTERY.md'",
+        "plain": null
+      },
+      {
+        "seq": 407,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in train_nova_lora_v7.py: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v7\\\\train_nova_lora_v7.py'",
+        "plain": null
+      },
+      {
+        "seq": 408,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in V7_REVIEW_2026-07-26.md: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v7\\\\V7_REVIEW_2026-07-26.md'",
+        "plain": null
+      },
+      {
+        "seq": 409,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in V7_SPEC.md: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v7\\\\V7_SPEC.md'",
+        "plain": null
+      },
+      {
+        "seq": 410,
+        "ts": "14:11:10",
+        "text": "[watcher] Could not update timestamp in V7_TRAIN_RUNBOOK.md: [Errno 13] Permission denied: 'C:\\\\Users\\\\lafou\\\\Project_Nova\\\\workspace\\\\_admin\\\\Trash\\\\ScriptRetirement_2026-10-04\\\\_admin\\\\Training_stuff\\\\v7\\\\V7_TRAIN_RUNBOOK.md'",
+        "plain": null
+      }
+    ],
+    "note": "Only observed log entries are recorded; all archive files independently checked after protection and event-delivery window."
+  },
+  "post_event_checks": [
+    {
+      "source": "general_tools/ping_claude.ps1",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "general_tools/cloud_call.py.turnabout_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "general_tools/nova_sync/watcher.py.holdback_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "general_tools/nova_sync/watcher.py.sizeguard_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "general_tools/nova_chat/static/index.html.polish_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_computer/toolkit.py.bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_cortex/tunables.py.holdback_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_cortex/tunables.py.turnabout_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.holdback_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.polish_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/nova_voice/nova.py.turnabout_bak",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/capture_app_window.ps1",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/nw_revive.cmd",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/run_baseline_replay.ps1",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/overnight_review.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/FIX_GIT.cmd",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/autonomy_watch/nova_recover_llama.cmd",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/autonomy_watch/REPORT.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/__init__.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/decision.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/manifest.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/keyword.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/test_koels.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/mnt/user-data/outputs/koels/strategies/__init__.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_source_v13.cjs",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_lower_lash.cjs",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/inspect_eye_anatomy.cjs",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "nova_body/SELF/Avatar/Live2D/tooling/audit_eye_failure_v16.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/deticker.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/mk_template.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6_add.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/nova_core_v6_base.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/qwen_template_gen.jinja",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/RESULTS.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/run_on_pod.sh",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/score_style.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/train_nova_lora_v6.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/TRAIN_RUN.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/V6_SPEC.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/evidence_pipeline_2026-07-23_night.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/MINING_NOTES.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/SOURCE_MAP.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_A_solitude.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_B_attribution.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_C_payload.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_D_witness.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/v7_candidates_E_reach.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mk_template.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/nova_core_v7.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/nova_core_v7_add.jsonl",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/PROBE_BATTERY.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/run_on_pod_v7.sh",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/train_nova_lora_v7.py",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_REVIEW_2026-07-26.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_SPEC.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_TRAIN_RUNBOOK.md",
+      "sha256_matches": true,
+      "byte_count_matches": true,
+      "readonly": true
+    }
+  ],
+  "backup_checks": [
+    {
+      "source": "_admin/overnight_review.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/autonomy_watch/REPORT.md",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/__init__.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/decision.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/manifest.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/keyword.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/test_koels.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/KoELS_Files/mnt/user-data/outputs/koels/strategies/__init__.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/deticker.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/mk_template.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/RESULTS.md",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/score_style.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/train_nova_lora_v6.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/TRAIN_RUN.md",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v6/V6_SPEC.md",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/MINING_NOTES.md",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mined/SOURCE_MAP.md",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/mk_template.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/PROBE_BATTERY.md",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/train_nova_lora_v7.py",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_REVIEW_2026-07-26.md",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_SPEC.md",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    },
+    {
+      "source": "_admin/Training_stuff/v7/V7_TRAIN_RUNBOOK.md",
+      "original_corrupt_bytes_preserved": true,
+      "readonly": true
+    }
+  ],
+  "completed_at": "2026-10-04T14:12:02.887063+09:00",
+  "protection_note": "All57 archived sources intentionally read-only against old watcher; source-level Trash exclusion applies next normal watcher startup. Existing manifest untouched; no service restart."
+}
