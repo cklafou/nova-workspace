@@ -1,5 +1,5 @@
 # @nova: Assemble Nova context while excluding sealed stores and private collaboration transport.
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 14:28:11
 """
 nova_chat/workspace_context.py -- Workspace File Access for Nova Group Chat
 ============================================================================

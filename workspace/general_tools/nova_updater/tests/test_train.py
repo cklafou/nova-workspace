@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 14:28:11
 # @nova: Tests LoRA training jobs: data checks, bundles and checksums, the loss-mask template patch on real Qwen templates, and RunPod runs that always stop the pod.
 """Run: python -m unittest discover -s general_tools/nova_updater/tests -v"""
 import hashlib

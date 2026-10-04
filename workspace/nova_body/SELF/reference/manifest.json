@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-04T14:16:01",
+  "generated": "2026-10-04T14:30:44",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -25,11 +25,13 @@
       "kind": "body_part",
       "path": "nova_body/nova_computer",
       "purpose": "My computer -- somewhere that is MINE to act in, that never reaches across and grabs",
-      "files": 11,
-      "lines": 1573,
+      "files": 12,
+      "lines": 1637,
       "age_days": 0,
       "ports_bind": [],
-      "ports_seen": [],
+      "ports_seen": [
+        "6080"
+      ],
       "nova_imports": [
         "nova_computer",
         "nova_paths",
@@ -858,7 +860,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.",
       "files": 27,
-      "lines": 8957,
+      "lines": 8953,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -924,7 +926,7 @@
       "path": "general_tools/nova_collaboration",
       "purpose": "Connect the actual Codex or Claude Cowork session to Nova Chat's private collaboration feed over local HTTP, an atomic shared-folder mailbox, or MCP stdio.",
       "files": 1,
-      "lines": 372,
+      "lines": 373,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -984,8 +986,8 @@
       "kind": "tool",
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.",
-      "files": 10,
-      "lines": 2879,
+      "files": 11,
+      "lines": 2971,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -1021,7 +1023,7 @@
       "path": "general_tools/nova_updater",
       "purpose": "Nova's model updater: finds newer dense models, installs them with rollback, and trains LoRAs for installed models.",
       "files": 34,
-      "lines": 6490,
+      "lines": 6499,
       "age_days": 0,
       "ports_bind": [
         "8080"

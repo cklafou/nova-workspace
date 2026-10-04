@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 14:28:11
 # @nova: Local collaboration broker isolated from Nova conversation, memory and autonomy ingestion.
 """A detachable room for Cole, Codex and the actual Claude Cowork client.
 

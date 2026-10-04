@@ -1,4 +1,4 @@
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 14:28:11
 # @nova: The ways I can HAVE a computer. Body part, stdlib only. A backend is a contract,
 #        not a machine: "somewhere I can run a command and see what happened." WSL is one
 #        answer on Cole's Windows box; a plain Linux host is another; "nowhere" is a third,

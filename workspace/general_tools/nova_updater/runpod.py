@@ -1,3 +1,4 @@
+# Last updated: 2026-10-04 14:29:14
 # @nova: Run paid LoRA training, always request GPU stop, and delete only the job pod after verified local adapters and provenance are preserved.
 """RunPod runner for LoRA training.
 

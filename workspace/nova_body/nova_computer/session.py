@@ -1,4 +1,4 @@
-# Last updated: 2026-10-03 10:59:53
+# Last updated: 2026-10-04 14:28:11
 """Keep the selected WSL guest alive between tool calls, without a visible terminal.
 
 Systemd services alone do not keep WSL running. An owned stdin pipe does: EOF on

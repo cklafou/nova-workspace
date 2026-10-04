@@ -1,5 +1,5 @@
 # @nova: Persists leased events and memory work with bounded retries and visible failures.
-# Last updated: 2026-10-03 09:59:47
+# Last updated: 2026-10-04 14:28:11
 """Durable, leased work queue. UI notifications remain a separate, lossy stream."""
 import json
 from pathlib import Path
