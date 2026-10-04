@@ -297,7 +297,8 @@
         "general_tools/nova_updater/tests/test_pod_venv.py",
         "general_tools/nova_chat/tests/test_lifecycle.py",
         "general_tools/nova_chat/tests/test_launcher_mode.py",
-        "general_tools/nova_chat/tests/test_conversation_power.cjs"
+        "general_tools/nova_chat/tests/test_conversation_power.cjs",
+        "general_tools/nova_updater/tests/test_runpod_lifecycle.py"
       ],
       "baseline": {
         "general_tools/nova_chat/tests/test_chat_only.py": "f4a5f0bd90f36bbe1c44e3bda16c3b0f5e99fccaf4543e981789e8230451a77e",
@@ -444,7 +445,9 @@
         "general_tools/nova_updater/paths.py",
         "general_tools/nova_updater/jobs.py",
         "general_tools/nova_updater/plan.py",
-        "general_tools/nova_updater/tests/test_pod_venv.py"
+        "general_tools/nova_updater/tests/test_pod_venv.py",
+        "general_tools/nova_updater/runpod.py",
+        "general_tools/nova_updater/net.py"
       ],
       "edit": "general_tools/architecture_map/notes/model_updates.md",
       "reviewed": "2026-10-04",

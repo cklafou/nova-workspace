@@ -9,7 +9,7 @@ from unittest.mock import patch
 import zipfile
 
 from support import Workspace
-from nova_updater import jobs, runpod, train
+from nova_updater import jobs, net, runpod, train
 from nova_updater.pod import template_gen
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
@@ -180,6 +180,7 @@ class TemplatePatch(unittest.TestCase):
 class FakeClient:
     def __init__(self, status="EXITED", cost=2.99):
         self.status, self.cost, self.calls = status, cost, []
+        self.deleted = False
 
     def balance(self):
         self.calls.append("balance")
@@ -187,6 +188,8 @@ class FakeClient:
 
     def pod(self, pod_id):
         self.calls.append("get")
+        if self.deleted:
+            raise net.NetError("Pod not found", status_code=404)
         running = self.status == "RUNNING"
         return {"id": pod_id, "desiredStatus": self.status, "costPerHr": self.cost,
                 "publicIp": "203.0.113.5" if running else None, "portMappings": {"22": 40022} if running else {}}
@@ -199,6 +202,10 @@ class FakeClient:
         self.calls.append("stop")
         self.status = "EXITED"
 
+    def delete(self, pod_id):
+        self.calls.append("delete")
+        self.deleted = True
+
     def create(self, body):
         raise AssertionError("must reuse the configured pod")
 
@@ -207,6 +214,7 @@ class FakeSSH:
     """Plays the pod: training finishes on the second poll; scp down creates gguf_out with sums."""
     def __init__(self, exit_code=0):
         self.exit_code, self.polls, self.commands = exit_code, 0, []
+        self.recipe = None
 
     def __call__(self, args, capture_output=True, text=True, timeout=None):
         self.commands.append(args)
@@ -214,11 +222,23 @@ class FakeSSH:
         if args[0] == "ssh" and "cat EXIT" in args[-1]:
             self.polls += 1
             out = (f"{self.exit_code}\n---\nstep 2/2" if self.polls >= 2 else "---\nloss 1.6")
+        if args[0] == "scp" and not args[-2].endswith("gguf_out"):
+            self.recipe = json.loads((Path(args[-2]) / "job.json").read_text(encoding="utf-8"))
         if args[0] == "scp" and args[-2].endswith("gguf_out"):
             dest = Path(args[-1]) / "gguf_out"
             dest.mkdir(parents=True, exist_ok=True)
-            (dest / "a_epoch1.gguf").write_bytes(b"x" * 10)
-            (dest / "SHA256SUMS.txt").write_text(f"{hashlib.sha256(b'x' * 10).hexdigest()}  a_epoch1.gguf\n")
+            names = [f"{self.recipe['output_name']}_epoch{i}.gguf" for i in range(1, self.recipe["params"]["epochs"] + 1)]
+            for name in names:
+                (dest / name).write_bytes(b"x" * 10)
+            (dest / "SHA256SUMS.txt").write_text("".join(f"{hashlib.sha256(b'x' * 10).hexdigest()}  {name}\n" for name in names))
+            details = dest / "training_details"
+            detail_names = ("environment.txt", "base_source.json", "tokenization_report.json",
+                            "chat_template.gen.jinja", "base_config/config.json", "README.md")
+            for name in detail_names:
+                target = details / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(b"fixture")
+            (details / "SHA256SUMS.txt").write_text("".join(f"{hashlib.sha256(b'fixture').hexdigest()}  {name}\n" for name in detail_names))
         return types.SimpleNamespace(returncode=0, stdout=out, stderr="")
 
 
@@ -235,7 +255,9 @@ class RunPodRuns(Specs):
         ssh, client = FakeSSH(), FakeClient()
         spec = self.spec(output_name="a")
         result = train.run(spec, jobs.Job("train", "t"), self.runner(ssh, client))
-        self.assertEqual(result["installed"], ["models/qwen3.8/a_epoch1.gguf"])
+        self.assertEqual(result["installed"], ["models/qwen3.8/a_epoch1.gguf", "models/qwen3.8/a_epoch2.gguf"])
+        self.assertTrue(result["runpod_cost"]["pod_deleted"])
+        self.assertLess(client.calls.index("stop"), client.calls.index("delete"))
         self.assertEqual(client.calls.count("start"), 1)
         self.assertIn("stop", client.calls)
 

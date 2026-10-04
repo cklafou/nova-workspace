@@ -60,8 +60,14 @@ no known incompatibility or replacement conflict exists. Training
 model's own chat template and proven (GATE A/B) before training, every epoch converted. New adapters
 are installed but not activated: A/B the epochs first. Activation with a restart is proven at
 llama-server's `/lora-adapters`; running without the adapter counts as failure and restores the previous
-adapter line (HTTP 502). RunPod runs request a pod stop after completion, failure or cancellation;
-they never terminate it. A failed stop is reported explicitly and requires action in RunPod.
+adapter line (HTTP 502). RunPod runs first request a pod stop after completion, failure or cancellation.
+Once all expected epoch adapters and complete runtime details have been verified and saved locally,
+successful runs delete the pod and confirm it is gone. Its attached pod storage is released; a matching
+saved pod ID is cleared so the next run creates a fresh pod. Unverified downloads, failed training and
+cancellations retain the stopped pod for recovery and explicitly warn that storage can keep billing.
+Delete failures retry a stop and report unresolved cleanup. Independent network volumes are never
+deleted automatically. A killed updater process or unreachable provider can prevent cleanup; check
+RunPod when the reported outcome is unconfirmed.
 
 Final training inputs live in `models/Training Files/<friendly base-model name>/<training name>/`: a
 frozen dataset, recipe, scripts, checksums and short README. Completed runs also retain checksummed
@@ -80,7 +86,9 @@ per-run spending cutoff. During training, the app refreshes wallet credit and sh
 pod hourly rate, elapsed time and estimated GPU spend; a manual top-up appears on a later refresh.
 Low-credit warnings do not themselves stop an active run. Provider-enforced credit exhaustion is
 separate from Nova's controls. Completed, failed and cancelled jobs retain their cost summary and
-pod-stop outcome. Estimated GPU spend excludes storage and is not a provider invoice.
+pod cleanup outcome: deleted, retained for recovery, or cleanup failed. Estimated GPU spend excludes
+storage and is not a provider invoice. A stopped pod still incurs attached-storage charges; confirmed
+pod deletion removes that pod's storage. Separate network-volume charges require separate cleanup.
 Google browser sign-in does not configure the updater API key. New pods default to Japan
 (`AP-JP-1`) near Korea; unavailability does not silently select a distant datacenter.
 

@@ -15,7 +15,10 @@ MAX_JSON = 32 * 1024 * 1024
 
 
 class NetError(Exception):
-    """A network or HTTP failure, safe to show the user."""
+    """A network or HTTP failure, safe to show the user, with optional HTTP status."""
+    def __init__(self, message, *, status_code=None):
+        super().__init__(message)
+        self.status_code = status_code
 
 
 def build_url(url: str, params=None) -> str:
@@ -38,7 +41,7 @@ def get_bytes(url: str, params=None, headers=None, timeout: float = 10.0, limit:
         with urllib.request.urlopen(_request(full, headers), timeout=timeout) as response:
             body = response.read(limit + 1)
     except urllib.error.HTTPError as error:
-        raise NetError(f"{urllib.parse.urlsplit(full).netloc} answered HTTP {error.code}") from None
+        raise NetError(f"{urllib.parse.urlsplit(full).netloc} answered HTTP {error.code}", status_code=error.code) from None
     except (urllib.error.URLError, TimeoutError, OSError) as error:
         reason = getattr(error, "reason", error)
         raise NetError(f"Could not reach {urllib.parse.urlsplit(full).netloc}: {reason}") from None
@@ -66,7 +69,7 @@ def send_json(url: str, method: str, body=None, headers=None, timeout: float = 2
         with urllib.request.urlopen(_request(url, merged, method, data), timeout=timeout) as response:
             raw = response.read(MAX_JSON + 1)
     except urllib.error.HTTPError as error:
-        raise NetError(f"{urllib.parse.urlsplit(url).netloc} answered HTTP {error.code} to {method}") from None
+        raise NetError(f"{urllib.parse.urlsplit(url).netloc} answered HTTP {error.code} to {method}", status_code=error.code) from None
     except (urllib.error.URLError, TimeoutError, OSError) as error:
         raise NetError(f"Could not reach {urllib.parse.urlsplit(url).netloc}: {getattr(error, 'reason', error)}") from None
     if not raw.strip():

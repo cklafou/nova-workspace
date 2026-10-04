@@ -1,4 +1,4 @@
 {
-  "last_recovery": "2026-08-01T19:54:00.962020",
+  "last_recovery": "2026-10-04T13:28:27.453761",
   "reason": "BARE: llama healthy but NO personality adapter loaded (running as base model)"
 }

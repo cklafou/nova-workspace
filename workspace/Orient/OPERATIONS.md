@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-04T04:23:37+00:00 from source (input `1017150b70cd`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T04:30:50+00:00 from source (input `f9f9eb785aef`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -117,12 +117,14 @@ The voice loop parses tool reaches from both content and reasoning streams. Rece
 helps distinguish executed work from earlier narration. Check loaded source, actual receipts,
 adapter status, and call order before changing personality or training. Rendering/mount artifacts
 can resemble damaged source: compare actual local bytes before repairing a supposed truncation.
-On remote training hosts, stop a RunPod rather than terminating its retained volume; put the
-Hugging Face cache on local disk rather than a slow network mount.
+On remote training hosts, stop GPU use while retrieving/verifying results; after successful local
+preservation, delete the disposable training pod to release its attached storage. Keep unverified
+results recoverable and surface any retained-storage charge. The Hugging Face cache belongs on local
+disk rather than a slow network mount.
 
 ## Test meaningful behavior
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/tests/test_updater_ui.cjs`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/tests/test_updater_ui.cjs`; new `general_tools/nova_updater/tests/test_runpod_lifecycle.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -143,7 +145,9 @@ Hugging Face cache on local disk rather than a slow network mount.
    A successful simulated install or GPU quote does not certify a real download or paid training run.
    The opt-in pod compatibility tests exercise a tiny actual model, assistant masks and GGUF conversion;
    Linux venv tests check dependency isolation and local storage. A full run additionally needs actual
-   optimizer progress, retrieved/checksummed epoch adapters and the provider's stopped-pod status.
+   optimizer progress, retrieved/checksummed epoch adapters, complete saved provenance and confirmed
+   pod deletion. Cleanup tests must also prove failed verification retains remote recovery data and
+   failed deletion reports a storage warning instead of claiming costs have ended.
    Behavioral A/B evaluation and runtime activation remain separate from training completion.
 9. For the controller, verify menu opening does not rearrange widgets, layout changes survive reload,
    old popouts close before switching layouts, and small windows keep controls reachable.
@@ -410,6 +414,8 @@ its temp folder stopped autosave (lesson 7 above).
 
 ## Controller menus and layouts
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/static/index.html`. Re-read it against the code, update it in `general_tools/architecture_map/notes/controller_layouts.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Controller menus and layouts"`.
+
 Nova Chat has one workspace. The top application bar contains expandable menus; opening Services,
 Advanced or Appearance leaves the dock arrangement alone. Widgets opens the widget choices, including
 Collaboration and Model updates. The optional Services and Generation widgets mirror the original menu
@@ -445,7 +451,7 @@ inference. Its posture record freshness is a separate runtime issue; the control
 
 ## Model updates
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/static/updater.js`. Re-read it against the code, update it in `general_tools/architecture_map/notes/model_updates.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Model updates"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/static/updater.js`, `general_tools/nova_updater/train.py`; new `general_tools/nova_updater/net.py`, `general_tools/nova_updater/runpod.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/model_updates.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Model updates"`.
 
 `general_tools/nova_updater/` is a general tool; its README has the full route contract. At each Nova
 Chat start one cached catalog query looks for a newer dense Qwen of 27-32B with a permissive license,
@@ -501,8 +507,14 @@ no known incompatibility or replacement conflict exists. Training
 model's own chat template and proven (GATE A/B) before training, every epoch converted. New adapters
 are installed but not activated: A/B the epochs first. Activation with a restart is proven at
 llama-server's `/lora-adapters`; running without the adapter counts as failure and restores the previous
-adapter line (HTTP 502). RunPod runs request a pod stop after completion, failure or cancellation;
-they never terminate it. A failed stop is reported explicitly and requires action in RunPod.
+adapter line (HTTP 502). RunPod runs first request a pod stop after completion, failure or cancellation.
+Once all expected epoch adapters and complete runtime details have been verified and saved locally,
+successful runs delete the pod and confirm it is gone. Its attached pod storage is released; a matching
+saved pod ID is cleared so the next run creates a fresh pod. Unverified downloads, failed training and
+cancellations retain the stopped pod for recovery and explicitly warn that storage can keep billing.
+Delete failures retry a stop and report unresolved cleanup. Independent network volumes are never
+deleted automatically. A killed updater process or unreachable provider can prevent cleanup; check
+RunPod when the reported outcome is unconfirmed.
 
 Final training inputs live in `models/Training Files/<friendly base-model name>/<training name>/`: a
 frozen dataset, recipe, scripts, checksums and short README. Completed runs also retain checksummed
@@ -521,7 +533,9 @@ per-run spending cutoff. During training, the app refreshes wallet credit and sh
 pod hourly rate, elapsed time and estimated GPU spend; a manual top-up appears on a later refresh.
 Low-credit warnings do not themselves stop an active run. Provider-enforced credit exhaustion is
 separate from Nova's controls. Completed, failed and cancelled jobs retain their cost summary and
-pod-stop outcome. Estimated GPU spend excludes storage and is not a provider invoice.
+pod cleanup outcome: deleted, retained for recovery, or cleanup failed. Estimated GPU spend excludes
+storage and is not a provider invoice. A stopped pod still incurs attached-storage charges; confirmed
+pod deletion removes that pod's storage. Separate network-volume charges require separate cleanup.
 Google browser sign-in does not configure the updater API key. New pods default to Japan
 (`AP-JP-1`) near Korea; unavailability does not silently select a distant datacenter.
 
@@ -644,6 +658,6 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Dangling references:** none.
 
-**Files without a purpose line:** 73, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
+**Files without a purpose line:** 75, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `OPERATIONS.md#Model updates`, `OPERATIONS.md#Test meaningful behavior`.
+**Sections awaiting review:** `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Model updates`, `OPERATIONS.md#Test meaningful behavior`.

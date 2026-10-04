@@ -168,7 +168,10 @@ const context = {
             ?.querySelector(".nup-dialog-error")
         : body.querySelector(selector),
   },
-  setTimeout: (callback, delay) => { timers.push({callback, delay}); return timers.length; },
+  setTimeout: (callback, delay) => {
+    timers.push({ callback, delay });
+    return timers.length;
+  },
   clearTimeout() {},
   AbortController,
   URL,
@@ -259,6 +262,50 @@ const context = {
           },
         },
         {
+          id: "retained-recovery",
+          kind: "train",
+          state: "failed",
+          title: "Recovery pod retained",
+          runpod_cost: {
+            pod_id: "recovery-pod",
+            stop_requested: true,
+            pod_deleted: false,
+            cleanup_state: "retained",
+            storage_retained: true,
+            cleanup_message:
+              "Local output verification failed; remote checkpoints retained.",
+          },
+        },
+        {
+          id: "cleanup-failed",
+          kind: "train",
+          state: "succeeded",
+          title: "Training succeeded but cleanup failed",
+          runpod_cost: {
+            pod_id: "cleanup-failed-pod",
+            stop_requested: true,
+            pod_deleted: false,
+            delete_requested: true,
+            cleanup_state: "cleanup_failed",
+            storage_retained: true,
+            delete_error: "Provider deletion timed out",
+          },
+        },
+        {
+          id: "cleanup-pending",
+          kind: "train",
+          state: "running",
+          title: "Deletion awaiting confirmation",
+          runpod_cost: {
+            pod_id: "pending-pod",
+            stop_requested: true,
+            pod_deleted: false,
+            delete_requested: true,
+            cleanup_state: "deleting",
+            storage_retained: true,
+          },
+        },
+        {
           id: "trained",
           kind: "train",
           state: "succeeded",
@@ -274,6 +321,14 @@ const context = {
               balance_usd: 8.5,
               balance_checked_at: "2026-10-04T04:30:00Z",
               stop_requested: true,
+              stop_error: "Stale stop error superseded by confirmed deletion",
+              cleanup_state: "terminated",
+              pod_deleted: true,
+              delete_requested: true,
+              storage_retained: false,
+              cleanup_verified_at: "2026-10-04T04:31:00Z",
+              cleanup_message:
+                "Verified local adapters and training records; provider confirms pod absence.",
               storage_included: false,
             },
             installed: ["models/fixture/Nova Personality - Epoch 2.gguf"],
@@ -281,7 +336,8 @@ const context = {
             training_directory: "models/Training Files/Fixture 27B Dense/run",
             readme: "models/Training Files/Fixture 27B Dense/run/README.md",
             receipt: "models/fixture/training-receipt.json",
-            run_details: "models/Training Files/Fixture 27B Dense/run/Run Details/fixture-job",
+            run_details:
+              "models/Training Files/Fixture 27B Dense/run/Run Details/fixture-job",
           },
         },
       ]);
@@ -409,6 +465,58 @@ const checkbox = (label, parent = root) =>
   assert.ok(root.textContent.includes("Pod needs attention"));
   assert.ok(root.textContent.includes("RunPod accepted the stop request"));
   assert.ok(root.textContent.includes("Storage is additional"));
+  const summaryFor = (title) =>
+    root
+      .querySelectorAll(".nup-card")
+      .find((card) => card.children[0]?.textContent === title)
+      .querySelector(".nup-cost-summary").textContent;
+  const deletedSummary = summaryFor("Trained outputs");
+  assert.ok(deletedSummary.includes("Deleted — absence confirmed"));
+  assert.ok(
+    deletedSummary.includes(
+      "Pod-attached recovery storage is no longer retained",
+    ),
+  );
+  assert.ok(deletedSummary.includes("Separate network volumes"));
+  assert.ok(
+    !deletedSummary.includes("Stale stop error"),
+    "Confirmed deletion supersedes a previous stop error",
+  );
+  assert.ok(
+    !deletedSummary.includes(
+      "does not verify that the pod has finished stopping",
+    ),
+    "A deleted pod must not appear merely stopped",
+  );
+  const retainedSummary = summaryFor("Recovery pod retained");
+  assert.ok(
+    retainedSummary.includes(
+      "storage continues billing even when the GPU is stopped",
+    ),
+  );
+  assert.ok(!retainedSummary.includes("Deleted — absence confirmed"));
+  const cleanupFailedSummary = summaryFor(
+    "Training succeeded but cleanup failed",
+  );
+  assert.ok(cleanupFailedSummary.includes("Pod cleanup needs attention"));
+  assert.ok(cleanupFailedSummary.includes("Provider deletion timed out"));
+  assert.ok(cleanupFailedSummary.includes("may still be billed"));
+  assert.ok(
+    !cleanupFailedSummary.includes("Deleted — absence confirmed"),
+    "Successful training does not prove successful cleanup",
+  );
+  const pendingSummary = summaryFor("Deletion awaiting confirmation");
+  assert.ok(pendingSummary.includes("confirmation is still pending"));
+  assert.ok(
+    !pendingSummary.includes("Deleted — absence confirmed"),
+    "Delete request is not proof of absence",
+  );
+  assert.ok(
+    summaryFor("Failure with retained cost").includes(
+      "Pod deletion is not recorded",
+    ),
+    "Old jobs with unknown cleanup must not imply free storage",
+  );
   assert.equal(
     input("Maximum GPU cost in USD"),
     undefined,
@@ -442,12 +550,25 @@ const checkbox = (label, parent = root) =>
   assert.ok(
     root.textContent.includes("models/fixture/Nova Personality - Epoch 2.gguf"),
   );
-  const savedDetails = root.querySelectorAll(".nup-file-locations").find(
-    row => row.textContent.includes("Saved run details — model revision, environment and tokenization"),
+  const savedDetails = root
+    .querySelectorAll(".nup-file-locations")
+    .find((row) =>
+      row.textContent.includes(
+        "Saved run details — model revision, environment and tokenization",
+      ),
+    );
+  assert.ok(
+    savedDetails,
+    "Persisted successful training shows its run-details location outside raw JSON",
   );
-  assert.ok(savedDetails, "Persisted successful training shows its run-details location outside raw JSON");
-  assert.equal(savedDetails.querySelector("code").textContent, "models/Training Files/Fixture 27B Dense/run/Run Details/fixture-job");
-  assert.ok(button("Copy path", savedDetails), "Runtime-evidence path can be copied");
+  assert.equal(
+    savedDetails.querySelector("code").textContent,
+    "models/Training Files/Fixture 27B Dense/run/Run Details/fixture-job",
+  );
+  assert.ok(
+    button("Copy path", savedDetails),
+    "Runtime-evidence path can be copied",
+  );
   assert.ok(root.textContent.includes("Adapter activation was not requested"));
   assert.equal(
     button("Roll back pending switch").disabled,
@@ -615,6 +736,18 @@ const checkbox = (label, parent = root) =>
   );
   assert.equal(input("Maximum GPU cost in USD"), undefined);
   assert.ok(
+    root.textContent.includes(
+      "then deletes the training pod and confirms it is gone",
+    ),
+    "Paid confirmation explains verified successful-run cleanup",
+  );
+  assert.ok(
+    root.textContent.includes(
+      "retain recovery storage, which continues billing",
+    ),
+    "Paid confirmation discloses failed-run storage charges",
+  );
+  assert.ok(
     root.textContent.includes("exceeds the current wallet balance"),
     "Estimated-total shortfall is a visible warning",
   );
@@ -645,20 +778,38 @@ const checkbox = (label, parent = root) =>
     "Only explicitly confirmed export and fake paid run were submitted",
   );
   const preservedBaseInput = input("Base model repository");
-  const statusCallsBeforeCompletion = calls.filter(c => c.url.endsWith("/status")).length;
+  const statusCallsBeforeCompletion = calls.filter((c) =>
+    c.url.endsWith("/status"),
+  ).length;
   state.busy = null;
   walletJobState = "succeeded";
   root.visible = true;
-  await timers.find(timer => timer.delay === 3500).callback();
-  assert.equal(calls.filter(c => c.url.endsWith("/status")).length, statusCallsBeforeCompletion + 1,
-    "A terminal job transition refreshes stale busy status automatically");
-  assert.equal(button("Roll back pending switch").disabled, false,
-    "Recovery unlocks without requiring manual Refresh");
-  assert.equal(input("Base model repository"), preservedBaseInput, "Completion refresh preserves editable forms");
+  await timers.find((timer) => timer.delay === 3500).callback();
+  assert.equal(
+    calls.filter((c) => c.url.endsWith("/status")).length,
+    statusCallsBeforeCompletion + 1,
+    "A terminal job transition refreshes stale busy status automatically",
+  );
+  assert.equal(
+    button("Roll back pending switch").disabled,
+    false,
+    "Recovery unlocks without requiring manual Refresh",
+  );
+  assert.equal(
+    input("Base model repository"),
+    preservedBaseInput,
+    "Completion refresh preserves editable forms",
+  );
   assert.equal(preservedBaseInput.value, "Fixture/Final-27B");
-  await timers.filter(timer => timer.delay === 3500).at(-1).callback();
-  assert.equal(calls.filter(c => c.url.endsWith("/status")).length, statusCallsBeforeCompletion + 1,
-    "Unchanged finished jobs do not refresh metadata repeatedly");
+  await timers
+    .filter((timer) => timer.delay === 3500)
+    .at(-1)
+    .callback();
+  assert.equal(
+    calls.filter((c) => c.url.endsWith("/status")).length,
+    statusCallsBeforeCompletion + 1,
+    "Unchanged finished jobs do not refresh metadata repeatedly",
+  );
   root.visible = false;
   await button("Refresh").click();
   await button("Roll back pending switch").click();
@@ -712,7 +863,7 @@ const checkbox = (label, parent = root) =>
     "Audit must not install or activate anything",
   );
   console.log(
-    "PASS: metadata-only startup, busy recovery lock, partial job outcomes, preview race rejection, input lock restoration, explicit export confirmation, bound preview token, invalidated token rejection, separate activation default, visible recovery result, explicit export/training paths, incompatible keep blocked, unknown versus zero credit, recharge link, paid funding gate/recheck, wallet-only paid consent and live/final cost metrics, Japan region and custom base path.",
+    "PASS: metadata-only startup, busy recovery lock, partial job outcomes, preview race rejection, input lock restoration, explicit export confirmation, bound preview token, invalidated token rejection, separate activation default, visible recovery result, explicit export/training paths, incompatible keep blocked, unknown versus zero credit, recharge link, paid funding gate/recheck, wallet-only paid consent and live/final cost metrics, verified deletion versus billed recovery storage and failed/unconfirmed cleanup, Japan region and custom base path.",
   );
 })().catch((error) => {
   console.error(error);

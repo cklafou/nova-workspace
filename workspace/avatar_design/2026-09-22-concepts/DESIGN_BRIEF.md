@@ -1,5 +1,5 @@
 # Nova avatar concepts — 22 September 2026
-_Last updated: 2026-10-03 04:41:56_
+_Last updated: 2026-10-04 13:26:26_
 
 Status: three visual proposals for Cole's review. No design has been selected or made
 canonical. These are 2D concept sheets, not an existing mesh, rig, or exact orthographic

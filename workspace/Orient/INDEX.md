@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-04T04:23:37+00:00 from source (input `1017150b70cd`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-04T04:30:50+00:00 from source (input `f9f9eb785aef`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -15,6 +15,25 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [RUN_PLUCK.cmd](../RUN_PLUCK.cmd) — Pluck test — boots my runtime headless (no chat server) to prove my faculties
 - [start_llama_qwen36.cmd](../start_llama_qwen36.cmd) — Starts Nova's model server (llama.cpp): Qwen 3.6 27B by default, or the model the model updater picked in nova_body\memory.
 - [StopNova.cmd](../StopNova.cmd) — Shutdown — stops the whole Nova stack cleanly.
+
+## avatar_design/2026-09-22-concepts
+
+- [avatar_design/2026-09-22-concepts/DESIGN_BRIEF.md](../avatar_design/2026-09-22-concepts/DESIGN_BRIEF.md) — Nova avatar concepts — 22 September 2026
+- [avatar_design/2026-09-22-concepts/nova-a-everyday.png](../avatar_design/2026-09-22-concepts/nova-a-everyday.png)
+- [avatar_design/2026-09-22-concepts/nova-a2-personality.png](../avatar_design/2026-09-22-concepts/nova-a2-personality.png)
+- [avatar_design/2026-09-22-concepts/nova-a3-gloves-consistency.png](../avatar_design/2026-09-22-concepts/nova-a3-gloves-consistency.png)
+- [avatar_design/2026-09-22-concepts/nova-b-utility.png](../avatar_design/2026-09-22-concepts/nova-b-utility.png)
+- [avatar_design/2026-09-22-concepts/nova-c-playful.png](../avatar_design/2026-09-22-concepts/nova-c-playful.png)
+- [avatar_design/2026-09-22-concepts/personality-study/a2-prompt.txt](../avatar_design/2026-09-22-concepts/personality-study/a2-prompt.txt)
+- [avatar_design/2026-09-22-concepts/personality-study/a3-prompt.txt](../avatar_design/2026-09-22-concepts/personality-study/a3-prompt.txt)
+- [avatar_design/2026-09-22-concepts/personality-study/A3_REVIEW.md](../avatar_design/2026-09-22-concepts/personality-study/A3_REVIEW.md) — Nova A3: user-directed consistency corrections
+- [avatar_design/2026-09-22-concepts/personality-study/DESIGN_NOTES.md](../avatar_design/2026-09-22-concepts/personality-study/DESIGN_NOTES.md) — Nova A2: personality-informed refinement
+- [avatar_design/2026-09-22-concepts/personality-study/provenance.json](../avatar_design/2026-09-22-concepts/personality-study/provenance.json)
+- [avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_lora_dataset_spec.md](../avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_lora_dataset_spec.md) — Nova-Core LoRA — Dataset Spec (v1 working draft)
+- [avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_v2_character_bible.md](../avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_v2_character_bible.md) — Nova-Core v2 — Character Bible
+- [avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_v2_strengthened_spec.md](../avatar_design/2026-09-22-concepts/personality-study/sources/nova_core_v2_strengthened_spec.md) — Nova-Core LoRA v2 — Strengthened Personality Spec
+- [avatar_design/2026-09-22-concepts/personality-study/sources/nova_lora_dataset_batch5_mischief_decision_solonarration.md](../avatar_design/2026-09-22-concepts/personality-study/sources/nova_lora_dataset_batch5_mischief_decision_solonarration.md) — Nova-Core LoRA Dataset — Batch 5: MISCHIEF + DECISION/REST + SOLO WORK NARRATION
+- [avatar_design/2026-09-22-concepts/prompts.json](../avatar_design/2026-09-22-concepts/prompts.json)
 
 ## general_tools
 
@@ -153,7 +172,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_updater/pod/template_gen.py](../general_tools/nova_updater/pod/template_gen.py) — Builds a loss-masking chat template for LoRA training from the base model's own template, refusing to train if it cannot prove the mask.
 - [general_tools/nova_updater/pod/train_lora.py](../general_tools/nova_updater/pod/train_lora.py) — Train text-only assistant-masked LoRA with an architecture-matched loader and frozen vision layers.
 - [general_tools/nova_updater/README.md](../general_tools/nova_updater/README.md) — How Nova's model updater works: startup check, manual search, install with rollback and quarantine, LoRA training, and the Nova Chat…
-- [general_tools/nova_updater/runpod.py](../general_tools/nova_updater/runpod.py) — Runs a training bundle on the user's RunPod pod: start it, upload over SSH, train, download, verify, and always stop (never terminate) the…
+- [general_tools/nova_updater/runpod.py](../general_tools/nova_updater/runpod.py) — Run paid LoRA training, always request GPU stop, and delete only the job pod after verified local adapters and provenance are preserved.
 - [general_tools/nova_updater/state/runpod_known_hosts](../general_tools/nova_updater/state/runpod_known_hosts)
 - [general_tools/nova_updater/state/updater_state.json](../general_tools/nova_updater/state/updater_state.json)
 - [general_tools/nova_updater/store.py](../general_tools/nova_updater/store.py) — Keeps the updater's small persistent state (last check, remembered decisions, plans, jobs) in one atomic JSON file.
@@ -166,6 +185,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_updater/tests/test_launcher.py](../general_tools/nova_updater/tests/test_launcher.py) — Runs the real model launcher on Windows with llama-server swapped for an argument recorder, proving boot files reach llama-server intact.
 - [general_tools/nova_updater/tests/test_pod_compat.py](../general_tools/nova_updater/tests/test_pod_compat.py) — Verify conditional-model loader selection, assistant masking, language-only LoRA and a disposable tiny training checkpoint.
 - [general_tools/nova_updater/tests/test_pod_venv.py](../general_tools/nova_updater/tests/test_pod_venv.py) — Prove the pod bootstrap installs dependencies in a venv while retaining the image Python packages.
+- [general_tools/nova_updater/tests/test_runpod_delete_http.py](../general_tools/nova_updater/tests/test_runpod_delete_http.py) — Verify RunPod deletion and absence detection through mocked HTTP, without network calls or credentials.
 - [general_tools/nova_updater/tests/test_runpod_funding.py](../general_tools/nova_updater/tests/test_runpod_funding.py) — Verify RunPod credit preflight and explicit region selection using temporary workspaces and fake provider responses only.
 - [general_tools/nova_updater/tests/test_runpod_lifecycle.py](../general_tools/nova_updater/tests/test_runpod_lifecycle.py) — Prove RunPod transfers named persistent training packages, retries SSH readiness and isolates paid attempts using local fake pods.
 - [general_tools/nova_updater/tests/test_train.py](../general_tools/nova_updater/tests/test_train.py) — Tests LoRA training jobs: data checks, bundles and checksums, the loss-mask template patch on real Qwen templates, and RunPod runs that…
@@ -1307,6 +1327,8 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/SELF/Avatar/Live2D/VALIDATION.md](../nova_body/SELF/Avatar/Live2D/VALIDATION.md)
 - [nova_body/SELF/Avatar/Nova_Avatar_Front_Reference.png](../nova_body/SELF/Avatar/Nova_Avatar_Front_Reference.png)
 - [nova_body/SELF/Avatar/Nova_Avatar_Reference.png](../nova_body/SELF/Avatar/Nova_Avatar_Reference.png)
+- [nova_body/SELF/Avatar/Outdated Concept Art/Nova Concept Avatar.png](../nova_body/SELF/Avatar/Outdated%20Concept%20Art/Nova%20Concept%20Avatar.png)
+- [nova_body/SELF/Avatar/Outdated Concept Art/Nova_2D_Avatar_Rough_Draft_Full_Body.jpg](../nova_body/SELF/Avatar/Outdated%20Concept%20Art/Nova_2D_Avatar_Rough_Draft_Full_Body.jpg)
 - [nova_body/SELF/core/00_START_HERE.md](../nova_body/SELF/core/00_START_HERE.md)
 - [nova_body/SELF/core/01_identity.md](../nova_body/SELF/core/01_identity.md)
 - [nova_body/SELF/core/02_how_i_work.md](../nova_body/SELF/core/02_how_i_work.md)
@@ -1334,8 +1356,10 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 ## Files without a purpose line
 
-The rule (Operations, "File conventions"): every file says what it is for in its first lines. These 73 do not yet. Add a `@nova:` line when you next touch one.
+The rule (Operations, "File conventions"): every file says what it is for in its first lines. These 75 do not yet. Add a `@nova:` line when you next touch one.
 
+- [avatar_design/2026-09-22-concepts/personality-study/a2-prompt.txt](../avatar_design/2026-09-22-concepts/personality-study/a2-prompt.txt)
+- [avatar_design/2026-09-22-concepts/personality-study/a3-prompt.txt](../avatar_design/2026-09-22-concepts/personality-study/a3-prompt.txt)
 - [nova_body/Nova_Created/_tmp_clean_queue.py](../nova_body/Nova_Created/_tmp_clean_queue.py)
 - [nova_body/Nova_Created/_tmp_list_pending.py](../nova_body/Nova_Created/_tmp_list_pending.py)
 - [nova_body/Nova_Created/check_reach.py](../nova_body/Nova_Created/check_reach.py)

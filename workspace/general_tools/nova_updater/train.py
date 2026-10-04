@@ -9,7 +9,7 @@ Two ways in:
 A job is a bundle: the data files (checksummed, row-counted), job.json, the generic pod scripts
 (template_gen.py proves the loss mask before training, train_lora.py, run_on_pod.sh). Runners:
   * export  - zip the bundle with instructions; you run it on any GPU box (no spend from here)
-  * runpod  - start your pod, upload, run, download, verify, ALWAYS stop the pod (never terminate)
+  * runpod  - start, upload, train, download, stop; delete the pod only after verified local installation
 Paid runs need explicit consent. RunPod prepaid credit is the funding limit; Nova never recharges it.
 """
 from __future__ import annotations
@@ -234,7 +234,8 @@ The script prepares an isolated environment and fetches its pinned llama.cpp con
 Python dependencies and converter repository; set `HF_TOKEN` only if the base model is gated. The scripts generate the template from that repository
 at execution time. The run records its exact model revision and dependency versions in Run Details; the large remote base weights are not copied into this input package.
 Download `gguf_out/`, then use Nova Chat's **Install trained LoRA** to verify and copy its GGUFs.
-Compare the epochs before choosing a separate activation action. Stop a paid pod when finished.
+Compare the epochs before choosing a separate activation action. Managed runs stop the GPU first, then
+delete the pod after verified local installation and provenance preservation; failed jobs retain recovery storage.
 """
 
 
@@ -333,13 +334,13 @@ def export(spec: dict) -> dict:
             "readme": paths.display(folder / "README.md")}
 
 
-def verify_outputs(folder: Path) -> list:
-    """Check gguf_out/SHA256SUMS.txt against the downloaded files. Returns verified file paths."""
+def _verified_output_hashes(folder: Path) -> dict:
+    """Return verified output paths and their expected transfer digests."""
     folder = Path(folder)
     sums = folder / "SHA256SUMS.txt"
     if not sums.is_file():
         raise TrainError(f"{paths.display(folder)} has no SHA256SUMS.txt; refusing to install unverified adapters.")
-    verified, seen = [], set()
+    verified, seen = {}, set()
     for line in sums.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
@@ -357,15 +358,20 @@ def verify_outputs(folder: Path) -> list:
         if not path.is_file() or _sha(path) != digest.lower():
             raise TrainError(f"{name} is missing or does not match SHA256SUMS.txt")
         seen.add(name)
-        verified.append(path)
+        verified[path] = digest.lower()
     if not verified:
         raise TrainError("SHA256SUMS.txt lists no files")
     return verified
 
 
+def verify_outputs(folder: Path) -> list:
+    """Check gguf_out/SHA256SUMS.txt against the downloaded files."""
+    return list(_verified_output_hashes(folder))
+
+
 def install_outputs(spec: dict, folder: Path) -> dict:
     """Copy verified GGUFs beside their base model, preserving inputs separately and never overwriting adapters."""
-    verified = verify_outputs(folder)
+    verified = _verified_output_hashes(folder)
     target = _output_directory(spec)
     for source in verified:
         if (target / source.name).exists():
@@ -376,8 +382,11 @@ def install_outputs(spec: dict, folder: Path) -> dict:
     for source in verified:
         destination = target / source.name
         _atomic_copy(source, destination, overwrite=False)
+        installed_hash = _sha(destination)
+        if installed_hash != verified[source]:
+            raise TrainError(f"Installed {source.name} does not match its verified download; remote recovery data must be retained.")
         placed.append(paths.display(destination))
-        records.append({"path": paths.display(destination), "source_name": source.name, "sha256": _sha(destination)})
+        records.append({"path": paths.display(destination), "source_name": source.name, "sha256": installed_hash})
     package = Path(bundle["dir"])
     if not package.is_absolute():
         package = paths.workspace() / package
@@ -464,10 +473,12 @@ def activate(rel_path: str, scale: float = 1.0, restart=None, probe=loaded_loras
                 outcome)
 
 
-def preserve_run_details(spec: dict, output_folder: Path, job_id: str) -> str | None:
+def preserve_run_details(spec: dict, output_folder: Path, job_id: str, *, require_complete=False) -> str | None:
     """Keep small, checksummed runtime inputs alongside the frozen training recipe."""
     source = Path(output_folder) / "training_details"
     if not source.is_dir():
+        if require_complete:
+            raise TrainError("Managed training is missing its reproducibility details; the pod must be retained.")
         return None  # Imported older adapters may have only a GGUF checksum manifest.
     manifest = source / "SHA256SUMS.txt"
     if not manifest.is_file():
@@ -487,15 +498,19 @@ def preserve_run_details(spec: dict, output_folder: Path, job_id: str) -> str | 
         if not re.fullmatch(r"[0-9a-fA-F]{64}", digest) or not path.is_file() or path.stat().st_size > 8 * 1024 * 1024 or _sha(path) != digest.lower():
             raise TrainError("Training details checksum or size mismatch")
         seen.add(name)
-        checked.append((path, name))
+        checked.append((path, name, digest.lower()))
     if not checked:
         raise TrainError("Training details manifest is empty")
+    if require_complete and seen != allowed:
+        raise TrainError("Managed training has incomplete reproducibility details; the pod must be retained.")
     target = paths.training_model_dir(spec["base_model_id"]) / spec["output_name"] / "Run Details" / job_id
     target.mkdir(parents=True, exist_ok=False)
-    for path, name in checked:
+    for path, name, digest in checked:
         destination = target / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         _atomic_copy(path, destination, overwrite=False)
+        if _sha(destination) != digest:
+            raise TrainError("Preserved training details do not match their verified checksums; the pod must be retained.")
     _atomic_copy(manifest, target / "SHA256SUMS.txt", overwrite=False)
     return paths.display(target)
 
@@ -510,10 +525,28 @@ def run(spec: dict, job: jobs.Job, runner=None) -> dict:
         bundle_path = paths.workspace() / bundle_path
     if runner is None:
         raise TrainError("No GPU runner configured; use the export runner or set up RunPod.")
-    outputs = runner.run(bundle_path, folder / "gguf_out", job)
-    job.set_step("Verifying downloaded adapters against SHA256SUMS.txt")
-    details = preserve_run_details(spec, Path(outputs), job.id)
-    placed = install_outputs(spec, Path(outputs))
+    finalize = getattr(runner, "finalize_success", None)
+    try:
+        outputs = runner.run(bundle_path, folder / "gguf_out", job)
+        job.check_cancel()
+        job.set_step("Verifying downloaded adapters against SHA256SUMS.txt")
+        if callable(finalize):
+            verified = verify_outputs(Path(outputs))
+            # prepare_spec normalizes epochs to an integer; save_strategy='epoch' retains each.
+            expected = {f"{spec['output_name']}_epoch{epoch}.gguf"
+                        for epoch in range(1, int(spec["params"]["epochs"]) + 1)}
+            if {path.name for path in verified} != expected:
+                raise TrainError("Downloaded adapters do not include exactly every requested epoch; the pod must be retained.")
+        details = preserve_run_details(spec, Path(outputs), job.id, require_complete=callable(finalize))
+        placed = install_outputs(spec, Path(outputs))
+        job.check_cancel()
+        if callable(finalize):
+            finalize(job)
+    except Exception:
+        retain = getattr(runner, "retain_unverified", None)
+        if callable(retain):
+            retain(job)
+        raise
     return {"bundle": bundle, **placed, "run_details": details,
             "runpod_cost": getattr(runner, "cost_summary", None)}
 

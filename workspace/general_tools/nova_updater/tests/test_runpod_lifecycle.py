@@ -10,21 +10,26 @@ import shutil
 import subprocess
 
 from support import Workspace
-from nova_updater import jobs, runpod, train
+from nova_updater import jobs, net, runpod, train
 
 
 class FakePod:
     def __init__(self):
         self.calls = []
+        self.deleted = set()
+        self.created = 0
 
     def balance(self):
         return 63.11
 
     def create(self, body):
         self.calls.append(("create", body))
-        return {"id": "fixture-h200"}
+        self.created += 1
+        return {"id": "fixture-h200" if self.created == 1 else f"fixture-h200-{self.created}"}
 
     def pod(self, pod_id):
+        if pod_id in self.deleted:
+            raise net.NetError("Pod not found", status_code=404)
         return {"desiredStatus": "RUNNING", "costPerHr": 4.59,
                 "publicIp": "192.0.2.1", "portMappings": {"22": 40022}}
 
@@ -33,6 +38,10 @@ class FakePod:
 
     def stop(self, pod_id):
         self.calls.append(("stop", pod_id))
+
+    def delete(self, pod_id):
+        self.calls.append(("delete", pod_id))
+        self.deleted.add(pod_id)
 
 
 class PodFilesystem:
@@ -87,10 +96,19 @@ class PodFilesystem:
                     recipe = json.loads((remote / "job.json").read_text(encoding="utf-8"))
                     outputs = remote / "gguf_out"
                     outputs.mkdir()
-                    name = recipe["output_name"] + "_epoch1.gguf"
                     blob = b"fake trained adapter"
-                    (outputs / name).write_bytes(blob)
-                    (outputs / "SHA256SUMS.txt").write_text(hashlib.sha256(blob).hexdigest() + "  " + name + "\n")
+                    names = [f"{recipe['output_name']}_epoch{i}.gguf" for i in range(1, recipe["params"]["epochs"] + 1)]
+                    for name in names:
+                        (outputs / name).write_bytes(blob)
+                    (outputs / "SHA256SUMS.txt").write_text("".join(hashlib.sha256(blob).hexdigest() + "  " + name + "\n" for name in names))
+                    details = outputs / "training_details"
+                    detail_names = ("environment.txt", "base_source.json", "tokenization_report.json",
+                                    "chat_template.gen.jinja", "base_config/config.json", "README.md")
+                    for name in detail_names:
+                        target = details / name
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        target.write_bytes(b"fixture provenance")
+                    (details / "SHA256SUMS.txt").write_text("".join(hashlib.sha256(b"fixture provenance").hexdigest() + "  " + name + "\n" for name in detail_names))
                 elif "cat EXIT" in command:
                     self.polls += 1
                     output = "0\n---\nTRAINING COMPLETE"
@@ -132,12 +150,13 @@ class RunPodLifecycle(Workspace):
         self.assertIn("Qwen 3.8 27B Dense", source)
         self.assertEqual(Path(source).name, "nova_core_qwen38_v7")
         self.assertEqual(destination, remote.path(f"/workspace/nova_jobs/{job.id}/bundle"))
-        self.assertEqual(result["installed"], ["models/qwen3.8/nova_core_qwen38_v7_epoch1.gguf"])
+        self.assertEqual(result["installed"], ["models/qwen3.8/nova_core_qwen38_v7_epoch1.gguf", "models/qwen3.8/nova_core_qwen38_v7_epoch2.gguf"])
         self.assertTrue((self.ws / result["installed"][0]).is_file())
         self.assertEqual(client.calls[0][1]["dataCenterIds"], ["AP-JP-1"])
         self.assertEqual(client.calls[0][1]["gpuTypeIds"], ["NVIDIA H200"])
         self.assertEqual(client.calls[0][1]["imageName"], runpod.DEFAULT_IMAGE)
-        self.assertEqual(client.calls[-1][0], "stop")
+        self.assertEqual(client.calls[-1][0], "delete")
+        self.assertLess(next(i for i,c in enumerate(client.calls) if c[0] == "stop"),len(client.calls)-1)
         self.assertEqual(sum(args[-1] == "true" for args in remote.commands), 3)
         self.assertEqual(remote.polls, 1)
         summary = job.to_dict()["runpod_cost"]
@@ -146,6 +165,8 @@ class RunPodLifecycle(Workspace):
         self.assertEqual(summary["pod_id"], "fixture-h200")
         self.assertTrue(summary["stop_requested"])
         self.assertFalse(summary["storage_included"])
+        self.assertTrue(summary["pod_deleted"])
+        self.assertFalse(summary["storage_retained"])
 
     def test_reusing_inputs_has_separate_remote_attempts_and_no_stale_exit(self):
         spec = self.spec()

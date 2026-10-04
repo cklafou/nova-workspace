@@ -472,7 +472,86 @@
         "warning",
         "Check RunPod credit",
       );
-    if (cost.stop_error)
+    const deleted = cost.pod_deleted === true;
+    const cleanupLabels = {
+      pending_verification: "Waiting for verified local files",
+      retained: "Retained for recovery — storage continues billing",
+      deleting: "Deletion requested — confirmation pending",
+      terminated: "Deletion is not confirmed",
+      cleanup_failed: "Cleanup failed — review charges",
+    };
+    if (deleted || cost.cleanup_state || cost.delete_requested)
+      facts(box, [
+        [
+          "Pod cleanup",
+          deleted
+            ? "Deleted — absence confirmed"
+            : cleanupLabels[cost.cleanup_state] || "Deletion is not confirmed",
+        ],
+        ...(cost.cleanup_verified_at
+          ? [["Cleanup confirmed", date(cost.cleanup_verified_at)]]
+          : []),
+      ]);
+    if (deleted) {
+      box.append(
+        el(
+          "p",
+          "nup-muted",
+          "Training pod deleted and confirmed absent. Pod-attached recovery storage is no longer retained. Separate network volumes and other RunPod resources may still incur charges.",
+        ),
+      );
+    } else if (cost.delete_error || cost.cleanup_state === "cleanup_failed") {
+      messages(
+        box,
+        [
+          cost.delete_error ||
+            cost.cleanup_message ||
+            "Pod deletion could not be confirmed.",
+          "Cleanup did not finish. The pod or its storage may still be billed. Open RunPod Pods to resolve it.",
+        ],
+        "warning",
+        "Pod cleanup needs attention",
+      );
+    } else if (cost.delete_requested || cost.cleanup_state === "deleting") {
+      box.append(
+        el(
+          "p",
+          "nup-warning",
+          "Pod deletion requested; confirmation is still pending. Do not assume billing has stopped.",
+        ),
+      );
+    } else if (
+      cost.storage_retained === true ||
+      cost.cleanup_state === "retained"
+    ) {
+      messages(
+        box,
+        [
+          "Pod retained for recovery. Its storage continues billing even when the GPU is stopped.",
+        ],
+        "warning",
+        "Recovery storage is still billed",
+      );
+    } else if (cost.cleanup_state === "pending_verification" && active) {
+      box.append(
+        el(
+          "p",
+          "nup-muted",
+          "Automatic pod deletion waits for verified local adapter files and saved training records.",
+        ),
+      );
+    } else if (!active && cost.pod_id) {
+      box.append(
+        el(
+          "p",
+          "nup-warning",
+          "Pod deletion is not recorded. If this pod remains in RunPod, its storage may continue billing after the GPU stops.",
+        ),
+      );
+    }
+    if (cost.cleanup_message)
+      box.append(el("p", "nup-muted", cost.cleanup_message));
+    if (!deleted && cost.stop_error)
       messages(
         box,
         [
@@ -483,7 +562,7 @@
         "blocking",
         "Pod needs attention",
       );
-    else if (cost.stop_requested)
+    else if (!deleted && cost.stop_requested)
       box.append(
         el(
           "p",
@@ -491,7 +570,7 @@
           "RunPod accepted the stop request. This receipt does not verify that the pod has finished stopping.",
         ),
       );
-    else if (!active && cost.pod_id)
+    else if (!deleted && !active && cost.pod_id)
       box.append(
         el(
           "p",
@@ -826,7 +905,7 @@
         el(
           "p",
           "nup-warning",
-          "This starts paid GPU time using your RunPod wallet. There is no separate per-run spending limit. Watch the live cost and balance in Jobs; recharge manually in RunPod Billing if needed. The pod is stopped when the run finishes or is cancelled, while stored volumes can continue billing.",
+          "This starts paid GPU time using your RunPod wallet. There is no separate per-run spending limit. Watch the live cost and balance in Jobs; recharge manually in RunPod Billing if needed. After successful training, Nova verifies the local adapter files and training records, then deletes the training pod and confirms it is gone. Failed, cancelled or unverified runs request a stop and retain recovery storage, which continues billing. Cleanup failures remain visible in Jobs; separate network volumes are not deleted.",
         ),
       );
       const fundingBox = el("div");

@@ -27,8 +27,14 @@ A general tool, not a body part. It answers three questions for Cole:
 - Downloads need `confirm: true`; paid GPU time needs `confirm: {paid: true}` for the reviewed run.
   RunPod wallet credit is the funding limit. There is no per-run spending cutoff and Nova never
   recharges credit. Low credit produces a warning and billing link while the run continues.
-  The runner requests a pod stop in a `finally` block on success, failure or cancellation;
-  provider confirmation and any stop error are reported. It never terminates a pod.
+  The runner requests a pod stop in a `finally` block on success, failure or cancellation.
+  After a successful run's expected epoch adapters and complete provenance are verified and saved
+  locally, it deletes the training pod and confirms removal, releasing the attached pod storage.
+  It clears a matching saved pod ID so the next run creates a fresh nearby pod. Download/validation
+  failures and cancellations retain recovery data with an explicit ongoing-storage warning.
+  Failed deletion is reported and a stop is retried; never confuse an accepted stop with deletion.
+  Separately attached network volumes are not deleted. Process death or an unavailable provider
+  can prevent automatic cleanup; job messages identify unconfirmed cleanup for action in RunPod.
 - Downloads resume, then are checked against size and the published sha256. A mismatch is set
   aside as `.part.bad`, not installed.
 - Switching models saves the exact old boot files to the updater state **before the first

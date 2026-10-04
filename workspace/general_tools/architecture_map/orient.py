@@ -989,8 +989,10 @@ The voice loop parses tool reaches from both content and reasoning streams. Rece
 helps distinguish executed work from earlier narration. Check loaded source, actual receipts,
 adapter status, and call order before changing personality or training. Rendering/mount artifacts
 can resemble damaged source: compare actual local bytes before repairing a supposed truncation.
-On remote training hosts, stop a RunPod rather than terminating its retained volume; put the
-Hugging Face cache on local disk rather than a slow network mount.
+On remote training hosts, stop GPU use while retrieving/verifying results; after successful local
+preservation, delete the disposable training pod to release its attached storage. Keep unverified
+results recoverable and surface any retained-storage charge. The Hugging Face cache belongs on local
+disk rather than a slow network mount.
 
 ## Test meaningful behavior
 
@@ -1013,7 +1015,9 @@ Hugging Face cache on local disk rather than a slow network mount.
    A successful simulated install or GPU quote does not certify a real download or paid training run.
    The opt-in pod compatibility tests exercise a tiny actual model, assistant masks and GGUF conversion;
    Linux venv tests check dependency isolation and local storage. A full run additionally needs actual
-   optimizer progress, retrieved/checksummed epoch adapters and the provider's stopped-pod status.
+   optimizer progress, retrieved/checksummed epoch adapters, complete saved provenance and confirmed
+   pod deletion. Cleanup tests must also prove failed verification retains remote recovery data and
+   failed deletion reports a storage warning instead of claiming costs have ended.
    Behavioral A/B evaluation and runtime activation remain separate from training completion.
 9. For the controller, verify menu opening does not rearrange widgets, layout changes survive reload,
    old popouts close before switching layouts, and small windows keep controls reachable.

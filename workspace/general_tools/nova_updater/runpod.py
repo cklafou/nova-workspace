@@ -1,4 +1,4 @@
-# @nova: Runs a training bundle on the user's RunPod pod: start it, upload over SSH, train, download, verify, and always stop (never terminate) the pod.
+# @nova: Run paid LoRA training, always request GPU stop, and delete only the job pod after verified local adapters and provenance are preserved.
 """RunPod runner for LoRA training.
 
 Needs, in the local credentials file (never in the project):
@@ -9,8 +9,9 @@ Needs, in the local credentials file (never in the project):
 
 Spending rules: a paid run needs explicit confirmation and the provider's one-hour starting
 credit. The prepaid wallet is the spending limit: Nova never recharges it or stops at a custom
-run ceiling. Stop is requested on success, failure or cancellation; never terminate, because
-Terminate wipes /workspace. Estimated GPU cost and refreshed wallet credit stay in job history.
+run ceiling. Stop is requested on success, failure or cancellation. Only after local verification
+and installation may finalization delete this job's pod and its attached storage. Failed or cancelled
+runs retain recovery data and report storage costs. Separate network volumes are never deleted.
 """
 from __future__ import annotations
 
@@ -23,6 +24,7 @@ from pathlib import Path
 import shlex
 import subprocess
 import time
+import threading
 
 from . import jobs, net, paths, store
 
@@ -34,6 +36,7 @@ DEFAULT_IMAGE = "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404"
 DEFAULT_PER_HOUR = 3.0           # v6 actual on an H100 SXM was $3.01/h
 COST_MARGIN = 1.25
 CREDENTIAL_KEYS = ("runpod_api_key", "ssh_key_path", "pod_id", "hf_token")
+_CREDENTIALS_LOCK = threading.RLock()
 
 
 class RunPodError(RuntimeError):
@@ -56,23 +59,39 @@ def credentials_view() -> dict:
             "pod_id": data.get("pod_id", "")}
 
 
-def save_credentials(changes: dict) -> dict:
-    """Merge the provided fields (empty string clears one). Typed by the user in the UI."""
-    data = load_credentials()
-    for key in CREDENTIAL_KEYS:
-        if key in (changes or {}):
-            value = str(changes[key] or "").strip()
-            if value:
-                data[key] = value
-            else:
-                data.pop(key, None)
+def _write_credentials(data):
     target = paths.credentials_path()
     store.atomic_write_text(target, json.dumps(data, indent=2) + "\n")
     try:
         os.chmod(target, 0o600)
     except OSError:
         pass
-    return credentials_view()
+
+
+def save_credentials(changes: dict) -> dict:
+    """Merge user settings atomically with cleanup's compare-and-clear operation."""
+    with _CREDENTIALS_LOCK:
+        data = load_credentials()
+        for key in CREDENTIAL_KEYS:
+            if key in (changes or {}):
+                value = str(changes[key] or "").strip()
+                if value:
+                    data[key] = value
+                else:
+                    data.pop(key, None)
+        _write_credentials(data)
+        return credentials_view()
+
+
+def clear_deleted_pod(pod_id: str) -> bool:
+    """Forget only the confirmed-deleted pod; preserve a newly selected pod and all secrets."""
+    with _CREDENTIALS_LOCK:
+        data = load_credentials()
+        if data.get("pod_id") != pod_id:
+            return False
+        data.pop("pod_id")
+        _write_credentials(data)
+        return True
 
 
 def _amount(value, name):
@@ -170,6 +189,12 @@ class RunPodClient:
     def stop(self, pod_id: str) -> dict:
         return self._send(f"{REST}/pods/{pod_id}/stop", "POST", None, self._headers())
 
+    def delete(self, pod_id: str) -> dict:
+        # Pod-scoped only: never address or delete a shared network-volume resource.
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", str(pod_id)):
+            raise RunPodError("Invalid RunPod pod identifier; no deletion requested.")
+        return self._send(f"{REST}/pods/{pod_id}", "DELETE", None, self._headers())
+
     def create(self, body: dict) -> dict:
         return self._send(f"{REST}/pods", "POST", body, self._headers())
 
@@ -184,6 +209,9 @@ class RunPodRunner:
         self.hf_token, self._run, self._sleep, self.poll, self._clock = hf_token, run, sleep, poll, clock
         self.paid_confirmed = False
         self.cost_summary = {}
+        self._run_pod_id = None
+        self._downloaded_job_id = None
+        self._network_volume_id = None
         self.known_hosts = paths.state_dir() / "runpod_known_hosts"
         self.data_center_ids = list(DEFAULT_DATA_CENTERS if data_center_ids is None else data_center_ids)
         if not self.data_center_ids or any(not isinstance(value, str) or not re.fullmatch(r"[A-Z]{2,3}-[A-Z0-9]+-[0-9]+", value) for value in self.data_center_ids):
@@ -242,6 +270,81 @@ class RunPodRunner:
         self.cost_summary = summary
         job.set_runpod_cost(summary)
 
+    def _publish_cleanup(self, job, **changes):
+        self.cost_summary = {**self.cost_summary, **changes}
+        job.set_runpod_cost(self.cost_summary)
+
+    def retain_unverified(self, job):
+        """A failed, cancelled or locally unverified job must keep its remote recovery files."""
+        if not self._run_pod_id or self.cost_summary.get("pod_deleted") or self.cost_summary.get("cleanup_state") == "retained":
+            return
+        message = ("Pod retained for recovery because training, local verification or installation did not finish. "
+                   "Pod storage continues to incur charges; check RunPod Billing.")
+        self._publish_cleanup(job, cleanup_state="retained", storage_retained=True,
+                              pod_deleted=False, cleanup_message=message)
+        job.say("WARNING: " + message)
+
+    def finalize_success(self, job):
+        """Called only after train.run verifies installed adapters and complete local provenance."""
+        if self._downloaded_job_id != job.id:
+            raise RunPodError("Pod cleanup requires this job's completed download and local verification.")
+        if self.cost_summary.get("pod_deleted"):
+            return dict(self.cost_summary)  # Idempotent for the already-finalized attempt.
+        job.check_cancel()
+        pod_id = self._run_pod_id
+        if not pod_id:
+            raise RunPodError("No training pod is recorded for this job's cleanup.")
+        job.set_step("Deleting the pod after verified local installation")
+        self._publish_cleanup(job, cleanup_state="deleting", delete_requested=True,
+                              delete_error="", cleanup_message="Local adapters and provenance verified; confirming pod deletion.")
+        try:
+            self.client.delete(pod_id)
+        except Exception:
+            pass  # A lost response or an already-absent pod still requires GET-404 proof.
+        absent = False
+        for attempt in range(6):
+            try:
+                self.client.pod(pod_id)
+            except net.NetError as error:
+                if error.status_code == 404:
+                    absent = True
+                    break
+                if error.status_code in (400, 401, 403):
+                    break
+            except Exception:
+                pass
+            if attempt < 5:
+                self._sleep(2)
+        if not absent:
+            error = ("RunPod pod deletion could not be confirmed. Local adapters are installed, "
+                     "but retained pod storage may still incur charges; check the RunPod console.")
+            try:
+                self.client.stop(pod_id)
+                stop = {"stop_requested": True, "stop_error": ""}
+            except Exception:
+                stop = {"stop_requested": False,
+                        "stop_error": "RunPod did not accept the fallback stop; stop the pod in the RunPod console now."}
+            self._publish_cleanup(job, cleanup_state="cleanup_failed", pod_deleted=False, storage_retained=True,
+                                  delete_error=error, cleanup_message=error, **stop)
+            job.say("WARNING: " + error)
+            return dict(self.cost_summary)
+        # HTTP 404 is actual absence, unlike an empty DELETE response or a stop request.
+        message = "Pod deletion confirmed; its attached pod storage was removed."
+        if self._network_volume_id:
+            message += " A separate network volume remains; its storage charges continue and it was not deleted."
+        cleared = False
+        try:
+            cleared = clear_deleted_pod(pod_id)
+        except Exception:
+            message += " The saved pod setting could not be cleared; clear that deleted pod ID in Settings before another run."
+        self.pod_id = None  # Reusing this runner also creates a fresh pod on the next job.
+        self._publish_cleanup(job, cleanup_state="terminated", pod_deleted=True, storage_retained=False,
+                              delete_error="", stop_error="", cleanup_message=message,
+                              cleanup_verified_at=store.now_iso(), credentials_cleared=cleared,
+                              network_volume_retained=bool(self._network_volume_id))
+        job.say(message)
+        return dict(self.cost_summary)
+
     # ── SSH helpers ──────────────────────────────────────────────────────────────────────
     def _ssh(self, ip: str, port: int, command: str, timeout: float = 120) -> str:
         args = ["ssh", "-i", self.ssh_key, "-p", str(port), "-o", "StrictHostKeyChecking=accept-new",
@@ -274,10 +377,16 @@ class RunPodRunner:
         try:
             created = self.client.create(body)
         except Exception:
-            raise RunPodError("RunPod could not create this GPU in the selected data centers (" + ", ".join(self.data_center_ids) + "). Check availability and funding. No other region was selected automatically.") from None
+            message = ("RunPod creation could not be confirmed in " + ", ".join(self.data_center_ids) +
+                       ". Check the RunPod console for nova-lora-training before retrying: a pod may have been created, "
+                       "but its ID is unknown and Nova cannot stop it automatically. No other region was selected.")
+            self._publish_cleanup(job, cleanup_state="cleanup_failed", storage_retained=None, cleanup_message=message)
+            raise RunPodError(message) from None
         pod_id = created.get("id")
         if not pod_id:
-            raise RunPodError("RunPod did not return a pod id.")
+            message = "RunPod returned no pod ID. Check nova-lora-training in the console; creation may have succeeded and automatic stop is unavailable."
+            self._publish_cleanup(job, cleanup_state="cleanup_failed", storage_retained=None, cleanup_message=message)
+            raise RunPodError(message)
         self.pod_id = pod_id
         job.say(f"Created pod {pod_id} ({self.gpu}).")
         return pod_id
@@ -316,6 +425,11 @@ class RunPodRunner:
         job.set_step("Starting the RunPod pod")
         started = self._clock()
         pod_id = None
+        self._run_pod_id = self._downloaded_job_id = self._network_volume_id = None
+        self.cost_summary = {"cleanup_state": "pending_verification", "pod_deleted": False,
+                             "delete_requested": False, "delete_error": "", "storage_retained": True,
+                             "cleanup_message": "Pod is retained until local adapters and provenance are verified.",
+                             "cleanup_verified_at": None, "credentials_cleared": False}
         self._publish_cost(job, started, per_hour, funding=funding, stop_requested=False, stop_error="")
         # Persistent input packages are named runs under a friendly model directory.
         # Give every paid attempt its own remote folder; never reuse an old EXIT/checkpoint.
@@ -324,7 +438,10 @@ class RunPodRunner:
         launched = False
         try:
             pod_id = self.pod_id or self._create(job)
+            self._run_pod_id = pod_id
             info = self.client.pod(pod_id)
+            self._network_volume_id = info.get("networkVolumeId")
+            self._publish_cleanup(job, network_volume_retained=bool(self._network_volume_id))
             try:
                 actual_rate = float(info["costPerHr"])
                 if not math.isfinite(actual_rate) or actual_rate <= 0:
@@ -383,6 +500,8 @@ class RunPodRunner:
             job.set_step("Downloading the trained adapters")
             out_dir.parent.mkdir(parents=True, exist_ok=True)
             self._scp(ip, port, f"root@{ip}:{remote_bundle}/gguf_out", str(out_dir.parent))
+            job.check_cancel()
+            self._downloaded_job_id = job.id
             return out_dir.parent / "gguf_out"
         except jobs.Cancelled:
             if launched:
@@ -399,9 +518,11 @@ class RunPodRunner:
                 try:
                     self.client.stop(pod_id)
                     self._publish_cost(job, started, per_hour, refresh_wallet=True, stop_requested=True, stop_error="")
-                    job.say(f"Pod {pod_id} stop requested (not terminated). Approx. GPU cost "
+                    job.say(f"Pod {pod_id} stop requested; deletion waits for verified local installation. Approx. GPU cost "
                             f"${(self._clock() - started) / 3600 * per_hour:.2f}; provider billing and storage may differ.")
                 except Exception:
                     self._publish_cost(job, started, per_hour, stop_requested=False,
                                        stop_error="RunPod did not accept the stop request; stop it in the RunPod console now.")
                     job.say(f"WARNING: could not stop pod {pod_id}. Stop it in the RunPod console NOW.")
+            if self._downloaded_job_id != job.id:
+                self.retain_unverified(job)
