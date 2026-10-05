@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-05T21:02:34",
+  "generated": "2026-10-05T21:14:49",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -654,7 +654,7 @@
       "path": "general_tools/architecture_map",
       "purpose": "Generates Orient documentation and validates source, review and link freshness.",
       "files": 10,
-      "lines": 3289,
+      "lines": 3299,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
