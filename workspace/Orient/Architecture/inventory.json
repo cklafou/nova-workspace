@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "generated_at": "2026-10-05T18:30:16+00:00",
+  "generated_at": "2026-10-05T18:30:22+00:00",
   "input_sha256": "7966729c1698745baf5bfe021622f21ec4a859cab0283012f44669dcdb513707",
   "files": [
     {
@@ -8974,10 +8974,10 @@
     "start_llama_qwen36.cmd": "3297f9b8977d45d037c3043c9bafccd4c8f6a737a5dae5eb7f88dc171c6a2fb0"
   },
   "document_hashes": {
-    "README.md": "ecb2fd5fbae112fdda423018168e41632627e5fbcca292eca34f16a49487f627",
-    "ARCHITECTURE.md": "4b4c6d093f31b8c184d94e0934e23de8c39fdc2ae5a76c8126f41f645c6d0330",
-    "OPERATIONS.md": "a7c0f5b19bcd43f60f76affd7a538213ad73a286c5f840066371a212cf4fa3a6",
-    "INDEX.md": "69f479e4661905e96419dd8bc31398461d339a92380db2037896db8e982b5421"
+    "README.md": "79b117bce4386d711c3dc5b7e242e60a1060622ba1dc518105c89f5db065c444",
+    "ARCHITECTURE.md": "35603b48eef8f41230fda6b0805d1f028710854d84030232273ea9c3ff0d13fb",
+    "OPERATIONS.md": "de119aa5d36054e98174a5e83b24a07febab8784519f9cc6f15b87c492651d13",
+    "INDEX.md": "5ea611e72f6a2904a52425c3ddd44363a06741815aaeefb45e2e613e5cd37896"
   },
   "review_needed": [
     "ARCHITECTURE.md#Runtime evidence and open modernization work"

@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T18:30:16+00:00 from source (input `7966729c1698`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T18:30:22+00:00 from source (input `7966729c1698`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
