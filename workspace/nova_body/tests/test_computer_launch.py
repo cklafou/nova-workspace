@@ -25,7 +25,7 @@ class LaunchProbeTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         (self.root / 'logs').mkdir()
 
-    def run_probe(self, *, code=None, window_pid=None, before=False, process_name='firefox', display_ok=True, executable=None):
+    def run_probe(self, *, code=None, window_pid=None, before=False, process_name='firefox', display_ok=True, executable=None, before_error=False):
         owner = window_pid or 321
         proc_dir = self.root / str(owner)
         proc_dir.mkdir()
@@ -49,6 +49,8 @@ class LaunchProbeTests(unittest.TestCase):
                 count += 1
                 visible = window_pid is not None and (before or count > 1)
                 out, rc = ('900', 0) if visible else ('', 1)
+                if count == 1 and before_error:
+                    out, err, rc = '', 'Cannot enumerate windows', 2
             elif argv[1] == 'getwindowname':
                 out = 'Example browser window'
             elif argv[1] == 'getwindowpid':
@@ -136,6 +138,22 @@ class LaunchProbeTests(unittest.TestCase):
     def test_preexisting_browser_window_cannot_prove_new_launch(self):
         result, _ = self.run_probe(code=0, window_pid=999, before=True)
         self.assertEqual(result['status'], 'unknown')
+
+
+    def test_failed_initial_window_probe_cannot_certify_an_existing_browser(self):
+        result, _ = self.run_probe(code=0, window_pid=999, before=True, before_error=True)
+        self.assertEqual(result['status'], 'unknown')
+        self.assertIn('Cannot enumerate', result['window_probe_error'])
+
+    def test_warning_lines_do_not_discard_the_verifier_result(self):
+        h = Hands.__new__(Hands)
+        h.display = ':1'
+        result = {'status':'succeeded','windows':[{'id':'123'}],'stderr':''}
+        h._run = Mock(return_value=(0, 'profile warning\nNOVA_LAUNCH_RESULT:'+json.dumps(result)+'\ninterop warning'))
+        answer = h.launch('firefox', wait=0)
+        self.assertEqual(answer['status'], 'succeeded')
+        self.assertIn('profile warning', answer['verifier_diagnostics'])
+        self.assertIn('interop warning', answer['verifier_diagnostics'])
 
 
 class DesktopContractTests(unittest.TestCase):

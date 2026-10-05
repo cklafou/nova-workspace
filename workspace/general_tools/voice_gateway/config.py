@@ -1,5 +1,5 @@
+# @nova: Configure detachable voice input, playback, audit policy and body-event outputs.
 # Last updated: 2026-10-04 15:01:23
-# @nova-adjacent: voice_gateway — configuration. All knobs in one place; overridable from
 #   _admin/voice_gateway.json and env. No secrets here (there are none — this tool is local).
 """voice_gateway/config.py — every tunable for the gateway, with safe defaults."""
 from __future__ import annotations
@@ -25,16 +25,18 @@ class GatewayConfig:
     nova_ws_url: str = "ws://127.0.0.1:8765/ws"
     speaker: str = "Cole"                 # whose voice the transcribed speech is attributed to
 
-    # ── register: "text" (unchanged, full witness rounds), "voice" (rounds capped at 2),
-    #    or "voice_fast" (rounds capped + reasoning skipped on casual first replies).
-    #    Sent in the message payload; the server ignores it until the register patch is applied
-    #    (see server_patch.md), so this is safe to set now. ────────────────────────────────
+    # ── register: "text", "voice" or "voice_fast", sent with every utterance. Nova Chat validates
+    #    it per request (2026-10-05 contract); it never switches a human request into autonomous mode.
     register: str = "voice"
 
-    # ── committer: when do we speak? "final" waits for the witness-approved message_end
-    #    (SAFE default — nothing unaudited is spoken). "stream" speaks sentences as they
-    #    generate (faster first audio, but pre-audit — only for voice_fast / casual). ────────
-    speak_from: str = "final"             # "final" | "stream"
+    # ── speech policy (first stage). Only text Nova Chat DELIVERED is spoken; delivered is not
+    #    the same as witness-approved, so the audit status rides along on every caption.
+    speak_from: str = "final"             # first stage: "final" only ("stream" is ignored, with a warning)
+    speak_scope: str = "mine"             # "mine" = replies to this gateway's own request_ids;
+                                          # "replies" = any delivered reply to a human line (reply_to set)
+    audit_gate: str = "delivered"         # "delivered": speak any delivered reply, its audit status attached;
+                                          # "pass_only": speak only an explicit PASS (NOT_RUN stays silent)
+    request_timeout_s: int = 300          # give up on a request with no end (never stay "thinking")
     min_chars: int = 7
     max_buffer: int = 220
 
@@ -58,8 +60,13 @@ class GatewayConfig:
     output_device: int = -1               # -1 = system default speakers
 
     # ── behavior ──────────────────────────────────────────────────────────────────────────
-    barge_in: bool = True                 # stop speaking if Cole starts talking (needs full run)
-    log_units: bool = True                # print each committed unit (observability, like pipeline)
+    duplex: str = "half"                  # "half": the mic is ignored while she speaks (+ tail), so her
+                                          # voice is never transcribed as Cole's; "full": headphones/AEC
+    half_duplex_tail_ms: int = 400
+    barge_in: bool = True                 # full duplex only: Cole starting to talk stops her speech
+    body_sink: str = "none"               # "none" | "stdout" | "jsonl" — v1 body events (see body.py)
+    body_log_path: str = "logs/voice/body_events.jsonl"
+    log_units: bool = True                # print each unit as it is spoken
 
     @classmethod
     def load(cls) -> "GatewayConfig":

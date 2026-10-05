@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-04T06:10:46+00:00 from source (input `44a2b436340f`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T08:39:36+00:00 from source (input `f6544527427c`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -56,6 +56,8 @@ or enumerate installed weights. The controller status bar distinguishes Chat onl
 
 ## Configuration and evidence
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `nova_body/nova_cortex/workspace_context.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Configuration and evidence"`.
+
 Collaboration is a detachable controller service (`general_tools/nova_chat/collaboration.py`). Its
 SQLite history and per-agent credentials live outside the repository at
 `%USERPROFILE%/ProjectNovaData/Collaboration`. Messages never enter chat sessions, runtime transcripts,
@@ -96,7 +98,9 @@ same-size edits with unchanged timestamps; it is not a census of every imported 
 New structured receipts distinguish success, failure, refusal,
 timeout, cancellation and unknown. Guest receipts include their shell/display context. Pipeline
 shows tool start and terminal outcomes rather than only witness work; its operation IDs link to
-the tool ledger. Witness incomplete/error statuses are unverified, never approval. Historical
+the tool ledger. Unknown terminal tool outcomes use neutral `tool_finished`, not a successful
+completion label. Witness incomplete/error statuses are unverified, never approval. A historical
+`witness_answered` with an incomplete/error status remains visibly unverified. Historical
 Pipeline rows whose recorded approval contains a tool request are shown as incomplete by the
 controller without rewriting the original log. Historical receipts retain their original values; older
 `ok: true` entries can mislabel nonzero exits. Validate their artifacts independently. A running
@@ -104,6 +108,8 @@ port does not prove successful inference. The Control widget exposes task schedu
 stop/resume, memory ingestion health and VM handoff through `/api/runtime/state` and related routes.
 
 ## Access and practical debugging
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/server.py::_LOOPBACK_ONLY`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Access and practical debugging"`.
 
 Nova's host access is intentional. The chat server has loopback exemptions, bearer authentication
 for remote HTTP clients, and restrictions on remote routes. Speaker capability checks are a separate
@@ -127,6 +133,8 @@ results recoverable and surface any retained-storage charge. The Hugging Face ca
 disk rather than a slow network mount.
 
 ## Test meaningful behavior
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/voice_gateway/test_voice_flow.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -158,6 +166,14 @@ disk rather than a slow network mount.
     updater conflicts, inherited transition guards, failed startup, app-quit cancellation and draft
     restoration. A browser fixture can prove buttons/reconnection with simulated services; the
     separate live check must confirm full start/stop, model readiness and native window continuity.
+
+11. For voice, run `general_tools/nova_chat/tests/test_voice_transport.py`, `nova_body/tests/test_model_client.py`,
+    `nova_body/tests/test_witness_delivery.py` and the gateway's `test_voice_flow.py`,
+    `test_link_socket.py` and `test_committer.py`. Use fake providers/audio and disposable state first.
+    Distinguish a local socket fixture from a live Nova turn; test wrong identities, delayed replies,
+    cancellation during synthesis, Stop, queue replacement and audit status before native playback.
+    Measure mic/STT, first-audio latency, interruption and avatar timing separately on real hardware.
+    Respect Cole's current instruction to keep Nova/models/audio off while he is gaming.
 
 ## Files and recovery
 
@@ -204,6 +220,8 @@ notes), which Orient lists but never quotes; backups; and formats without commen
 A generated file gets its purpose line from the code that writes it.
 
 ## Security model
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_LOOPBACK_ONLY`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
 
 Nova's reach is intentional — Cole: *"My machine is her body. If she can't use it fully, she is
 crippled."* Every control here is about **who can reach her from outside**, not what she may do
@@ -272,6 +290,11 @@ and block updater mutations. This is lifecycle coordination, not a repair of the
 identity gaps. Quiesce is accepted only during a pending transition and must acknowledge drained
 operations and saved session state before the owned worker is terminated.
 
+Voice request IDs, reply links and run IDs are correlation fields, not authentication. They let
+clients reject unrelated or stale output; they do not close the WebSocket exposure described
+above. Chat-only and lifecycle rejections may complete a correlated request without storing its
+text in Nova's body. A future remote voice gateway still needs the transport identity work above.
+
 ### Who is speaking — `nova_cortex/principals.py`
 
 This lives in her body, not the server, because who someone is to her is part of how she thinks.
@@ -322,19 +345,30 @@ or a bad value falls back to the registered default (an unregistered key returns
 is bounded: `set()` clamps to `min`/`max`. A migrated knob's default equals the literal it replaces, so
 registering it changes nothing until someone turns it.
 
+Audit evidence controls include `witness_receipt_chars` (default 2,400 per output),
+`witness_total_receipt_chars` (24,000 shared across outputs) and `witness_max_images` (four across
+attachments and tool frames). Truncated output and omitted images are explicitly disclosed;
+they do not certify an unseen claim. `computer_launch_wait_seconds` defaults to ten seconds
+for guest window verification. These defaults change the earlier narrow evidence slices and
+three-second launch wait; no personal tunables store was rewritten.
+
 Currently registered, read from `REGISTRY`:
 
 | Knob | Label | Category | Default | Range |
 |---|---|---|---|---|
 | `autonomy_wake_budget_seconds` | Time per autonomous wake | Autonomy | `300` | 30–1800 |
 | `max_tool_loops` | Max tool-chain depth | Cognition | `60` | 10–120 |
+| `computer_launch_wait_seconds` | Application window verification wait | Computer | `10` | 1–20 |
 | `voice_fast_thinking_off` | Voice-fast skips reasoning | Voice | `True` | on / off |
 | `binding_cloud_escalation` | Binding cloud escalation | Witness | `True` | on / off |
 | `heavy_witness_enabled` | Cloud heavy witness | Witness | `True` | on / off |
 | `hold_back_streaming` | Hold-back streaming | Witness | `True` | on / off |
 | `witness_deadlock_repeats` | Deadlock threshold | Witness | `3` | 2–10 |
+| `witness_max_images` | Total images per witness audit | Witness | `4` | 1–8 |
 | `witness_max_rounds` | Witness rounds — text | Witness | `20` | 1–40 |
 | `witness_max_rounds_voice` | Witness rounds — voice | Witness | `2` | 1–8 |
+| `witness_receipt_chars` | Output characters per audit receipt | Witness | `2400` | 400–12000 |
+| `witness_total_receipt_chars` | Total output characters in audit receipts | Witness | `24000` | 4000–80000 |
 
 ## Lessons from incidents
 
@@ -420,6 +454,8 @@ its temp folder stopped autosave (lesson 7 above).
 
 ## Controller menus and layouts
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/static/index.html`. Re-read it against the code, update it in `general_tools/architecture_map/notes/controller_layouts.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Controller menus and layouts"`.
+
 Nova Chat has one workspace. The top application bar contains expandable menus; opening Services,
 Advanced or Appearance leaves the dock arrangement alone. Widgets opens the widget choices, including
 Collaboration and Model updates. The optional Services and Generation widgets mirror the original menu
@@ -496,6 +532,11 @@ Live log includes recorded history as well as new events. Earlier dates are disp
 event labels distinguish scheduled reminders from model responses. A `stretch_nudge` comes from the
 existing shelf watcher called at autonomy startup: its canned wording does not demonstrate fresh model
 inference. Its posture record freshness is a separate runtime issue; the controller does not alter it.
+
+Pipeline pairs tool starts and terminal results by operation ID. Unknown outcomes remain neutral
+and count as finished steps; they are not displayed as successful. A revised answer whose audit
+is INCOMPLETE or ERROR retains that status instead of appearing as a successful correction.
+The October 4 review follow-through passes 23 isolated Pipeline scenarios, including these cases.
 
 ## Model updates
 
@@ -710,4 +751,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 70, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** none.
+**Sections awaiting review:** `ARCHITECTURE.md#Body faculties`, `ARCHITECTURE.md#Execution path`, `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Access and practical debugging`, `OPERATIONS.md#Configuration and evidence`, `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Security model`, `OPERATIONS.md#Test meaningful behavior`.

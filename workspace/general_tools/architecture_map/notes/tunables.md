@@ -26,6 +26,13 @@ or a bad value falls back to the registered default (an unregistered key returns
 is bounded: `set()` clamps to `min`/`max`. A migrated knob's default equals the literal it replaces, so
 registering it changes nothing until someone turns it.
 
+Audit evidence controls include `witness_receipt_chars` (default 2,400 per output),
+`witness_total_receipt_chars` (24,000 shared across outputs) and `witness_max_images` (four across
+attachments and tool frames). Truncated output and omitted images are explicitly disclosed;
+they do not certify an unseen claim. `computer_launch_wait_seconds` defaults to ten seconds
+for guest window verification. These defaults change the earlier narrow evidence slices and
+three-second launch wait; no personal tunables store was rewritten.
+
 Currently registered, read from `REGISTRY`:
 
 {{TUNABLES_TABLE}}

@@ -74,6 +74,11 @@ and block updater mutations. This is lifecycle coordination, not a repair of the
 identity gaps. Quiesce is accepted only during a pending transition and must acknowledge drained
 operations and saved session state before the owned worker is terminated.
 
+Voice request IDs, reply links and run IDs are correlation fields, not authentication. They let
+clients reject unrelated or stale output; they do not close the WebSocket exposure described
+above. Chat-only and lifecycle rejections may complete a correlated request without storing its
+text in Nova's body. A future remote voice gateway still needs the transport identity work above.
+
 ### Who is speaking — `nova_cortex/principals.py`
 
 This lives in her body, not the server, because who someone is to her is part of how she thinks.

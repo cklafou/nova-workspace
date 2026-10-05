@@ -3189,6 +3189,7 @@ const _PL_META={
   witness_error:      {i:'⚠', t:'Audit error',               c:'err'},
   tool_started:       {i:'◌', t:'Tool running',              c:'running'},
   tool_completed:     {i:'✓', t:'Tool completed',            c:'ok'},
+  tool_finished:      {i:'•', t:'Tool finished; outcome unknown',c:'neutral'},
   tool_failed:        {i:'×', t:'Tool failed',               c:'err'},
   witness_concern:    {i:'❓', t:'Witness objected',        c:'held'},
   witness_answered:   {i:'💬', t:'She answered & revised',  c:'ok'},
@@ -3265,6 +3266,11 @@ function _plExplicitPass(verdict){
   return /^PASS[.!]?$/i.test(text);
 }
 function _plNormalizeEvent(event){
+  if(event.stage==='witness_answered'&&['INCOMPLETE','ERROR'].includes(event.status)){
+    return {...event,original_stage:event.stage,stage:event.status==='ERROR'?'witness_error':'witness_incomplete',
+      reason:'Nova revised her reply, but the final audit is '+event.status+'. Revision is not approval.'};
+  }
+
   // Old logs can say witness_pass while retaining a JSON read request as their
   // verdict. Correct its presentation without rewriting Nova's historical record.
   if(['witness_pass','witness_answered'].includes(event.stage)&&!_plExplicitPass(event.verdict)){
@@ -3286,7 +3292,7 @@ function _plToolStatus(event){
 function _plToolSteps(events){
   const steps=[],byId=new Map();
   for(const event of events){
-    if(!['tool_started','tool_completed','tool_failed'].includes(event.stage))continue;
+    if(!['tool_started','tool_completed','tool_finished','tool_failed'].includes(event.stage))continue;
     const id=event.operation_id?String(event.operation_id):'unpaired-'+steps.length;
     let step=byId.get(id);
     if(!step){step={id,started:null,event};steps.push(step);byId.set(id,step);}
@@ -3342,7 +3348,7 @@ function _plRenderGroup(g){
   // repeats (the same draft rides along on several events).
   const evs=g.events.map(_plNormalizeEvent);
   const last=evs[evs.length-1];
-  const toolStage=['tool_started','tool_completed','tool_failed'].includes(last.stage);
+  const toolStage=['tool_started','tool_completed','tool_finished','tool_failed'].includes(last.stage);
   const toolStatus=toolStage?_plToolStatus(last):null;
   const oc=toolStage?{t:toolStatus.label+' · '+(last.tool||'Tool'),c:toolStatus.color,d:last.detail||'Tool progress; full inputs and output are in Activity.'}
     :(_PL_OUTCOME[last.stage]||{t:_plTitle(last.stage),c:'neutral',d:last.what||last.detail||'No interpretation is registered for this event.'});
@@ -6281,5 +6287,7 @@ if(new URLSearchParams(location.search).get('layout')==='legacy'){
 <script src="/static/updater.js?v=updater-cleanup-1"></script>
 <script src="/static/workspace.js?v=manual-layout-2"></script>
 <script src="/static/conversation-power.js?v=conversation-power-1"></script>
+<link rel="stylesheet" href="/static/voice.css?v=conversation-voice-1">
+<script src="/static/voice.js?v=conversation-voice-1"></script>
 </body>
 </html>

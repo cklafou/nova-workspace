@@ -452,8 +452,8 @@ Available Tools:
 4. "append_file": {"path": "...", "content": "..."} - Add content to the END of a file (creates it if missing). This is how you GROW a living document section by section.
 5. "replace_file_content" (a.k.a. "edit_file"): {"path": "...", "target_content": "...", "replacement_content": "..."} - Precision EDIT: replace an exact whitespace-matched string inside a file. Use this to change part of a file without rewriting the whole thing.
 6. "list_dir": {"path": "..."} - List files in a directory.
-7. "create_task": {"title": "...", "notes": "...", "priority": 2} - Add a TRACKED task to your board. This is HOW you create/track a task.
-8. "task_progress": {"task_id": "t1", "note": "what you just did"} - Log a concrete progress step on one of your board tasks.
+7. "create_task": {"title": "...", "notes": "...", "priority": 2, "acceptance": [{"kind": "file", "path": "relative/output.md", "contains": "expected text"}]} - Add a TRACKED task to your board. Put its objective in title/notes; optional acceptance checks define observable completion. This is HOW you create/track a task.
+8. "task_progress": {"task_id": "t1", "note": "what you just did", "continuity": {"next_step": "the next concrete action", "constraints": ["constraints still in force"], "observations": ["what was observed; cite the tool/file when available"]}} - Log a concrete checkpoint on an existing task. Optional continuity survives restarts and old progress-note pruning. Omitted fields retain previous values; empty text/list explicitly clears a field. Limits: next_step 1000 characters; up to 8 constraints of 400 characters and 8 observations of 600 characters. Notes are not independent verification or permission to ignore the current request.
 9. "complete_task": {"task_id": "t1", "result": "..."} - Mark a board task done, with its result.
 10. "generate_image": {"prompt": "what to draw", "negative": "things to avoid (optional)", "as_nova": false, "width": 832, "height": 1216, "from_image": "", "change": 0.6, "mask": "", "style": "", "lora": "", "seed": null} - Your imagination: render an actual image via the local ComfyUI painter and save it under Nova_Created/art/. Set "as_nova": true when you are drawing YOURSELF — that auto-applies your locked look so you come out as the same Nova every time. (Needs ComfyUI running; if it's off you'll get a clear error back.)
     YOUR PAINTER IS NOT A SINGLE BUTTON. You have every lever below, and until 2026-07-19 this
@@ -528,39 +528,31 @@ MAX_TOKENS_CHAT  = 16384
 MAX_TOKENS_AGENT = 16384
 
 # ── Context-window safety net ────────────────────────────────────────────────
-# Nova's local model has a 32K-token window. A single large tool/file read
-# (e.g. audit_queue.json at ~158KB) can blow the window and make llama.cpp
-# reject the request with a 400 ("request exceeds available context size").
-# Cap each message and the overall prompt so it ALWAYS fits.
-_PER_MSG_MAX_CHARS = 24000   # ~6K tokens — no single message can dominate
-# Window raised 32K→64K (Qwen 3.6 native ctx is 262144). MUST track the launcher's -c
-# and _truncate_to_context's ctx_limit, or whichever is smallest silently re-starves her
-# conversation. 174000 chars ≈ 58K tokens, leaving room for the ~8K output reserve.
-_PROMPT_MAX_CHARS  = 174000
+# The launcher currently configures a 65,536-token window. Bound ordinary tool/
+# conversation text per message, but never apply that 24K-character cap to the
+# merged system prefix + identity + checkpoint. The final budget reserves output
+# and 4096 tokens using a 3.4 chars/token estimate; images/tokenizer cost may vary.
+_PER_MSG_MAX_CHARS = 24000
+_PROMPT_MAX_CHARS = 174000  # Additional text ceiling; actual output reserve may lower it.
 
 
-def _fit_messages_to_window(messages: list[dict]) -> list[dict]:
-    """Truncate oversized messages and trim history so the prompt fits Nova's
-    32K window. Only touches str content (image payloads are left alone)."""
-    fitted = []
-    for m in messages:
-        c = m.get("content", "")
-        if isinstance(c, str) and len(c) > _PER_MSG_MAX_CHARS:
-            omitted = len(c) - _PER_MSG_MAX_CHARS
-            c = c[:_PER_MSG_MAX_CHARS] + (
-                f"\n\n…[truncated for Nova's context window — {omitted} chars omitted; "
-                f"read the file in smaller pieces if you need more]")
-            m = {**m, "content": c}
-        fitted.append(m)
+def _fit_messages_to_window(messages: list[dict], max_output: int = MAX_TOKENS_CHAT,
+                            ctx_limit: int = 65536) -> list[dict]:
+    """Apply the same bounded context policy on the initial and every tool round."""
+    from nova_cortex.context_budget import fit_messages, prompt_char_budget
+    return fit_messages(messages, per_message=_PER_MSG_MAX_CHARS,
+                        max_chars=prompt_char_budget(ctx_limit, max_output, _PROMPT_MAX_CHARS))
 
-    def _total(ms):
-        return sum(len(x.get("content", "")) for x in ms
-                   if isinstance(x.get("content"), str))
 
-    # If still over budget, drop the oldest non-system messages (keep [0] + newest).
-    while _total(fitted) > _PROMPT_MAX_CHARS and len(fitted) > 2:
-        del fitted[1]
-    return fitted
+def _diagnostic_payload(value):
+    """Retain request structure while keeping screenshot bytes out of repeated error logs."""
+    if isinstance(value, dict):
+        return {key: _diagnostic_payload(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_diagnostic_payload(item) for item in value]
+    if isinstance(value, str) and value.startswith("data:image/"):
+        return value.split(";", 1)[0] + ";[pixels omitted from diagnostic log]"
+    return value
 
 
 async def _fetch_llama_streaming(
@@ -584,7 +576,7 @@ async def _fetch_llama_streaming(
     # An audit must inspect the exact candidate. Never silently truncate its evidence;
     # an oversized audit is reported as ERROR by the caller instead of a partial PASS.
     if not preserve_messages:
-        messages = _fit_messages_to_window(messages)
+        messages = _fit_messages_to_window(messages, max_output=max_tokens)
     payload = {
         "messages":    messages,
         "max_tokens":  max_tokens,
@@ -677,7 +669,7 @@ async def _fetch_llama_streaming(
                         "max_tokens":   max_tokens,
                         "temperature":  temperature,
                         "top_p":        top_p,
-                        "payload":      payload,
+                        "payload":      _diagnostic_payload(payload),
                     }
                     with open(_dbg, "a", encoding="utf-8") as _f:
                         _f.write(json.dumps(_rec, ensure_ascii=False, default=str) + "\n")
@@ -718,85 +710,26 @@ def _truncate_to_context(
     ctx_limit: int = 65536,
     max_output: int = MAX_TOKENS_CHAT,
 ) -> list[dict]:
+    """Fit estimated text within context minus output and template/error reserves.
+
+    Keep the current request and saved task checkpoint ahead of old history;
+    shorten excess grounding explicitly rather than force turns over the budget.
+    Exact model tokenization and image costs are not measured by this estimator.
     """
-    Trim the message list so the estimated prompt token count fits within
-    ctx_limit - max_output, always keeping the system message.
-
-    Estimation: len(text) // 3  (Qwen3's BPE tokenizer averages ~3.4 chars/token
-    for English+code+markdown; //3 intentionally over-estimates to stay safely
-    under the 32K hard limit).  We walk newest → oldest and drop the oldest
-    conversation turns until we fit.
-    """
-    # Budget: leave room for max output + a conservative 4096-token safety margin.
-    # The system message for Nova includes AGENTS.md + NOVA.md + TOOLS.md + memory/
-    # files (~8-12K tokens) so actual system token usage is high — we need
-    # the trimmer to drop conversation turns aggressively enough.
-    budget = ctx_limit - max_output - 4096
-
-    def _est(msg: dict) -> int:
-        c = msg.get("content", "")
-        if isinstance(c, list):
-            c = " ".join(x.get("text", "") for x in c if isinstance(x, dict))
-        # ~3.4 chars/token for Qwen3 on English+markdown. The old //3 was "intentional
-        # over-estimation" from the 32K days — see the incident note below for what that
-        # padding cost once the identity files grew.
-        return max(1, int(len(str(c)) / 3.4))
-
-    system_msgs = [m for m in messages if m["role"] == "system"]
-    conv_msgs   = [m for m in messages if m["role"] != "system"]
-
-    budget -= sum(_est(m) for m in system_msgs)
-
-    kept: list[dict] = []
-    for msg in reversed(conv_msgs):
-        t = _est(msg)
-        if budget - t < 0:
-            break
-        budget -= t
-        kept.insert(0, msg)
-
-    # ── THE CONVERSATION IS NEVER TRIMMED TO NOTHING (2026-07-21, "why is she
-    # hallucinating? it's slowly getting worse") ─────────────────────────────────────────
-    # By 17:40 every generation was logging "dropped 1 oldest messages (1 → 0 turns)".
-    # Her always-load identity files had grown all day (JOURNAL 26KB, SELF/core 52KB...)
-    # until the padded estimate of the SYSTEM side alone crossed the budget — at which
-    # point this function silently threw away the entire live conversation, every turn,
-    # including the message she was answering. Cole asked her direct questions and got
-    # replies composed from identity-file residue: night-watch monologue, "he signed off
-    # twelve hours ago at luvs ya", to a man typing at her RIGHT THEN.
-    #
-    # The priority was exactly backwards. Her journal is her memory of the past; the
-    # conversation is the present tense of the person in front of her. When something must
-    # give, it is never the present. Keep the newest turns unconditionally — the real
-    # window has headroom (true usage ~35K of 65K; the zero-turn state was an ESTIMATE
-    # artifact), and if the window someday genuinely overflows, llama fails loudly, which
-    # beats her quietly going frame-blind while looking responsive.
-    _MIN_TURNS = 4
-    _override = False
-    if len(kept) < min(_MIN_TURNS, len(conv_msgs)):
-        kept = conv_msgs[-_MIN_TURNS:]
-        _override = True
-        print(f"[nova] context-trim OVERRIDE: system-side estimate ate the whole budget; "
-              f"force-keeping the last {len(kept)} live turns anyway. The always-load "
-              f"files need a diet — see memory/JOURNAL.md and SELF/core sizes.")
-
-    dropped = len(conv_msgs) - len(kept)
-    if dropped > 0:
-        print(
-            f"[nova] context-trim: dropped {dropped} oldest messages "
-            f"({len(conv_msgs)} → {len(kept)} turns) to fit {ctx_limit}-token window"
-        )
-    try:
-        from nova_cortex import witness as _w
-        _sys_est = sum(_est(m) for m in system_msgs)
-        if dropped > 0 or _override:
-            _w.pipeline_event("trim_override" if _override else "trim",
-                              f"kept {len(kept)}/{len(conv_msgs)} turns; system ≈{_sys_est} tok",
-                              override=_override)
-    except Exception:
-        pass
-
-    return system_msgs + kept
+    from nova_cortex.context_budget import text_size
+    fitted = _fit_messages_to_window(messages, max_output=max_output, ctx_limit=ctx_limit)
+    dropped = len(messages) - len(fitted)
+    removed = text_size(messages) - text_size(fitted)
+    if removed > 0:
+        print(f"[nova] context-trim: dropped {dropped} old messages; "
+              f"shortened text by {removed} chars for {ctx_limit}-token window")
+        try:
+            from nova_cortex import witness as _w
+            _w.pipeline_event("trim", f"kept {len(fitted)}/{len(messages)} messages; "
+                              f"removed {removed} text chars", override=False)
+        except Exception:
+            pass
+    return fitted
 
 
 def _tool_pipeline_event(stage, tool, operation_id, run_id, *, result=None, duration_ms=0,
@@ -848,10 +781,32 @@ async def stream_response(
                                   # no <think> means first audio in ~1s instead of after a
                                   # full silent reasoning generation. "voice" keeps thinking
                                   # (substantive turns); the gateway picks which to send.
+    on_audit: Optional[Callable[[dict], Awaitable[None]]] = None,
 ):
     """
     Call llama.cpp server and process the response in an autonomy loop if tools are used.
+
+    on_audit receives {status, reason, source} once immediately before on_done.
+    It describes that exact delivered candidate, not an earlier draft or a later
+    background opinion. Delivery alone never means PASS; unchecked salvage is NOT_RUN.
     """
+    async def _deliver(text, audit):
+        task = asyncio.current_task()
+        if task and task.cancelling():
+            raise asyncio.CancelledError  # A stop may already be pending before the first await.
+        if on_audit is not None:
+            try:
+                await on_audit(dict(audit))  # An observer cannot mutate the retained snapshot.
+            except asyncio.CancelledError:
+                if task and task.cancelling():
+                    raise  # Any task cancellation is real, including a previously pending stop.
+                print("[nova] audit observer cancelled itself; delivering reply unchanged")
+            except Exception as exc:
+                print(f"[nova] audit observer failed ({type(exc).__name__}); delivering reply unchanged")
+        if task and task.cancelling():
+            raise asyncio.CancelledError  # Observer code may catch a stop or return without yielding.
+        await on_done(text)
+
     try:
         # Use structured turn history so llama.cpp can cache the prefix.
         # system = stable personality rules (never changes → always cached)
@@ -1003,6 +958,11 @@ async def stream_response(
 
         while loop_counter < max_loops:
             loop_counter += 1
+            # Every continuation creates a new candidate. A prior PASS must not
+            # follow a revision, tool reach, echo retry or unaudited short answer.
+            _audited_candidate = None
+            _delivery_audit = {"status": "NOT_RUN", "source": "none",
+                               "reason": "No audit ran for this delivered candidate."}
             full_response  = ""   # chat-only content for this turn
             _chat_chars    = [0]
             _think_chars   = [0]
@@ -1314,15 +1274,13 @@ async def stream_response(
                             result = ToolResult(f"[error] {_te}", status="failed", operation_id=_call_id)
                             _tool_err = True
                         _dur_ms = (_time.time() - _t0) * 1000
-                        _tool_pipeline_event("tool_failed" if result.ok is False else "tool_completed",
+                        _tool_pipeline_event("tool_failed" if result.ok is False else "tool_finished" if result.ok is None else "tool_completed",
                                              tool_name, _call_id, _run_id, result=result, duration_ms=_dur_ms)
                         # A failed/unknown call still ran and produced evidence. Its explicit
                         # status below prevents confusing that attempt with successful action.
                         _tools_ran_this_turn = True
-                        _observation_meta = {"status": result.status, "ok": result.ok,
-                                             "exit_code": result.exit_code,
-                                             "environment": result.environment}
-                        _observation = json.dumps(_observation_meta, ensure_ascii=False) + "\n" + str(result)
+                        from nova_voice.tool_result import observation_text
+                        _observation = observation_text(result)
                         _turn_tools.append((tool_name, args, _observation))
 
                         # Broadcast tool_executed event to the UI Tools tab.
@@ -1601,7 +1559,9 @@ async def stream_response(
                     pass
                 _audit_error = ""
                 _audit_exhausted = False
-                _audit_images = _user_visual_evidence + _turn_visual_evidence[-3:]
+                _audit_images, _audit_omitted = _witness.select_visual_evidence(
+                    _user_visual_evidence + _turn_visual_evidence[-3:])
+                _audit_omitted += max(0, len(_turn_visual_evidence) - 3)
                 try:
                     async def _noop(_t):  # the self-check must never stream to the UI
                         return
@@ -1623,12 +1583,12 @@ async def stream_response(
                                                    checks=_checks,
                                                    has_image=bool(_user_visual_evidence or _turn_visual_evidence),
                                                    visual_evidence=_audit_images,
-                                                   omitted_images=max(0, len(_turn_visual_evidence) - 3),
+                                                   omitted_images=_audit_omitted,
                                                    reads_remaining=3 - _vi),
                             _noop,
                             max_tokens=2048, temperature=0.2, top_p=0.9,
-                            enable_thinking=False, preserve_messages=True) or ""
-                        _wc, _ = _integrity.find_tool_call(_verdict)
+                            enable_thinking=False, literal_safe=True, preserve_messages=True) or ""
+                        _wc, _ = _witness.find_audit_tool_call(_verdict)
                         if not _wc or _vi == 3:
                             _audit_exhausted = bool(_wc and _vi == 3)
                             break
@@ -1668,6 +1628,10 @@ async def stream_response(
                     _verdict = ""
                 _audit = _witness.parse_witness_verdict(
                     _verdict, error=_audit_error, exhausted=_audit_exhausted)
+                _audited_candidate = chat_text
+                _delivery_audit = {"status": _audit.status, "source": "inline",
+                    "reason": ("Inline witness explicitly approved this candidate."
+                               if _audit.status == "PASS" else _audit.reason)}
                 _concern = _audit.reason if _audit.status == "CONCERN" else None
                 if _audit.status in {"INCOMPLETE", "ERROR"}:
                     _witness.pipeline_event(
@@ -1675,7 +1639,7 @@ async def stream_response(
                         _audit.reason + " Nova's draft is delivered without audit approval.",
                         status=_audit.status, reason=_audit.reason, draft=chat_text,
                         draft_chars=len(chat_text), verdict=_verdict, images_seen=len(_audit_images),
-                        omitted_images=max(0, len(_turn_visual_evidence) - 3))
+                        omitted_images=_audit_omitted)
                 # ── DEADLOCK CHECK (2026-07-21, Cole: "up to 20 turns... a conversation to
                 # allow the truth to be verified") ────────────────────────────────────────
                 # A long conversation is only worth having while it MOVES. Two things make it
@@ -1865,7 +1829,7 @@ async def stream_response(
                                           f"{_he_hw}")
                                     return
                                 try:
-                                    _twc_hw, _ = _integrity.find_tool_call(_hv)
+                                    _twc_hw, _ = _witness.find_audit_tool_call(_hv)
                                 except Exception:
                                     _twc_hw = None
                                 if not _twc_hw or _ri_hw == 2:
@@ -2023,7 +1987,7 @@ async def stream_response(
                                 print(f"[nova] cloud arbiter skipped (fail-open): {_e}")
                                 return "skip"
                             try:
-                                _twc, _ = _integrity.find_tool_call(_v)
+                                _twc, _ = _witness.find_audit_tool_call(_v)
                             except Exception:
                                 _twc = None
                             _cloud_audit = _witness.parse_witness_verdict(_v, exhausted=bool(_twc))
@@ -2053,6 +2017,7 @@ async def stream_response(
                                     and _witness.is_checkable_fact_concern(_concern))
                         if _binding:
                             _escalated_this_turn = True
+                            _arb_candidate = chat_text  # Same draft captured by _cloud_verdict.
                             try:
                                 _arb = await _cloud_verdict()
                             except Exception as _abe:
@@ -2104,7 +2069,16 @@ async def stream_response(
                                 _concern_prev = _concern
                                 _tools_at_last_concern = len(_turn_tools)
                                 continue
-                            # _arb == "her": the arbiter protects her draft — ship it.
+                            # "her" is returned only for explicit foreground PASS.
+                            # Background second opinions never change this delivery snapshot.
+                            if _arb == "her" and chat_text == _arb_candidate:
+                                _audited_candidate = _arb_candidate
+                                _delivery_audit = {"status": "PASS", "source": "foreground_arbiter",
+                                    "reason": "Foreground arbiter explicitly approved this candidate."}
+                            elif _arb == "her":
+                                _delivery_audit["reason"] = (
+                                    "Inline witness: " + _audit.reason +
+                                    " Foreground approval could not be matched to this candidate.")
 
                         # Escalate to the background logs-only lane ONLY for checkable-FACT
                         # disputes; skipped entirely when the binding path handled it above.
@@ -2122,16 +2096,15 @@ async def stream_response(
                                   f"(cloud off, or not a checkable-fact dispute)")
                     except Exception as _hwe:
                         print(f"[nova] heavy witness dispatch failed open: {_hwe}")
-                elif _prior_draft and _audit.status == "PASS":
-                    # She was questioned, answered in her own words, and the witness now
-                    # passes it. This is the whole design working — show both versions so the
-                    # revision is visibly HERS and not a translation.
+                elif _prior_draft and _prior_draft.strip() != chat_text.strip():
+                    # A changed draft remains a concession even if its re-audit failed.
+                    # Record the actual status and preserve the existing correction check.
                     try:
                         _witness.pipeline_event(
                             "witness_answered",
-                            f"settled in {_witness_rounds} round(s) — she answered, revised in "
-                            f"her own voice, and the witness now agrees",
-                            before=_prior_draft, after=chat_text, verdict=_verdict, status="PASS",
+                            f"revised in {_witness_rounds} round(s) — final audit {_audit.status}; "
+                            f"revision does not imply approval",
+                            before=_prior_draft, after=chat_text, verdict=_verdict, status=_audit.status,
                             rationale=_think_for_check, rounds=_witness_rounds)
                     except Exception:
                         pass
@@ -2191,7 +2164,7 @@ async def stream_response(
                                 return
                             _dt_cc = _t_cc.time() - _t0_cc
                             try:
-                                _tc2, _ = (_integrity.find_tool_call(_hv2) if _hv2
+                                _tc2, _ = (_witness.find_audit_tool_call(_hv2) if _hv2
                                            else (None, ""))
                             except Exception:
                                 _tc2 = None
@@ -2309,7 +2282,10 @@ async def stream_response(
 
             # Final Answer
             final_chat_buffer += chat_text
-            await on_done(final_chat_buffer)
+            if _audited_candidate != final_chat_buffer:
+                _delivery_audit = {"status": "NOT_RUN", "source": "none",
+                    "reason": "No audit ran for this delivered candidate."}
+            await _deliver(final_chat_buffer, _delivery_audit)
             break
         else:
             # ── LOOP EXHAUSTION IS NOT PERMISSION TO SAY NOTHING (2026-07-21 review) ─────
@@ -2331,7 +2307,10 @@ async def stream_response(
                     tools_this_turn=len(_turn_tools))
             except Exception:
                 pass
-            _salvage = (final_chat_buffer + chat_text).strip()
+            # A final tool iteration is already represented in the prose buffer.
+            # Never append its raw JSON (or repeat its prefix) as human-facing salvage.
+            _pending_tool, _ = _find_tool_call(chat_text)
+            _salvage = (final_chat_buffer if _pending_tool else final_chat_buffer + chat_text).strip()
             if not _salvage:
                 _salvage = (f"I ran out of thinking room this turn after {len(_turn_tools)} "
                             f"tool call(s) and never landed the answer. The receipts are in "
@@ -2340,7 +2319,8 @@ async def stream_response(
                 _witness.pipeline_event("witness_incomplete",
                     "Turn limit reached; the delivered salvage has no complete final audit.",
                     status="INCOMPLETE", draft_chars=len(_salvage))
-            await on_done(_salvage)
+            await _deliver(_salvage, {"status": "NOT_RUN", "source": "none",
+                "reason": "Turn limit reached; this salvage has no final candidate audit."})
 
     except Exception as e:
         import traceback

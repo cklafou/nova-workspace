@@ -46,6 +46,7 @@ class DeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(self.stack.close)
         self.events, self.done, self.errors, self.audit_calls, self.main_calls = [], [], [], [], []
         self.tools, self.reads = [], []
+        self.delivery_audits, self.delivery_order = [], []
         self.generations, self.verdicts, self.results = [], [], []
         self.config = {'max_tool_loops': 12, 'witness_max_rounds': 2,
                        'heavy_witness_enabled': False, 'binding_cloud_escalation': False,
@@ -97,11 +98,18 @@ class DeliveryTests(unittest.IsolatedAsyncioTestCase):
         await on_token(value)
         return value
 
-    async def run_turn(self, images=None):
+    async def collect_audit(self, metadata):
+        self.delivery_audits.append(copy.deepcopy(metadata))
+        self.delivery_order.append('audit')
+
+    async def run_turn(self, images=None, on_audit=None, transcript=None):
         async def token(_): pass
-        async def done(value): self.done.append(value)
+        async def done(value):
+            self.done.append(value)
+            self.delivery_order.append('done')
         async def error(value): self.errors.append(value)
-        await nova.stream_response(Transcript(), token, done, error, images=images)
+        await nova.stream_response(transcript or Transcript(), token, done, error,
+                                   images=images, on_audit=on_audit)
         await asyncio.sleep(0)  # any disabled background audit exits without I/O
         self.assertEqual(self.errors, [])
 
@@ -129,8 +137,8 @@ class DeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ended['environment'], 'guest')
         self.assertNotIn('PRIVATE_', json.dumps([started, ended]))
         observation = text_of(self.main_calls[1])
-        self.assertIn('"exit_code": 127', observation)
-        self.assertIn('"shell": "bash"', observation)
+        self.assertIn("exit=127", observation)
+        self.assertIn("shell=bash", observation)
         self.assertEqual(self.stages().count('witness_pass'), 1)
 
     async def test_concern_replaces_full_draft_in_novas_own_words(self):
@@ -234,7 +242,7 @@ class DeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.results = [ToolResult('untyped adapter', status='unknown')]
         self.verdicts = ['INCOMPLETE: The tool result is unverified.']
         await self.run_turn()
-        ended = next(e for e in self.events if e['stage'] == 'tool_completed')
+        ended = next(e for e in self.events if e['stage'] in {'tool_completed', 'tool_finished'})
         self.assertIsNone(ended['ok'])
         self.assertEqual(ended['status'], 'unknown')
 
@@ -250,8 +258,233 @@ class DeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('cleanup may still be pending', events[1]['detail'])
         self.assertEqual(self.done, [])
 
+    async def test_concern_quoting_tool_json_is_not_executed_as_a_read(self):
+        self.generations = ["The video was definitely opened on the desktop.",
+                            "The attempted launch did not verify a visible page."]
+        self.verdicts = ['CONCERN: {"tool":"computer_exec","args":{}} is only an attempted launch.', 'PASS']
+        await self.run_turn()
+        self.assertEqual(self.reads, [])
+        self.assertIn('witness_concern', self.stages())
+        self.assertEqual(self.done, ['The attempted launch did not verify a visible page.'])
+
+    async def test_failed_reaudit_keeps_correction_check_and_honest_status(self):
+        from unittest.mock import Mock
+        self.config['heavy_witness_enabled'] = True
+        self.generations = ["The file exists and contains the exact expected output.",
+                            "The file content is unverified; I withdrew the earlier claim."]
+        self.verdicts = ['CONCERN: The file receipt contradicts the claimed contents.',
+                         'INCOMPLETE: The second audit could not settle the file contents.']
+        dispatched = []
+        def fake_task(coro):
+            dispatched.append(coro.cr_code.co_name)
+            coro.close()
+            task = Mock()
+            task.add_done_callback.side_effect = lambda fn: fn(task)
+            return task
+        with patch.object(nova.asyncio, 'create_task', side_effect=fake_task):
+            await self.run_turn()
+        self.assertIn('_heavy_correction_check', dispatched)
+        answered = [e for e in self.events if e['stage']=='witness_answered']
+        self.assertEqual(answered[-1]['status'], 'INCOMPLETE')
+        self.assertNotIn('witness_pass', self.stages())
+
+    async def test_tool_at_loop_limit_never_delivers_raw_json_or_duplicate_prefix(self):
+        self.config['max_tool_loops'] = 1
+        self.generations = ['One attempt now.\n'+call('computer_exec', command='PRIVATE_COMMAND')]
+        self.results = [ToolResult('done')]
+        await self.run_turn()
+        self.assertEqual(self.done[0].count('One attempt now.'), 1)
+        self.assertNotIn('PRIVATE_COMMAND', self.done[0])
+        self.assertNotIn('"tool"', self.done[0])
+
+
+    async def test_final_audit_callback_precedes_delivery_and_preserves_actual_status(self):
+        for verdict, status in [('PASS', 'PASS'), ('', 'INCOMPLETE'),
+                                (TimeoutError('fixture'), 'ERROR')]:
+            with self.subTest(status=status):
+                self.generations = ['This candidate describes the limited evidence available for the current request.']
+                self.verdicts = [verdict]
+                await self.run_turn(on_audit=self.collect_audit)
+                self.assertEqual(self.delivery_audits[-1]['status'], status)
+                self.assertEqual(self.delivery_audits[-1]['source'], 'inline')
+                self.assertTrue(self.delivery_audits[-1]['reason'])
+                self.assertEqual(self.delivery_order[-2:], ['audit', 'done'])
+
+    async def test_concern_on_final_candidate_is_not_approval(self):
+        self.config['witness_max_rounds'] = 1
+        self.generations = ['This candidate maintains a disputed file claim without resolving its evidence.'] * 2
+        self.verdicts = ['CONCERN: File contents remain disputed.'] * 2
+        await self.run_turn(on_audit=self.collect_audit)
+        self.assertEqual(len(self.delivery_audits), 1)
+        self.assertEqual(self.delivery_audits[0]['status'], 'CONCERN')
+        self.assertIn('File contents', self.delivery_audits[0]['reason'])
+
+    async def test_revision_reports_only_its_own_final_audit(self):
+        revised = 'My revised reply describes only the evidence that the screenshot actually supports.'
+        self.generations = ['The first candidate claims a browser result without enough visual evidence.', revised]
+        self.verdicts = ['CONCERN: The browser claim is unsupported.', 'INCOMPLETE: Remaining image was omitted.']
+        await self.run_turn(on_audit=self.collect_audit)
+        self.assertEqual(self.done, [revised])
+        self.assertEqual(self.delivery_audits, [{'status': 'INCOMPLETE', 'source': 'inline',
+                                              'reason': 'Remaining image was omitted.'}])
+
+    async def test_echo_revision_does_not_inherit_pass_when_final_answer_is_unaudited(self):
+        repeated = 'This was the earlier delivered answer, sufficiently long to trigger the witness check.'
+        class History(Transcript):
+            def to_messages(self, *args, **kwargs):
+                messages = super().to_messages(*args, **kwargs)
+                messages.insert(1, {'role': 'assistant', 'content': repeated})
+                return messages
+        self.generations = [repeated, 'Okay.']
+        self.verdicts = ['PASS']
+        with patch.object(witness, 'needs_witness', return_value=False):
+            await self.run_turn(on_audit=self.collect_audit, transcript=History())
+        self.assertIn('echo_retry', self.stages())
+        self.assertEqual(self.done, ['Okay.'])
+        self.assertEqual(self.delivery_audits[0]['status'], 'NOT_RUN')
+        self.assertEqual(self.delivery_audits[0]['source'], 'none')
+
+    async def test_tool_continuation_and_salvage_cannot_inherit_prior_pass(self):
+        repeated = 'An earlier delivered answer repeats here and should be discarded after its audit.'
+        class History(Transcript):
+            def to_messages(self, *args, **kwargs):
+                messages = super().to_messages(*args, **kwargs)
+                messages.insert(1, {'role': 'assistant', 'content': repeated})
+                return messages
+        self.config['max_tool_loops'] = 2
+        self.generations = [repeated, 'Attempting a receipt.\n' + call('read_file', path='fixture')]
+        self.verdicts = ['PASS']
+        await self.run_turn(on_audit=self.collect_audit, transcript=History())
+        self.assertIn('loop_exhausted', self.stages())
+        self.assertEqual(len(self.tools), 1)
+        self.assertEqual(self.delivery_audits[0]['status'], 'NOT_RUN')
+        self.assertIn('salvage', self.delivery_audits[0]['reason'])
+        self.assertEqual(len(self.delivery_audits), 1)
+
+    async def test_audit_observer_failure_does_not_suppress_final_reply(self):
+        for failure in (ValueError('fixture observer failure'), asyncio.CancelledError()):
+            with self.subTest(failure=type(failure).__name__):
+                self.generations = ['This candidate is delivered even when its optional metadata observer fails.']
+                self.verdicts = ['PASS']
+                async def observer(metadata):
+                    metadata['status'] = 'MUTATED_BY_OBSERVER'
+                    raise failure
+                before = len(self.done)
+                await self.run_turn(on_audit=observer)
+                self.assertEqual(len(self.done), before + 1)
+
+    async def test_real_turn_cancellation_during_observer_still_cancels_delivery(self):
+        self.generations = ['This candidate is approved, but the turn will be cancelled during observation.']
+        self.verdicts = ['PASS']
+        entered = asyncio.Event()
+        waiting = asyncio.Event()
+        async def observer(metadata):
+            entered.set()
+            await waiting.wait()
+        task = asyncio.create_task(self.run_turn(on_audit=observer))
+        await asyncio.wait_for(entered.wait(), timeout=2)
+        task.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await task
+        self.assertEqual(self.done, [])
+
+    async def test_already_pending_cancel_prevents_observer_and_final_delivery(self):
+        for observe in (False, True):
+            with self.subTest(observer=observe):
+                self.generations = ['This approved candidate must not ship after an already pending stop.']
+                self.verdicts = ['PASS']
+                observer_calls = []
+                async def observer(metadata):
+                    observer_calls.append(metadata)
+                    await asyncio.sleep(0)
+                def event(stage, detail='', **fields):
+                    self.events.append({'stage': stage, 'detail': detail, **fields})
+                    if stage == 'witness_pass':
+                        # No await remains before _deliver; its first await used to
+                        # swallow this real cancellation as an observer failure.
+                        asyncio.current_task().cancel()
+                with patch.object(witness, 'pipeline_event', side_effect=event):
+                    task = asyncio.create_task(self.run_turn(on_audit=observer if observe else None))
+                    with self.assertRaises(asyncio.CancelledError):
+                        await task
+                self.assertTrue(task.cancelled())
+                self.assertEqual(observer_calls, [])
+                self.assertEqual(self.done, [])
+
+    async def test_observer_cannot_swallow_task_stop_and_allow_delivery(self):
+        for yield_before_return in (False, True):
+            with self.subTest(yield_before_return=yield_before_return):
+                self.generations = ['This approved candidate must not ship after the observer receives a real stop.']
+                self.verdicts = ['PASS']
+                async def observer(metadata):
+                    asyncio.current_task().cancel()
+                    if yield_before_return:
+                        try:
+                            await asyncio.sleep(0)
+                        except asyncio.CancelledError:
+                            pass  # Even a mistaken observer cannot clear the stop.
+                task = asyncio.create_task(self.run_turn(on_audit=observer))
+                with self.assertRaises(asyncio.CancelledError):
+                    await task
+                self.assertTrue(task.cancelled())
+                self.assertEqual(self.done, [])
+
+    async def test_foreground_arbiter_pass_is_bound_to_same_delivered_candidate(self):
+        self.config.update(witness_max_rounds=1, heavy_witness_enabled=True,
+                           binding_cloud_escalation=True)
+        draft = 'This candidate keeps its file claim because the existing foreground arbiter will settle it.'
+        self.generations, self.verdicts = [draft, draft], ['CONCERN: File claim disputed.'] * 2
+        judged = []
+        def judge(candidate, *args, **kwargs):
+            judged.append(candidate)
+            return 'PASS'
+        loader = types.SimpleNamespace(exec_module=lambda module: None)
+        module = types.SimpleNamespace(heavy_witness=judge)
+        with patch.object(witness, 'is_checkable_fact_concern', return_value=True), \
+             patch.object(importlib.util, 'spec_from_file_location', return_value=types.SimpleNamespace(loader=loader)), \
+             patch.object(importlib.util, 'module_from_spec', return_value=module):
+            await self.run_turn(on_audit=self.collect_audit)
+        self.assertEqual(judged, self.done)
+        self.assertEqual(self.delivery_audits[0]['status'], 'PASS')
+        self.assertEqual(self.delivery_audits[0]['source'], 'foreground_arbiter')
+        self.assertEqual(len(self.delivery_audits), 1)
+
+    async def test_background_cloud_cannot_rewrite_delivered_audit_snapshot(self):
+        self.config.update(witness_max_rounds=1, heavy_witness_enabled=True,
+                           binding_cloud_escalation=False)
+        draft = 'This candidate still has a disputed file claim when the synchronous reply is delivered.'
+        self.generations, self.verdicts = [draft, draft], ['CONCERN: File claim disputed.'] * 2
+        loader = types.SimpleNamespace(exec_module=lambda module: None)
+        module = types.SimpleNamespace(heavy_witness=lambda *a, **k: 'PASS')
+        tasks = []
+        create_task = asyncio.create_task
+        def tracked(coro):
+            task = create_task(coro)
+            tasks.append(task)
+            return task
+        with patch.object(witness, 'is_checkable_fact_concern', return_value=True), \
+             patch.object(importlib.util, 'spec_from_file_location', return_value=types.SimpleNamespace(loader=loader)), \
+             patch.object(importlib.util, 'module_from_spec', return_value=module), \
+             patch.object(nova.asyncio, 'create_task', side_effect=tracked):
+            await self.run_turn(on_audit=self.collect_audit)
+            snapshot = copy.deepcopy(self.delivery_audits)
+            await asyncio.gather(*tasks)
+        self.assertTrue(tasks)
+        self.assertEqual(self.delivery_audits, snapshot)
+        self.assertEqual(snapshot[0]['status'], 'CONCERN')
+        self.assertEqual(snapshot[0]['source'], 'inline')
+
 
 class VerdictTests(unittest.TestCase):
+    def test_diagnostic_payload_omits_pixels_without_mutating_request(self):
+        original = {'messages': [{'content': [{'type': 'image_url', 'image_url':
+                    {'url': 'data:image/png;base64,SECRET_PIXELS'}},
+                    {'type': 'text', 'text': 'keep the diagnostic text'}]}]}
+        rendered = nova._diagnostic_payload(original)
+        self.assertNotIn('SECRET_PIXELS', json.dumps(rendered))
+        self.assertIn('keep the diagnostic text', json.dumps(rendered))
+        self.assertIn('SECRET_PIXELS', json.dumps(original))
+
     def test_only_complete_explicit_pass_is_approval(self):
         for value in ('PASS', '2. PASS.', '```text\nPASS!\n```', '```\npass\n```'):
             with self.subTest(value=value):

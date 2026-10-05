@@ -1,3 +1,4 @@
+# @nova: Drive Nova’s persisted task choices and execution using her existing board and resumable checkpoints.
 # Last updated: 2026-10-04 14:28:11
 # @nova: Executive will — my self-direction. When my time-sense stirs me (or my
 #        environment changes, or Cole speaks) I see my board + my senses + Cole's word,
@@ -982,7 +983,9 @@ def build_execution(task: dict, recent: str = "") -> str:
         "",
         f'ACTIVE TASK [{tid}]: {title}{_asked_by(task)}',
         (f"What {_asker(task)} asks: {notes}" if notes else None),
-        "Progress so far:",
+        "Saved task checkpoint:",
+        tasking.render_task_resume(task),
+        "Recent progress:",
         recent_prog,
         "",
         art_block,
@@ -1006,6 +1009,10 @@ def build_execution(task: dict, recent: str = "") -> str:
         "one status line:",
         "  DONE: <one-line result>      — only if the whole task is now complete",
         "  PROGRESS: <what you just did> — if real work happened but more remains",
+        "When a next step, constraint or observation changes, use task_progress with optional "
+        "continuity: {next_step: text, constraints: [text], observations: [text]}. Omitted fields "
+        "retain their saved values; empty text/lists explicitly clear them. These are your notes, "
+        "not independent proof. Keep the final status line too.",
         "Your PROGRESS note MUST name the specific thing you just did AND the specific next "
         "step (e.g. 'reviewed server.py, wrote its section; next: clients/nova.py') — never "
         "vague like 'starting' or 'mapping structure', or you lose your place and loop.",

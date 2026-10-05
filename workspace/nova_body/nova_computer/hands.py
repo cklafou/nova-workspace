@@ -182,7 +182,7 @@ class Hands:
     def focus(self, window_id: str):
         return self._run(f"xdotool windowactivate {shlex.quote(str(window_id))}")
 
-    def launch(self, command: str, wait: float = 3):
+    def launch(self, command: str, wait: float | None = None):
         """Launch one guest executable and verify a visible application window, not an echo.
 
         Success proves a matching window exists, never that its page loaded or playback began.
@@ -192,6 +192,9 @@ class Hands:
             if not isinstance(command, str) or not command.strip():
                 raise ValueError("Provide an executable command as text.")
             argv = shlex.split(command)
+            if wait is None:
+                from nova_cortex.tunables import get
+                wait = get("computer_launch_wait_seconds") or 10
             seconds = float(wait)
             if not argv or not math.isfinite(seconds) or not 0 <= seconds <= 20:
                 raise ValueError("Provide an executable command and a wait between 0 and 20 seconds.")
@@ -200,13 +203,21 @@ class Hands:
             if argv[0].lower().endswith((".exe", ".cmd", ".bat")):
                 raise ValueError("This action observes Nova's Linux desktop. Use run_command for an intentional Windows application launch.")
             source = inspect.getsource(_launch_probe)
-            script = source + "\nimport json\nprint(json.dumps(_launch_probe(" + repr(argv) + ", " + repr(seconds) + ")))"
+            script = source + "\nimport json\nprint('NOVA_LAUNCH_RESULT:' + json.dumps(_launch_probe(" + repr(argv) + ", " + repr(seconds) + ")))"
             rc, out = self._run("python3 -c " + shlex.quote(script), timeout=int(seconds) + 30)
             if rc != 0:
                 return {"status": "timed_out" if rc == 124 else "cancelled" if rc == 130 else "failed",
                         "exit_code": rc, "stderr": out, "stdout": "", "display": self.display,
                         "message": "The application verifier could not finish; no launch success is claimed."}
-            result = json.loads(out)
+            records = [line[len("NOVA_LAUNCH_RESULT:"):] for line in out.splitlines()
+                       if line.startswith("NOVA_LAUNCH_RESULT:")]
+            if not records:
+                return {"status": "unknown", "exit_code": rc, "stdout": "", "stderr": out[-12000:],
+                        "display": self.display, "message": "No verifier result received; application state is unknown."}
+            result = json.loads(records[-1])
+            noise = "\n".join(line for line in out.splitlines() if not line.startswith("NOVA_LAUNCH_RESULT:"))
+            if noise:
+                result["verifier_diagnostics"] = noise[-12000:]
             if not isinstance(result, dict) or result.get("status") not in {"succeeded", "failed", "unknown"}:
                 raise ValueError("Invalid application-verifier response")
             result["display"] = self.display
@@ -215,7 +226,7 @@ class Hands:
             return {"status": "failed", "exit_code": None, "stdout": "", "stderr": str(error),
                     "display": self.display, "message": "Application launch was not verified."}
 
-    def open_url(self, url: str, browser: str = "firefox", wait: float = 3):
+    def open_url(self, url: str, browser: str = "firefox", wait: float | None = None):
         """Open an HTTP(S) page in a new guest browser window; navigation remains unverified."""
         parsed = urlparse(str(url))
         if parsed.scheme not in {"http", "https"} or not parsed.netloc:
@@ -338,7 +349,7 @@ def _launch_probe(argv, wait):
             running.add(proc.pid)
         matched = [row for row in after if row["pid"] in running and
                    (row["pid"] in tracked or
-                    (row["id"] not in initial_ids and owns_requested_executable(row["pid"])))]
+                    (not before_error and row["id"] not in initial_ids and owns_requested_executable(row["pid"])))]
         if matched or proc.poll() is not None and proc.returncode != 0 or time.monotonic() >= deadline:
             break
         time.sleep(min(0.25, max(0, deadline - time.monotonic())))

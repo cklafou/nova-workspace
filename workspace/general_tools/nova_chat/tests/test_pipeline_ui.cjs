@@ -88,5 +88,17 @@ events=[started];await api.poll();const runningWrites=feedWrites;await api.poll(
 api.open('turn1');rendered=api.render({turn:'turn1',events:[legacy]});assert.match(rendered,/raw audit output \(not a verdict\)/);assert.match(rendered,/read_file/);assert.match(rendered,/aria-expanded="true"/);cases++;
 
 events=[];await api.poll();assert.match(html(),/No Pipeline events yet/);assert.equal(nodes.get('pl-tools').textContent,0);cases++;
+for(const status of ['INCOMPLETE','ERROR']){
+ const answered=event('witness_answered',{status,verdict:status+': still unresolved'});
+ assert.equal(api.normalize(answered).stage,status==='ERROR'?'witness_error':'witness_incomplete');
+ rendered=api.render({turn:'turn1',events:[answered]});
+ assert.match(rendered,new RegExp('AUDIT '+status));assert.ok(!rendered.includes('SHE FIXED IT'));
+ assert.ok(!rendered.includes('pl-badge ok'));cases++;
+}
+const unknown=event('tool_finished',{status:'unknown',detail:'Initial window enumeration failed'});
+assert.equal(api.steps([started,unknown]).length,1);
+assert.equal(api.steps([started,unknown])[0].event.stage,'tool_finished');
+rendered=api.rows([started,unknown]);assert.match(rendered,/Outcome unknown/);
+assert.ok(!rendered.includes('Completed'));assert.ok(!rendered.includes('Running'));cases++;
 console.log('Pipeline UI: '+cases+' isolated scenarios passed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -1,8 +1,9 @@
-# Last updated: 2026-10-04 14:55:32
 # @nova: Verify model-off controller launch and prevent chat-only messages from reaching Nova's body.
+# Last updated: 2026-10-04 14:55:32
 import ast
 import asyncio
 import json
+import re
 from pathlib import Path
 import threading
 import types
@@ -72,7 +73,7 @@ class ChatOnlyTests(unittest.TestCase):
         class Socket:
             def __init__(self):
                 self.out = []
-                self.inputs = iter([{"type": "message", "content": "Private collaboration"},
+                self.inputs = iter([{"type": "message", "content": "Private collaboration", "request_id": "off-request"},
                                     {"type": "user_typing", "typing": True},
                                     {"type": "autonomous_toggle", "enabled": True}])
             async def accept(self): pass
@@ -86,12 +87,17 @@ class ChatOnlyTests(unittest.TestCase):
               "json": json, "connected_clients": [], "is_processing": False,
               "autonomous_mode": False, "_mute_states": {}, "_CHAT_ONLY_MESSAGE": "disabled",
               "session_mgr": None, "get_status": AsyncMock(return_value={"Nova": False}),
+              "re": re, "broadcast": AsyncMock(),
               "_mirror_to_runtime": forbidden, "memory_indexer": forbidden, "_rt": forbidden}
-        extract(SERVER, {"websocket_endpoint"}, ns)
+        extract(SERVER.with_name("response_events.py"), {"normalize_request_id"}, ns)
+        extract(ROOT / "nova_body/nova_runtime/model_client.py", {"normalize_register"}, ns)
+        extract(SERVER, {"websocket_endpoint", "_end_queued_request"}, ns)
         asyncio.run(ns["websocket_endpoint"](ws))
         self.assertEqual(len([m for m in ws.out if m["type"] == "error"]), 2)
         self.assertTrue(all(m.get("enabled") is False for m in ws.out if m["type"] == "autonomous_state"))
         forbidden.assert_not_called()
+        ns["broadcast"].assert_awaited_once_with({"type": "request_end", "request_id": "off-request",
+                                                "reply_to": None, "register": "text", "delivery": "unavailable"})
         self.assertEqual(ns["connected_clients"], [])
 
     def test_launcher_never_starts_models_watcher_guardian_in_chat_only(self):

@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "generated_at": "2026-10-04T06:10:46+00:00",
-  "input_sha256": "44a2b436340f436290686cb80f4ce1893156c4482ecf2c6f5aa5e27c72905d07",
+  "generated_at": "2026-10-05T08:39:36+00:00",
+  "input_sha256": "f6544527427ce7588029911b48b04b6a476f5a42a38ce3778429863e875a2439",
   "files": [
     {
       "path": "NovaChatOnly.cmd",
@@ -76,7 +76,7 @@
     {
       "path": "general_tools/architecture_map/notes/controller_layouts.md",
       "owner": "detachable tool",
-      "bytes": 6530
+      "bytes": 7039
     },
     {
       "path": "general_tools/architecture_map/notes/conventions.md",
@@ -96,7 +96,7 @@
     {
       "path": "general_tools/architecture_map/notes/security.md",
       "owner": "detachable tool",
-      "bytes": 6884
+      "bytes": 7165
     },
     {
       "path": "general_tools/architecture_map/notes/shelf.md",
@@ -106,17 +106,17 @@
     {
       "path": "general_tools/architecture_map/notes/tunables.md",
       "owner": "detachable tool",
-      "bytes": 1815
+      "bytes": 2350
     },
     {
       "path": "general_tools/architecture_map/orient.py",
       "owner": "detachable tool",
-      "bytes": 77780
+      "bytes": 83576
     },
     {
       "path": "general_tools/architecture_map/reviews.json",
       "owner": "detachable tool",
-      "bytes": 37926
+      "bytes": 41059
     },
     {
       "path": "general_tools/architecture_map/serve.py",
@@ -186,12 +186,12 @@
     {
       "path": "general_tools/calls.py",
       "owner": "detachable tool",
-      "bytes": 10574
+      "bytes": 10861
     },
     {
       "path": "general_tools/calls_order.py",
       "owner": "detachable tool",
-      "bytes": 14228
+      "bytes": 14535
     },
     {
       "path": "general_tools/cloud_call.py",
@@ -259,6 +259,11 @@
       "bytes": 14268
     },
     {
+      "path": "general_tools/nova_chat/response_events.py",
+      "owner": "detachable tool",
+      "bytes": 2078
+    },
+    {
       "path": "general_tools/nova_chat/runtime_host.py",
       "owner": "detachable tool",
       "bytes": 2060
@@ -266,7 +271,7 @@
     {
       "path": "general_tools/nova_chat/server.py",
       "owner": "detachable tool",
-      "bytes": 220027
+      "bytes": 220515
     },
     {
       "path": "general_tools/nova_chat/server_runner.py",
@@ -306,7 +311,7 @@
     {
       "path": "general_tools/nova_chat/static/index.html",
       "owner": "detachable tool",
-      "bytes": 368875
+      "bytes": 369439
     },
     {
       "path": "general_tools/nova_chat/static/updater.css",
@@ -317,6 +322,16 @@
       "path": "general_tools/nova_chat/static/updater.js",
       "owner": "detachable tool",
       "bytes": 73145
+    },
+    {
+      "path": "general_tools/nova_chat/static/voice.css",
+      "owner": "detachable tool",
+      "bytes": 3317
+    },
+    {
+      "path": "general_tools/nova_chat/static/voice.js",
+      "owner": "detachable tool",
+      "bytes": 14403
     },
     {
       "path": "general_tools/nova_chat/static/workspace.css",
@@ -331,7 +346,7 @@
     {
       "path": "general_tools/nova_chat/tests/test_chat_only.py",
       "owner": "detachable tool",
-      "bytes": 7594
+      "bytes": 7963
     },
     {
       "path": "general_tools/nova_chat/tests/test_collaboration.py",
@@ -386,7 +401,7 @@
     {
       "path": "general_tools/nova_chat/tests/test_pipeline_ui.cjs",
       "owner": "detachable tool",
-      "bytes": 8387
+      "bytes": 9336
     },
     {
       "path": "general_tools/nova_chat/tests/test_source_fingerprint.py",
@@ -404,9 +419,29 @@
       "bytes": 28268
     },
     {
+      "path": "general_tools/nova_chat/tests/test_voice_control.py",
+      "owner": "detachable tool",
+      "bytes": 20891
+    },
+    {
+      "path": "general_tools/nova_chat/tests/test_voice_transport.py",
+      "owner": "detachable tool",
+      "bytes": 33766
+    },
+    {
+      "path": "general_tools/nova_chat/tests/test_voice_ui.cjs",
+      "owner": "detachable tool",
+      "bytes": 13026
+    },
+    {
       "path": "general_tools/nova_chat/transcript.py",
       "owner": "detachable tool",
       "bytes": 14213
+    },
+    {
+      "path": "general_tools/nova_chat/voice_control.py",
+      "owner": "detachable tool",
+      "bytes": 18079
     },
     {
       "path": "general_tools/nova_chat/widget_data.py",
@@ -736,7 +771,12 @@
     {
       "path": "general_tools/voice_gateway/README.md",
       "owner": "detachable tool",
-      "bytes": 4612
+      "bytes": 9452
+    },
+    {
+      "path": "general_tools/voice_gateway/VOICE_CHECK.cmd",
+      "owner": "detachable tool",
+      "bytes": 277
     },
     {
       "path": "general_tools/voice_gateway/__init__.py",
@@ -744,14 +784,29 @@
       "bytes": 213
     },
     {
+      "path": "general_tools/voice_gateway/body.py",
+      "owner": "detachable tool",
+      "bytes": 3590
+    },
+    {
+      "path": "general_tools/voice_gateway/check_voice_ready.py",
+      "owner": "detachable tool",
+      "bytes": 4633
+    },
+    {
       "path": "general_tools/voice_gateway/committer.py",
       "owner": "detachable tool",
-      "bytes": 8440
+      "bytes": 8437
     },
     {
       "path": "general_tools/voice_gateway/config.py",
       "owner": "detachable tool",
-      "bytes": 5328
+      "bytes": 5846
+    },
+    {
+      "path": "general_tools/voice_gateway/control_worker.py",
+      "owner": "detachable tool",
+      "bytes": 11865
     },
     {
       "path": "general_tools/voice_gateway/fetch_models.cmd",
@@ -761,12 +816,12 @@
     {
       "path": "general_tools/voice_gateway/gateway.py",
       "owner": "detachable tool",
-      "bytes": 7557
+      "bytes": 7793
     },
     {
       "path": "general_tools/voice_gateway/nova_link.py",
       "owner": "detachable tool",
-      "bytes": 3003
+      "bytes": 5752
     },
     {
       "path": "general_tools/voice_gateway/requirements.txt",
@@ -776,12 +831,17 @@
     {
       "path": "general_tools/voice_gateway/server_patch.md",
       "owner": "detachable tool",
-      "bytes": 2442
+      "bytes": 2680
+    },
+    {
+      "path": "general_tools/voice_gateway/speech.py",
+      "owner": "detachable tool",
+      "bytes": 9295
     },
     {
       "path": "general_tools/voice_gateway/stt.py",
       "owner": "detachable tool",
-      "bytes": 5639
+      "bytes": 7169
     },
     {
       "path": "general_tools/voice_gateway/test_committer.py",
@@ -789,9 +849,24 @@
       "bytes": 3588
     },
     {
+      "path": "general_tools/voice_gateway/test_link_socket.py",
+      "owner": "detachable tool",
+      "bytes": 5904
+    },
+    {
+      "path": "general_tools/voice_gateway/test_voice_flow.py",
+      "owner": "detachable tool",
+      "bytes": 33177
+    },
+    {
       "path": "general_tools/voice_gateway/tts.py",
       "owner": "detachable tool",
-      "bytes": 6558
+      "bytes": 10093
+    },
+    {
+      "path": "general_tools/voice_gateway/turns.py",
+      "owner": "detachable tool",
+      "bytes": 12780
     },
     {
       "path": "nova_body/KoELS/SCHEMA.md",
@@ -1631,7 +1706,7 @@
     {
       "path": "nova_body/SELF/Avatar/Live2D/SESSION_CHECKPOINT.txt",
       "owner": "body",
-      "bytes": 3889
+      "bytes": 5225
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/VALIDATION.md",
@@ -1779,6 +1854,11 @@
       "bytes": 9923
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/Nova_A3_Eye_Reference.png",
+      "owner": "body",
+      "bytes": 2103108
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/Nova_HEAD_master.png",
       "owner": "body",
       "bytes": 1613568
@@ -1794,9 +1874,14 @@
       "bytes": 726672
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/art-status.json",
+      "owner": "body",
+      "bytes": 1007
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_ArtNeck.png",
       "owner": "body",
-      "bytes": 150857
+      "bytes": 123647
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_BlinkL.png",
@@ -1811,12 +1896,12 @@
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_BrowL.png",
       "owner": "body",
-      "bytes": 11238
+      "bytes": 10378
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_BrowR.png",
       "owner": "body",
-      "bytes": 12154
+      "bytes": 10416
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_CollarBack.png",
@@ -1824,7 +1909,17 @@
       "bytes": 166764
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_CollarBack_v18_PREP.png",
+      "owner": "body",
+      "bytes": 166764
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_CollarFront.png",
+      "owner": "body",
+      "bytes": 250244
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_CollarFront_v18_PREP.png",
       "owner": "body",
       "bytes": 250244
     },
@@ -1841,32 +1936,32 @@
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_HairForelock.png",
       "owner": "body",
-      "bytes": 116617
+      "bytes": 122586
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_HairFringe.png",
       "owner": "body",
-      "bytes": 205234
+      "bytes": 217931
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_HairRear.png",
       "owner": "body",
-      "bytes": 483543
+      "bytes": 512654
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_HairSideL.png",
       "owner": "body",
-      "bytes": 91879
+      "bytes": 96678
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_HairSideR.png",
       "owner": "body",
-      "bytes": 138409
+      "bytes": 141160
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_Head.png",
       "owner": "body",
-      "bytes": 331332
+      "bytes": 331190
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_IrisL.png",
@@ -1881,7 +1976,7 @@
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_MouthClosed.png",
       "owner": "body",
-      "bytes": 6978
+      "bytes": 7443
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_Nose.png",
@@ -1891,12 +1986,12 @@
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_RimL.png",
       "owner": "body",
-      "bytes": 13327
+      "bytes": 12369
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_RimR.png",
       "owner": "body",
-      "bytes": 12917
+      "bytes": 12170
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_WhiteL.png",
@@ -1907,6 +2002,91 @@
       "path": "nova_body/SELF/Avatar/Live2D/art/v18/cut_FRONT_WhiteR.png",
       "owner": "body",
       "bytes": 8366
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/reference-iris.png",
+      "owner": "body",
+      "bytes": 47880
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v18/reference-iris.svg",
+      "owner": "body",
+      "bytes": 1089
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/ArtNeck.png",
+      "owner": "body",
+      "bytes": 130072
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_BlinkL.png",
+      "owner": "body",
+      "bytes": 7221
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_BlinkR.png",
+      "owner": "body",
+      "bytes": 7277
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_Head.png",
+      "owner": "body",
+      "bytes": 963816
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_Head_before_blink_underpaint.png",
+      "owner": "body",
+      "bytes": 968351
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_IrisL.png",
+      "owner": "body",
+      "bytes": 17919
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_IrisR.png",
+      "owner": "body",
+      "bytes": 18425
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_MouthClosed.png",
+      "owner": "body",
+      "bytes": 7731
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_RimL.png",
+      "owner": "body",
+      "bytes": 14120
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_RimL_before_blink_underpaint.png",
+      "owner": "body",
+      "bytes": 16137
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_RimR.png",
+      "owner": "body",
+      "bytes": 13972
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_RimR_before_blink_underpaint.png",
+      "owner": "body",
+      "bytes": 15492
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_WhiteL.png",
+      "owner": "body",
+      "bytes": 11515
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/FRONT_WhiteR.png",
+      "owner": "body",
+      "bytes": 12737
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/art/v19/Nova_FRONT_MASTER.png",
+      "owner": "body",
+      "bytes": 1980199
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/checkpoints/2026-09-30_183610/manifest.json",
@@ -1992,6 +2172,36 @@
       "path": "nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-03_144816/result.json",
       "owner": "body",
       "bytes": 455
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-04_160427_reference_eyes_v18/manifest.json",
+      "owner": "body",
+      "bytes": 24926
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-04_160427_reference_eyes_v18/portable-manifest.json",
+      "owner": "body",
+      "bytes": 5162
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-04_160427_reference_eyes_v18/result.json",
+      "owner": "body",
+      "bytes": 1042
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-04_160637_reference_eyes_v18/manifest.json",
+      "owner": "body",
+      "bytes": 24926
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-04_160637_reference_eyes_v18/portable-manifest.json",
+      "owner": "body",
+      "bytes": 5162
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/checkpoints/2026-10-04_160637_reference_eyes_v18/result.json",
+      "owner": "body",
+      "bytes": 1042
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/preview/ArtBrowL_source_v05.png",
@@ -2364,6 +2574,11 @@
       "bytes": 7681
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/front-master-v19.html",
+      "owner": "body",
+      "bytes": 8456
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/preview/front-registration-v09.html",
       "owner": "body",
       "bytes": 14569
@@ -2457,6 +2672,11 @@
       "path": "nova_body/SELF/Avatar/Live2D/preview/junction_reference_inspection.png",
       "owner": "body",
       "bytes": 541357
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/reference-eyes-v18.html",
+      "owner": "body",
+      "bytes": 4339
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/preview/reference_eye_boundary.png",
@@ -3889,24 +4109,1414 @@
       "bytes": 984
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/browser-face-comparison.jpg",
+      "owner": "body",
+      "bytes": 103612
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/browser-review.jpg",
+      "owner": "body",
+      "bytes": 280484
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/eyes-before-after.png",
+      "owner": "body",
+      "bytes": 633869
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/eyes-calm-comparison.png",
+      "owner": "body",
+      "bytes": 272173
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/eyes-detail.png",
+      "owner": "body",
+      "bytes": 304425
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/eyes-face.png",
+      "owner": "body",
+      "bytes": 425333
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/eyes-front-overlay.png",
+      "owner": "body",
+      "bytes": 990924
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/eyes-full.png",
+      "owner": "body",
+      "bytes": 2044528
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/preview/v18/head-validation-v17.json",
       "owner": "body",
       "bytes": 2043917
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-a3-calm-eyes.png",
+      "owner": "body",
+      "bytes": 44291
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-a3-calm-face.png",
+      "owner": "body",
+      "bytes": 272791
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-a3-calm-iris-far.png",
+      "owner": "body",
+      "bytes": 7802
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-a3-calm-iris-near.png",
+      "owner": "body",
+      "bytes": 8731
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-a3-calm-lower-face.png",
+      "owner": "body",
+      "bytes": 22466
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-a3-pride-eyes.png",
+      "owner": "body",
+      "bytes": 43809
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-a3-pride-iris-near.png",
+      "owner": "body",
+      "bytes": 10788
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-draft-eyes.png",
+      "owner": "body",
+      "bytes": 82563
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-eye-measurements.json",
+      "owner": "body",
+      "bytes": 17050
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-front-eyes.png",
+      "owner": "body",
+      "bytes": 25695
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-front-face.png",
+      "owner": "body",
+      "bytes": 61132
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/reference-front-pupil-pixels.png",
+      "owner": "body",
+      "bytes": 7650
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-blink-0.025.png",
+      "owner": "body",
+      "bytes": 223508
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-blink-0.1.png",
+      "owner": "body",
+      "bytes": 223441
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-blink-0.25.png",
+      "owner": "body",
+      "bytes": 227944
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-blink-0.5.png",
+      "owner": "body",
+      "bytes": 236922
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-blink-0.75.png",
+      "owner": "body",
+      "bytes": 244378
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-blink-0.png",
+      "owner": "body",
+      "bytes": 223539
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-blink-1.png",
+      "owner": "body",
+      "bytes": 242443
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-blink-filmstrip.png",
+      "owner": "body",
+      "bytes": 1667097
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-eye-validation.json",
+      "owner": "body",
+      "bytes": 620
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-face.png",
+      "owner": "body",
+      "bytes": 375971
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-frontal-overlay.png",
+      "owner": "body",
+      "bytes": 396288
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-gaze--1--1.png",
+      "owner": "body",
+      "bytes": 238172
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-gaze--1-0.png",
+      "owner": "body",
+      "bytes": 238925
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-gaze--1-1.png",
+      "owner": "body",
+      "bytes": 234076
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-gaze-0--1.png",
+      "owner": "body",
+      "bytes": 242725
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-gaze-0-0.png",
+      "owner": "body",
+      "bytes": 242443
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-gaze-0-1.png",
+      "owner": "body",
+      "bytes": 237090
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-gaze-1--1.png",
+      "owner": "body",
+      "bytes": 242894
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-gaze-1-0.png",
+      "owner": "body",
+      "bytes": 243610
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-gaze-1-1.png",
+      "owner": "body",
+      "bytes": 237349
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v18/runtime-gaze-filmstrip.png",
+      "owner": "body",
+      "bytes": 2216156
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/preview/v18/source-face.png",
       "owner": "body",
-      "bytes": 962510
+      "bytes": 926217
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/preview/v18/source-full.png",
       "owner": "body",
-      "bytes": 2158639
+      "bytes": 2129801
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/preview/v18/source-layers.png",
       "owner": "body",
-      "bytes": 738536
+      "bytes": 761970
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/audit-eye-envelope-L.png",
+      "owner": "body",
+      "bytes": 116098
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/audit-eye-envelope-R.png",
+      "owner": "body",
+      "bytes": 122224
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/audit-hair-grid.png",
+      "owner": "body",
+      "bytes": 456025
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/audit-hair-left.png",
+      "owner": "body",
+      "bytes": 176612
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/audit-hair-right.png",
+      "owner": "body",
+      "bytes": 255642
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/audit-iris-L.png",
+      "owner": "body",
+      "bytes": 15922
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/audit-iris-R.png",
+      "owner": "body",
+      "bytes": 16646
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/audit-master-lower-hair.png",
+      "owner": "body",
+      "bytes": 391392
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/head-review-mask.png",
+      "owner": "body",
+      "bytes": 32724
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/iris-hidden-boundary.png",
+      "owner": "body",
+      "bytes": 32361
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-ArtNeck.png",
+      "owner": "body",
+      "bytes": 66805
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-ArtTorso.png",
+      "owner": "body",
+      "bytes": 124937
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-FRONT_CollarBack.png",
+      "owner": "body",
+      "bytes": 75941
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-FRONT_Head.png",
+      "owner": "body",
+      "bytes": 60987
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-FRONT_Shirt.png",
+      "owner": "body",
+      "bytes": 36553
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-aperture-0.1.png",
+      "owner": "body",
+      "bytes": 70831
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-aperture-0.25.png",
+      "owner": "body",
+      "bytes": 74843
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-aperture-0.5.png",
+      "owner": "body",
+      "bytes": 81045
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-aperture-0.75.png",
+      "owner": "body",
+      "bytes": 89465
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-aperture-1.png",
+      "owner": "body",
+      "bytes": 95180
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-aperture-filmstrip.png",
+      "owner": "body",
+      "bytes": 428488
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-blink-layers.png",
+      "owner": "body",
+      "bytes": 323979
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-closed-FRONT_BlinkL.png",
+      "owner": "body",
+      "bytes": 1989
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-closed-FRONT_BlinkR.png",
+      "owner": "body",
+      "bytes": 1659
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-closed-FRONT_Head.png",
+      "owner": "body",
+      "bytes": 256520
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-closed-FRONT_RimL.png",
+      "owner": "body",
+      "bytes": 23535
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-closed-FRONT_RimR.png",
+      "owner": "body",
+      "bytes": 21425
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/isolate-neck-layers.png",
+      "owner": "body",
+      "bytes": 378232
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/master-eye-L.png",
+      "owner": "body",
+      "bytes": 29211
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/master-eye-R.png",
+      "owner": "body",
+      "bytes": 28289
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/master-eyes.png",
+      "owner": "body",
+      "bytes": 157248
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/master-face.png",
+      "owner": "body",
+      "bytes": 370126
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/master-measurements.json",
+      "owner": "body",
+      "bytes": 10658
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/master-neck-grid.png",
+      "owner": "body",
+      "bytes": 559974
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/master-overlay.png",
+      "owner": "body",
+      "bytes": 655690
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/master-paired.png",
+      "owner": "body",
+      "bytes": 771855
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/master-registered.png",
+      "owner": "body",
+      "bytes": 689473
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/native-vts-check.json",
+      "owner": "body",
+      "bytes": 596
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/opening-contour-review.png",
+      "owner": "body",
+      "bytes": 624302
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/outer-canthus-motion.json",
+      "owner": "body",
+      "bytes": 12235
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/preimport-mesh-coverage.json",
+      "owner": "body",
+      "bytes": 8346
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/isolate-aperture-0.1.png",
+      "owner": "body",
+      "bytes": 70831
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/isolate-aperture-0.5.png",
+      "owner": "body",
+      "bytes": 81045
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/isolate-blink-layers.png",
+      "owner": "body",
+      "bytes": 323979
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/isolate-neck-layers.png",
+      "owner": "body",
+      "bytes": 378232
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/runtime-blink-0.5.png",
+      "owner": "body",
+      "bytes": 366557
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/runtime-blink-0.png",
+      "owner": "body",
+      "bytes": 346603
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/runtime-face.png",
+      "owner": "body",
+      "bytes": 590659
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/runtime-gaze-0--1.png",
+      "owner": "body",
+      "bytes": 374103
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/runtime-source-reference.png",
+      "owner": "body",
+      "bytes": 591079
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/runtime-validation.json",
+      "owner": "body",
+      "bytes": 22772
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/runtime-visual-audit.json",
+      "owner": "body",
+      "bytes": 2637
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/runtime/Nova_FRONT_v19.4096/texture_00.png",
+      "owner": "body",
+      "bytes": 5250976
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/runtime/Nova_FRONT_v19.moc3",
+      "owner": "body",
+      "bytes": 71296
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/rejected-first-export/source-manifest.json",
+      "owner": "body",
+      "bytes": 9573
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-blink-0.025.png",
+      "owner": "body",
+      "bytes": 347441
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-blink-0.1.png",
+      "owner": "body",
+      "bytes": 348404
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-blink-0.25.png",
+      "owner": "body",
+      "bytes": 353249
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-blink-0.5.png",
+      "owner": "body",
+      "bytes": 366557
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-blink-0.75.png",
+      "owner": "body",
+      "bytes": 375639
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-blink-0.png",
+      "owner": "body",
+      "bytes": 346603
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-blink-1.png",
+      "owner": "body",
+      "bytes": 379385
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-blink-filmstrip.png",
+      "owner": "body",
+      "bytes": 2554442
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-difference-registeredMaster.png",
+      "owner": "body",
+      "bytes": 75097
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-difference-sourceComposite.png",
+      "owner": "body",
+      "bytes": 59942
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-eye-L.png",
+      "owner": "body",
+      "bytes": 251338
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-eye-R.png",
+      "owner": "body",
+      "bytes": 269864
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-eye-reference.png",
+      "owner": "body",
+      "bytes": 370375
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-eye-source.png",
+      "owner": "body",
+      "bytes": 373564
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-face.png",
+      "owner": "body",
+      "bytes": 590659
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-gaze--1--1.png",
+      "owner": "body",
+      "bytes": 368413
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-gaze--1-0.png",
+      "owner": "body",
+      "bytes": 371714
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-gaze--1-1.png",
+      "owner": "body",
+      "bytes": 366990
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-gaze-0--1.png",
+      "owner": "body",
+      "bytes": 374103
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-gaze-0-0.png",
+      "owner": "body",
+      "bytes": 379385
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-gaze-0-1.png",
+      "owner": "body",
+      "bytes": 371822
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-gaze-1--1.png",
+      "owner": "body",
+      "bytes": 369544
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-gaze-1-0.png",
+      "owner": "body",
+      "bytes": 374806
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-gaze-1-1.png",
+      "owner": "body",
+      "bytes": 368513
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-gaze-filmstrip.png",
+      "owner": "body",
+      "bytes": 3393793
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-master-overlay.png",
+      "owner": "body",
+      "bytes": 584337
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-master-reference.png",
+      "owner": "body",
+      "bytes": 548315
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-mouth-filmstrip.png",
+      "owner": "body",
+      "bytes": 202387
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-reference-eye-L.png",
+      "owner": "body",
+      "bytes": 240779
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-reference-eye-R.png",
+      "owner": "body",
+      "bytes": 259198
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-source-overlay.png",
+      "owner": "body",
+      "bytes": 592845
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-source-reference.png",
+      "owner": "body",
+      "bytes": 591079
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-validation.json",
+      "owner": "body",
+      "bytes": 22772
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/runtime-visual-audit.json",
+      "owner": "body",
+      "bytes": 2637
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-difference-face.png",
+      "owner": "body",
+      "bytes": 16336
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-difference.png",
+      "owner": "body",
+      "bytes": 42440
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-eye-layers.png",
+      "owner": "body",
+      "bytes": 55494
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-face.png",
+      "owner": "body",
+      "bytes": 666590
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-full.png",
+      "owner": "body",
+      "bytes": 2177648
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-head-underpaint.png",
+      "owner": "body",
+      "bytes": 259024
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/aperture-raw-0.1.npz",
+      "owner": "body",
+      "bytes": 626850
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/aperture-raw-0.5.npz",
+      "owner": "body",
+      "bytes": 815135
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/aperture-raw-0.npz",
+      "owner": "body",
+      "bytes": 584671
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/aperture-raw-1.npz",
+      "owner": "body",
+      "bytes": 1047224
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/blink-0.025.png",
+      "owner": "body",
+      "bytes": 324027
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/blink-0.1.png",
+      "owner": "body",
+      "bytes": 324554
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/blink-0.25.png",
+      "owner": "body",
+      "bytes": 330274
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/blink-0.5.png",
+      "owner": "body",
+      "bytes": 345237
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/blink-0.75.png",
+      "owner": "body",
+      "bytes": 362100
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/blink-0.png",
+      "owner": "body",
+      "bytes": 323417
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/blink-1.png",
+      "owner": "body",
+      "bytes": 372120
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/blink-filmstrip.png",
+      "owner": "body",
+      "bytes": 2421367
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/face.png",
+      "owner": "body",
+      "bytes": 589950
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/gaze--1--1.png",
+      "owner": "body",
+      "bytes": 363550
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/gaze--1-0.png",
+      "owner": "body",
+      "bytes": 365207
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/gaze--1-1.png",
+      "owner": "body",
+      "bytes": 360144
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/gaze-0--1.png",
+      "owner": "body",
+      "bytes": 369408
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/gaze-0-0.png",
+      "owner": "body",
+      "bytes": 372120
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/gaze-0-1.png",
+      "owner": "body",
+      "bytes": 365199
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/gaze-1--1.png",
+      "owner": "body",
+      "bytes": 365116
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/gaze-1-0.png",
+      "owner": "body",
+      "bytes": 367774
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/gaze-1-1.png",
+      "owner": "body",
+      "bytes": 361619
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/gaze-filmstrip.png",
+      "owner": "body",
+      "bytes": 3342292
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-Blink-0.1.png",
+      "owner": "body",
+      "bytes": 4022
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-Blink-0.5.png",
+      "owner": "body",
+      "bytes": 7478
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-Rim-0.1.png",
+      "owner": "body",
+      "bytes": 55284
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-Rim-0.5.png",
+      "owner": "body",
+      "bytes": 52742
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-White-0.1.png",
+      "owner": "body",
+      "bytes": 10211
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-White-0.5.png",
+      "owner": "body",
+      "bytes": 25736
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-aperture-0.1.png",
+      "owner": "body",
+      "bytes": 57529
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-aperture-0.5.png",
+      "owner": "body",
+      "bytes": 70873
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-aperture-0.png",
+      "owner": "body",
+      "bytes": 56283
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-aperture-1.png",
+      "owner": "body",
+      "bytes": 84477
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-head-0.1.png",
+      "owner": "body",
+      "bytes": 292209
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-head-0.5.png",
+      "owner": "body",
+      "bytes": 292209
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-head-0.png",
+      "owner": "body",
+      "bytes": 292209
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/isolated-head-1.png",
+      "owner": "body",
+      "bytes": 292209
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layer-source.json",
+      "owner": "body",
+      "bytes": 5918
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/0.png",
+      "owner": "body",
+      "bytes": 904950
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/1.png",
+      "owner": "body",
+      "bytes": 221460
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/10.png",
+      "owner": "body",
+      "bytes": 136219
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/11.png",
+      "owner": "body",
+      "bytes": 6630
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/12.png",
+      "owner": "body",
+      "bytes": 4084
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/13.png",
+      "owner": "body",
+      "bytes": 2114
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/14.png",
+      "owner": "body",
+      "bytes": 757
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/15.png",
+      "owner": "body",
+      "bytes": 1674
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/16.png",
+      "owner": "body",
+      "bytes": 7506
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/17.png",
+      "owner": "body",
+      "bytes": 6503
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/18.png",
+      "owner": "body",
+      "bytes": 4034
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/19.png",
+      "owner": "body",
+      "bytes": 2095
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/2.png",
+      "owner": "body",
+      "bytes": 216335
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/20.png",
+      "owner": "body",
+      "bytes": 737
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/21.png",
+      "owner": "body",
+      "bytes": 1666
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/22.png",
+      "owner": "body",
+      "bytes": 7439
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/23.png",
+      "owner": "body",
+      "bytes": 563
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/24.png",
+      "owner": "body",
+      "bytes": 642
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/25.png",
+      "owner": "body",
+      "bytes": 6906
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/26.png",
+      "owner": "body",
+      "bytes": 3835
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/27.png",
+      "owner": "body",
+      "bytes": 41265
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/28.png",
+      "owner": "body",
+      "bytes": 63522
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/29.png",
+      "owner": "body",
+      "bytes": 128750
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/3.png",
+      "owner": "body",
+      "bytes": 61570
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/30.png",
+      "owner": "body",
+      "bytes": 33302
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/31.png",
+      "owner": "body",
+      "bytes": 386242
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/32.png",
+      "owner": "body",
+      "bytes": 3290
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/33.png",
+      "owner": "body",
+      "bytes": 4838
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/34.png",
+      "owner": "body",
+      "bytes": 3803
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/35.png",
+      "owner": "body",
+      "bytes": 2751
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/36.png",
+      "owner": "body",
+      "bytes": 4704
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/37.png",
+      "owner": "body",
+      "bytes": 3757
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/38.png",
+      "owner": "body",
+      "bytes": 985
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/39.png",
+      "owner": "body",
+      "bytes": 814
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/4.png",
+      "owner": "body",
+      "bytes": 49875
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/40.png",
+      "owner": "body",
+      "bytes": 812
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/41.png",
+      "owner": "body",
+      "bytes": 7318
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/42.png",
+      "owner": "body",
+      "bytes": 1817
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/43.png",
+      "owner": "body",
+      "bytes": 660
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/44.png",
+      "owner": "body",
+      "bytes": 1006
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/45.png",
+      "owner": "body",
+      "bytes": 712
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/46.png",
+      "owner": "body",
+      "bytes": 1172
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/47.png",
+      "owner": "body",
+      "bytes": 1607
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/48.png",
+      "owner": "body",
+      "bytes": 3893
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/49.png",
+      "owner": "body",
+      "bytes": 2838
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/5.png",
+      "owner": "body",
+      "bytes": 109899
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/50.png",
+      "owner": "body",
+      "bytes": 2925
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/51.png",
+      "owner": "body",
+      "bytes": 1253
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/6.png",
+      "owner": "body",
+      "bytes": 286865
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/7.png",
+      "owner": "body",
+      "bytes": 390979
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/8.png",
+      "owner": "body",
+      "bytes": 37331
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/layers/9.png",
+      "owner": "body",
+      "bytes": 27961
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/preflight.json",
+      "owner": "body",
+      "bytes": 987
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/source-overlay.png",
+      "owner": "body",
+      "bytes": 590720
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/source-reference.png",
+      "owner": "body",
+      "bytes": 590230
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/aperture-raw-0.1.npz",
+      "owner": "body",
+      "bytes": 608496
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/aperture-raw-0.5.npz",
+      "owner": "body",
+      "bytes": 793064
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/aperture-raw-0.npz",
+      "owner": "body",
+      "bytes": 566261
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/aperture-raw-1.npz",
+      "owner": "body",
+      "bytes": 1030111
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/blink-0.025.png",
+      "owner": "body",
+      "bytes": 324445
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/blink-0.1.png",
+      "owner": "body",
+      "bytes": 324946
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/blink-0.25.png",
+      "owner": "body",
+      "bytes": 330699
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/blink-0.5.png",
+      "owner": "body",
+      "bytes": 345402
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/blink-0.75.png",
+      "owner": "body",
+      "bytes": 362541
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/blink-0.png",
+      "owner": "body",
+      "bytes": 324204
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/blink-1.png",
+      "owner": "body",
+      "bytes": 373473
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/blink-filmstrip.png",
+      "owner": "body",
+      "bytes": 2425038
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/contour-measurements.json",
+      "owner": "body",
+      "bytes": 1334
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/face.png",
+      "owner": "body",
+      "bytes": 590049
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/gaze--1--1.png",
+      "owner": "body",
+      "bytes": 363903
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/gaze--1-0.png",
+      "owner": "body",
+      "bytes": 366317
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/gaze--1-1.png",
+      "owner": "body",
+      "bytes": 360944
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/gaze-0--1.png",
+      "owner": "body",
+      "bytes": 370033
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/gaze-0-0.png",
+      "owner": "body",
+      "bytes": 373473
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/gaze-0-1.png",
+      "owner": "body",
+      "bytes": 366025
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/gaze-1--1.png",
+      "owner": "body",
+      "bytes": 365649
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/gaze-1-0.png",
+      "owner": "body",
+      "bytes": 368866
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/gaze-1-1.png",
+      "owner": "body",
+      "bytes": 362483
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/gaze-filmstrip.png",
+      "owner": "body",
+      "bytes": 3350573
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-Blink-0.1.png",
+      "owner": "body",
+      "bytes": 3898
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-Blink-0.5.png",
+      "owner": "body",
+      "bytes": 7151
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-Rim-0.1.png",
+      "owner": "body",
+      "bytes": 55256
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-Rim-0.5.png",
+      "owner": "body",
+      "bytes": 52737
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-White-0.1.png",
+      "owner": "body",
+      "bytes": 8555
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-White-0.5.png",
+      "owner": "body",
+      "bytes": 24635
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-aperture-0.1.png",
+      "owner": "body",
+      "bytes": 57262
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-aperture-0.5.png",
+      "owner": "body",
+      "bytes": 70928
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-aperture-0.png",
+      "owner": "body",
+      "bytes": 56294
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-aperture-1.png",
+      "owner": "body",
+      "bytes": 85215
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-head-0.1.png",
+      "owner": "body",
+      "bytes": 292987
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-head-0.5.png",
+      "owner": "body",
+      "bytes": 292987
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-head-0.png",
+      "owner": "body",
+      "bytes": 292987
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/isolated-head-1.png",
+      "owner": "body",
+      "bytes": 292987
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/preflight.json",
+      "owner": "body",
+      "bytes": 834
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/source-overlay.png",
+      "owner": "body",
+      "bytes": 590809
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-flat332.0/source-reference.png",
+      "owner": "body",
+      "bytes": 590343
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-proposals/L-white-closed-down-0.png",
+      "owner": "body",
+      "bytes": 241514
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-proposals/L-white-closed-down-1.png",
+      "owner": "body",
+      "bytes": 241239
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-proposals/L-white-closed-down-2.png",
+      "owner": "body",
+      "bytes": 242544
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-proposals/L-white-closed-down-3.png",
+      "owner": "body",
+      "bytes": 243462
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-proposals/L-white-closed-down-4.png",
+      "owner": "body",
+      "bytes": 243794
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-keyform-proposals/measurements.json",
+      "owner": "body",
+      "bytes": 3688
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/source-motion-preflight/white-mesh-coverage.json",
+      "owner": "body",
+      "bytes": 1342
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/preview/v19/underpaint-master-context.png",
+      "owner": "body",
+      "bytes": 619479
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/rig/Nova_CALM_v07.cmo3",
@@ -3967,6 +5577,26 @@
       "path": "nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v17.cmo3",
       "owner": "body",
       "bytes": 73189180
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v18_eyes.cmo3",
+      "owner": "body",
+      "bytes": 77978963
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v19.cmo3",
+      "owner": "body",
+      "bytes": 82665320
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v19_before_lash_coverage.cmo3",
+      "owner": "body",
+      "bytes": 82617872
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/rig/Nova_FRONT_v19_before_underpaint.cmo3",
+      "owner": "body",
+      "bytes": 82658325
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/rig/Nova_before_CALM_v07_2026-09-28.cmo3",
@@ -4999,6 +6629,181 @@
       "bytes": 436
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/Nova_FRONT_v18_eyes.4096/texture_00.png",
+      "owner": "body",
+      "bytes": 5344273
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/Nova_FRONT_v18_eyes.cdi3.json",
+      "owner": "body",
+      "bytes": 4087
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/Nova_FRONT_v18_eyes.moc3",
+      "owner": "body",
+      "bytes": 100032
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/Nova_FRONT_v18_eyes.model3.json",
+      "owner": "body",
+      "bytes": 2059
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/Nova_FRONT_v18_eyes.vtube.json",
+      "owner": "body",
+      "bytes": 46577
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/README.txt",
+      "owner": "body",
+      "bytes": 5225
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/expressions/Nova_v13_LipContact_FV.exp3.json",
+      "owner": "body",
+      "bytes": 191
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/expressions/Nova_v13_Round_OH.exp3.json",
+      "owner": "body",
+      "bytes": 191
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/expressions/Nova_v13_Sleepy.exp3.json",
+      "owner": "body",
+      "bytes": 281
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/expressions/Nova_v13_Wide_EE.exp3.json",
+      "owner": "body",
+      "bytes": 191
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/icon.png",
+      "owner": "body",
+      "bytes": 166865
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_FRONT_Clothes.motion3.json",
+      "owner": "body",
+      "bytes": 1983
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_FRONT_Idle.motion3.json",
+      "owner": "body",
+      "bytes": 1732
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v13_AA.motion3.json",
+      "owner": "body",
+      "bytes": 1549
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v13_Demo.motion3.json",
+      "owner": "body",
+      "bytes": 4207
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v13_EE.motion3.json",
+      "owner": "body",
+      "bytes": 1553
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v13_FV.motion3.json",
+      "owner": "body",
+      "bytes": 1553
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v13_Gaze.motion3.json",
+      "owner": "body",
+      "bytes": 1549
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v13_Neutral.motion3.json",
+      "owner": "body",
+      "bytes": 1549
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v13_OH.motion3.json",
+      "owner": "body",
+      "bytes": 1553
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v14_Down.motion3.json",
+      "owner": "body",
+      "bytes": 1551
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v14_DownLeft.motion3.json",
+      "owner": "body",
+      "bytes": 1553
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v14_DownRight.motion3.json",
+      "owner": "body",
+      "bytes": 1551
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v14_HalfDown.motion3.json",
+      "owner": "body",
+      "bytes": 1559
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v15_Down.motion3.json",
+      "owner": "body",
+      "bytes": 1551
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v15_DownLeft.motion3.json",
+      "owner": "body",
+      "bytes": 1553
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v15_DownRight.motion3.json",
+      "owner": "body",
+      "bytes": 1551
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v15_HalfDown.motion3.json",
+      "owner": "body",
+      "bytes": 1559
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v16_Eye_Review.motion3.json",
+      "owner": "body",
+      "bytes": 3174
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/motions/Nova_v17_Eye_Review.motion3.json",
+      "owner": "body",
+      "bytes": 4659
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v18_eyes/speech-shapes.json",
+      "owner": "body",
+      "bytes": 436
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v19/Nova_FRONT_v19.4096/texture_00.png",
+      "owner": "body",
+      "bytes": 5250976
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v19/Nova_FRONT_v19.cdi3.json",
+      "owner": "body",
+      "bytes": 4087
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v19/Nova_FRONT_v19.moc3",
+      "owner": "body",
+      "bytes": 71296
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_FRONT_v19/Nova_FRONT_v19.model3.json",
+      "owner": "body",
+      "bytes": 179
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.4096/texture_00.png",
       "owner": "body",
       "bytes": 4896190
@@ -5169,9 +6974,24 @@
       "bytes": 455
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/source/FRONT_v18_eyes.json",
+      "owner": "body",
+      "bytes": 7041
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/source/FRONT_v18_layers.json",
       "owner": "body",
-      "bytes": 7052
+      "bytes": 7168
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/source/FRONT_v19_master.json",
+      "owner": "body",
+      "bytes": 8731
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/source/FRONT_v19_master_before_blink_underpaint.json",
+      "owner": "body",
+      "bytes": 9573
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/source/Nova_CALM_v07.psd",
@@ -5226,7 +7046,22 @@
     {
       "path": "nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v18.psd",
       "owner": "body",
-      "bytes": 13092733
+      "bytes": 13367042
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v18_eyes.psd",
+      "owner": "body",
+      "bytes": 11876698
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v19.psd",
+      "owner": "body",
+      "bytes": 11896094
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/source/Nova_FRONT_v19_before_blink_underpaint.psd",
+      "owner": "body",
+      "bytes": 11895117
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/source/Nova_Layer_Assembly_Preview_v01.png",
@@ -5396,7 +7231,7 @@
     {
       "path": "nova_body/SELF/Avatar/Live2D/tooling/assemble_head_v18.cjs",
       "owner": "body",
-      "bytes": 12190
+      "bytes": 12540
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/tooling/assemble_layers.cjs",
@@ -5447,6 +7282,16 @@
       "path": "nova_body/SELF/Avatar/Live2D/tooling/check_front_geometry.py",
       "owner": "body",
       "bytes": 3372
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/checkpoint_front_master_v19.py",
+      "owner": "body",
+      "bytes": 14284
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/checkpoint_reference_eyes_v18.py",
+      "owner": "body",
+      "bytes": 11897
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v12.py",
@@ -5524,6 +7369,11 @@
       "bytes": 85
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/package_front_master_v19.py",
+      "owner": "body",
+      "bytes": 2211
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/tooling/package_front_v09.py",
       "owner": "body",
       "bytes": 4599
@@ -5564,9 +7414,19 @@
       "bytes": 3138
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/package_reference_eyes_v18.py",
+      "owner": "body",
+      "bytes": 2229
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/tooling/package_runtime.py",
       "owner": "body",
       "bytes": 6348
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/preflight_front_master_v19.py",
+      "owner": "body",
+      "bytes": 9143
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/tooling/prepare_blink_v17.cjs",
@@ -5594,9 +7454,24 @@
       "bytes": 8836
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/prepare_front_master_v19.cjs",
+      "owner": "body",
+      "bytes": 31366
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/prepare_front_master_v19_before_blink_underpaint.cjs",
+      "owner": "body",
+      "bytes": 22589
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/tooling/prepare_lower_lash_v14.cjs",
       "owner": "body",
       "bytes": 4464
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/prepare_reference_iris_v18.cjs",
+      "owner": "body",
+      "bytes": 15956
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/tooling/prepare_speech_v13.cjs",
@@ -5664,6 +7539,11 @@
       "bytes": 3482
     },
     {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/review_front_master_v19.py",
+      "owner": "body",
+      "bytes": 26149
+    },
+    {
       "path": "nova_body/SELF/Avatar/Live2D/tooling/review_garments_v11.py",
       "owner": "body",
       "bytes": 3194
@@ -5672,6 +7552,11 @@
       "path": "nova_body/SELF/Avatar/Live2D/tooling/review_lower_lash_v14.py",
       "owner": "body",
       "bytes": 4777
+    },
+    {
+      "path": "nova_body/SELF/Avatar/Live2D/tooling/review_reference_eyes_v18.py",
+      "owner": "body",
+      "bytes": 5381
     },
     {
       "path": "nova_body/SELF/Avatar/Live2D/tooling/save_session_checkpoint.py",
@@ -5736,7 +7621,7 @@
     {
       "path": "nova_body/SELF/core/03_body_manifest.md",
       "owner": "body",
-      "bytes": 9365
+      "bytes": 9514
     },
     {
       "path": "nova_body/SELF/core/04_tools_and_voice.md",
@@ -5761,7 +7646,7 @@
     {
       "path": "nova_body/SELF/reference/manifest.json",
       "owner": "body",
-      "bytes": 27883
+      "bytes": 33878
     },
     {
       "path": "nova_body/SELF/reference/ncl_master.md",
@@ -5851,7 +7736,7 @@
     {
       "path": "nova_body/nova_computer/hands.py",
       "owner": "body",
-      "bytes": 20699
+      "bytes": 21126
     },
     {
       "path": "nova_body/nova_computer/pluck_check.py",
@@ -5914,6 +7799,11 @@
       "bytes": 702
     },
     {
+      "path": "nova_body/nova_cortex/context_budget.py",
+      "owner": "body",
+      "bytes": 5935
+    },
+    {
       "path": "nova_body/nova_cortex/discourse.py",
       "owner": "body",
       "bytes": 27035
@@ -5926,7 +7816,7 @@
     {
       "path": "nova_body/nova_cortex/executive.py",
       "owner": "body",
-      "bytes": 75935
+      "bytes": 76493
     },
     {
       "path": "nova_body/nova_cortex/integrity.py",
@@ -5956,12 +7846,12 @@
     {
       "path": "nova_body/nova_cortex/tasking.py",
       "owner": "body",
-      "bytes": 13471
+      "bytes": 18940
     },
     {
       "path": "nova_body/nova_cortex/tunables.py",
       "owner": "body",
-      "bytes": 9819
+      "bytes": 10797
     },
     {
       "path": "nova_body/nova_cortex/verification.py",
@@ -5971,12 +7861,12 @@
     {
       "path": "nova_body/nova_cortex/witness.py",
       "owner": "body",
-      "bytes": 66441
+      "bytes": 57852
     },
     {
       "path": "nova_body/nova_cortex/workspace_context.py",
       "owner": "body",
-      "bytes": 30296
+      "bytes": 30903
     },
     {
       "path": "nova_body/nova_forge/__init__.py",
@@ -6111,7 +8001,7 @@
     {
       "path": "nova_body/nova_runtime/model_client.py",
       "owner": "body",
-      "bytes": 5044
+      "bytes": 5754
     },
     {
       "path": "nova_body/nova_runtime/model_guard.py",
@@ -6216,17 +8106,17 @@
     {
       "path": "nova_body/nova_voice/nova.py",
       "owner": "body",
-      "bytes": 164795
+      "bytes": 167907
     },
     {
       "path": "nova_body/nova_voice/tool_result.py",
       "owner": "body",
-      "bytes": 3024
+      "bytes": 3919
     },
     {
       "path": "nova_body/nova_voice/tool_router.py",
       "owner": "body",
-      "bytes": 75801
+      "bytes": 77153
     },
     {
       "path": "nova_body/nova_witness/README.md",
@@ -6234,9 +8124,129 @@
       "bytes": 4865
     },
     {
+      "path": "nova_body/nova_witness/casekit.py",
+      "owner": "body",
+      "bytes": 16884
+    },
+    {
       "path": "nova_body/nova_witness/cases/candidates.jsonl",
       "owner": "body",
       "bytes": 23891
+    },
+    {
+      "path": "nova_body/nova_witness/controls/README.md",
+      "owner": "body",
+      "bytes": 2225
+    },
+    {
+      "path": "nova_body/nova_witness/controls/build_controls_v1.py",
+      "owner": "body",
+      "bytes": 41203
+    },
+    {
+      "path": "nova_body/nova_witness/controls/controls_v1.jsonl",
+      "owner": "body",
+      "bytes": 141824
+    },
+    {
+      "path": "nova_body/nova_witness/controls/images/black_frame.png",
+      "owner": "body",
+      "bytes": 4294
+    },
+    {
+      "path": "nova_body/nova_witness/controls/images/desktop_empty_a.png",
+      "owner": "body",
+      "bytes": 677089
+    },
+    {
+      "path": "nova_body/nova_witness/controls/images/desktop_empty_b.png",
+      "owner": "body",
+      "bytes": 677125
+    },
+    {
+      "path": "nova_body/nova_witness/controls/images/yt_results.png",
+      "owner": "body",
+      "bytes": 848964
+    },
+    {
+      "path": "nova_body/nova_witness/controls/images/yt_short_muted_later.png",
+      "owner": "body",
+      "bytes": 422611
+    },
+    {
+      "path": "nova_body/nova_witness/controls/images/yt_short_sound_icon.png",
+      "owner": "body",
+      "bytes": 393551
+    },
+    {
+      "path": "nova_body/nova_witness/dev/README.md",
+      "owner": "body",
+      "bytes": 2758
+    },
+    {
+      "path": "nova_body/nova_witness/dev/build_dev_v1.py",
+      "owner": "body",
+      "bytes": 29234
+    },
+    {
+      "path": "nova_body/nova_witness/dev/dev_v1.jsonl",
+      "owner": "body",
+      "bytes": 65624
+    },
+    {
+      "path": "nova_body/nova_witness/dev/evidence/voice_README.md",
+      "owner": "body",
+      "bytes": 5554
+    },
+    {
+      "path": "nova_body/nova_witness/dev/images/example_page.png",
+      "owner": "body",
+      "bytes": 279830
+    },
+    {
+      "path": "nova_body/nova_witness/dev/images/files_downloads.png",
+      "owner": "body",
+      "bytes": 32993
+    },
+    {
+      "path": "nova_body/nova_witness/dev/images/firefox_splash.png",
+      "owner": "body",
+      "bytes": 197295
+    },
+    {
+      "path": "nova_body/nova_witness/dev/images/player_paused.png",
+      "owner": "body",
+      "bytes": 22837
+    },
+    {
+      "path": "nova_body/nova_witness/dev/images/tail_1.png",
+      "owner": "body",
+      "bytes": 24360
+    },
+    {
+      "path": "nova_body/nova_witness/dev/images/tail_2.png",
+      "owner": "body",
+      "bytes": 24594
+    },
+    {
+      "path": "nova_body/nova_witness/dev/images/tail_3.png",
+      "owner": "body",
+      "bytes": 24811
+    },
+    {
+      "path": "nova_body/nova_witness/dev/images/tail_4.png",
+      "owner": "body",
+      "bytes": 24562
+    },
+    {
+      "path": "nova_body/nova_witness/dev/images/tail_5.png",
+      "owner": "body",
+      "bytes": 24535
+    },
+    {
+      "path": "nova_body/nova_witness/dev/images/term_wc.png",
+      "owner": "body",
+      "bytes": 22265
     },
     {
       "path": "nova_body/nova_witness/extract_golden.py",
@@ -6254,9 +8264,19 @@
       "bytes": 10096
     },
     {
+      "path": "nova_body/nova_witness/holdout/README.md",
+      "owner": "body",
+      "bytes": 1800
+    },
+    {
       "path": "nova_body/nova_witness/replay.py",
       "owner": "body",
-      "bytes": 12023
+      "bytes": 25542
+    },
+    {
+      "path": "nova_body/nova_witness/reports/2026-10-04_1849_controls_v1_readout.md",
+      "owner": "body",
+      "bytes": 3098
     },
     {
       "path": "nova_body/nova_witness/reports/replay_127.0.0.1_8080_2026-08-02_1420.json",
@@ -6389,6 +8409,21 @@
       "bytes": 976
     },
     {
+      "path": "nova_body/nova_witness/reports/replay_v3_127.0.0.1_8080_2026-10-04_184921_053922.json",
+      "owner": "body",
+      "bytes": 30887
+    },
+    {
+      "path": "nova_body/nova_witness/reports/replay_v3_127.0.0.1_8080_2026-10-04_184921_053922.md",
+      "owner": "body",
+      "bytes": 3281
+    },
+    {
+      "path": "nova_body/nova_witness/reports/replay_v3_127.0.0.1_8080_2026-10-04_184921_053922_environment.json",
+      "owner": "body",
+      "bytes": 1548
+    },
+    {
       "path": "nova_body/nova_witness/start_witness.cmd",
       "owner": "body",
       "bytes": 2051
@@ -6396,12 +8431,17 @@
     {
       "path": "nova_body/tests/test_computer_launch.py",
       "owner": "body",
-      "bytes": 12142
+      "bytes": 13170
     },
     {
       "path": "nova_body/tests/test_koels_launcher.py",
       "owner": "body",
       "bytes": 5684
+    },
+    {
+      "path": "nova_body/tests/test_model_client.py",
+      "owner": "body",
+      "bytes": 6599
     },
     {
       "path": "nova_body/tests/test_modernization.py",
@@ -6429,6 +8469,11 @@
       "bytes": 1633
     },
     {
+      "path": "nova_body/tests/test_task_continuity.py",
+      "owner": "body",
+      "bytes": 16205
+    },
+    {
       "path": "nova_body/tests/test_tool_correlation.py",
       "owner": "body",
       "bytes": 2952
@@ -6436,7 +8481,22 @@
     {
       "path": "nova_body/tests/test_witness_delivery.py",
       "owner": "body",
-      "bytes": 18781
+      "bytes": 32385
+    },
+    {
+      "path": "nova_body/tests/test_witness_evidence.py",
+      "owner": "body",
+      "bytes": 3588
+    },
+    {
+      "path": "nova_body/tests/test_witness_policy.py",
+      "owner": "body",
+      "bytes": 4641
+    },
+    {
+      "path": "nova_body/tests/test_witness_replay.py",
+      "owner": "body",
+      "bytes": 19637
     },
     {
       "path": "nova_start.py",
@@ -6459,7 +8519,7 @@
     "general_tools/architecture_map/atlas_history.py": "3e2976780c6e6f72a66047d3e161903f0acfe27f718943976f6460f1ad5a4bb6",
     "general_tools/architecture_map/build.py": "582d9c2129953e60e632ade53c949b768614ca077e939a8d61c312ba9fd6153c",
     "general_tools/architecture_map/experience.js": "ed3dbaf90ce9743729a82d61ab25e96afc9d8d30c54d739956e986aed039fa46",
-    "general_tools/architecture_map/orient.py": "60a6ebe01c398b4c2df9c0fa0f8f702feaa1cf61f7286a3512ead96c278cdfa0",
+    "general_tools/architecture_map/orient.py": "99815f7bcb927ac308bf7046bdbcf0a53e46863bcb5ab82132a86b068343d138",
     "general_tools/architecture_map/serve.py": "dc9340f05e7ad159ddd89fdc8bd81945c320422ae88c8bfe071a491d4d1e3ef4",
     "general_tools/architecture_map/test_architecture.py": "b84106cfa4c1543c63361f2f0f3d078744545f572603a96e52e04e2cb63c989c",
     "general_tools/architecture_map/test_history.py": "331cf2bb2840ca0b5b1bb35d43a72260a36ff4424006644cab3fcf00b02d67cc",
@@ -6472,8 +8532,8 @@
     "general_tools/audit_queue.py": "691df9bb627c592453031a2fcdbf8afa8d786864c1b896b4f6f39c8341952e0d",
     "general_tools/audit_scripts.py": "5d77421f563cd17997f916b8414a525f02fe51d9c5cdd62c1492f6dcfb9a5f21",
     "general_tools/build_manifest.py": "0020fc3e461a5b66c8a250e5831806937e77c89781fed33bfb4d252aa49913da",
-    "general_tools/calls.py": "70740c5b50c33b9fb002724256d9af56d0b3b4aa44cdbfded2a8872f6de096b6",
-    "general_tools/calls_order.py": "4291ecb0edf04d8a4caa960d847274decb4638cd13dc5b8ee2a1e33708038a91",
+    "general_tools/calls.py": "a324029ef926dd243b715817504aa6c1e2fda63593f7e832eb369a5d5b403e2d",
+    "general_tools/calls_order.py": "5795f1b10423abf9e3c6b7893d457b15728e391b7f21772f70d227343e309639",
     "general_tools/cloud_call.py": "05bdae344ea761c91322f78e804a1b1d08da9cc50a5ff70aa696aa014128e702",
     "general_tools/injector.py": "b50ad6607bde2ca422ea5b5c93ff57332626045b037e6b84965347457e8f14f0",
     "general_tools/janitor.py": "13a3f18fa07578321b8650d9219a4694ee25355d69a97e7d462c07a8a95e4694",
@@ -6486,8 +8546,9 @@
     "general_tools/nova_chat/nova_bridge.py": "00f2923ee58f57adfe9048f3d0790e46ff651221d95c26efec7b1e061ed95dfe",
     "general_tools/nova_chat/nova_lang.py": "5ccbda6863c272f893797530b8c8a5534b8c4f8f4cc267d44ddcc7a30104ed1c",
     "general_tools/nova_chat/orchestrator.py": "f2812f14724ef6b0410512d66f45555e40d1a076fabfcd7d212b0601d31326d6",
+    "general_tools/nova_chat/response_events.py": "641f2c04b72d09fb68c8a8e8d681a95fb73e927e2bb9243643c37cbb3ebd82ce",
     "general_tools/nova_chat/runtime_host.py": "34826f81047c6625f90d77641f62fba034342aa98ed5021e0ec0f41210f25990",
-    "general_tools/nova_chat/server.py": "48ccaec9994a668651fadd9bfeafbc0fb70ee83f9366871fbb0917457909ba6b",
+    "general_tools/nova_chat/server.py": "c1d55323e24a85d5caa526f5e867520c31d5780b2b2a518b2d5b76a2ef7bab10",
     "general_tools/nova_chat/server_runner.py": "f514b9ea1a90b3f732784e3901c99e692eb7cfe035a37af5be6a2f655a83c680",
     "general_tools/nova_chat/session_manager.py": "f0cdac265a55310ba3c7cbde4dd5032a1a7153867293da2d10bc139a080e1f69",
     "general_tools/nova_chat/static/collaboration.css": "b631b717a09e0895dc3f468ef2d926e79df8bf7edb12563322db86d9ca3a1317",
@@ -6495,12 +8556,14 @@
     "general_tools/nova_chat/static/control.css": "665eadf73f12b98ee74bb1af70373a0cfecaeaef5eabfe87871a81b29224c1d4",
     "general_tools/nova_chat/static/control.js": "c315005fa5e6533c529196cc9537f898d2b65f0d87eaf4758c0931f6ee640457",
     "general_tools/nova_chat/static/conversation-power.js": "07a039944f313a362483523fbe4f9363528e531616cb4e0ca2687c1a41a49b3a",
-    "general_tools/nova_chat/static/index.html": "72f68b481a9b37000c55f526f9dab0c6afe1cd01afab8e44220c1dfead507268",
+    "general_tools/nova_chat/static/index.html": "0e96de15f74a6de3ec9e5cf32b3451b4111cee875a9e800b8ed89b495dfee1ad",
     "general_tools/nova_chat/static/updater.css": "486381d3320d9fabda76e6af9dc450ae39b4a606246c0113e3049b3690f8d134",
     "general_tools/nova_chat/static/updater.js": "ad9794687a76ef86b2c76c5f450b090d6d8ec7d8ae58999bdeb78f2fec8338c6",
+    "general_tools/nova_chat/static/voice.css": "501b9d6a31e3dba5c915f0b49f830f10bcfb4319966da3cb73cf7b2144498bb5",
+    "general_tools/nova_chat/static/voice.js": "f29b9078d6b3e3afd1d2f3e44618e8c45324931da80fe98b7e4f041c925b0066",
     "general_tools/nova_chat/static/workspace.css": "6299ae7acd33eb8b30553768dc733d2bcb26a8dfba01ea0f1580cc469341a3e0",
     "general_tools/nova_chat/static/workspace.js": "bfbd78cc85ffe3a472b502dfec3ea056b135ee6ba106b03792959eb31f7901f6",
-    "general_tools/nova_chat/tests/test_chat_only.py": "531988886eb3193f6d53df8e874c6c715d09910664768bae3d0bc5b508445aec",
+    "general_tools/nova_chat/tests/test_chat_only.py": "0d88143bb800206702732d22dae1076db6dc5fe983ede56fb50535614bdc8559",
     "general_tools/nova_chat/tests/test_collaboration.py": "aa14740b372201b7d3b3bee87ab9c7f392f916f858beca63b324620a076514a6",
     "general_tools/nova_chat/tests/test_collaboration_bridge.py": "6026dd0ffb47fab8441e6856c5d71be70311f8a07e96c9bf208d290c445bf18d",
     "general_tools/nova_chat/tests/test_collaboration_spool.py": "f2288b34f580aeb508f81a41a2b4bbe3fd3129a29353c7d081d054b64ad963f2",
@@ -6511,7 +8574,10 @@
     "general_tools/nova_chat/tests/test_lifecycle_ack.py": "143facc1a6a3a9af3711d223f3a6230ae2a6ca5dc7b64948708a1c2775a9cd69",
     "general_tools/nova_chat/tests/test_source_fingerprint.py": "ab013444aa2bc5eb0681b05c6efabdcea5271afea6f015859374fbb1c29f7661",
     "general_tools/nova_chat/tests/test_updater_integration.py": "14649bc735ee414ea8d83aeea7d6d8911837debeca60713dab93378bc5d2a7ff",
+    "general_tools/nova_chat/tests/test_voice_control.py": "2a472b684d5244501ebdc0d080216399fca5e44ce2df9939a441bdeea6bfecb9",
+    "general_tools/nova_chat/tests/test_voice_transport.py": "359b4c9ee71565e3591619f5235b7b567882271f95224567added1b55223c17d",
     "general_tools/nova_chat/transcript.py": "235c7aa097515e26f7c149f28cd5906e4918e9334e06e5f780ece057946e6959",
+    "general_tools/nova_chat/voice_control.py": "7fec951b2438da55ae259fb0af16278c0ca1b4d75ce017598220273e2a4ba2e6",
     "general_tools/nova_chat/widget_data.py": "f62bfa2da5b360a4031717ec75c398fcc82417f848e94fa3b5e8bb0a66edc2d8",
     "general_tools/nova_chat/workspace_context.py": "4700a55f9e21487ef549fe0af101519fa6bbeb4c46544774a17641e4fcf25b9f",
     "general_tools/nova_collaboration/bridge.py": "2d2c212b59fe6becba9e07389fb97d78d6d403c41e79458c4fafb92e41e9f41f",
@@ -6558,7 +8624,7 @@
     "general_tools/nova_updater/tests/test_install.py": "5fdb0c560e5a56a77bca431f05ddedc5949b47c50a1314706d2c5b423dfc11a5",
     "general_tools/nova_updater/tests/test_launcher.py": "4c9ad7e6b5e0da279a6e554a7fe9b40720cd8471833701e2e4897332544bf834",
     "general_tools/nova_updater/tests/test_pod_compat.py": "98603836e503e86d28298f30167249e293e26dbbc006eb2df7145c68edfabbf9",
-    "general_tools/nova_updater/tests/test_pod_venv.py": "143322f384818cb4fc8d3f9b6e65e6f35e952d5954f067a66c92621029f57a30",
+    "general_tools/nova_updater/tests/test_pod_venv.py": "fb8d98041f28f682d6909ee6cdb28712ec4c4a6186095fde77935508dcba7ba5",
     "general_tools/nova_updater/tests/test_runpod_cleanup.py": "eaea99523e98cf29689bcaefbc296b1260ef4be0d46000f7051a50efac7fd283",
     "general_tools/nova_updater/tests/test_runpod_delete_http.py": "5f045ef260aff2e41aa0631c104bb2e66654442739ee1ac07db170a7e763f529",
     "general_tools/nova_updater/tests/test_runpod_funding.py": "61302753ae9c581d7be74d06282b28e80aa0c4230aa7fd410a5e82505e711d27",
@@ -6568,15 +8634,23 @@
     "general_tools/nova_updater/tests/test_training_files.py": "34db291f71bd4e257f6f129eedf619b5600cc95c1e267dbb30bfac844de3282b",
     "general_tools/nova_updater/train.py": "556d842e0b605fa0f7e5ca2a3419a92f32594465195b1351dac444d5595b05b7",
     "general_tools/restructure.py": "6b87d65ad01998a7e89de9600d2cb401ddd7bcecc826380f104cb6819edfe7fd",
+    "general_tools/voice_gateway/VOICE_CHECK.cmd": "6367409bc4ee96a4c386b287ad6d5a4eb8305afe97bde657df1f2968594729bc",
     "general_tools/voice_gateway/__init__.py": "a291aefb01444be321e2f097689165f2f7ddeb8ba2155f6608c5c9dd3e937325",
-    "general_tools/voice_gateway/committer.py": "2a20f9b9e2f02310404336b2c107bfe186f5960ae84212f5205f5d84e3237675",
-    "general_tools/voice_gateway/config.py": "48c7d0affe5c649e6aec4b40b56a60f1ae23acc8fd97a75c90f3b7b4a8eb5309",
+    "general_tools/voice_gateway/body.py": "1f65ef8285a44973f40bf771aed369cb82f46bf38b5b47b24699d6d14284fcf6",
+    "general_tools/voice_gateway/check_voice_ready.py": "3d88aea494d9f695f61aefc7004acf3aa5e058896501c40f9139b0bb1e220c01",
+    "general_tools/voice_gateway/committer.py": "1f8df0ee55b87a7af2be52ff28f5875768183510d8cb8bbf13a8f1c835a4c0d3",
+    "general_tools/voice_gateway/config.py": "7a9ee441b7fa9ccf021e7d6fa77f6114ae8935e7ee6a8c3b53be189c6bb03293",
+    "general_tools/voice_gateway/control_worker.py": "a681b31846897af8881c4af96e41c0bdcba6133a6ff169cbcb9bcd23805281a3",
     "general_tools/voice_gateway/fetch_models.cmd": "1df9e31cfbb10453a81ce802c2424f47640dedefcfeefd0347a7c937d3c2cad6",
-    "general_tools/voice_gateway/gateway.py": "cfb87c043ce778da6472267610474d705c963ef35b079ce2f870f1e41e247abc",
-    "general_tools/voice_gateway/nova_link.py": "c504216564c5b722203471f604c0bea94d037ece84f43fed3eb94caea99ec08c",
-    "general_tools/voice_gateway/stt.py": "fde037c98cebd1976fa2cbd1cb1b7f3d54c7400bbcb38fcd809b4a1b7a5dc04d",
+    "general_tools/voice_gateway/gateway.py": "e008a0756cabba401a15b8a1387b60f5ec4f7a96319707a4adbf96f6a82e85b0",
+    "general_tools/voice_gateway/nova_link.py": "6cac6ed4649c57a9da200e0b98fec65870e9a67f02b5463f044eb0841c334856",
+    "general_tools/voice_gateway/speech.py": "556e40eed2a15ba6189fc7c206e2f85eb211497fc6bc2c14f89987845577e8ed",
+    "general_tools/voice_gateway/stt.py": "0218b66778f2fc5cec92b66e116efba6b02af6340538cac82e356423cb6b2bb2",
     "general_tools/voice_gateway/test_committer.py": "cf07a113ab34deb1827f950523d481cefa058a8a39dca382c45085c332d728d2",
-    "general_tools/voice_gateway/tts.py": "916fcc1e90799e7934b746c48df54c77e0bfc88d5f9b27a8b0180267b9538373",
+    "general_tools/voice_gateway/test_link_socket.py": "afb3d4d468d9d71278aea11075a1100c22977a284b63eb0f829787c944dce071",
+    "general_tools/voice_gateway/test_voice_flow.py": "73e58d2fe70fc9fe05be366a390cbfc32c751165e9b944374b3b00224992f004",
+    "general_tools/voice_gateway/tts.py": "1128de489652994296976402c65cfcb4911299c99a5e64698c62ee5ebe6b5dd1",
+    "general_tools/voice_gateway/turns.py": "dd8e3011582e9031356cc84c27bf64db80368fe4eae9426dcf85559ba5572642",
     "nova_body/nova_computer/HANDS.cmd": "c33a82d36dd24475e6483aa33639436dd0757c5c1a8224ef638e89ffb4e15697",
     "nova_body/nova_computer/PLUCK_CHECK.cmd": "5b086764d4c0583a97ce96d917257732df198121f2ee118d63d7ab7a8773ab78",
     "nova_body/nova_computer/REACH.cmd": "7f57c786e7501f8bfbc7725a9fec3bccda1d22407ef9671cd435f38c9a7bfa46",
@@ -6589,7 +8663,7 @@
     "nova_body/nova_computer/backends.py": "6063c47d0c822a7d891988d235da413736d4b43b1e08146d16164a40832b259b",
     "nova_body/nova_computer/computer.py": "4d12d2b8efd18a62cb42eeba13f844cdad75fc53fd74aea11189df9a1d23d3ac",
     "nova_body/nova_computer/first_boot.py": "92ad5cf9d95a981cce85f62b3dbc73461fb4af7d6d2a35c6790334b0b4ec2bf6",
-    "nova_body/nova_computer/hands.py": "c27b19373ed10115825575090f37069749c18c01c91717a65d2275260ba45b6b",
+    "nova_body/nova_computer/hands.py": "eaf9416a85bb735045e8e73b8f44be17e213763388377f650ba16110d32b9230",
     "nova_body/nova_computer/pluck_check.py": "06066c66bfe3229d166a88c76431a3403054f1e82906a579aeb5dc036b198f53",
     "nova_body/nova_computer/provision/setup_guest.sh": "fc0f68f8bd1385eeb2bbfde13bbb229bea72a330207541a9fe5be59752a596e2",
     "nova_body/nova_computer/provision/vnc_password_guest.py": "0aed94c90277771069db485f7fb3914023cdc40f1f543b25845d44da22911c0c",
@@ -6601,19 +8675,20 @@
     "nova_body/nova_computer/tune_up.py": "f5e7449596bc2db5d98364466719604aff50a60a17e9b858158adf702f9deb07",
     "nova_body/nova_config/__init__.py": "b9f8c73ae9175da92ecd1b23cda5b150e548aaf1475798b8f910c6df79e89479",
     "nova_body/nova_cortex/__init__.py": "6420f1b28b2a3a7531a0d50905734b6c7bfe7c30487ec8c4f4636cc6138cd6d3",
+    "nova_body/nova_cortex/context_budget.py": "9be9d40bfb932c13e91f49530582adb37441c679143f0e0ba07740f3d4923378",
     "nova_body/nova_cortex/discourse.py": "4cbfd2293da27f8ef445fe046506ec02f5494bb2a50e1b2ceed29fa5f5d5e493",
     "nova_body/nova_cortex/drives.py": "1a2c3606ae9ec483238542c081daa8739e3840c095ec053c66ba9d12319ff714",
-    "nova_body/nova_cortex/executive.py": "40ea40148a8ae036a9d56bd756261744030ca6ba2a4444ad86766cf9185e6f09",
+    "nova_body/nova_cortex/executive.py": "b0d5ccc7ad4c0556136bee12a40f44aadde8313be6a59520f023d0c6bf300d22",
     "nova_body/nova_cortex/integrity.py": "3c1beeb0a9819ef0c426320a0850825bb2e12240fc77ffa7a100ec2874011681",
     "nova_body/nova_cortex/loadout.py": "24ed300f618e4a98f154db628f2e0a0f01b76e798e29cd606f9bb03c31f8a440",
     "nova_body/nova_cortex/nova_status.py": "971b24616bcf9b2c4c7553098752558c3f1a338e3ff31425c12924b3fff16489",
     "nova_body/nova_cortex/principals.py": "c4dae2c7d9da98463ae539e0b64217fd86b10035d6f2a78a84c884d50e3b7f66",
     "nova_body/nova_cortex/task_workspace.py": "13b6f37da2d3542d51ae1355bf540147e900081f473f1c106f8124098244da79",
-    "nova_body/nova_cortex/tasking.py": "a8f6b3e8224fb000878f0f17494e8b79d3bed189a2caf00090a428511383ad1d",
-    "nova_body/nova_cortex/tunables.py": "8cc2bda2ca846cd28bd5b3468313e3e335eeaa9e5292a6baea14ba161722617e",
+    "nova_body/nova_cortex/tasking.py": "25304df70d713e9cadab7299c6ee89ff582be0833c62e5fd2237556b6cfb5481",
+    "nova_body/nova_cortex/tunables.py": "9cd83b368d77deb5504c9126115c94cec60cd45148787de6a11e43c5a485919d",
     "nova_body/nova_cortex/verification.py": "11affcb665470cf4bd9b5f6350b1900d9de6f767c7ffcbe6e04aab1ee72421aa",
-    "nova_body/nova_cortex/witness.py": "359648d5260cdec7e3d0b76511eac93d2e04bd8b89dfd4d532b50a8352aa1560",
-    "nova_body/nova_cortex/workspace_context.py": "15058787ebbd62b72dc9594bf4d91c1630bf7b96afe317296b094243e117a2a9",
+    "nova_body/nova_cortex/witness.py": "7c25f991ce2c04c2aff28efd8cfc8a38ed0ee18ef740f92ba7849cb22366dc26",
+    "nova_body/nova_cortex/workspace_context.py": "ee6a7ad2549eb0dc2eff7d7d43a6b0557f109ff6ce1cb4e5d3041b9b068bf9fe",
     "nova_body/nova_forge/__init__.py": "1cb5b9fd93f20b5a638fd88a2adcb8b260edc2bcf7175c8e76c7d46114278362",
     "nova_body/nova_imagination/__init__.py": "4ae8f8fe0bbc1d1b8bc35b2d45c84254639c473a4b1235d820cde97cce102de0",
     "nova_body/nova_imagination/imagination.py": "734ab4f56602569c43fac333f89c838d4980e4be496c122f14433746abb1cb20",
@@ -6639,7 +8714,7 @@
     "nova_body/nova_runtime/event_bus.py": "71251a2fab6c2f6243e78f0d71bc47bfd120baecd1e5378124848317edcc3189",
     "nova_body/nova_runtime/koels_equip.py": "814be1f768d25751f95e417898cd8e569bc1699ef45ec548e3ca1b7c757e52e9",
     "nova_body/nova_runtime/llama_control.py": "d9d09735ff7756a7b47160e19437a4eac32b45147d9ca60753921958e4066555",
-    "nova_body/nova_runtime/model_client.py": "bcd905067d8ece2e360ae4c80c9205003469ce8b4f504db34c68a29e93dafcd5",
+    "nova_body/nova_runtime/model_client.py": "d51239e4f6ebb1b92371bfed0b56be62c34d68e18e5ca53735f0802c5a01506e",
     "nova_body/nova_runtime/model_guard.py": "4f3bcffd67fab43ab221bfbbe695fa3fb58f3b7e7f2193e28679a8216d610326",
     "nova_body/nova_runtime/operations.py": "9a5443f6c3b6a20551acb46ce659f59153dfd6a25da335166773c2d1177405da",
     "nova_body/nova_runtime/runtime.py": "5aff153bb21e7da2e912d74b19f277189945164e2f5412ca4f6e08132e13e691",
@@ -6659,23 +8734,35 @@
     "nova_body/nova_senses/vision.py": "3ed2286c432a4d56ca0d9d094e10d80924a8a06e2a47fe9727beabc01416410e",
     "nova_body/nova_senses/web.py": "276a58c5e6fafc07701c91f5e412634b3d340cf3f0a4971954349f2c0ac36537",
     "nova_body/nova_voice/__init__.py": "d7c2d3b9a5acb225ec1489b7b56c181c98482e3280a62a7ccc2392ce9f68698c",
-    "nova_body/nova_voice/nova.py": "0bdeeaa2cbaaec32db4e10e9b750d0ed53d0c451f0f54bf8d36ef18e7c86c7c3",
-    "nova_body/nova_voice/tool_result.py": "ca1a6c0c0c4a931fa17c84fe52098fdf77d22dec6b944afc4746f215088ff7df",
-    "nova_body/nova_voice/tool_router.py": "690be38bac6f10f564b66336c659a2e4fcadbf1a5c1afab2a0b281d99c26b89f",
+    "nova_body/nova_voice/nova.py": "8658e45dcc5aac49d865cb88b3af8bddea2619cdd8893e11f702113c388304d6",
+    "nova_body/nova_voice/tool_result.py": "0e65466b8945733bf520f44e2b94a4967924d92bf0821b31c94664df8b69a2f7",
+    "nova_body/nova_voice/tool_router.py": "1428e5d045278dd4e714fd6094b02fe1bdf6a6f94a9791af2561863a8994767b",
+    "nova_body/nova_witness/casekit.py": "6ce12f61bc8b9b47f264ba3dae7e8f277cb4ed9f68816aca67919406caaacc85",
+    "nova_body/nova_witness/controls/build_controls_v1.py": "7c4c414cdaf760bc23d1460be448f5140336425f30f464f1eb875aabd930f321",
+    "nova_body/nova_witness/dev/build_dev_v1.py": "29d65b0d78b468a293d63e029e9e9b2ccf0f050afd9688931ce6d70617dd2a00",
     "nova_body/nova_witness/extract_golden.py": "b6032fa5584dc7bead7252813e1b6ff0b6b53c7a0e8ec39da91b6dca845800f1",
     "nova_body/nova_witness/fetch_witness_model.cmd": "0e27eb07932af5e179fc3f317a2e6a9eecc9a6f82220ec54fbcc3e4f295ced33",
-    "nova_body/nova_witness/replay.py": "1fe822913fd5fabd71e47c36dc507d44d219e75f051ff694aa702699f85eda01",
+    "nova_body/nova_witness/replay.py": "01df5a70cee89e081a6ad2270b50f3f405941634e4565453db38c7cb87133184",
     "nova_body/nova_witness/start_witness.cmd": "fdbd3ac598b9ac5a8443e1479836013b910080e1e612a85896cbad31f1978b8b",
     "nova_start.py": "66117f155eff4a949ff146efa6c22b6f1f57d389fd2904ebf107664cf526a6e3",
     "start_llama_qwen36.cmd": "3297f9b8977d45d037c3043c9bafccd4c8f6a737a5dae5eb7f88dc171c6a2fb0"
   },
   "document_hashes": {
-    "README.md": "2d843e016cd149fbb2856b1c04edc47b81c1a68373072c16180524d47bb0e446",
-    "ARCHITECTURE.md": "18f0f7a94031aee62edfd9ea4e0e08773a4cf196a4c01ce56d546636fa591124",
-    "OPERATIONS.md": "90a1d82c85924e4f2aeb214fbabff301b730ddf11d9e8f1b61f483dc4ed23e31",
-    "INDEX.md": "5fb24fcd4bc6b68bc5ea791f4445b849eb88890e365ee3383d7e0878d03d3ea7"
+    "README.md": "63c132f3b290ebdd87bae0de7e477412f06db0e9215807d13c892b34bf196a21",
+    "ARCHITECTURE.md": "88449e3e6688ca95049ef85c7121d641b7bfb5581e285eaf3f07e7177f532e88",
+    "OPERATIONS.md": "e798af8bb4e28b03fb00dc0fb33ab494b0ffb8e2bb9465093465a873809e0dff",
+    "INDEX.md": "660d77dae23cb509a0fbbf044b1afc232c7aa8271db999eb8123368683f4bb5b"
   },
-  "review_needed": [],
+  "review_needed": [
+    "ARCHITECTURE.md#Body faculties",
+    "ARCHITECTURE.md#Execution path",
+    "ARCHITECTURE.md#Runtime evidence and open modernization work",
+    "OPERATIONS.md#Access and practical debugging",
+    "OPERATIONS.md#Configuration and evidence",
+    "OPERATIONS.md#Controller menus and layouts",
+    "OPERATIONS.md#Security model",
+    "OPERATIONS.md#Test meaningful behavior"
+  ],
   "unknown_review_sections": [],
   "dangling": []
 }

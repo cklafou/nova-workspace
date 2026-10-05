@@ -1,5 +1,5 @@
+# @nova: Transcribe gated microphone input and provide a typed-input fallback for the voice gateway.
 # Last updated: 2026-10-04 15:01:23
-# @nova-adjacent: voice_gateway — speech→text (input). Silero VAD segments the mic stream into
 #   utterances; Moonshine transcribes each. A stdin backend (type instead of talk) lets the whole
 #   gateway run and be tested with no microphone or audio libraries at all.
 """voice_gateway/stt.py — yield Cole's utterances as text. Backends expose async utterances()."""
@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+import threading
 
 
 class StdinSTT:
@@ -16,13 +17,26 @@ class StdinSTT:
 
     def __init__(self, cfg=None):
         self.cfg = cfg
+        self.gate = None              # typed input is never her own voice; accepted for symmetry
+        self.on_speech_start = None
 
     async def utterances(self):
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
+        q: asyncio.Queue = asyncio.Queue()
+
+        def _reader():                      # daemon: a blocked readline never holds up shutdown
+            try:
+                for line in sys.stdin:
+                    loop.call_soon_threadsafe(q.put_nowait, line)
+                loop.call_soon_threadsafe(q.put_nowait, None)
+            except RuntimeError:            # the loop closed while we were reading
+                pass
+
+        threading.Thread(target=_reader, name="voice-stdin", daemon=True).start()
         print("[stt:stdin] type to Nova (blank line or Ctrl-D to quit):")
         while True:
-            line = await loop.run_in_executor(None, sys.stdin.readline)
-            if not line:
+            line = await q.get()
+            if line is None:
                 break
             line = line.strip()
             if not line:
@@ -50,6 +64,8 @@ class MoonshineSTT:
         self._np, self._sd = np, sd
         self._vad = _load_silero(cfg) if cfg.vad_backend == "silero" else None
         self._transcribe = _load_moonshine(cfg)
+        self.gate = None              # callable -> bool; False = drop mic frames (half duplex)
+        self.on_speech_start = None   # callable(); first voiced frame of an utterance (barge-in)
 
     async def utterances(self):
         np, sd = self._np, self._sd
@@ -57,22 +73,35 @@ class MoonshineSTT:
         block = int(sr * 0.03)                        # 30ms frames
         silence_frames = max(1, self.cfg.silence_ms // 30)
         q: asyncio.Queue = asyncio.Queue()
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
+        generation = [0]                              # bumps while the gate is closed
 
         def _cb(indata, frames, time_info, status):
-            loop.call_soon_threadsafe(q.put_nowait, bytes(indata))
+            # Audio thread. Gate at CAPTURE (Codex review #72): her voice never enters the queue,
+            # and every frame captured before the gate closed carries a stale generation.
+            if self.gate is not None and not self.gate():
+                generation[0] += 1
+                return
+            loop.call_soon_threadsafe(q.put_nowait, (generation[0], bytes(indata)))
 
         dev = None if self.cfg.input_device < 0 else self.cfg.input_device
         with sd.RawInputStream(samplerate=sr, blocksize=block, dtype="int16",
                                channels=1, device=dev, callback=_cb):
-            buf = []
-            silent = 0
-            speaking = False
+            buf, silent, speaking, born = [], 0, False, 0
             while True:
-                chunk = await q.get()
+                stamp, chunk = await q.get()
+                stale = stamp != generation[0]
+                if stale or (speaking and stamp != born):
+                    buf, silent, speaking = [], 0, False       # never splice audio across her turn
+                    if stale:
+                        continue
                 frame = np.frombuffer(chunk, dtype="int16").astype("float32") / 32768.0
                 voiced = self._is_voiced(frame)
                 if voiced:
+                    if not speaking:
+                        born = stamp
+                        if callable(self.on_speech_start):
+                            self.on_speech_start()
                     speaking = True
                     silent = 0
                     buf.append(frame)

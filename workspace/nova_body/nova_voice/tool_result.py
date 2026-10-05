@@ -66,3 +66,23 @@ def tool_event(tool, args, result, is_error=False, duration_ms=0):
     return {"type": "tool_executed", "tool": tool, "input": args,
             "result": str(result)[:12000], "error": result.ok is False,
             "duration_ms": round(duration_ms), "outcome": result.to_dict()}
+
+
+def observation_text(value):
+    """One compact outcome heading followed by actual output, shared by runtime and replay.
+
+    Environment prose is documentation, not evidence; it must not crowd out stdout.
+    This function does not truncate. The receiving audit explicitly budgets its evidence.
+    """
+    result = normalize_result(value)
+    env = result.environment
+    fields = ["status=" + result.status, "exit=" + str(result.exit_code)]
+    for key in ("target", "shell", "display", "default_display"):
+        if env.get(key) is not None:
+            fields.append(key + "=" + str(env[key]).replace("\n", " ")[:100])
+    text = str(result)
+    if result.stdout and result.stdout not in text:
+        text += "\nSTDOUT:\n" + result.stdout
+    if result.stderr and result.stderr not in text:
+        text += "\nSTDERR:\n" + result.stderr
+    return "[" + " ".join(fields) + "]\n" + text

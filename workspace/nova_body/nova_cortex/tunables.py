@@ -1,3 +1,4 @@
+# @nova: Define and persist bounded, live-editable behavior settings for Nova.
 # Last updated: 2026-10-04 15:01:23
 # @nova: nova_cortex/tunables.py — LIVE-TUNABLE knobs. Cole (2026-08-03): "make things that
 #   should be easily changed into adjustable variables, with a tool that adjusts them on the
@@ -43,6 +44,22 @@ REGISTRY: dict = {
         "default": 300, "type": "int", "min": 30, "max": 1800, "category": "Autonomy",
         "label": "Time per autonomous wake",
         "desc": "Seconds available to reflect, decide and execute before retaining progress and resting."},
+    "witness_receipt_chars": {
+        "default": 2400, "type": "int", "min": 400, "max": 12000, "category": "Witness",
+        "label": "Output characters per audit receipt",
+        "desc": "Keep compact status plus output head/tail; omitted output is explicitly marked."},
+    "witness_total_receipt_chars": {
+        "default": 24000, "type": "int", "min": 4000, "max": 80000, "category": "Witness",
+        "label": "Total output characters in audit receipts",
+        "desc": "Share this output budget across tool receipts; truncation never proves absence."},
+    "witness_max_images": {
+        "default": 4, "type": "int", "min": 1, "max": 8, "category": "Witness",
+        "label": "Total images per witness audit",
+        "desc": "Bound user attachments and latest tool frames together; omitted images are disclosed."},
+    "computer_launch_wait_seconds": {
+        "default": 10, "type": "int", "min": 1, "max": 20, "category": "Computer",
+        "label": "Application window verification wait",
+        "desc": "Maximum default wait for a guest window; returns immediately on a match."},
     "witness_max_rounds": {
         "default": 20, "type": "int", "min": 1, "max": 40, "category": "Witness",
         "label": "Witness rounds — text",

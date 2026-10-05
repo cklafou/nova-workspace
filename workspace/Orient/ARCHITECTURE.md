@@ -1,9 +1,11 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-04T06:10:46+00:00 from source (input `44a2b436340f`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T08:39:36+00:00 from source (input `f6544527427c`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/voice_gateway/speech.py`, `general_tools/voice_gateway/tts.py`, `general_tools/voice_gateway/turns.py`, `nova_body/nova_cortex/executive.py` and 2 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -25,6 +27,24 @@ enters the Nova inference path below. The shared files are transport artifacts u
 Chat input → speaker attribution and screening → conversation/context assembly → body model
 dispatch → `nova_voice.nova` inference/tool loop → `tool_router` → environment result → receipt
 and another model step → response, transcript and asynchronous indexing.
+Voice input follows that same model/tool path. A client request ID and validated register
+(`text`, `voice` or `voice_fast`) survive immediate dispatch and the busy queue. Reply events
+carry their own message ID, supervised run ID and input-message link. A terminal delivery status
+is separate from the exact final candidate's audit disposition; delivered text is not necessarily
+approved. Invalid or missing dispositions remain unverified. Errors, cancellations, empty replies,
+deduplicated replies and unsolicited autonomy excerpts do not become ordinary voice replies.
+Requests that never generate receive `request_end` (superseded, answered elsewhere, unavailable
+or cancelled); busy-queue draining keeps its newest-message policy and honors Stop before starting
+work. Chat-only rejection sends this completion without adding a message to Nova's transcript.
+The model client forwards an optional audit callback only to Nova; the callback runs immediately
+before final delivery and resets after a revision. Background second opinions cannot relabel an
+already delivered candidate. Human messages retain the human audit path even when global autonomy
+is enabled. The detachable voice gateway consumes these events through a separate WebSocket client,
+with final-text speech and body-event sinks. Closing it flushes queued speech and invalidates
+late playback; already-running synthesis may still finish computing. Null output and subprocess
+completion are distinguished from playback API receipts. Transport and gateway have isolated coverage; native
+audio and avatar presentation still require hardware validation.
+
 The retired host-desktop Claude ping and its aliases return an unknown-tool failure rather than
 launching PowerShell. Active instructions no longer advertise it. The private Collaboration room
 remains separate from Nova; asking Cole uses the ordinary conversation.
@@ -37,12 +57,23 @@ including earlier tool-loop commentary, and receives available screenshot pixels
 observation context. An explicit approval is distinct from a concern, an incomplete check or an
 execution error. Incomplete/error checks remain visible and do not certify the draft. A concern
 returns to Nova to revise in her own words; the auditor does not silently replace her voice.
+A verdict prefix takes precedence over quoted tool JSON, so an objection quoting a command is
+not accidentally executed as another verification request. Receipts share a compact outcome
+formatter with replay: real stdout/stderr follow shell/target/status, and truncation is explicitly
+marked. The combined attachment/tool image budget is tunable and omissions remain disclosed.
+Audit sampling disables DRY so verbatim evidence can be copied. A revised draft still enters the
+configured incorrect-concession check when the re-audit is incomplete or errored, without treating
+that revision as approval. Bad-request diagnostics omit image bytes while preserving the actual
+provider request. This improves audit evidence and reporting; it does not guarantee sound judgment.
 
 Guest Bash (`computer_exec`), screenshots and hands target Nova's authenticated :1 display.
 Host `run_command` is Windows PowerShell. WSLg :0 is another Linux graphical session, not the
 native Windows desktop. Authorized host reach remains available; tool choice identifies the
 destination. `computer_action` launch/browser helpers retain diagnostics and report the limited
 postcondition they observed; a process or window alone does not prove a page loaded or a video played.
+The default launch wait is ten seconds (tunable). A tagged verifier record tolerates unrelated
+startup warnings. Existing-browser handoff requires a successful initial window enumeration;
+otherwise an already-open window cannot count as a newly opened one.
 The guest command environment prefers Nova's per-user `~/.local/bin` tools. On this machine,
 Firefox uses an official Mozilla build under `~/.local/opt`, because the Ubuntu Snap could not
 connect to the authenticated VNC display. Provisioning records the pinned version and checksum;
@@ -60,11 +91,13 @@ and child processes, and reports pending cleanup rather than falsely claiming ev
 
 ## Body faculties
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `nova_body/nova_voice/tool_router.py`, `nova_body/nova_witness/replay.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py (PURPOSES)`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Body faculties"`.
+
 | Part | Responsibility | Python sources |
 |---|---|---:|
 | `nova_paths` | Canonical body/workspace paths; relocated state never falls back to a second copy. | 1 |
 | `nova_config` | Body settings loader. Some execution paths still have independent constants; this is not yet universal configuration. | 1 |
-| `nova_cortex` | Task board, wake decisions, wants, speaker roles, witness/integrity checks, tunables and shared identity/context loading. | 14 |
+| `nova_cortex` | Task board, wake decisions, wants, speaker roles, witness/integrity checks, tunables and shared identity/context loading. | 15 |
 | `nova_runtime` | Model dispatch, headless autonomy, transcript, event bus, provider lifecycle and KoELS equip operations. | 11 |
 | `nova_voice` | Local inference client, parsing/tool loop, shell/file tools and durable execution receipts. The retired host-desktop Claude ping is no longer registered. | 4 |
 | `nova_senses` | Time, environment changes, presence, touch, sight, web access and proprioception. | 13 |
@@ -75,7 +108,7 @@ and child processes, and reports pending cleanup rather than falsely claiming ev
 | `nova_computer` | VM observation, command and input tools in the normal voice router; explicit human handoff pauses actions. | 13 |
 | `nova_imagination` | Image generation and art workflow; uses optional external ComfyUI services. | 3 |
 | `nova_play` | Curiosity and saved discoveries, including the curio shelf. | 2 |
-| `nova_witness` | Witness model launch, evaluation and training utilities; the live auditing faculty is in cortex/voice. | 2 |
+| `nova_witness` | Witness model launch, evaluation and training utilities; replay v3 shares live evidence/dispatch/sampling, with frozen regression controls, open development cases and a sealed holdout. Live auditing lives in cortex/voice. | 5 |
 
 ## Persistent ownership
 
@@ -123,6 +156,8 @@ prove argument compatibility, not adapter loading, VRAM use or application of sc
 Drives/wants and the hormone design are not evidence of online weight learning. Keep implemented controls distinct from biological analogies.
 
 ## Runtime evidence and open modernization work
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `nova_body/nova_cortex/executive.py`, `nova_body/nova_cortex/tasking.py`, `nova_body/nova_voice/tool_router.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
 
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
@@ -179,6 +214,28 @@ The verdict remained INCOMPLETE, without a false PASS. A subsequent direct probe
 existing-Firefox handoff through executable identity after its initial name-only probe returned
 unknown. Host browser opening, audio output measurement and general witness accuracy remain
 unverified. See the computer repair AI Notes for receipts and reload evidence.
+At 18:49, replay v3 completed Claude's 26 previously labelled controls through the local Qwen
+3.8 27B Q6_K_XL model with nova_core_v7_qwen38_r2_epoch2 at scale 1.0. Sixteen verdicts matched:
+one false approval, one false concern and eight unwarranted incomplete results. Both historical
+problem drafts remained INCOMPLETE; neither received the expected specific objection. Five
+outputs violated the verdict protocol, including an erroneous verbose PASS that strict parsing
+kept unapproved. Replay refuses historical read requests; this is a selected regression set,
+not general accuracy or a full live-chat evaluation. Sources, case hashes, model/adapter metadata
+and the confusion matrix are retained in `nova_body/nova_witness/reports/replay_v3_*184921*`.
+The follow-through passed 141 isolated checks and a fresh guest Firefox window probe. Voice
+readiness found missing audio/STT/TTS dependencies; live voice and body-event integration remain
+unfinished. Nova stayed in chat-only mode during the benchmark; the temporary model was stopped.
+The October 5 offline foundation carries request/run/message IDs and voice register through the
+chat queue to the body, then reports the delivered candidate's audit disposition. Tests cover stopped
+and superseded requests, stale closures, observer failures and cancellation at delivery. Claude's
+gateway adds final-text speech, interruption and body events; fake-TTS and loopback socket fixtures
+verify protocol behavior without using a microphone or model. Live speech timing and native avatar
+coupling remain unverified. New witness cases comprise 27 open development items and a separate
+sealed 27-case holdout; no model evaluation of either has run. Nova remained off during this work.
+The [Codex/Cowork comparison](Architecture/evidence/2026-10-05-agent-harness-comparison.md) separates
+model capability from tool execution, context, persistence and presentation. It recommends measuring
+these existing Nova paths before replacing the architecture; its review status is recorded in the report.
+Backend edits load on the next Start Nova; the existing UI needs a reload to receive new JavaScript.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 
 ## Nova's shelf

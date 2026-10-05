@@ -1,3 +1,4 @@
+# @nova: Dispatch model requests with per-call voice register and optional audit reporting without coupling to a chat face.
 # Last updated: 2026-10-04 14:35:18
 # @nova: ModelClient — the act of generation as a body faculty (layer 2). It owns HOW Nova
 #        (and the mentors) are driven to produce a response: the model dispatch + each model's
@@ -8,9 +9,9 @@
 #        generate() directly instead of reaching into the server.
 """
 nova_runtime/model_client.py — relocated faithfully from general_tools/nova_chat/server.py
-(the model-dispatch tail of run_ai_response). Behavior is unchanged; the dispatch just lives
-in the body now and takes its output sinks AND the client modules by injection, so it imports
-no chat-server module and runs with or without a face.
+(the model-dispatch tail of run_ai_response). Nova requests carry a per-call register and
+optional audit sink; other client signatures remain unchanged. Output sinks and client modules
+are injected, so the body imports no chat-server module and runs with or without a face.
 
 Step 4 split — "model-call vs token-broadcast": generation (this) and rendering (the sinks)
 used to be one monolith. Pulling the model-call into the body makes the thing that *makes*
@@ -21,6 +22,11 @@ moves only the dispatch, nothing else, so behavior is identical.
 
 
 from nova_runtime.operations import supervised
+
+
+def normalize_register(value) -> str:
+    """Accept only supported exact register names; malformed input keeps text behavior."""
+    return value if isinstance(value, str) and value in ("text", "voice", "voice_fast") else "text"
 
 
 class ModelClient:
@@ -51,7 +57,8 @@ class ModelClient:
                        on_think_token=None, on_progress=None, on_tool_executed=None,
                        workspace_context: str = "", images=None,
                        autonomous: bool = False,
-                       temperature: float = 0.7, top_p: float = 0.9) -> None:
+                       temperature: float = 0.7, top_p: float = 0.9,
+                       register: str = "text", on_audit=None) -> None:
         """Drive one generation. The caller supplies the output sinks (what to do with each
         token, on done, on error); this owns only WHICH client and HOW it is called. Faithful
         to run_ai_response's three branches:
@@ -73,6 +80,9 @@ class ModelClient:
             # Nova supports <think> tag parsing — pass on_think_token and on_progress. The
             # transcript is whatever the caller resolved (HeartbeatContext for HB ticks, or the
             # active session for normal turns); the faculty stays agnostic to which.
+            # Keep routing state local to this call; simultaneous faces may use different
+            # registers and sinks. Older Nova clients need not accept an unused audit sink.
+            audit_kwargs = {"on_audit": on_audit} if on_audit is not None else {}
             await client_mod.stream_response(
                 transcript, on_token, on_done, on_error,
                 on_think_token=on_think_token,
@@ -82,6 +92,8 @@ class ModelClient:
                 autonomous=autonomous,
                 temperature=temperature,
                 top_p=top_p,
+                register=normalize_register(register),
+                **audit_kwargs,
             )
         else:
             await client_mod.stream_response(

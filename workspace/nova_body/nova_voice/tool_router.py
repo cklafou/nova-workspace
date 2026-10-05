@@ -623,10 +623,10 @@ def create_task(title: str, notes: str = "", priority: int = 3, acceptance=None)
     except Exception as e:
         return ToolResult(f"ERROR: Could not create task: {e}", status="failed")
 
-def task_progress(task_id: str, note: str) -> str:
+def task_progress(task_id: str, note: str, continuity=None) -> str:
     try:
         from nova_cortex import tasking
-        return ((ToolResult(f"Logged progress on {task_id}.", status="succeeded") if tasking.progress(task_id, note) else ToolResult(f"ERROR: No task with id {task_id}.", status="failed")))
+        return ((ToolResult(f"Logged progress on {task_id}.", status="succeeded") if tasking.progress(task_id, note, continuity=continuity) else ToolResult(f"ERROR: No task with id {task_id}.", status="failed")))
     except Exception as e:
         return ToolResult(f"ERROR: Could not log progress: {e}", status="failed")
 
@@ -1182,7 +1182,7 @@ def _execute_tool_inner(tool_name: str, args: dict) -> str:
         elif tool_name == "create_task":
             return create_task(args.get("title", ""), args.get("notes", ""), args.get("priority", 3), args.get("acceptance"))
         elif tool_name in ("task_progress", "progress_task"):
-            return task_progress(args.get("task_id", "") or args.get("id", ""), args.get("note", ""))
+            return task_progress(args.get("task_id", "") or args.get("id", ""), args.get("note", ""), args.get("continuity"))
         elif tool_name in ("complete_task", "task_complete"):
             return complete_task(args.get("task_id", "") or args.get("id", ""), args.get("result", ""))
         elif tool_name in ("generate_image", "draw", "create_image"):

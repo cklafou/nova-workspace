@@ -1,0 +1,31 @@
+/* @nova: Style compact voice controls embedded in Conversation, with accessible buttons and bounded device settings. */
+.nc-conversation-voice{flex:0 0 auto;min-width:0;margin:0 20px 10px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface,#25232e);color:var(--text,#e7e2ed);overflow:hidden;}
+.nv-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:8px 10px;}
+.nv-identity{display:flex;flex-direction:column;gap:2px;min-width:95px;flex:1;}
+.nv-title{font-size:12px;font-weight:600;letter-spacing:.15px;}
+.nv-state{font-size:11px;color:var(--text-dim,#bbb4c7);line-height:1.4;}
+.nc-conversation-voice[data-state="listening"] .nv-state{color:#a2d8bb;}
+.nc-conversation-voice[data-state="speaking"] .nv-state{color:var(--nova,#c4a4f1);}
+.nc-conversation-voice .nv-button{min-height:36px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg,#1d1b25);color:inherit;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap;}
+.nc-conversation-voice .nv-button:hover:not(:disabled){border-color:var(--nova,#b79cdb);background:var(--nova-dim,#362b47);}
+#voice-toggle{border-color:var(--nova,#b79cdb);background:var(--nova-dim,#362b47);}
+.nc-conversation-voice .nv-button[aria-pressed="true"]{border-color:#b18b56;background:#392f23;}
+.nc-conversation-voice .nv-button:disabled{opacity:.48;cursor:default;}
+.nc-conversation-voice :is(button,select,summary):focus-visible{outline:2px solid var(--nova,#c4a4f1);outline-offset:2px;}
+.nc-conversation-voice [hidden]{display:none!important;}
+.nv-notice{margin:0;padding:0 10px 8px;font-size:11px;line-height:1.5;color:var(--text-dim,#bbb4c7);overflow-wrap:anywhere;}
+.nv-notice[data-error="true"]{color:#f3b695;}
+.nv-caption{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;padding:0 10px 8px;font-size:12px;line-height:1.5;}
+.nv-caption-text{max-height:4.5em;overflow:auto;overflow-wrap:anywhere;flex:1 1 160px;}
+.nv-audit{font-size:10px;color:var(--text-dim,#bbb4c7);border:1px solid var(--border);border-radius:5px;padding:1px 5px;}
+.nv-audit[data-status="CONCERN"],.nv-audit[data-status="INCOMPLETE"],.nv-audit[data-status="ERROR"]{color:#f3b695;}
+.nv-details{border-top:1px solid var(--border);font-size:12px;}
+.nv-details>summary{cursor:pointer;min-height:36px;box-sizing:border-box;padding:9px 10px;color:var(--text-dim,#bbb4c7);}
+.nv-details-body{padding:0 10px 10px;max-height:min(260px,32vh);overflow:auto;}
+.nv-help{margin:0 0 10px;color:var(--text-dim,#bbb4c7);font-size:11px;line-height:1.5;}
+.nv-device-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;}
+.nv-device{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:11px;color:var(--text-dim,#bbb4c7);}
+.nv-device select{width:100%;min-height:36px;box-sizing:border-box;border:1px solid var(--border);border-radius:7px;padding:6px;background:var(--bg,#1d1b25);color:var(--text,#e7e2ed);font:inherit;font-size:12px;}
+.nv-device-actions,.nv-tests{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;}
+.nv-test-result,.nv-transcript{font-size:11px;line-height:1.6;margin:9px 0 0;overflow-wrap:anywhere;}
+@media(max-width:540px){.nc-conversation-voice{margin-left:10px;margin-right:10px;}.nv-bar{gap:5px;}.nv-identity{min-width:85px;}.nc-conversation-voice .nv-button{padding:7px 8px;}}

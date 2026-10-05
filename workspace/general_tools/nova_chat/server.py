@@ -27,6 +27,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from nova_chat.response_events import ResponseEvents, normalize_request_id
+from nova_runtime.model_client import normalize_register
 from nova_chat.transcript import Transcript
 from nova_chat.session_manager import SessionManager
 from nova_chat.orchestrator import parse_directed, should_respond, build_response_queue, is_ncl_message
@@ -203,7 +205,7 @@ _REMOTE_ALLOWED_PREFIXES = (
 _LOOPBACK_ONLY = (
     "/api/terminal/run", "/api/files/inject", "/api/files/read", "/api/files/tree",
     "/api/nova/bridge", "/api/lora", "/api/restart", "/api/eyes",
-    "/api/sight", "/api/llama/start", "/api/llama/stop", "/nova-message",
+    "/api/sight", "/api/llama/start", "/api/llama/stop", "/nova-message", "/api/voice",
 )
 
 
@@ -324,6 +326,7 @@ async def _auth_gate(request: Request, call_next):
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    await _voice_controller.close()
     await _stop_updater_check()
     if CHAT_ONLY:
         return
@@ -510,20 +513,23 @@ _cole_message_queue: list[dict] = []
 _inflight_upto: int = 0
 
 
-async def _drain_cole_queue() -> None:
-    """Deliver the newest queued inbound message, if any — with the already-answered guard.
+async def _end_queued_request(queued: dict, delivery: str) -> None:
+    """Close a correlated inbound request without inventing a generation or audit result."""
+    request_id = normalize_request_id(queued.get("request_id"))
+    if request_id is None:
+        return  # Legacy clients have no request identity to complete.
+    await broadcast({"type": "request_end", "request_id": request_id,
+                     "reply_to": (queued.get("msg") or {}).get("id"),
+                     "register": normalize_register(queued.get("register")),
+                     "delivery": delivery})
 
-    ── WHY THIS IS A FUNCTION AND NOT A BLOCK (2026-07-22) ─────────────────────────────────
-    The drain used to live inline in _queued_run's finally — the ONLY place it ever ran. But
-    the busy flag messages queue behind is SHARED with her autonomy daemon (set_busy), so a
-    message arriving during a silent wake tick was told "queued — will be delivered next"
-    and then waited for a Cole-triggered run that might be hours away. Observed live twice:
-    the unexplained 18:17 silence on 2026-07-21, and Cowork Claude's 09:30 greeting on
-    2026-07-22 — twelve daemon ticks started after it landed and the queue never moved. The
-    comment above _cole_message_queue even promised "drained as soon as is_processing
-    becomes False": a false claim about the body, which is this project's oldest bug shape.
-    Every busy-release now calls this — _queued_run's finally, _drain_run's finally (so a
-    pileup drains to empty instead of exactly one), and the daemon's set_busy(False).
+
+async def _drain_cole_queue() -> None:
+    """Deliver the newest queued message and explicitly close requests that never run.
+
+    Every busy-release calls this, including autonomous work, so a queued human
+    request never has to wait for a second human message. Selection still coalesces
+    a pileup to its newest entry; request_end makes that policy observable to clients.
     """
     global is_processing
     if getattr(globals().get("_nova_lifecycle"), "pending", False):
@@ -532,72 +538,114 @@ async def _drain_cole_queue() -> None:
         if not _cole_message_queue:
             await broadcast({"type": "queue_cleared"})
         return
-    _queued = _cole_message_queue[-1]
+    # Claim before any await: status checks and completion broadcasts can admit a
+    # concurrent message/drain, which must queue behind this selected request.
+    _batch = list(_cole_message_queue)
     _cole_message_queue.clear()
-    # ── ALREADY-ANSWERED GUARD — root cause of the doubling bug (2026-07-19) ────────────
-    # The message is appended to the transcript the instant it arrives, BEFORE it is
-    # queued. If the in-flight generation built its prompt after that moment, it already
-    # SAW the message and answered it; draining then re-answers it from a byte-identical
-    # prompt. TWO conditions, both required (the one-condition version DROPPED messages):
-    #   (a) the run's prompt actually included this message (index below the watermark), AND
-    #   (b) an AI has spoken since.
-    # Conservative by design: when anything is uncertain, DELIVER. A duplicate is noise; a
-    # dropped message is a person talking to a wall.
-    _already, _qid = False, None
+    is_processing = True
+    _queued = _batch[-1]
+    _scheduled = False
+    # A terminal is committed before broadcast: cancellation after a partial send
+    # must not retry it with a contradictory disposition.
+    _selected_closed = False
     try:
-        _qid  = (_queued.get("msg") or {}).get("id")
-        _msgs = session_mgr.active.messages
-        _idx  = next((i for i, m in enumerate(_msgs) if m.get("id") == _qid), None)
-        if _idx is not None:
-            _was_in_prompt  = _idx < _inflight_upto
-            _ai_spoke_after = any(m.get("author") in CLIENT_MAP for m in _msgs[_idx + 1:])
-            _already = _was_in_prompt and _ai_spoke_after
-            if _ai_spoke_after and not _was_in_prompt:
-                print(f"[queue] {_qid} arrived AFTER the in-flight prompt was built "
-                      f"(idx {_idx} >= watermark {_inflight_upto}) — delivering, not skipping.")
-    except Exception as _ge:
-        print(f"[queue] already-answered check failed (delivering normally): {_ge}")
-    if _already:
-        print(f"[queue] queued message {_qid} was already answered by the in-flight run — "
-              f"not re-delivering")
-        _trace_gen("drain_skipped", "Nova", str(_qid), "drain",
-                   extra="already answered by in-flight run")
-        await broadcast({"type": "queue_cleared"})
+        for _discarded in _batch[:-1]:
+            await _end_queued_request(_discarded, "cancelled" if _stop_requested.is_set() else "superseded")
+
+        # A transcript entry was already answered only if it was inside the prior
+        # prompt watermark AND an AI spoke after it. New arrivals must still run.
+        _already, _qid = False, None
+        try:
+            _qid = (_queued.get("msg") or {}).get("id")
+            _msgs = session_mgr.active.messages
+            _idx = next((i for i, m in enumerate(_msgs) if m.get("id") == _qid), None)
+            if _idx is not None:
+                _was_in_prompt = _idx < _inflight_upto
+                _ai_spoke_after = any(m.get("author") in CLIENT_MAP for m in _msgs[_idx + 1:])
+                _already = _was_in_prompt and _ai_spoke_after
+        except Exception as _ge:
+            print(f"[queue] already-answered check failed (delivering normally): {_ge}")
         _qqueue = []
-    else:
-        print(f"[queue] Delivering 1 queued message")
-        _qdir  = _queued.get("directed_at") or []
-        _qstat = await get_status()
-        if not _qdir:
-            _qqueue = [
-                n for n in ("Claude", "Gemini", "Nova")
-                if _qstat.get(n) and not _mute_states.get(n, True)
-            ]
+        if _stop_requested.is_set():
+            _selected_closed = True
+            await _end_queued_request(_queued, "cancelled")
+        elif _already:
+            _trace_gen("drain_skipped", "Nova", str(_qid), "drain",
+                       extra="already answered by in-flight run")
+            _selected_closed = True
+            await _end_queued_request(_queued, "answered_elsewhere")
         else:
-            _qqueue = build_response_queue(_qdir, _qstat)
-    if _qqueue:
-        _stop_requested.clear()
-        is_processing = True
-        await broadcast({"type": "processing_start"})
-        _qq2   = list(_qqueue)
-        _qc2   = _queued["content"]
-        _qimgs = _queued.get("images", [])
-        async def _drain_run():
-            global is_processing
+            _qdir = _queued.get("directed_at") or []
             try:
-                await _run_response_queue(_qq2, _qc2, images=_qimgs or None, source="drain")
-            except asyncio.CancelledError:
-                pass
-            except Exception as _de:
-                print(f"[queue] Drain error: {_de}")
-            finally:
-                is_processing = False
+                _qstat = await get_status()
+            except Exception as _se:
+                print(f"[queue] provider status unavailable: {_se}")
+                _qstat = {}
+            if _stop_requested.is_set():
+                _selected_closed = True
+                await _end_queued_request(_queued, "cancelled")
+            else:
+                if not _qdir:
+                    _qqueue = [n for n in ("Claude", "Gemini", "Nova")
+                               if _qstat.get(n) and not _mute_states.get(n, True)]
+                else:
+                    _qqueue = build_response_queue(_qdir, _qstat)
+                if not _qqueue:
+                    _selected_closed = True
+                    await _end_queued_request(_queued, "unavailable")
+        if _qqueue:
+            await broadcast({"type": "processing_start"})
+            if _stop_requested.is_set():
+                _selected_closed = True
+                await _end_queued_request(_queued, "cancelled")
                 await broadcast({"type": "processing_end"})
+                _qqueue = []
+        if _qqueue:
+            _qq2 = list(_qqueue)
+            _qc2 = _queued["content"]
+            _qimgs = _queued.get("images", [])
+            _qregister = normalize_register(_queued.get("register"))
+            _qreply = (_queued.get("msg") or {}).get("id")
+            _qrequest = normalize_request_id(_queued.get("request_id"))
+            async def _drain_run():
+                global is_processing
                 try:
-                    await _drain_cole_queue()   # a pileup drains to empty, not to one
-                except Exception as _dee:
-                    print(f"[queue] re-drain failed: {_dee}")
-        asyncio.ensure_future(_drain_run())
+                    if _stop_requested.is_set():
+                        await _end_queued_request(_queued, "cancelled")
+                        return
+                    await _run_response_queue(_qq2, _qc2, images=_qimgs or None, source="drain",
+                                              register=_qregister, reply_to=_qreply, request_id=_qrequest)
+                except asyncio.CancelledError:
+                    pass
+                except Exception as _de:
+                    print(f"[queue] Drain error: {_de}")
+                finally:
+                    is_processing = False
+                    await broadcast({"type": "processing_end"})
+                    try:
+                        await _drain_cole_queue()
+                    except Exception as _dee:
+                        print(f"[queue] re-drain failed: {_dee}")
+            asyncio.ensure_future(_drain_run())
+            _scheduled = True
+    except asyncio.CancelledError:
+        if not _selected_closed:
+            await _end_queued_request(_queued, "cancelled")
+        raise
+    except Exception:
+        if not _selected_closed:
+            await _end_queued_request(_queued, "unavailable")
+        raise
+    finally:
+        if not _scheduled:
+            is_processing = False
+    if not _scheduled:
+        # New arrivals may have queued during status/completion awaits. Release only
+        # this reservation, then let the same drain policy process those arrivals.
+        if _cole_message_queue:
+            await _drain_cole_queue()
+        else:
+            await broadcast({"type": "queue_cleared"})
 
 
 _eyes_running: bool = False        # tracks desktop streaming state
@@ -640,6 +688,9 @@ from nova_chat.lifecycle import NovaLifecycle
 _nova_lifecycle = NovaLifecycle(chat_only=CHAT_ONLY, before_stop=lambda: _prepare_nova_off(),
                                 quiesce=lambda: _quiesce_nova_worker())
 app.include_router(_nova_lifecycle.router)
+from nova_chat.voice_control import VoiceController
+_voice_controller = VoiceController(_ws_root(), nova_enabled=lambda: not CHAT_ONLY and not _nova_lifecycle.pending)
+app.include_router(_voice_controller.router)
 
 _updater_check_task = None
 
@@ -725,6 +776,16 @@ _WS_ROOT_FOR_PROBE = _INBOX_WORKSPACE   # temporary: doubling/free-pass probe (2
 #
 # Found by audit_queue.reconcile() — not by reading, and not by anything failing.
 _CODE_FILES = ("general_tools/nova_chat/server.py",
+               "general_tools/nova_chat/response_events.py",
+               "general_tools/nova_chat/voice_control.py",
+               "general_tools/voice_gateway/control_worker.py",
+               "general_tools/voice_gateway/tts.py",
+               "general_tools/voice_gateway/stt.py",
+               "general_tools/voice_gateway/turns.py",
+               "general_tools/voice_gateway/speech.py",
+               "general_tools/nova_chat/static/voice.js",
+               "general_tools/nova_chat/static/voice.css",
+               "nova_body/nova_runtime/model_client.py",
                "general_tools/nova_chat/collaboration.py",
                "general_tools/nova_chat/static/collaboration.js",
                "general_tools/nova_chat/static/collaboration.css",
@@ -1725,7 +1786,8 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                           hb_ctx=None,
                           cole_pending: bool = True,
                           auto_log_path=None,
-                          source: str = "?") -> str:
+                          source: str = "?", register: str = "text",
+                          reply_to: str = None, request_id: str = None) -> str:
     """
     Stream one AI response, broadcast tokens, and return the full response text.
     The return value lets callers (e.g. _run_response_queue) inspect Nova's
@@ -1743,7 +1805,19 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     auto_log_path: pathlib.Path to the daily autonomy tick log file.
     """
     if _nova_lifecycle.pending:
+        await _end_queued_request({"request_id": request_id, "register": register,
+                                   "msg": {"id": reply_to}}, "unavailable")
         return ""
+    register = normalize_register(register)
+    from nova_runtime.operations import current_operation
+    _operation = current_operation.get()
+    _events = ResponseEvents(author=ai_name, message_id=msg_id,
+                             run_id=_operation.id if _operation else uuid.uuid4().hex,
+                             reply_to=reply_to, request_id=request_id, register=register)
+    async def _emit_response(kind, **fields):
+        event = _events.event(kind, **fields)
+        if event is not None:
+            await broadcast(event)
     # Determine the transcript object to use (ephemeral HB ctx vs full session)
     _transcript = hb_ctx if hb_ctx is not None else session_mgr.active
     _is_hb_tick = hb_ctx is not None
@@ -1828,7 +1902,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         print(f"[probe] could not write GEN probe: {_pe}")
     # Silent autonomous ticks use autonomous_start (invisible to chat bubble renderer)
     _start_event = "autonomous_start" if _silent_tick else "message_start"
-    await broadcast({"type": _start_event, "author": ai_name, "id": msg_id})
+    await _emit_response(_start_event)
     # Emit generation_start so Thoughts pane can show "Nova is generating..." indicator
     if ai_name == "Nova":
         await broadcast({"type": "generation_start", "author": ai_name, "id": msg_id,
@@ -1867,7 +1941,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             raise asyncio.CancelledError("STOP requested by user")
         # Silent autonomous ticks stream to autonomous_token (Monitor pane) not chat
         _tok_type = "autonomous_token" if _silent_tick else "token"
-        await broadcast({"type": _tok_type, "author": ai_name, "token": token, "id": msg_id})
+        await _emit_response(_tok_type, token=token)
 
     async def on_think_token(token):
         if _stop_requested.is_set():
@@ -1914,6 +1988,8 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         await _emit_new_activities(partial_content)
 
     async def on_done(full):
+        if _stop_requested.is_set():
+            raise asyncio.CancelledError
         _result.append(full)
         # Successful generation → clear the model-error streak (model is alive again)
         _rt_guard.record_success()
@@ -1990,8 +2066,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                     # exactly this bug lied by omission. It reports itself now.
                     _trace_gen("commit", ai_name, msg_id, "silent_promote",
                                extra=f"chars={len(_cole_part)} reason={_why}")
-                    await broadcast({"type": "message_end", "author": ai_name,
-                                     "id": msg_id + "_cole", "content": _cole_part})
+                    await _emit_response("message_end", id=msg_id + "_cole", content=_cole_part, delivery="unsolicited")
         elif (full or "").strip():
             # ── Doubling guard (2026-07-02) ──────────────────────────────────────
             # Known bug: the same reply intermittently gets committed twice — byte-
@@ -2030,7 +2105,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                            extra=f"kind={_dup_kind} dup_of={_dup_of.get('id')} chars={len(full)}")
                 # Close this generation's dangling bubble without committing content
                 # (same pattern as the empty-turn branch below).
-                await broadcast({"type": "message_end", "author": ai_name, "id": msg_id, "content": ""})
+                await _emit_response("message_end", content="", delivery="suppressed")
             else:
                 # ── Normal path — add response to chat transcript ────────────────
                 msg = session_mgr.active.add(ai_name, full)
@@ -2043,7 +2118,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                 if memory_indexer:
                     memory_indexer.add_message(full, ai_name, session_mgr.active_id)
 
-                await broadcast({"type": "message_end", "author": ai_name, "id": msg_id, "content": full})
+                await _emit_response("message_end", content=full, delivery="delivered")
                 if ai_name == "Nova":
                     # Refresh her time-sense so "since you last stirred" reflects THIS reply,
                     # not a stale autonomy wake (fixes her thinking minutes passed after a
@@ -2060,7 +2135,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             # solitary 'rest' mode so she never actually answers Cole (the loop we hit in
             # testing). Just clear the dangling bubble; her reasoning still lives in the
             # Thoughts pane. cole_pending stays TRUE so the next wake re-asks her to reply.
-            await broadcast({"type": "message_end", "author": ai_name, "id": msg_id, "content": ""})
+            await _emit_response("message_end", content="", delivery="empty")
 
         # Phase 4A.5 — Route module responses with [TASK_ID] to Master_Inbox
         _maybe_route_inbox(ai_name, full)
@@ -2119,10 +2194,9 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         _last_error_msg = _err_str
         _last_error_time = _now2
         _should_pause = _rt_guard.record_error(err)
+        await _emit_response("message_end", content="" if _dup else f"⚠ {err}", delivery="error")
         if not _dup:
-            await broadcast({"type": "message_end", "author": ai_name, "id": msg_id,
-                             "content": f"⚠ {err}"})
-            await broadcast({"type": "error", "author": ai_name, "message": err, "id": msg_id})
+            await _emit_response("error", message=str(err))
         # Backoff: if llama has failed N times in a row, pause autonomy with one clear
         # System notice so the daemon stops hammering a dead model.
         if _should_pause:
@@ -2162,17 +2236,27 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     # the broadcast sinks above; the runtime owns WHICH client and HOW it's driven — the dispatch
     # + per-model call conventions, relocated verbatim to nova_runtime/model_client.py. The body
     # resolves the client by ai_name (registered at startup), so client_mod isn't used here now.
-    await _rt.model_client.generate(
-        ai_name, _transcript,
-        on_token=on_token, on_done=on_done, on_error=on_error,
-        on_think_token=on_think_token,
-        on_progress=on_progress,
-        on_tool_executed=on_tool_executed_cb,
-        workspace_context=ws_context, images=images,
-        autonomous=autonomous_mode or _is_hb_tick,
-        temperature=_nova_temperature,
-        top_p=_nova_top_p,
-    )
+    try:
+        await _rt.model_client.generate(
+            ai_name, _transcript,
+            on_token=on_token, on_done=on_done, on_error=on_error,
+            on_think_token=on_think_token,
+            on_progress=on_progress,
+            on_tool_executed=on_tool_executed_cb,
+            workspace_context=ws_context, images=images,
+            # A global autonomy toggle does not turn a human voice/chat request into a silent tick.
+            autonomous=_is_hb_tick,
+            register=register, on_audit=_events.on_audit,
+            temperature=_nova_temperature,
+            top_p=_nova_top_p,
+        )
+    except asyncio.CancelledError:
+        if not _silent_tick:
+            await _emit_response("message_end", content="", delivery="cancelled")
+        raise
+    except Exception as error:
+        await on_error(error)
+        raise
 
     return _result[0] if _result else ""
 
@@ -2190,7 +2274,8 @@ CLIENT_MAP = {} if CHAT_ONLY else {
 
 async def _run_response_queue(queue: list, content: str,
                               images: list = None,
-                              source: str = "ws") -> None:
+                              source: str = "ws", register: str = "text",
+                              reply_to: str = None, request_id: str = None) -> None:
     """
     Execute AI responses SEQUENTIALLY in queue order.
 
@@ -2217,7 +2302,8 @@ async def _run_response_queue(queue: list, content: str,
         client_mod = CLIENT_MAP[ai_name]
         msg_id = str(uuid.uuid4())[:8]
         response_text = await run_ai_response(ai_name, client_mod, msg_id, content,
-                                              images=images, source=source)
+                                              images=images, source=source, register=register,
+                                              reply_to=reply_to, request_id=request_id)
 
         # After Nova responds: check if she @mentioned any listeners.
         # If so, run a follow-up round (one level — no further recursion).
@@ -4026,6 +4112,8 @@ async def websocket_endpoint(ws: WebSocket):
             transitioning = getattr(globals().get("_nova_lifecycle"), "pending", False)
             if (CHAT_ONLY or transitioning) and data.get("type") not in {"ping", "stop"}:
                 # Never store a regular chat message or typing signal in Nova's body.
+                if data.get("type") == "message":
+                    await _end_queued_request(data, "unavailable")
                 if data.get("type") != "user_typing":
                     await ws.send_text(json.dumps({"type": "error", "author": "System",
                                                    "chat_only": CHAT_ONLY, "message": ("Nova is starting or stopping." if transitioning else _CHAT_ONLY_MESSAGE)}))
@@ -4178,6 +4266,8 @@ async def websocket_endpoint(ws: WebSocket):
                 content = data.get("content", "").strip()
                 images  = data.get("images", [])  # [{dataUrl, name}]
                 telemetry = data.get("telemetry", "").strip()
+                _message_register = normalize_register(data.get("register"))
+                _request_id = normalize_request_id(data.get("request_id"))
                 
                 if not content and not images:
                     continue
@@ -4266,6 +4356,8 @@ async def websocket_endpoint(ws: WebSocket):
                     "author": _speaker,
                     "content": content,
                     "id": msg["id"],
+                    "request_id": _request_id,
+                    "register": _message_register,
                     "timestamp": msg["timestamp"],
                     "directed_at": directed_at,
                     "images": images,
@@ -4303,9 +4395,14 @@ async def websocket_endpoint(ws: WebSocket):
                         "directed_at":          directed_at,
                         "images":               effective_images or [],
                         "msg":                  msg,
+                        "register":             _message_register,
+                        "request_id":           _request_id,
                     })
                     await ws.send_text(json.dumps({
                         "type":    "queued",
+                        "request_id": _request_id,
+                        "reply_to": msg["id"],
+                        "register": _message_register,
                         "count":   len(_cole_message_queue),
                         "reason":  "Nova is responding — your message is queued and will be delivered next.",
                     }))
@@ -4339,10 +4436,13 @@ async def websocket_endpoint(ws: WebSocket):
                     _run_start_idx    = len(session_mgr.active.messages)
                     _original_task    = _c   # Cole's triggering message
 
-                    async def _queued_run():
+                    async def _queued_run(_q=list(queue), _c=content, _imgs=effective_images or [],
+                                          _register=_message_register, _reply_to=msg["id"],
+                                          _request=_request_id):
                         global is_processing
                         try:
-                            await _run_response_queue(_q, _c, images=_imgs or None, source="ws")
+                            await _run_response_queue(_q, _c, images=_imgs or None, source="ws",
+                                                      register=_register, reply_to=_reply_to, request_id=_request)
 
                             # ── Autonomous cognition now lives in autonomy_daemon() ──────
                             # _queued_run only produces the direct response to Cole now;
@@ -4393,6 +4493,10 @@ async def websocket_endpoint(ws: WebSocket):
                     # WebSocket "stop" messages can never arrive while generation is
                     # running.  ensure_future already schedules it; the while loop
                     # continues to ws.receive_text() and processes stop/ping/etc.
+                else:
+                    await _end_queued_request({"request_id": _request_id,
+                                               "register": _message_register, "msg": msg},
+                                              "unavailable")
 
     except WebSocketDisconnect:
         pass  # client closed the tab or lost connection — normal, not an error

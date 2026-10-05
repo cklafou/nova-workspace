@@ -1,4 +1,4 @@
-# @nova: Assemble Nova context while excluding sealed stores and private collaboration transport.
+# @nova: Assemble identity, memory and bounded task continuity while excluding private collaboration transport.
 # Last updated: 2026-10-04 14:28:11
 """
 nova_chat/workspace_context.py -- Workspace File Access for Nova Group Chat
@@ -524,7 +524,7 @@ class WorkspaceContext:
 
     def build_nova_context_block(self) -> str:
         """
-        Slim context block for Nova's local Qwen 3.5 27B model (32K token window).
+        Budgeted context block for Nova; the model client fits the final prompt to its window.
         Always includes core identity files (AGENTS.md, NOVA.md, TOOLS.md) plus
         memory/ files (STATUS.md, JOURNAL.md, COLE.md, etc.) so Nova always has
         her full identity and grounding context, regardless of launch path.
@@ -536,6 +536,17 @@ class WorkspaceContext:
         _now = _clock_stamp()  # e.g. "Sunday, August 2, 2026, 12:26 PM"
         parts.append(f"[NOW — {_now}]")
         total += len(parts[-1])
+
+        # Read the canonical board on every build; no cached copy or state mutation.
+        # Place this before large identity/memory sections so resumed work is visible.
+        try:
+            from nova_cortex import tasking, executive
+            resume = tasking.render_resume_context(executive.active_focus(), max_chars=6000)
+        except Exception:
+            resume = "[Task continuity unavailable: could not read the canonical task board/focus; do not infer its state.]"
+        if resume:
+            parts.append(resume)
+            total += len(resume)
 
         # ── Self-model: SELF/core/ (ordered, budgeted) — single source of truth ──
         # SELF/core/*.md (identity, how-I-work, body manifest, tools/voice) is loaded

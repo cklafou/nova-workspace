@@ -1,5 +1,5 @@
+# @nova: Split delivered reply text into ordered, speakable sentence units.
 # Last updated: 2026-10-04 15:01:23
-# @nova-adjacent: voice_gateway — the sentence-committer. PURE PYTHON, no audio, no models,
 #   no network: this is the one piece that carries real design intelligence, so it is the one
 #   piece with unit tests (test_committer.py). Everything else is an adapter around it.
 """
@@ -106,20 +106,22 @@ class SentenceCommitter:
     # ── internals ────────────────────────────────────────────────────────────────────────
     def _pop_ready(self):
         """Pop one complete sentence from the front of the buffer, or None."""
-        boundary = self._first_real_boundary(self._buf)
-        if boundary is not None:
-            head, self._buf = self._buf[:boundary], self._buf[boundary:]
-            head = head.strip()
+        start = 0
+        while True:
+            boundary = self._first_real_boundary(self._buf, start)
+            if boundary is None:
+                break
+            head = self._buf[:boundary].strip()
             # Merge tiny fragments forward: a SINGLE short word ("Yeah." "No." "Hmm.") with
-            # more text behind it merges into the next sentence instead of becoming a choppy
-            # stub. A multi-word short sentence ("Hey Cole." "Ship it?") is real speech and
-            # stands on its own — the space is the tell.
-            if len(head) < self.min_chars and " " not in head and self._buf.strip():
-                self._buf = head + " " + self._buf.lstrip()
-                return None
-            if head:
-                return self._make(head)
-            return None
+            # more text behind it joins the next sentence instead of becoming a choppy stub.
+            # A multi-word short sentence ("Hey Cole." "Ship it?") is real speech and stands on
+            # its own — the space is the tell. (2026-10-05: keep scanning past the merged stub;
+            # returning None here used to swallow every later sentence into one final unit.)
+            if len(head) < self.min_chars and " " not in head and self._buf[boundary:].strip():
+                start = boundary
+                continue
+            self._buf = self._buf[boundary:]
+            return self._make(head) if head else None
         # No sentence end. If the buffer is over budget, soft-flush at a clause boundary so a
         # long first sentence does not delay first audio.
         if len(self._buf) >= self.max_buffer:
@@ -131,10 +133,10 @@ class SentenceCommitter:
                     return self._make(head, soft=True)
         return None
 
-    def _first_real_boundary(self, s: str):
-        """Index just AFTER the first genuine sentence terminator, or None. Skips abbreviations
-        and decimals."""
-        for m in _TERMINATOR.finditer(s):
+    def _first_real_boundary(self, s: str, start: int = 0):
+        """Index just AFTER the first genuine sentence terminator at or after `start`, or None.
+        Skips abbreviations and decimals."""
+        for m in _TERMINATOR.finditer(s, start):
             end = m.end()
             # decimal like 3.5 — terminator sits between two digits
             if m.start() > 0 and end < len(s) and s[m.start() - 1].isdigit() and s[end:end + 1].isdigit():

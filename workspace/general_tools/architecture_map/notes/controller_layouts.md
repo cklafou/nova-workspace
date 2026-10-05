@@ -1,3 +1,4 @@
+_Last updated: 2026-10-04 15:13:52_
 <!-- @nova: Explain the desktop controller menus, widgets and saved layouts published in Operations. -->
 ---
 doc: OPERATIONS.md
@@ -81,3 +82,8 @@ Live log includes recorded history as well as new events. Earlier dates are disp
 event labels distinguish scheduled reminders from model responses. A `stretch_nudge` comes from the
 existing shelf watcher called at autonomy startup: its canned wording does not demonstrate fresh model
 inference. Its posture record freshness is a separate runtime issue; the controller does not alter it.
+
+Pipeline pairs tool starts and terminal results by operation ID. Unknown outcomes remain neutral
+and count as finished steps; they are not displayed as successful. A revised answer whose audit
+is INCOMPLETE or ERROR retains that status instead of appearing as a successful correction.
+The October 4 review follow-through passes 23 isolated Pipeline scenarios, including these cases.

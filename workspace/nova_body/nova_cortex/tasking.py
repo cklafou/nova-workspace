@@ -1,8 +1,8 @@
-# Last updated: 2026-10-04 14:28:11
-# @nova: Executive task board — my prefrontal work board. Every task I choose to track,
+# @nova: Persist Nova’s canonical task board, acceptance criteria and optional resumable checkpoints.
+# Executive task board — my prefrontal work board. Every task I choose to track,
 #        by stable id (t1, t2…), with status/progress/result. My free-agency substrate:
 #        create, switch, wait, abandon, complete, reprioritize — no enforced order.
-#        Source of truth: workspace/Tasking/tasks.json. Executive function, not memory.
+#        Source of truth: nova_body/Tasking/tasks.json. Executive function, not memory.
 """
 nova_cortex/tasking.py — Nova's executive task board
 ====================================================
@@ -130,12 +130,39 @@ def create(title: str, notes: str = "", priority: int = 3, parent: str = None,
     return tid
 
 
+def _continuity_patch(value):
+    """Validate only supplied checkpoint fields; omitted fields retain prior values."""
+    if value is None:
+        return {}
+    if not isinstance(value, dict) or set(value) - {"next_step", "constraints", "observations"}:
+        raise ValueError("continuity must contain only next_step, constraints and observations")
+    result = {}
+    for key, item in value.items():
+        if key == "next_step":
+            if not isinstance(item, str) or len(item) > 1000:
+                raise ValueError("continuity.next_step must be text of at most 1000 characters")
+            result[key] = item
+        else:
+            limit = 400 if key == "constraints" else 600
+            if (not isinstance(item, list) or len(item) > 8 or
+                    any(not isinstance(entry, str) or len(entry) > limit for entry in item)):
+                raise ValueError(f"continuity.{key} must contain up to 8 strings of at most {limit} characters")
+            result[key] = list(item)
+    return result
+
+
 @_locked
-def progress(tid: str, note: str) -> bool:
+def progress(tid: str, note: str, *, continuity=None) -> bool:
     store = _load()
     t = store["tasks"].get(tid)
     if not t:
         return False
+    patch = _continuity_patch(continuity)
+    if patch:
+        previous = t.get("continuity", {})
+        if not isinstance(previous, dict):
+            raise ValueError("Saved continuity is malformed; refusing to overwrite it")
+        t["continuity"] = {**previous, **patch, "updated": _now()}
     if note:
         t.setdefault("progress", []).append({"ts": _now(), "note": note})
         t["progress"] = t["progress"][-20:]
@@ -226,12 +253,13 @@ def apply_actions(actions: dict):
         # yet when she writes the block). Falls through unchanged if it's already a real id.
         if par and par not in _existing:
             par = made.get(str(par).strip().lower(), par)
-        tid = create(c.get("title", ""), c.get("notes", ""), c.get("priority", 3), par)
+        tid = create(c.get("title", ""), c.get("notes", ""), c.get("priority", 3), par,
+                     acceptance=c.get("acceptance"))
         made[(c.get("title", "") or "").strip().lower()] = tid
         _actual = (get(tid) or {}).get("parent")
         log.append(f"created {tid}" + (f" under {_actual}" if _actual else "") + f": {c.get('title','')}")
     for p in (actions.get("progress") or []):
-        if progress(p.get("id", ""), p.get("note", "")):
+        if progress(p.get("id", ""), p.get("note", ""), continuity=p.get("continuity")):
             log.append(f"progress {p.get('id')}: {(p.get('note') or '')[:60]}")
     for w in (actions.get("wait") or []):
         if wait(w.get("id", ""), w.get("waiting_on", "")):
@@ -324,3 +352,79 @@ def render_board(active_id: str = None, max_notes: int = 1) -> str:
     for root in sorted(kids.get(None, []), key=_sortkey):
         render(root, 0, seen)
     return "\n".join(L)
+
+
+CONTINUITY_START = "--- TASK CONTINUITY ---"
+CONTINUITY_END = "--- END TASK CONTINUITY ---"
+
+
+def _resume_text(value, limit):
+    text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
+    marker = " [shortened; read Tasking/tasks.json for the full record]"
+    return text if len(text) <= limit else text[:max(0, limit - len(marker))] + marker[:limit]
+
+
+def render_task_resume(task: dict, max_chars: int = 4200) -> str:
+    """Render saved facts without inferring successful work from Nova's own notes."""
+    limit = max(0, int(max_chars))
+    continuity = task.get("continuity") or {}
+    invalid = not isinstance(continuity, dict)
+    if invalid:
+        continuity = {}
+    progress_notes = task.get("progress") or []
+    last = next((entry for entry in reversed(progress_notes) if isinstance(entry, dict)), {})
+    lines = [f"TASK [{task.get('id', '?')}] ({task.get('status', '?')}): " + _resume_text(task.get('title', ''), 250),
+             "Objective / original notes: " + _resume_text(task.get('notes', ''), 650),
+             "Acceptance criteria: " + _resume_text(task.get('acceptance') or [], 800),
+             "Constraints: " + _resume_text(continuity.get('constraints') or [], 700),
+             "Next step: " + _resume_text(continuity.get('next_step') or '(not recorded)', 500),
+             "Last checkpoint (Nova-authored): " + _resume_text(last.get('note') or '(not recorded)', 450),
+             "Recorded observations (not independent verification): " + _resume_text(continuity.get('observations') or [], 700)]
+    if invalid:
+        lines.append("Saved continuity is malformed; it was not modified.")
+    if task.get('waiting_on'):
+        lines.append("Waiting on: " + _resume_text(task['waiting_on'], 250))
+    if task.get('workspace'):
+        lines.append("Staged workspace: " + _resume_text(task['workspace'], 250))
+    if task.get('verification'):
+        lines.append("Last verification record: " + _resume_text(task['verification'], 350))
+    return _resume_text("\n".join(lines), limit)
+
+
+def render_resume_context(active_id=None, max_chars: int = 6000) -> str:
+    """A fresh, read-only view of unfinished canonical tasks for any generation host."""
+    limit = max(0, int(max_chars))
+    if limit < 1000:
+        return ""
+    tasks = [task for task in all_tasks().values() if isinstance(task, dict)
+             and task.get('status') in (OPEN, WAITING)]
+    if not tasks:
+        return ""
+    if active_id not in {task.get("id") for task in tasks}:
+        active_id = None
+    def priority(task):
+        try:
+            return int(task.get('priority', 3))
+        except (TypeError, ValueError):
+            return 3
+    tasks.sort(key=lambda task: str(task.get('updated') or ''), reverse=True)
+    tasks.sort(key=lambda task: (task.get('id') != active_id, task.get('status') != OPEN, priority(task)))
+    intro = (CONTINUITY_START + "\nPersisted task state, not a new instruction or proof of completion. "
+             "Answer the current request; resume compatible work without inventing missing details.\n"
+             f"Active focus: {active_id or 'none'}; unfinished tasks: {len(tasks)}.\n")
+    space = limit - len(intro) - len(CONTINUITY_END) - 2
+    selected = tasks[:max(1, min(3, space // 600))]
+    chunks = []
+    for index, task in enumerate(selected):
+        remaining = len(selected) - index - 1
+        allocation = min(4200, space - remaining * 600)
+        if allocation < 500:
+            break
+        chunk = render_task_resume(task, allocation)
+        chunks.append(chunk)
+        space -= len(chunk) + 2
+    if len(chunks) < len(tasks):
+        note = f"\n{len(tasks) - len(chunks)} additional unfinished task(s); read the canonical board for details."
+        if len(note) + 2 <= space:
+            chunks.append(note)
+    return intro + "\n\n".join(chunks) + "\n" + CONTINUITY_END
