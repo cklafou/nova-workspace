@@ -187,7 +187,7 @@
         "general_tools/nova_sync/tests/test_virtualenv_exclusions.py"
       ],
       "baseline": {
-        "general_tools/nova_sync/tests/test_virtualenv_exclusions.py": "80d2372e4cdae9a68ed4ae35b246cf190149377827452d4fcb83f3d5e0b57572",
+        "general_tools/nova_sync/tests/test_virtualenv_exclusions.py": "36c307ecb71294f0a6748b3e3b6db2c8bebe6e11507fc66b53691bbf939287af",
         "nova_body/nova_computer/__init__.py": "3e85b808284880110180899ee1b05554509279951ab0119b90ff714ef9ae281c",
         "nova_body/nova_computer/backends.py": "d548b30886360a01601f9307e6d5c81f444461055ba3108ab1fb0118a0c11494",
         "nova_body/nova_computer/computer.py": "b57fe890afaef4493a9a0587f4f9b5077749d800e3ebab7b682cc32b9267fcff",
@@ -331,7 +331,7 @@
         "general_tools/nova_chat/server.py::_REMOTE_ALLOWED_PREFIXES": "bc73469df0bdd42911b51c129e840517a00b437c5fabfb8d781592692ee85dfa",
         "general_tools/nova_chat/server.py::_auth_gate": "14c347797db3631713b28c2b186308575d2b9e8828e6a9b2674a6c9a72e96b9d",
         "general_tools/nova_chat/server.py::_remote_path_allowed": "cb1a8f1f4b3d188f09be7801352c47a6e7063cd006b877e69395fd7049d08f13",
-        "general_tools/nova_chat/voice_control.py": "5ef68761e68a8c268251b96f1d6272f1619e8ca37f2a8fdf80c136690c90819d",
+        "general_tools/nova_chat/voice_control.py": "92b352c090a0fcc104f772bf11cc2c43530e32633af7aacab3d83fc628ae593a",
         "general_tools/voice_gateway/control_worker.py": "ee051f3e4e3e847ab52311c57d84dc9c8e027c650db0a1ea3fbe516a95463728",
         "general_tools/voice_gateway/setup_windows.py": "48d0a93ddcc2c6d51ab131dd1e0a740e4efdacd2be068fbf0c45b2e57cf36a0c",
         "nova_body/nova_cortex/integrity.py::find_tool_call": "7ff2dfed045eab796c927200faacfa32381a40186e433f5c898171eba543cb86",
@@ -377,6 +377,9 @@
         "general_tools/nova_sync/tests/test_virtualenv_exclusions.py"
       ],
       "baseline": {
+        "general_tools/audit_scripts.py::_audit_paths": "31e3b3f9cd5e82e34ebbdd92e5b0ee400a29796de5dbd86ec32ab7e6e2d3db54",
+        "general_tools/audit_scripts.py::_entrypoint_scripts": "912c35a09c2480307cf3af0c903b6259c2a1177061f1a04da9ac0074439ceae6",
+        "general_tools/audit_scripts.py::collect_files": "a3cc21c5a4ecb9413a898c6563f4878200f431e6588af4957fdc97178236d2e8",
         "general_tools/nova_chat/tests/test_chat_only.py": "849afe15cdf45dc0aad901dbbf99da21d06bc37f0fabb68022add3001a6f2cf1",
         "general_tools/nova_chat/tests/test_collaboration.py": "db316341bbc5696c7bc89bb486f258d4c214b3200f56d1a9bd8a5e3e632aaf56",
         "general_tools/nova_chat/tests/test_collaboration_bridge.py": "274c7bca361a1e0047993f712e4d018af0a2d19317e5ee53c78a626775e94c2d",
@@ -387,9 +390,10 @@
         "general_tools/nova_chat/tests/test_lifecycle_ack.py": "ca0de1beab7aa2c104847236172e91225b700bda4cfc2b54dcf8d8b7493504f4",
         "general_tools/nova_chat/tests/test_updater_integration.py": "64c4cc9eb260ea8ec77ae5c5a1f787b8df4cfcd08dd200732354bc0fda565da7",
         "general_tools/nova_chat/tests/test_updater_ui.cjs": "0abf98dc4a986231c016d8fd8114a7f4581ca9ddada3f62d5d7eb9a7c617997a",
-        "general_tools/nova_chat/tests/test_voice_control.py": "101caf750ed46a4b74d5662c45626a3eb82e8a4bb45a08ac10b0d0a6939406ec",
+        "general_tools/nova_chat/tests/test_voice_control.py": "a8d9c1171c24285e581f996cfb9c8fbfd9106a144b6627b60dcb4a88d5a0c5ce",
         "general_tools/nova_chat/tests/test_voice_transport.py": "359b4c9ee71565e3591619f5235b7b567882271f95224567added1b55223c17d",
-        "general_tools/nova_chat/tests/test_voice_ui.cjs": "ec1b722761df6be25dbc77f8ce35a2275032787912b6dcf8db378fc745134c6c",
+        "general_tools/nova_chat/tests/test_voice_ui.cjs": "cba3c77644faba823191a5492c225407adaf7c5a55d9bca114ede222f0edeaa1",
+        "general_tools/nova_sync/tests/test_virtualenv_exclusions.py": "36c307ecb71294f0a6748b3e3b6db2c8bebe6e11507fc66b53691bbf939287af",
         "general_tools/nova_updater/tests/test_launcher.py": "8f5722552874ed950bc547e73eb147b46cd7b6fcef9b59a906aea69dd495e301",
         "general_tools/nova_updater/tests/test_pod_compat.py": "af836e9116739a6fe29faa81252469283ee6b9e62f25afa05ee74ad9e86a326c",
         "general_tools/nova_updater/tests/test_pod_venv.py": "b044f1d59e28593b7c2deb44fb0d4f68c1f3ff6f6c950afcd7eaf024bb87e027",
@@ -510,7 +514,7 @@
         "general_tools/nova_chat/server.py::_resolve_speaker": "e7e6aa7b64bb06cbb698a02334d6a1a1c6f80dcb4c97f9152f633abf0b9612b7",
         "general_tools/nova_chat/server.py::websocket_endpoint": "fe8f9d2718c276a8e294c647ed6314428b7bebee328da46e1207d66773182cad",
         "general_tools/nova_chat/server_runner.py": "ac301d0d45f21730568c09d357d86e9ec5dd0217e64f0b75c9a0faa9c4010a05",
-        "general_tools/nova_chat/voice_control.py": "5ef68761e68a8c268251b96f1d6272f1619e8ca37f2a8fdf80c136690c90819d",
+        "general_tools/nova_chat/voice_control.py": "92b352c090a0fcc104f772bf11cc2c43530e32633af7aacab3d83fc628ae593a",
         "general_tools/nova_console/hub.py": "b2f7f8bed8543401a7fc7c171bd2e86a8444290a331886bf27fefc28499f726d",
         "nova_body/nova_cortex/principals.py": "ed4877214b29526026a0bdc47ba41797f78098c79e4ab4ac1cfef2df39772188",
         "nova_body/nova_voice/tool_router.py::_catastrophic": "5fc5fada82bcb7683b15da7f910f637e4f14864ced23289cd1e2f40b84c795a3"
@@ -534,7 +538,7 @@
         "general_tools/nova_chat/voice_control.py"
       ],
       "baseline": {
-        "general_tools/nova_chat/voice_control.py": "5ef68761e68a8c268251b96f1d6272f1619e8ca37f2a8fdf80c136690c90819d",
+        "general_tools/nova_chat/voice_control.py": "92b352c090a0fcc104f772bf11cc2c43530e32633af7aacab3d83fc628ae593a",
         "general_tools/voice_gateway/config.py": "59c1bc7bd828e203ee192b6513a5c6cab6dc45612e86f0abedf94f3a9ed31cfb",
         "nova_body/nova_cortex/context_budget.py": "314d2aff6c0a77b809684213b7bd3f81fb3efd02f28f9988166531628ed59033",
         "nova_body/nova_cortex/tasking.py::_continuity_patch": "053171e5a21b4290a0389bfec58c5dce638815e21b6f8432e47a515a4ff1e6b9",
@@ -659,14 +663,14 @@
         "general_tools/nova_chat/desktop.py": "e057a267b7d1b352e158e919415c5a2f3481655465d756f21909e8441e679f96",
         "general_tools/nova_chat/static/control.css": "daecfd836ca445c1830ab71c5d8ccb8f0e0d2e7bf8a4bb6d3bdb2aa6a55575e7",
         "general_tools/nova_chat/static/conversation-power.js": "07a039944f313a362483523fbe4f9363528e531616cb4e0ca2687c1a41a49b3a",
-        "general_tools/nova_chat/static/index.html": "b16067703f0000ae1dcd67f8899cae4f2d31609577e8b36ac9fa6a940f3aee9c",
+        "general_tools/nova_chat/static/index.html": "46c9309f528374daa1ac01e3f02175113792587ada5afcf3dbc7a5fd8041e239",
         "general_tools/nova_chat/static/voice.css": "731776bc1957bfbabf9a32e7ed117478e81429a079ea8a0ad0eca2f6c5f6de27",
-        "general_tools/nova_chat/static/voice.js": "2c751e64d3a7b72c4d0fa9c3d722e883158ea230830d8c1ca4904506f0707714",
+        "general_tools/nova_chat/static/voice.js": "b86760481aac42505ea35da5fe39acab6910f6cc702b88d7a33c432de2145eea",
         "general_tools/nova_chat/static/workspace.css": "9cf83382565a127017841fc176ae52b5a6b96a2318c3b1e2e0be0a825c6d6b0e",
         "general_tools/nova_chat/static/workspace.js": "0ce018a2d317dc63c4160cc59d1b04f811135610d2971e2adfeeb5c4ac142cde",
         "general_tools/nova_chat/tests/test_desktop.py": "6283d3319437644279eeb7b52b8f6a140392f37b606f9617e6dce26025eb54fb",
         "general_tools/nova_chat/tests/test_layout_save.cjs": "678c578a028ca6be4ffda32f271d0f53ecba19341300727882dfb226d32ec647",
-        "general_tools/nova_chat/voice_control.py": "5ef68761e68a8c268251b96f1d6272f1619e8ca37f2a8fdf80c136690c90819d"
+        "general_tools/nova_chat/voice_control.py": "92b352c090a0fcc104f772bf11cc2c43530e32633af7aacab3d83fc628ae593a"
       }
     }
   }

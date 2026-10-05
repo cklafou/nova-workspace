@@ -1,3 +1,4 @@
+# Last updated: 2026-10-05 18:32:29
 # @nova: Shared kit for witness evaluation cases: runtime-shaped receipts, rooms rendered by witness.py's own formatters, pinned real captures and clean synthetic screens.
 """
 casekit.py — build witness cases the way runtime would audit them.

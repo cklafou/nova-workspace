@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-05T18:04:58",
+  "generated": "2026-10-05T18:33:20",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -95,7 +95,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Expose Nova's executive faculties, task board, runtime settings and body-owned context assembly.",
       "files": 15,
-      "lines": 5822,
+      "lines": 5864,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -182,7 +182,7 @@
       "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
       "files": 5,
       "lines": 786,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -217,7 +217,7 @@
       "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
       "files": 5,
       "lines": 786,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -375,7 +375,7 @@
       "purpose": "Nova's perception — LIVE: chronoception (clock), environmental sensing (environment), and touch (what's interacting with her). SCAFFOLDED (GUI-automation phase, not yet wired): desktop vision (eyes, vision) and UI proprioception.",
       "files": 13,
       "lines": 2579,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -457,7 +457,7 @@
       "path": "nova_body/nova_witness",
       "purpose": "Shared kit for witness evaluation cases: runtime-shaped receipts, rooms rendered by witness.py's own formatters, pinned real captures and clean synthetic screens.",
       "files": 5,
-      "lines": 1918,
+      "lines": 1921,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -493,7 +493,7 @@
       "purpose": "Launch the full Nova stack or an explicit chat-only controller without starting her body.",
       "files": 1,
       "lines": 1165,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -653,7 +653,7 @@
       "path": "general_tools/architecture_map",
       "purpose": "Generates Orient documentation and validates source, review and link freshness.",
       "files": 10,
-      "lines": 3178,
+      "lines": 3197,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -718,8 +718,8 @@
       "path": "general_tools/audit_scripts.py",
       "purpose": "Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.",
       "files": 1,
-      "lines": 1200,
-      "age_days": 1,
+      "lines": 1194,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -765,7 +765,7 @@
       "purpose": "Call-graph generator — AST-walks packages to map imports/calls; feeds the Body Manifest.",
       "files": 1,
       "lines": 288,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -787,7 +787,7 @@
       "purpose": "Call-ORDER generator — traces execution paths from entry points and renders them as a",
       "files": 1,
       "lines": 308,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -876,7 +876,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.",
       "files": 31,
-      "lines": 10517,
+      "lines": 10530,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -1012,7 +1012,7 @@
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.",
       "files": 12,
-      "lines": 3156,
+      "lines": 3198,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -1048,8 +1048,8 @@
       "path": "general_tools/nova_updater",
       "purpose": "Nova's model updater: finds newer dense models, installs them with rollback, and trains LoRAs for installed models.",
       "files": 34,
-      "lines": 6500,
-      "age_days": 1,
+      "lines": 6504,
+      "age_days": 0,
       "ports_bind": [
         "8080"
       ],
@@ -1122,8 +1122,8 @@
       "kind": "tool",
       "path": "general_tools/voice_gateway",
       "purpose": "voice_gateway — Cole's microphone to Nova. A comms tool (pluck test: her body is",
-      "files": 4533,
-      "lines": 2153185,
+      "files": 4534,
+      "lines": 2153554,
       "age_days": 0,
       "ports_bind": [
         "8080"
@@ -1859,6 +1859,7 @@
         "contingency",
         "contrib",
         "control",
+        "control_worker",
         "controlflow",
         "convert",
         "convert_tf_models_to_pytorch",

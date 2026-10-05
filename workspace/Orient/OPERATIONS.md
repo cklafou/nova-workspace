@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T09:32:29+00:00 from source (input `768f1c60405c`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:38:12+00:00 from source (input `d20522593129`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -108,8 +108,6 @@ stop/resume, memory ingestion health and VM handoff through `/api/runtime/state`
 
 ## Access and practical debugging
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/voice_control.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Access and practical debugging"`.
-
 Nova's host access is intentional. The chat server has loopback exemptions, bearer authentication
 for remote HTTP clients, and restrictions on remote routes. Speaker capability checks are a separate
 layer: an unknown display name resolves to untrusted. A name added in the UI is not automatically
@@ -139,8 +137,6 @@ results recoverable and surface any retained-storage charge. The Hugging Face ca
 disk rather than a slow network mount.
 
 ## Test meaningful behavior
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_voice_control.py`, `general_tools/nova_chat/tests/test_voice_ui.cjs`; new `general_tools/audit_scripts.py::_audit_paths`, `general_tools/audit_scripts.py::_entrypoint_scripts`, `general_tools/audit_scripts.py::collect_files`, `general_tools/nova_sync/tests/test_virtualenv_exclusions.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -242,8 +238,6 @@ notes), which Orient lists but never quotes; backups; and formats without commen
 A generated file gets its purpose line from the code that writes it.
 
 ## Security model
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/voice_control.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
 
 Nova's reach is intentional — Cole: *"My machine is her body. If she can't use it fully, she is
 crippled."* Every control here is about **who can reach her from outside**, not what she may do
@@ -356,8 +350,6 @@ Secrets may live in files; they must never leave in an upload. `.gitignore` and 
 `audit_scripts.py::check_secret_exclusions` asserts that the two lists match.
 
 ## Tunable variables
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/voice_control.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/tunables.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Tunable variables"`.
 
 **The rule** (Cole, 2026-08-03): any constant that Cole or Nova might want to change without editing
 code and restarting belongs in the tunables registry, not as a literal. If a number governs behavior —
@@ -506,8 +498,6 @@ its temp folder stopped autosave (lesson 7 above).
 `Nova_Drive/` is ignored by git and by the watcher, and Orient does not index it.
 
 ## Controller menus and layouts
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/static/index.html`, `general_tools/nova_chat/static/voice.js`, `general_tools/nova_chat/voice_control.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/controller_layouts.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Controller menus and layouts"`.
 
 Nova Chat has one workspace. The top application bar contains expandable menus; opening Services,
 Advanced or Appearance leaves the dock arrangement alone. Widgets opens the widget choices, including
@@ -814,4 +804,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 70, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Access and practical debugging`, `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Security model`, `OPERATIONS.md#Test meaningful behavior`, `OPERATIONS.md#Tunable variables`.
+**Sections awaiting review:** none.

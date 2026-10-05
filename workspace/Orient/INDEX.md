@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T09:32:29+00:00 from source (input `768f1c60405c`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:38:12+00:00 from source (input `d20522593129`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -1793,7 +1793,6 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/tests/test_tool_correlation.py](../nova_body/tests/test_tool_correlation.py) — Verify that tool lifecycle identifiers match canonical receipts on success, refusal and exceptions.
 - [nova_body/tests/test_witness_delivery.py](../nova_body/tests/test_witness_delivery.py) — Exercise full-draft witness delivery and tool observability with isolated providers, receipts and images.
 - [nova_body/tests/test_witness_evidence.py](../nova_body/tests/test_witness_evidence.py) — Guard audit evidence visibility, verdict precedence, image bounds and diagnostic redaction.
-- [nova_body/tests/test_witness_policy.py](../nova_body/tests/test_witness_policy.py) — Guard witness evidence-policy consistency and offline case transport without grading model intelligence.
 - [nova_body/tests/test_witness_replay.py](../nova_body/tests/test_witness_replay.py) — Prove the witness replay harness audits like runtime: pixels, read detection, read budget, refusals, sampling parity and separately scored…
 
 ## Files without a purpose line

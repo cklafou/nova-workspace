@@ -1,3 +1,4 @@
+# Last updated: 2026-10-05 18:36:12
 # @nova: Match voice turns to delivered replies and control speech eligibility, timeouts and interruption.
 #   Nova Chat says it DELIVERED in reply to one of this gateway's own requests (by request_id),
 #   with its audit disposition attached. Never diagnostics, never empty/suppressed/cancelled ends.

@@ -1,7 +1,7 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T09:32:29+00:00 from source (input `768f1c60405c`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:38:12+00:00 from source (input `d20522593129`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
 
@@ -181,8 +181,6 @@ Drives/wants and the hormone design are not evidence of online weight learning. 
 
 ## Runtime evidence and open modernization work
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_sync/tests/test_virtualenv_exclusions.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
-
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
 tool calls occurred; none operated on the fixture. Session switches/context refresh also occurred,
@@ -249,25 +247,35 @@ and the confusion matrix are retained in `nova_body/nova_witness/reports/replay_
 The follow-through passed 141 isolated checks and a fresh guest Firefox window probe. Voice
 readiness found missing audio/STT/TTS dependencies; live voice and body-event integration remain
 unfinished. Nova stayed in chat-only mode during the benchmark; the temporary model was stopped.
-The October 5 offline foundation carries request/run/message IDs and voice register through the
-chat queue to the body, then reports the delivered candidate's audit disposition. Tests cover stopped
-and superseded requests, stale closures, observer failures and cancellation at delivery. Claude's
-gateway adds final-text speech, interruption and body events; fake-TTS and loopback socket fixtures
-verify protocol behavior without using a microphone or model. Live speech timing and native avatar
-coupling remain unverified. New witness cases comprise 27 open development items and a separate
-sealed 27-case holdout; no model evaluation of either has run. Nova remained off during this work.
+The October 5 voice foundation carries request/run/message IDs and voice register through the
+chat queue, then reports the delivered candidate's audit disposition. Conversation now contains
+explicit voice start/stop, microphone/output mute, device selection and bounded audio tests.
+A pinned CPU-only environment provides Moonshine/Silero; Windows system speech is explicitly a
+temporary voice. Native microphone capture and speaker playback completed, generated test speech
+was transcribed, and UI start/mute/stop was exercised. Playback API completion is not confirmation
+that Cole heard it; a natural human conversation and native avatar lipsync remain unverified.
+The voice worker passed 59 gateway tests, 27 controller tests and 12 UI scenarios. This includes
+startup pipe handling, decoder recovery, cancellation and rejecting transcripts decoded across
+mute/playback changes. Detailed receipts and final transport status are in the
+[voice and continuity validation](Architecture/evidence/2026-10-05-voice-continuity-validation.md).
 The [Codex/Cowork comparison](Architecture/evidence/2026-10-05-agent-harness-comparison.md) separates
-model capability from tool execution, context, persistence and presentation. It recommends measuring
-these existing Nova paths before replacing the architecture; its review status is recorded in the report.
+model capability from tool execution, context, persistence and presentation. Claude reviewed it;
+its subsequent implementation status is recorded separately from the original source-only review.
+Witness prompt development used 27 open cases, followed by a source/settings lock and one unseen
+27-case holdout plus the unchanged 26-case regression set. Candidate 3 matched 25/27 on the
+holdout and 21/26 controls, but approved an actual historical miscounted-clicks claim. It was
+REJECTED for deployment; the pre-experiment witness is retained. No holdout-based tuning followed.
+Correct labels also concealed flawed rationales, reinforcing that model PASS is not proof.
 The October 5 continuity changes passed 87 relevant isolated checks: 19 new task/context cases,
 30 modernization, 31 delivery and seven ModelClient tests. A fresh module load recovered checkpoint
 fields; partial updates retained prior constraints and observations after old progress notes were
 pruned. A fixture using the real system prefix preserved the current request and a checkpoint at an
 oversized context tail through final fitting. This is persistence/prompt evidence, not a live proof
-that Nova reliably saves checkpoints or resumes long work. No personal records were edited.
+that Nova reliably saves checkpoints or resumes long work. No personal records were hand-edited.
 The same day's dependency exclusion repair passed 34 sync tests, including ten new environment
-fixtures. Exactly 1,646 accidentally tracked virtualenv paths were removed from Git's index; installed
-files remained on disk with unchanged size/mtime metadata. This did not erase earlier Git history.
+fixtures. Two later code-audit collector regressions also passed (12 exclusion fixtures total).
+Exactly 1,646 accidentally tracked virtualenv paths were removed from Git's index; installed files
+remained on disk with unchanged size/mtime metadata. This did not erase earlier Git history.
 Backend edits load on the next Start Nova; the existing UI needs a reload to receive new JavaScript.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 
