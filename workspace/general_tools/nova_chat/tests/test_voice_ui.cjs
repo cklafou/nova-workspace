@@ -1,4 +1,4 @@
-/* @nova: Verify integrated Conversation voice controls with a fake DOM and API, without audio, devices or Nova. */
+// @nova: Verify dockable voice calls, device settings and honest turn/playback rendering using a fake DOM and API without audio or Nova.
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -33,11 +33,12 @@ function fixture(options = {}) {
   const body = new Element("body"), chat = new Element("div", "chat-main");
   const composer = new Element("div", "input-area");
   composer.value = "unsent draft";
-  body.append(chat); chat.append(composer);
+  const host = new Element("div", "voice-host");
+  body.append(chat, host); chat.append(composer);
   const events = {}, calls = [], timers = [];
   const find = (id, root = body) => root.id === id ? root : root.children.map(n => find(id, n)).find(Boolean);
   const f = {status: {...baseStatus(), ...options.status}, statusCode: options.statusCode || 200,
-    down: false, calls, chat, composer, timers, find, post: null, pendingGet: null,
+    down: false, calls, chat, composer, host, timers, find, post: null, pendingGet: null,
     devices: {inputs: [{id: 2, name: "USB microphone", default: true}],
       outputs: [{id: 3, name: "Headphones", default: true}]}};
   const context = {
@@ -70,24 +71,27 @@ function fixture(options = {}) {
   };
   vm.createContext(context); vm.runInContext(source, context);
   f.context = context;
-  f.ui = context.window.initNovaConversationVoice();
+  assert.equal(calls.length, 0, "Module evaluation alone performs no audio/status requests");
+  f.ui = context.window.mountNovaVoice(host);
   f.controls = f.ui.controls;
   f.lifecycle = state => {for (const callback of events["nova:lifecycle"] || []) callback({detail: state});};
   return f;
 }
 const posts = f => f.calls.filter(call => call.method === "POST");
 
-test("mounts inside Conversation and performs status-only reads", async () => {
+test("mounts only in the Voice widget and performs status-only reads", async () => {
   const f = fixture(); await settle();
-  assert.equal(f.chat.children[0], f.ui.root);
-  assert.equal(f.chat.children[1], f.composer);
+  assert.equal(f.host.children[0], f.ui.root);
+  assert.deepEqual(f.chat.children, [f.composer], "Conversation is untouched");
   assert.equal(f.composer.value, "unsent draft");
   assert.deepEqual(f.calls.map(call => [call.url, call.method]), [["/api/voice/status", "GET"]]);
-  assert.equal(f.controls.toggle.textContent, "Start voice");
+  assert.equal(f.controls.toggle.textContent, "Call Nova");
   assert.equal(f.controls.toggle.disabled, false);
   assert.equal(f.controls.stateText.attrs["role"], "status");
   assert.equal(f.controls.inputDevice.attrs["aria-label"], "Microphone");
-  assert.equal(f.context.window.initNovaConversationVoice(), null);
+  assert.equal(f.context.window.mountNovaVoice(f.host), f.ui, "Remount reuses one UI and poller");
+  assert.equal(f.controls.details.children[0].textContent, "Settings & tests");
+  assert.ok(!f.controls.details.open && !f.controls.conversation.open, "Secondary panels start collapsed");
   f.ui.destroy();
 });
 
@@ -100,7 +104,7 @@ test("Nova-off gates voice start, but explicit audio tests remain available and 
     return {data: {...baseStatus(), state: "testing", test_result: {kind: "microphone", state: "running", message: "Listening to test clip"}}};
   };
   await f.controls.testMic.click(); await settle();
-  assert.equal(f.controls.toggle.textContent, "Stop voice");
+  assert.equal(f.controls.toggle.textContent, "Stop test");
   assert.equal(f.controls.toggle.disabled, false);
   assert.match(f.controls.testResult.textContent, /test clip/);
   assert.equal(f.controls.microphone.disabled, true);
@@ -121,10 +125,10 @@ test("explicit start avoids duplicate requests and uses server state on reload",
   assert.equal(posts(f)[0].url, "/api/voice/start");
   pending.resolve({data: {...baseStatus(), running: true, state: "listening"}}); await settle();
   assert.equal(f.controls.stateText.textContent, "Listening");
-  assert.equal(f.controls.toggle.textContent, "Stop voice");
+  assert.equal(f.controls.toggle.textContent, "End call");
   const reopened = fixture({status: {running: true, state: "listening", output_muted: true}}); await settle();
   assert.equal(posts(reopened).length, 0);
-  assert.equal(reopened.controls.output.textContent, "Unmute voice");
+  assert.equal(reopened.controls.output.textContent, "Unmute speaker");
   f.ui.destroy(); reopened.ui.destroy();
 });
 
@@ -190,7 +194,7 @@ test("network loss preserves active uncertainty and recovery clears transport er
   const f = fixture({status: {running: true, state: "listening"}}); await settle();
   f.down = true; await f.ui.refresh();
   assert.equal(f.controls.stateText.textContent, "Status unavailable");
-  assert.equal(f.controls.toggle.textContent, "Stop voice");
+  assert.equal(f.controls.toggle.textContent, "End call");
   assert.equal(f.controls.toggle.disabled, false, "An uncertain active service still needs its stop action");
   assert.equal(f.controls.microphone.disabled, true);
   f.down = false; await f.ui.refresh();
@@ -241,6 +245,69 @@ test("lifecycle events update start gating without triggering voice", async () =
   const f = fixture({lifecycle: {state: "off"}}); await settle();
   f.lifecycle({state: "starting", pending: true}); assert.equal(f.controls.toggle.disabled, true);
   f.lifecycle({state: "on", pending: false}); assert.equal(f.controls.toggle.disabled, false);
+  assert.equal(posts(f).length, 0);
+  f.ui.destroy();
+});
+
+
+test("voice widget remount/popout lifecycle cannot start or stop the shared call", async () => {
+  const f = fixture({status: {running: true, state: "listening"}}); await settle();
+  const original = f.ui.root;
+  const dock = new Element("div"); dock.append(f.host);
+  assert.equal(f.ui.root, original, "Dock movement preserves controls and state");
+  f.ui.destroy();
+  await f.ui.refresh();
+  assert.equal(posts(f).length, 0, "Closing the UI does not silently end audio");
+  const reopened = f.context.window.mountNovaVoice(f.host); await settle();
+  assert.notEqual(reopened, f.ui);
+  assert.equal(f.host.children.length, 1);
+  assert.equal(reopened.controls.toggle.textContent, "End call");
+  assert.equal(posts(f).length, 0, "A new popout reads the existing call rather than creating another");
+  reopened.destroy();
+});
+
+test("delayed turns, omitted speech and request IDs remain visible without pretending to speak", async () => {
+  const f = fixture({status: {running: true, state: "waiting", last_turn: {phase: "delayed", request_id: "r2", message_id: "m2", run_id: "run2", elapsed_s: 312.8}}}); await settle();
+  assert.equal(f.controls.stateText.textContent, "Waiting for Nova");
+  assert.match(f.controls.delivery.textContent, /still waiting/);
+  assert.match(f.controls.trace.textContent, /request_id: r2/);
+  assert.match(f.controls.trace.textContent, /elapsed_s: 312.8/);
+  f.status.last_turn = {...f.status.last_turn, phase: "end", eligible: false, delivery: "suppressed", why: "Witness audit incomplete"};
+  f.status.state = "listening";
+  await f.ui.refresh();
+  assert.match(f.controls.delivery.textContent, /Reply was not spoken: Witness audit incomplete/);
+  assert.equal(f.controls.stateText.textContent, "Listening");
+  f.ui.destroy();
+});
+
+test("playback failures never show a speaking indicator; older output cannot replace current turn", async () => {
+  const f = fixture({status: {running: true, state: "speaking", last_turn: {phase: "end", request_id: "r1", eligible: true},
+    last_playback: {phase: "end", request_id: "r1", outcome: "error", clock: "playback"}}}); await settle();
+  assert.equal(f.ui.root.dataset.state, "error");
+  assert.equal(f.controls.stateText.textContent, "Needs attention");
+  assert.equal(f.controls.delivery.textContent, "Spoken output failed");
+  f.status.last_playback = {phase: "requested", request_id: "r1"}; await f.ui.refresh();
+  assert.equal(f.controls.stateText.textContent, "Preparing speech");
+  f.status.last_playback = {phase: "start", request_id: "r1", clock: "process"}; await f.ui.refresh();
+  assert.equal(f.controls.stateText.textContent, "Output requested");
+  f.status.last_playback = {phase: "start", request_id: "r1", clock: "playback"}; await f.ui.refresh();
+  assert.equal(f.controls.stateText.textContent, "Speaking");
+  assert.equal(f.controls.delivery.textContent, "Audio sent to the selected output");
+  f.status.state = "thinking"; f.status.last_turn = {phase: "started", request_id: "r2"}; await f.ui.refresh();
+  assert.equal(f.controls.stateText.textContent, "Nova is thinking");
+  assert.equal(f.controls.delivery.hidden, true);
+  f.ui.destroy();
+});
+
+test("hearing and recognition are reported only from real service states", async () => {
+  const f = fixture({status: {running: true, state: "hearing"}}); await settle();
+  assert.equal(f.controls.stateText.textContent, "Hearing you");
+  f.status.state = "recognizing"; await f.ui.refresh();
+  assert.equal(f.controls.stateText.textContent, "Recognizing speech");
+  f.status.state = "transcribing"; await f.ui.refresh();
+  assert.equal(f.controls.stateText.textContent, "Recognizing speech");
+  assert.equal(f.ui.root.dataset.state, "transcribing");
+  assert.match(f.controls.hint.textContent, /Turning your words/);
   assert.equal(posts(f).length, 0);
   f.ui.destroy();
 });

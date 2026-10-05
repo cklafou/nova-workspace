@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 18:42:07
+# Last updated: 2026-10-05 20:33:22
 # @nova: Synthesize a labelled Windows system voice to PCM WAV and play through the gateway's cancellable device path.
 """System.Speech is a CPU/native baseline, not a cloned voice or a GPU model.
 

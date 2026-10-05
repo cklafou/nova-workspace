@@ -1,4 +1,4 @@
-# @nova: Pin the verified Python 3.12 Windows CPU voice environment without Torch or Chatterbox.
+# @nova: Pin the Python 3.12 Windows CPU voice environment with local Whisper/Moonshine recognition.
 anyio==4.15.1
 certifi==2026.7.22
 cffi==2.1.1
@@ -44,3 +44,7 @@ typing_extensions==4.16.0
 urllib3==2.8.0
 useful-moonshine-onnx==20251121
 websockets==17.2
+
+av==19.0.1
+ctranslate2==4.8.2
+faster-whisper==1.2.1

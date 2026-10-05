@@ -36,12 +36,15 @@ class GatewayConfig:
                                           # "replies" = any delivered reply to a human line (reply_to set)
     audit_gate: str = "delivered"         # "delivered": speak any delivered reply, its audit status attached;
                                           # "pass_only": speak only an explicit PASS (NOT_RUN stays silent)
-    request_timeout_s: int = 300          # give up on a request with no end (never stay "thinking")
+    request_timeout_s: int = 300          # expire unacknowledged requests; flag current accepted turn as delayed
     min_chars: int = 7
     max_buffer: int = 220
 
     # ── STT / VAD (input) ─────────────────────────────────────────────────────────────────
-    stt_backend: str = "moonshine"        # "moonshine" | "stdin" (stdin = type instead of talk)
+    stt_backend: str = "faster_whisper"   # "faster_whisper" | "moonshine" | "stdin"
+    whisper_model: str = "large-v3-turbo"  # prepared local CTranslate2 directory or bundled model
+    speech_language: str = "en"          # Cole speaks English; explicit language avoids short-clip guesses
+    whisper_cpu_threads: int = 8          # CPU int8 keeps Nova's occupied GPUs available
     moonshine_model: str = "moonshine/base"   # or a local onnx dir
     vad_backend: str = "silero"           # "silero" | "none"
     vad_threshold: float = 0.5

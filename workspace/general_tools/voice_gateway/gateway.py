@@ -40,30 +40,49 @@ from turns import VoiceSession                             # noqa: E402
 
 
 # ── rung 2: one request against a running Nova, no audio ──────────────────────────────────────
-async def smoke_link(cfg: GatewayConfig, text: str, timeout_s: float = 600.0):
+async def smoke_link(cfg: GatewayConfig, text: str, timeout_s: float = 600.0, *, audio=False):
+    """A bounded real transport test; audio=True requires a real backend and uses the live sweep."""
     from nova_link import NovaLink, new_request_id
-    from tts import NullTTS
+    from tts import NullTTS, make_tts
     body = StdoutBody()
-    print(f"[voice_gateway] → Nova ({cfg.register}): {text!r}\n")
-    async with NovaLink(cfg.nova_ws_url, cfg.speaker, cfg.register) as link:
-        player = SpeechPlayer(NullTTS(cfg), body, tail_s=0).start()
-        session = VoiceSession(cfg, player, body)
-        request_id = new_request_id()
-        session.sent(request_id, text)
-        await link.say(text, request_id=request_id)
+    if audio and cfg.tts_backend == "auto" and sys.platform == "win32":
+        cfg.tts_backend = "windows"
+    tts = make_tts(cfg) if audio else NullTTS(cfg)
+    if audio and tts.name == "null":
+        tts.close()
+        raise RuntimeError("Audio smoke test requires a real speech backend; NullTTS is not voice proof")
+    print(f"[voice_gateway] transport test audio={audio}, TTS={tts.name}, register={cfg.register}: {text!r}")
+    player = SpeechPlayer(tts, body, tail_s=0).start()
+    sweeper = None
+    try:
+        async with NovaLink(cfg.nova_ws_url, cfg.speaker, cfg.register) as link:
+            session = VoiceSession(cfg, player, body)
+            request_id = new_request_id()
+            session.sent(request_id, text)
+            await link.say(text, request_id=request_id)
 
-        async def _until_done():
-            async for ev in link.events():
-                session.handle(ev)
-                if request_id not in session.pending:
-                    return
-        try:
-            await asyncio.wait_for(_until_done(), timeout=timeout_s)
-        except asyncio.TimeoutError:
-            print(f"[voice_gateway] no end for this request within {int(timeout_s)} s")
-        await player.drain()
+            async def sweep():
+                while True:
+                    await asyncio.sleep(5)
+                    session.sweep()
+            sweeper = asyncio.create_task(sweep())
+            async def until_done():
+                async for ev in link.events():
+                    session.handle(ev)
+                    if request_id not in session.pending:
+                        return
+                if request_id in session.pending:
+                    raise RuntimeError("Voice link closed before the test reply was delivered")
+            await asyncio.wait_for(until_done(), timeout=timeout_s)
+            await player.drain()
+    finally:
+        if sweeper:
+            sweeper.cancel()
+            await asyncio.gather(sweeper, return_exceptions=True)
         await player.close()
-    print("\n[voice_gateway] done.")
+        tts.close()
+        body.close()
+    print("[voice_gateway] transport test finished; consult speech outcomes for actual playback.")
 
 
 # ── rung 3: sanitizer + committer + TTS backend, no transport ─────────────────────────────────
@@ -138,6 +157,7 @@ async def run(cfg: GatewayConfig):
 def main():
     ap = argparse.ArgumentParser(description="Nova voice gateway")
     ap.add_argument("--smoke-link", metavar="TEXT", help="send TEXT to a running Nova, print events + units")
+    ap.add_argument("--smoke-audio", metavar="TEXT", help="send TEXT to Nova and play the delivered reply through real TTS")
     ap.add_argument("--smoke-tts", metavar="TEXT", help="run TEXT through sanitizer + committer + TTS")
     ap.add_argument("--run", action="store_true", help="full loop: STT → Nova → session → TTS")
     args = ap.parse_args()
@@ -145,6 +165,8 @@ def main():
 
     if args.smoke_link is not None:
         asyncio.run(smoke_link(cfg, args.smoke_link))
+    elif args.smoke_audio is not None:
+        asyncio.run(smoke_link(cfg, args.smoke_audio, audio=True))
     elif args.smoke_tts is not None:
         smoke_tts(cfg, args.smoke_tts)
     elif args.run:

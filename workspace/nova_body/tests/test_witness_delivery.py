@@ -166,6 +166,26 @@ class DeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('witness_incomplete', self.stages())
         self.assertNotIn('witness_pass', self.stages())
 
+    async def test_refused_witness_reaches_are_attempts_not_verified_evidence(self):
+        self.generations = ["This reply makes a claim that requires an audit before it is delivered."]
+        self.verdicts = [call('run_command', command='must not execute')] * 3 + ['PASS. explanation is invalid']
+        await self.run_turn()
+        self.assertEqual(self.reads, [])
+        event = next(e for e in self.events if e['stage'] == 'witness_verified')
+        self.assertEqual(event['read_attempts'], 3)
+        self.assertEqual(event['read_returned'], 0)
+        self.assertEqual(event['read_refused'], 3)
+        self.assertNotIn('checked', event['detail'])
+        self.assertIn('not verification', event['what'])
+        self.assertIn('witness_incomplete', self.stages())
+        self.assertNotIn('witness_pass', self.stages())
+
+    async def test_witness_read_counts_keep_output_failure_and_refusal_distinct(self):
+        counts = nova._audit_read_counts([('read_file', {}, 'fixture content'),
+            ('read_file', {}, 'ERROR: missing'), ('list_dir', {}, 'REFUSED: unavailable')])
+        self.assertEqual(counts, {'read_attempts': 3, 'read_returned': 1,
+                                 'read_refused': 1, 'read_failed': 1})
+
     async def test_malformed_verdict_preserves_draft_and_records_incomplete(self):
         draft = 'A complete draft from Nova whose witness returned malformed data instead of a ruling.'
         self.generations = [draft]

@@ -107,6 +107,35 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(self.control.settings_path.exists())
         self.assertEqual(list(self.workspace.iterdir()), [])
 
+    async def test_voice_turn_and_playback_evidence_survive_until_next_start(self):
+        def event(kind, **fields):
+            self.control._event({'type': 'body', 'event': {'type': kind, **fields}})
+        event('turn', phase='sent', request_id='voice1', state='waiting')
+        event('turn', phase='started', request_id='voice1', message_id='m1', run_id='run1', state='thinking')
+        event('message', phase='end', request_id='other', why='unrelated broadcast')
+        self.assertEqual(self.control.snapshot()['last_turn']['request_id'], 'voice1')
+        event('message', phase='end', request_id='voice1', delivery='delivered', eligible=True,
+              queued_units=1, audit={'status': 'INCOMPLETE'}, why='delivered (audit INCOMPLETE)')
+        ids = dict(request_id='voice1', message_id='m1', run_id='run1', unit=0, backend='windows', output_device=5)
+        event('speech', phase='requested', **ids)
+        event('speech', phase='start', clock='playback', synthesis_ms=123, **ids)
+        event('speech', phase='end', outcome='played', duration_ms=900, playback_ms=777, **ids)
+        status = self.control.snapshot()
+        self.assertEqual(status['last_turn']['queued_units'], 1)
+        self.assertEqual(status['last_playback']['synthesis_ms'], 123)
+        self.assertEqual(status['last_playback']['outcome'], 'played')
+        self.assertEqual(status['last_playback']['output_device'], 5)
+        self.assertIsInstance(status['last_playback']['received_at'], float)
+        self.assertNotIn('unrelated broadcast', str(status['last_turn']))
+        self.control._launch('run')
+        self.assertIsNone(self.control.snapshot()['last_playback'])
+        self.assertIsNone(self.control.snapshot()['last_turn'])
+
+    async def test_voice_recent_events_remain_bounded(self):
+        for i in range(100):
+            self.control._event({'type': 'body', 'event': {'type': 'turn', 'phase': 'sent', 'request_id': str(i)}})
+        self.assertEqual(len(self.control.snapshot()['recent_events']), 48)
+
     async def test_actual_probe_command_uses_gateway_python_and_only_probe_mode(self):
         interpreter = self.control.folder / '.venv' / 'Scripts' / 'python.exe'
         interpreter.parent.mkdir(parents=True); interpreter.touch()
@@ -293,6 +322,7 @@ class WorkerTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_probe_checks_presence_without_loading_audio_or_models(self):
         self.cfg.tts_backend = 'windows'
+        self.cfg.stt_backend = 'moonshine'
         installed = {'numpy', 'sounddevice', 'moonshine_onnx', 'websockets'}
         with patch.object(stt, 'local_asset_status', return_value={'ready': True, 'missing': [], 'vad': 'silero'}), \
              patch.object(worker, '_installed', side_effect=lambda name: name in installed), \
@@ -329,6 +359,13 @@ class WorkerTests(unittest.IsolatedAsyncioTestCase):
         self.control.command({'command': 'mute', 'output': False})
         self.assertFalse(session.output_muted)
         self.control.command({'command': 'stop'})
+        self.assertTrue(self.control.stop.is_set())
+
+    async def test_stop_retires_session_before_async_teardown(self):
+        cancel = Mock()
+        self.control.session = types.SimpleNamespace(cancel=cancel)
+        self.control.command({'command': 'stop'})
+        cancel.assert_called_once_with('voice_stopped')
         self.assertTrue(self.control.stop.is_set())
 
     async def test_muted_delivered_reply_closes_request_but_never_queues_for_later(self):
@@ -387,7 +424,7 @@ class WorkerTests(unittest.IsolatedAsyncioTestCase):
         self.control.stop.set()
         recognition = types.SimpleNamespace(close=Mock())
         output = types.SimpleNamespace(name='fake', close=Mock())
-        with patch.object(stt, 'MoonshineSTT', return_value=recognition) as input_factory, \
+        with patch.object(stt, 'make_stt', return_value=recognition) as input_factory, \
              patch.object(tts, 'make_tts', return_value=output) as output_factory:
             await worker.voice(self.cfg, self.control)
         input_factory.assert_not_called(); output_factory.assert_not_called()
@@ -396,8 +433,10 @@ class WorkerTests(unittest.IsolatedAsyncioTestCase):
         entered, release = threading.Event(), threading.Event()
         recognition = types.SimpleNamespace(close=Mock())
         output = types.SimpleNamespace(name='fake', close=Mock())
-        def load(cfg): entered.set(); release.wait(2); return recognition
-        with patch.object(stt, 'MoonshineSTT', side_effect=load), patch.object(tts, 'make_tts', return_value=output) as output_factory:
+        def load(cfg, *, allow_fallback):
+            self.assertFalse(allow_fallback)
+            entered.set(); release.wait(2); return recognition
+        with patch.object(stt, 'make_stt', side_effect=load), patch.object(tts, 'make_tts', return_value=output) as output_factory:
             task = asyncio.create_task(worker.voice(self.cfg, self.control))
             try:
                 for _ in range(100):

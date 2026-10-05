@@ -44,6 +44,34 @@ class RecordingTTS:
 
 @unittest.skipIf(websockets is None, "websockets is not installed")
 class LinkOverSocket(unittest.IsolatedAsyncioTestCase):
+    async def test_scoped_stop_waits_for_exact_final_receipt_and_never_sends_global(self):
+        from nova_link import NovaLink
+        received, release, pending_seen = [], asyncio.Event(), asyncio.Event()
+        async def server(ws):
+            async for raw in ws:
+                data = json.loads(raw); received.append(data)
+                await ws.send(json.dumps({'type': 'stop_pending', 'request_id': data['request_id']}))
+                pending_seen.set()
+                await release.wait()
+                await ws.send(json.dumps({'type': 'stopped', 'request_id': data['request_id'], 'matched': True}))
+        async with websockets.serve(server, '127.0.0.1', 0) as fixture:
+            port = next(iter(fixture.sockets)).getsockname()[1]
+            async with NovaLink(f'ws://127.0.0.1:{port}') as link:
+                async def listen():
+                    async for event in link.events(): pass
+                listener = asyncio.create_task(listen())
+                stop = asyncio.create_task(link.stop('my-request'))
+                try:
+                    await asyncio.wait_for(pending_seen.wait(), 1)
+                    await asyncio.sleep(.03)
+                    self.assertFalse(stop.done(), 'stop_pending incorrectly confirmed cancellation')
+                    release.set()
+                    self.assertTrue(await asyncio.wait_for(stop, 1))
+                    self.assertEqual(received, [{'type': 'stop', 'request_id': 'my-request'}])
+                finally:
+                    release.set(); listener.cancel(); stop.cancel()
+                    await asyncio.gather(listener, stop, return_exceptions=True)
+
     async def test_request_id_round_trip_and_only_delivered_reply_spoken(self):
         from nova_link import NovaLink, new_request_id
         received = []
@@ -135,6 +163,127 @@ class Supervision(unittest.IsolatedAsyncioTestCase):
                 stt_module.make_stt, tts_module.make_tts, gateway.make_body = originals
         self.assertTrue(ForeverMic.closed)
         self.assertTrue(any("link ended" in d["message"] for d in body.of("diagnostic")))
+
+
+@unittest.skipIf(websockets is None, "websockets is not installed")
+class LiveWorkerPipeline(unittest.IsolatedAsyncioTestCase):
+    async def test_worker_utterance_reaches_correlated_playback_and_stop_cleans_up(self):
+        # Real worker orchestration + local WebSocket; fake capture/playback only.
+        # This is transport integration, explicitly not hardware audibility proof.
+        import control_worker as worker
+        import stt as recognition
+        import tts as output
+        from unittest.mock import patch
+        class Mic:
+            name = 'fixture recognizer'
+            gate = on_speech_start = on_diagnostic = None
+            closed = False
+            async def utterances(self):
+                yield 'Hello Nova.'
+                await asyncio.Event().wait()
+            def close(self): self.closed = True
+        class Voice:
+            name = 'fixture audio'
+            closed = False
+            def __init__(self): self.spoken = []
+            def speak(self, text, should_stop=None, on_playback=None):
+                if should_stop(): return {'outcome': 'skipped'}
+                self.spoken.append(text)
+                on_playback()
+                return {'outcome': 'played'}
+            def stop(self): pass
+            def close(self): self.closed = True
+        mic, voice, events, requests = Mic(), Voice(), [], []
+        control = worker.Control()
+        async def server(ws):
+            async for raw in ws:
+                request = json.loads(raw); requests.append(request)
+                rid = request['request_id']
+                ids = dict(author='Nova', request_id=rid, reply_to='user1', id='reply1', run_id='run1')
+                for frame in [dict(type='user_message', request_id=rid, id='user1'),
+                              dict(type='message_start', **ids),
+                              dict(type='message_end', content='Hello Cole.', delivery='delivered',
+                                   audit={'status': 'INCOMPLETE'}, **ids)]:
+                    await ws.send(json.dumps(frame))
+        def report(kind, **fields):
+            events.append(dict(type=kind, **fields))
+            body = fields.get('event', {})
+            if body.get('type') == 'speech' and body.get('phase') == 'end':
+                control.command({'command': 'stop'})
+        async with websockets.serve(server, '127.0.0.1', 0) as fixture:
+            port = next(iter(fixture.sockets)).getsockname()[1]
+            cfg = GatewayConfig(nova_ws_url=f'ws://127.0.0.1:{port}/ws')
+            with patch.object(recognition, 'make_stt', return_value=mic) as factory, \
+                 patch.object(recognition, 'local_asset_status', return_value={'label': 'fixture'}), \
+                 patch.object(output, 'make_tts', return_value=voice), patch.object(worker, 'report', side_effect=report):
+                await asyncio.wait_for(worker.voice(cfg, control), 5)
+            factory.assert_called_once_with(cfg, allow_fallback=False)
+        self.assertEqual(voice.spoken, ['Hello Cole.'])
+        self.assertTrue(mic.closed and voice.closed)
+        self.assertEqual(len(requests), 1)
+        body = [e['event'] for e in events if e['type'] == 'body']
+        end = next(e for e in body if e['type'] == 'speech' and e['phase'] == 'end')
+        self.assertEqual(end['outcome'], 'played')
+        self.assertEqual(end['request_id'], requests[0]['request_id'])
+        self.assertTrue(any(e['type'] == 'caption' and e['clock'] == 'playback' for e in body))
+
+    async def test_end_call_cancels_owned_request_before_socket_close(self):
+        import control_worker as worker
+        import nova_link
+        import stt as recognition
+        import tts as output
+        from unittest.mock import Mock, patch
+        record, frames = [], asyncio.Queue()
+        control = worker.Control()
+        class Link:
+            def __init__(self, *args): pass
+            async def __aenter__(self): return self
+            async def __aexit__(self, *args): record.append('socket_closed')
+            async def say(self, text, request_id):
+                record.append(('sent', request_id))
+                await frames.put(nova_link.parse_event(dict(type='user_message', request_id=request_id, id='u1')))
+                await frames.put(nova_link.parse_event(dict(type='message_start', request_id=request_id, id='m1',
+                                                           reply_to='u1', run_id='run1', author='Nova')))
+            async def stop(self, request_id=None, *, timeout_s=2):
+                if not request_id: raise AssertionError('global stop is forbidden')
+                record.append(('cancel_requested', request_id))
+                await asyncio.sleep(.02)
+                record.append('cancel_acknowledged')
+                return True
+            async def events(self):
+                while True: yield await frames.get()
+        class Mic:
+            name = 'fixture'
+            gate = on_speech_start = on_state = on_diagnostic = None
+            async def utterances(self):
+                self.on_state('transcribing'); self.on_state('listening')
+                yield 'Hello'
+                await asyncio.Event().wait()
+            def close(self): pass
+        voice = RecordingTTS()
+        def report(kind, **fields):
+            event = fields.get('event', {})
+            if event.get('type') == 'state' and event.get('state') == 'thinking':
+                control.command({'command': 'stop'})
+            if event.get('state') == 'transcribing': record.append('transcribing')
+        with patch.object(nova_link, 'NovaLink', Link), patch.object(recognition, 'make_stt', return_value=Mic()), \
+             patch.object(recognition, 'local_asset_status', return_value={'label':'fixture'}), \
+             patch.object(output, 'make_tts', return_value=voice), patch.object(worker, 'report', side_effect=report):
+            await asyncio.wait_for(worker.voice(GatewayConfig(), control), 2)
+        sent = next(item[1] for item in record if isinstance(item, tuple) and item[0] == 'sent')
+        self.assertIn(('cancel_requested', sent), record)
+        self.assertLess(record.index('cancel_acknowledged'), record.index('socket_closed'))
+        self.assertIn('transcribing', record)
+        self.assertEqual(voice.spoken, [])
+
+    async def test_audio_smoke_refuses_null_before_opening_transport(self):
+        import gateway
+        import tts as output
+        from unittest.mock import patch
+        cfg = GatewayConfig(tts_backend='null')
+        with patch.object(output, 'make_tts', return_value=output.NullTTS(cfg)):
+            with self.assertRaisesRegex(RuntimeError, 'NullTTS is not voice proof'):
+                await gateway.smoke_link(cfg, 'fixture', audio=True)
 
 
 if __name__ == "__main__":

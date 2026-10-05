@@ -51,11 +51,13 @@ def _installed(module):
 
 def probe(cfg):
     packages = {name: _installed(name) for name in
-                ("websockets", "numpy", "sounddevice", "moonshine_onnx", "moonshine", "chatterbox")}
+                ("websockets", "numpy", "sounddevice", "moonshine_onnx", "faster_whisper", "chatterbox")}
     audio = packages["numpy"] and packages["sounddevice"]
     from stt import local_asset_status
     assets = local_asset_status(cfg)
-    stt = audio and packages["moonshine_onnx"] and assets["ready"] and cfg.sample_rate == 16000
+    recognizer = str(cfg.stt_backend).lower()
+    recognizer_module = {"moonshine": "moonshine_onnx", "faster_whisper": "faster_whisper"}.get(recognizer)
+    stt = audio and bool(recognizer_module and packages[recognizer_module]) and assets["ready"]
     if cfg.tts_backend == "windows":
         tts = audio and sys.platform == "win32" and bool(shutil.which("powershell"))
     elif cfg.tts_backend == "chatterbox":
@@ -80,7 +82,8 @@ def probe(cfg):
             "reason": "Ready for local voice" if not missing else "Voice setup needs: " + ", ".join(missing),
             "capabilities": {"microphone_mute": True, "output_mute": True,
                              "microphone_test": bool(audio), "speaker_test": bool(tts)},
-            "backends": {"input": cfg.stt_backend, "output": cfg.tts_backend, "vad": cfg.vad_backend},
+            "backends": {"input": cfg.stt_backend, "input_label": assets.get("label", cfg.stt_backend),
+                         "output": cfg.tts_backend, "vad": cfg.vad_backend},
             "assets": assets, "packages": packages}
 
 
@@ -173,9 +176,15 @@ class Control:
         self.microphone_muted = False
         self.output_muted = False
         self.session = None
+        self.cancel_generation = None
 
     def command(self, value):
         if value.get("command") == "stop":
+            if callable(self.cancel_generation):
+                self.cancel_generation()
+            cancel = getattr(self.session, "cancel", None)
+            if callable(cancel):
+                cancel("voice_stopped")
             self.stop.set()
         elif value.get("command") == "mute":
             if type(value.get("microphone")) is bool:
@@ -221,7 +230,7 @@ class PipeBody(BodySink):
 
 async def voice(cfg, control):
     from nova_link import NovaLink, new_request_id
-    from stt import MoonshineSTT
+    from stt import make_stt, local_asset_status
     from tts import make_tts
     from speech import SpeechPlayer
     from turns import VoiceSession
@@ -230,7 +239,7 @@ async def voice(cfg, control):
     report("state", state="starting", reason="Loading local speech recognition and voice")
     if control.stop.is_set():
         return
-    stt = await asyncio.to_thread(MoonshineSTT, cfg)
+    stt = await asyncio.to_thread(make_stt, cfg, allow_fallback=False)
     if control.stop.is_set():
         stt.close()
         return
@@ -248,10 +257,44 @@ async def voice(cfg, control):
             player = SpeechPlayer(tts, body, tail_s=max(0, cfg.half_duplex_tail_ms) / 1000).start()
             session = control.session = VoiceSession(cfg, player, body)
             session.output_muted = control.output_muted
+            cancellation_tasks, cancellation_ids = set(), set()
+            async def cancel_requests(ids):
+                for request_id in ids:
+                    try:
+                        matched = await link.stop(request_id, timeout_s=2)
+                        body.emit("diagnostic", level="info", request_id=request_id,
+                                  message=("Prior voice request cancellation accepted." if matched else
+                                           "Prior voice request was no longer active; no other request was stopped."))
+                    except Exception as error:
+                        body.emit("diagnostic", level="warn", request_id=request_id,
+                                  message=f"Voice request cancellation was not confirmed ({type(error).__name__}); "
+                                          "Nova may still be finishing that request. Audio is stopped locally.")
+            def schedule_cancellation():
+                ids = [rid for rid, pending in session.pending.items()
+                       if pending.eligible and rid not in cancellation_ids]
+                if not ids:
+                    return None
+                cancellation_ids.update(ids)
+                task = asyncio.create_task(cancel_requests(ids))
+                cancellation_tasks.add(task)
+                task.add_done_callback(cancellation_tasks.discard)
+                return task
+            control.cancel_generation = schedule_cancellation
+            def recognition_state(state):
+                if control.stop.is_set():
+                    return
+                if state == "transcribing" and not player.active():
+                    body.emit("state", state="transcribing")
+                elif state == "listening":
+                    session._settle()
+            stt.on_state = recognition_state
             stt.on_diagnostic = lambda message: report("body", event={"type": "diagnostic", "level": "warning", "message": message})
             stt.gate = lambda: not control.microphone_muted and (cfg.duplex == "full" or not player.busy())
             if cfg.duplex == "full" and cfg.barge_in:
-                stt.on_speech_start = session.barge_in
+                def barge_in():
+                    schedule_cancellation()
+                    session.barge_in()
+                stt.on_speech_start = barge_in
             async def mic():
                 async for text in stt.utterances():
                     if control.stop.is_set():
@@ -259,8 +302,13 @@ async def voice(cfg, control):
                     if control.microphone_muted:
                         continue
                     report("transcript", text=text)
+                    cancellation = schedule_cancellation()
                     request_id = new_request_id()
-                    session.sent(request_id, text)
+                    session.sent(request_id, text)       # retire old audio immediately, before cancellation I/O
+                    if cancellation is not None:
+                        await cancellation
+                    if control.stop.is_set():
+                        return
                     await link.say(text, request_id=request_id)
             async def inbound():
                 async for event in link.events():
@@ -271,13 +319,20 @@ async def voice(cfg, control):
                     session.sweep()
             parts = [asyncio.create_task(mic()), asyncio.create_task(inbound()),
                      asyncio.create_task(control.stop.wait()), asyncio.create_task(sweep())]
-            report("state", state="listening", reason="Voice connected", backends={"input": stt.name, "output": tts.name})
-            done, _ = await asyncio.wait(parts[:3], return_when=asyncio.FIRST_COMPLETED)
-            for task in done:
-                if not task.cancelled() and task.exception():
-                    raise task.exception()
-            if not control.stop.is_set():
-                raise RuntimeError("Voice connection or microphone ended; start voice again to reconnect")
+            report("state", state="listening", reason="Voice connected", backends={"input": stt.name, "input_label": local_asset_status(cfg).get("label", stt.name),
+                        "output": tts.name, "vad": cfg.vad_backend})
+            try:
+                done, _ = await asyncio.wait(parts[:3], return_when=asyncio.FIRST_COMPLETED)
+                for task in done:
+                    if not task.cancelled() and task.exception():
+                        raise task.exception()
+                if not control.stop.is_set():
+                    raise RuntimeError("Voice connection or microphone ended; start voice again to reconnect")
+            finally:
+                schedule_cancellation()             # EOF/orphan shutdown follows the same owned path
+                session.cancel("voice_stopped")
+                if cancellation_tasks:
+                    await asyncio.gather(*list(cancellation_tasks), return_exceptions=True)
     finally:
         for task in parts:
             task.cancel()
@@ -289,6 +344,7 @@ async def voice(cfg, control):
         tts.close()
         body.close()
         control.session = None
+        control.cancel_generation = None
 
 
 async def microphone_test(cfg, control):

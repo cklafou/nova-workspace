@@ -26,6 +26,7 @@ Speech policy (first stage, agreed in the Collaboration room #55-#70):
 from __future__ import annotations
 
 import time
+from collections import deque
 from dataclasses import dataclass, field
 
 from committer import commit_block
@@ -45,6 +46,7 @@ class Pending:
     run_ids: dict = field(default_factory=dict)     # message_id -> run_id from its message_start
     eligible: bool = True               # False once interrupted: its reply is never spoken
     why_not: str = ""
+    delayed: bool = False
 
 
 class VoiceSession:
@@ -53,6 +55,7 @@ class VoiceSession:
         self.pending: dict[str, Pending] = {}
         self._by_message: dict[str, str] = {}
         self._old_schema_warned = False
+        self._retired_replies = deque(maxlen=512)
         self.output_muted = False
         if getattr(cfg, "speak_from", "final") != "final":
             body.emit("diagnostic", level="warn",
@@ -65,7 +68,19 @@ class VoiceSession:
         """Cole spoke: stop what she is saying, retire every earlier request, wait for THIS one."""
         self._retire("new_request")
         self.pending[request_id] = Pending(request_id, text, self.clock())
+        self._turn(self.pending[request_id], "sent", state="waiting")
         self.body.emit("state", state="waiting", request_id=request_id)
+
+    def _turn(self, pending, phase, **fields):
+        self.body.emit("turn", phase=phase, request_id=pending.request_id,
+                       elapsed_s=round(self.clock() - pending.sent_at, 3),
+                       delayed=pending.delayed, **fields)
+
+    def cancel(self, reason="voice_stopped") -> None:
+        """Close this voice output immediately; never cancel another client's model request."""
+        self.output_muted = True
+        self._retire(reason)
+        self._settle()
 
     def barge_in(self) -> None:
         """Cole started talking over her (full-duplex only)."""
@@ -77,6 +92,7 @@ class VoiceSession:
         for p in self.pending.values():
             if p.eligible:
                 p.eligible, p.why_not = False, f"interrupted ({reason})"
+                self._turn(p, "interrupted", state="cancelled", eligible=False, why=p.why_not)
         self.player.interrupt(reason)
 
     # ── inbound ───────────────────────────────────────────────────────────────────────────────
@@ -90,9 +106,14 @@ class VoiceSession:
         p = self.pending.get(ev.request_id) if ev.request_id else None
         if p is not None:
             p.reply_to, p.state = ev.message_id, "acknowledged"
+            self._turn(p, "acknowledged", state="waiting", reply_to=p.reply_to)
 
     def _on_queued(self, ev):
         # Sent only to this socket right after our message; it names no request, so it only informs.
+        for p in self.pending.values():
+            if p.eligible:
+                p.state = "queued"
+                self._turn(p, "queued", state="waiting", why=str(ev.raw.get("reason") or "Nova is busy"))
         self.body.emit("diagnostic", level="info",
                        message=str(ev.raw.get("reason") or "Nova is busy; the request is queued."))
 
@@ -109,6 +130,7 @@ class VoiceSession:
         p.message_ids.add(ev.message_id)
         p.run_ids[ev.message_id] = ev.run_id
         self._by_message[ev.message_id] = p.request_id
+        self._turn(p, "started", state="thinking", message_id=ev.message_id, run_id=ev.run_id)
         self.body.emit("state", state="thinking", request_id=p.request_id, message_id=ev.message_id,
                        run_id=ev.run_id)
 
@@ -136,7 +158,11 @@ class VoiceSession:
         # Policy and queueing only; whether audio actually played is in the speech events.
         self.body.emit("message", phase="end", message_id=ev.message_id, request_id=request_id,
                        run_id=ev.run_id, delivery=ev.delivery, audit=dict(ev.audit), eligible=eligible,
-                       queued_units=len(units), why=why)
+                       queued_units=len(units), why=why,
+                       elapsed_s=round(self.clock() - pending.sent_at, 3) if pending else None)
+        if pending is not None and not units:
+            self.body.emit("diagnostic", level="warn", request_id=request_id,
+                           message=f"Nova's reply was not spoken: {why}.")
         if ev.delivery == "error":
             self.log(f"[voice_gateway] Nova Chat error end (never spoken): {ev.text[:300]}")
         try:
@@ -152,6 +178,8 @@ class VoiceSession:
     def _on_request_end(self, ev):
         if ev.request_id in self.pending:
             self._close(ev.request_id)
+            self.body.emit("diagnostic", level="warn", request_id=ev.request_id,
+                           message=f"Voice request ended without a spoken reply ({ev.delivery}).")
             self.body.emit("message", phase="dropped", request_id=ev.request_id, delivery=ev.delivery,
                            eligible=False, queued_units=0, why=f"request ended before a reply ({ev.delivery})")
             self._settle()
@@ -164,7 +192,19 @@ class VoiceSession:
             self._settle()
 
     def _on_stopped(self, ev):
+        if ev.request_id:
+            pending = self.pending.get(ev.request_id)
+            if ev.raw.get("matched") is True and pending is not None:
+                pending.eligible, pending.why_not = False, "interrupted (request stopped)"
+                self._turn(pending, "interrupted", state="cancelled", eligible=False, why=pending.why_not)
+                self._close(ev.request_id)
+                current = getattr(self.player, "current", None)
+                if current is not None and current.request_id == ev.request_id:
+                    self.player.interrupt("request_stopped")
+                self._settle()
+            return                         # an old scoped acknowledgement never stops a new turn
         self._retire("stopped")
+        self._settle()
 
     # ── policy ────────────────────────────────────────────────────────────────────────────────
     @staticmethod
@@ -209,17 +249,37 @@ class VoiceSession:
         return True, f"delivered (audit {status})"
 
     def _retired_reply_ids(self) -> set:
-        return {p.reply_to for p in self.pending.values() if not p.eligible and p.reply_to}
+        return set(self._retired_replies) | {p.reply_to for p in self.pending.values() if not p.eligible and p.reply_to}
 
     # ── housekeeping ──────────────────────────────────────────────────────────────────────────
     def sweep(self) -> list:
-        """Close requests that never got an end, so the body never stays 'thinking' forever."""
+        """Expire unacknowledged/retired requests; retain the current accepted slow reply.
+
+        A slow model is not a cancelled turn. Keep its exact correlation while this socket
+        lives, announce the delay once, and let an explicit stop/new utterance retire it.
+        Only one request can remain eligible, so retention cannot grow with conversation length.
+        """
         limit = float(getattr(self.cfg, "request_timeout_s", 300))
-        stale = [rid for rid, p in self.pending.items() if self.clock() - p.sent_at > limit]
-        for rid in stale:
+        stale = []
+        for rid, pending in list(self.pending.items()):
+            if self.clock() - pending.sent_at <= limit:
+                continue
+            if pending.eligible and pending.reply_to:
+                if not pending.delayed:
+                    pending.delayed = True
+                    self._turn(pending, "delayed", state="waiting",
+                               why="Nova has accepted this request; waiting for the delayed reply")
+                    self.body.emit("diagnostic", level="warn", request_id=rid,
+                                   message=f"Nova's voice reply is taking longer than {int(limit)} s. "
+                                           "Its reply will still be spoken unless interrupted or stopped.")
+                continue
+            stale.append(rid)
+            self._turn(pending, "expired", state="idle", eligible=False,
+                       why="No acknowledgement before timeout" if pending.eligible else pending.why_not)
             self._close(rid)
-            self.body.emit("diagnostic", level="warn",
-                           message=f"No reply to voice request {rid[:8]} after {int(limit)} s; giving up on it.")
+            if pending.eligible:
+                self.body.emit("diagnostic", level="warn", request_id=rid,
+                               message=f"Voice request was not acknowledged within {int(limit)} s; it was dropped.")
         if stale:
             self._settle()
         return stale
@@ -227,14 +287,17 @@ class VoiceSession:
     def _close(self, request_id):
         p = self.pending.pop(request_id, None)
         if p is not None:
+            if not p.eligible and p.reply_to:
+                self._retired_replies.append(p.reply_to)
             for mid in p.message_ids:
                 self._by_message.pop(mid, None)
 
     def _settle(self):
         if self.player.active():
             return
-        if self.pending:
-            self.body.emit("state", state="thinking" if any(p.state == "answering" for p in self.pending.values())
+        eligible = [p for p in self.pending.values() if p.eligible]
+        if eligible:
+            self.body.emit("state", state="thinking" if any(p.state == "answering" and not p.delayed for p in eligible)
                            else "waiting")
         else:
             self.body.emit("state", state="idle")

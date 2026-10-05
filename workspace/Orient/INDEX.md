@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T09:48:31+00:00 from source (input `2e911cb4b379`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T11:48:18+00:00 from source (input `b6955fb40ebe`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -80,12 +80,12 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/static/collaboration.js](../general_tools/nova_chat/static/collaboration.js) — Display the isolated workshop feed for Cole, Codex and Cowork without sending messages to Nova.
 - [general_tools/nova_chat/static/control.css](../general_tools/nova_chat/static/control.css) — Style runtime widgets and the accessible Conversation start/stop control.
 - [general_tools/nova_chat/static/control.js](../general_tools/nova_chat/static/control.js) — Runtime controls use body state. Every action is acknowledged by the server.
-- [general_tools/nova_chat/static/conversation-power.js](../general_tools/nova_chat/static/conversation-power.js) — Start and stop Nova through the owning launcher while preserving the controller, composer draft and layout.
-- [general_tools/nova_chat/static/index.html](../general_tools/nova_chat/static/index.html) — Serve Nova Chat with named customizable layouts, model-update controls and a separate collaboration workshop.
+- [general_tools/nova_chat/static/conversation-power.js](../general_tools/nova_chat/static/conversation-power.js) — Provide compact Conversation power controls through the owning launcher while preserving composer drafts and manual layouts.
+- [general_tools/nova_chat/static/index.html](../general_tools/nova_chat/static/index.html) — Serve Nova Chat with manually saved dockable widgets, independent voice calls, model updates and a separate collaboration workshop.
 - [general_tools/nova_chat/static/updater.css](../general_tools/nova_chat/static/updater.css) — Style the model updater widget, reviewed install dialogs, training controls and update notification.
 - [general_tools/nova_chat/static/updater.js](../general_tools/nova_chat/static/updater.js) — Present model discovery, reviewed installation, adapter training and recovery without starting work automatically.
-- [general_tools/nova_chat/static/voice.css](../general_tools/nova_chat/static/voice.css) — Style compact voice controls embedded in Conversation, with accessible buttons and bounded device settings.
-- [general_tools/nova_chat/static/voice.js](../general_tools/nova_chat/static/voice.js) — Provide explicit voice controls inside Conversation without starting audio or changing layouts on page load.
+- [general_tools/nova_chat/static/voice.css](../general_tools/nova_chat/static/voice.css) — Style the dockable Nova voice call with accessible call controls and secondary settings and diagnostics.
+- [general_tools/nova_chat/static/voice.js](../general_tools/nova_chat/static/voice.js) — Mount a dockable voice call widget with explicit audio controls and truthful call, delivery and playback status.
 - [general_tools/nova_chat/static/workspace.css](../general_tools/nova_chat/static/workspace.css) — Style the dockable Nova controller, explicit layout saving and accessible widget surfaces.
 - [general_tools/nova_chat/static/workspace.js](../general_tools/nova_chat/static/workspace.js) — Mount Nova's dockable controller widgets while preserving their handlers and state.
 - [general_tools/nova_chat/tests/test_chat_only.py](../general_tools/nova_chat/tests/test_chat_only.py) — Verify model-off controller launch and prevent chat-only messages from reaching Nova's body.
@@ -198,16 +198,17 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/voice_gateway/gateway.py](../general_tools/voice_gateway/gateway.py) — Connect microphone or typed input to Nova Chat and delivered replies to speech and avatar events.
 - [general_tools/voice_gateway/nova_link.py](../general_tools/voice_gateway/nova_link.py) — Exchange correlated voice requests and response events with the Nova Chat WebSocket server.
 - [general_tools/voice_gateway/README.md](../general_tools/voice_gateway/README.md) — Describe the voice gateway: first-stage delivered-text speech, its event contract, verified tests and the remaining audio work.
-- [general_tools/voice_gateway/requirements-windows.lock.txt](../general_tools/voice_gateway/requirements-windows.lock.txt) — Pin the verified Python 3.12 Windows CPU voice environment without Torch or Chatterbox.
+- [general_tools/voice_gateway/requirements-windows.lock.txt](../general_tools/voice_gateway/requirements-windows.lock.txt) — Pin the Python 3.12 Windows CPU voice environment with local Whisper/Moonshine recognition.
 - [general_tools/voice_gateway/requirements.txt](../general_tools/voice_gateway/requirements.txt) — voice_gateway dependencies. Install in tiers — the gateway runs at each tier, more capable
 - [general_tools/voice_gateway/server_patch.md](../general_tools/voice_gateway/server_patch.md) — Optional server patch — thread the voice `register` to `stream_response`
-- [general_tools/voice_gateway/setup_windows.py](../general_tools/voice_gateway/setup_windows.py) — Install the isolated Windows CPU voice dependencies and verified Silero/Moonshine ONNX assets.
+- [general_tools/voice_gateway/setup_windows.py](../general_tools/voice_gateway/setup_windows.py) — Install the isolated Windows CPU voice dependencies and verified local Whisper/Silero/Moonshine assets.
 - [general_tools/voice_gateway/speech.py](../general_tools/voice_gateway/speech.py) — Sanitize delivered text and serialize interruptible speech with explicit playback outcomes.
 - [general_tools/voice_gateway/stt.py](../general_tools/voice_gateway/stt.py) — Transcribe gated microphone input and provide a typed-input fallback for the voice gateway.
 - [general_tools/voice_gateway/test_committer.py](../general_tools/voice_gateway/test_committer.py) — Tests for the sentence-committer — the one piece with real logic, so the one with tests.
 - [general_tools/voice_gateway/test_link_socket.py](../general_tools/voice_gateway/test_link_socket.py) — Verify voice transport and disconnect cleanup against a local mock WebSocket server.
 - [general_tools/voice_gateway/test_native_voice.py](../general_tools/voice_gateway/test_native_voice.py) — Verify native speech file synthesis, cancellation, output-device selection and current Moonshine/Silero contracts without audio hardware.
 - [general_tools/voice_gateway/test_voice_flow.py](../general_tools/voice_gateway/test_voice_flow.py) — Test voice identity, delivery, interruption and truthful playback using isolated fake backends.
+- [general_tools/voice_gateway/test_whisper_stt.py](../general_tools/voice_gateway/test_whisper_stt.py) — Verify local Whisper decoding, explicit English, strict backend selection and asset readiness without audio hardware.
 - [general_tools/voice_gateway/test_worker_readiness.py](../general_tools/voice_gateway/test_worker_readiness.py) — Regress Windows control-pipe startup and local speech readiness/segmentation using isolated fixtures, without opening audio devices.
 - [general_tools/voice_gateway/tts.py](../general_tools/voice_gateway/tts.py) — Provide cancellable speech backends with truthful playback callbacks and surfaced failures.
 - [general_tools/voice_gateway/turns.py](../general_tools/voice_gateway/turns.py) — Match voice turns to delivered replies and control speech eligibility, timeouts and interruption.
@@ -500,6 +501,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 - [nova_body/nova_voice/__init__.py](../nova_body/nova_voice/__init__.py) — nova_voice — her MOUTH and her HANDS, moved body-ward 2026-07-20.
 - [nova_body/nova_voice/nova.py](../nova_body/nova_voice/nova.py) — Run Nova's local inference and tool loop with her current capabilities and execution receipts.
+- [nova_body/nova_voice/provider_diagnostics.py](../nova_body/nova_voice/provider_diagnostics.py) — Capture bounded opt-in provider payloads and phase timings in disposable Temp diagnostics without changing generation.
 - [nova_body/nova_voice/tool_result.py](../nova_body/nova_voice/tool_result.py) — Preserve explicit tool outcomes, operation identity and execution environment alongside their text view.
 - [nova_body/nova_voice/tool_router.py](../nova_body/nova_voice/tool_router.py) — Routes Nova tool calls to body faculties and records execution outcomes.
 
@@ -1786,6 +1788,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/tests/test_model_client.py](../nova_body/tests/test_model_client.py) — Verify isolated model-client register routing, optional audit sinks and concurrent-request compatibility.
 - [nova_body/tests/test_modernization.py](../nova_body/tests/test_modernization.py) — Isolated runtime contracts; never load a model or write Nova's personal state.
 - [nova_body/tests/test_mozilla_provision.py](../nova_body/tests/test_mozilla_provision.py) — Verify pinned browser provisioning with disposable files and no network, account changes or application launches.
+- [nova_body/tests/test_provider_diagnostics.py](../nova_body/tests/test_provider_diagnostics.py) — Verify opt-in exact provider snapshots, stream timing and bounded/cancel-safe diagnostics without network or Nova state.
 - [nova_body/tests/test_retired_desktop_ping.py](../nova_body/tests/test_retired_desktop_ping.py) — Keep retired desktop-message aliases unavailable without spawning processes or touching Nova records.
 - [nova_body/tests/test_review_followup.py](../nova_body/tests/test_review_followup.py) — Reproduces lifecycle, outcome and durable-queue edge cases from the shared review.
 - [nova_body/tests/test_staging_location.py](../nova_body/tests/test_staging_location.py) — Guards where task workspaces are staged: under workspace/Temp, outside git, Orient and the sync watcher.

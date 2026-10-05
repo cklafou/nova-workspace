@@ -1,5 +1,5 @@
-# Last updated: 2026-10-05 17:52:28
 # @nova: Exercise real server voice routing and response callbacks with isolated providers, sessions and event sinks.
+# Last updated: 2026-10-05 17:52:28
 import ast
 import asyncio
 import contextvars
@@ -10,6 +10,7 @@ from pathlib import Path
 import sys
 import tempfile
 import threading
+import time
 import types
 import unittest
 import uuid
@@ -90,7 +91,7 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
             self.events.append(event)
 
         self.ns = dict(
-            asyncio=asyncio, json=json, uuid=uuid, datetime=datetime,
+            asyncio=asyncio, json=json, uuid=uuid, datetime=datetime, time=time,
             ResponseEvents=events_module.ResponseEvents,
             normalize_request_id=events_module.normalize_request_id,
             normalize_register=NORMALIZERS['normalize_register'],
@@ -110,7 +111,7 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
             _llama_error_streak=0, _last_error_msg='', _last_error_time=0,
             _ERROR_DEDUP_WINDOW=30, _LLAMA_ERROR_BACKOFF=3,
             _inflight_upto=0, CLIENT_MAP={'Nova': object()}, _mute_states={'Nova': False},
-            _cole_message_queue=[], is_processing=False,
+            _cole_message_queue=[], _request_work={}, is_processing=False,
             get_status=AsyncMock(return_value={'Nova': True}),
             build_response_queue=lambda targets, status: [n for n in targets if status.get(n)],
             parse_directed=lambda content: [], _resolve_speaker=lambda value: value or 'Cole',
@@ -123,14 +124,138 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
         fake_operations = types.ModuleType('nova_runtime.operations')
         fake_operations.current_operation = self.operation
         fake_cortex = types.ModuleType('nova_cortex')
+        fake_voice = types.ModuleType('nova_voice')
+        self.phase_receipt = Mock()
+        fake_voice.provider_diagnostics = types.SimpleNamespace(record_phase=self.phase_receipt)
         fake_cortex.executive = types.SimpleNamespace(note_activity=Mock(), autonomy_enabled=lambda: False)
         self.modules = patch.dict(sys.modules, {'nova_runtime': fake_runtime,
                                                 'nova_runtime.operations': fake_operations,
-                                                'nova_cortex': fake_cortex})
+                                                'nova_cortex': fake_cortex, 'nova_voice': fake_voice})
         self.modules.start()
         self.addCleanup(self.modules.stop)
         extract(SERVER, {'run_ai_response', '_run_response_queue', '_drain_cole_queue', '_end_queued_request',
+                         '_release_request_work', '_scoped_stop_reply', '_stop_request',
                          'websocket_endpoint'}, self.ns)
+
+    async def test_scoped_stop_removes_only_own_queued_request(self):
+        owner, other = Socket([]), Socket([])
+        own = self.queued_request('voice', 'voice-old'); own['owner'] = owner
+        adjacent = self.queued_request('typed', 'typed-new'); adjacent['owner'] = other
+        self.ns['_request_work'][(owner, 'voice-old')] = own
+        self.ns['_request_work'][(other, 'typed-new')] = adjacent
+        self.ns['is_processing'] = True
+        await self.ns['_stop_request'](owner, 'voice-old')
+        self.assertEqual(self.ns['_cole_message_queue'], [adjacent])
+        self.assertTrue(self.ns['is_processing'])
+        self.assertFalse(self.ns['_stop_requested'].is_set())
+        self.assertEqual(self.request_ends()[0]['delivery'], 'cancelled')
+        self.assertEqual(owner.sent[-1], {'type': 'stopped', 'request_id': 'voice-old', 'matched': True})
+        self.assertIn((other, 'typed-new'), self.ns['_request_work'])
+
+    async def test_scoped_stop_cancels_own_active_task_without_global_stop(self):
+        owner = Socket([])
+        entered = asyncio.Event()
+        async def work():
+            entered.set()
+            await asyncio.Event().wait()
+        task = asyncio.create_task(work())
+        other = asyncio.create_task(asyncio.Event().wait())
+        self.addCleanup(other.cancel)
+        await entered.wait()
+        entry = {'owner': owner, 'request_id': 'active', 'started': True, 'task': task}
+        self.ns['_request_work'][(owner, 'active')] = entry
+        await self.ns['_stop_request'](owner, 'active')
+        self.assertTrue(task.cancelled())
+        self.assertFalse(other.done())
+        self.assertFalse(self.ns['_stop_requested'].is_set())
+        self.assertEqual(owner.sent[-1]['matched'], True)
+        self.assertEqual(self.request_ends(), [])
+
+    async def test_scoped_stop_pending_ack_waits_for_the_owned_task_to_finish(self):
+        owner = Socket([])
+        entered = asyncio.Event()
+        async def work():
+            entered.set(); await asyncio.Event().wait()
+        task = asyncio.create_task(work())
+        await entered.wait()
+        self.ns['_request_work'][(owner, 'pending')] = {
+            'owner': owner, 'request_id': 'pending', 'task': task, 'started': True}
+        self.ns['asyncio'] = types.SimpleNamespace(wait=AsyncMock(return_value=(set(), {task})),
+            ensure_future=asyncio.ensure_future, CancelledError=asyncio.CancelledError)
+        await self.ns['_stop_request'](owner, 'pending')
+        self.assertEqual(owner.sent, [{'type': 'stop_pending', 'request_id': 'pending'}])
+        await asyncio.sleep(0); await asyncio.sleep(0); await asyncio.sleep(0)
+        self.assertTrue(task.cancelled())
+        self.assertEqual(owner.sent[-1], {'type': 'stopped', 'request_id': 'pending', 'matched': True})
+
+    async def test_stale_other_socket_and_invalid_scoped_stop_cannot_cancel_new_work(self):
+        owner, other = Socket([]), Socket([])
+        task = asyncio.create_task(asyncio.Event().wait())
+        self.addCleanup(task.cancel)
+        self.ns['_request_work'][(owner, 'new')] = {'owner': owner, 'request_id': 'new', 'task': task, 'started': True}
+        for socket, request in [(owner, 'old'), (other, 'new'), (owner, None), (owner, ['new'])]:
+            await self.ns['_stop_request'](socket, request)
+            self.assertFalse(socket.sent[-1]['matched'])
+            self.assertFalse(task.done())
+        self.assertFalse(self.ns['_stop_requested'].is_set())
+
+    async def test_scoped_cancel_before_task_starts_releases_only_its_reservation(self):
+        owner = Socket([])
+        ran = []
+        async def work(): ran.append(True)
+        task = asyncio.create_task(work())
+        entry = {'owner': owner, 'request_id': 'before-start', 'task': task,
+                 'msg': {'id': 'input'}, 'register': 'voice'}
+        self.ns['_request_work'][(owner, 'before-start')] = entry
+        self.ns['is_processing'] = True
+        self.ns['_drain_cole_queue'] = AsyncMock()
+        await self.ns['_stop_request'](owner, 'before-start')
+        self.assertFalse(ran)
+        self.assertTrue(task.cancelled())
+        self.assertFalse(self.ns['is_processing'])
+        self.assertEqual(self.request_ends()[0]['request_id'], 'before-start')
+        self.ns['_drain_cole_queue'].assert_awaited_once()
+        self.assertNotIn((owner, 'before-start'), self.ns['_request_work'])
+
+    async def test_scoped_cancel_during_drain_status_cannot_launch_generation(self):
+        owner = Socket([])
+        entry = self.queued_request('voice', 'selected'); entry['owner'] = owner
+        self.ns['_request_work'][(owner, 'selected')] = entry
+        selected = asyncio.Event(); release = asyncio.Event()
+        async def status():
+            selected.set(); await release.wait(); return {'Nova': True}
+        self.ns['get_status'] = status
+        self.ns['_run_response_queue'] = AsyncMock()
+        drain = asyncio.create_task(self.ns['_drain_cole_queue']())
+        await selected.wait()
+        await self.ns['_stop_request'](owner, 'selected')
+        release.set(); await drain
+        self.ns['_run_response_queue'].assert_not_awaited()
+        self.assertFalse(self.ns['is_processing'])
+        self.assertEqual(len(self.request_ends()), 1)
+        self.assertEqual(self.request_ends()[0]['delivery'], 'cancelled')
+
+    async def test_scoped_websocket_stop_never_falls_back_to_global(self):
+        self.ns['_stop_request'] = AsyncMock()
+        self.ns['stop_endpoint'] = AsyncMock()
+        ws = Socket([{'type': 'stop', 'request_id': None}, {'type': 'stop', 'request_id': 'mine'}])
+        await self.ns['websocket_endpoint'](ws)
+        self.assertEqual(self.ns['_stop_request'].await_count, 2)
+        self.ns['stop_endpoint'].assert_not_awaited()
+        ws = Socket([{'type': 'stop'}])
+        await self.ns['websocket_endpoint'](ws)
+        self.ns['stop_endpoint'].assert_awaited_once()
+
+    async def test_context_phase_timings_preserve_request_identity(self):
+        async def provider(*args, **sinks):
+            await sinks['on_done']('Hello.')
+        await self.response(provider)
+        calls = self.phase_receipt.call_args_list
+        self.assertEqual([c.args[0] for c in calls],
+                         ['context_update', 'context_memory', 'context_workspace'])
+        for call in calls:
+            self.assertEqual(call.kwargs, {'request_id': 'request-1', 'reply_to': 'human-1', 'register': 'voice'})
+            self.assertIsInstance(call.args[1], float)
 
     def terminal(self):
         return [event for event in self.events if event['type'] == 'message_end']

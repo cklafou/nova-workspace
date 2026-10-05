@@ -1,12 +1,12 @@
-/* @nova: Start and stop Nova through the owning launcher while preserving the controller, composer draft and layout. */
+// @nova: Provide compact Conversation power controls through the owning launcher while preserving composer drafts and manual layouts.
 (() => {
   "use strict";
   const DRAFT_KEY = "nova.conversation.lifecycle-draft.v1";
   const TRANSITIONS = new Set(["starting", "stopping"]);
   const STATES = new Set(["off", "starting", "on", "stopping", "error"]);
   window.initNovaConversationPower = function () {
-    const chat = document.getElementById("chat-main");
-    if (!chat || document.getElementById("conversation-nova-toggle"))
+    const controls = document.getElementById("conversation-controls");
+    if (!controls || document.getElementById("conversation-nova-toggle"))
       return null;
     const row = document.createElement("div");
     row.className = "nc-conversation-power";
@@ -17,13 +17,12 @@
     const toggle = document.createElement("button");
     toggle.id = "conversation-nova-toggle";
     toggle.type = "button";
-    toggle.textContent = "Checking Nova…";
+    toggle.textContent = "⏻";
+    toggle.setAttribute("aria-label", "Checking Nova…");
     toggle.disabled = true;
     toggle.setAttribute("aria-describedby", detail.id);
-    row.append(detail, toggle);
-    const tabs = document.getElementById("session-tabs");
-    if (tabs?.parentElement === chat) chat.insertBefore(row, tabs.nextSibling);
-    else chat.prepend(row);
+    row.append(toggle, detail);
+    controls.prepend(row);
     let state = null,
       pageChatOnly = null,
       fetching = false,
@@ -154,7 +153,7 @@
       const on =
         state?.state === "on" ||
         (state?.state === "error" && state?.chat_only === false);
-      toggle.textContent = busy
+      const actionLabel = busy
         ? target === "off" || state?.state === "stopping"
           ? "Stopping Nova…"
           : "Starting Nova…"
@@ -164,9 +163,8 @@
       toggle.disabled =
         busy || !state || state.available === false || !STATES.has(state.state);
       toggle.dataset.state = busy ? "busy" : on ? "on" : "off";
-      toggle.title = on
-        ? "Stop Nova and keep this controller open"
-        : "Start Nova and keep this controller open";
+      toggle.setAttribute("aria-label", actionLabel);
+      row.dataset.attention = String(!!actionError || !!state?.error || state?.available === false);
       toggle.setAttribute("aria-busy", String(busy));
       detail.textContent =
         actionError ||
@@ -179,6 +177,7 @@
             : busy
               ? "Waiting for Nova’s services…"
               : "Checking Nova’s launcher…");
+      toggle.title = actionLabel + " · " + detail.textContent + " · Controller stays open";
       syncOtherControls(busy);
     }
     async function accept(next) {
@@ -221,7 +220,7 @@
           return;
         }
         reloading = true;
-        // Existing beforeunload handlers persist the named widget layout.
+        // Reload keeps explicitly saved layouts; unsaved layout edits remain session-only.
         window.location.reload();
       }
     }

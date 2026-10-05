@@ -34,7 +34,8 @@ class ChatOnlyTests(unittest.TestCase):
         fake_async = types.SimpleNamespace(ensure_future=scheduled.append)
         ns = {"CHAT_ONLY": True, "asyncio": fake_async, "_rt": rt,
               "_window_close_watchdog": lambda: "window-lifecycle-only",
-              "_start_updater_check": Mock(), "_stop_updater_check": AsyncMock()}
+              "_start_updater_check": Mock(), "_stop_updater_check": AsyncMock(),
+              "_voice_controller": types.SimpleNamespace(close=AsyncMock())}
         extract(SERVER, {"startup_event", "shutdown_event"}, ns)
         asyncio.run(ns["startup_event"]())
         asyncio.run(ns["shutdown_event"]())
@@ -42,6 +43,7 @@ class ChatOnlyTests(unittest.TestCase):
         self.assertEqual(rt.mock_calls, [])
         ns["_start_updater_check"].assert_called_once()
         ns["_stop_updater_check"].assert_awaited_once()
+        ns["_voice_controller"].close.assert_awaited_once()
 
     def test_model_off_status_does_not_query_body_or_provider(self):
         client = types.SimpleNamespace(is_available=AsyncMock())
@@ -87,11 +89,11 @@ class ChatOnlyTests(unittest.TestCase):
               "json": json, "connected_clients": [], "is_processing": False,
               "autonomous_mode": False, "_mute_states": {}, "_CHAT_ONLY_MESSAGE": "disabled",
               "session_mgr": None, "get_status": AsyncMock(return_value={"Nova": False}),
-              "re": re, "broadcast": AsyncMock(),
+              "re": re, "broadcast": AsyncMock(), "_request_work": {},
               "_mirror_to_runtime": forbidden, "memory_indexer": forbidden, "_rt": forbidden}
         extract(SERVER.with_name("response_events.py"), {"normalize_request_id"}, ns)
         extract(ROOT / "nova_body/nova_runtime/model_client.py", {"normalize_register"}, ns)
-        extract(SERVER, {"websocket_endpoint", "_end_queued_request"}, ns)
+        extract(SERVER, {"websocket_endpoint", "_end_queued_request", "_release_request_work"}, ns)
         asyncio.run(ns["websocket_endpoint"](ws))
         self.assertEqual(len([m for m in ws.out if m["type"] == "error"]), 2)
         self.assertTrue(all(m.get("enabled") is False for m in ws.out if m["type"] == "autonomous_state"))

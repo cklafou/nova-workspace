@@ -17,7 +17,8 @@
 .ncc-help summary{min-height:32px;display:flex;align-items:center;gap:7px;cursor:pointer;list-style:none}
 .ncc-help summary:before{content:'›';font-size:20px;line-height:1}.ncc-help[open] summary:before{transform:rotate(90deg)}
 .ncc-help p{margin:0 0 10px;padding:0 8px 0 17px;line-height:1.65}
-.ncc-feed{flex:1 1 0%;min-height:60px;box-sizing:border-box;overflow:auto;overscroll-behavior:contain;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;scrollbar-gutter:stable;overflow-anchor:none}
+.ncc-feed-area{position:relative;display:flex;flex:1 1 0%;min-height:60px}
+.ncc-feed{flex:1 1 0%;min-height:0;box-sizing:border-box;overflow:auto;overscroll-behavior:contain;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;scrollbar-gutter:stable;overflow-anchor:none}
 .ncc-empty{height:100%;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px;box-sizing:border-box}
 .ncc-empty-mark{font-size:30px;color:var(--nova);line-height:1.2}.ncc-empty h3{font-size:16px;font-weight:500;margin:12px 0 8px}
 .ncc-empty p{max-width:320px;font-size:12px;line-height:1.7;color:var(--text-mute);margin:0}
@@ -33,13 +34,17 @@
 .controller .ncc-workshop button{min-height:38px;cursor:pointer;padding:8px 14px}.controller .ncc-workshop button:disabled{cursor:not-allowed}
 .ncc-send{background:#b5a0f6;color:#20172d;border-color:#b5a0f6;font-weight:600}.ncc-send:hover{background:#c6b4fd;color:#20172d}
 .ncc-notice{margin:0;font-size:12px;line-height:1.6;color:#d8bd92;overflow-wrap:anywhere}.ncc-notice:empty{display:none}
-.ncc-jump{align-self:center;flex:none;margin-top:-6px}.controller .nc-header-actions>.ncc-shortcut{min-height:36px}
+/* Same anchored pill and bottom threshold as Conversation; it also appears on manual scroll. */
+.controller .ncc-workshop .ncc-jump{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;min-height:36px;padding:5px 12px;color:var(--text);background:var(--bg-2,#1b1b26);border:1px solid var(--border);border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.45);cursor:pointer}
+.controller .ncc-workshop .ncc-jump[hidden]{display:none}
+.controller .ncc-workshop .ncc-jump:hover{border-color:var(--nova);color:var(--nova)}.controller .nc-header-actions>.ncc-shortcut{min-height:36px}
 @container(max-width:380px){.ncc-heading{flex-wrap:wrap}.ncc-compose-row{align-items:flex-start;flex-direction:column}.ncc-send{align-self:stretch}.ncc-feed{padding:8px}.ncc-message{padding:11px}.ncc-sequence{display:none}}
 @media(max-width:1100px){.controller .nc-header{height:auto;min-height:74px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px;gap:10px}.controller .nc-header-actions{flex-wrap:wrap;justify-content:flex-end}}
 @media(max-width:620px){.controller .nc-header-actions{width:100%;justify-content:flex-start}.controller .nc-header-actions>.nc-action{flex:1;min-height:36px}.controller .nc-modes{order:0}.ncc-hint{font-size:10px}}
 
 .ncc-chat-only{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;gap:16px}.ncc-chat-only strong{font-size:20px;font-weight:500}.ncc-chat-only p{max-width:400px;line-height:1.7;font-size:13px;color:var(--text-mute)}.controller .ncc-chat-only button{min-height:38px}
-.controller[data-chat-only=true] #chat-main:after{display:none}.controller[data-chat-only=true] #session-tabs,.controller[data-chat-only=true] #participant-bar,.controller[data-chat-only=true] #chat,.controller[data-chat-only=true] #input-area{display:none!important}
+.controller[data-chat-only=true] #chat-main:after{display:none}.controller[data-chat-only=true] #session-tabs,.controller[data-chat-only=true] #participant-bar,.controller[data-chat-only=true] #chat{display:none!important}
+.controller[data-chat-only=true] #input-area .input-row,.controller[data-chat-only=true] #pending-images,.controller[data-chat-only=true] #file-chip-bar,.controller[data-chat-only=true] #conversation-controls>:not(.nc-conversation-power),.controller[data-chat-only=true] .input-bar-right{display:none!important}
 
 /* Keep the composer visible while the feed gives up space; tiny panes can scroll the heading. */
 .controller .nc-pane-body[data-widget=collaboration]{min-height:0;box-sizing:border-box;overflow:hidden}

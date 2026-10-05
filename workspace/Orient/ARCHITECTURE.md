@@ -1,9 +1,11 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T09:48:31+00:00 from source (input `2e911cb4b379`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T11:48:18+00:00 from source (input `b6955fb40ebe`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_drain_cole_queue`, `general_tools/nova_chat/server.py::_end_queued_request`, `general_tools/nova_chat/server.py::run_ai_response`, `general_tools/nova_chat/server.py::websocket_endpoint` and 10 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -123,7 +125,7 @@ witness audits bypass this normal fitting policy so evidence is not silently cha
 | `nova_config` | Body settings loader. Some execution paths still have independent constants; this is not yet universal configuration. | 1 |
 | `nova_cortex` | Task board, wake decisions, wants, speaker roles, witness/integrity checks, tunables and shared identity/context loading. | 15 |
 | `nova_runtime` | Model dispatch, headless autonomy, transcript, event bus, provider lifecycle and KoELS equip operations. | 11 |
-| `nova_voice` | Local inference client, parsing/tool loop, shell/file tools and durable execution receipts. The retired host-desktop Claude ping is no longer registered. | 4 |
+| `nova_voice` | Local inference client, parsing/tool loop, shell/file tools and durable execution receipts. The retired host-desktop Claude ping is no longer registered. | 5 |
 | `nova_senses` | Time, environment changes, presence, touch, sight, web access and proprioception. | 13 |
 | `nova_lancedb` | Semantic/visual memory store, embeddings and asynchronous indexing; separate from journal files. | 5 |
 | `nova_memory` | Journal/goals/log-reader helpers. Some overlap with router-owned journaling remains. | 5 |

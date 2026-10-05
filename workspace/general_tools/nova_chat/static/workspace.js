@@ -14,6 +14,7 @@
     ['generation','Generation','Response settings and model parameters',null],
     ['profile','Profiles','Participant images and identity','controller-profile'],
     ['chat','Conversation','Talk with Nova','chat-main'],
+    ['voice','Voice','Call Nova, control microphone and speakers, and inspect audio status',null],
     ['collaboration','Collaboration','A live workshop for Cole, Codex and Claude; separate from Nova',null],
     ['updater','Model updates','Review model updates, installations and training',null],
     ['sidebar','Sessions','Browse and reopen conversations','sidebar'],
@@ -135,6 +136,7 @@
   const mirrorTimer=setInterval(()=>{for(const mirror of menuMirrors)if(window.novaWidgetVisible?.(mirror.id))mirror.sync();},500);
   window.addEventListener('pagehide',()=>clearInterval(mirrorTimer),{once:true});
   // Viewers keep their DOM when moved, preserving iframe, terminal and scroll state.
+  window.mountNovaVoice?.(registry.get('voice').node);
   window.mountNovaControl?.(registry.get('control').node);
   window.mountNovaCollaboration?.(registry.get('collaboration').node);
   window.mountNovaUpdater?.(registry.get('updater').node);

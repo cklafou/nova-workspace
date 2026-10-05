@@ -64,7 +64,7 @@ body.controller{--bg:#101116;--bg-mid:#14151c;--bg-surface:#191a23;--bg-raised:#
 .controller .nc-custom-help{font-size:13px;line-height:1.7;color:var(--text-dim);margin-bottom:20px;}.controller .nc-library label{display:block;margin-bottom:8px;font-size:12px;}.controller input[type=color]{height:44px;padding:4px;}.controller[data-density=compact] .nc-header{min-height:56px;height:auto;padding-top:10px;padding-bottom:10px;}.controller[data-density=compact] .nc-pane-body{padding:6px;}
 .controller.nc-popout #menubar,.controller.nc-popout .nc-header,.controller.nc-popout #statusbar{display:none;}.controller.nc-popout #main-area{height:100vh;}.controller.nc-popout #app{height:100vh;}.controller.nc-popout .nc-docking{height:100vh;}
 .controller .nc-pane-body button{min-height:28px;}.controller .nc-pane-body input:not([type=checkbox]):not([type=range]){min-height:30px;}
-.controller .stab-x{background:transparent;border:0;color:inherit;cursor:pointer;}.controller.nc-no-conversation #chat,.controller.nc-no-conversation #input-area,.controller.nc-no-conversation #participant-bar{display:none;}.controller.nc-no-conversation #chat-main:after{content:'Conversation closed. Reopen it from Sessions, or start a new conversation with +.';display:grid;place-items:center;flex:1;padding:48px;color:var(--text-mute);text-align:center;font-size:14px;}
+.controller .stab-x{background:transparent;border:0;color:inherit;cursor:pointer;}.controller.nc-no-conversation #chat,.controller.nc-no-conversation #participant-bar{display:none;}.controller.nc-no-conversation #chat-main:after{content:'Conversation closed. Reopen it from Sessions, or start a new conversation with +.';display:grid;place-items:center;flex:1;padding:48px;color:var(--text-mute);text-align:center;font-size:14px;}
 .controller .nc-pane-body>.dropdown{display:block!important;position:static!important;width:auto!important;min-width:0!important;max-height:none;box-shadow:none;border:0;padding:8px;background:transparent;transform:none!important;}
 .controller #controller-adapters,.controller #controller-profile{width:100%!important;max-height:none;max-width:none;box-shadow:none;border:0;background:transparent;padding:8px;}.controller #controller-adapters .close-btn,.controller #controller-profile .close-btn{display:none;}.controller .dd-srv-btn{min-width:48px;padding:6px;}.controller #chat-jump{z-index:20;}
 
@@ -126,3 +126,7 @@ body.controller{--bg:#101116;--bg-mid:#14151c;--bg-surface:#191a23;--bg-raised:#
 .controller .nc-layout-picker{flex-wrap:wrap;gap:5px;}
 @media(max-width:1250px){.controller .nc-layout-picker{order:4;flex-basis:100%;justify-content:flex-end;}.controller .nc-header #menubar{order:initial;flex-basis:auto;}}
 @media(max-width:600px){.controller .nc-layout-picker{justify-content:flex-start;}.nc-layout-edit{padding:7px 8px;}.nc-layout-saved{max-width:none;}}
+
+/* Keep the power control accessible when no conversation is selected. */
+.controller.nc-no-conversation #input-area .input-row,.controller.nc-no-conversation #pending-images,.controller.nc-no-conversation #file-chip-bar,.controller.nc-no-conversation #conversation-controls>:not(.nc-conversation-power){display:none!important;}
+.controller.nc-no-conversation #input-area{order:2;}

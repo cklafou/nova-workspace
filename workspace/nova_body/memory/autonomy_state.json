@@ -1,9 +1,9 @@
 {
   "enabled": false,
   "active": null,
-  "last_activity": "2026-10-05T20:23:34",
-  "wake_at": "2026-10-05T20:25:04",
-  "last_fp": "[[\"memory/interrupt_inbox.json\", 105, 1791091267], [\"memory/cole_intent.json\", 174, 1791199332]]",
+  "last_activity": "2026-10-05T20:41:36",
+  "wake_at": "2026-10-05T20:43:06",
+  "last_fp": "[[\"memory/interrupt_inbox.json\", 105, 1791200446], [\"memory/cole_intent.json\", 110, 1791200446]]",
   "rest_note": "",
   "last_wake": "2026-05-25T02:17:17",
   "stall": 0,

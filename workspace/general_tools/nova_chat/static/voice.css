@@ -1,34 +1,45 @@
-/* @nova: Style compact voice controls embedded in Conversation, with accessible buttons and bounded device settings. */
-.nc-conversation-voice{flex:0 0 auto;min-width:0;margin:0 20px 10px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface,#25232e);color:var(--text,#e7e2ed);max-height:min(300px,35%);overflow-y:auto;} 
-.nv-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:8px 10px;}
-.nv-identity{display:flex;flex-direction:column;gap:2px;min-width:95px;flex:1;}
-.nv-title{font-size:12px;font-weight:600;letter-spacing:.15px;}
-.nv-state{font-size:11px;color:var(--text-dim,#bbb4c7);line-height:1.4;}
-.nc-conversation-voice[data-state="listening"] .nv-state{color:#a2d8bb;}
-.nc-conversation-voice[data-state="speaking"] .nv-state{color:var(--nova,#c4a4f1);}
-.nc-conversation-voice .nv-button{min-height:36px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg,#1d1b25);color:inherit;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap;}
-.nc-conversation-voice .nv-button:hover:not(:disabled){border-color:var(--nova,#b79cdb);background:var(--nova-dim,#362b47);}
-#voice-toggle{border-color:var(--nova,#b79cdb);background:var(--nova-dim,#362b47);}
-.nc-conversation-voice .nv-button[aria-pressed="true"]{border-color:#b18b56;background:#392f23;}
-.nc-conversation-voice .nv-button:disabled{opacity:.48;cursor:default;}
-.nc-conversation-voice :is(button,select,summary):focus-visible{outline:2px solid var(--nova,#c4a4f1);outline-offset:2px;}
-.nc-conversation-voice [hidden]{display:none!important;}
-.nv-notice{margin:0;padding:0 10px 8px;font-size:11px;line-height:1.5;color:var(--text-dim,#bbb4c7);overflow-wrap:anywhere;}
-.nv-notice[data-error="true"]{color:#f3b695;}
-.nv-caption{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;padding:0 10px 8px;font-size:12px;line-height:1.5;}
-.nv-caption-text{max-height:4.5em;overflow:auto;overflow-wrap:anywhere;flex:1 1 160px;}
+/* @nova: Style the dockable Nova voice call with accessible call controls and secondary settings and diagnostics. */
+[data-widget="voice"].nc-custom-widget{height:100%;min-height:0;overflow:auto;container-type:inline-size;}
+.nv-voice{display:flex;flex-direction:column;min-width:0;min-height:100%;box-sizing:border-box;color:var(--text,#edecf5);font-size:13px;}
+.nv-call{display:flex;flex:1 0 auto;flex-direction:column;align-items:center;justify-content:center;gap:22px;min-height:270px;padding:28px 14px 20px;background:radial-gradient(ellipse at 50% 35%,#30284044,transparent 70%);}
+.nv-identity{display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;min-width:0;}
+.nv-eyebrow{font-size:10px;letter-spacing:.18em;color:var(--text-mute,#9391a6);}
+.nv-orb{display:grid;place-items:center;width:100px;height:100px;margin:9px 0;border-radius:36%;border:1px solid #665385;background:radial-gradient(circle at 30% 20%,#45355c,#211c2b);box-shadow:0 0 0 10px #80619c0b,0 12px 45px #0002;color:#d9c6ff;font-size:54px;transition:border-color .2s,box-shadow .2s;}
+.nv-title{margin:0;font-size:24px;font-weight:550;letter-spacing:-.6px;}
+.nv-state{font-size:14px;color:var(--text-dim,#bab8ca);line-height:1.45;}
+.nv-call-hint{max-width:300px;min-height:2.8em;margin:0;font-size:12px;line-height:1.5;color:var(--text-mute,#9391a6);}
+.nv-voice[data-state="listening"] .nv-orb,.nv-voice[data-state="hearing"] .nv-orb{border-color:#72bca3;box-shadow:0 0 0 10px #72bca30a,0 0 35px #72bca311;}
+.nv-voice[data-state="listening"] .nv-state,.nv-voice[data-state="hearing"] .nv-state{color:#9cdcc2;}
+.nv-voice[data-state="speaking"] .nv-orb{border-color:#d5b4ff;box-shadow:0 0 0 10px #b69af111,0 0 35px #b69af11c;}
+.nv-voice[data-state="error"] .nv-orb{border-color:#d08b81;}
+.nv-call-actions{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+.nv-voice .nv-button{min-height:38px;padding:8px 12px;border:1px solid var(--border,#2b2c39);border-radius:9px;background:var(--bg-raised,#22232e);color:inherit;font:inherit;font-size:12px;cursor:pointer;white-space:normal;}
+.nv-voice .nv-button:hover:not(:disabled){border-color:var(--nova,#b5a0f6);background:#302a40;}
+.nv-voice #voice-toggle{min-width:110px;min-height:44px;border-color:#b5a0f6;background:#b5a0f6;color:#21192f;font-weight:600;}
+.nv-voice[data-active="true"] #voice-toggle{border-color:#855969;background:#412936;color:#f7d4df;}
+.nv-voice .nv-button[aria-pressed="true"]{border-color:#b18b56;background:#392f23;color:#efcf9f;}
+.nv-voice .nv-button:disabled{opacity:.45;cursor:default;}
+.nv-voice :is(button,select,summary):focus-visible{outline:2px solid var(--nova,#c4a4f1);outline-offset:3px;}
+.nv-voice [hidden]{display:none!important;}
+.nv-notice,.nv-delivery{margin:0 12px 12px;padding:10px 12px;border:1px solid var(--border,#2b2c39);border-radius:9px;font-size:12px;line-height:1.6;color:var(--text-dim,#bab8ca);overflow-wrap:anywhere;}
+.nv-notice[data-error="true"]{color:#f3b695;border-color:#63483d;background:#35251e55;}
+.nv-delivery{border-style:dashed;}
+.nv-caption{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:0 12px 12px;font-size:12px;line-height:1.6;}
+.nv-caption-text{max-height:8em;overflow:auto;overflow-wrap:anywhere;}
 .nv-audit{font-size:10px;color:var(--text-dim,#bbb4c7);border:1px solid var(--border);border-radius:5px;padding:1px 5px;}
 .nv-audit[data-status="CONCERN"],.nv-audit[data-status="INCOMPLETE"],.nv-audit[data-status="ERROR"]{color:#f3b695;}
-.nv-details{border-top:1px solid var(--border);font-size:12px;}
-.nv-details>summary{cursor:pointer;min-height:36px;box-sizing:border-box;padding:9px 10px;color:var(--text-dim,#bbb4c7);}
-.nv-details-body{padding:0 10px 10px;max-height:min(220px,28vh);overflow:auto;}
-.nv-help{margin:0 0 8px;color:var(--text-dim,#bbb4c7);font-size:11px;line-height:1.5;}
-.nv-device-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;}
+.nv-details,.nv-captions{border-top:1px solid var(--border,#2b2c39);font-size:12px;}
+.nv-voice summary{cursor:pointer;min-height:38px;box-sizing:border-box;padding:11px 12px;color:var(--text-dim,#bbb4c7);}
+.nv-details-body{padding:0 12px 14px;}
+.nv-help{margin:0 0 9px;color:var(--text-dim,#bbb4c7);font-size:11px;line-height:1.6;overflow-wrap:anywhere;}
+.nv-device-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px;}
 .nv-device{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:11px;color:var(--text-dim,#bbb4c7);}
-.nv-device select{width:100%;min-height:36px;box-sizing:border-box;border:1px solid var(--border);border-radius:7px;padding:6px;background:var(--bg,#1d1b25);color:var(--text,#e7e2ed);font:inherit;font-size:12px;}
-.nv-audio-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
+.nv-device select{width:100%;min-height:38px;box-sizing:border-box;border:1px solid var(--border);border-radius:7px;padding:6px;background:var(--bg,#1d1b25);color:var(--text,#e7e2ed);font:inherit;font-size:12px;}
+.nv-audio-actions{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0;}
 .nv-device-actions,.nv-tests{display:contents;}
-.nv-test-result,.nv-transcript{font-size:11px;line-height:1.6;margin:9px 0 0;overflow-wrap:anywhere;}
-@media(max-width:540px){.nc-conversation-voice{margin-left:10px;margin-right:10px;}.nv-bar{gap:5px;}.nv-identity{min-width:85px;}.nc-conversation-voice .nv-button{padding:7px 8px;}}
-
-.nv-bar{position:sticky;top:0;z-index:1;background:var(--bg-surface,#25232e);}
+.nv-test-result,.nv-transcript{font-size:11px;line-height:1.6;margin:9px 0;overflow-wrap:anywhere;}
+.nv-captions>.nv-transcript{padding:0 12px;}
+.nv-trace-details{border-top:1px solid var(--border,#2b2c39);margin-top:12px;}
+.nv-trace-details>summary{padding-left:0;}
+.nv-trace{white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;line-height:1.6;color:var(--text-mute,#9391a6);max-height:220px;overflow:auto;margin:0;}
+@container(max-width:330px){.nv-call{padding:18px 8px 14px;gap:14px;}.nv-orb{width:76px;height:76px;font-size:42px;margin:4px 0;}.nv-call-actions{gap:6px;}.nv-voice .nv-button{padding:8px;}.nv-voice #voice-toggle{min-width:92px;}.nv-title{font-size:22px;}}

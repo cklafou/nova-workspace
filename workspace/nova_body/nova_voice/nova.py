@@ -21,6 +21,7 @@ import urllib.error
 from typing import Callable, Awaitable, Optional
 
 import httpx
+from nova_voice import provider_diagnostics as _provider_diagnostics
 
 # Safety-net: strip any stray <think>...</think> blocks that leak into content
 _THINK_RE = _re.compile(r'<think>(.*?)</think>', _re.DOTALL)
@@ -645,63 +646,78 @@ async def _fetch_llama_streaming(
     if not enable_thinking:
         payload["chat_template_kwargs"] = {"enable_thinking": False}
 
-    chat_response = ""   # chat content only — what's returned to the caller
-    async with httpx.AsyncClient(timeout=600.0) as client:
-        async with client.stream("POST", LLAMA_CPP_URL, json=payload) as resp:
-            if not resp.is_success:
-                # Read body so the error message includes the actual llama.cpp reason
-                body_bytes = await resp.aread()
-                body_str   = body_bytes.decode("utf-8", errors="replace")[:600]
-                print(f"[nova] llama.cpp {resp.status_code} for {LLAMA_CPP_URL}: {body_str}")
-                # Capture the offending request so 4xx failures can be diagnosed later.
-                try:
-                    from pathlib import Path as _P
-                    import datetime as _dt
-                    _ws = _P(__file__).resolve().parents[3]
-                    _dbg = body_path('logs') / "llama" / f"bad_requests-{_dt.date.today():%Y-%m-%d}.jsonl"
-                    _dbg.parent.mkdir(parents=True, exist_ok=True)
-                    _rec = {
-                        "ts":           _dt.datetime.now().isoformat(),
-                        "status":       resp.status_code,
-                        "llama_body":   body_str,
-                        "n_messages":   len(messages),
-                        "total_chars":  sum(len(str(m.get("content", ""))) for m in messages),
-                        "max_tokens":   max_tokens,
-                        "temperature":  temperature,
-                        "top_p":        top_p,
-                        "payload":      _diagnostic_payload(payload),
-                    }
-                    with open(_dbg, "a", encoding="utf-8") as _f:
-                        _f.write(json.dumps(_rec, ensure_ascii=False, default=str) + "\n")
-                    print(f"[nova] bad-request payload captured -> {_dbg}")
-                except Exception as _e:
-                    print(f"[nova] failed to capture bad-request payload: {_e}")
-            resp.raise_for_status()
-            async for line in resp.aiter_lines():
-                if not line.strip() or not line.startswith("data: "):
-                    continue
+    _trace = _provider_diagnostics.begin(payload, phase="audit" if preserve_messages else "generation")
+    _trace_status = "completed"
+    try:
+        chat_response = ""   # chat content only — what's returned to the caller
+        async with httpx.AsyncClient(timeout=600.0) as client:
+            async with client.stream("POST", LLAMA_CPP_URL, json=payload) as resp:
+                if not resp.is_success:
+                    # Read body so the error message includes the actual llama.cpp reason
+                    body_bytes = await resp.aread()
+                    body_str   = body_bytes.decode("utf-8", errors="replace")[:600]
+                    print(f"[nova] llama.cpp {resp.status_code} for {LLAMA_CPP_URL}: {body_str}")
+                    # Capture the offending request so 4xx failures can be diagnosed later.
+                    try:
+                        from pathlib import Path as _P
+                        import datetime as _dt
+                        _ws = _P(__file__).resolve().parents[3]
+                        _dbg = body_path('logs') / "llama" / f"bad_requests-{_dt.date.today():%Y-%m-%d}.jsonl"
+                        _dbg.parent.mkdir(parents=True, exist_ok=True)
+                        _rec = {
+                            "ts":           _dt.datetime.now().isoformat(),
+                            "status":       resp.status_code,
+                            "llama_body":   body_str,
+                            "n_messages":   len(messages),
+                            "total_chars":  sum(len(str(m.get("content", ""))) for m in messages),
+                            "max_tokens":   max_tokens,
+                            "temperature":  temperature,
+                            "top_p":        top_p,
+                            "payload":      _diagnostic_payload(payload),
+                        }
+                        with open(_dbg, "a", encoding="utf-8") as _f:
+                            _f.write(json.dumps(_rec, ensure_ascii=False, default=str) + "\n")
+                        print(f"[nova] bad-request payload captured -> {_dbg}")
+                    except Exception as _e:
+                        print(f"[nova] failed to capture bad-request payload: {_e}")
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line.strip() or not line.startswith("data: "):
+                        continue
 
-                data_str = line[len("data: "):]
-                if data_str == "[DONE]":
-                    break
+                    data_str = line[len("data: "):]
+                    if data_str == "[DONE]":
+                        break
 
-                try:
-                    chunk = json.loads(data_str)
-                    delta = chunk.get("choices", [{}])[0].get("delta", {})
+                    try:
+                        chunk = json.loads(data_str)
+                        if _trace is not None:
+                            _trace.chunk(chunk)
+                        delta = chunk.get("choices", [{}])[0].get("delta", {})
 
-                    # ── Thinking tokens (llama.cpp reasoning_content field) ──────
-                    think_tok = delta.get("reasoning_content") or ""
-                    if think_tok and on_think_token:
-                        await on_think_token(think_tok)
+                        # ── Thinking tokens (llama.cpp reasoning_content field) ──────
+                        think_tok = delta.get("reasoning_content") or ""
+                        if think_tok and on_think_token:
+                            await on_think_token(think_tok)
 
-                    # ── Chat tokens (content field) ──────────────────────────────
-                    chat_tok = delta.get("content") or ""
-                    if chat_tok:
-                        chat_response += chat_tok
-                        await on_token(chat_tok)
+                        # ── Chat tokens (content field) ──────────────────────────────
+                        chat_tok = delta.get("content") or ""
+                        if chat_tok:
+                            chat_response += chat_tok
+                            await on_token(chat_tok)
 
-                except json.JSONDecodeError:
-                    continue
+                    except json.JSONDecodeError:
+                        continue
+
+    except asyncio.CancelledError:
+        _trace_status = "cancelled"
+        raise
+    except Exception:
+        _trace_status = "error"
+        raise
+    finally:
+        if _trace is not None:
+            _trace.finish(_trace_status)
 
     return chat_response
 
@@ -730,6 +746,20 @@ def _truncate_to_context(
         except Exception:
             pass
     return fitted
+
+
+def _audit_read_counts(checks):
+    """Read attempts are not verification; legacy text without a failure is only output."""
+    counts = {"read_attempts": len(checks), "read_returned": 0, "read_refused": 0, "read_failed": 0}
+    for _, _, result in checks:
+        text = str(result).lstrip()
+        if text.startswith(("REFUSED", "HELD")):
+            counts["read_refused"] += 1
+        elif text.startswith(("ERROR", "[error]", "EXCEPTION:", "CANCELLED", "TIMED OUT")):
+            counts["read_failed"] += 1
+        else:
+            counts["read_returned"] += 1
+    return counts
 
 
 def _tool_pipeline_event(stage, tool, operation_id, run_id, *, result=None, duration_ms=0,
@@ -1608,15 +1638,19 @@ async def stream_response(
                         except Exception as _we:
                             _wr = f"ERROR: {_we}"
                         _checks.append((_wt, _wa, str(_wr)))
-                        print(f"[nova] witness verified: {_wt}({str(_wa)[:60]}) "
+                        print(f"[nova] witness read returned: {_wt}({str(_wa)[:60]}) "
                               f"-> {len(str(_wr))}B")
                     if len(_checks) > _pre_checks:
                         _new_checks = _checks[_pre_checks:]
+                        _read_counts = _audit_read_counts(_new_checks)
                         try:
                             _witness.pipeline_event(
                                 "witness_verified",
-                                f"her witness checked {len(_new_checks)} thing(s) itself before "
-                                f"ruling — it can read, so it does not have to guess",
+                                f"witness attempted {_read_counts['read_attempts']} read(s): "
+                                f"{_read_counts['read_returned']} returned output, "
+                                f"{_read_counts['read_refused']} refused, {_read_counts['read_failed']} failed",
+                                what="Read attempts and returned text are not verification. The audit verdict separately judges the available evidence.",
+                                **_read_counts,
                                 args="; ".join(f"{t}({str(a)[:50]})" for t, a, _ in _new_checks),
                                 verdict="\n".join(str(r)[:400] for _, _, r in _new_checks))
                         except Exception:

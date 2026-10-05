@@ -268,6 +268,79 @@ class Flow(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.sweep(), ["req1"])
         self.assertEqual(self.body.of("state")[-1]["state"], "idle")
 
+    async def test_slow_acknowledged_reply_keeps_correlation_and_is_spoken(self):
+        now = [1000.0]
+        session = VoiceSession(self.cfg, self.player, self.body, clock=lambda: now[0])
+        session.sent("req1", "hello")
+        session.handle(parse_event(ack()))
+        session.handle(parse_event(frame("message_start")))
+        now[0] += 313
+        self.assertEqual(session.sweep(), [])
+        self.assertTrue(session.pending["req1"].delayed)
+        session.sweep()
+        self.assertEqual(len([d for d in self.body.of("diagnostic") if "taking longer" in d["message"]]), 1)
+        session.handle(parse_event(end(content="Hi!")))
+        await self.player.drain()
+        self.assertEqual(self.tts.spoken, ["Hi!"])
+        self.assertEqual(self.body.of("message")[-1]["elapsed_s"], 313)
+        self.assertEqual(session.pending, {})
+
+    async def test_delayed_reply_never_speaks_after_stop_or_new_request(self):
+        for reason in ("stop", "new"):
+            with self.subTest(reason=reason):
+                now = [1000.0]
+                session = VoiceSession(self.cfg, self.player, self.body, clock=lambda: now[0])
+                session.sent("req1", "hello")
+                session.handle(parse_event(ack()))
+                session.handle(parse_event(frame("message_start")))
+                now[0] += 313
+                session.sweep()
+                if reason == "stop":
+                    session.handle(parse_event({"type": "stopped"}))
+                else:
+                    session.sent("req2", "different question")
+                session.handle(parse_event(end()))
+                await self.player.drain()
+                self.assertEqual(self.tts.spoken, [])
+                self.assertIn("interrupted", self.body.of("message")[-1]["why"])
+                self.assertTrue(any("not spoken" in d["message"] for d in self.body.of("diagnostic")))
+
+    async def test_old_scoped_stop_ack_never_retires_newer_request(self):
+        self.session.sent("req1", "first")
+        await self.feed(ack(), frame("message_start"))
+        self.session.sent("req2", "second")
+        await self.feed({'type': 'stopped', 'request_id': 'req1', 'matched': True})
+        self.assertTrue(self.session.pending['req2'].eligible)
+        self.assertNotIn('req1', self.session.pending)
+        await self.feed(*turn('req2', 'u2', 'm2', 'run2', content='Current reply.'))
+        self.assertEqual(self.tts.spoken, ['Current reply.'])
+
+    async def test_scoped_stop_tombstone_blocks_late_reply_in_replies_scope(self):
+        self.cfg.speak_scope = 'replies'
+        self.session.sent('req1', 'first')
+        await self.feed(ack(), frame('message_start'), {'type': 'stopped', 'request_id': 'req1', 'matched': True})
+        await self.feed(end())
+        self.assertEqual(self.tts.spoken, [])
+
+    async def test_explicit_voice_cancel_blocks_reply_before_worker_teardown(self):
+        self.session.sent("req1", "hello")
+        await self.feed(ack(), frame("message_start"))
+        self.session.cancel()
+        await self.feed(end(content="Late reply"))
+        self.assertEqual(self.tts.spoken, [])
+        self.assertTrue(self.session.output_muted)
+        self.assertIn("muted", self.body.of("message")[-1]["why"])
+
+    async def test_accepted_current_request_is_only_request_retained_after_timeout(self):
+        now = [1000.0]
+        session = VoiceSession(self.cfg, self.player, self.body, clock=lambda: now[0])
+        for i in range(20):
+            session.sent(f"r{i}", "question")
+            session.handle(parse_event(ack(f"r{i}", f"u{i}")))
+        now[0] += 301
+        self.assertEqual(len(session.sweep()), 19)
+        self.assertEqual(list(session.pending), ["r19"])
+
     async def test_new_request_and_stop_interrupt_speech(self):
         tts = FakeTTS(block=True)
         player = SpeechPlayer(tts, self.body, tail_s=0).start()

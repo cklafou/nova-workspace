@@ -489,6 +489,7 @@ async def variables_page():
 
 connected_clients: list[WebSocket] = []
 active_tasks: list[asyncio.Task] = []
+_request_work: dict = {}  # (originating websocket, request_id) -> queued/running work
 is_processing: bool = False
 _stop_requested = asyncio.Event()  # set by STOP; cleared at start of every new response
 _force_wake = asyncio.Event()      # set by the Wake Up button (/api/wake) — forces one immediate cognition cycle
@@ -513,11 +514,66 @@ _cole_message_queue: list[dict] = []
 _inflight_upto: int = 0
 
 
+def _release_request_work(work):
+    key = (work.get("owner"), work.get("request_id"))
+    if _request_work.get(key) is work:
+        _request_work.pop(key, None)
+
+
+async def _scoped_stop_reply(ws, request_id, matched):
+    try:
+        await ws.send_text(json.dumps({"type": "stopped", "request_id": request_id, "matched": matched}))
+    except Exception:
+        pass  # End call may have closed this socket while its task was cleaning up.
+
+
+async def _stop_request(ws, request_id):
+    """Stop only work submitted by this socket, never another conversation's task."""
+    request_id = normalize_request_id(request_id)
+    work = _request_work.get((ws, request_id)) if request_id is not None else None
+    if work is None:
+        await _scoped_stop_reply(ws, request_id, False)
+        return
+    # Mark before any await, including while a drain owns the popped queue entry.
+    work["cancelled"] = True
+    task = work.get("task")
+    if task is None:
+        _cole_message_queue[:] = [item for item in _cole_message_queue if item is not work]
+        await _end_queued_request(work, "cancelled")
+        await _scoped_stop_reply(ws, request_id, True)
+        return
+    if task.done():
+        _release_request_work(work)
+        await _scoped_stop_reply(ws, request_id, False)
+        return
+    task.cancel()
+    if not work.get("started"):
+        # A task cancelled before entering its coroutine never executes its finally.
+        # Release only its already-owned reservation, then service any newer request.
+        global is_processing
+        is_processing = False
+        await _end_queued_request(work, "cancelled")
+        await broadcast({"type": "processing_end"})
+        await _drain_cole_queue()
+    done, _ = await asyncio.wait({task}, timeout=0.5)
+    if done:
+        await _scoped_stop_reply(ws, request_id, True)
+    else:
+        await ws.send_text(json.dumps({"type": "stop_pending", "request_id": request_id}))
+        def complete(_task):
+            asyncio.ensure_future(_scoped_stop_reply(ws, request_id, True))
+        task.add_done_callback(complete)
+
+
 async def _end_queued_request(queued: dict, delivery: str) -> None:
     """Close a correlated inbound request without inventing a generation or audit result."""
     request_id = normalize_request_id(queued.get("request_id"))
     if request_id is None:
         return  # Legacy clients have no request identity to complete.
+    if queued.get("terminal_sent"):
+        return
+    queued["terminal_sent"] = True
+    _release_request_work(queued)
     await broadcast({"type": "request_end", "request_id": request_id,
                      "reply_to": (queued.get("msg") or {}).get("id"),
                      "register": normalize_register(queued.get("register")),
@@ -566,7 +622,7 @@ async def _drain_cole_queue() -> None:
         except Exception as _ge:
             print(f"[queue] already-answered check failed (delivering normally): {_ge}")
         _qqueue = []
-        if _stop_requested.is_set():
+        if _stop_requested.is_set() or _queued.get("cancelled"):
             _selected_closed = True
             await _end_queued_request(_queued, "cancelled")
         elif _already:
@@ -581,7 +637,7 @@ async def _drain_cole_queue() -> None:
             except Exception as _se:
                 print(f"[queue] provider status unavailable: {_se}")
                 _qstat = {}
-            if _stop_requested.is_set():
+            if _stop_requested.is_set() or _queued.get("cancelled"):
                 _selected_closed = True
                 await _end_queued_request(_queued, "cancelled")
             else:
@@ -595,7 +651,7 @@ async def _drain_cole_queue() -> None:
                     await _end_queued_request(_queued, "unavailable")
         if _qqueue:
             await broadcast({"type": "processing_start"})
-            if _stop_requested.is_set():
+            if _stop_requested.is_set() or _queued.get("cancelled"):
                 _selected_closed = True
                 await _end_queued_request(_queued, "cancelled")
                 await broadcast({"type": "processing_end"})
@@ -609,8 +665,9 @@ async def _drain_cole_queue() -> None:
             _qrequest = normalize_request_id(_queued.get("request_id"))
             async def _drain_run():
                 global is_processing
+                _queued["started"] = True
                 try:
-                    if _stop_requested.is_set():
+                    if _stop_requested.is_set() or _queued.get("cancelled"):
                         await _end_queued_request(_queued, "cancelled")
                         return
                     await _run_response_queue(_qq2, _qc2, images=_qimgs or None, source="drain",
@@ -620,13 +677,16 @@ async def _drain_cole_queue() -> None:
                 except Exception as _de:
                     print(f"[queue] Drain error: {_de}")
                 finally:
+                    _release_request_work(_queued)
                     is_processing = False
                     await broadcast({"type": "processing_end"})
                     try:
                         await _drain_cole_queue()
                     except Exception as _dee:
                         print(f"[queue] re-drain failed: {_dee}")
-            asyncio.ensure_future(_drain_run())
+            _task = asyncio.ensure_future(_drain_run())
+            _queued["task"] = _task
+            active_tasks.append(_task)
             _scheduled = True
     except asyncio.CancelledError:
         if not _selected_closed:
@@ -830,6 +890,7 @@ _CODE_FILES = ("general_tools/nova_chat/server.py",
                "nova_body/nova_runtime/operations.py",
                "nova_body/nova_runtime/work_queue.py",
                "nova_body/nova_voice/tool_result.py",
+               "nova_body/nova_voice/provider_diagnostics.py",
                "nova_body/nova_cortex/tasking.py",
                "nova_body/nova_cortex/executive.py",
                "nova_body/nova_cortex/verification.py",
@@ -1825,11 +1886,15 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     _transcript = hb_ctx if hb_ctx is not None else session_mgr.active
     _is_hb_tick = hb_ctx is not None
     _silent_tick = _is_hb_tick and not cole_pending   # True = don't touch chat
+    from nova_voice import provider_diagnostics as _provider_diagnostics
     # Update workspace context based on what was mentioned in the message
     # Offload to background thread to prevent event loop freeze
     if latest_message:
         loop = asyncio.get_event_loop()
+        _phase_started = time.perf_counter()
         await loop.run_in_executor(None, workspace.update_for_message, latest_message)
+        _provider_diagnostics.record_phase("context_update", _phase_started,
+                                           request_id=request_id, reply_to=reply_to, register=register)
 
     # Nova uses a slim context block — her local model has a 32K token window.
     # Memory files + manifest already arrive via CONTEXT REFRESH in chat history.
@@ -1837,9 +1902,15 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     if ai_name == "Nova":
         # New semantic memory layer: find most relevant past knowledge
         loop = asyncio.get_event_loop()
+        _phase_started = time.perf_counter()
         memory_ctx = await loop.run_in_executor(None, workspace.build_nova_memory_context, latest_message)
+        _provider_diagnostics.record_phase("context_memory", _phase_started,
+                                           request_id=request_id, reply_to=reply_to, register=register)
 
+        _phase_started = time.perf_counter()
         on_demand_ctx = workspace.build_nova_context_block()
+        _provider_diagnostics.record_phase("context_workspace", _phase_started,
+                                           request_id=request_id, reply_to=reply_to, register=register)
         ws_context = f"{memory_ctx}\n{on_demand_ctx}" if memory_ctx else on_demand_ctx
 
         # Identity files (AGENTS.md, NOVA.md, TOOLS.md) are now injected inside
@@ -4156,6 +4227,9 @@ async def websocket_endpoint(ws: WebSocket):
                 continue
 
             if data.get("type") == "stop":
+                if "request_id" in data:
+                    await _stop_request(ws, data.get("request_id"))
+                    continue
                 await stop_endpoint()
                 continue
 
@@ -4271,6 +4345,10 @@ async def websocket_endpoint(ws: WebSocket):
                 telemetry = data.get("telemetry", "").strip()
                 _message_register = normalize_register(data.get("register"))
                 _request_id = normalize_request_id(data.get("request_id"))
+                if _request_id is not None and (ws, _request_id) in _request_work:
+                    await ws.send_text(json.dumps({"type": "error", "code": "duplicate_request_id",
+                                                   "request_id": _request_id, "message": "This request is already pending."}))
+                    continue
                 
                 if not content and not images:
                     continue
@@ -4353,6 +4431,12 @@ async def websocket_endpoint(ws: WebSocket):
                             session_id=session_mgr.active_id
                         )
 
+                _request_entry = {"owner": ws, "content": content, "full_context_content": full_context_content,
+                                  "directed_at": directed_at, "images": effective_images or [], "msg": msg,
+                                  "register": _message_register, "request_id": _request_id}
+                if _request_id is not None:
+                    _request_work[(ws, _request_id)] = _request_entry
+
                 # Broadcast the CLEAN content back to the UI so Cole doesn't see the telemetry
                 await broadcast({
                     "type": "user_message",
@@ -4392,15 +4476,7 @@ async def websocket_endpoint(ws: WebSocket):
                 # Instead of dropping Cole's message with "blocked", queue it.
                 # The queue is drained at the end of _queued_run (below).
                 if is_processing:
-                    _cole_message_queue.append({
-                        "content":              content,
-                        "full_context_content": full_context_content,
-                        "directed_at":          directed_at,
-                        "images":               effective_images or [],
-                        "msg":                  msg,
-                        "register":             _message_register,
-                        "request_id":           _request_id,
-                    })
+                    _cole_message_queue.append(_request_entry)
                     await ws.send_text(json.dumps({
                         "type":    "queued",
                         "request_id": _request_id,
@@ -4441,8 +4517,9 @@ async def websocket_endpoint(ws: WebSocket):
 
                     async def _queued_run(_q=list(queue), _c=content, _imgs=effective_images or [],
                                           _register=_message_register, _reply_to=msg["id"],
-                                          _request=_request_id):
+                                          _request=_request_id, _work=_request_entry):
                         global is_processing
+                        _work["started"] = True
                         try:
                             await _run_response_queue(_q, _c, images=_imgs or None, source="ws",
                                                       register=_register, reply_to=_reply_to, request_id=_request)
@@ -4478,6 +4555,7 @@ async def websocket_endpoint(ws: WebSocket):
                         except Exception as e:
                             print(f"[chat] Error in response queue: {e}")
                         finally:
+                            _release_request_work(_work)
                             is_processing = False
                             await broadcast({"type": "processing_end"})
 
@@ -4491,15 +4569,14 @@ async def websocket_endpoint(ws: WebSocket):
                                 print(f"[queue] drain after run failed: {_dqe}")
 
                     task = asyncio.ensure_future(_queued_run())
+                    _request_entry["task"] = task
                     active_tasks.append(task)
                     # Do NOT await task here — awaiting blocks the receive loop so
                     # WebSocket "stop" messages can never arrive while generation is
                     # running.  ensure_future already schedules it; the while loop
                     # continues to ws.receive_text() and processes stop/ping/etc.
                 else:
-                    await _end_queued_request({"request_id": _request_id,
-                                               "register": _message_register, "msg": msg},
-                                              "unavailable")
+                    await _end_queued_request(_request_entry, "unavailable")
 
     except WebSocketDisconnect:
         pass  # client closed the tab or lost connection — normal, not an error

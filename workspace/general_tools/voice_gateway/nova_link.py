@@ -17,6 +17,7 @@ Tokens are ignored: the first stage speaks delivered final text only. Everything
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -96,6 +97,7 @@ class NovaLink:
         self.register = register
         self.author = author
         self._ws = None
+        self._stop_waiters = {}
 
     async def __aenter__(self):
         self._ws = await websockets.connect(self.url, max_size=8 * 1024 * 1024)
@@ -116,9 +118,26 @@ class NovaLink:
                                         "register": self.register, "request_id": request_id}))
         return request_id
 
-    async def stop(self) -> None:
-        """Ask the server to stop the current generation (the UI's stop button)."""
-        await self._ws.send(json.dumps({"type": "stop"}))
+    async def stop(self, request_id: str | None = None, *, timeout_s=2.0):
+        """Cancel only the owned request when supplied; never fall back to a global stop.
+
+        Scoped cancellation waits for the receipt consumed by events(), so successful socket
+        submission cannot be mistaken for matched cancellation. The existing explicit global
+        caller remains supported when request_id is omitted.
+        """
+        if request_id is None:
+            await self._ws.send(json.dumps({"type": "stop"}))
+            return None
+        if not isinstance(request_id, str) or not request_id:
+            raise ValueError("A nonempty request_id is required for scoped cancellation")
+        future = asyncio.get_running_loop().create_future()
+        self._stop_waiters[request_id] = future
+        try:
+            await self._ws.send(json.dumps({"type": "stop", "request_id": request_id}))
+            return await asyncio.wait_for(future, timeout=timeout_s)
+        finally:
+            if self._stop_waiters.get(request_id) is future:
+                self._stop_waiters.pop(request_id, None)
 
     async def events(self):
         """Async-generate NovaEvents until the socket closes."""
@@ -129,4 +148,8 @@ class NovaLink:
                 continue
             ev = parse_event(frame, self.author)
             if ev is not None:
+                if ev.raw.get("type") == "stopped" and ev.request_id:
+                    waiter = self._stop_waiters.get(ev.request_id)
+                    if waiter is not None and not waiter.done():
+                        waiter.set_result(ev.raw.get("matched") is True)
                 yield ev

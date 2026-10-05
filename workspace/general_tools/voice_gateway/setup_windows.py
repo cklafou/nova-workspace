@@ -1,8 +1,9 @@
-# @nova: Install the isolated Windows CPU voice dependencies and verified Silero/Moonshine ONNX assets.
+# @nova: Install the isolated Windows CPU voice dependencies and verified local Whisper/Silero/Moonshine assets.
 """Run with Python 3.12: python setup_windows.py. No microphone, playback or Nova startup.
 
-Assets come from the official Silero release and UsefulSensors model repository. Every
-model file must match its pinned SHA256 before publication; partial downloads stay temporary.
+Assets are pinned from Silero, UsefulSensors Moonshine and the Dropbox Dash
+CTranslate2 conversion of Whisper large-v3-turbo. Every model file must match its
+pinned SHA256 before publication; partial downloads stay temporary.
 """
 from pathlib import Path
 import argparse
@@ -24,6 +25,18 @@ ASSETS = [
     ("moonshine-base/decoder_model_merged.onnx", f"https://huggingface.co/UsefulSensors/moonshine/resolve/{REVISION}/onnx/merged/base/float/decoder_model_merged.onnx",
      "58778763ca8438963190244d6b26572bdca2cedec56a4b91e828f3f2d69ef3c5"),
 ]
+WHISPER_REVISION = "0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf"
+WHISPER_FILES = {
+    "model.bin": "e76620f83d5f5b69efd3d87e3dc180c1bd21df9fbebacfd4335e5e1efcc018da",
+    "config.json": "b0253ea6c0d3bea6b1e19e91a02acfd3b53f4467362efcb5a3e6b16c9b3a9b7e",
+    "tokenizer.json": "297b13372ac43916285644fb9687add3cc62ee2a1adb60da3dc25cc94c1871fd",
+    "preprocessor_config.json": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711",
+    "vocabulary.json": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1",
+}
+ASSETS += [("whisper-large-v3-turbo/" + name,
+            f"https://huggingface.co/dropbox-dash/faster-whisper-large-v3-turbo/resolve/{WHISPER_REVISION}/{name}", sha)
+           for name, sha in WHISPER_FILES.items()]
+
 
 
 def digest(path):
@@ -68,7 +81,7 @@ def main():
     if not python.exists():
         raise SystemExit("Create the gateway .venv before installing its assets.")
     install_assets(environment / "share/nova_voice")
-    print("Windows system voice + Moonshine base CPU ready. No audio device was opened.")
+    print("Windows system voice + Whisper turbo CPU ready; Moonshine remains available. No audio device was opened.")
 
 
 if __name__ == "__main__":

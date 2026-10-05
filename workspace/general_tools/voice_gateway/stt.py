@@ -66,10 +66,22 @@ class MoonshineSTT:
                                f"or set stt_backend='stdin'")
         self._np, self._sd = np, sd
         self._vad = _load_silero(cfg) if cfg.vad_backend == "silero" else None
-        self._transcribe = _load_moonshine(cfg)
+        self._transcribe = self._load_model(cfg)
         self.gate = None              # callable -> bool; False = drop mic frames (half duplex)
         self.on_speech_start = None   # callable(); first voiced frame of an utterance (barge-in)
         self.on_diagnostic = None     # optional observer; a decoder failure does not end listening
+        self.on_state = None          # transcribing/listening, separate from Nova thinking/speaking
+
+    def _load_model(self, cfg):
+        return _load_moonshine(cfg)
+
+    def _state(self, state):
+        callback = getattr(self, "on_state", None)
+        if callable(callback):
+            try:
+                callback(state)
+            except Exception:
+                pass
 
     async def utterances(self):
         np, sd = self._np, self._sd
@@ -136,6 +148,7 @@ class MoonshineSTT:
                     if not enough_speech:
                         continue
                     audio = np.concatenate(frames_to_decode)
+                    self._state("transcribing")
                     try:
                         text = await loop.run_in_executor(None, self._transcribe, audio)
                         text = _transcript_text(text)
@@ -150,6 +163,8 @@ class MoonshineSTT:
                         else:
                             print(f"[voice_gateway] {message}", flush=True)
                         continue
+                    finally:
+                        self._state("listening")
                     # Decoding runs outside the event loop. Mute/playback can invalidate
                     # this capture while it is in flight; never publish the stale result.
                     if born != generation[0] or (self.gate is not None and not self.gate()):
@@ -171,14 +186,26 @@ class MoonshineSTT:
         pass
 
 
-def make_stt(cfg):
+class FasterWhisperSTT(MoonshineSTT):
+    """Share capture/VAD/gating with Moonshine; decode with larger local Whisper turbo."""
+    name = "faster_whisper"
+
+    def _load_model(self, cfg):
+        return _load_faster_whisper(cfg)
+
+
+def make_stt(cfg, *, allow_fallback=True):
     want = (cfg.stt_backend or "stdin").lower()
-    if want == "stdin":
-        return StdinSTT(cfg)
+    backends = {"stdin": StdinSTT, "moonshine": MoonshineSTT,
+                "faster_whisper": FasterWhisperSTT}
+    if want not in backends:
+        raise ValueError(f"Unknown speech recognition backend: {want}")
     try:
-        return MoonshineSTT(cfg)
-    except Exception as e:
-        print(f"[voice_gateway] STT backend '{want}' unavailable ({e}) — using stdin (type to talk)")
+        return backends[want](cfg)
+    except Exception as error:
+        if not allow_fallback:
+            raise
+        print(f"[voice_gateway] STT backend '{want}' unavailable ({error}) — using stdin (type to talk)")
         return StdinSTT(cfg)
 
 
@@ -224,14 +251,60 @@ def _moonshine_path(cfg):
             else Path(name).expanduser())
 
 
+def _whisper_path(cfg):
+    name = str(cfg.whisper_model)
+    return (Path(sys.prefix) / "share/nova_voice/whisper-large-v3-turbo"
+            if name == "large-v3-turbo" else Path(name).expanduser())
+
+
 def local_asset_status(cfg):
-    """Cheap readiness check only; setup verifies hashes, runtime never fetches model weights."""
-    moonshine = _moonshine_path(cfg)
-    paths = [moonshine / "encoder_model.onnx", moonshine / "decoder_model_merged.onnx"]
-    if cfg.vad_backend == "silero":
+    """Check only selected local assets; never load models or download during status polling."""
+    recognizer = (cfg.stt_backend or "stdin").lower()
+    labels = {"faster_whisper": "Whisper large-v3-turbo · English · CPU int8",
+              "moonshine": "Moonshine base · English", "stdin": "Typed input"}
+    if recognizer == "faster_whisper":
+        path = _whisper_path(cfg)
+        paths = [path / name for name in ("model.bin", "config.json", "tokenizer.json", "preprocessor_config.json")]
+    elif recognizer == "moonshine":
+        path = _moonshine_path(cfg)
+        paths = [path / "encoder_model.onnx", path / "decoder_model_merged.onnx"]
+    elif recognizer == "stdin":
+        paths = []
+    else:
+        return {"ready": False, "missing": [], "vad": cfg.vad_backend,
+                "recognizer": recognizer, "label": recognizer, "reason": "Unknown speech recognizer"}
+    if recognizer != "stdin" and cfg.vad_backend == "silero":
         paths.append(Path(sys.prefix) / "share/nova_voice/silero_vad.onnx")
     missing = [str(path) for path in paths if not path.is_file() or path.stat().st_size == 0]
-    return {"ready": not missing, "missing": missing, "vad": cfg.vad_backend}
+    rate_ok = recognizer == "stdin" or cfg.sample_rate == 16000
+    return {"ready": not missing and rate_ok, "missing": missing, "vad": cfg.vad_backend,
+            "recognizer": recognizer, "label": labels[recognizer],
+            "reason": "" if rate_ok else "Speech recognition requires 16000 Hz mono input"}
+
+
+def _load_faster_whisper(cfg):
+    """Load a prepared local CTranslate2 model without CUDA or network fallback."""
+    if cfg.sample_rate != 16000:
+        raise RuntimeError("Whisper requires sample_rate=16000")
+    import numpy as np
+    from faster_whisper import WhisperModel
+    status = local_asset_status(cfg)
+    if not status["ready"]:
+        raise RuntimeError("Local Whisper assets missing; run setup_windows.py --assets-only")
+    model = WhisperModel(str(_whisper_path(cfg)), device="cpu", compute_type="int8",
+                         cpu_threads=max(1, int(cfg.whisper_cpu_threads)), num_workers=1,
+                         local_files_only=True)
+    def transcribe(audio):
+        samples = np.asarray(audio, dtype="float32")
+        if samples.ndim != 1 or not np.isfinite(samples).all():
+            raise ValueError("Whisper input must be finite mono audio")
+        if samples.size < 1600:
+            return ""
+        segments, _ = model.transcribe(samples, language=cfg.speech_language or None,
+            beam_size=5, temperature=0.0, condition_on_previous_text=False,
+            vad_filter=False, without_timestamps=True)
+        return " ".join(segment.text.strip() for segment in segments if segment.text.strip()).strip()
+    return transcribe
 
 
 def _load_silero(cfg):

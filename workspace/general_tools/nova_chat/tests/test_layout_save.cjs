@@ -308,5 +308,26 @@ assert.equal(
   "Open-widget clicks focus existing dock/popout instead of duplicating or closing it",
 );
 
+// The Voice widget uses the real registry/bind/focus paths, so it inherits normal
+// menu checkmarks and popout behavior without adding it to anyone's saved layout.
+const registered = {};
+vm.createContext(registered);
+vm.runInContext(sourceBetween('  const definitions = [', '  const registry = new Map();')+'\nthis.defs=definitions;', registered);
+const voiceDef=registered.defs.find(item=>item[0]==='voice');
+assert.ok(voiceDef);assert.equal(voiceDef[1],'Voice');assert.equal(voiceDef[3],null);
+const indexSource=fs.readFileSync(path.join(__dirname,'../static/index.html'),'utf8');
+assert.ok(indexSource.indexOf('src="/static/voice.js?')<indexSource.indexOf('src="/static/workspace.js?'),'Voice module must exist before widget registry mounts');
+const voiceNode={name:'voice'}, mounts=[];
+const mountContext={registry:new Map([['voice',{node:voiceNode}]]),window:{mountNovaVoice:node=>mounts.push(node)}};
+vm.createContext(mountContext);
+vm.runInContext(sourceBetween('  window.mountNovaVoice?.(', '  window.mountNovaControl?.('),mountContext);
+assert.deepEqual(mounts,[voiceNode]);
+focusContext.registry.set('voice',{title:'Voice'});
+focusContext.layout.openPopouts=[{getGlInstance:()=>({saveLayout:()=>({root:{componentState:{id:'voice'}}})}),getWindow:()=>({focus(){focused++;}})}];
+focusContext.showWidget('voice');assert.equal(focused,3);assert.equal(opened,0,'Opening Voice focuses its existing popout');
+const voiceSaved=fixture();voiceSaved.current.root.content.push({type:'stack',content:[{componentState:{id:'voice'}}]});
+voiceSaved.context.recordLayoutChange();assert.equal(voiceSaved.writes,0,'Opening Voice does not automatically persist or rewrite a saved layout');
+voiceSaved.context.saveButton.click();assert.equal(voiceSaved.saved().items[0].config.root.content.at(-1).content[0].componentState.id,'voice');cases++;
+
 console.log(`Layout UI: ${cases+2} scenarios passed (manual save/discard, failure recovery, Undo/Redo/Revert/Load, drag coalescing, bounded history, safe popouts, screenshot reference, and widget checks/focus).`);
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -1,4 +1,4 @@
-<!-- @nova: Serve Nova Chat with named customizable layouts, model-update controls and a separate collaboration workshop. -->
+<!-- @nova: Serve Nova Chat with manually saved dockable widgets, independent voice calls, model updates and a separate collaboration workshop. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1348,7 +1348,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
           <button id="send-btn" onclick="sendMsg()" title="Send">↑</button>
         </div>
         <div class="input-bar">
-          <div class="input-bar-left">
+          <div class="input-bar-left" id="conversation-controls">
             <!-- WHO IS SPEAKING (2026-07-14). Nova is told who each message is from, so she never
                  has to guess whether she's talking to Cole or to Claude. Right-click a name for
                  switch / rename / new / delete. -->
@@ -3201,7 +3201,7 @@ const _PL_META={
   witness_unresolved: {i:'⚖️', t:'Still disputed — shipped',c:'held'},
   witness_rewrite:    {i:'✍️', t:'Witness: REWROTE',        c:'held'},
   witness_skip:       {i:'➖', t:'No audit fired',          c:''},
-  witness_verified:   {i:'🔎', t:'Witness checked it',    c:''},
+  witness_verified:   {i:'🔎', t:'Witness read attempts',    c:''},
   promise_unkept:     {i:'🤞', t:'Promised, didn\'t check',  c:'held'},
   spill_trimmed:      {i:'🧹', t:'Private thinking cut',    c:'held'},
   premise_hold:       {i:'✋', t:'Premise hold',            c:'held'},
@@ -3238,7 +3238,7 @@ const _PL_OUTCOME={
   witness_overruled: {t:'SHE OVERRULED',    c:'held', d:'Her witness objected; she disagreed and kept her position. She holds more context than it does.'},
   witness_unresolved:{t:'STILL DISPUTED',   c:'held', d:'She revised and the witness still objects. Her words shipped anyway — one round only.'},
   witness_check:     {t:'AUDITING…',        c:'',     d:'Her witness is reading this draft right now. The outcome lands in a moment.'},
-  witness_verified:  {t:'READ CHECKS RETURNED', c:'neutral', d:'Read-only tool results returned. This alone is not a verdict.'},
+  witness_verified:  {t:'READ ATTEMPTS', c:'neutral', d:'The witness attempted read-only tools. Returned output is not verification or a verdict.'},
   promise_unkept:    {t:'PROMISED, DIDN\'T CHECK', c:'held', d:'She said she would verify, then answered anyway. Asked for the tool call and nothing else.'},
   witness_concern:   {t:'OBJECTED — awaiting her answer', c:'held', d:'The witness has objected and is waiting on her answer.'},
   witness_skip:      {t:'NOT AUDITED',      c:'',     d:'Sent without an audit — nothing triggered one.'},
@@ -3379,7 +3379,10 @@ function _plRenderGroup(g){
         push('system',e.stage==='witness_error'?'audit failed — no valid verdict':'audit incomplete — not a pass',e.reason||e.detail,T);
         if(e.verdict)push('witness','raw audit output (not a verdict)',e.verdict,T);
       }
-      if(e.stage==='witness_verified')    push('witness','went and checked this itself before ruling', (e.args||'')+'\n'+(e.verdict||''), T);
+      if(e.stage==='witness_verified') {
+        const counts=['read_attempts','read_returned','read_refused','read_failed'].filter(key=>Number.isFinite(e[key])).map(key=>key.replace('read_','')+': '+e[key]).join(' · ');
+        push('witness','read attempts — output is not verification', [e.detail,counts,e.args,e.verdict].filter(Boolean).join('\n'),T);
+      }
       if(e.stage==='promise_unkept')      push('system','she said she would check, then didn\'t — asked for the tool call only', e.concern, T, 'del');
       if(e.stage==='witness_check')
         push('nova', objected? 'answered the objection with this'
@@ -6280,18 +6283,18 @@ if(new URLSearchParams(location.search).get('layout')==='legacy'){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
-<link rel="stylesheet" href="/static/workspace.css?v=manual-layout-2">
-<link rel="stylesheet" href="/static/control.css?v=conversation-power-1">
+<link rel="stylesheet" href="/static/workspace.css?v=voice-widget-1">
+<link rel="stylesheet" href="/static/control.css?v=compact-power-2">
 <script src="/static/control.js?v=collaboration-2"></script>
-<link rel="stylesheet" href="/static/collaboration.css?v=collaboration-2">
-<script src="/static/collaboration.js?v=collaboration-2"></script>
+<link rel="stylesheet" href="/static/collaboration.css?v=collaboration-scroll-3">
+<script src="/static/collaboration.js?v=collaboration-scroll-3"></script>
 <link rel="stylesheet" href="/static/vendor/goldenlayout-base.css">
 <script src="/static/vendor/nova-dock.js"></script>
 <link rel="stylesheet" href="/static/updater.css?v=updater-wallet-1">
 <script src="/static/updater.js?v=updater-cleanup-1"></script>
-<script src="/static/workspace.js?v=manual-layout-2"></script>
-<script src="/static/conversation-power.js?v=conversation-power-1"></script>
-<link rel="stylesheet" href="/static/voice.css?v=conversation-voice-7">
-<script src="/static/voice.js?v=conversation-voice-7"></script>
+<link rel="stylesheet" href="/static/voice.css?v=voice-widget-1">
+<script src="/static/voice.js?v=voice-widget-2"></script>
+<script src="/static/workspace.js?v=voice-widget-1"></script>
+<script src="/static/conversation-power.js?v=compact-power-2"></script>
 </body>
 </html>

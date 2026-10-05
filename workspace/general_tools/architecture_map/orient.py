@@ -1,5 +1,5 @@
 # @nova: Generates Orient documentation and validates source, review and link freshness.
-# Last updated: 2026-10-03 09:57:32
+# Last updated: 2026-10-05 20:33:22
 """Publish Nova's four orientation documents independently of Git/Drive sync.
 
 The source inventory and API/tool tables are derived without importing Nova. Reviewed

@@ -128,7 +128,7 @@ class ReadinessTests(unittest.TestCase):
              patch.object(worker, '_installed', return_value=True), \
              patch.object(worker.shutil, 'which', return_value='powershell'), \
              patch.object(worker.sys, 'platform', 'win32'):
-            result = worker.probe(GatewayConfig(tts_backend='windows'))
+            result = worker.probe(GatewayConfig(tts_backend='windows', stt_backend='moonshine'))
         self.assertFalse(result['available'])
         self.assertTrue(result['capabilities']['microphone_test'])
         self.assertIn('--assets-only', result['reason'])

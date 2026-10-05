@@ -19,7 +19,9 @@
     help.append(element('summary','','How the agents connect'),element('p','','Codex and Claude Cowork read and post through the collaboration bridge while their tasks are running. Waiting means a bridge is listening; active means it checked in recently. Neither state proves a message has been understood. Sleeping apps do not automatically wake up.'));
     const viewport=element('div','ncc-feed');viewport.setAttribute('role','log');viewport.setAttribute('aria-label','Workshop messages');viewport.setAttribute('aria-live','polite');viewport.setAttribute('aria-relevant','additions');viewport.tabIndex=0;
     const empty=element('div','ncc-empty');empty.append(element('span','ncc-empty-mark','◇'),element('h3','','Work it out together'),element('p','','Send a question, share a result, or ask the team to challenge a plan. Messages will appear here as each agent connects.'));viewport.append(empty);
-    const jump=element('button','nc-action ncc-jump','New messages ↓');jump.type='button';jump.hidden=true;
+    const feedArea=element('div','ncc-feed-area');
+    const jump=element('button','ncc-jump','↓ Latest');jump.type='button';jump.hidden=true;jump.title='Jump to the latest message';
+    feedArea.append(viewport,jump);
     const footer=element('form','ncc-compose');
     const label=element('label','','Message the workshop as Cole');label.htmlFor='collaboration-message';
     const input=element('textarea','ncc-input');input.id='collaboration-message';input.rows=3;input.maxLength=12000;input.placeholder='Talk with Codex and Claude…';input.setAttribute('aria-describedby','collaboration-hint');
@@ -27,7 +29,7 @@
     const hint=element('span','ncc-hint','Ctrl / ⌘ + Enter to send');hint.id='collaboration-hint';
     const send=element('button','nc-action ncc-send','Send message');send.type='submit';bottom.append(hint,send);
     const notice=element('p','ncc-notice');notice.setAttribute('role','status');
-    footer.append(label,input,bottom,notice);root.append(header,boundary,people,help,viewport,jump,footer);
+    footer.append(label,input,bottom,notice);root.append(header,boundary,people,help,feedArea,footer);
     let draft={text:'',id:''},cursor=0,stopped=false,busy=false,ready=false,failures=0,stateTimer=null,pollTimer=null;
     const requests=new Set(), messages=new Map();
     try{const value=JSON.parse(localStorage.getItem(storageKey)||'null');if(value&&typeof value.text==='string')draft={text:value.text.slice(0,input.maxLength),id:typeof value.id==='string'?value.id:''};}catch(_){}
@@ -47,16 +49,20 @@
         return data;
       } finally {clearTimeout(timeout);requests.delete(controller);}
     }
-    const atBottom=()=>viewport.scrollHeight-viewport.scrollTop-viewport.clientHeight<70;
-    const scrollBottom=()=>{viewport.scrollTop=viewport.scrollHeight;jump.hidden=true;};
+    let unseen=0;
+    const atBottom=()=>viewport.scrollHeight-viewport.scrollTop-viewport.clientHeight<=60;
+    const syncJump=()=>{const bottom=atBottom();if(bottom)unseen=0;jump.hidden=bottom;jump.textContent=unseen?'↓ '+unseen+' new':'↓ Latest';};
+    const scrollBottom=()=>{viewport.scrollTop=viewport.scrollHeight;unseen=0;syncJump();};
     jump.addEventListener('click',scrollBottom);
-    viewport.addEventListener('scroll',()=>{if(atBottom())jump.hidden=true;});
+    viewport.addEventListener('scroll',syncJump,{passive:true});
+    const resizeObserver=typeof ResizeObserver==='function'?new ResizeObserver(syncJump):null;
+    resizeObserver?.observe(viewport);
     function addEvents(events,own=false) {
       const follow=atBottom()||own,oldHeight=viewport.scrollHeight,oldTop=viewport.scrollTop;
-      let added=false;
+      let added=0;
       for(const event of events){
         if(!Number.isSafeInteger(event.seq)||event.seq<=0||typeof event.text!=='string'||messages.has(event.seq))continue;
-        messages.set(event.seq,event);added=true;
+        messages.set(event.seq,event);added++;
       }
       if(!added)return;
       const ordered=[...messages.values()].sort((a,b)=>a.seq-b.seq);
@@ -76,7 +82,7 @@
         viewport.insertBefore(item,next||null);
       }
       if(follow)requestAnimationFrame(scrollBottom);
-      else {viewport.scrollTop=oldTop+Math.min(0,viewport.scrollHeight-oldHeight);jump.hidden=false;}
+      else {viewport.scrollTop=oldTop+Math.min(0,viewport.scrollHeight-oldHeight);unseen+=added;syncJump();}
     }
     async function refreshState() {
       try {
@@ -114,7 +120,7 @@
       } catch(error) {notice.textContent=error.message+' Your draft is saved. Send again to retry the same message safely.';}
       finally {busy=false;input.readOnly=false;sendState();input.focus();}
     });
-    function stop(){stopped=true;clearTimeout(stateTimer);clearTimeout(pollTimer);for(const controller of requests)controller.abort();}
+    function stop(){stopped=true;resizeObserver?.disconnect();clearTimeout(stateTimer);clearTimeout(pollTimer);for(const controller of requests)controller.abort();}
     window.addEventListener('pagehide',stop,{once:true});
     sendState();refreshState();poll(0);
   };

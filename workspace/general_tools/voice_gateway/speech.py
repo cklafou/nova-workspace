@@ -145,17 +145,23 @@ class SpeechPlayer:
                 ids = dict(message_id=u.message_id, request_id=u.request_id, run_id=u.run_id, unit=u.index)
                 stale = lambda e=epoch: e != self._epoch
                 started = []
+                requested_at = time.monotonic()
+                playback_at = []
+                metadata = {"backend": str(getattr(self.tts, "name", "unknown")),
+                            "output_device": getattr(getattr(self.tts, "cfg", None), "output_device", -1)}
 
                 def _started(clock):
                     if started or stale():
                         return
                     started.append(clock)
+                    playback_at.append(time.monotonic())
                     self.body.emit("caption", text=u.text, audit=dict(u.audit), clock=clock, **ids)
-                    self.body.emit("speech", phase="start", clock=clock, **ids)
+                    self.body.emit("speech", phase="start", clock=clock,
+                                   synthesis_ms=round((playback_at[0] - requested_at) * 1000, 1), **metadata, **ids)
 
                 self.body.emit("state", state="speaking", message_id=u.message_id, request_id=u.request_id,
                                run_id=u.run_id)
-                self.body.emit("speech", phase="requested", **ids)
+                self.body.emit("speech", phase="requested", **metadata, **ids)
                 if "on_playback" not in hooks:
                     _started("requested")             # backend can't say when audio starts
                 outcome = None
@@ -166,7 +172,8 @@ class SpeechPlayer:
                         lambda: loop.call_soon_threadsafe(_started, "playback"), hooks)
                     await asyncio.sleep(0)  # receive a pending playback-start callback first
                 except asyncio.CancelledError:
-                    self.body.emit("speech", phase="end", outcome="cut" if started else "skipped", **ids)
+                    self.body.emit("speech", phase="end", outcome="cut" if started else "skipped",
+                                   duration_ms=round((time.monotonic() - requested_at) * 1000, 1), **metadata, **ids)
                     raise
                 except Exception as error:
                     outcome = "error"
@@ -183,7 +190,10 @@ class SpeechPlayer:
                         outcome = "played" if "playback" in started else "completed"
                     else:
                         outcome = "no_audio"
-                self.body.emit("speech", phase="end", outcome=outcome, **details, **ids)
+                self.body.emit("speech", phase="end", outcome=outcome,
+                               duration_ms=round((time.monotonic() - requested_at) * 1000, 1),
+                               playback_ms=round((time.monotonic() - playback_at[0]) * 1000, 1) if playback_at else None,
+                               **details, **metadata, **ids)
             finally:
                 self.current = None
                 self._last_end = time.monotonic()

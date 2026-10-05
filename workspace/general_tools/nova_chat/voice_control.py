@@ -44,6 +44,9 @@ class VoiceController:
         self._output_muted = False
         self._last_caption = None
         self._last_transcript = ""
+        self._last_turn = None
+        self._last_playback = None
+        self._voice_events = deque(maxlen=48)
         self._test_result = None
         self._diagnostics = deque(maxlen=12)
         self._probe = None
@@ -148,6 +151,9 @@ class VoiceController:
                     "output_muted": self._output_muted, "capabilities": ready.get("capabilities", {}),
                     "settings": dict(self.settings), "backends": ready.get("backends", {}),
                     "last_caption": self._last_caption, "last_transcript": self._last_transcript,
+                    "last_turn": dict(self._last_turn) if self._last_turn else None,
+                    "last_playback": dict(self._last_playback) if self._last_playback else None,
+                    "recent_events": list(self._voice_events),
                     "test_result": self._test_result, "diagnostics": list(self._diagnostics)}
 
     async def status(self, request: Request):
@@ -199,6 +205,27 @@ class VoiceController:
             self._test_result = {k: v for k, v in event.items() if k != "type"}
         elif kind == "body":
             value = event.get("event", {})
+            body_type = value.get("type")
+            fields = {key: value[key] for key in ("type", "ts", "phase", "state", "request_id", "message_id",
+                      "run_id", "unit", "delivery", "audit", "eligible", "queued_units", "why", "elapsed_s",
+                      "delayed", "outcome", "clock", "backend", "output_device", "synthesis_ms", "playback_ms", "duration_ms")
+                      if key in value}
+            fields["received_at"] = time.time()
+            if body_type == "turn":
+                # A terminal old turn may arrive after a new one; it must not replace current status.
+                same = self._last_turn and value.get("request_id") == self._last_turn.get("request_id")
+                if value.get("phase") == "sent" or same or self._last_turn is None:
+                    self._last_turn = {**(self._last_turn if same else {}), **fields}
+                self._voice_events.append(fields)
+            elif body_type == "message":
+                if self._last_turn and value.get("request_id") == self._last_turn.get("request_id"):
+                    self._last_turn.update(fields)
+                    self._voice_events.append(fields)
+            elif body_type == "speech":
+                same = self._last_playback and all(value.get(k) == self._last_playback.get(k)
+                                                   for k in ("request_id", "message_id", "unit"))
+                self._last_playback = {**(self._last_playback if same else {}), **fields}
+                self._voice_events.append(fields)
             if value.get("type") == "caption":
                 self._last_caption = {"text": str(value.get("text", ""))[:8000], "audit": value.get("audit", {}),
                                       "clock": value.get("clock")}
@@ -256,6 +283,8 @@ class VoiceController:
             self._test_result = None
             self._last_caption = None
             self._last_transcript = ""
+            self._last_turn = self._last_playback = None
+            self._voice_events.clear()
             self._microphone_muted = self._output_muted = self._stopping = False
             self._diagnostics.clear()
             self._generation += 1

@@ -68,7 +68,8 @@ function fixture(options = {}) {
     tabs = new Element("div", "session-tabs"),
     input = new Element("textarea", "input");
   body.append(chat);
-  chat.append(tabs, input);
+  const controls = new Element("div", "conversation-controls");
+  chat.append(tabs, input, controls);
   for (const id of [
     "llama-start-btn",
     "llama-stop-btn",
@@ -106,6 +107,7 @@ function fixture(options = {}) {
     timers,
     input,
     chat,
+    controls,
     tabs,
     find,
   };
@@ -179,17 +181,19 @@ function fixture(options = {}) {
 (async () => {
   const f = fixture();
   await settle();
-  assert.equal(f.ui.button.textContent, "Start Nova");
+  assert.equal(f.ui.button.attrs["aria-label"], "Start Nova");
   assert.equal(
     f.ui.button.disabled,
     false,
     "Chat-only must still offer genuine Start Nova",
   );
   assert.equal(
-    f.chat.children[1].className,
+    f.controls.children[0].className,
     "nc-conversation-power",
-    "Power remains outside the hideable participant bar",
+    "Power lives inline in the composer controls rather than a Conversation banner",
   );
+  assert.equal(f.ui.button.textContent, "⏻", "Only the compact power icon is visible");
+  assert.match(f.ui.button.title, /Start Nova.*Nova is off/);
   assert.equal(f.ui.button.attrs["aria-describedby"], f.ui.detail.id);
   assert.equal(f.ui.detail.attrs["role"], "status");
   assert.ok(
@@ -208,7 +212,7 @@ function fixture(options = {}) {
     });
   const click = f.ui.button.click();
   await settle();
-  assert.equal(f.ui.button.textContent, "Starting Nova…");
+  assert.equal(f.ui.button.attrs["aria-label"], "Starting Nova…");
   assert.equal(f.find("pb-auto").disabled, true);
   assert.equal(f.find("llama-start-btn").disabled, true);
   await f.ui.button.click();
@@ -229,7 +233,7 @@ function fixture(options = {}) {
   await click;
   f.networkDown = true;
   await f.ui.refresh();
-  assert.equal(f.ui.button.textContent, "Starting Nova…");
+  assert.equal(f.ui.button.attrs["aria-label"], "Starting Nova…");
   assert.match(f.ui.detail.textContent, /Reconnecting/);
   assert.equal(
     f.ui.button.disabled,
@@ -292,7 +296,7 @@ function fixture(options = {}) {
     "Restored draft is consumed once",
   );
   assert.equal(next.reloads, 0);
-  assert.equal(next.ui.button.textContent, "Stop Nova");
+  assert.equal(next.ui.button.attrs["aria-label"], "Stop Nova");
   next.post = async () => ({
     code: 409,
     data: {
@@ -321,7 +325,7 @@ function fixture(options = {}) {
     return { data: next.status };
   };
   await next.ui.button.click();
-  assert.equal(next.ui.button.textContent, "Stopping Nova…");
+  assert.equal(next.ui.button.attrs["aria-label"], "Stopping Nova…");
   next.status = {
     ok: true,
     state: "off",
@@ -356,7 +360,7 @@ function fixture(options = {}) {
     error: "Model startup failed; controller restored",
   };
   await failedStart.ui.refresh();
-  assert.equal(failedStart.ui.button.textContent, "Start Nova");
+  assert.equal(failedStart.ui.button.attrs["aria-label"], "Start Nova");
   assert.equal(
     failedStart.ui.button.disabled,
     false,
@@ -388,7 +392,7 @@ function fixture(options = {}) {
   );
   failedStart.versionDown = false;
   await failedStart.ui.refresh();
-  assert.equal(failedStart.ui.button.textContent, "Stop Nova");
+  assert.equal(failedStart.ui.button.attrs["aria-label"], "Stop Nova");
   assert.equal(
     failedStart.reloads,
     1,

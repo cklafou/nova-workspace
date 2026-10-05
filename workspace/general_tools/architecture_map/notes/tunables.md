@@ -47,9 +47,12 @@ observations up to 600 each; the prompt may shorten them while preserving the co
 
 **Voice settings are separate interface configuration.** `voice_gateway/config.py` loads
 `_admin/voice_gateway.json` and `VOICE_GW_<FIELD>` environment overrides. The prepared Windows baseline
-uses local Moonshine/Silero and the temporary Windows system voice (`windows_voice` optionally selects
-an installed name). Segmentation defaults are minimum speech 192 ms, onset pre-roll 288 ms and retained
-trailing silence 192 ms, with a 700 ms end-of-utterance interval. Conversation stores only selected input
+uses faster-whisper large-v3-turbo, CPU int8, English (`speech_language="en"`) and Silero;
+`whisper_cpu_threads` defaults to eight. Moonshine is an explicit optional backend, not a silent fallback.
+The temporary Windows system voice can select an installed name through `windows_voice`. Segmentation defaults are minimum speech 192 ms, onset pre-roll 288 ms and retained
+trailing silence 192 ms, with a 700 ms end-of-utterance interval. `request_timeout_s` defaults to 300
+seconds: the current acknowledged request remains correlated and gains a delayed warning;
+unacknowledged and retired requests expire. The separate Voice widget stores only selected input
 and output device IDs in `_admin/voice_devices.json`; apply them while stopped. These are not body
 Variables controls and do not alter Nova's identity or model settings.
 
