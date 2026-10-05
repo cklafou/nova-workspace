@@ -1,11 +1,9 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T18:25:20+00:00 from source (input `ac59c64468ff`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T18:30:16+00:00 from source (input `7966729c1698`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/NovaLauncher.py`, `general_tools/nova_chat/server.py::startup_event`, `general_tools/nova_chat/server.py::stop_endpoint`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Run and stop"`.
 
 | Operation | Entry point | Check |
 |---|---|---|
@@ -65,8 +63,6 @@ the body transcript. Explicitly stopped inputs stay cancelled. An uncertain prio
 observation/reconciliation before further mutations; inspect the runtime recovery status if it waits.
 
 ## Configuration and evidence
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_CODE_FILES`, `nova_body/nova_cortex/workspace_context.py`; new `general_tools/NovaLauncher.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Configuration and evidence"`.
 
 Collaboration is a detachable controller service (`general_tools/nova_chat/collaboration.py`). Its
 SQLite history and per-agent credentials live outside the repository at
@@ -136,8 +132,6 @@ details. A hash or retained status is not independent verification or a copy of 
 
 ## Access and practical debugging
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/voice_gateway/control_worker.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Access and practical debugging"`.
-
 Nova's host access is intentional. The chat server has loopback exemptions, bearer authentication
 for remote HTTP clients, and restrictions on remote routes. Speaker capability checks are a separate
 layer: an unknown display name resolves to untrusted. A name added in the UI is not automatically
@@ -191,8 +185,6 @@ results recoverable and surface any retained-storage charge. The Hugging Face ca
 disk rather than a slow network mount.
 
 ## Test meaningful behavior
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/nova_chat/tests/test_voice_transport.py`, `nova_body/tests/test_conversation.py`, `nova_body/tests/test_model_client.py` and 2 more; new `general_tools/NovaLauncher.py`, `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker` and 8 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -278,11 +270,12 @@ disk rather than a slow network mount.
     Score ASR errors separately from transport order. WAV synthesis proves a file, not audible
     playback. Natural microphone/speaker quality and final voice selection need their own evidence.
 
-15. Run body `test_request_contract.py`, `test_audit_protocol.py`, witness delivery/replay checks
-    and ModelClient forwarding tests. Verify actual admitted request identity, no stale cancelled
+15. Run body `test_request_contract.py`, `test_generation_work_state.py`, `test_audit_protocol.py`,
+    witness delivery/replay checks and ModelClient forwarding tests. Verify actual admitted request identity, no stale cancelled
     restrictions, late permission changes before dispatch, frozen candidate obligations, explicit
     follow-up relevance, and no-tools enforcement across main, inline and optional heavy paths.
-    Constrained JSON only proves valid format; real response content requires live acceptance.
+    Verify generation state refresh without stale snapshots, duplicated unbounded anchors or missing
+    ordinary-action facts. Constrained JSON only proves valid format; real response content requires live acceptance.
 
 ## Files and recovery
 
@@ -341,8 +334,6 @@ notes), which Orient lists but never quotes; backups; and formats without commen
 A generated file gets its purpose line from the code that writes it.
 
 ## Security model
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/NovaLauncher.py`, `general_tools/nova_chat/server.py::_resolve_speaker`, `general_tools/nova_chat/server.py::_stop_request`, `general_tools/nova_chat/server.py::websocket_endpoint`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
 
 Nova's reach is intentional — Cole: *"My machine is her body. If she can't use it fully, she is
 crippled."* Every control here is about **who can reach her from outside**, not what she may do
@@ -754,8 +745,6 @@ verification. The October 5 follow-through passes 24 isolated Pipeline scenarios
 
 ## Model updates
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::startup_event`. Re-read it against the code, update it in `general_tools/architecture_map/notes/model_updates.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Model updates"`.
-
 `general_tools/nova_updater/` is a general tool; its README has the full route contract. At each Nova
 Chat start one cached catalog query looks for a newer dense Qwen of 27-32B with a permissive license,
 and Nova Chat offers Update / Decline / "Remember my decision". The manual widget searches Hugging Face
@@ -967,4 +956,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 71, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `ARCHITECTURE.md#Body faculties`, `ARCHITECTURE.md#Execution path`, `ARCHITECTURE.md#Memory and learning`, `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Access and practical debugging`, `OPERATIONS.md#Configuration and evidence`, `OPERATIONS.md#Model updates`, `OPERATIONS.md#Run and stop`, `OPERATIONS.md#Security model`, `OPERATIONS.md#Test meaningful behavior`.
+**Sections awaiting review:** `ARCHITECTURE.md#Runtime evidence and open modernization work`.

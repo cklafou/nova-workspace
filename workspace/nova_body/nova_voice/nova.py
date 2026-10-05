@@ -1695,18 +1695,16 @@ async def stream_response(
                         _observation = observation_text(result)
                         _turn_tools.append((tool_name, args, _observation))
                         _completed_tool_count += 1
-                        if on_boundary is not None:
-                            import hashlib as _boundary_hash
-                            import json as _boundary_json
-                            _args_text = _boundary_json.dumps(args, sort_keys=True, ensure_ascii=False, default=str)
-                            _last_completed_action = {
-                                "tool": str(tool_name)[:120], "operation_id": _call_id,
-                                "status": result.status, "ok": result.ok, "exit_code": result.exit_code,
-                                "args_preview": _args_text[:240],
-                                "args_sha256": _boundary_hash.sha256(_args_text.encode("utf-8")).hexdigest(),
-                                "observation_preview": _observation[:800],
-                                "observation_sha256": _boundary_hash.sha256(_observation.encode("utf-8")).hexdigest()}
-
+                        import hashlib as _boundary_hash
+                        import json as _boundary_json
+                        _args_text = _boundary_json.dumps(args, sort_keys=True, ensure_ascii=False, default=str)
+                        _last_completed_action = {
+                            "tool": str(tool_name)[:120], "operation_id": _call_id,
+                            "status": result.status, "ok": result.ok, "exit_code": result.exit_code,
+                            "args_preview": _args_text[:240],
+                            "args_sha256": _boundary_hash.sha256(_args_text.encode("utf-8")).hexdigest(),
+                            "observation_preview": _observation[:800],
+                            "observation_sha256": _boundary_hash.sha256(_observation.encode("utf-8")).hexdigest()}
                         # Broadcast tool_executed event to the UI Tools tab.
                         # 1000 -> 12000 chars (2026-07-19): the Tools panel's new Verbose tab shows
                         # what a tool ACTUALLY DID, and at 1000 chars a file read or an append was

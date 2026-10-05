@@ -2,6 +2,7 @@
 """Pure per-generation context; no persisted state or inferred completion ledger."""
 from copy import deepcopy
 import json
+import hashlib
 import re
 
 
@@ -45,6 +46,30 @@ _VOICE_DELIVERY_EVIDENCE = (
 def voice_delivery_context(register):
     """Known body/adapter boundary, not an inferred device status or a fabricated receipt."""
     return _VOICE_DELIVERY_EVIDENCE if register in ("voice", "voice_fast") else ""
+
+
+def _step_records(values, max_chars=4096):
+    """Bound duplicate snapshot fields without mutating their original message history."""
+    values = deepcopy(list(values))
+    encoded = json.dumps(values, ensure_ascii=False, separators=(",", ":"))
+    if len(encoded) <= max_chars:
+        return values
+    # Keep order and both ends; elided middle entries carry an exact ordered hash.
+    # This is a reference/excerpt, not an inferred summary or silently lost input.
+    indices = list(range(len(values))) if len(values) <= 8 else [*range(4), *range(len(values)-4, len(values))]
+    records = []
+    for index in indices:
+        if len(values) > 8 and index == len(values)-4:
+            middle = json.dumps(values[4:-4], ensure_ascii=False, separators=(",", ":"))
+            records.append({"omitted_entries": len(values)-8, "first_index": 4,
+                "last_index": len(values)-5,
+                "sha256": hashlib.sha256(middle.encode("utf-8")).hexdigest()})
+        value = values[index]
+        text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+        records.append({"index": index, "chars": len(text),
+            "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+            "excerpt": text[:240], "omitted_chars": max(0, len(text)-240)})
+    return records
 
 
 class CurrentRequest:
@@ -100,14 +125,14 @@ class CurrentRequest:
         state = {
             "turn_id": turn_id,
             "input_revision": input_revision,
-            "applied_incoming_requests": deepcopy(self.entries),
-            "committed_output_segments": list(delivered),
+            "applied_incoming_requests": _step_records(self.entries),
+            "committed_output_segments": _step_records(delivered),
             "completed_tool_count": completed_tool_count,
             "last_completed_action": deepcopy(last_completed_action),
             # Attention is separately attributed context from the work owner, not
             # another admission or a claim that its assistant text was ours to deliver.
-            "latest_attended_context": [{"role": item["role"],
-                "content": text_content(item.get("content"))} for item in attended_context],
+            "latest_attended_context": _step_records([{"role": item["role"],
+                "content": text_content(item.get("content"))} for item in attended_context]),
         }
         return ("[System] CURRENT WORK STEP — body state for this provider call.\n"
                 + json.dumps(state, ensure_ascii=False) +
@@ -115,8 +140,11 @@ class CurrentRequest:
                 "the last entry is the latest applied input. Later changes amend earlier ones. "
                 "Older NOW cards and request/correction snapshots describe earlier steps, not "
                 "the current input state. Keep their relevant evidence and corrections, but "
-                "answer the current requests above. Only committed_output_segments have been "
-                "delivered by this work; other drafts are private intermediate work. Completed "
+                "answer the current requests above. Hash/excerpt records identify shortened fields; "
+                "full text may be absent from fitted history and a hash cannot recover it. Omitted "
+                "counts do not cancel those inputs. Only "
+                "committed_output_segments were committed through the segment callback; streamed "
+                "draft/progress text is not committed output. Completed "
                 "tool records describe actual outcomes, not permission to repeat actions. "
                 "No final/progress choice is made for the next candidate here: choose the output "
                 "control required by the remaining work and the actual requests. Do not repeat "

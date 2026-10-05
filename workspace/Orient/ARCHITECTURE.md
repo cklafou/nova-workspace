@@ -1,11 +1,9 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T18:25:20+00:00 from source (input `ac59c64468ff`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T18:30:16+00:00 from source (input `7966729c1698`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_end_queued_request`, `general_tools/nova_chat/server.py::_run_ai_response_owned`, `general_tools/nova_chat/server.py::_steer_request`, `general_tools/nova_chat/server.py::_stop_request` and 12 more; new `general_tools/NovaLauncher.py`, `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker` and 7 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -59,8 +57,9 @@ alongside its evidence and delivered parts; corrections must preserve still-appl
 Immediately before each main/retry provider call, one generation-only current-work record carries
 that turn's applied inputs, revision, committed parts, compact completed-action facts and separately
 attributed attended context. Earlier NOW/correction snapshots remain historical evidence. This record
-is context-anchored, never accumulated in transcript/private history, and does not preselect a final
-reply before the model chooses its next control. Frozen candidate audits retain their original scope.
+is context-anchored and never accumulated in transcript/private history. Oversized duplicate fields
+use visibly shortened, ordered hash/excerpt references; original admitted inputs remain protected.
+It does not preselect a final reply before the model chooses its next control. Frozen candidate audits retain their original scope.
 An explicit no-tools request also forbids auditor reads. The inline witness uses the installed
 provider's constrained JSON schema for exact verdicts or permitted read-only calls, with a verdict-only
 schema when no reads remain. Schema validity is not factual correctness; malformed, truncated and
@@ -253,8 +252,6 @@ so evidence is not silently changed.
 
 ## Body faculties
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `nova_body/nova_witness/replay.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py (PURPOSES)`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Body faculties"`.
-
 | Part | Responsibility | Python sources |
 |---|---|---:|
 | `nova_paths` | Canonical body/workspace paths; relocated state never falls back to a second copy. | 1 |
@@ -298,8 +295,6 @@ Python dependencies. External ComfyUI, VM/WSL, voice and mobile tunnel facilitie
 separately. Their availability is not established by source imports.
 
 ## Memory and learning
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `nova_body/nova_lancedb/embedder.py`, `nova_body/nova_lancedb/hippocampus.py`, `nova_body/nova_lancedb/indexer.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Memory and learning"`.
 
 SELF/core and personal memory files ground each turn. Semantic recall uses LanceDB and an
 asynchronous indexer; the raw journals/transcripts and vector store serve different purposes.

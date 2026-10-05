@@ -803,8 +803,9 @@ alongside its evidence and delivered parts; corrections must preserve still-appl
 Immediately before each main/retry provider call, one generation-only current-work record carries
 that turn's applied inputs, revision, committed parts, compact completed-action facts and separately
 attributed attended context. Earlier NOW/correction snapshots remain historical evidence. This record
-is context-anchored, never accumulated in transcript/private history, and does not preselect a final
-reply before the model chooses its next control. Frozen candidate audits retain their original scope.
+is context-anchored and never accumulated in transcript/private history. Oversized duplicate fields
+use visibly shortened, ordered hash/excerpt references; original admitted inputs remain protected.
+It does not preselect a final reply before the model chooses its next control. Frozen candidate audits retain their original scope.
 An explicit no-tools request also forbids auditor reads. The inline witness uses the installed
 provider's constrained JSON schema for exact verdicts or permitted read-only calls, with a verdict-only
 schema when no reads remain. Schema validity is not factual correctness; malformed, truncated and
@@ -1539,11 +1540,12 @@ disk rather than a slow network mount.
     Score ASR errors separately from transport order. WAV synthesis proves a file, not audible
     playback. Natural microphone/speaker quality and final voice selection need their own evidence.
 
-15. Run body `test_request_contract.py`, `test_audit_protocol.py`, witness delivery/replay checks
-    and ModelClient forwarding tests. Verify actual admitted request identity, no stale cancelled
+15. Run body `test_request_contract.py`, `test_generation_work_state.py`, `test_audit_protocol.py`,
+    witness delivery/replay checks and ModelClient forwarding tests. Verify actual admitted request identity, no stale cancelled
     restrictions, late permission changes before dispatch, frozen candidate obligations, explicit
     follow-up relevance, and no-tools enforcement across main, inline and optional heavy paths.
-    Constrained JSON only proves valid format; real response content requires live acceptance.
+    Verify generation state refresh without stale snapshots, duplicated unbounded anchors or missing
+    ordinary-action facts. Constrained JSON only proves valid format; real response content requires live acceptance.
 
 ## Files and recovery
 
