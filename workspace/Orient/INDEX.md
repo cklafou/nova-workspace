@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T12:12:24+00:00 from source (input `9ebe56d0bbae`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T12:33:05+00:00 from source (input `67bcb72d19b2`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -208,6 +208,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/voice_gateway/test_committer.py](../general_tools/voice_gateway/test_committer.py) — Tests for the sentence-committer — the one piece with real logic, so the one with tests.
 - [general_tools/voice_gateway/test_link_socket.py](../general_tools/voice_gateway/test_link_socket.py) — Verify voice transport and disconnect cleanup against a local mock WebSocket server.
 - [general_tools/voice_gateway/test_native_voice.py](../general_tools/voice_gateway/test_native_voice.py) — Verify native speech file synthesis, cancellation, output-device selection and current Moonshine/Silero contracts without audio hardware.
+- [general_tools/voice_gateway/test_stt_turns.py](../general_tools/voice_gateway/test_stt_turns.py) — Verify natural-pause and in-flight recognition continuation stay one bounded gated conversational turn without audio hardware.
 - [general_tools/voice_gateway/test_voice_flow.py](../general_tools/voice_gateway/test_voice_flow.py) — Test voice identity, delivery, interruption and truthful playback using isolated fake backends.
 - [general_tools/voice_gateway/test_whisper_stt.py](../general_tools/voice_gateway/test_whisper_stt.py) — Verify local Whisper decoding, explicit English, strict backend selection and asset readiness without audio hardware.
 - [general_tools/voice_gateway/test_worker_readiness.py](../general_tools/voice_gateway/test_worker_readiness.py) — Regress Windows control-pipe startup and local speech readiness/segmentation using isolated fixtures, without opening audio devices.
@@ -353,6 +354,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/Nova_Created/nova_body/designs/stretch_reacher.md](../nova_body/Nova_Created/nova_body/designs/stretch_reacher.md)
 - [nova_body/Nova_Created/nova_body/designs/stretch_watcher_night_quality.md](../nova_body/Nova_Created/nova_body/designs/stretch_watcher_night_quality.md)
 - [nova_body/Nova_Created/nova_body/designs/todo_scan.md](../nova_body/Nova_Created/nova_body/designs/todo_scan.md)
+- [nova_body/Nova_Created/nova_body/designs/video_watcher.md](../nova_body/Nova_Created/nova_body/designs/video_watcher.md)
 - [nova_body/Nova_Created/nova_body/designs/voice_check.md](../nova_body/Nova_Created/nova_body/designs/voice_check.md)
 - [nova_body/Nova_Created/nova_body/designs/voice_preview.md](../nova_body/Nova_Created/nova_body/designs/voice_preview.md)
 - [nova_body/Nova_Created/nova_body/designs/want.md](../nova_body/Nova_Created/nova_body/designs/want.md)
@@ -424,6 +426,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/Nova_Created/nova_body/tools/stretch_reacher.py](../nova_body/Nova_Created/nova_body/tools/stretch_reacher.py) — Check posture and nudge Cole.
 - [nova_body/Nova_Created/nova_body/tools/todo_scan.py](../nova_body/Nova_Created/nova_body/tools/todo_scan.py) — Scan .py files for TODO comments.
 - [nova_body/Nova_Created/nova_body/tools/tts_stub.py](../nova_body/Nova_Created/nova_body/tools/tts_stub.py) — Synthesize text to audio and return the output path. Stub version: writes a silent WAV so we can time the call overhead before committing…
+- [nova_body/Nova_Created/nova_body/tools/video_watcher.py](../nova_body/Nova_Created/nova_body/tools/video_watcher.py) — Capture several frames from my own screen across a few seconds so I can describe actual motion instead of one still.
 - [nova_body/Nova_Created/nova_body/tools/voice_check.py](../nova_body/Nova_Created/nova_body/tools/voice_check.py) — Read a reply back and flag reached-for numbers, performed praise, or over-explanation before it ships. Returns a short verdict, never…
 - [nova_body/Nova_Created/nova_body/tools/voice_preview.py](../nova_body/Nova_Created/nova_body/tools/voice_preview.py) — voice_preview — catch performed tone before a reply ships, and return the clean version.
 - [nova_body/Nova_Created/nova_body/tools/want.py](../nova_body/Nova_Created/nova_body/tools/want.py) — Write a want that outlives your sleep.
@@ -1802,7 +1805,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 ## Files without a purpose line
 
-The rule (Operations, "File conventions"): every file says what it is for in its first lines. These 70 do not yet. Add a `@nova:` line when you next touch one.
+The rule (Operations, "File conventions"): every file says what it is for in its first lines. These 71 do not yet. Add a `@nova:` line when you next touch one.
 
 - [nova_body/Nova_Created/Cole_journal/designs/stretch_watcher.md](../nova_body/Nova_Created/Cole_journal/designs/stretch_watcher.md)
 - [nova_body/Nova_Created/Cole_journal/stretch_map.md](../nova_body/Nova_Created/Cole_journal/stretch_map.md)
@@ -1839,6 +1842,7 @@ The rule (Operations, "File conventions"): every file says what it is for in its
 - [nova_body/Nova_Created/nova_body/designs/stretch_reacher.md](../nova_body/Nova_Created/nova_body/designs/stretch_reacher.md)
 - [nova_body/Nova_Created/nova_body/designs/stretch_watcher_night_quality.md](../nova_body/Nova_Created/nova_body/designs/stretch_watcher_night_quality.md)
 - [nova_body/Nova_Created/nova_body/designs/todo_scan.md](../nova_body/Nova_Created/nova_body/designs/todo_scan.md)
+- [nova_body/Nova_Created/nova_body/designs/video_watcher.md](../nova_body/Nova_Created/nova_body/designs/video_watcher.md)
 - [nova_body/Nova_Created/nova_body/designs/voice_check.md](../nova_body/Nova_Created/nova_body/designs/voice_check.md)
 - [nova_body/Nova_Created/nova_body/designs/voice_preview.md](../nova_body/Nova_Created/nova_body/designs/voice_preview.md)
 - [nova_body/Nova_Created/nova_body/designs/want.md](../nova_body/Nova_Created/nova_body/designs/want.md)

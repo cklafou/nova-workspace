@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T12:12:24+00:00 from source (input `9ebe56d0bbae`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T12:33:05+00:00 from source (input `67bcb72d19b2`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -159,6 +159,8 @@ results recoverable and surface any retained-storage charge. The Hugging Face ca
 disk rather than a slow network mount.
 
 ## Test meaningful behavior
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_voice_ui.cjs`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -381,6 +383,8 @@ Secrets may live in files; they must never leave in an upload. `.gitignore` and 
 
 ## Tunable variables
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/voice_gateway/config.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/tunables.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Tunable variables"`.
+
 **The rule** (Cole, 2026-08-03): any constant that Cole or Nova might want to change without editing
 code and restarting belongs in the tunables registry, not as a literal. If a number governs behavior —
 rounds, depth, a threshold, a timeout, a feature switch — ask whether you would ever want to turn it
@@ -536,6 +540,8 @@ its temp folder stopped autosave (lesson 7 above).
 `Nova_Drive/` is ignored by git and by the watcher, and Orient does not index it.
 
 ## Controller menus and layouts
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/static/index.html`, `general_tools/nova_chat/static/voice.css`, `general_tools/nova_chat/static/voice.js`. Re-read it against the code, update it in `general_tools/architecture_map/notes/controller_layouts.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Controller menus and layouts"`.
 
 Nova Chat has one workspace. The top application bar contains expandable menus; opening Services,
 Advanced or Appearance leaves the dock arrangement alone. Widgets opens the widget choices, including
@@ -853,6 +859,6 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Dangling references:** none.
 
-**Files without a purpose line:** 70, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
+**Files without a purpose line:** 71, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** none.
+**Sections awaiting review:** `ARCHITECTURE.md#Execution path`, `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Test meaningful behavior`, `OPERATIONS.md#Tunable variables`.

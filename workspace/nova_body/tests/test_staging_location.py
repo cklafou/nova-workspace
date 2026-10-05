@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 14:59:16
+# Last updated: 2026-10-05 21:27:11
 # @nova: Guards where task workspaces are staged: under workspace/Temp, outside git, Orient and the sync watcher.
 """Staged task copies must live where git, Orient and the watcher never look (2026-10-03)."""
 from pathlib import Path

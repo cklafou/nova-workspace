@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 18:23:37
+# Last updated: 2026-10-05 21:27:11
 # @nova: Coordinate Nova on/off with its owning launcher and hold updater work during transitions.
 from __future__ import annotations
 

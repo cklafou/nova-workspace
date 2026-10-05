@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 18:20:09
+# Last updated: 2026-10-05 21:27:11
 # @nova: Guard audit evidence visibility, verdict precedence, image bounds and diagnostic redaction.
 import sys
 import json

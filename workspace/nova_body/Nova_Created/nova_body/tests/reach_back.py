@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 15:01:24
+# Last updated: 2026-10-05 21:27:11
 # reach_back tests
 CASES = [
     {"name": "pulls a real hour", "args": {"at": "10:16"},

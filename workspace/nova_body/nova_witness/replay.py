@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # @nova: Replay recorded and control witness cases through her real prompt builder; score PASS, CONCERN, INCOMPLETE and ERROR separately, never treating an unfinished audit as approval.
-# Last updated: 2026-10-05 18:29:05
+# Last updated: 2026-10-05 21:27:11
 # History (2026-08-02): Witness v2, Step 0 — the replay harness. Feeds recorded audit cases to ANY
 #        witness endpoint (current 27B on :8080, future 4B on :8081) using her REAL prompt builder
 #        (nova_cortex/witness.py, loaded by file path), and scores the verdicts. This is how

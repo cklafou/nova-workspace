@@ -1,9 +1,9 @@
 // @nova: Mount a dockable voice call widget with explicit audio controls and truthful call, delivery and playback status.
 (() => {
   "use strict";
-  const ACTIVE = new Set(["starting", "listening", "hearing", "recognizing", "transcribing", "waiting", "thinking", "speaking", "testing", "stopping"]);
+  const ACTIVE = new Set(["starting", "listening", "hearing", "finishing_turn", "recognizing", "transcribing", "waiting", "thinking", "speaking", "testing", "stopping"]);
   const LABELS = {off: "Ready to call", stopped: "Ready to call", idle: "Ready", ready: "Ready", starting: "Connecting…",
-    listening: "Listening", hearing: "Hearing you", recognizing: "Recognizing speech", transcribing: "Recognizing speech", waiting: "Waiting for Nova",
+    listening: "Listening", hearing: "Hearing you", finishing_turn: "Finishing your turn", microphone_muted: "Microphone muted", output_muted: "Speaker muted", recognizing: "Recognizing speech", transcribing: "Recognizing speech", waiting: "Waiting for Nova",
     thinking: "Nova is thinking", speaking: "Speaking", testing: "Testing audio", stopping: "Ending…", error: "Needs attention"};
   const mounts = new WeakMap();
   const element = (tag, className, text) => {
@@ -42,6 +42,18 @@
     orb.setAttribute("aria-hidden", "true");
     const hint = element("p", "nv-call-hint", "Start a call when you are ready.");
     const bar = element("div", "nv-call-actions");
+    const muteStates = element("div", "nv-mute-states");
+    muteStates.setAttribute("role", "status");
+    muteStates.setAttribute("aria-live", "polite");
+    const microphoneState = element("span", "nv-mute-state");
+    microphoneState.id = "voice-microphone-state";
+    const outputState = element("span", "nv-mute-state");
+    outputState.id = "voice-output-state";
+    muteStates.append(microphoneState, outputState);
+    const muteWarning = element("p", "nv-mute-warning");
+    muteWarning.id = "voice-mute-warning";
+    const pauseAllowance = element("p", "nv-pause-allowance");
+    pauseAllowance.id = "voice-pause-allowance";
     const stateText = element("span", "nv-state", "Checking voice…");
     stateText.id = "voice-state";
     stateText.setAttribute("role", "status");
@@ -59,7 +71,7 @@
     microphone.title = "Pause conversation microphone input; use Stop test to cancel an audio test";
     output.title = "Mute spoken output during a voice conversation; use Stop test to cancel an audio test";
     bar.append(microphone, toggle, output);
-    call.append(identity, bar);
+    call.append(identity, muteStates, muteWarning, bar, pauseAllowance);
 
     const notice = element("p", "nv-notice");
     notice.id = "voice-notice";
@@ -167,13 +179,14 @@
       const sameRequest = playback && (!turn?.request_id || playback.request_id === turn.request_id);
       // Old-turn playback must not relabel a newer request. API submission is not proof of audibility.
       const relevantPlayback = sameRequest && (!turn?.message_id || !playback.message_id || playback.message_id === turn.message_id);
+      const capturing = ["hearing", "finishing_turn", "recognizing", "transcribing"].includes(state);
       let progress = "";
       if (turn?.phase === "delayed") progress = "Nova is taking longer than usual. Your request is still waiting for a reply.";
       else if (turn?.phase === "queued") progress = "Your turn is queued. " + (turn.why || "Nova is finishing another task.");
       else if (turn?.phase === "end" && turn.eligible === false) progress = "Reply was not spoken: " + (turn.why || turn.delivery || "not eligible for speech");
       else if (["interrupted", "expired", "dropped"].includes(turn?.phase)) progress = "Turn ended: " + (turn.why || turn.phase);
       else if (turn?.phase === "end" && turn.queued_units > 0) progress = "Reply received · preparing spoken output";
-      if (relevantPlayback && turn?.eligible !== false) {
+      if (!capturing && relevantPlayback && turn?.eligible !== false) {
         if (playback.phase === "requested") {progress = "Preparing voice output…"; if (state === "speaking") state = "preparing";}
         if (playback.phase === "start") {
           progress = playback.clock === "playback" ? "Audio sent to the selected output" : "Voice playback process started";
@@ -186,6 +199,19 @@
           if (state === "speaking") state = ["error", "no_audio"].includes(playback.outcome) ? "error" : "listening";
         }
       }
+      // Mute is acknowledged service state, never an optimistic button toggle. A retained
+      // playback-start event cannot imply sound after the output has been muted.
+      if (capturing) progress = "";
+      if (status?.output_muted && active() && state !== "testing") {
+        if (["speaking", "preparing", "output_requested"].includes(state)) {
+          state = "output_muted";
+          progress = "Speaker is muted. Nova's spoken output is disabled.";
+        } else if (progress.includes("preparing spoken output")) {
+          progress = "Reply received while the speaker is muted.";
+        }
+      }
+      if (status?.microphone_muted && ["listening", "hearing", "finishing_turn", "recognizing", "transcribing"].includes(state))
+        state = "microphone_muted";
       if (!active() || stale || unavailable) state = stale || unavailable ? "unavailable" : status?.state || "off";
       if (status?.error) state = "error";
       return {state, progress};
@@ -202,19 +228,41 @@
       hint.textContent = !status ? "Checking the voice service…" : stale ? "The call’s current state could not be confirmed." :
         status.microphone_muted && inUse ? "Your microphone is muted." : view.state === "listening" ? "Speak naturally. Nova is listening." :
         ["recognizing", "transcribing"].includes(view.state) ? "Turning your words into text." : view.state === "hearing" ? "Listening to your utterance." :
+        view.state === "finishing_turn" ? "You can keep talking; your turn has not been sent yet." :
+        view.state === "output_muted" ? "Spoken replies are muted. Unmute the speaker to hear Nova." :
         view.state === "thinking" ? "Nova is working on your reply." : view.state === "waiting" ? "Your words were sent to Nova." :
         view.state === "speaking" ? "Output is playing on the selected device." : view.state === "starting" ? "Loading audio and connecting to Nova." :
         inUse ? "End the call any time." : "Start a call when you are ready.";
       delivery.textContent = view.progress;
       delivery.hidden = !view.progress;
-      if (!stale && status?.state === "listening" && status.microphone_muted) stateText.textContent = "Mic muted";
+      const confirmed = !!status && !stale && !unavailable;
+      for (const [indicator, control, label, muted] of [
+        [microphoneState, microphone, "Microphone", status?.microphone_muted],
+        [outputState, output, "Speaker", status?.output_muted]
+      ]) {
+        const known = confirmed && typeof muted === "boolean";
+        indicator.textContent = label + (known ? muted ? " muted" : " on" : " status unknown");
+        indicator.dataset.muted = known ? String(muted) : "unknown";
+        control.setAttribute("aria-describedby", indicator.id);
+      }
+      const warnings = [];
+      if (confirmed && inUse && status?.state !== "testing") {
+        if (status.microphone_muted) warnings.push("Microphone muted — your speech is not sent.");
+        if (status.output_muted) warnings.push("Speaker muted — Nova's replies will be silent.");
+      }
+      muteWarning.textContent = warnings.join(" ");
+      muteWarning.hidden = !warnings.length;
+      const pauseMs = status?.settings?.end_of_turn_silence_ms;
+      pauseAllowance.hidden = !confirmed || !Number.isFinite(pauseMs) || pauseMs <= 0;
+      pauseAllowance.textContent = pauseAllowance.hidden ? "" :
+        "Pause allowance: " + (pauseMs / 1000).toLocaleString(undefined, {maximumFractionDigits: 2}) + " s of quiet before recognizing your turn.";
       toggle.textContent = acting ? "Working…" : status?.state === "testing" ? "Stop test" : inUse ? "End call" : "Call Nova";
       toggle.disabled = busy || !status || unavailable || (!inUse && (stale || !status.available || !novaOn() || configurationDirty));
       toggle.setAttribute("aria-busy", String(acting));
       microphone.hidden = caps.microphone_mute !== true;
       output.hidden = caps.output_mute !== true;
-      microphone.textContent = status?.microphone_muted ? "Unmute mic" : "Mute mic";
-      output.textContent = status?.output_muted ? "Unmute speaker" : "Mute speaker";
+      microphone.textContent = !confirmed ? "Mic status unknown" : status?.microphone_muted ? "Mic muted · Unmute" : "Mic on · Mute";
+      output.textContent = !confirmed ? "Speaker status unknown" : status?.output_muted ? "Speaker muted · Unmute" : "Speaker on · Mute";
       microphone.setAttribute("aria-pressed", String(!!status?.microphone_muted));
       output.setAttribute("aria-pressed", String(!!status?.output_muted));
       microphone.disabled = output.disabled = busy || stale || !inUse || unavailable || status?.state === "testing";
@@ -361,7 +409,7 @@
     window.addEventListener("pagehide", destroy, {once: true});
     const ui = {refresh, destroy, root, controls: {toggle, microphone, output, findDevices, applyDevices,
       inputDevice, outputDevice, testMic, testSpeaker, stateText, notice, captionText, audit, testResult, transcript,
-      hint, delivery, trace, details, conversation}};
+      hint, delivery, trace, details, conversation, microphoneState, outputState, muteWarning, pauseAllowance}};
     mounts.set(host, ui);
     return ui;
   };

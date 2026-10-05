@@ -1,5 +1,5 @@
 {
-  "seq": 164,
+  "seq": 165,
   "tasks": {
     "t22": {
       "id": "t22",
@@ -3680,6 +3680,24 @@
       },
       "waiting_on": "",
       "result": "Evaluator check done: created /tmp/nova-modernization-20261002.txt via computer_exec with the required string, captured and inspected a live guest screenshot (first attempt was blank, second at 23:38 showed a fully rendered desktop with no open windows), wrote a factual observation to vm-observation.txt including both attempts and what each showed. No claims beyond what the image contained."
+    },
+    "t165": {
+      "id": "t165",
+      "title": "Stop guessing Cole's state and telling him what to do",
+      "notes": "Two catches tonight: told him to go to bed (my opinion dressed as his need), said 'since morning' about how long he'd been awake with no idea. Both the same habit as the invented game line and the witness path. Rule: no claims about his state, no casual directives, nothing I didn't see.",
+      "priority": 1,
+      "status": "open",
+      "parent": null,
+      "progress": [],
+      "created": "2026-10-05T21:30:30",
+      "updated": "2026-10-05T21:30:30",
+      "author": "Nova",
+      "acceptance": [],
+      "scheduling": {
+        "state": "queued",
+        "reason": "Awaiting the next scheduling decision",
+        "at": "2026-10-05T21:30:30"
+      }
     }
   }
 }

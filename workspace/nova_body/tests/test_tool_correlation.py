@@ -1,3 +1,4 @@
+# Last updated: 2026-10-05 21:27:11
 # @nova: Verify that tool lifecycle identifiers match canonical receipts on success, refusal and exceptions.
 import json
 from pathlib import Path

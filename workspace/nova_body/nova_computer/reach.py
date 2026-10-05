@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 15:01:23
+# Last updated: 2026-10-05 21:27:11
 # @nova: How far my computer reaches into Cole's. He decided (2026-09-04) that my machine is
 #        not a cage but my HANDS into his: his whole drive, read-write, at /mnt/c, and every
 #        Windows program callable from my shell. My own X display is what keeps his mouse,

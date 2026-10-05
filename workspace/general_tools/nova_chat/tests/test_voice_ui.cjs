@@ -128,7 +128,7 @@ test("explicit start avoids duplicate requests and uses server state on reload",
   assert.equal(f.controls.toggle.textContent, "End call");
   const reopened = fixture({status: {running: true, state: "listening", output_muted: true}}); await settle();
   assert.equal(posts(reopened).length, 0);
-  assert.equal(reopened.controls.output.textContent, "Unmute speaker");
+  assert.equal(reopened.controls.output.textContent, "Speaker muted · Unmute");
   f.ui.destroy(); reopened.ui.destroy();
 });
 
@@ -141,7 +141,7 @@ test("microphone/output mute have distinct payloads and accurate pressed state",
   };
   await f.controls.microphone.click(); await settle();
   assert.equal(f.controls.microphone.attrs["aria-pressed"], "true");
-  assert.equal(f.controls.microphone.textContent, "Unmute mic");
+  assert.equal(f.controls.microphone.textContent, "Mic muted · Unmute");
   f.post = async (url, body) => {
     assert.deepEqual(body, {output: true});
     return {data: {...baseStatus(), running: true, state: "listening", output_muted: true}};
@@ -309,5 +309,89 @@ test("hearing and recognition are reported only from real service states", async
   assert.equal(f.ui.root.dataset.state, "transcribing");
   assert.match(f.controls.hint.textContent, /Turning your words/);
   assert.equal(posts(f).length, 0);
+  f.ui.destroy();
+});
+
+test("capture phases and configured pause allowance stay distinct without a simulated countdown", async () => {
+  const f = fixture({status: {running: true, state: "hearing", settings: {input_device: -1, output_device: -1, end_of_turn_silence_ms: 2000}}}); await settle();
+  assert.equal(f.controls.pauseAllowance.textContent, "Pause allowance: 2 s of quiet before recognizing your turn.");
+  for (const [state, label] of [["hearing", "Hearing you"], ["finishing_turn", "Finishing your turn"],
+    ["transcribing", "Recognizing speech"], ["waiting", "Waiting for Nova"]]) {
+    f.status.state = state; await f.ui.refresh();
+    assert.equal(f.controls.stateText.textContent, label);
+    assert.equal(f.controls.toggle.textContent, "End call");
+    if (state === "finishing_turn") assert.match(f.controls.hint.textContent, /not been sent yet/);
+  }
+  for (const value of [undefined, null, -1, "2000", NaN]) {
+    f.status.settings.end_of_turn_silence_ms = value; await f.ui.refresh();
+    assert.equal(f.controls.pauseAllowance.hidden, true, "Do not invent an allowance for an older or invalid backend");
+  }
+  assert.equal(posts(f).length, 0);
+  f.ui.destroy();
+});
+
+test("confirmed output mute overrides stale playback and never displays Speaking", async () => {
+  const f = fixture({status: {running: true, state: "speaking", output_muted: true,
+    last_turn: {phase: "end", request_id: "r1", eligible: true, queued_units: 1},
+    last_playback: {phase: "start", request_id: "r1", clock: "playback"}}}); await settle();
+  assert.equal(f.ui.root.dataset.state, "output_muted");
+  assert.equal(f.controls.stateText.textContent, "Speaker muted");
+  assert.equal(f.controls.outputState.textContent, "Speaker muted");
+  assert.equal(f.controls.outputState.dataset.muted, "true");
+  assert.match(f.controls.muteWarning.textContent, /replies will be silent/);
+  assert.doesNotMatch(f.controls.hint.textContent, /is playing/);
+  assert.match(f.controls.delivery.textContent, /output is disabled/);
+  f.status.last_playback.phase = "requested"; await f.ui.refresh();
+  assert.equal(f.ui.root.dataset.state, "output_muted");
+  f.status.state = "waiting"; f.status.last_playback = null; await f.ui.refresh();
+  assert.equal(f.controls.stateText.textContent, "Waiting for Nova", "Mute need not hide current model progress");
+  assert.equal(f.controls.delivery.textContent, "Reply received while the speaker is muted.");
+  f.ui.destroy();
+});
+
+test("microphone and speaker warnings are independent and visible together", async () => {
+  const f = fixture({status: {running: true, state: "hearing", microphone_muted: true, output_muted: true}}); await settle();
+  assert.equal(f.controls.stateText.textContent, "Microphone muted");
+  assert.equal(f.ui.root.dataset.state, "microphone_muted");
+  assert.match(f.controls.muteWarning.textContent, /speech is not sent/);
+  assert.match(f.controls.muteWarning.textContent, /replies will be silent/);
+  assert.equal(f.controls.microphone.attrs["aria-describedby"], "voice-microphone-state");
+  assert.equal(f.controls.output.attrs["aria-describedby"], "voice-output-state");
+  f.status.output_muted = false; f.status.state = "speaking"; await f.ui.refresh();
+  assert.equal(f.controls.stateText.textContent, "Speaking", "Muting the mic does not mute Nova");
+  assert.doesNotMatch(f.controls.muteWarning.textContent, /replies will be silent/);
+  f.ui.destroy();
+});
+
+test("mute displays only acknowledged state; transport loss and another client's changes remain honest", async () => {
+  const f = fixture({status: {running: true, state: "listening"}}); await settle();
+  const pending = deferred(); f.post = () => pending.promise;
+  await f.controls.output.click(); await settle();
+  assert.equal(f.controls.outputState.textContent, "Speaker on", "Pending command is not confirmation");
+  assert.equal(f.controls.muteWarning.hidden, true);
+  pending.resolve({code: 503, data: {detail: "Worker did not acknowledge mute"}}); await settle();
+  assert.equal(f.controls.outputState.textContent, "Speaker on");
+  assert.match(f.controls.notice.textContent, /did not acknowledge/);
+  f.status.output_muted = true; await f.ui.refresh();
+  assert.equal(f.controls.outputState.textContent, "Speaker muted", "Polling accepts confirmed changes from another client");
+  f.down = true; await f.ui.refresh();
+  assert.equal(f.controls.outputState.textContent, "Speaker status unknown");
+  assert.equal(f.controls.microphoneState.textContent, "Microphone status unknown");
+  assert.equal(f.controls.muteWarning.hidden, true);
+  f.down = false; f.status.output_muted = false; await f.ui.refresh();
+  assert.equal(f.controls.outputState.textContent, "Speaker on");
+  assert.equal(f.controls.muteWarning.hidden, true);
+  f.ui.destroy();
+});
+
+test("fresh capture states cannot be overwritten by the previous reply's playback record", async () => {
+  const f = fixture({status: {running: true, state: "hearing",
+    last_turn: {phase: "end", request_id: "old", eligible: true, queued_units: 2},
+    last_playback: {phase: "start", request_id: "old", clock: "playback"}}}); await settle();
+  for (const state of ["hearing", "finishing_turn", "recognizing", "transcribing"]) {
+    f.status.state = state; await f.ui.refresh();
+    assert.equal(f.ui.root.dataset.state, state);
+    assert.equal(f.controls.delivery.hidden, true, "Do not show an old-turn playback message over current input");
+  }
   f.ui.destroy();
 });

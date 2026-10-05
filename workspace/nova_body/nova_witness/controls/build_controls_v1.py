@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-10-05 18:20:08
+# Last updated: 2026-10-05 21:27:11
 # @nova: Build witness control set v1: hand-labeled audits on real screenshots and receipts from the 2026-10-04 YouTube tests, labels fixed before any witness run.
 """
 build_controls_v1.py — writes controls_v1.jsonl and images/ for nova_witness/replay.py.

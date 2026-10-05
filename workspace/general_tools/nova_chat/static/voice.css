@@ -1,7 +1,7 @@
 /* @nova: Style the dockable Nova voice call with accessible call controls and secondary settings and diagnostics. */
 [data-widget="voice"].nc-custom-widget{height:100%;min-height:0;overflow:auto;container-type:inline-size;}
 .nv-voice{display:flex;flex-direction:column;min-width:0;min-height:100%;box-sizing:border-box;color:var(--text,#edecf5);font-size:13px;}
-.nv-call{display:flex;flex:1 0 auto;flex-direction:column;align-items:center;justify-content:center;gap:22px;min-height:270px;padding:28px 14px 20px;background:radial-gradient(ellipse at 50% 35%,#30284044,transparent 70%);}
+.nv-call{display:flex;flex:1 0 auto;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:270px;padding:28px 14px 20px;background:radial-gradient(ellipse at 50% 35%,#30284044,transparent 70%);}
 .nv-identity{display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;min-width:0;}
 .nv-eyebrow{font-size:10px;letter-spacing:.18em;color:var(--text-mute,#9391a6);}
 .nv-orb{display:grid;place-items:center;width:100px;height:100px;margin:9px 0;border-radius:36%;border:1px solid #665385;background:radial-gradient(circle at 30% 20%,#45355c,#211c2b);box-shadow:0 0 0 10px #80619c0b,0 12px 45px #0002;color:#d9c6ff;font-size:54px;transition:border-color .2s,box-shadow .2s;}
@@ -12,6 +12,15 @@
 .nv-voice[data-state="listening"] .nv-state,.nv-voice[data-state="hearing"] .nv-state{color:#9cdcc2;}
 .nv-voice[data-state="speaking"] .nv-orb{border-color:#d5b4ff;box-shadow:0 0 0 10px #b69af111,0 0 35px #b69af11c;}
 .nv-voice[data-state="error"] .nv-orb{border-color:#d08b81;}
+.nv-mute-states{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
+.nv-mute-state{padding:5px 9px;border-radius:6px;border:1px solid var(--border,#2b2c39);font-size:12px;font-weight:600;}
+.nv-mute-state[data-muted="false"]{color:#a8dbc6;}
+.nv-mute-state[data-muted="true"]{color:#ffdda1;border-color:#98733c;background:#49381f;}
+.nv-mute-state[data-muted="unknown"]{color:var(--text-mute,#9391a6);}
+.nv-mute-warning{max-width:370px;margin:0;padding:8px 10px;border:1px solid #98733c;border-radius:7px;background:#49381f;color:#ffdda1;font-size:12px;line-height:1.5;text-align:center;}
+.nv-pause-allowance{max-width:340px;margin:0;color:var(--text-mute,#9391a6);font-size:11px;line-height:1.5;text-align:center;}
+.nv-voice[data-state="finishing_turn"] .nv-state{color:#efcf9f;}
+.nv-voice[data-state="microphone_muted"] .nv-orb,.nv-voice[data-state="output_muted"] .nv-orb{border-color:#b18b56;box-shadow:none;}
 .nv-call-actions{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
 .nv-voice .nv-button{min-height:38px;padding:8px 12px;border:1px solid var(--border,#2b2c39);border-radius:9px;background:var(--bg-raised,#22232e);color:inherit;font:inherit;font-size:12px;cursor:pointer;white-space:normal;}
 .nv-voice .nv-button:hover:not(:disabled){border-color:var(--nova,#b5a0f6);background:#302a40;}

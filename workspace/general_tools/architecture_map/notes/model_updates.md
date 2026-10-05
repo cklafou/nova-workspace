@@ -1,3 +1,4 @@
+_Last updated: 2026-10-05 21:27:02_
 <!-- @nova: Orient note: how Nova's model updater checks, installs, rolls back and trains LoRAs, published in OPERATIONS.md. -->
 ---
 doc: OPERATIONS.md

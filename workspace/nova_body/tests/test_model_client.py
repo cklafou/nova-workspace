@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 18:30:27
+# Last updated: 2026-10-05 21:27:11
 # @nova: Verify isolated model-client register routing, optional audit sinks and concurrent-request compatibility.
 import asyncio
 from pathlib import Path

@@ -1,9 +1,11 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T12:12:24+00:00 from source (input `9ebe56d0bbae`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T12:33:05+00:00 from source (input `67bcb72d19b2`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/voice_gateway/config.py`, `general_tools/voice_gateway/stt.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -211,6 +213,8 @@ Drives/wants and the hormone design are not evidence of online weight learning. 
 
 ## Runtime evidence and open modernization work
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/voice_gateway/config.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
+
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
 tool calls occurred; none operated on the fixture. Session switches/context refresh also occurred,
@@ -381,6 +385,7 @@ by hand. A test file existing is not evidence that it passes.
 | [`stretch_reacher`](../nova_body/Nova_Created/nova_body/tools/stretch_reacher.py) | Check posture and nudge Cole. | body (pluck-safe) | yes |
 | [`todo_scan`](../nova_body/Nova_Created/nova_body/tools/todo_scan.py) | *Module — no `TOOL` dict, so not callable as a tool.* | body (pluck-safe) | no |
 | [`tts_stub`](../nova_body/Nova_Created/nova_body/tools/tts_stub.py) | (TOOL is not a plain literal) | body (pluck-safe) | no |
+| [`video_watcher`](../nova_body/Nova_Created/nova_body/tools/video_watcher.py) | Capture several frames from my own screen across a few seconds so I can describe actual motion instead of one still. | body (pluck-safe) | no |
 | [`voice_check`](../nova_body/Nova_Created/nova_body/tools/voice_check.py) | Read a reply back and flag reached-for numbers, performed praise, or over-explanation before it ships. Returns a short verdict, never rewrites. | body (pluck-safe) | yes |
 | [`voice_preview`](../nova_body/Nova_Created/nova_body/tools/voice_preview.py) | Catch performed tone and over-narration in a reply before it ships. Returns the cleaned text, or the original if nothing was caught. | body (pluck-safe) | yes |
 | [`want`](../nova_body/Nova_Created/nova_body/tools/want.py) | Write or list a want you're pursuing. Writes one line per want with a timestamp so it survives your sleep and comes back with an age attached. | body (pluck-safe) | yes |

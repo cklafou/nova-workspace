@@ -1,5 +1,5 @@
 # @nova: Assemble identity, memory and bounded task continuity while excluding private collaboration transport.
-# Last updated: 2026-10-04 14:28:11
+# Last updated: 2026-10-05 21:26:09
 """
 nova_chat/workspace_context.py -- Workspace File Access for Nova Group Chat
 ============================================================================

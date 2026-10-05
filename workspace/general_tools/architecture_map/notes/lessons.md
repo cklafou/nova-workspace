@@ -1,5 +1,5 @@
 <!-- @nova: Explain incident lessons and evidence needed to verify Nova repairs. -->
-_Last updated: 2026-10-04 14:28:11_
+_Last updated: 2026-10-05 21:27:02_
 ---
 doc: OPERATIONS.md
 order: 30

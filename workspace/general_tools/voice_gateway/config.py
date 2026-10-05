@@ -50,7 +50,7 @@ class GatewayConfig:
     vad_threshold: float = 0.5
     input_device: int = -1                # -1 = system default mic
     sample_rate: int = 16000
-    silence_ms: int = 700                 # trailing silence that ends an utterance
+    silence_ms: int = 2000                # natural pause before finalizing; continuation during decode joins the turn
     min_speech_ms: int = 192              # ignore isolated VAD spikes before decoding
     pre_roll_ms: int = 288                # retain speech onset before VAD fires
     speech_tail_ms: int = 192             # trim long terminal silence before decoding

@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 14:39:22
+# Last updated: 2026-10-05 21:27:11
 # @nova: Runs as root inside my computer to set my desktop viewer's VNC password and prove the server accepts it; sent by set_vnc_password.py.
 """Set the VNC password of Nova's desktop and prove it with a real login.
 

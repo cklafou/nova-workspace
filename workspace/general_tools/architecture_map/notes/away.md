@@ -1,5 +1,5 @@
 <!-- @nova: Explain the remote reading copy and its exclusions. -->
-_Last updated: 2026-10-03 11:23:52_
+_Last updated: 2026-10-05 21:27:02_
 ---
 doc: OPERATIONS.md
 order: 40

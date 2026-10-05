@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Last updated: 2026-10-05 18:32:29
+# Last updated: 2026-10-05 21:27:11
 # @nova: Build the open witness dev set v1: 27 hand-labeled audits for comparing prompt/protocol variants before one scoring of the sealed holdout.
 """
 build_dev_v1.py — writes dev_v1.jsonl, images/ and evidence/ for nova_witness/replay.py.
