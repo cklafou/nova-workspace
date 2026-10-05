@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "generated_at": "2026-10-05T09:38:12+00:00",
-  "input_sha256": "d205225931296ed27f811abf9b198a1fecb2377863a4c25dd48159dfbf445184",
+  "generated_at": "2026-10-05T09:48:31+00:00",
+  "input_sha256": "2e911cb4b379f0d9a75327d1d35f5ace0f07163dce06002b3d17c377347e8765",
   "files": [
     {
       "path": "NovaChatOnly.cmd",
@@ -111,7 +111,7 @@
     {
       "path": "general_tools/architecture_map/orient.py",
       "owner": "detachable tool",
-      "bytes": 91499
+      "bytes": 91894
     },
     {
       "path": "general_tools/architecture_map/reviews.json",
@@ -776,7 +776,7 @@
     {
       "path": "general_tools/voice_gateway/README.md",
       "owner": "detachable tool",
-      "bytes": 12019
+      "bytes": 12478
     },
     {
       "path": "general_tools/voice_gateway/VOICE_CHECK.cmd",
@@ -851,7 +851,7 @@
     {
       "path": "general_tools/voice_gateway/speech.py",
       "owner": "detachable tool",
-      "bytes": 9295
+      "bytes": 9547
     },
     {
       "path": "general_tools/voice_gateway/stt.py",
@@ -886,7 +886,7 @@
     {
       "path": "general_tools/voice_gateway/tts.py",
       "owner": "detachable tool",
-      "bytes": 10659
+      "bytes": 10963
     },
     {
       "path": "general_tools/voice_gateway/turns.py",
@@ -896,7 +896,7 @@
     {
       "path": "general_tools/voice_gateway/windows_tts.py",
       "owner": "detachable tool",
-      "bytes": 5459
+      "bytes": 5608
     },
     {
       "path": "nova_body/KoELS/SCHEMA.md",
@@ -8544,7 +8544,7 @@
     "general_tools/architecture_map/atlas_history.py": "3e2976780c6e6f72a66047d3e161903f0acfe27f718943976f6460f1ad5a4bb6",
     "general_tools/architecture_map/build.py": "582d9c2129953e60e632ade53c949b768614ca077e939a8d61c312ba9fd6153c",
     "general_tools/architecture_map/experience.js": "ed3dbaf90ce9743729a82d61ab25e96afc9d8d30c54d739956e986aed039fa46",
-    "general_tools/architecture_map/orient.py": "930d3e4afb48f91798e9a8571a76ff4faaa5dd2544f9c0cd40190c25d4318e45",
+    "general_tools/architecture_map/orient.py": "762acc6ef6f07c936ffa0aa8ee055db12b48fe24bf569cc81505e31c6cf15e35",
     "general_tools/architecture_map/serve.py": "dc9340f05e7ad159ddd89fdc8bd81945c320422ae88c8bfe071a491d4d1e3ef4",
     "general_tools/architecture_map/test_architecture.py": "b84106cfa4c1543c63361f2f0f3d078744545f572603a96e52e04e2cb63c989c",
     "general_tools/architecture_map/test_history.py": "331cf2bb2840ca0b5b1bb35d43a72260a36ff4424006644cab3fcf00b02d67cc",
@@ -8671,16 +8671,16 @@
     "general_tools/voice_gateway/gateway.py": "e008a0756cabba401a15b8a1387b60f5ec4f7a96319707a4adbf96f6a82e85b0",
     "general_tools/voice_gateway/nova_link.py": "6cac6ed4649c57a9da200e0b98fec65870e9a67f02b5463f044eb0841c334856",
     "general_tools/voice_gateway/setup_windows.py": "48d0a93ddcc2c6d51ab131dd1e0a740e4efdacd2be068fbf0c45b2e57cf36a0c",
-    "general_tools/voice_gateway/speech.py": "556e40eed2a15ba6189fc7c206e2f85eb211497fc6bc2c14f89987845577e8ed",
+    "general_tools/voice_gateway/speech.py": "62c4b4338858a4d3fc7188209a5f4a40b0bf9bdec6485a62cc0487c28b9ea7fc",
     "general_tools/voice_gateway/stt.py": "6896a7238bd5d7af62b259e6057da5de8f774bac269256841f8b14f9a526e45c",
     "general_tools/voice_gateway/test_committer.py": "bd185951dedf5aa871f381c7f4f1cf809001d4f199b2a0a24cd0973ae4665712",
     "general_tools/voice_gateway/test_link_socket.py": "afb3d4d468d9d71278aea11075a1100c22977a284b63eb0f829787c944dce071",
     "general_tools/voice_gateway/test_native_voice.py": "853a488d6defffa9846a7f6eb2017c189dc62f1a990e0bc955bd284b56311487",
     "general_tools/voice_gateway/test_voice_flow.py": "6ac5866cdad01aabafc44b6a6a563110634c4162a89c9c0087fcebb8f8722373",
     "general_tools/voice_gateway/test_worker_readiness.py": "bc2c27422869ec4f45cef6b5f88deea58ca4f3c6d592efb2323c01ac6a5f0406",
-    "general_tools/voice_gateway/tts.py": "0445d1810b85441cea43711685775061d46a4e362afea3bb73b01030c584cf86",
+    "general_tools/voice_gateway/tts.py": "df9582519e6126eef3aecbfed6bdb85c0008b635a4be3aeeb122eb5194dafed2",
     "general_tools/voice_gateway/turns.py": "b5de494cb97a7ad083af38053fcfecaf03b7d34d77176f633e610c93d4ecd0eb",
-    "general_tools/voice_gateway/windows_tts.py": "87f3b06e1ea9cf6ad4077843f6712b13a4ee4bb7db4e111add23856f102d3460",
+    "general_tools/voice_gateway/windows_tts.py": "6c969fc73bc43b9a1fc78bb52a2a463cd0b47bf5889368a6ecb9901cbffda115",
     "nova_body/nova_computer/HANDS.cmd": "c33a82d36dd24475e6483aa33639436dd0757c5c1a8224ef638e89ffb4e15697",
     "nova_body/nova_computer/PLUCK_CHECK.cmd": "5b086764d4c0583a97ce96d917257732df198121f2ee118d63d7ab7a8773ab78",
     "nova_body/nova_computer/REACH.cmd": "7f57c786e7501f8bfbc7725a9fec3bccda1d22407ef9671cd435f38c9a7bfa46",
@@ -8708,7 +8708,7 @@
     "nova_body/nova_cortex/context_budget.py": "6c833d446b83095e0e05d6ec9932740103094bdde691374f50222e5653b91014",
     "nova_body/nova_cortex/discourse.py": "6d07bc7911c06a7e1b35a27aec3cdbe0b231bb7b05f5cdf72490bd675ed4bb6c",
     "nova_body/nova_cortex/drives.py": "7eac4782dc3d163a54565b5ecca75fc135e0ac4c20a52265cc9f31c608ff8e64",
-    "nova_body/nova_cortex/executive.py": "827c946bb4bf68782a91d0f094e8e4649a8ae85f978587d29540ddef4d5e66ac",
+    "nova_body/nova_cortex/executive.py": "d3de945e4a7b06c63acd31cb2d55a688b1e1d10ac0c22a58cbf71e20d5f209bc",
     "nova_body/nova_cortex/integrity.py": "0b2c998db0dee4b7cb0ccd33fa213b9426a31622b79625ab656ba6625765caf2",
     "nova_body/nova_cortex/loadout.py": "88b430420df375e57ca9762c1235fd43a30ac2a77034b9cc6a024c4539c553cf",
     "nova_body/nova_cortex/nova_status.py": "cb5b78df17b0069ab62817c284734dff750c578cc0855194e0e47df717abd0e9",
@@ -8778,10 +8778,10 @@
     "start_llama_qwen36.cmd": "3297f9b8977d45d037c3043c9bafccd4c8f6a737a5dae5eb7f88dc171c6a2fb0"
   },
   "document_hashes": {
-    "README.md": "1374fe5ef230d34d9a9d70dd16aaabf5f08cd19d903f430b4335773cebb8f03d",
-    "ARCHITECTURE.md": "d4775fddf0fa05fb938811eccc08e796fa2b2de84cf178344b71dadce8b2702e",
-    "OPERATIONS.md": "31cbf2ad87f3670c7f4a77efb8209f8bbf3bd3360ce0f1ba6623001a9e4133a6",
-    "INDEX.md": "b63b5452c42a4fd61314836f9c342f31b9a13494fee512867788937f0b0749c4"
+    "README.md": "9eadb14cf863ea04d3ae136620708e848f1a54f92728f01440d69a715cd708f9",
+    "ARCHITECTURE.md": "67c523b77b458febcf68fbe513944e418ef05b1b720143773c5c78bbc9295f0a",
+    "OPERATIONS.md": "47ce5eabfdb9fbd5b2541e3c75fbfa76628bd5afbe8e660e583248565289b730",
+    "INDEX.md": "7a5898419025446fd4c5da05d3455979d5da3a5ec0b6ba7eb0bfd7deac9b20fa"
   },
   "review_needed": [],
   "unknown_review_sections": [],

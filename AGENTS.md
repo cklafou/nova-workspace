@@ -1,5 +1,5 @@
 <!-- @nova: Standing rules for AI coding agents (Codex, Claude) working in Project Nova. -->
-_Last updated: 2026-10-03 10:58:22_
+_Last updated: 2026-10-05 18:40:03_
 # Rules for coding agents
 
 Start by reading `workspace/Orient/README.md`, then every note in `workspace/Orient/AI Notes/` written

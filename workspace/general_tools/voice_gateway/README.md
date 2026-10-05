@@ -63,6 +63,12 @@ speech recognition during a real conversation, physical echo behavior, human con
 output, custom voice quality and native avatar lipsync are separate remaining checks. No measured
 playback API event is described as proof that someone heard it.
 
+A final live `--smoke-link` run delivered correlated request/run/message and audit events, but took
+312.804 seconds and answered an older topic instead of the greeting. Transport succeeded; the actual
+conversation task failed. Its audit was INCOMPLETE. NullTTS emitted no audio. See
+`Orient/Architecture/evidence/2026-10-05-voice-continuity-validation.md` and
+`Temp/voice-validation/live-link-result.json`; this is not a low-latency conversation pass.
+
 The current gateway suite has 59 tests, including Windows control-pipe/native-import startup,
 compatible device filtering, missing asset refusal, brief-noise rejection, decoder-error recovery,
 and stale results discarded after capture gating. The controller has 27 tests; the Conversation UI has

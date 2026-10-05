@@ -1,3 +1,4 @@
+# Last updated: 2026-10-05 18:41:04
 # @nova: Sanitize delivered text and serialize interruptible speech with explicit playback outcomes.
 """voice_gateway/speech.py — speakable text and ordered, interruptible playback.
 

@@ -1,7 +1,7 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T09:38:12+00:00 from source (input `d20522593129`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:48:31+00:00 from source (input `2e911cb4b379`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
 
@@ -254,6 +254,10 @@ A pinned CPU-only environment provides Moonshine/Silero; Windows system speech i
 temporary voice. Native microphone capture and speaker playback completed, generated test speech
 was transcribed, and UI start/mute/stop was exercised. Playback API completion is not confirmation
 that Cole heard it; a natural human conversation and native avatar lipsync remain unverified.
+The final live link delivered after 312.804 seconds with audit INCOMPLETE and answered an older
+model-upgrade topic instead of the greeting. Correlated transport worked, but the conversation task
+failed. Checked routing/context assembly retained the request; exact provider bytes were not captured.
+Context distraction/model behavior is the leading explanation, not a proven routing defect.
 The voice worker passed 59 gateway tests, 27 controller tests and 12 UI scenarios. This includes
 startup pipe handling, decoder recovery, cancellation and rejecting transcripts decoded across
 mute/playback changes. Detailed receipts and final transport status are in the

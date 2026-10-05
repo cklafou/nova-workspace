@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-05T09:38:12+00:00 from source (input `d20522593129`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:48:31+00:00 from source (input `2e911cb4b379`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
@@ -53,8 +53,8 @@ Last built 2026-10-04 05:12 UTC; as of this generation, 209 source file(s) had b
 
 **AI notes.** Claude, Codex and the other agents leave a note in [AI Notes](AI%20Notes/ReadMeBeforeNoteTaking.md) after each session: what changed, why, and what is still open. Read the rules once, then every note since your own last one. Newest first:
 
+- [2026-10-05_1848_Codex_ConversationVoiceAndValidation.md](AI%20Notes/2026-10-05_1848_Codex_ConversationVoiceAndValidation.md)
+- [2026-10-05_1839_Codex_WitnessHoldoutRejectedAndRestored.md](AI%20Notes/2026-10-05_1839_Codex_WitnessHoldoutRejectedAndRestored.md)
 - [2026-10-05_1822_Codex_WitnessDevelopmentCandidates.md](AI%20Notes/2026-10-05_1822_Codex_WitnessDevelopmentCandidates.md)
 - [2026-10-05_1817_Codex_CodeAuditEnvironmentExclusions.md](AI%20Notes/2026-10-05_1817_Codex_CodeAuditEnvironmentExclusions.md)
 - [2026-10-05_1812_Codex_VoiceWorkerStartupAndReadiness.md](AI%20Notes/2026-10-05_1812_Codex_VoiceWorkerStartupAndReadiness.md)
-- [2026-10-05_1808_Codex_TaskContinuityAndDependencyExclusions.md](AI%20Notes/2026-10-05_1808_Codex_TaskContinuityAndDependencyExclusions.md)
-- [2026-10-05_1800_Codex_VoiceControlsInProgress.md](AI%20Notes/2026-10-05_1800_Codex_VoiceControlsInProgress.md)
