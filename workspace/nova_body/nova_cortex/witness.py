@@ -539,8 +539,10 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
     if omitted_images:
         image_block += (f"{omitted_images} earlier image(s) were omitted from this bounded audit. "
                         "Do not certify claims requiring an omitted image.\n")
+    # A changing counter must not invalidate the stable evidence prefix on every read.
+    read_budget_block = ""
     if reads_remaining is not None:
-        image_block += (f"READ BUDGET: {reads_remaining} further read(s) are available. "
+        read_budget_block = (f"READ BUDGET: {reads_remaining} further read(s) are available. "
                         + ("No further tool calls will run. Give PASS, CONCERN or INCOMPLETE now.\n"
                            if reads_remaining == 0 else "Use them only to settle a relevant fact.\n"))
     session_tools = session_tool_record()
@@ -609,7 +611,7 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             f"{think_block}\n"
             f"WHAT YOUR HANDS DID THIS TURN (the receipt log — your actions in the CURRENT turn "
             f"ONLY; earlier turns are in the session log below):\n{ran}\n"
-            f"{session_block}{spoken_block}{prior_block}{_checks_block}{_VERIFY_BLOCK}\n"
+            f"{session_block}{spoken_block}{prior_block}{read_budget_block}{_checks_block}{_VERIFY_BLOCK}\n"
             "THREE checks, one per kind of failure:\n"
             "1. ACTIONS AND FACTS — does the draft state any number, count, path, filename, "
             "version, hardware detail, or file content that appears in NONE of your evidence: not "
@@ -710,7 +712,7 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             f"EARLIER SESSION RECEIPTS:\n{session_tools}\n"
             f"RECENT CONVERSATION:\n{spoken}\nHUMAN RECORD:\n{humans}\n"
             f"PRIOR CONCERN:\n{prior_concern}\n"
-            f"AUDITOR READ RESULTS:\n{_checks_block}\n"
+            f"{read_budget_block}AUDITOR READ RESULTS:\n{_checks_block}\n"
             "Check factual/action claims against actual evidence, attributed human words "
             "against the record's stated time span, and whether the reply answers the latest "
             "human message. Earlier-turn receipts count, but a successful command does not "

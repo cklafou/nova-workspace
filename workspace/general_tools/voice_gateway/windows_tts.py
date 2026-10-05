@@ -1,6 +1,7 @@
-# Last updated: 2026-10-05 20:33:22
 # @nova: Synthesize a labelled Windows system voice to PCM WAV and play through the gateway's cancellable device path.
+# Last updated: 2026-10-05 20:33:22
 """System.Speech is a CPU/native baseline, not a cloned voice or a GPU model.
+With no configured name, prefer an installed English female voice for Nova.
 
 Text and paths travel as JSON on stdin; no utterance becomes PowerShell source.
 Synthesis writes a file only. Playback stays in _PlaybackControl / sounddevice.
@@ -27,6 +28,13 @@ $novaSpeechRequest = [Console]::In.ReadToEnd() | ConvertFrom-Json
 $novaSpeech = New-Object System.Speech.Synthesis.SpeechSynthesizer
 try {
     if ($novaSpeechRequest.voice) { $novaSpeech.SelectVoice([string]$novaSpeechRequest.voice) }
+    else {
+        $novaFemaleVoice = $novaSpeech.GetInstalledVoices() | Where-Object {
+            $_.Enabled -and $_.VoiceInfo.Gender -eq [System.Speech.Synthesis.VoiceGender]::Female -and
+            $_.VoiceInfo.Culture.TwoLetterISOLanguageName -eq 'en'
+        } | Select-Object -First 1
+        if ($novaFemaleVoice) { $novaSpeech.SelectVoice($novaFemaleVoice.VoiceInfo.Name) }
+    }
     $novaSpeechFormat = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(
         16000, [System.Speech.AudioFormat.AudioBitsPerSample]::Sixteen,
         [System.Speech.AudioFormat.AudioChannel]::Mono)

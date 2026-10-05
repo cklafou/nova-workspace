@@ -49,7 +49,12 @@ observations up to 600 each; the prompt may shorten them while preserving the co
 `_admin/voice_gateway.json` and `VOICE_GW_<FIELD>` environment overrides. The prepared Windows baseline
 uses faster-whisper large-v3-turbo, CPU int8, English (`speech_language="en"`) and Silero;
 `whisper_cpu_threads` defaults to eight. Moonshine is an explicit optional backend, not a silent fallback.
-The temporary Windows system voice can select an installed name through `windows_voice`. Segmentation defaults are minimum speech 192 ms, onset pre-roll 288 ms and retained
+The gateway register defaults to `voice_fast`: with `voice_fast_thinking_off` enabled, first-loop
+provider reasoning is disabled while subsequent tool loops retain thinking. Set `register="voice"`
+for the ordinary thinking-enabled voice path. Neither bypasses final auditing or guarantees response
+time; no utterance classifier selects a register automatically.
+The temporary Windows system voice honors an installed name supplied through `windows_voice`; with
+no explicit name it prefers an installed English female voice, otherwise the system default. Segmentation defaults are minimum speech 192 ms, onset pre-roll 288 ms and retained
 trailing silence 192 ms, with a 700 ms end-of-utterance interval. `request_timeout_s` defaults to 300
 seconds: the current acknowledged request remains correlated and gains a delayed warning;
 unacknowledged and retired requests expire. The separate Voice widget stores only selected input

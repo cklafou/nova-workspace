@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T11:48:18+00:00 from source (input `b6955fb40ebe`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T12:01:53+00:00 from source (input `7002dcdaeaed`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -100,13 +100,14 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/tests/test_lifecycle.py](../general_tools/nova_chat/tests/test_lifecycle.py) — Exercise real Nova lifecycle HTTP routes with a fake launcher and isolated updater job manager.
 - [general_tools/nova_chat/tests/test_lifecycle_ack.py](../general_tools/nova_chat/tests/test_lifecycle_ack.py) — Preserve lifecycle HTTP acknowledgement before fast controller teardown without extending grace on retries.
 - [general_tools/nova_chat/tests/test_pipeline_ui.cjs](../general_tools/nova_chat/tests/test_pipeline_ui.cjs)
+- [general_tools/nova_chat/tests/test_prompt_cache.py](../general_tools/nova_chat/tests/test_prompt_cache.py) — Verify cache-friendly prompt ordering retains the exact clock, evidence, audit policy and strict verdict handling.
 - [general_tools/nova_chat/tests/test_source_fingerprint.py](../general_tools/nova_chat/tests/test_source_fingerprint.py) — Checks restart reporting against real edits and harmless watcher timestamp changes.
 - [general_tools/nova_chat/tests/test_updater_integration.py](../general_tools/nova_chat/tests/test_updater_integration.py) — Verify updater routing and cancellable controller metadata checks using temporary models and fake catalogs only.
 - [general_tools/nova_chat/tests/test_updater_ui.cjs](../general_tools/nova_chat/tests/test_updater_ui.cjs)
 - [general_tools/nova_chat/tests/test_voice_control.py](../general_tools/nova_chat/tests/test_voice_control.py) — Test voice HTTP supervision and worker cancellation with temporary settings and fake processes/audio only.
 - [general_tools/nova_chat/tests/test_voice_transport.py](../general_tools/nova_chat/tests/test_voice_transport.py) — Exercise real server voice routing and response callbacks with isolated providers, sessions and event sinks.
 - [general_tools/nova_chat/tests/test_voice_ui.cjs](../general_tools/nova_chat/tests/test_voice_ui.cjs)
-- [general_tools/nova_chat/transcript.py](../general_tools/nova_chat/transcript.py) — Shared conversation transcript for Nova Group Chat.
+- [general_tools/nova_chat/transcript.py](../general_tools/nova_chat/transcript.py) — Persist shared chat transcripts and assemble current requests with stable cacheable instructions.
 - [general_tools/nova_chat/voice_control.py](../general_tools/nova_chat/voice_control.py) — Supervise explicit local voice sessions, device settings and bounded audio tests for Conversation controls.
 - [general_tools/nova_chat/widget_data.py](../general_tools/nova_chat/widget_data.py) — Bounded reads for frequently refreshed controller widgets.
 - [general_tools/nova_chat/workspace_context.py](../general_tools/nova_chat/workspace_context.py) — Compatibility import: the body owns Nova's context in chat and headless runs.
@@ -444,8 +445,8 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 - [nova_body/nova_lancedb/__init__.py](../nova_body/nova_lancedb/__init__.py) — Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).
 - [nova_body/nova_lancedb/backfill.py](../nova_body/nova_lancedb/backfill.py) — Recover searchable coverage from intact local records; never rewrite originals.
-- [nova_body/nova_lancedb/embedder.py](../nova_body/nova_lancedb/embedder.py) — nova_lancedb/embedder.py
-- [nova_body/nova_lancedb/hippocampus.py](../nova_body/nova_lancedb/hippocampus.py) — nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
+- [nova_body/nova_lancedb/embedder.py](../nova_body/nova_lancedb/embedder.py) — Load cached semantic-memory embedders once per process and encode text/images without fabricating failed vectors.
+- [nova_body/nova_lancedb/hippocampus.py](../nova_body/nova_lancedb/hippocampus.py) — Store and retrieve Nova semantic memories with a single shared LanceDB store per process.
 - [nova_body/nova_lancedb/indexer.py](../nova_body/nova_lancedb/indexer.py) — Durable background memory ingestion with visible failures and bounded retries.
 
 ## nova_body/nova_logs
@@ -1785,6 +1786,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 - [nova_body/tests/test_computer_launch.py](../nova_body/tests/test_computer_launch.py) — Isolated regression tests for guest desktop routing and honest process/window launch verification.
 - [nova_body/tests/test_koels_launcher.py](../nova_body/tests/test_koels_launcher.py) — Prove KoELS preload arguments survive the real Windows launcher and current llama parser without loading models.
+- [nova_body/tests/test_lancedb_init.py](../nova_body/tests/test_lancedb_init.py) — Verify cached embedder initialization and singleton concurrency without loading models, querying memory or accessing Nova state.
 - [nova_body/tests/test_model_client.py](../nova_body/tests/test_model_client.py) — Verify isolated model-client register routing, optional audit sinks and concurrent-request compatibility.
 - [nova_body/tests/test_modernization.py](../nova_body/tests/test_modernization.py) — Isolated runtime contracts; never load a model or write Nova's personal state.
 - [nova_body/tests/test_mozilla_provision.py](../nova_body/tests/test_mozilla_provision.py) — Verify pinned browser provisioning with disposable files and no network, account changes or application launches.

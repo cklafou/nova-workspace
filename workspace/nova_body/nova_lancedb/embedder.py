@@ -1,3 +1,4 @@
+# @nova: Load cached semantic-memory embedders once per process and encode text/images without fabricating failed vectors.
 # Last updated: 2026-10-05 18:23:37
 """
 nova_lancedb/embedder.py
@@ -13,6 +14,8 @@ vector must never be presented as a successfully indexed memory.
 """
 from __future__ import annotations
 import hashlib
+import threading
+import time
 import numpy as np
 from pathlib import Path
 from typing import Optional
@@ -20,19 +23,55 @@ from typing import Optional
 # ── Text embedder ────────────────────────────────────────────────────────────
 
 _text_model = None
+_text_model_lock = threading.Lock()
 TEXT_DIM = 384
+
+
+def _missing_local_assets(error):
+    """Only cache absence permits the existing download fallback, never arbitrary failures."""
+    seen = set()
+    while error is not None and id(error) not in seen:
+        seen.add(id(error))
+        if (type(error).__name__ == "LocalEntryNotFoundError"
+                and type(error).__module__.startswith("huggingface_hub")):
+            return True
+        message = str(error).lower()
+        if isinstance(error, OSError) and (
+            "cannot find the requested files in the disk cache" in message
+            or ("couldn't find" in message and "cached files" in message)
+            or ("couldn't find" in message and "local cache" in message)
+        ):
+            return True
+        error = error.__cause__ or error.__context__
+    return False
+
+
+def _construct_model(name):
+    started = time.perf_counter()
+    from sentence_transformers import SentenceTransformer
+    source = "local cache"
+    try:
+        model = SentenceTransformer(name, local_files_only=True)
+    except Exception as error:
+        if not _missing_local_assets(error):
+            raise
+        source = "missing-cache download fallback"
+        model = SentenceTransformer(name)       # preserve existing first-install behavior
+    print(f"[nova_memory] Embedder loaded ({name}; {source}; init={time.perf_counter() - started:.3f}s)")
+    return model
 
 def _load_text_model():
     global _text_model
     if _text_model is not None:
         return _text_model
-    try:
-        from sentence_transformers import SentenceTransformer
-        _text_model = SentenceTransformer("all-MiniLM-L6-v2")
-        print("[nova_memory] Text embedder loaded (all-MiniLM-L6-v2)")
-    except Exception as e:
-        print(f"[nova_memory] WARNING: text embedder failed to load: {e}")
-        _text_model = None
+    with _text_model_lock:
+        if _text_model is not None:
+            return _text_model
+        try:
+            _text_model = _construct_model("all-MiniLM-L6-v2")
+        except Exception as error:
+            print(f"[nova_memory] WARNING: text embedder failed to load: {error}")
+            _text_model = None
     return _text_model
 
 
@@ -52,19 +91,21 @@ def embed_text(text: str) -> list[float]:
 # ── Visual embedder ──────────────────────────────────────────────────────────
 
 _clip_model = None
+_clip_model_lock = threading.Lock()
 VISUAL_DIM = 512
 
 def _load_clip_model():
     global _clip_model
     if _clip_model is not None:
         return _clip_model
-    try:
-        from sentence_transformers import SentenceTransformer
-        _clip_model = SentenceTransformer("clip-ViT-B-32")
-        print("[nova_memory] Visual embedder loaded (clip-ViT-B-32)")
-    except Exception as e:
-        print(f"[nova_memory] WARNING: visual embedder failed to load: {e}")
-        _clip_model = None
+    with _clip_model_lock:
+        if _clip_model is not None:
+            return _clip_model
+        try:
+            _clip_model = _construct_model("clip-ViT-B-32")
+        except Exception as error:
+            print(f"[nova_memory] WARNING: visual embedder failed to load: {error}")
+            _clip_model = None
     return _clip_model
 
 

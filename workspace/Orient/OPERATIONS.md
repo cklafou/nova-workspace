@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T11:48:18+00:00 from source (input `b6955fb40ebe`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T12:01:53+00:00 from source (input `7002dcdaeaed`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -40,8 +40,10 @@ to close; failure is reported instead of acknowledging a skipped restart. KoELS 
 failure. Starting an already starting model is a no-op.
 
 Chat-only mode retains the desktop controller and the separate Collaboration widget. It does not
-turn on Nova when a message arrives. **Start Nova** in Conversation explicitly enables the full
-stack; **Stop Nova** drains work, saves the active session and returns to chat-only. The launcher
+turn on Nova when a message arrives. Conversation's compact power button below the composer offers
+**Start Nova**, explicitly enabling the full stack, or **Stop Nova**, which drains work, saves the active
+session and returns to chat-only. Voice has a separate **End call** action: it stops local audio and
+requests cancellation of only its owned pending response, while Nova and the controller remain on. The launcher
 stops its guardian/watcher before replacing workers and refuses a worker teardown without a
 successful quiesce acknowledgment. New body input and updater mutations are blocked while a switch
 is pending. Failed startup attempts return to a usable chat-only controller when recovery succeeds.
@@ -55,8 +57,6 @@ Both modes start the updater catalog check after a cancellable delay; this does 
 or enumerate installed weights. The controller status bar distinguishes Chat only from Nova running.
 
 ## Configuration and evidence
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_CODE_FILES`, `general_tools/nova_chat/static/collaboration.js`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Configuration and evidence"`.
 
 Collaboration is a detachable controller service (`general_tools/nova_chat/collaboration.py`). Its
 SQLite history and per-agent credentials live outside the repository at
@@ -77,6 +77,8 @@ Task workspaces are staged under `workspace/Temp/task-workspaces` and excluded t
 staged copies are never committed or timestamp-stamped by the watcher.
 The widget uses cursor replay and retry IDs. Presence reports recent activity or a bounded receive
 wait, and expires when an agent stops checking. It does not prove that a desktop task is awake.
+Its Latest control appears above a 60-pixel bottom gap, including manual scroll; incoming messages
+preserve the older reading position until Latest is chosen. This changes the view, not room routing.
 `general_tools/nova_collaboration` provides a CLI and a Cowork local MCP plugin. Neither substitutes
 an API model for the actual app session nor automatically wakes an ended Codex/Cowork turn.
 
@@ -93,14 +95,17 @@ from both Git and Drive, including relocated `.auth_token` and `nova_users.json`
 Useful evidence lives under `nova_body/logs/`: `tool_calls.jsonl`, `generation_trace.jsonl`,
 events, runtime transcript, chat sessions and launcher/model logs. Read current receipts and loaded
 source before changing prompts. `/api/version` compares normalized content hashes of watched
-sources against startup, including task/context assembly and `nova_cortex/context_budget.py`, while
+sources against startup, including task/context assembly, `nova_cortex/context_budget.py` and the
+opt-in provider diagnostic helper, while
 ignoring watcher header timestamps and line endings. This detects even
 same-size edits with unchanged timestamps; it is not a census of every imported module.
 New structured receipts distinguish success, failure, refusal,
 timeout, cancellation and unknown. Guest receipts include their shell/display context. Pipeline
 shows tool start and terminal outcomes rather than only witness work; its operation IDs link to
 the tool ledger. Unknown terminal tool outcomes use neutral `tool_finished`, not a successful
-completion label. Witness incomplete/error statuses are unverified, never approval. A historical
+completion label. Witness reads show attempted/returned/refused/failed counts, not a blanket
+verified label; returned output is not proof that the claim was checked. Witness incomplete/error
+statuses are unverified, never approval. A historical
 `witness_answered` with an incomplete/error status remains visibly unverified. Historical
 Pipeline rows whose recorded approval contains a tool request are shown as incomplete by the
 controller without rewriting the original log. Historical receipts retain their original values; older
@@ -109,8 +114,6 @@ port does not prove successful inference. The Control widget exposes task schedu
 stop/resume, memory ingestion health and VM handoff through `/api/runtime/state` and related routes.
 
 ## Access and practical debugging
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/voice_control.py`, `general_tools/voice_gateway/control_worker.py`, `general_tools/voice_gateway/setup_windows.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Access and practical debugging"`.
 
 Nova's host access is intentional. The chat server has loopback exemptions, bearer authentication
 for remote HTTP clients, and restrictions on remote routes. Speaker capability checks are a separate
@@ -124,12 +127,27 @@ Conversation power uses a separate local lifecycle gate and launcher status. If 
 restart is needed, inspect both the chat worker and launcher versions; a fresh static page can still
 be connected to old processes. `starting`/`stopping` acknowledge work in progress, not readiness.
 
-For desktop voice, open Conversation → Devices & tests. Run `voice_gateway/setup_windows.py` to
-recreate the isolated CPU environment and pinned speech assets. Readiness verifies local dependencies;
-select a listed compatible device, apply while stopped, and use the bounded microphone/speaker tests.
-A playback API receipt still needs human confirmation of audible sound on the intended output. Full
-voice is explicit and does not restart automatically after a worker error or Nova restart. Use the audio
-note and source fingerprint when diagnosing stale UI versus failed capture, decoding or playback.
+For desktop voice, open **Widgets → Voice → Settings & tests**. Run
+`voice_gateway/setup_windows.py` to recreate the isolated CPU environment and pinned speech assets.
+The default is faster-whisper large-v3-turbo, CPU int8, English, with local Silero VAD and temporary
+Windows system speech. Readiness checks dependencies and selected assets without audio capture;
+choose a listed compatible device, apply while stopped and explicitly run microphone/speaker tests.
+A playback API receipt still needs human confirmation on the intended output. Call Nova is explicit
+and does not restart automatically after a worker error or Nova restart.
+
+Voice's Delivery & playback details show the current request/message/run IDs, delayed/suppressed
+reply reason and actual output phases. A requested unit is not yet playback; process launch is not a
+measured audio start. Check `last_turn` versus `last_playback`, output device, audit disposition and
+source fingerprint before attributing silence to the model. End call retires local output immediately
+and waits briefly for final request-scoped cancellation acknowledgement; an unconfirmed receipt does
+not justify claiming all provider computation ended.
+
+For a bounded provider investigation, `Temp/provider-diagnostics/capture.json` explicitly enables
+capture with a unique `capture_id` and timezone-aware `expires_at` for at most ten minutes. Receipts
+preserve fitted provider JSON fields and context/memory/provider/audit timings, with image data URLs
+removed and file/count/byte caps. Capture is off without a valid marker; remove it when the diagnostic
+run ends. It records transient conversation content, so keep receipts local in excluded Temp and
+never treat them as ordinary project documentation.
 
 The voice loop parses tool reaches from both content and reasoning streams. Receipt-backed context
 helps distinguish executed work from earlier narration. Check loaded source, actual receipts,
@@ -141,8 +159,6 @@ results recoverable and surface any retained-storage charge. The Hugging Face ca
 disk rather than a slow network mount.
 
 ## Test meaningful behavior
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_chat_only.py`, `general_tools/nova_chat/tests/test_conversation_power.cjs`, `general_tools/nova_chat/tests/test_voice_control.py`, `general_tools/nova_chat/tests/test_voice_transport.py` and 5 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -181,9 +197,13 @@ disk rather than a slow network mount.
     Distinguish a local socket fixture from a live Nova turn; test wrong identities, delayed replies,
     cancellation during synthesis, Stop, queue replacement and audit status before native playback.
     Measure mic/STT, first-audio latency, interruption and avatar timing separately on real hardware.
-    The Conversation controls also have `test_voice_control.py` and `test_voice_ui.cjs` coverage;
+    The Voice widget and controller also have `test_voice_control.py` and `test_voice_ui.cjs` coverage;
     native/API/segmentation tests are in `voice_gateway/test_native_voice.py` and
-    `test_worker_readiness.py`. Status-only checks must never acquire devices. Keep microphone capture,
+    `test_worker_readiness.py`. Include acknowledgement delays past 300 seconds, scoped Stop that cannot
+    cancel another socket's request, recognizing-state reporting, device/output failures and actual
+    request/message/run correlation. `--smoke-link` remains silent; `--smoke-audio` uses real TTS and
+    refuses NullTTS. Both exercise the request sweeper. Status-only checks must never acquire devices.
+    Keep microphone capture,
     silent WAV transcription, audible playback, live Nova replies and native avatar timing distinct.
     Cole authorized Nova and audio tests on October 5; future restrictions override that permission.
 
@@ -244,8 +264,6 @@ notes), which Orient lists but never quotes; backups; and formats without commen
 A generated file gets its purpose line from the code that writes it.
 
 ## Security model
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::websocket_endpoint`, `general_tools/nova_chat/voice_control.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
 
 Nova's reach is intentional — Cole: *"My machine is her body. If she can't use it fully, she is
 crippled."* Every control here is about **who can reach her from outside**, not what she may do
@@ -317,7 +335,11 @@ operations and saved session state before the owned worker is terminated.
 Voice request IDs, reply links and run IDs are correlation fields, not authentication. They let
 clients reject unrelated or stale output; they do not close the WebSocket exposure described
 above. Chat-only and lifecycle rejections may complete a correlated request without storing its
-text in Nova's body. A future remote voice gateway still needs the transport identity work above.
+text in Nova's body. Request-scoped `stop` additionally matches the request ID to the exact originating
+WebSocket; stale, invalid or another socket's IDs cannot select its work and never fall back to global
+Stop. Final acknowledgement has `stopped`, the request ID and `matched`; pending cleanup is explicitly
+`stop_pending`. This bounds cancellation ownership, not who can connect or claim a speaker name.
+A future remote voice gateway still needs the transport identity work above.
 
 ### Local audio controls
 
@@ -358,8 +380,6 @@ Secrets may live in files; they must never leave in an upload. `.gitignore` and 
 `audit_scripts.py::check_secret_exclusions` asserts that the two lists match.
 
 ## Tunable variables
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/voice_control.py`, `general_tools/voice_gateway/config.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/tunables.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Tunable variables"`.
 
 **The rule** (Cole, 2026-08-03): any constant that Cole or Nova might want to change without editing
 code and restarting belongs in the tunables registry, not as a literal. If a number governs behavior —
@@ -403,7 +423,12 @@ observations up to 600 each; the prompt may shorten them while preserving the co
 `_admin/voice_gateway.json` and `VOICE_GW_<FIELD>` environment overrides. The prepared Windows baseline
 uses faster-whisper large-v3-turbo, CPU int8, English (`speech_language="en"`) and Silero;
 `whisper_cpu_threads` defaults to eight. Moonshine is an explicit optional backend, not a silent fallback.
-The temporary Windows system voice can select an installed name through `windows_voice`. Segmentation defaults are minimum speech 192 ms, onset pre-roll 288 ms and retained
+The gateway register defaults to `voice_fast`: with `voice_fast_thinking_off` enabled, first-loop
+provider reasoning is disabled while subsequent tool loops retain thinking. Set `register="voice"`
+for the ordinary thinking-enabled voice path. Neither bypasses final auditing or guarantees response
+time; no utterance classifier selects a register automatically.
+The temporary Windows system voice honors an installed name supplied through `windows_voice`; with
+no explicit name it prefers an installed English female voice, otherwise the system default. Segmentation defaults are minimum speech 192 ms, onset pre-roll 288 ms and retained
 trailing silence 192 ms, with a 700 ms end-of-utterance interval. `request_timeout_s` defaults to 300
 seconds: the current acknowledged request remains correlated and gains a delayed warning;
 unacknowledged and retired requests expire. The separate Voice widget stores only selected input
@@ -511,8 +536,6 @@ its temp folder stopped autosave (lesson 7 above).
 `Nova_Drive/` is ignored by git and by the watcher, and Orient does not index it.
 
 ## Controller menus and layouts
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/static/control.css`, `general_tools/nova_chat/static/conversation-power.js`, `general_tools/nova_chat/static/index.html`, `general_tools/nova_chat/static/voice.css` and 5 more. Re-read it against the code, update it in `general_tools/architecture_map/notes/controller_layouts.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Controller menus and layouts"`.
 
 Nova Chat has one workspace. The top application bar contains expandable menus; opening Services,
 Advanced or Appearance leaves the dock arrangement alone. Widgets opens the widget choices, including
@@ -832,4 +855,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 70, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `ARCHITECTURE.md#Execution path`, `OPERATIONS.md#Access and practical debugging`, `OPERATIONS.md#Configuration and evidence`, `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Security model`, `OPERATIONS.md#Test meaningful behavior`, `OPERATIONS.md#Tunable variables`.
+**Sections awaiting review:** none.

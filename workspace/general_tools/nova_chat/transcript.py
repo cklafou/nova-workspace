@@ -1,3 +1,4 @@
+# @nova: Persist shared chat transcripts and assemble current requests with stable cacheable instructions.
 # Last updated: 2026-10-05 18:30:24
 """
 Shared conversation transcript for Nova Group Chat.
@@ -132,7 +133,7 @@ class Transcript:
         return self.messages[last_idx + 1:]
 
     def _now_block(self) -> str:
-        """The clock, at the TOP of every chat turn. Ambient, not fetched.
+        """The clock in every chat turn, after stable instructions. Ambient, not fetched.
 
         ── WHY (2026-07-20, Cole: "fix it so she always knows the time and how much time is
         passing") ────────────────────────────────────────────────────────────────────────
@@ -202,7 +203,11 @@ class Transcript:
         """
         messages = []
 
-        system_content = self._now_block() + system_prefix.strip()
+        # Keep the changing clock/gap after stable instructions so prefix caching can reuse them.
+        system_content = system_prefix.strip()
+        if system_content:
+            system_content += "\n\n"
+        system_content += self._now_block()
         if workspace_context:
             system_content += f"\n\n--- WORKSPACE CONTEXT ---\n{workspace_context}\n--- END CONTEXT ---"
         messages.append({"role": "system", "content": system_content})

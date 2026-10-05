@@ -77,7 +77,11 @@ operations and saved session state before the owned worker is terminated.
 Voice request IDs, reply links and run IDs are correlation fields, not authentication. They let
 clients reject unrelated or stale output; they do not close the WebSocket exposure described
 above. Chat-only and lifecycle rejections may complete a correlated request without storing its
-text in Nova's body. A future remote voice gateway still needs the transport identity work above.
+text in Nova's body. Request-scoped `stop` additionally matches the request ID to the exact originating
+WebSocket; stale, invalid or another socket's IDs cannot select its work and never fall back to global
+Stop. Final acknowledgement has `stopped`, the request ID and `matched`; pending cleanup is explicitly
+`stop_pending`. This bounds cancellation ownership, not who can connect or claim a speaker name.
+A future remote voice gateway still needs the transport identity work above.
 
 ### Local audio controls
 

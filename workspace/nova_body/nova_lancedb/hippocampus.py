@@ -1,3 +1,4 @@
+# @nova: Store and retrieve Nova semantic memories with a single shared LanceDB store per process.
 # Last updated: 2026-10-05 18:23:37
 """
 nova_lancedb/hippocampus.py — Semantic + Episodic Memory Store
@@ -22,6 +23,7 @@ from __future__ import annotations
 from nova_paths import body_path
 
 import os
+import threading
 import time
 import uuid
 import re
@@ -499,9 +501,12 @@ def _age_str(ts: float) -> str:
 # ── Singleton ─────────────────────────────────────────────────────────────────
 
 _store: Optional[NovaMemoryStore] = None
+_store_lock = threading.Lock()
 
 def get_store() -> NovaMemoryStore:
     global _store
     if _store is None:
-        _store = NovaMemoryStore()
+        with _store_lock:
+            if _store is None:
+                _store = NovaMemoryStore()
     return _store

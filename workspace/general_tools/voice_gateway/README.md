@@ -32,7 +32,8 @@ and delivered caption with its audit status. **Delivery & playback details** sho
 IDs, submission/completion outcomes, selected output and available timing fields. Preparing audio,
 a playback-process launch and a successful playback API submission are different observations;
 none proves that a person heard sound. Windows system speech is a labelled temporary baseline,
-not Nova's final cast voice.
+not Nova's final cast voice. If no `windows_voice` name is configured, Windows speech prefers an
+installed English female voice, falling back to the system default only when none is available.
 
 ## First stage (built 2026-10-05; contract agreed with Codex in the Collaboration room #55–#63)
 
@@ -87,11 +88,20 @@ with sweeping. This is a demonstrated source hazard, not proof of every earlier 
 See `Temp/voice-validation/live-link-result.json` and the dated
 `Orient/Architecture/evidence/2026-10-05-voice-continuity-validation.md`.
 
-The local **Whisper large-v3-turbo, CPU int8, English** recognizer is now installed and selected by
-default. A fresh end-to-end native conversation, reply relevance/latency, human recognition accuracy,
-physical echo behavior and human confirmation of audible output remain pending root-coordinated
-validation. Native avatar lipsync and a custom expressive voice remain separate work. Playback API
-completion never means that someone heard it.
+The local **Whisper large-v3-turbo, CPU int8, English** recognizer is installed and selected by default.
+The later 20:48 `voice_fast` test used real Windows TTS with the microphone off: a relevant greeting
+was delivered in 94.844 seconds, first playback began at 96.246 seconds, and both speech units ended
+`played`. It produced two sentences rather than the requested one; audit remained INCOMPLETE. This
+proves the tested reply/output path, not low-latency conversation. Cole separately confirmed hearing
+that greeting and disliked the temporary voice. Subsequent synthesis selected Microsoft Zira Desktop
+as the female placeholder; that synthesis receipt is not human approval or a final casting choice.
+
+A separate public 11-second human-speech clip produced 0/22 word errors for both recognizers. Whisper
+decoded in 6.529 seconds; Moonshine in 0.822 seconds. One clean clip is not broad accuracy evidence or a
+Cole-microphone test. See the [dated repair validation](../../Orient/Architecture/evidence/2026-10-05-voice-repair-validation.md)
+for receipts, the measured memory/prefill/audit delays and the file-decoder workaround. Natural human
+conversation, physical echo, native avatar timing and a suitable final voice remain unverified.
+Human audibility is confirmed for this greeting only; the new female placeholder is not yet approved.
 
 ## The smoke ladder — verify each layer before wiring audio
 
@@ -124,7 +134,10 @@ backends with separate dependencies and validation; neither is required for this
 
 `config.py` holds every knob; override via `_admin/voice_gateway.json` or `VOICE_GW_*` env vars.
 
-- `register`: `voice`, `voice_fast` or `text`; validated per request by the server.
+- `register`: defaults to `voice_fast`; `voice` and `text` remain explicit alternatives. With
+  `voice_fast_thinking_off` enabled, only the first model loop requests thinking off; later tool loops
+  keep normal reasoning. Choose `voice` for the ordinary thinking-enabled voice path. The witness
+  still audits final delivery. This setting is not an utterance classifier or a latency guarantee.
 - `speak_scope`: `mine` or `replies`.
 - `audit_gate`: `delivered` or `pass_only`.
 - `request_timeout_s`: delay threshold for the current acknowledged request; expiry for unacknowledged/retired requests.

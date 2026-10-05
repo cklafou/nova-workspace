@@ -803,14 +803,10 @@ async def stream_response(
     autonomous:  bool  = False,  # if True, inject autonomous-mode directive into system prompt
     temperature: float = 0.7,
     top_p:       float = 0.9,
-    register:    str   = "text",  # "voice"/"voice_fast" (gateway) cap witness rounds at 2 —
-                                  # spoken audio cannot wait out a 20-round debate; disputes
-                                  # defer to the heavy lane instead (witness_deferred).
-                                  # "voice_fast" ALSO skips the reasoning pass on the first
-                                  # reply (casual chit-chat the gateway classified as light):
-                                  # no <think> means first audio in ~1s instead of after a
-                                  # full silent reasoning generation. "voice" keeps thinking
-                                  # (substantive turns); the gateway picks which to send.
+    register:    str   = "text",  # Voice registers use the configured voice witness revision limit.
+                                  # Explicit "voice_fast" skips reasoning on the first loop only.
+                                  # The gateway sends its configured register; it does not classify
+                                  # utterances here. Context/prefill/auditing/playback still add latency.
     on_audit: Optional[Callable[[dict], Awaitable[None]]] = None,
 ):
     """
@@ -1057,14 +1053,9 @@ async def stream_response(
                 # Loop 1 is her talking, so it keeps the conversational sampler.
                 _literal_safe = loop_counter > 1
 
-                # ── VOICE-FAST: skip the reasoning pass on the first spoken reply ─────────
-                # Only for register "voice_fast" (casual chit-chat the gateway flagged light)
-                # and only on loop 1 (her actual reply — tool loops keep thinking so agentic
-                # work stays sound). A full <think> pass is a silent multi-second generation
-                # before a single token of audio can commit; for "hey" / "what's up" / "yeah"
-                # that reasoning buys nothing and costs the whole first-audio budget. Plain
-                # "voice" and "text" are unchanged. If this reply turns out claim-bearing the
-                # witness still gates it — speed here never bypasses the conscience.
+                # Explicit voice_fast skips first-loop reasoning; subsequent tool loops
+                # keep thinking. The configured register is not an utterance classifier.
+                # This does not promise first-audio latency or bypass the witness gate.
                 _think_this = not (register == "voice_fast" and loop_counter == 1
                                    and _tune("voice_fast_thinking_off", True))
 

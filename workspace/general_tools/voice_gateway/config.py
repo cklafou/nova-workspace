@@ -27,7 +27,7 @@ class GatewayConfig:
 
     # ── register: "text", "voice" or "voice_fast", sent with every utterance. Nova Chat validates
     #    it per request (2026-10-05 contract); it never switches a human request into autonomous mode.
-    register: str = "voice"
+    register: str = "voice_fast"
 
     # ── speech policy (first stage). Only text Nova Chat DELIVERED is spoken; delivered is not
     #    the same as witness-approved, so the audit status rides along on every caption.
@@ -57,7 +57,7 @@ class GatewayConfig:
 
     # ── TTS (output) ──────────────────────────────────────────────────────────────────────
     tts_backend: str = "auto"             # "auto" | "windows" | "chatterbox" | "llamacpp" | "null"
-    windows_voice: str = ""              # exact installed System.Speech voice name; empty = default
+    windows_voice: str = ""              # exact installed System.Speech voice name; empty = installed English female voice when available
     tts_reference_wav: str = ""           # Chatterbox zero-shot voice clone reference (~10s clip)
     tts_exaggeration: float = 0.6         # Chatterbox expressiveness (0..1); Cole: tomboyish/expressive
     tts_cfg_weight: float = 0.5

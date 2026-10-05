@@ -786,15 +786,30 @@ already delivered candidate. Human messages retain the human audit path even whe
 is enabled. The detachable voice gateway consumes these events through a separate WebSocket client,
 with final-text speech and body-event sinks. Closing it flushes queued speech and invalidates
 late playback; already-running synthesis may still finish computing. Null output and subprocess
-completion are distinguished from playback API receipts. Conversation explicitly supervises a hidden
-`voice_gateway/control_worker.py` child through `nova_chat/voice_control.py`; status never starts audio.
-A prepared CPU environment contains pinned Moonshine/Silero assets. Missing assets require setup rather
-than a hidden download or energy-VAD fallback. Windows system speech is a labelled temporary baseline.
-The worker's Windows control pipe polls before reading so native imports do not deadlock against a
-blocked stdin thread. Recognition uses 512-sample frames, minimum voiced duration, onset buffering and
-bounded utterances; decoder errors produce diagnostics and listening continues. Capture gates discard
-stale frames/transcripts across mute/playback transitions. Native capture and system playback have
-separate dated receipts; human conversational recognition and avatar lipsync are distinct checks.
+completion are distinguished from playback API receipts. The separate dockable Voice widget explicitly
+supervises a hidden `voice_gateway/control_worker.py` child through `nova_chat/voice_control.py`;
+status never starts audio. Its prepared CPU environment contains pinned Whisper/Silero/Moonshine
+assets; the default recognizer is Whisper large-v3-turbo with CPU int8 and English selected. The
+gateway defaults to `voice_fast`, requesting thinking off on its first loop when the corresponding
+tunable is enabled; later tool loops keep thinking, and final auditing remains. `voice` is an explicit
+ordinary-thinking alternative, not an automatically classified mode. Neither promises instant replies. Missing
+selected assets require setup instead of a hidden download or silent recognizer/VAD fallback.
+Windows system speech is a labelled temporary baseline; absent an explicit voice name, it prefers
+an installed English female voice and otherwise retains the system default. The worker's Windows control pipe polls
+before reading so native imports do not deadlock against a blocked stdin thread. Recognition uses
+512-sample frames, minimum voiced duration, onset buffering and bounded utterances; decoder errors
+produce diagnostics and listening continues. Capture gates discard stale frames/transcripts across
+mute/playback transitions. Native capture and system playback have separate dated receipts; human
+conversational recognition and avatar lipsync are distinct checks.
+
+The gateway retains its current acknowledged eligible request past the 300-second default delay
+threshold, emits a warning once and preserves its exact reply identity. Unacknowledged/retired
+requests expire. A new utterance or End call immediately retires local speech and sends request-scoped
+Stop; only a same-socket owned request can match. Final `stopped` with the exact request ID and
+`matched=true` acknowledges cancellation; `stop_pending` or a submitted frame is not completion.
+The worker waits up to two seconds for that receipt before socket close and reports unconfirmed
+cancellation without issuing global Stop. `last_turn`, `last_playback` and bounded `recent_events`
+expose correlation, eligibility/suppression, output device and available submission/completion timing.
 
 The retired host-desktop Claude ping and its aliases return an unknown-tool failure rather than
 launching PowerShell. Active instructions no longer advertise it. The private Collaboration room
@@ -812,10 +827,19 @@ A verdict prefix takes precedence over quoted tool JSON, so an objection quoting
 not accidentally executed as another verification request. Receipts share a compact outcome
 formatter with replay: real stdout/stderr follow shell/target/status, and truncation is explicitly
 marked. The combined attachment/tool image budget is tunable and omissions remain disclosed.
+Prompt ordering keeps stable system instructions before the unchanged clock/gap block. Witness
+READ BUDGET text follows stable evidence and precedes accumulated read receipts, allowing a longer
+unchanged prefix across audit calls. Its wording, evidence, read limits and strict verdict parser
+are unchanged; this cache-oriented placement does not deploy the rejected witness policy candidate.
 Audit sampling disables DRY so verbatim evidence can be copied. A revised draft still enters the
 configured incorrect-concession check when the re-audit is incomplete or errored, without treating
 that revision as approval. Bad-request diagnostics omit image bytes while preserving the actual
 provider request. This improves audit evidence and reporting; it does not guarantee sound judgment.
+Pipeline read-attempt counts distinguish returned, refused and failed reads; returned text is not
+verification. Optional `nova_voice/provider_diagnostics.py` captures the actual fitted provider JSON
+and timing phases only while a valid short-lived local capture marker is active. It is disabled by
+default, bounded in duration/count/size, and replaces image data URLs in receipts. These diagnostic
+receipts help distinguish input/context delay, provider generation and auditing without changing policy.
 
 Guest Bash (`computer_exec`), screenshots and hands target Nova's authenticated :1 display.
 Host `run_command` is Windows PowerShell. WSLg :0 is another Linux graphical session, not the
@@ -904,6 +928,12 @@ can be submitted again; outstanding work still deduplicates. Failed jobs require
 are reported individually. Recall distinguishes unavailable storage/embedding from no matches.
 Archived record timestamps are preserved, so record age differs from today's ingestion time.
 See the dated evidence for coverage; an operational text index does not certify visual recall.
+Text and visual SentenceTransformer loaders first request locally cached assets, avoiding a network
+check on that path. Only a recognized missing-cache failure falls back to the existing first-install
+download behavior; other failures remain failures. Per-model initialization locks and a separate
+memory-store singleton lock prevent concurrent first-use construction. Model names, retrieval,
+indexing and failure reporting are unchanged; no personal memory records were rewritten. These
+changes address startup work and races, not a measured accuracy or latency improvement by themselves.
 
 KoELS separates choosing a specialist manifest from equipping adapters. Changing scales within
 a loaded set differs from restarting the provider with a different set. A live personality adapter
@@ -983,20 +1013,42 @@ The follow-through passed 141 isolated checks and a fresh guest Firefox window p
 readiness found missing audio/STT/TTS dependencies; live voice and body-event integration remain
 unfinished. Nova stayed in chat-only mode during the benchmark; the temporary model was stopped.
 The October 5 voice foundation carries request/run/message IDs and voice register through the
-chat queue, then reports the delivered candidate's audit disposition. Conversation now contains
-explicit voice start/stop, microphone/output mute, device selection and bounded audio tests.
-A pinned CPU-only environment provides Moonshine/Silero; Windows system speech is explicitly a
-temporary voice. Native microphone capture and speaker playback completed, generated test speech
-was transcribed, and UI start/mute/stop was exercised. Playback API completion is not confirmation
-that Cole heard it; a natural human conversation and native avatar lipsync remain unverified.
-The final live link delivered after 312.804 seconds with audit INCOMPLETE and answered an older
-model-upgrade topic instead of the greeting. Correlated transport worked, but the conversation task
-failed. Checked routing/context assembly retained the request; exact provider bytes were not captured.
-Context distraction/model behavior is the leading explanation, not a proven routing defect.
-The voice worker passed 59 gateway tests, 27 controller tests and 12 UI scenarios. This includes
-startup pipe handling, decoder recovery, cancellation and rejecting transcripts decoded across
-mute/playback changes. Detailed receipts and final transport status are in the
+chat queue, then reports the delivered candidate's audit disposition. Voice is now a separate dockable
+widget with Call/End call, independent microphone/output mute, device selection and bounded audio
+tests. Conversation has a compact power button under the composer beside Users and Options. Saved
+layouts remain manual-only. Hidden-browser checks verified widget/control interactions and
+Collaboration's Latest appearing after manual scroll and hiding at the bottom, without console errors.
+A pinned CPU-only environment originally provided Moonshine/Silero. Native microphone capture and
+Windows system playback completed, generated test speech was transcribed, and UI start/mute/stop was
+exercised. The default has since changed to installed Whisper large-v3-turbo, CPU int8, English.
+Playback API completion is not confirmation that Cole heard it; current human recognition accuracy,
+a natural spoken exchange and native avatar lipsync remain unverified.
+The earlier silent live link delivered after 312.804 seconds with audit INCOMPLETE and answered an
+older model-upgrade topic instead of the greeting. Correlated transport worked, but the conversation
+task failed. Checked routing/context assembly retained the request; exact provider bytes were not
+captured. The old microphone sweep would have discarded its reply correlation at 300 seconds; the
+silent smoke did not exercise that sweep. Acknowledged slow replies are now retained with a delay
+warning, both smoke modes sweep, and request-scoped cancellation plus playback diagnostics are tested.
+This repairs a demonstrated source hazard without proving the cause of every silent/off-topic turn.
+At this checkpoint, 73 gateway tests, 30 controller tests and 70 frontend scenarios pass. The frontend
+total comprises 16 Voice, eight power, 24 Pipeline and 22 manual-layout cases; it is not an audio-test
+count. Source/fixture checks cover startup pipes, decoding state/recovery, capture gates, late delivery,
+scoped cancellation acknowledgements and playback failures. The earlier failed run remains in the
 [voice and continuity validation](Architecture/evidence/2026-10-05-voice-continuity-validation.md).
+A later 20:48 `voice_fast` run, with the microphone off, delivered a relevant greeting in 94.844 seconds
+and began actual Windows playback at 96.246 seconds; two units completed as `played`. The requested
+one sentence became two, and audit remained INCOMPLETE. This adds reply-to-playback evidence, not a
+real-time pass. Cole separately confirmed hearing the greeting and disliked the temporary voice.
+An unnamed-voice preference now selects an installed English female when available; a synthesis-only
+receipt selected Microsoft Zira Desktop. Her proper voice remains a future choice. Captured timing
+separated 34.947 seconds of semantic-memory work,
+28.677 seconds generation (including 25.992 seconds prefill for 31,383 prompt tokens, cache count 0),
+and four audit calls totaling 30.030 seconds. These are one-run measurements, not general latency rates.
+A separate 11-second public human-speech clip scored 0/22 word errors for both Whisper and Moonshine;
+decode times were 6.529 and 0.822 seconds respectively. This is not broad accuracy evidence or a test
+of Cole's unstructured microphone speech. See the [voice repair validation](Architecture/evidence/2026-10-05-voice-repair-validation.md)
+for local receipts, reproduction limits and the temporary file-decoder workaround.
+
 The [Codex/Cowork comparison](Architecture/evidence/2026-10-05-agent-harness-comparison.md) separates
 model capability from tool execution, context, persistence and presentation. Claude reviewed it;
 its subsequent implementation status is recorded separately from the original source-only review.
@@ -1056,8 +1108,10 @@ to close; failure is reported instead of acknowledging a skipped restart. KoELS 
 failure. Starting an already starting model is a no-op.
 
 Chat-only mode retains the desktop controller and the separate Collaboration widget. It does not
-turn on Nova when a message arrives. **Start Nova** in Conversation explicitly enables the full
-stack; **Stop Nova** drains work, saves the active session and returns to chat-only. The launcher
+turn on Nova when a message arrives. Conversation's compact power button below the composer offers
+**Start Nova**, explicitly enabling the full stack, or **Stop Nova**, which drains work, saves the active
+session and returns to chat-only. Voice has a separate **End call** action: it stops local audio and
+requests cancellation of only its owned pending response, while Nova and the controller remain on. The launcher
 stops its guardian/watcher before replacing workers and refuses a worker teardown without a
 successful quiesce acknowledgment. New body input and updater mutations are blocked while a switch
 is pending. Failed startup attempts return to a usable chat-only controller when recovery succeeds.
@@ -1091,6 +1145,8 @@ Task workspaces are staged under `workspace/Temp/task-workspaces` and excluded t
 staged copies are never committed or timestamp-stamped by the watcher.
 The widget uses cursor replay and retry IDs. Presence reports recent activity or a bounded receive
 wait, and expires when an agent stops checking. It does not prove that a desktop task is awake.
+Its Latest control appears above a 60-pixel bottom gap, including manual scroll; incoming messages
+preserve the older reading position until Latest is chosen. This changes the view, not room routing.
 `general_tools/nova_collaboration` provides a CLI and a Cowork local MCP plugin. Neither substitutes
 an API model for the actual app session nor automatically wakes an ended Codex/Cowork turn.
 
@@ -1107,14 +1163,17 @@ from both Git and Drive, including relocated `.auth_token` and `nova_users.json`
 Useful evidence lives under `nova_body/logs/`: `tool_calls.jsonl`, `generation_trace.jsonl`,
 events, runtime transcript, chat sessions and launcher/model logs. Read current receipts and loaded
 source before changing prompts. `/api/version` compares normalized content hashes of watched
-sources against startup, including task/context assembly and `nova_cortex/context_budget.py`, while
+sources against startup, including task/context assembly, `nova_cortex/context_budget.py` and the
+opt-in provider diagnostic helper, while
 ignoring watcher header timestamps and line endings. This detects even
 same-size edits with unchanged timestamps; it is not a census of every imported module.
 New structured receipts distinguish success, failure, refusal,
 timeout, cancellation and unknown. Guest receipts include their shell/display context. Pipeline
 shows tool start and terminal outcomes rather than only witness work; its operation IDs link to
 the tool ledger. Unknown terminal tool outcomes use neutral `tool_finished`, not a successful
-completion label. Witness incomplete/error statuses are unverified, never approval. A historical
+completion label. Witness reads show attempted/returned/refused/failed counts, not a blanket
+verified label; returned output is not proof that the claim was checked. Witness incomplete/error
+statuses are unverified, never approval. A historical
 `witness_answered` with an incomplete/error status remains visibly unverified. Historical
 Pipeline rows whose recorded approval contains a tool request are shown as incomplete by the
 controller without rewriting the original log. Historical receipts retain their original values; older
@@ -1136,12 +1195,27 @@ Conversation power uses a separate local lifecycle gate and launcher status. If 
 restart is needed, inspect both the chat worker and launcher versions; a fresh static page can still
 be connected to old processes. `starting`/`stopping` acknowledge work in progress, not readiness.
 
-For desktop voice, open Conversation → Devices & tests. Run `voice_gateway/setup_windows.py` to
-recreate the isolated CPU environment and pinned speech assets. Readiness verifies local dependencies;
-select a listed compatible device, apply while stopped, and use the bounded microphone/speaker tests.
-A playback API receipt still needs human confirmation of audible sound on the intended output. Full
-voice is explicit and does not restart automatically after a worker error or Nova restart. Use the audio
-note and source fingerprint when diagnosing stale UI versus failed capture, decoding or playback.
+For desktop voice, open **Widgets → Voice → Settings & tests**. Run
+`voice_gateway/setup_windows.py` to recreate the isolated CPU environment and pinned speech assets.
+The default is faster-whisper large-v3-turbo, CPU int8, English, with local Silero VAD and temporary
+Windows system speech. Readiness checks dependencies and selected assets without audio capture;
+choose a listed compatible device, apply while stopped and explicitly run microphone/speaker tests.
+A playback API receipt still needs human confirmation on the intended output. Call Nova is explicit
+and does not restart automatically after a worker error or Nova restart.
+
+Voice's Delivery & playback details show the current request/message/run IDs, delayed/suppressed
+reply reason and actual output phases. A requested unit is not yet playback; process launch is not a
+measured audio start. Check `last_turn` versus `last_playback`, output device, audit disposition and
+source fingerprint before attributing silence to the model. End call retires local output immediately
+and waits briefly for final request-scoped cancellation acknowledgement; an unconfirmed receipt does
+not justify claiming all provider computation ended.
+
+For a bounded provider investigation, `Temp/provider-diagnostics/capture.json` explicitly enables
+capture with a unique `capture_id` and timezone-aware `expires_at` for at most ten minutes. Receipts
+preserve fitted provider JSON fields and context/memory/provider/audit timings, with image data URLs
+removed and file/count/byte caps. Capture is off without a valid marker; remove it when the diagnostic
+run ends. It records transient conversation content, so keep receipts local in excluded Temp and
+never treat them as ordinary project documentation.
 
 The voice loop parses tool reaches from both content and reasoning streams. Receipt-backed context
 helps distinguish executed work from earlier narration. Check loaded source, actual receipts,
@@ -1191,9 +1265,13 @@ disk rather than a slow network mount.
     Distinguish a local socket fixture from a live Nova turn; test wrong identities, delayed replies,
     cancellation during synthesis, Stop, queue replacement and audit status before native playback.
     Measure mic/STT, first-audio latency, interruption and avatar timing separately on real hardware.
-    The Conversation controls also have `test_voice_control.py` and `test_voice_ui.cjs` coverage;
+    The Voice widget and controller also have `test_voice_control.py` and `test_voice_ui.cjs` coverage;
     native/API/segmentation tests are in `voice_gateway/test_native_voice.py` and
-    `test_worker_readiness.py`. Status-only checks must never acquire devices. Keep microphone capture,
+    `test_worker_readiness.py`. Include acknowledgement delays past 300 seconds, scoped Stop that cannot
+    cancel another socket's request, recognizing-state reporting, device/output failures and actual
+    request/message/run correlation. `--smoke-link` remains silent; `--smoke-audio` uses real TTS and
+    refuses NullTTS. Both exercise the request sweeper. Status-only checks must never acquire devices.
+    Keep microphone capture,
     silent WAV transcription, audible playback, live Nova replies and native avatar timing distinct.
     Cole authorized Nova and audio tests on October 5; future restrictions override that permission.
 
