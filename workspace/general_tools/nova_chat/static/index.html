@@ -546,7 +546,9 @@ a:hover { text-decoration: underline; }
 .stab-add:hover { color: var(--nova); }
 
 /* Messages */
-#chat { flex: 1; overflow-y: auto; padding: 14px 0 4px; display: flex; flex-direction: column; }
+#chat-message-area { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.controller.nc-no-conversation #chat-message-area { display: none; }
+#chat { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 0 4px; display: flex; flex-direction: column; }
 .msg-wrap {
   padding: 8px 20px; display: flex; gap: 11px;
   animation: msgIn 0.16s var(--ease); position: relative;
@@ -899,9 +901,9 @@ a:hover { text-decoration: underline; }
 
 /* Jump-to-latest — only exists while the newest message is off-screen. */
 #chat-jump {
-  position: absolute; left: 50%; bottom: 96px; transform: translate(-50%, 8px);
+  position: absolute; left: 50%; bottom: 12px; transform: translate(-50%, 8px);
   z-index: 40; display: flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 500; padding: 5px 12px;
+  font-size: 11px; font-weight: 500; min-height: 36px; padding: 5px 12px;
   color: var(--text); background: var(--bg-2, #1b1b26);
   border: 1px solid var(--border); border-radius: 999px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.45);
@@ -1321,12 +1323,14 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
         <span id="nova-state-label">Sleeping</span>
       </div>
     </div>
-    <!-- Messages -->
-    <div id="chat"></div>
-    <!-- Jump-to-latest. Appears ONLY when the newest message is off-screen. -->
-    <button id="chat-jump" onclick="chatJump()" title="Jump to the latest message">
-      <span id="chat-jump-label">↓ Latest</span>
-    </button>
+    <!-- The jump control is anchored to the message viewport, independent of voice/composer height. -->
+    <div id="chat-message-area">
+      <div id="chat"></div>
+      <!-- Jump-to-latest. Appears ONLY when the newest message is off-screen. -->
+      <button id="chat-jump" onclick="chatJump()" title="Jump to the latest message">
+        <span id="chat-jump-label">↓ Latest</span>
+      </button>
+    </div>
     <!-- Thought cards — shown inline above input while Nova is working -->
     <div id="thought-cards-bar"></div>
     <!-- Input -->
@@ -6287,7 +6291,7 @@ if(new URLSearchParams(location.search).get('layout')==='legacy'){
 <script src="/static/updater.js?v=updater-cleanup-1"></script>
 <script src="/static/workspace.js?v=manual-layout-2"></script>
 <script src="/static/conversation-power.js?v=conversation-power-1"></script>
-<link rel="stylesheet" href="/static/voice.css?v=conversation-voice-1">
-<script src="/static/voice.js?v=conversation-voice-1"></script>
+<link rel="stylesheet" href="/static/voice.css?v=conversation-voice-4">
+<script src="/static/voice.js?v=conversation-voice-4"></script>
 </body>
 </html>

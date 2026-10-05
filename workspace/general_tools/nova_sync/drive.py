@@ -76,7 +76,7 @@ API_RETRIES = 5
 
 # Never mirror: VCS internals, caches, screenshots, build output, model weights
 # (models/ is sealed and 18GB+), and the llama runtime binaries.
-EXCLUDE_DIRS     = {".git", "__pycache__", "node_modules", "screenshots",
+EXCLUDE_DIRS     = {".git", "__pycache__", "node_modules", ".venv", "venv", "screenshots",
                     "_build", "models", "llama"}
 # Path-prefix excludes (relative to workspace root). logs/ is pure runtime churn
 # and would re-trigger a sync every cycle, so it stays out of Gemini's mirror.

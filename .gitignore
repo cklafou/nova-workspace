@@ -1,3 +1,4 @@
+# @nova: Exclude local dependencies and generated or private paths from automated source handling.
 # ── PyInstaller build output ──────────────────────────────────────────────────
 workspace/_build/
 workspace/**/__pycache__/
@@ -47,3 +48,7 @@ NovaDrop/
 .tmp.drivedownload/
 # The copy Drive for Desktop syncs instead of this repo (workspace/general_tools/nova_sync/drive_copy.py).
 /Nova_Drive/
+
+# Local Python environments are reproducible dependencies, never source.
+.venv/
+venv/

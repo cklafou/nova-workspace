@@ -73,7 +73,7 @@ def _current_request(messages):
     if labelled:
         return labelled[-1]
     actual = [i for i in users if not content_text(messages[i].get("content")).startswith(
-        ("[System Result", "[System Error", "[System: Result", "[System: Error"))]
+        ("[System ", "[System:", "Screenshot from "))]
     return (actual or users or [None])[-1]
 
 

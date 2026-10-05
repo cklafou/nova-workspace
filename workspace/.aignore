@@ -1,5 +1,7 @@
+# @nova: Exclude local dependencies and generated or private paths from automated source handling.
 # .aignore — Paths excluded from AI file indexes, backups, and Drive sync.
-# Parsed by watcher.py, backup.py, and drive.py on startup.
+# Reference exclusions; sync consumers also enforce their own built-in exclusions.
+# watcher.py currently loads the repository-root .aignore at startup.
 # Format: one path per line. Lines starting with # are comments.
 # Prefix with workspace/ to target a specific subpath, or just a folder name
 # to exclude it anywhere it appears in the tree.
@@ -23,3 +25,7 @@ prompt_cache
 # Runtime state and training scratch: changes here are not source and must not trigger autosave.
 workspace/general_tools/nova_updater/state
 workspace/Temp/updater
+
+# Local Python environments are reproducible dependencies, never source.
+.venv
+venv

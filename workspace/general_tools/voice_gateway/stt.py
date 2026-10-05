@@ -6,6 +6,8 @@
 from __future__ import annotations
 
 import asyncio
+import math
+from pathlib import Path
 import sys
 import threading
 
@@ -70,8 +72,10 @@ class MoonshineSTT:
     async def utterances(self):
         np, sd = self._np, self._sd
         sr = self.cfg.sample_rate
-        block = int(sr * 0.03)                        # 30ms frames
-        silence_frames = max(1, self.cfg.silence_ms // 30)
+        # Current Silero ONNX requires exactly 512 samples at 16k (32ms), not 480.
+        block = 512 if sr == 16000 else 256 if sr == 8000 else int(sr * 0.032)
+        silence_frames = max(1, math.ceil(self.cfg.silence_ms * sr / (1000 * block)))
+        max_frames = max(1, int(60 * sr / block))       # Moonshine accepts strictly under 64s
         q: asyncio.Queue = asyncio.Queue()
         loop = asyncio.get_running_loop()
         generation = [0]                              # bumps while the gate is closed
@@ -93,6 +97,8 @@ class MoonshineSTT:
                 stale = stamp != generation[0]
                 if stale or (speaking and stamp != born):
                     buf, silent, speaking = [], 0, False       # never splice audio across her turn
+                    if hasattr(self._vad, "reset"):
+                        self._vad.reset()
                     if stale:
                         continue
                 frame = np.frombuffer(chunk, dtype="int16").astype("float32") / 32768.0
@@ -108,13 +114,13 @@ class MoonshineSTT:
                 elif speaking:
                     silent += 1
                     buf.append(frame)
-                    if silent >= silence_frames:
-                        audio = np.concatenate(buf) if buf else np.zeros(1, "float32")
-                        buf, silent, speaking = [], 0, False
-                        text = await loop.run_in_executor(None, self._transcribe, audio)
-                        text = (text or "").strip()
-                        if text:
-                            yield text
+                if speaking and (silent >= silence_frames or len(buf) >= max_frames):
+                    audio = np.concatenate(buf) if buf else np.zeros(1, "float32")
+                    buf, silent, speaking = [], 0, False
+                    text = await loop.run_in_executor(None, self._transcribe, audio)
+                    text = _transcript_text(text)
+                    if text:
+                        yield text
 
     def _is_voiced(self, frame) -> bool:
         if self._vad is None:
@@ -139,42 +145,95 @@ def make_stt(cfg):
 
 
 # ── model loaders (kept out of the class so import failures are localized) ───────────────────
-def _load_silero(cfg):
-    """Return a callable(frame)->speech_prob in [0,1], or None on failure."""
-    try:
-        import numpy as np
-        import onnxruntime as ort  # noqa: F401
-        import torch
-        model, _ = torch.hub.load("snakers4/silero-vad", "silero_vad", trust_repo=True)
-        sr = cfg.sample_rate
+class _SileroOnnx:
+    """Single-stream NumPy adapter for the official Silero v6 ONNX state/context inputs.
 
-        def _prob(frame):
-            with torch.no_grad():
-                t = torch.from_numpy(np.asarray(frame, dtype="float32"))
-                return float(model(t, sr).item())
-        return _prob
-    except Exception as e:
-        print(f"[voice_gateway] Silero VAD unavailable ({e}) — using energy gate")
+    Contract: github.com/snakers4/silero-vad/blob/v6.2.1/src/silero_vad/utils_vad.py.
+    No Torch import, GPU session, network call, or microphone acquisition.
+    """
+    def __init__(self, path, sample_rate):
+        import numpy as np
+        import onnxruntime as ort
+        if sample_rate not in (8000, 16000):
+            raise ValueError("Silero supports 8000 or 16000 Hz")
+        self.np, self.sample_rate = np, sample_rate
+        self.frame_size = 512 if sample_rate == 16000 else 256
+        self.context_size = 64 if sample_rate == 16000 else 32
+        options = ort.SessionOptions()
+        options.inter_op_num_threads = options.intra_op_num_threads = 1
+        self.session = ort.InferenceSession(str(path), sess_options=options, providers=["CPUExecutionProvider"])
+        self.reset()
+
+    def reset(self):
+        self.state = self.np.zeros((2, 1, 128), dtype="float32")
+        self.context = self.np.zeros((1, self.context_size), dtype="float32")
+
+    def __call__(self, frame):
+        np = self.np
+        frame = np.asarray(frame, dtype="float32").reshape(1, -1)
+        if frame.shape[1] != self.frame_size:
+            raise ValueError(f"Silero needs {self.frame_size} samples, got {frame.shape[1]}")
+        audio = np.concatenate((self.context, frame), axis=1)
+        probability, self.state = self.session.run(None, {
+            "input": audio, "state": self.state, "sr": np.array(self.sample_rate, dtype="int64")})
+        self.context = audio[:, -self.context_size:].copy()
+        return float(probability.reshape(-1)[0])
+
+
+def _load_silero(cfg):
+    """Use the pinned local CPU ONNX asset, with an explicit energy fallback if absent."""
+    try:
+        path = Path(sys.prefix) / "share" / "nova_voice" / "silero_vad.onnx"
+        if not path.is_file():
+            raise RuntimeError("pinned Silero asset missing; run setup_windows.py")
+        return _SileroOnnx(path, cfg.sample_rate)
+    except Exception as error:
+        print(f"[voice_gateway] Silero VAD unavailable ({error}) — using energy gate")
         return None
 
 
+def _transcript_text(result):
+    """Moonshine ONNX returns one string per batch item; do not call .strip on its list."""
+    if result is None:
+        return ""
+    if isinstance(result, str):
+        return result.strip()
+    if isinstance(result, (list, tuple)) and all(isinstance(item, str) for item in result):
+        return " ".join(item.strip() for item in result if item.strip())
+    raise TypeError(f"Unexpected Moonshine transcript type: {type(result).__name__}")
+
+
 def _load_moonshine(cfg):
-    """Return a callable(audio_np)->text."""
+    """Cache one CPU ONNX model and tokenizer for the microphone session, at 16k mono."""
+    if cfg.sample_rate != 16000:
+        raise RuntimeError("Moonshine requires sample_rate=16000; select a 16k microphone stream")
     try:
         import moonshine_onnx as moonshine
-        model = cfg.moonshine_model
+        import numpy as np
+    except ImportError as error:
+        raise RuntimeError(f"Moonshine ONNX is unavailable ({error}) — run setup_windows.py") from error
+    name = str(cfg.moonshine_model)
+    path = Path(name)
+    prepared = Path(sys.prefix) / "share/nova_voice/moonshine-base"
+    if name in ("moonshine/base", "base") and prepared.is_dir():
+        path = prepared
+    if path.is_dir():
+        # The current upstream class still needs base/tiny to size decoder caches.
+        family = "tiny" if "tiny" in path.name.lower() else "base"
+        model = moonshine.MoonshineOnnxModel(models_dir=str(path), model_name=family)
+    else:
+        model = moonshine.MoonshineOnnxModel(model_name=name)
+    tokenizer = moonshine.load_tokenizer()
 
-        def _t(audio):
-            return moonshine.transcribe(audio, model)
-        return _t
-    except Exception:
-        pass
-    try:
-        import moonshine
-        model = cfg.moonshine_model
-
-        def _t2(audio):
-            return moonshine.transcribe(audio, model)
-        return _t2
-    except Exception as e:
-        raise RuntimeError(f"moonshine not installed ({e}) — pip install useful-moonshine-onnx")
+    def transcribe(audio):
+        samples = np.asarray(audio, dtype="float32")
+        if samples.ndim != 1:
+            raise ValueError("Moonshine input must be mono audio")
+        seconds = samples.size / 16000
+        if seconds <= 0.1:
+            return ""                              # too short to be an utterance
+        if seconds >= 64:
+            raise ValueError("Moonshine utterance must be shorter than 64 seconds")
+        tokens = model.generate(samples[None, :])
+        return _transcript_text(tokenizer.decode_batch(tokens))
+    return transcribe

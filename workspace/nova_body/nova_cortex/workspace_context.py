@@ -55,7 +55,7 @@ GENERAL_TOOLS_DIR = WORKSPACE_DIR / "general_tools"
 # ── Limits ────────────────────────────────────────────────────────────────────
 TEXT_EXTENSIONS   = {".py", ".md", ".json", ".txt", ".jsonl", ".ps1", ".cmd",
                      ".yaml", ".yml", ".toml", ".ini", ".env"}
-SKIP_DIRS         = {"__pycache__", ".git", "node_modules", ".clawhub",
+SKIP_DIRS         = {"__pycache__", ".git", "node_modules", ".venv", "venv", ".clawhub",
                      "backups", "sessions", "static", "_admin", "models", "llama",
                      "nova_memory_db", "prompt_cache", "Temp", "logs", "Avatar"}
 SKIP_FILES        = {"FILE_INDEX.md", "FILE_INDEX_LINK.md", ".drive_sync_cache.json",
@@ -354,8 +354,10 @@ class WorkspaceContext:
             candidates.insert(0, workspace_path(real_rel))
 
         for p in candidates:
-            # Direct filename mentions must respect the same private-room boundary as
-            # inventory recall. Nova's deliberate host tools remain independent.
+            # Automatic injection excludes local dependencies and the private room;
+            # Nova's deliberate host/file tools remain independent.
+            if any(part.casefold() in {".venv", "venv"} for part in p.parts):
+                return
             if p.resolve().is_relative_to((WORKSPACE_DIR / "Temp" / "collaboration").resolve()):
                 return
             if p.exists() and p.is_file() and p.suffix.lower() in TEXT_EXTENSIONS:
@@ -635,7 +637,10 @@ class WorkspaceContext:
 
 def _context_paths(start=None):
     """Inventory ordinary project files without entering sealed weights or runtime stores."""
-    for root, directories, files in os.walk(start or WORKSPACE_DIR, followlinks=False):
+    base = Path(start or WORKSPACE_DIR)
+    if any(part.casefold() in {".venv", "venv"} for part in base.parts):
+        return
+    for root, directories, files in os.walk(base, followlinks=False):
         directories[:] = [name for name in directories if name not in SKIP_DIRS
                           and not name.startswith('.') and not (Path(root) / name).is_symlink()]
         for name in directories + files:

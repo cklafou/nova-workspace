@@ -28,7 +28,7 @@ from pathlib import Path
 
 TEXT_SUFFIXES = {".py", ".md", ".txt", ".json", ".jsonl", ".cmd", ".bat", ".ps1", ".sh", ".js",
                  ".html", ".css", ".toml", ".yaml", ".yml", ".cfg", ".ini", ".csv", ".svg"}
-SKIP_PARTS = {"node_modules", "__pycache__", ".git"}
+SKIP_PARTS = {"node_modules", "__pycache__", ".git", ".venv", "venv"}
 MAX_BYTES = 5 * 1024 * 1024
 MANIFEST = ".nova_export.json"
 README = """Nova_Drive: Project Nova, readable from anywhere Google Drive works.
@@ -56,7 +56,7 @@ def wanted(path: str, size: int) -> bool:
     if parts[:2] == ("temp", "collaboration"):
         return False  # Defense in depth even if a transport file was accidentally committed.
     return (size <= MAX_BYTES and p.suffix.lower() in TEXT_SUFFIXES
-            and not SKIP_PARTS.intersection(p.parts))
+            and not SKIP_PARTS.intersection(parts))
 
 
 def _dest(read: Path, path: str) -> Path:

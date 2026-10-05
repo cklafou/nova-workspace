@@ -1,3 +1,4 @@
+# @nova: Back up Nova workspace source and records while excluding local dependency environments.
 # Last updated: 2026-10-04 15:01:23
 """
 nova_backup.py -- Automated Workspace Backup System
@@ -57,7 +58,7 @@ SESSION_SNAPSHOT_FILES = [
 ]
 
 EXCLUDE_DIRS = {
-    ".git", "__pycache__", "node_modules",
+    ".git", "__pycache__", "node_modules", ".venv", "venv",
     "screenshots", "backups",
     "models",       # model weight files (GGUF etc.) — never back up, 18GB+
 }

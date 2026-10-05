@@ -35,6 +35,7 @@ import speech
 spec = importlib.util.spec_from_file_location('voice_control_worker_fixture', TOOLS / 'voice_gateway' / 'control_worker.py')
 worker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(worker)
+ACTUAL_REPORT = worker.report
 
 
 def readiness():
@@ -271,10 +272,17 @@ class FakePlayer:
 class WorkerTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.events = []
-        self.enterContext(patch.object(worker, 'report', side_effect=lambda kind, **fields: self.events.append({'type': kind, **fields})))
+        self.enterContext(patch.object(worker, 'report', side_effect=lambda event_type, **fields: self.events.append({'type': event_type, **fields})))
         self.cfg = GatewayConfig()
         self.control = worker.Control()
         FakePlayer.instances = []
+
+    async def test_report_can_serialize_test_kind_without_parameter_collision(self):
+        output = io.StringIO()
+        with patch('sys.stdout', output):
+            ACTUAL_REPORT('test', kind='speaker', state='running')
+        self.assertEqual(json.loads(output.getvalue()[len(worker.PREFIX):]),
+                         {'type': 'test', 'kind': 'speaker', 'state': 'running'})
 
     async def test_probe_checks_presence_without_loading_audio_or_models(self):
         self.cfg.tts_backend = 'windows'
@@ -286,6 +294,22 @@ class WorkerTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result['available'])
         self.assertTrue(result['capabilities']['microphone_test'])
         self.assertEqual(result['backends']['output'], 'windows')
+
+    async def test_backend_cut_outcome_does_not_become_played(self):
+        class CutBackend:
+            def speak(self, text, should_stop=None, on_playback=None):
+                on_playback()
+                return {'outcome': 'cut'}
+            def stop(self):
+                pass
+        body = MemoryBody()
+        player = speech.SpeechPlayer(CutBackend(), body, tail_s=0).start()
+        try:
+            player.say(speech.Utterance('Backend interrupted audio'))
+            await player.drain()
+            self.assertEqual(body.of('speech')[-1]['outcome'], 'cut')
+        finally:
+            await player.close()
 
     async def test_control_mute_acknowledges_flags_and_interrupts_current_output(self):
         player = FakePlayer(); session = types.SimpleNamespace(output_muted=False, player=player)

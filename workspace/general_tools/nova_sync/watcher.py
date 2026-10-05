@@ -52,7 +52,7 @@ INDEX_PATH    = WORKSPACE_DIR / "Orient" / "INDEX.md"
 DEBOUNCE_SECONDS = 120
 
 EXCLUDE_DIRS = {
-    ".git", "__pycache__", "node_modules", "screenshots",
+    ".git", "__pycache__", "node_modules", ".venv", "venv", "screenshots",
     # Google Drive for Desktop backs up Project_Nova and stages uploads in these two folders
     # (tens of thousands of temp copies). Never source: watching them only queues autosave
     # cycles, and git must never see them either -- they are in .gitignore (2026-10-02).
@@ -110,7 +110,7 @@ def _audit_should_skip(path: str) -> bool:
         return True
     return False
 
-# Read .aignore dynamically and append to EXCLUDE_SUBPATHS
+# Read the repository-root .aignore once at startup; built-in exclusions do not depend on it.
 try:
     _aignore_file = WATCH_DIR / ".aignore"
     if _aignore_file.exists():
@@ -179,7 +179,8 @@ def _is_frozen_file(path: Path) -> bool:
 
 
 def update_timestamp_in_file(path: Path):
-    if _is_frozen_file(path) or path.name in EXCLUDE_FROM_TIMESTAMPS:
+    if (_is_frozen_file(path) or path.name in EXCLUDE_FROM_TIMESTAMPS
+            or any(part.casefold() in {".venv", "venv"} for part in path.parts)):
         return
     suffix = path.suffix.lower()
     if suffix not in (".py", ".md"):
@@ -775,6 +776,7 @@ def run_pup_cycle():
             and p.is_file()
             and len(p.relative_to(WORKSPACE_DIR).parts) > 1
             and not _is_frozen_file(p)
+            and not any(part.casefold() in {".venv", "venv"} for part in p.parts)
         ]
 
         if not candidates:

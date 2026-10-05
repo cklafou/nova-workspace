@@ -833,6 +833,26 @@ trigger Priority 0; they are not yet automatically converted into tasks. Focus l
 at checkpoints; each wake has a configurable time budget. Stop supervises generation, workers
 and child processes, and reports pending cleanup rather than falsely claiming everything stopped.
 
+Task continuity uses the existing `nova_body/Tasking/tasks.json`, not another task store. Title/notes
+carry the objective, acceptance checks define completion, and `task_progress` can persist a bounded
+`continuity` object: next step, constraints and observations. Omitted fields retain previous values;
+empty text/lists clear a supplied field. These survive restart and the twenty-note progress limit.
+Both ordinary chat and autonomous execution receive this saved context. Each chat context build reads
+up to three unfinished tasks in a block capped at 6,000 characters, before larger identity/memory
+sections; valid active focus comes first. Done/abandoned tasks stay in storage but do not enter that
+resume block. Saved observations are Nova-authored notes, not independent verification or permission
+to override the current request. Shortened fields are marked; use a targeted task query for details
+rather than pushing the entire board through a clipped file-read result.
+
+`nova_cortex/context_budget.py` fits the initial prompt and subsequent tool rounds. The combined
+system prefix, identity and checkpoint no longer receive the ordinary 24,000-character message cap.
+Older history is discarded before excess system text is shortened; the current request, newest turn
+and marked task checkpoint receive priority. Fitting reserves the actual output allowance plus
+4,096 tokens, using the established 3.4 characters/token estimate and an additional 174,000-character
+ceiling. The old minimum-four-turn overflow override is gone. This bounds estimated text, not exact
+tokenizer or image usage; unusually small budgets can still shorten critical content. Exact-candidate
+witness audits bypass this normal fitting policy so evidence is not silently changed.
+
 ## Body faculties
 
 | Part | Responsibility | Python sources |
@@ -964,6 +984,15 @@ sealed 27-case holdout; no model evaluation of either has run. Nova remained off
 The [Codex/Cowork comparison](Architecture/evidence/2026-10-05-agent-harness-comparison.md) separates
 model capability from tool execution, context, persistence and presentation. It recommends measuring
 these existing Nova paths before replacing the architecture; its review status is recorded in the report.
+The October 5 continuity changes passed 86 relevant isolated checks: 18 new task/context cases,
+30 modernization, 31 delivery and seven ModelClient tests. A fresh module load recovered checkpoint
+fields; partial updates retained prior constraints and observations after old progress notes were
+pruned. A fixture using the real system prefix preserved the current request and a checkpoint at an
+oversized context tail through final fitting. This is persistence/prompt evidence, not a live proof
+that Nova reliably saves checkpoints or resumes long work. No personal records were edited.
+The same day's dependency exclusion repair passed 34 sync tests, including ten new environment
+fixtures. Exactly 1,646 accidentally tracked virtualenv paths were removed from Git's index; installed
+files remained on disk with unchanged size/mtime metadata. This did not erase earlier Git history.
 Backend edits load on the next Start Nova; the existing UI needs a reload to receive new JavaScript.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 """
@@ -1056,7 +1085,8 @@ from both Git and Drive, including relocated `.auth_token` and `nova_users.json`
 Useful evidence lives under `nova_body/logs/`: `tool_calls.jsonl`, `generation_trace.jsonl`,
 events, runtime transcript, chat sessions and launcher/model logs. Read current receipts and loaded
 source before changing prompts. `/api/version` compares normalized content hashes of watched
-sources against startup, ignoring watcher header timestamps and line endings. This detects even
+sources against startup, including task/context assembly and `nova_cortex/context_budget.py`, while
+ignoring watcher header timestamps and line endings. This detects even
 same-size edits with unchanged timestamps; it is not a census of every imported module.
 New structured receipts distinguish success, failure, refusal,
 timeout, cancellation and unknown. Guest receipts include their shell/display context. Pipeline
@@ -1135,6 +1165,18 @@ disk rather than a slow network mount.
     Respect Cole's current instruction to keep Nova/models/audio off while he is gaming.
 
 ## Files and recovery
+
+Local Python `.venv/` and `venv/` trees are dependencies, including any model assets installed inside
+them. Root/workspace Git rules exclude them; built-in filters also keep them out of watcher events,
+audit queues, timestamp/PUP writes, Drive scans/indexes, weekly source backups, the committed-file
+Drive reading copy, path repair and automatic context injection. Orient already prunes both names.
+Deliberate file/host tools remain available. The watcher reads the repository-root `.aignore` once at
+startup; `workspace/.aignore` is a reference list, not a shared live configuration consumed by every
+sync component. Do not assume editing it updates all filters or the running watcher.
+Adding Git ignore rules does not untrack an existing dependency tree: verify the exact path before
+index-only removal and retain its installed files. Existing processes need a normal restart to load
+source-level exclusions. Reconstruct environments from their setup instructions, rather than relying
+on source backup archives to contain third-party packages.
 
 Temporary diagnostics belong in `Temp/` beside their owner. Retired files go to
 `_admin/Trash/<change>_<date>/` with a manifest and `WHY.md`; preserve original relative paths,

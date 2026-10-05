@@ -67,7 +67,9 @@
     const details = element("details", "nv-details");
     details.append(element("summary", "", "Devices & tests"));
     const detailsBody = element("div", "nv-details-body");
-    const help = element("p", "nv-help", "Audio stays off until you start voice or run a test. Device changes apply while voice is stopped.");
+    const help = element("p", "nv-help", "Audio starts only when requested. Apply device changes while voice is stopped.");
+    const backend = element("p", "nv-help");
+    backend.id = "voice-backend";
     const devices = element("div", "nv-device-grid");
     function selector(title, id) {
       const label = element("label", "nv-device", title);
@@ -105,7 +107,9 @@
     testResult.setAttribute("role", "status");
     const transcript = element("p", "nv-transcript");
     transcript.id = "voice-transcript";
-    detailsBody.append(help, devices, deviceActions, testActions, testResult, transcript);
+    const audioActions = element("div", "nv-audio-actions");
+    audioActions.append(deviceActions, testActions);
+    detailsBody.append(help, backend, devices, audioActions, testResult, transcript);
     details.append(detailsBody);
     root.append(bar, notice, caption, details);
     const composer = document.getElementById("input-area");
@@ -169,6 +173,9 @@
       notice.textContent = reason;
       notice.hidden = !reason;
       notice.dataset.error = String(!!actionError || !!status?.error || stale);
+      const voiceName = {windows: "Windows system voice (temporary)", chatterbox: "Chatterbox", llamacpp: "Local model voice"}[status?.backends?.output];
+      backend.textContent = voiceName ? "Speaking voice: " + voiceName : "";
+      backend.hidden = !voiceName;
       const latest = status?.last_caption;
       caption.hidden = !latest?.text;
       captionText.textContent = latest?.text || "";

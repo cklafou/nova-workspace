@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T08:39:50+00:00 from source (input `952e8b5ef890`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:04:23+00:00 from source (input `8d76f84984eb`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -45,7 +45,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/architecture_map/notes/model_updates.md](../general_tools/architecture_map/notes/model_updates.md) — Orient note: how Nova's model updater checks, installs, rolls back and trains LoRAs, published in OPERATIONS.md.
 - [general_tools/architecture_map/notes/security.md](../general_tools/architecture_map/notes/security.md) — Explain Nova access boundaries, identity and known exposure gaps.
 - [general_tools/architecture_map/notes/shelf.md](../general_tools/architecture_map/notes/shelf.md) — Orient note: introduces Nova's own tools above their derived table, published in ARCHITECTURE.md.
-- [general_tools/architecture_map/notes/tunables.md](../general_tools/architecture_map/notes/tunables.md) — Orient note: how tunable variables work and how to add one, published in OPERATIONS.md.
+- [general_tools/architecture_map/notes/tunables.md](../general_tools/architecture_map/notes/tunables.md) — Explain live tunable variables and distinguish source-defined context limits.
 - [general_tools/architecture_map/orient.py](../general_tools/architecture_map/orient.py) — Generates Orient documentation and validates source, review and link freshness.
 - [general_tools/architecture_map/reviews.json](../general_tools/architecture_map/reviews.json)
 - [general_tools/architecture_map/serve.py](../general_tools/architecture_map/serve.py) — Serve and automatically regenerate the read-only Nova architecture atlas.
@@ -130,8 +130,8 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 ## general_tools/nova_sync
 
 - [general_tools/nova_sync/__init__.py](../general_tools/nova_sync/__init__.py) — Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.
-- [general_tools/nova_sync/backup.py](../general_tools/nova_sync/backup.py) — nova_backup.py -- Automated Workspace Backup System
-- [general_tools/nova_sync/dir_patch.py](../general_tools/nova_sync/dir_patch.py) — nova_sync/dir_patch.py -- Nova Workspace Path Auditor
+- [general_tools/nova_sync/backup.py](../general_tools/nova_sync/backup.py) — Back up Nova workspace source and records while excluding local dependency environments.
+- [general_tools/nova_sync/dir_patch.py](../general_tools/nova_sync/dir_patch.py) — Audit workspace import and file references without scanning local dependency source.
 - [general_tools/nova_sync/drive.py](../general_tools/nova_sync/drive.py) — Google Drive workspace mirror excluding secrets, runtime churn and private collaboration transport.
 - [general_tools/nova_sync/drive_copy.py](../general_tools/nova_sync/drive_copy.py) — Keeps Nova_Drive/read a text copy of the last commit, so Cole can read Nova from a Drive-only PC.
 - [general_tools/nova_sync/hooks/pre-push](../general_tools/nova_sync/hooks/pre-push) — Refuses a push GitHub would reject anyway (any file over 100 MB) before uploading anything.
@@ -140,6 +140,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_sync/tests/test_frozen_training.py](../general_tools/nova_sync/tests/test_frozen_training.py) — Protect frozen training hashes from timestamp maintenance and PUP replacement while preserving sync detection.
 - [general_tools/nova_sync/tests/test_gemini_index.py](../general_tools/nova_sync/tests/test_gemini_index.py) — Verify local Gemini index pruning without cloud authentication, content reads or changed backup eligibility.
 - [general_tools/nova_sync/tests/test_updates.py](../general_tools/nova_sync/tests/test_updates.py) — Tests Drive export, git hooks and collaborator roles in disposable repositories.
+- [general_tools/nova_sync/tests/test_virtualenv_exclusions.py](../general_tools/nova_sync/tests/test_virtualenv_exclusions.py) — Keep local Python environments out of Git, sync, backup, audits and automatic context using disposable fixtures.
 - [general_tools/nova_sync/watcher.py](../general_tools/nova_sync/watcher.py) — Workspace watcher: stamps Last-updated lines, autosaves to git (commit, then push), refreshes Nova's SELF manifest and Orient, mirrors to…
 
 ## general_tools/nova_updater
@@ -197,16 +198,20 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/voice_gateway/gateway.py](../general_tools/voice_gateway/gateway.py) — Connect microphone or typed input to Nova Chat and delivered replies to speech and avatar events.
 - [general_tools/voice_gateway/nova_link.py](../general_tools/voice_gateway/nova_link.py) — Exchange correlated voice requests and response events with the Nova Chat WebSocket server.
 - [general_tools/voice_gateway/README.md](../general_tools/voice_gateway/README.md) — Describe the voice gateway: first-stage delivered-text speech, its event contract, verified tests and the remaining audio work.
+- [general_tools/voice_gateway/requirements-windows.lock.txt](../general_tools/voice_gateway/requirements-windows.lock.txt) — Pin the verified Python 3.12 Windows CPU voice environment without Torch or Chatterbox.
 - [general_tools/voice_gateway/requirements.txt](../general_tools/voice_gateway/requirements.txt) — voice_gateway dependencies. Install in tiers — the gateway runs at each tier, more capable
 - [general_tools/voice_gateway/server_patch.md](../general_tools/voice_gateway/server_patch.md) — Optional server patch — thread the voice `register` to `stream_response`
+- [general_tools/voice_gateway/setup_windows.py](../general_tools/voice_gateway/setup_windows.py) — Install the isolated Windows CPU voice dependencies and verified Silero/Moonshine ONNX assets.
 - [general_tools/voice_gateway/speech.py](../general_tools/voice_gateway/speech.py) — Sanitize delivered text and serialize interruptible speech with explicit playback outcomes.
 - [general_tools/voice_gateway/stt.py](../general_tools/voice_gateway/stt.py) — Transcribe gated microphone input and provide a typed-input fallback for the voice gateway.
 - [general_tools/voice_gateway/test_committer.py](../general_tools/voice_gateway/test_committer.py) — Tests for the sentence-committer — the one piece with real logic, so the one with tests.
 - [general_tools/voice_gateway/test_link_socket.py](../general_tools/voice_gateway/test_link_socket.py) — Verify voice transport and disconnect cleanup against a local mock WebSocket server.
+- [general_tools/voice_gateway/test_native_voice.py](../general_tools/voice_gateway/test_native_voice.py) — Verify native speech file synthesis, cancellation, output-device selection and current Moonshine/Silero contracts without audio hardware.
 - [general_tools/voice_gateway/test_voice_flow.py](../general_tools/voice_gateway/test_voice_flow.py) — Test voice identity, delivery, interruption and truthful playback using isolated fake backends.
 - [general_tools/voice_gateway/tts.py](../general_tools/voice_gateway/tts.py) — Provide cancellable speech backends with truthful playback callbacks and surfaced failures.
 - [general_tools/voice_gateway/turns.py](../general_tools/voice_gateway/turns.py) — Match voice turns to delivered replies and control speech eligibility, timeouts and interruption.
 - [general_tools/voice_gateway/VOICE_CHECK.cmd](../general_tools/voice_gateway/VOICE_CHECK.cmd) — One-click, read-only voice readiness check (GPU memory, voice packages, audio devices, local services); writes voice_check.log.
+- [general_tools/voice_gateway/windows_tts.py](../general_tools/voice_gateway/windows_tts.py) — Synthesize a labelled Windows system voice to PCM WAV and play through the gateway's cancellable device path.
 
 ## nova_body
 

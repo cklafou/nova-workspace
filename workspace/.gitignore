@@ -69,3 +69,7 @@ nova_body/SELF/Avatar/
 
 # Model updater runtime state (decisions, plans, job history). Never source. (2026-10-04)
 general_tools/nova_updater/state/
+
+# Local Python environments are reproducible dependencies, never source.
+.venv/
+venv/

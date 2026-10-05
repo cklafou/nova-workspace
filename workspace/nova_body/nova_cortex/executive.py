@@ -813,6 +813,9 @@ def build_decision(reflection: str, cole_pending: bool, reason: str,
           ' "complete":[{"id":"t1","result":"..."}], "abandon":[{"id":"t2","reason":"..."}],'
           ' "wait":[{"id":"t3","waiting_on":"..."}], "reprioritize":[{"id":"t4","priority":3}],'
           ' "rest":"why you are resting"}',
+          "Optional create.acceptance is a list of concrete file/command checks. Optional "
+          "progress.continuity carries next_step text, constraints list and observations list; "
+          "omitted checkpoint fields retain prior values. Use these for recoverable work.",
           "No actions block at all is completely fine — most conversational moments need "
           "none. A `progress`/`complete` note is only honest if you ACTUALLY did it with a "
           "tool this step. Paths are workspace-relative on Windows (e.g. memory/STATUS.md), "
@@ -968,11 +971,6 @@ def build_execution(task: dict, recent: str = "") -> str:
     for this wake she ends with a single PROGRESS: or DONE: line the host logs."""
     tid    = task.get("id", "")
     title  = task.get("title", "")
-    notes  = task.get("notes", "")
-    notes += "\nAcceptance checks: " + json.dumps(task.get("acceptance", []))
-    notes += "\nDONE requests verification. Without acceptance checks this task waits for human review."
-    if task.get("workspace"):
-        notes += "\nStaged workspace: " + json.dumps(task["workspace"])
     prog   = task.get("progress", []) or []
     recent_prog = "\n".join(f"  - {p.get('note','')}" for p in prog[-4:]) or "  (nothing yet)"
     loop_n = _progress_loop_count(task)
@@ -982,9 +980,9 @@ def build_execution(task: dict, recent: str = "") -> str:
         "This is not reflection and not board bookkeeping — it is the real work, with your hands.",
         "",
         f'ACTIVE TASK [{tid}]: {title}{_asked_by(task)}',
-        (f"What {_asker(task)} asks: {notes}" if notes else None),
-        "Saved task checkpoint:",
+        "Saved task checkpoint (read Tasking/tasks.json if a field is marked shortened):",
         tasking.render_task_resume(task),
+        "DONE requests verification. Without acceptance checks this task waits for human review.",
         "Recent progress:",
         recent_prog,
         "",

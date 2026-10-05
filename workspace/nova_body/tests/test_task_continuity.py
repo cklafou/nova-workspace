@@ -246,6 +246,16 @@ class ContextBudget(unittest.TestCase):
         self.assertIn('HEADLESS_OBJECTIVE', str(result))
         self.assertLessEqual(text_size(result), 12000)
 
+    def test_headless_request_survives_newer_guest_screenshot(self):
+        messages = [{'role': 'system', 'content': 's' * 20000},
+                    {'role': 'user', 'content': 'HEADLESS_OBJECTIVE'},
+                    {'role': 'assistant', 'content': 'older tool call' * 500},
+                    {'role': 'user', 'content': [{'type': 'text', 'text': 'Screenshot from computer_screenshot, operation fixture; display=:1.'},
+                                                {'type': 'image_url', 'image_url': {'url': 'data:fixture'}}]}]
+        result = fit_messages(messages, max_chars=12000)
+        self.assertIn('HEADLESS_OBJECTIVE', str(result))
+        self.assertLessEqual(text_size(result), 12000)
+
     def test_fetch_uses_actual_output_reserve_and_preserves_audit_bypass(self):
         # Execute the real fetch prelude, stopping at the request payload assignment;
         # no HTTP/client import or model call is performed.

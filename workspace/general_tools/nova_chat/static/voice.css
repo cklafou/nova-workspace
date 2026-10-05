@@ -1,5 +1,5 @@
 /* @nova: Style compact voice controls embedded in Conversation, with accessible buttons and bounded device settings. */
-.nc-conversation-voice{flex:0 0 auto;min-width:0;margin:0 20px 10px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface,#25232e);color:var(--text,#e7e2ed);overflow:hidden;}
+.nc-conversation-voice{flex:0 0 auto;min-width:0;margin:0 20px 10px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface,#25232e);color:var(--text,#e7e2ed);max-height:min(300px,35%);overflow-y:auto;} 
 .nv-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:8px 10px;}
 .nv-identity{display:flex;flex-direction:column;gap:2px;min-width:95px;flex:1;}
 .nv-title{font-size:12px;font-weight:600;letter-spacing:.15px;}
@@ -21,11 +21,14 @@
 .nv-audit[data-status="CONCERN"],.nv-audit[data-status="INCOMPLETE"],.nv-audit[data-status="ERROR"]{color:#f3b695;}
 .nv-details{border-top:1px solid var(--border);font-size:12px;}
 .nv-details>summary{cursor:pointer;min-height:36px;box-sizing:border-box;padding:9px 10px;color:var(--text-dim,#bbb4c7);}
-.nv-details-body{padding:0 10px 10px;max-height:min(260px,32vh);overflow:auto;}
-.nv-help{margin:0 0 10px;color:var(--text-dim,#bbb4c7);font-size:11px;line-height:1.5;}
+.nv-details-body{padding:0 10px 10px;max-height:min(220px,28vh);overflow:auto;}
+.nv-help{margin:0 0 8px;color:var(--text-dim,#bbb4c7);font-size:11px;line-height:1.5;}
 .nv-device-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;}
 .nv-device{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:11px;color:var(--text-dim,#bbb4c7);}
 .nv-device select{width:100%;min-height:36px;box-sizing:border-box;border:1px solid var(--border);border-radius:7px;padding:6px;background:var(--bg,#1d1b25);color:var(--text,#e7e2ed);font:inherit;font-size:12px;}
-.nv-device-actions,.nv-tests{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;}
+.nv-audio-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
+.nv-device-actions,.nv-tests{display:contents;}
 .nv-test-result,.nv-transcript{font-size:11px;line-height:1.6;margin:9px 0 0;overflow-wrap:anywhere;}
 @media(max-width:540px){.nc-conversation-voice{margin-left:10px;margin-right:10px;}.nv-bar{gap:5px;}.nv-identity{min-width:85px;}.nc-conversation-voice .nv-button{padding:7px 8px;}}
+
+.nv-bar{position:sticky;top:0;z-index:1;background:var(--bg-surface,#25232e);}

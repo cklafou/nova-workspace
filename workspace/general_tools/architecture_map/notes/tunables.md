@@ -1,3 +1,4 @@
+<!-- @nova: Explain live tunable variables and distinguish source-defined context limits. -->
 _Last updated: 2026-10-04 14:28:11_
 ---
 doc: OPERATIONS.md
@@ -32,6 +33,17 @@ attachments and tool frames). Truncated output and omitted images are explicitly
 they do not certify an unseen claim. `computer_launch_wait_seconds` defaults to ten seconds
 for guest window verification. These defaults change the earlier narrow evidence slices and
 three-second launch wait; no personal tunables store was rewritten.
+
+**Context limits are currently source-defined, not live Variables controls.** The model client
+passes its configured window/output reserve to `nova_cortex/context_budget.py`; the default window
+is 65,536 tokens and output allowance is 16,384. A 4,096-token reserve and 3.4 characters/token
+estimate determine the text budget, additionally capped at 174,000 characters. Ordinary message
+text is capped at 24,000 characters; the merged system context is instead fitted to the total budget.
+Images and exact tokenizer costs are not measured. Keep the client's window value aligned with the
+inference launcher's context setting; changing a Variables entry cannot change these constants.
+The saved resume block is at most 6,000 characters across three unfinished tasks. Checkpoint field
+validation permits next_step text up to 1,000 characters, eight constraints up to 400 each, and eight
+observations up to 600 each; the prompt may shorten them while preserving the complete saved record.
 
 Currently registered, read from `REGISTRY`:
 

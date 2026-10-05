@@ -1,3 +1,4 @@
+# @nova: Audit workspace import and file references without scanning local dependency source.
 #!/usr/bin/env python3
 # Last updated: 2026-10-04 15:01:23
 """
@@ -35,7 +36,7 @@ SYNC_DIR      = Path(__file__).parent
 FILE_INDEX    = WORKSPACE_DIR / "Orient" / "INDEX.md"
 
 SKIP_DIRS = {
-    "__pycache__", ".git", "node_modules",
+    "__pycache__", ".git", "node_modules", ".venv", "venv",
     "backups", "logs", "screenshots",
 }
 

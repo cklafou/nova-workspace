@@ -22,9 +22,9 @@ PREFIX = "[voice-control] "
 _print_lock = threading.Lock()
 
 
-def report(kind, **values):
+def report(event_type, **values):
     with _print_lock:
-        print(PREFIX + json.dumps({"type": kind, **values}, ensure_ascii=False), flush=True)
+        print(PREFIX + json.dumps({"type": event_type, **values}, ensure_ascii=False), flush=True)
 
 
 def configuration():
@@ -92,6 +92,62 @@ def devices():
     return {"inputs": rows("input", default[0]), "outputs": rows("output", default[1])}
 
 
+def _control_lines(stream):
+    """Read Windows control pipes without holding a CRT stdin lock during native imports.
+
+    A blocked TextIOWrapper/FileIO stdin read can hold the Windows CRT descriptor lock.
+    NumPy's DLL initialization then stalled until a command arrived. Polling the native
+    pipe avoids a pending blocking read while retaining the same newline-JSON protocol.
+    """
+    if sys.platform != "win32" or stream.isatty():
+        yield from stream
+        return
+    import ctypes
+    from ctypes import wintypes
+    import msvcrt
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    read = kernel.ReadFile
+    read.argtypes = (wintypes.HANDLE, wintypes.LPVOID, wintypes.DWORD,
+                     ctypes.POINTER(wintypes.DWORD), wintypes.LPVOID)
+    read.restype = wintypes.BOOL
+    peek = kernel.PeekNamedPipe
+    peek.argtypes = (wintypes.HANDLE, wintypes.LPVOID, wintypes.DWORD, wintypes.LPVOID,
+                     ctypes.POINTER(wintypes.DWORD), wintypes.LPVOID)
+    peek.restype = wintypes.BOOL
+    handle = msvcrt.get_osfhandle(stream.fileno())
+    buffer = ctypes.create_string_buffer(4096)
+    count = wintypes.DWORD()
+    available = wintypes.DWORD()
+    pending = b""
+    while True:
+        # Even a pending native blocking read reproduced DLL-import stalls on this
+        # host. Peek + a short sleep keeps the control thread out of blocking I/O;
+        # ReadFile runs only for bytes already present in our single-reader pipe.
+        if not peek(handle, None, 0, None, ctypes.byref(available), None):
+            error = ctypes.get_last_error()
+            if error in (38, 109):
+                break
+            raise OSError(error, "Could not inspect voice control pipe")
+        if not available.value:
+            time.sleep(0.025)
+            continue
+        if not read(handle, buffer, min(len(buffer), available.value), ctypes.byref(count), None):
+            error = ctypes.get_last_error()
+            if error in (38, 109):           # EOF / broken pipe: parent ended control
+                break
+            raise OSError(error, "Could not read voice control pipe")
+        if not count.value:
+            break
+        pending += buffer.raw[:count.value]
+        if len(pending) > 65536:
+            raise ValueError("Voice control command exceeded 64 KiB")
+        while b"\n" in pending:
+            line, pending = pending.split(b"\n", 1)
+            yield line.decode("utf-8")
+    if pending.strip():
+        yield pending.decode("utf-8")
+
+
 class Control:
     def __init__(self):
         self.stop = asyncio.Event()
@@ -117,7 +173,7 @@ class Control:
         loop = asyncio.get_running_loop()
         def read():
             try:
-                for line in sys.stdin:
+                for line in _control_lines(sys.stdin):
                     try:
                         value = json.loads(line)
                         if isinstance(value, dict):
@@ -126,7 +182,16 @@ class Control:
                         continue
                 loop.call_soon_threadsafe(self.stop.set)
             except RuntimeError:
-                pass
+                pass                        # event loop has already closed
+            except Exception as error:
+                try:
+                    loop.call_soon_threadsafe(lambda message=str(error): report("error", message=message))
+                except (RuntimeError, TypeError):
+                    pass
+                try:
+                    loop.call_soon_threadsafe(self.stop.set)
+                except RuntimeError:
+                    pass
         threading.Thread(target=read, daemon=True, name="voice-control").start()
 
 
@@ -208,6 +273,9 @@ async def voice(cfg, control):
 
 async def microphone_test(cfg, control):
     """Six seconds of in-memory metering. No transcript, disk audio or model call."""
+    if control.stop.is_set():
+        report("test", kind="microphone", state="cancelled", message="Microphone test stopped")
+        return
     import numpy as np
     import sounddevice as sd
     levels = []
@@ -216,6 +284,9 @@ async def microphone_test(cfg, control):
         signal = np.asarray(indata)
         peak[0] = max(peak[0], float(np.max(np.abs(signal))))
         levels.append(float(np.mean(signal ** 2)))
+    if control.stop.is_set():
+        report("test", kind="microphone", state="cancelled", message="Microphone test stopped")
+        return
     report("test", kind="microphone", state="running", message="Speak for six seconds; audio stays in memory")
     device = None if cfg.input_device < 0 else cfg.input_device
     with sd.InputStream(device=device, channels=1, samplerate=cfg.sample_rate, dtype="float32", callback=audio):
@@ -267,6 +338,8 @@ async def speaker_test(cfg, control):
 
 
 async def controlled(mode, cfg):
+    report("state", state="starting" if mode == "run" else "testing",
+           reason="Preparing voice worker and local audio libraries")
     control = Control()
     control.listen()
     if mode == "run":

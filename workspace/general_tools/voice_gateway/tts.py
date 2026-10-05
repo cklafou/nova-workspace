@@ -175,9 +175,12 @@ def make_tts(cfg):
     """Resolve configured backends, falling back to logging if none can be constructed."""
     want = (cfg.tts_backend or "auto").lower()
     order = {"auto": ["chatterbox", "llamacpp", "null"], "chatterbox": ["chatterbox", "null"],
-             "llamacpp": ["llamacpp", "null"], "null": ["null"]}.get(want, ["null"])
+             "llamacpp": ["llamacpp", "null"], "windows": ["windows", "null"], "null": ["null"]}.get(want, ["null"])
     for backend in order:
         try:
+            if backend == "windows":
+                from windows_tts import WindowsTTS
+                return WindowsTTS(cfg)
             if backend == "chatterbox":
                 return ChatterboxTTS(cfg)
             if backend == "llamacpp":
@@ -233,9 +236,16 @@ def _play_wav(path: Path, holder, epoch, should_stop=None, on_playback=None):
                     holder._proc = None
     with wave.open(str(path), "rb") as wav:
         rate = wav.getframerate()
+        channels = wav.getnchannels()
+        if wav.getsampwidth() != 2 or wav.getcomptype() != "NONE":
+            raise RuntimeError("WAV playback requires uncompressed PCM16 audio")
         frames = wav.readframes(wav.getnframes())
     samples = np.frombuffer(frames, dtype="int16").astype("float32") / 32768.0
-    return holder._play_array(sd, samples, rate, epoch, should_stop, on_playback)
+    if channels > 1:
+        samples = samples.reshape(-1, channels)
+    output_device = getattr(getattr(holder, "cfg", None), "output_device", -1)
+    device = None if output_device < 0 else output_device
+    return holder._play_array(sd, samples, rate, epoch, should_stop, on_playback, device=device)
 
 
 def _stop_holder(holder) -> None:

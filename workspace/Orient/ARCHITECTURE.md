@@ -1,11 +1,9 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T08:39:50+00:00 from source (input `952e8b5ef890`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:04:23+00:00 from source (input `8d76f84984eb`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/voice_gateway/speech.py`, `general_tools/voice_gateway/tts.py`, `general_tools/voice_gateway/turns.py`, `nova_body/nova_cortex/executive.py` and 2 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -89,6 +87,26 @@ trigger Priority 0; they are not yet automatically converted into tasks. Focus l
 at checkpoints; each wake has a configurable time budget. Stop supervises generation, workers
 and child processes, and reports pending cleanup rather than falsely claiming everything stopped.
 
+Task continuity uses the existing `nova_body/Tasking/tasks.json`, not another task store. Title/notes
+carry the objective, acceptance checks define completion, and `task_progress` can persist a bounded
+`continuity` object: next step, constraints and observations. Omitted fields retain previous values;
+empty text/lists clear a supplied field. These survive restart and the twenty-note progress limit.
+Both ordinary chat and autonomous execution receive this saved context. Each chat context build reads
+up to three unfinished tasks in a block capped at 6,000 characters, before larger identity/memory
+sections; valid active focus comes first. Done/abandoned tasks stay in storage but do not enter that
+resume block. Saved observations are Nova-authored notes, not independent verification or permission
+to override the current request. Shortened fields are marked; use a targeted task query for details
+rather than pushing the entire board through a clipped file-read result.
+
+`nova_cortex/context_budget.py` fits the initial prompt and subsequent tool rounds. The combined
+system prefix, identity and checkpoint no longer receive the ordinary 24,000-character message cap.
+Older history is discarded before excess system text is shortened; the current request, newest turn
+and marked task checkpoint receive priority. Fitting reserves the actual output allowance plus
+4,096 tokens, using the established 3.4 characters/token estimate and an additional 174,000-character
+ceiling. The old minimum-four-turn overflow override is gone. This bounds estimated text, not exact
+tokenizer or image usage; unusually small budgets can still shorten critical content. Exact-candidate
+witness audits bypass this normal fitting policy so evidence is not silently changed.
+
 ## Body faculties
 
 > ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `nova_body/nova_voice/tool_router.py`, `nova_body/nova_witness/replay.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py (PURPOSES)`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Body faculties"`.
@@ -156,8 +174,6 @@ prove argument compatibility, not adapter loading, VRAM use or application of sc
 Drives/wants and the hormone design are not evidence of online weight learning. Keep implemented controls distinct from biological analogies.
 
 ## Runtime evidence and open modernization work
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `nova_body/nova_cortex/executive.py`, `nova_body/nova_cortex/tasking.py`, `nova_body/nova_voice/tool_router.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
 
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
@@ -235,6 +251,15 @@ sealed 27-case holdout; no model evaluation of either has run. Nova remained off
 The [Codex/Cowork comparison](Architecture/evidence/2026-10-05-agent-harness-comparison.md) separates
 model capability from tool execution, context, persistence and presentation. It recommends measuring
 these existing Nova paths before replacing the architecture; its review status is recorded in the report.
+The October 5 continuity changes passed 86 relevant isolated checks: 18 new task/context cases,
+30 modernization, 31 delivery and seven ModelClient tests. A fresh module load recovered checkpoint
+fields; partial updates retained prior constraints and observations after old progress notes were
+pruned. A fixture using the real system prefix preserved the current request and a checkpoint at an
+oversized context tail through final fitting. This is persistence/prompt evidence, not a live proof
+that Nova reliably saves checkpoints or resumes long work. No personal records were edited.
+The same day's dependency exclusion repair passed 34 sync tests, including ten new environment
+fixtures. Exactly 1,646 accidentally tracked virtualenv paths were removed from Git's index; installed
+files remained on disk with unchanged size/mtime metadata. This did not erase earlier Git history.
 Backend edits load on the next Start Nova; the existing UI needs a reload to receive new JavaScript.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 

@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T08:39:50+00:00 from source (input `952e8b5ef890`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:04:23+00:00 from source (input `8d76f84984eb`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -56,7 +56,7 @@ or enumerate installed weights. The controller status bar distinguishes Chat onl
 
 ## Configuration and evidence
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `nova_body/nova_cortex/workspace_context.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Configuration and evidence"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_CODE_FILES`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Configuration and evidence"`.
 
 Collaboration is a detachable controller service (`general_tools/nova_chat/collaboration.py`). Its
 SQLite history and per-agent credentials live outside the repository at
@@ -93,7 +93,8 @@ from both Git and Drive, including relocated `.auth_token` and `nova_users.json`
 Useful evidence lives under `nova_body/logs/`: `tool_calls.jsonl`, `generation_trace.jsonl`,
 events, runtime transcript, chat sessions and launcher/model logs. Read current receipts and loaded
 source before changing prompts. `/api/version` compares normalized content hashes of watched
-sources against startup, ignoring watcher header timestamps and line endings. This detects even
+sources against startup, including task/context assembly and `nova_cortex/context_budget.py`, while
+ignoring watcher header timestamps and line endings. This detects even
 same-size edits with unchanged timestamps; it is not a census of every imported module.
 New structured receipts distinguish success, failure, refusal,
 timeout, cancellation and unknown. Guest receipts include their shell/display context. Pipeline
@@ -176,6 +177,18 @@ disk rather than a slow network mount.
     Respect Cole's current instruction to keep Nova/models/audio off while he is gaming.
 
 ## Files and recovery
+
+Local Python `.venv/` and `venv/` trees are dependencies, including any model assets installed inside
+them. Root/workspace Git rules exclude them; built-in filters also keep them out of watcher events,
+audit queues, timestamp/PUP writes, Drive scans/indexes, weekly source backups, the committed-file
+Drive reading copy, path repair and automatic context injection. Orient already prunes both names.
+Deliberate file/host tools remain available. The watcher reads the repository-root `.aignore` once at
+startup; `workspace/.aignore` is a reference list, not a shared live configuration consumed by every
+sync component. Do not assume editing it updates all filters or the running watcher.
+Adding Git ignore rules does not untrack an existing dependency tree: verify the exact path before
+index-only removal and retain its installed files. Existing processes need a normal restart to load
+source-level exclusions. Reconstruct environments from their setup instructions, rather than relying
+on source backup archives to contain third-party packages.
 
 Temporary diagnostics belong in `Temp/` beside their owner. Retired files go to
 `_admin/Trash/<change>_<date>/` with a manifest and `WHY.md`; preserve original relative paths,
@@ -352,6 +365,17 @@ they do not certify an unseen claim. `computer_launch_wait_seconds` defaults to 
 for guest window verification. These defaults change the earlier narrow evidence slices and
 three-second launch wait; no personal tunables store was rewritten.
 
+**Context limits are currently source-defined, not live Variables controls.** The model client
+passes its configured window/output reserve to `nova_cortex/context_budget.py`; the default window
+is 65,536 tokens and output allowance is 16,384. A 4,096-token reserve and 3.4 characters/token
+estimate determine the text budget, additionally capped at 174,000 characters. Ordinary message
+text is capped at 24,000 characters; the merged system context is instead fitted to the total budget.
+Images and exact tokenizer costs are not measured. Keep the client's window value aligned with the
+inference launcher's context setting; changing a Variables entry cannot change these constants.
+The saved resume block is at most 6,000 characters across three unfinished tasks. Checkpoint field
+validation permits next_step text up to 1,000 characters, eight constraints up to 400 each, and eight
+observations up to 600 each; the prompt may shorten them while preserving the complete saved record.
+
 Currently registered, read from `REGISTRY`:
 
 | Knob | Label | Category | Default | Range |
@@ -442,8 +466,8 @@ its temp folder stopped autosave (lesson 7 above).
 
 - `Nova_Drive/read/` holds the text files of the last commit under `workspace/`, plus `AGENTS.md`:
   code, docs, Orient, configs and notes. Git already leaves out secrets, weights and logs; the copy
-  also skips binaries, `node_modules`, files over 5 MB and `workspace/Temp/collaboration`
-  (even if a transport artifact were accidentally tracked). The private Collaboration room is not
+  also skips binaries, `node_modules`, `.venv`, `venv`, files over 5 MB and
+  `workspace/Temp/collaboration` (even if a dependency or transport artifact were accidentally tracked). The private Collaboration room is not
   part of this remote reading copy. The watcher refreshes it after every
   autosave (`general_tools/nova_sync/drive_copy.py`). It is a copy, so edits made there are
   overwritten.
@@ -751,4 +775,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 70, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `ARCHITECTURE.md#Body faculties`, `ARCHITECTURE.md#Execution path`, `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Access and practical debugging`, `OPERATIONS.md#Configuration and evidence`, `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Security model`, `OPERATIONS.md#Test meaningful behavior`.
+**Sections awaiting review:** `ARCHITECTURE.md#Body faculties`, `OPERATIONS.md#Access and practical debugging`, `OPERATIONS.md#Configuration and evidence`, `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Security model`, `OPERATIONS.md#Test meaningful behavior`.
