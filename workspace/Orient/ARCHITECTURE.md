@@ -1,7 +1,7 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T17:48:29+00:00 from source (input `36cc6f1895f5`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T17:51:10+00:00 from source (input `b393e9416474`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
 
