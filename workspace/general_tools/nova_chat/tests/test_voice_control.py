@@ -86,7 +86,8 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
             return process
         self.spawn = self.enterContext(patch.object(vc.subprocess, 'Popen', side_effect=child))
         self.run = self.enterContext(patch.object(vc.subprocess, 'run', side_effect=AssertionError('Unexpected real command')))
-        self.thread = self.enterContext(patch.object(vc.threading, 'Thread', FakeThread))
+        self.thread = self.enterContext(patch.object(vc, 'threading', types.SimpleNamespace(
+            Thread=FakeThread, RLock=threading.RLock, current_thread=threading.current_thread)))
         self.probe = self.enterContext(patch.object(self.control, '_small', return_value=readiness()))
         app = FastAPI(); app.include_router(self.control.router)
         self.app = app

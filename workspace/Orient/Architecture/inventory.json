@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "generated_at": "2026-10-05T08:39:36+00:00",
-  "input_sha256": "f6544527427ce7588029911b48b04b6a476f5a42a38ce3778429863e875a2439",
+  "generated_at": "2026-10-05T08:39:50+00:00",
+  "input_sha256": "952e8b5ef890793ad96e2fe95de5ba8575000c876498ae3f6a74020b4a65915f",
   "files": [
     {
       "path": "NovaChatOnly.cmd",
@@ -421,7 +421,7 @@
     {
       "path": "general_tools/nova_chat/tests/test_voice_control.py",
       "owner": "detachable tool",
-      "bytes": 20891
+      "bytes": 20991
     },
     {
       "path": "general_tools/nova_chat/tests/test_voice_transport.py",
@@ -8574,7 +8574,7 @@
     "general_tools/nova_chat/tests/test_lifecycle_ack.py": "143facc1a6a3a9af3711d223f3a6230ae2a6ca5dc7b64948708a1c2775a9cd69",
     "general_tools/nova_chat/tests/test_source_fingerprint.py": "ab013444aa2bc5eb0681b05c6efabdcea5271afea6f015859374fbb1c29f7661",
     "general_tools/nova_chat/tests/test_updater_integration.py": "14649bc735ee414ea8d83aeea7d6d8911837debeca60713dab93378bc5d2a7ff",
-    "general_tools/nova_chat/tests/test_voice_control.py": "2a472b684d5244501ebdc0d080216399fca5e44ce2df9939a441bdeea6bfecb9",
+    "general_tools/nova_chat/tests/test_voice_control.py": "b6d0eedd92d3d043aaa09f4affee8aecfbf317cc6f5349ea29d38276b6d3aae3",
     "general_tools/nova_chat/tests/test_voice_transport.py": "359b4c9ee71565e3591619f5235b7b567882271f95224567added1b55223c17d",
     "general_tools/nova_chat/transcript.py": "235c7aa097515e26f7c149f28cd5906e4918e9334e06e5f780ece057946e6959",
     "general_tools/nova_chat/voice_control.py": "7fec951b2438da55ae259fb0af16278c0ca1b4d75ce017598220273e2a4ba2e6",
@@ -8748,10 +8748,10 @@
     "start_llama_qwen36.cmd": "3297f9b8977d45d037c3043c9bafccd4c8f6a737a5dae5eb7f88dc171c6a2fb0"
   },
   "document_hashes": {
-    "README.md": "63c132f3b290ebdd87bae0de7e477412f06db0e9215807d13c892b34bf196a21",
-    "ARCHITECTURE.md": "88449e3e6688ca95049ef85c7121d641b7bfb5581e285eaf3f07e7177f532e88",
-    "OPERATIONS.md": "e798af8bb4e28b03fb00dc0fb33ab494b0ffb8e2bb9465093465a873809e0dff",
-    "INDEX.md": "660d77dae23cb509a0fbbf044b1afc232c7aa8271db999eb8123368683f4bb5b"
+    "README.md": "8c9cbec8520a7420e7e6165335a108d75ce0efd01fbba191e2be4e4989fec1f5",
+    "ARCHITECTURE.md": "be7bc0c06b4f074be5f5d3134f05564a1c7eb4886354fb02e7c8ad7c8d9fc473",
+    "OPERATIONS.md": "8aa8490cf7c071e71f833e608658295029230e97a717b7d45e2a4f84d805186f",
+    "INDEX.md": "4cfc33fbeb1dd7c63dd67a07b37c60d53b0db2b23b3a75689b5a8ef4700fc034"
   },
   "review_needed": [
     "ARCHITECTURE.md#Body faculties",
