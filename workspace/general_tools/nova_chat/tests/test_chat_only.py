@@ -33,13 +33,12 @@ class ChatOnlyTests(unittest.TestCase):
         rt = Mock()
         fake_async = types.SimpleNamespace(ensure_future=scheduled.append)
         ns = {"CHAT_ONLY": True, "asyncio": fake_async, "_rt": rt,
-              "_window_close_watchdog": lambda: "window-lifecycle-only",
               "_start_updater_check": Mock(), "_stop_updater_check": AsyncMock(),
               "_voice_controller": types.SimpleNamespace(close=AsyncMock())}
         extract(SERVER, {"startup_event", "shutdown_event"}, ns)
         asyncio.run(ns["startup_event"]())
         asyncio.run(ns["shutdown_event"]())
-        self.assertEqual(scheduled, ["window-lifecycle-only"])
+        self.assertEqual(scheduled, [])
         self.assertEqual(rt.mock_calls, [])
         ns["_start_updater_check"].assert_called_once()
         ns["_stop_updater_check"].assert_awaited_once()

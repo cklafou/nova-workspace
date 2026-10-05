@@ -1,6 +1,6 @@
 {
-  "ts": "2026-10-04T13:28:27.453761",
-  "reason": "BARE: llama healthy but NO personality adapter loaded (running as base model)",
-  "pid": 40380,
-  "log": "C:\\Users\\lafou\\Project_Nova\\workspace\\_admin\\autonomy_watch\\recovery\\attempt_20261004_132827.log"
+  "ts": "2026-10-06T03:35:18.556561",
+  "reason": "FROZEN: nova_chat API did not answer within 8s",
+  "pid": 38988,
+  "log": "C:\\Users\\lafou\\Project_Nova\\workspace\\_admin\\autonomy_watch\\recovery\\attempt_20261006_033518.log"
 }

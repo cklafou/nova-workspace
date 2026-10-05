@@ -1252,7 +1252,6 @@ async def startup_event():
     _start_updater_check()
     if CHAT_ONLY:
         # No body lifecycle, context/indexing, sensors, model or autonomy jobs.
-        asyncio.ensure_future(_window_close_watchdog())
         print("[controller] Chat-only mode: Nova is disabled; collaboration is available.")
         return
     _rt.start_indexer()              # runtime owns the indexer; bring it up
@@ -1498,8 +1497,8 @@ async def startup_event():
     asyncio.ensure_future(_bg_sys_metrics())
     # Persistent sleep/wake autonomy daemon (replaces per-message heartbeat loop)
     asyncio.ensure_future(autonomy_daemon())
-    # Shut the stack down when the app window closes (last WS client gone)
-    asyncio.ensure_future(_window_close_watchdog())
+    # Socket lifetime is not app lifetime: voice/headless peers may disconnect.
+    # The launcher owns explicit Quit and native window process teardown.
 
 
 @app.get("/")
@@ -3217,30 +3216,6 @@ def _mirror_to_runtime(author: str, content: str) -> None:
 # priority.md stays the human-readable queue; this sidecar holds the machine
 # state (status + a timestamped log of what Nova did each tick) so she has
 # memory across cold ticks and the SERVER keeps status honest.
-async def _window_close_watchdog():
-    """Shut the whole stack down shortly after the last UI window disconnects,
-    so closing the app actually stops Nova (closing the Chrome --app window drops
-    the WebSocket). A page reload reconnects within a couple seconds and cancels
-    the pending shutdown, so reloads don't kill the server."""
-    await asyncio.sleep(5)            # let the server boot before arming
-    had_client = False
-    empty_since = None
-    while True:
-        await asyncio.sleep(3)
-        if connected_clients:
-            had_client = True
-            empty_since = None
-            continue
-        if not had_client:
-            continue                 # no window has opened yet — stay up
-        if empty_since is None:
-            empty_since = _time.monotonic()
-        elif _time.monotonic() - empty_since >= 8:
-            print("[server] App window closed (no UI for 8s) — shutting down the stack.")
-            import os as _os, signal as _sig
-            _os.kill(_os.getpid(), _sig.SIGTERM)
-            return
-
 
 def _recent_chat_context(n: int = 14) -> str:
     """Recent conversation the host hands to Nova's reflection so she is never blind to what

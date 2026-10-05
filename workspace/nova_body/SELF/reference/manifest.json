@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-06T03:25:59",
+  "generated": "2026-10-06T03:30:50",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -95,7 +95,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Expose Nova's executive faculties, task board, runtime settings and body-owned context assembly.",
       "files": 17,
-      "lines": 6309,
+      "lines": 6337,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -416,7 +416,7 @@
       "path": "nova_body/nova_voice",
       "purpose": "Run Nova's local inference and tool loop with her current capabilities and execution receipts.",
       "files": 5,
-      "lines": 4406,
+      "lines": 4404,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -658,7 +658,7 @@
       "path": "general_tools/architecture_map",
       "purpose": "Generates Orient documentation and validates source, review and link freshness.",
       "files": 10,
-      "lines": 3559,
+      "lines": 3561,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-06T03:30:22+09:00",
+  "updated_at": "2026-10-06T03:31:15+09:00",
   "items": [
     {
       "id": "69f42cdb",
@@ -6491,15 +6491,15 @@
     },
     {
       "id": "d322bf9c",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-10-06T03:30:22+09:00",
       "commit": "35ffff5d",
       "old_path": null,
       "new_path": "Orient/AI Notes/2026-10-06_0329_Codex_CurrentWorkSnapshotReview.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-10-06T03:31:15+09:00",
       "notes": null
     }
   ],

@@ -1,9 +1,11 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T18:30:22+00:00 from source (input `7966729c1698`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T18:39:02+00:00 from source (input `531fb2fa510b`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::startup_event`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Run and stop"`.
 
 | Operation | Entry point | Check |
 |---|---|---|
@@ -50,6 +52,11 @@ the controller, while an exited server thread fails promptly. A slow import must
 by the former shorter 25-second inner timeout before the controller's deadline. New body input and updater mutations are blocked while a switch
 is pending. Failed startup attempts return to a usable chat-only controller when recovery succeeds.
 The main window and console stay open; the page reconnects and restores its unsent composer draft.
+WebSocket disconnects do not control process lifetime: voice clients, scripts and browser reconnects
+can end independently of Nova. The obsolete last-client watchdog was removed after a real test
+connection closed and killed the worker. Native Quit and launcher-owned process teardown remain the
+shutdown path. A browser window handed to an existing browser instance needs explicit Services Quit
+or StopNova; socket absence cannot establish that the user quit the application.
 The launcher uses `start_llama_qwen36.cmd`, so its model selection matches the updater's boot files.
 A launcher predating this feature needs one full app restart; refreshing the page alone cannot
 upgrade that process. Start/Stop remains unavailable when lifecycle support cannot be reached. It
@@ -185,6 +192,8 @@ results recoverable and surface any retained-storage charge. The Hugging Face ca
 disk rather than a slow network mount.
 
 ## Test meaningful behavior
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_chat_only.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -745,6 +754,8 @@ verification. The October 5 follow-through passes 24 isolated Pipeline scenarios
 
 ## Model updates
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::startup_event`. Re-read it against the code, update it in `general_tools/architecture_map/notes/model_updates.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Model updates"`.
+
 `general_tools/nova_updater/` is a general tool; its README has the full route contract. At each Nova
 Chat start one cached catalog query looks for a newer dense Qwen of 27-32B with a permissive license,
 and Nova Chat offers Update / Decline / "Remember my decision". The manual widget searches Hugging Face
@@ -956,4 +967,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 71, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `ARCHITECTURE.md#Runtime evidence and open modernization work`.
+**Sections awaiting review:** `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Model updates`, `OPERATIONS.md#Run and stop`, `OPERATIONS.md#Test meaningful behavior`.

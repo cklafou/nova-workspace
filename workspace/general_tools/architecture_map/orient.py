@@ -1320,6 +1320,11 @@ the controller, while an exited server thread fails promptly. A slow import must
 by the former shorter 25-second inner timeout before the controller's deadline. New body input and updater mutations are blocked while a switch
 is pending. Failed startup attempts return to a usable chat-only controller when recovery succeeds.
 The main window and console stay open; the page reconnects and restores its unsent composer draft.
+WebSocket disconnects do not control process lifetime: voice clients, scripts and browser reconnects
+can end independently of Nova. The obsolete last-client watchdog was removed after a real test
+connection closed and killed the worker. Native Quit and launcher-owned process teardown remain the
+shutdown path. A browser window handed to an existing browser instance needs explicit Services Quit
+or StopNova; socket absence cannot establish that the user quit the application.
 The launcher uses `start_llama_qwen36.cmd`, so its model selection matches the updater's boot files.
 A launcher predating this feature needs one full app restart; refreshing the page alone cannot
 upgrade that process. Start/Stop remains unavailable when lifecycle support cannot be reached. It

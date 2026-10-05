@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-05T18:30:22+00:00 from source (input `7966729c1698`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T18:39:02+00:00 from source (input `531fb2fa510b`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
@@ -53,8 +53,8 @@ Last built 2026-10-04 05:12 UTC; as of this generation, 234 source file(s) had b
 
 **AI notes.** Claude, Codex and the other agents leave a note in [AI Notes](AI%20Notes/ReadMeBeforeNoteTaking.md) after each session: what changed, why, and what is still open. Read the rules once, then every note since your own last one. Newest first:
 
+- [2026-10-06_0337_Codex_FreshTypedContinuation.md](AI%20Notes/2026-10-06_0337_Codex_FreshTypedContinuation.md)
+- [2026-10-06_0334_Codex_FreshTypedContentReview.md](AI%20Notes/2026-10-06_0334_Codex_FreshTypedContentReview.md)
 - [2026-10-06_0329_Codex_CurrentWorkSnapshotReview.md](AI%20Notes/2026-10-06_0329_Codex_CurrentWorkSnapshotReview.md)
 - [2026-10-06_0323_Codex_CurrentWorkStep.md](AI%20Notes/2026-10-06_0323_Codex_CurrentWorkStep.md)
 - [2026-10-06_0318_Codex_MinimalCoverageProbe.md](AI%20Notes/2026-10-06_0318_Codex_MinimalCoverageProbe.md)
-- [2026-10-06_0314_Codex_FrozenAuditThinkingReplay.md](AI%20Notes/2026-10-06_0314_Codex_FrozenAuditThinkingReplay.md)
-- [2026-10-06_0301_Codex_VoiceEvidenceReview.md](AI%20Notes/2026-10-06_0301_Codex_VoiceEvidenceReview.md)

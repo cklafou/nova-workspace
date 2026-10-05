@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "generated_at": "2026-10-05T18:30:22+00:00",
-  "input_sha256": "7966729c1698745baf5bfe021622f21ec4a859cab0283012f44669dcdb513707",
+  "generated_at": "2026-10-05T18:39:02+00:00",
+  "input_sha256": "531fb2fa510b92b4f9eb2d18001ba2006024154a31c3517c5b455a3cfa65ade2",
   "files": [
     {
       "path": "NovaChatOnly.cmd",
@@ -111,7 +111,7 @@
     {
       "path": "general_tools/architecture_map/orient.py",
       "owner": "detachable tool",
-      "bytes": 123075
+      "bytes": 123552
     },
     {
       "path": "general_tools/architecture_map/reviews.json",
@@ -271,7 +271,7 @@
     {
       "path": "general_tools/nova_chat/server.py",
       "owner": "detachable tool",
-      "bytes": 237537
+      "bytes": 236452
     },
     {
       "path": "general_tools/nova_chat/server_runner.py",
@@ -346,7 +346,7 @@
     {
       "path": "general_tools/nova_chat/tests/test_chat_only.py",
       "owner": "detachable tool",
-      "bytes": 8319
+      "bytes": 8077
     },
     {
       "path": "general_tools/nova_chat/tests/test_collaboration.py",
@@ -8724,7 +8724,7 @@
     "general_tools/architecture_map/atlas_history.py": "1508f199a2ae66351c31019f55a2fe139973bd001975835cdfd770d353cd8d26",
     "general_tools/architecture_map/build.py": "9da0a8b1c768eddb5b9d534df2cb08b9d6276dae794640653ac6476f8d17c3c8",
     "general_tools/architecture_map/experience.js": "ed3dbaf90ce9743729a82d61ab25e96afc9d8d30c54d739956e986aed039fa46",
-    "general_tools/architecture_map/orient.py": "4049b8dbc933a0eb660f756b63de3057bcdb1f55230bed747a90b2b4536a0fd8",
+    "general_tools/architecture_map/orient.py": "abdb604ebf0ad8dab90d3867fe46b714c851169b165e5db46a8a3e76e5722066",
     "general_tools/architecture_map/serve.py": "3f32546c2c2e64e1ddd9b63fd0c44eaf4e49aad10c5f9855952fe6398f987a98",
     "general_tools/architecture_map/test_architecture.py": "5165c81edac8e05567dedf65640c5218301ca3d1e332631e893c6b6d2920becc",
     "general_tools/architecture_map/test_history.py": "f4e5f865909cf21fe863ca92b1b81aa83d1d0e1abb110b5be39297344fc84e2c",
@@ -8753,7 +8753,7 @@
     "general_tools/nova_chat/orchestrator.py": "5d857df8cdd95aa4ee83ef76a33ce7a691c34abe25d732ac1280881267f944ac",
     "general_tools/nova_chat/response_events.py": "eec8f590aecd71aad250ca99075b367cf10a296f84e84167721e1a285a2ecea5",
     "general_tools/nova_chat/runtime_host.py": "47e6b35cf8952005fb35ed1e06b0abc71a4382d5a61c56f3a92885399461f7c2",
-    "general_tools/nova_chat/server.py": "f5a9dee7bb4b0ee75040104498b2532400550227ac004f20086ed31ce00050ec",
+    "general_tools/nova_chat/server.py": "84047dcfa211526803e3b66d5d7fa6f1b7bceca65b5acf635c8fbfa742836dbc",
     "general_tools/nova_chat/server_runner.py": "7b92d5d3cbaac968d89b81ccb805ea5176c43b4ba022767e4f64617515d69ab4",
     "general_tools/nova_chat/session_manager.py": "5912ebb346dbd85b4212ee1db9045f8dc7654c47c32e5c97cf19b4d51f825c96",
     "general_tools/nova_chat/static/collaboration.css": "4a8322810a513df7b78f8ab9b780b823e529b06990913f23a99a80564d29e37e",
@@ -8768,7 +8768,7 @@
     "general_tools/nova_chat/static/voice.js": "5f7ed8cd8f45707cd537991ebfa588c64dd20f2430ccaf8587827b2fdab5ed31",
     "general_tools/nova_chat/static/workspace.css": "d10b63e243f72059267ab0e0f5c16214188a7780b8d3c0bbc7d18e41327d7c1d",
     "general_tools/nova_chat/static/workspace.js": "020229e13ef63207c6ee2905884e25198b9368c69e54b05ac6a753c3ce1fce44",
-    "general_tools/nova_chat/tests/test_chat_only.py": "eeb50c4bc7b7c47876232a3553012df072d6a54d2e6116a46e0f41fb4f3320a9",
+    "general_tools/nova_chat/tests/test_chat_only.py": "ec35c75008a62a083ed3717f820fb06a403ad94b4401eb9167776c5dd778f242",
     "general_tools/nova_chat/tests/test_collaboration.py": "0c7b7c3037aec40e6cfee81bd2d3b5be6277cc5793d0a9d21aa05aa5f23c06d5",
     "general_tools/nova_chat/tests/test_collaboration_bridge.py": "6abe5979fcf54e51d0b725b562489d198e912b542e3b34924abce2ded2c4700d",
     "general_tools/nova_chat/tests/test_collaboration_spool.py": "024efefc6b39ac2b9a5916f9411a90ae66986fd2a478f209913de6c0c55ddd00",
@@ -8974,13 +8974,16 @@
     "start_llama_qwen36.cmd": "3297f9b8977d45d037c3043c9bafccd4c8f6a737a5dae5eb7f88dc171c6a2fb0"
   },
   "document_hashes": {
-    "README.md": "79b117bce4386d711c3dc5b7e242e60a1060622ba1dc518105c89f5db065c444",
-    "ARCHITECTURE.md": "35603b48eef8f41230fda6b0805d1f028710854d84030232273ea9c3ff0d13fb",
-    "OPERATIONS.md": "de119aa5d36054e98174a5e83b24a07febab8784519f9cc6f15b87c492651d13",
-    "INDEX.md": "5ea611e72f6a2904a52425c3ddd44363a06741815aaeefb45e2e613e5cd37896"
+    "README.md": "b26b76ccd5e0281d2c8ee93613d8d5209e0177be2a7fc7f290e128fb078d5b55",
+    "ARCHITECTURE.md": "5b532bf7baf6ee2ab7042b7422768420292d2e18358c4ca694b07464d517b4d1",
+    "OPERATIONS.md": "4b420aacfa46b4d3b2026522e5deefbdc62b8fa670d207dc96c1e005b3394f7d",
+    "INDEX.md": "282e4b261529353ee0d7e38083fe4ccab6be4fd79dfd0841021440f32c22f34f"
   },
   "review_needed": [
-    "ARCHITECTURE.md#Runtime evidence and open modernization work"
+    "ARCHITECTURE.md#Runtime evidence and open modernization work",
+    "OPERATIONS.md#Model updates",
+    "OPERATIONS.md#Run and stop",
+    "OPERATIONS.md#Test meaningful behavior"
   ],
   "unknown_review_sections": [],
   "dangling": []
