@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-05T18:39:04",
+  "generated": "2026-10-05T20:22:34",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -653,7 +653,7 @@
       "path": "general_tools/architecture_map",
       "purpose": "Generates Orient documentation and validates source, review and link freshness.",
       "files": 10,
-      "lines": 3207,
+      "lines": 3211,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -1123,7 +1123,7 @@
       "path": "general_tools/voice_gateway",
       "purpose": "voice_gateway — Cole's microphone to Nova. A comms tool (pluck test: her body is",
       "files": 4534,
-      "lines": 2153555,
+      "lines": 2153558,
       "age_days": 0,
       "ports_bind": [
         "8080"
