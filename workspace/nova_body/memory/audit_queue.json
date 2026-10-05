@@ -1,33 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-10-06T03:31:15+09:00",
+  "updated_at": "2026-10-06T03:39:09+09:00",
   "items": [
-    {
-      "id": "69f42cdb",
-      "status": "resolved",
-      "event_type": "new",
-      "detected_at": "2026-10-05T17:40:05+09:00",
-      "commit": "70b3f9ec",
-      "old_path": null,
-      "new_path": "general_tools/voice_gateway/.venv/Lib/site-packages/google/protobuf/internal/api_implementation.py",
-      "confidence": 1.0,
-      "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-10-05T17:43:34+09:00",
-      "notes": null
-    },
-    {
-      "id": "f47b24a3",
-      "status": "resolved",
-      "event_type": "new",
-      "detected_at": "2026-10-05T17:40:05+09:00",
-      "commit": "70b3f9ec",
-      "old_path": null,
-      "new_path": "general_tools/voice_gateway/.venv/Lib/site-packages/google/protobuf/internal/builder.py",
-      "confidence": 1.0,
-      "resolved_by": "reconcile: new file, nothing can dangle",
-      "resolved_at": "2026-10-05T17:43:34+09:00",
-      "notes": null
-    },
     {
       "id": "47666395",
       "status": "resolved",
@@ -6500,6 +6474,32 @@
       "confidence": 1.0,
       "resolved_by": "reconcile: new file, nothing can dangle",
       "resolved_at": "2026-10-06T03:31:15+09:00",
+      "notes": null
+    },
+    {
+      "id": "6737eb21",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-10-06T03:39:09+09:00",
+      "commit": "57997b12",
+      "old_path": null,
+      "new_path": "Orient/AI Notes/2026-10-06_0334_Codex_FreshTypedContentReview.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
+      "notes": null
+    },
+    {
+      "id": "c5c7e3b1",
+      "status": "pending",
+      "event_type": "new",
+      "detected_at": "2026-10-06T03:39:09+09:00",
+      "commit": "57997b12",
+      "old_path": null,
+      "new_path": "Orient/AI Notes/2026-10-06_0337_Codex_FreshTypedContinuation.md",
+      "confidence": 1.0,
+      "resolved_by": null,
+      "resolved_at": null,
       "notes": null
     }
   ],
