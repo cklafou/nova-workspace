@@ -1,3 +1,4 @@
+# Last updated: 2026-10-06 03:10:51
 # @nova: Verify ordered voice follow-ups preserve body work and bind one combined reply without real audio or models.
 from __future__ import annotations
 import asyncio

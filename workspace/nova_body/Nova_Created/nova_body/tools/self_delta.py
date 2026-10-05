@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:19:21
 TOOL = {"name": "self_delta", "description": "Compare two snapshots of my self-model and return what changed as a first-person feeling, not a file diff.", "params": {"old_snapshot": "path to last-night's self-model file", "new_snapshot": "path to tonight's self-model file"}}
 
 import json, os

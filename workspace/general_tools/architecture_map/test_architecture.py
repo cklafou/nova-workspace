@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 """Isolation, evidence and change-detection tests; never write to Nova's real state."""
 import json
 import sys

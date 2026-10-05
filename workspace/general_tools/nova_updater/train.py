@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 # @nova: LoRA training for new or installed models: job specs with Nova's proven defaults, verified training bundles, and RunPod or export runners.
 """Train a LoRA for a model Nova has (or is about to have).
 

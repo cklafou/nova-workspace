@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 # @nova: Turns a chosen model, files and replacements into a checked install plan: sizes, disk space, compatibility, invalidated LoRAs and training.
 """Install plans (a dry run the user confirms).
 

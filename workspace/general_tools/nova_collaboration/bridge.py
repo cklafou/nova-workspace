@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 # @nova: Connect the actual Codex or Claude Cowork session to Nova Chat's private collaboration feed over local HTTP, an atomic shared-folder mailbox, or MCP stdio.
 """Dependency-free CLI and MCP transport. This does not start an AI or wake an idle task."""
 from __future__ import annotations

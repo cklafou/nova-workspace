@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 # @nova: Tests model-name parsing and the startup update check: candidates, remembered decisions, caching and offline behaviour.
 """Run: python -m unittest discover -s general_tools/nova_updater/tests -v"""
 import unittest

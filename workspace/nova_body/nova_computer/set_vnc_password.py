@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:19:20
 # @nova: Sets the password of my desktop viewer (the Computer widget, noVNC) from desktop_secret.json and proves the server accepts it; logs every step without the password.
 """Set Nova's desktop viewer password. Double-click SET_VNC_PASSWORD.cmd, or from nova_body:
 py -3 -m nova_computer.set_vnc_password

@@ -1,5 +1,5 @@
 # @nova: Warm shared recall encoders at boot and durably index memories with visible failures and bounded retries.
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:07:09
 """Durable background memory ingestion with visible failures and bounded retries."""
 import base64
 import io

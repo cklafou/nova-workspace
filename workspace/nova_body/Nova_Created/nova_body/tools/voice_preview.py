@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:19:21
 """voice_preview — catch performed tone before a reply ships, and return the clean version.
 
 Runs between generation and shipping. Doesn't report, it trims. If I'm about to say

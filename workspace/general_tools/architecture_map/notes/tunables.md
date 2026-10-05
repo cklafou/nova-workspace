@@ -1,5 +1,5 @@
 <!-- @nova: Explain live tunable variables and distinguish source-defined context limits. -->
-_Last updated: 2026-10-04 14:28:11_
+_Last updated: 2026-10-06 03:19:21_
 ---
 doc: OPERATIONS.md
 order: 20

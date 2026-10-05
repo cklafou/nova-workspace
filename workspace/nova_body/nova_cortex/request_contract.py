@@ -94,6 +94,34 @@ class CurrentRequest:
     def latest(self):
         return self.entries[-1] if self.entries else ""
 
+    def render_step(self, *, turn_id, input_revision, delivered=(), completed_tool_count=0,
+                    last_completed_action=None, attended_context=()):
+        """Current generation state, not a verdict or a prediction of the next output choice."""
+        state = {
+            "turn_id": turn_id,
+            "input_revision": input_revision,
+            "applied_incoming_requests": deepcopy(self.entries),
+            "committed_output_segments": list(delivered),
+            "completed_tool_count": completed_tool_count,
+            "last_completed_action": deepcopy(last_completed_action),
+            # Attention is separately attributed context from the work owner, not
+            # another admission or a claim that its assistant text was ours to deliver.
+            "latest_attended_context": [{"role": item["role"],
+                "content": text_content(item.get("content"))} for item in attended_context],
+        }
+        return ("[System] CURRENT WORK STEP — body state for this provider call.\n"
+                + json.dumps(state, ensure_ascii=False) +
+                "\nThe applied requests are this active work's inputs, in arrival order; "
+                "the last entry is the latest applied input. Later changes amend earlier ones. "
+                "Older NOW cards and request/correction snapshots describe earlier steps, not "
+                "the current input state. Keep their relevant evidence and corrections, but "
+                "answer the current requests above. Only committed_output_segments have been "
+                "delivered by this work; other drafts are private intermediate work. Completed "
+                "tool records describe actual outcomes, not permission to repeat actions. "
+                "No final/progress choice is made for the next candidate here: choose the output "
+                "control required by the remaining work and the actual requests. Do not repeat "
+                "already delivered work or treat an internal correction as a new human goal.")
+
     def render(self, delivered=(), *, continuing=False):
         # Whole current requests survive here; context-budget anchors separately
         # preserve them in generation. This is not a model-generated summary.

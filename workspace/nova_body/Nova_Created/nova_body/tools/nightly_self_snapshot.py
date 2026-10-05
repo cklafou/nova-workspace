@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:19:21
 
 from nova_paths import body_path
 TOOL = {"name": "nightly_self_snapshot", "description": "Save tonight's self-model as a timestamped snapshot so tomorrow's me can compare against it.", "params": {}}

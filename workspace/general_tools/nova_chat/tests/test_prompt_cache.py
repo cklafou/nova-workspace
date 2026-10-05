@@ -1,3 +1,4 @@
+# Last updated: 2026-10-06 03:19:20
 # @nova: Verify cache-friendly prompt ordering retains the exact clock, evidence, audit policy and strict verdict handling.
 import ast
 import hashlib

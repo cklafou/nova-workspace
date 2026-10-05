@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:19:20
 # @nova: Checks restart reporting against real edits and harmless watcher timestamp changes.
 import os
 from pathlib import Path

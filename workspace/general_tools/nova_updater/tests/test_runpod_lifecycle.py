@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 # @nova: Prove RunPod transfers named persistent training packages, retries SSH readiness and isolates paid attempts using local fake pods.
 from __future__ import annotations
 

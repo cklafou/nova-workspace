@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 """Read bounded, first-parent source history. No checkout, hooks or Nova imports.
 
 Daily net changes suppress auto-save noise without pretending that Git records intent.

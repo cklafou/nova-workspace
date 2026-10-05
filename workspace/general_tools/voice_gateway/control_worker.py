@@ -1,3 +1,4 @@
+# Last updated: 2026-10-06 03:10:10
 # @nova: Run explicitly requested desktop voice sessions and device tests under Nova Chat process supervision.
 """Line-delimited control worker. Nothing captures or plays audio on import/probe."""
 from __future__ import annotations

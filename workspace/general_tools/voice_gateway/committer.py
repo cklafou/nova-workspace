@@ -1,5 +1,5 @@
 # @nova: Split delivered reply text into ordered, speakable sentence units.
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:14:02
 #   no network: this is the one piece that carries real design intelligence, so it is the one
 #   piece with unit tests (test_committer.py). Everything else is an adapter around it.
 """Split already-delivered text into sentence/clause units for ordered speech.

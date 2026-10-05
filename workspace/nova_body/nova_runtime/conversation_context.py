@@ -1,3 +1,4 @@
+# Last updated: 2026-10-06 03:11:23
 # @nova: Assemble shared body-owned conversation context with stable instructions, clock, author labels and images.
 """Provider formatting shared by faces and headless human conversation; no persistence or services."""
 from copy import deepcopy

@@ -1,5 +1,5 @@
 # @nova: Google Drive workspace mirror excluding secrets, runtime churn and private collaboration transport.
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 """
 drive.py -- Google Drive Workspace Mirror for Gemini Live Access
 ================================================================

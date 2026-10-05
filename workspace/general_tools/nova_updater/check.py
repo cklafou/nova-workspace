@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 # @nova: Lightweight update check run at each Nova Chat start: one catalog query, cached, never blocking the app or raising.
 """Is there a newer dense model in Nova's size class?
 

@@ -1,5 +1,5 @@
 # @nova: Body-owned computer backends with an explicit Nova desktop default and deliberate host interoperability.
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:19:20
 # @claude 2026-09-03: PLUCK FIX. computer.py used to BE the WSL implementation -- module-level
 # wsl.exe path, Windows-only creationflags passed unconditionally. Dropped body-only onto a
 # Linux host it did not degrade, it EXPLODED: subprocess raises ValueError for creationflags

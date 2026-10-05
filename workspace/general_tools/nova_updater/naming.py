@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 # @nova: Parses model repository and GGUF file names (Qwen first) into version, size, variant and quant so releases can be compared.
 """Model-name parsing for update checks. Pure functions, no I/O.
 

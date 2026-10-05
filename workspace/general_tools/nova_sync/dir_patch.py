@@ -1,6 +1,6 @@
 # @nova: Audit workspace import and file references without scanning local dependency source.
 #!/usr/bin/env python3
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 """
 nova_sync/dir_patch.py -- Nova Workspace Path Auditor
 ======================================================

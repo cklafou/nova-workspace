@@ -194,14 +194,20 @@ class ContinuationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([prompt.index(f'FOLLOWUP {i}') for i in range(3)],
                          sorted(prompt.index(f'FOLLOWUP {i}') for i in range(3)))
         self.assertEqual(len(self.done), 1)
-        pressured = fit_messages(self.main_calls[1], max_chars=1800, per_message=40)
+        # Retain the same pressure on prior context plus the new exact state anchor.
+        snapshot = self.main_calls[1][-1]
+        self.assertTrue(snapshot['content'].startswith('[System] CURRENT WORK STEP'))
+        pressure_budget = 1800 + len(snapshot['content'])
+        pressured = fit_messages(self.main_calls[1], max_chars=pressure_budget, per_message=40)
         pressure_text = text_of(pressured)
-        self.assertLessEqual(text_size(pressured), 1800)
+        self.assertLessEqual(text_size(pressured), pressure_budget)
         self.assertIn('[System Completed Tool Attempt]', pressure_text)
         self.assertIn(self.tools[0][2], pressure_text)
         self.assertIn('observation_sha256', pressure_text)
         self.assertIn('does not mean the action did not run', pressure_text)
-        self.assertNotIn('fixture receipt', pressure_text)  # raw detail can go, completed action cannot
+        # Raw observation is clipped; the new state may retain its bounded receipt preview.
+        self.assertNotIn('fixture receipt', text_of(pressured[:-1]))
+        self.assertEqual(pressured[-1], snapshot)
         self.assertIn('Explain what the visible desktop actually shows.', pressure_text)
         for i in range(3):
             self.assertIn(f'FOLLOWUP {i}', pressure_text)

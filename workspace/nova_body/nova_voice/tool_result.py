@@ -1,5 +1,5 @@
 # @nova: Preserve explicit tool outcomes, operation identity and execution environment alongside their text view.
-# Last updated: 2026-10-05 21:26:09
+# Last updated: 2026-10-06 03:19:21
 """Explicit tool outcomes, with a string-compatible view for older faculties."""
 from __future__ import annotations
 

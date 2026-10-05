@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:26:09
+# Last updated: 2026-10-06 03:19:20
 """Task acceptance checks are execution evidence, separate from a model's DONE text."""
 import hashlib
 from pathlib import Path

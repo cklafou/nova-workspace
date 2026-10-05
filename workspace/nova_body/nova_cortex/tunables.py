@@ -1,5 +1,5 @@
 # @nova: Define and persist bounded, live-editable behavior settings for Nova.
-# Last updated: 2026-10-05 21:26:09
+# Last updated: 2026-10-06 03:19:20
 # @nova: nova_cortex/tunables.py — LIVE-TUNABLE knobs. Cole (2026-08-03): "make things that
 #   should be easily changed into adjustable variables, with a tool that adjusts them on the
 #   fly." This is that registry. Any constant Cole might reasonably want to change WITHOUT a

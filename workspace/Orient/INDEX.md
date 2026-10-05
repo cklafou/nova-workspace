@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T18:05:33+00:00 from source (input `6be81c8b902b`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T18:25:20+00:00 from source (input `ac59c64468ff`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -1810,6 +1810,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/tests/test_conversation_context.py](../nova_body/tests/test_conversation_context.py) — Verify body-owned and face-delegated conversation formatting preserve frozen clock, labels, images and provider payloads without services.
 - [nova_body/tests/test_conversation_pending.py](../nova_body/tests/test_conversation_pending.py) — Verify pending-input inspection cannot mutate, consume or acknowledge a body conversation queue.
 - [nova_body/tests/test_conversation_segments.py](../nova_body/tests/test_conversation_segments.py) — Verify useful body-owned output segments, frozen audits, total budgets, and explicit Stop without provider cancellation on input.
+- [nova_body/tests/test_generation_work_state.py](../nova_body/tests/test_generation_work_state.py) — Verify current body work snapshots at real generation boundaries without providers or personal state.
 - [nova_body/tests/test_koels_launcher.py](../nova_body/tests/test_koels_launcher.py) — Prove KoELS preload arguments survive the real Windows launcher and current llama parser without loading models.
 - [nova_body/tests/test_lancedb_init.py](../nova_body/tests/test_lancedb_init.py) — Verify cached embedder initialization and singleton concurrency without loading models, querying memory or accessing Nova state.
 - [nova_body/tests/test_model_client.py](../nova_body/tests/test_model_client.py) — Verify isolated model-client register routing, optional audit sinks and concurrent-request compatibility.

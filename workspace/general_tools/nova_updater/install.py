@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 # @nova: Executes an install plan: resumable verified downloads, model switch with a real load check and rollback, then trash quarantine of what it replaced.
 """Carry out a confirmed plan.
 

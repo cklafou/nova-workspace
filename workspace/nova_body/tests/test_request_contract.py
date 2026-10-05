@@ -111,7 +111,7 @@ class RequestDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.tools, [])
         self.assertEqual(self.reads, [])
         self.assertNotIn('assertion_challenge', self.stages())
-        correction = self.main_calls[1][-1]['content']
+        correction = self.main_calls[1][-2]['content']  # tail is the provider-only work snapshot
         self.assertIn('Say silver is ready', correction)
         self.assertIn('external tools and file reads are forbidden', correction)
         self.assertNotIn('Emit the tool call NOW', correction)
@@ -125,7 +125,7 @@ class RequestDeliveryTests(unittest.IsolatedAsyncioTestCase):
             await self.run_turn(transcript=Incoming('Do not use tools. Say silver is ready.'))
         self.assertIn('assertion_challenge', self.stages())
         self.assertEqual(self.tools, [])
-        repair = self.main_calls[1][-1]['content']
+        repair = self.main_calls[1][-2]['content']  # inspect the actual correction, not its new state tail
         self.assertIn('Say silver is ready', repair)
         self.assertIn('Do not call external tools or read files', repair)
         self.assertNotIn('GENERATED them', repair)
@@ -135,7 +135,7 @@ class RequestDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.verdicts = ['PASS']
         await self.run_turn(transcript=Incoming('Use no external tools or files. Say silver is ready.'))
         self.assertEqual(self.tools, [])
-        self.assertIn('was NOT executed', self.main_calls[1][-1]['content'])
+        self.assertIn('was NOT executed', self.main_calls[1][-2]['content'])
 
 
     async def test_background_heavy_cannot_read_when_current_request_forbids_it(self):
@@ -193,7 +193,7 @@ class RequestSegmentTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn('Add gold after silver', prompts[0])
         self.assertIn('Add gold after silver', prompts[1])
         self.assertIn('Add gold after silver', prompts[2])
-        self.assertIn('Add gold after silver', self.main_calls[2][-1]['content'])
+        self.assertIn('Add gold after silver', self.main_calls[2][-2]['content'])
         self.assertIn(segments[0][0], prompts[2])
         self.assertEqual([meta['input_revision'] for _,meta in segments], [0,1])
         self.assertEqual(self.reads, [])

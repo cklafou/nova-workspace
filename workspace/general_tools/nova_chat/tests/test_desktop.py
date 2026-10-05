@@ -1,5 +1,5 @@
 # @nova: Verify native controller geometry across processes and preserve renderer storage during isolated profile migration.
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:19:20
 """Run: python -m unittest discover -s general_tools/nova_chat/tests.
 
 Tests the desktop face without importing Nova's runtime or loading a model.

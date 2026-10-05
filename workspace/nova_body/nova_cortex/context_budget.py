@@ -1,5 +1,5 @@
 # @nova: Fit text context without losing the current request or persisted task checkpoint to tool-output clipping.
-# Last updated: 2026-10-05 21:24:29
+# Last updated: 2026-10-06 03:19:20
 """Pure text-budget estimation; image tokens and exact tokenizer costs remain provider-dependent."""
 from copy import deepcopy
 from nova_runtime.conversation import ANCHOR, RECEIPT_ANCHOR

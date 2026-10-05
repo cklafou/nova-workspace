@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:10:51
 # @nova: Verify native speech file synthesis, cancellation, output-device selection and current Moonshine/Silero contracts without audio hardware.
 import asyncio
 import importlib.util

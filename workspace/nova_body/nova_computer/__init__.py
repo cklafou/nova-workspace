@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:19:20
 # @nova: My computer -- somewhere that is MINE to act in, that never reaches across and grabs
 #        Cole's screen, mouse, keyboard or focus. On his Windows box that is a sandboxed Linux
 #        machine (WSL2, hers alone, watched at the URL below). Dropped somewhere else, it is

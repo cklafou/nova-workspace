@@ -1,3 +1,4 @@
+# Last updated: 2026-10-06 03:09:48
 # @nova: Verify production voice-worker output waits for an already-started human turn without audio, models or network.
 import asyncio
 import sys

@@ -1,5 +1,5 @@
 # @nova: Persist shared chat transcripts and assemble current requests with stable cacheable instructions.
-# Last updated: 2026-10-05 18:30:24
+# Last updated: 2026-10-06 03:23:59
 """
 Shared conversation transcript for Nova Group Chat.
 Persists to logs/chat_sessions/ on every message.

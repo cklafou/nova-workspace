@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:16:07
 """Recover searchable coverage from intact local records; never rewrite originals."""
 import gzip
 import hashlib

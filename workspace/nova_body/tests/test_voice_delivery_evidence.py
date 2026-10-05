@@ -88,8 +88,8 @@ class VoiceDeliveryStreamTests(unittest.IsolatedAsyncioTestCase):
                          json.dumps({'status':'PASS', 'reason':'Requested wording remains; no unsupported delivery claim.'})]
         await self.run_voice()
         self.assertEqual(self.done, [fixed])
-        self.assertIn('Say silver is ready', self.main_calls[1][-1]['content'])
-        self.assertIn(voice_delivery_context('voice_fast'), self.main_calls[1][-1]['content'])
+        self.assertIn('Say silver is ready', self.main_calls[1][-2]['content'])
+        self.assertIn(voice_delivery_context('voice_fast'), self.main_calls[1][-2]['content'])
         self.assertEqual(self.tools, [])
         self.assertEqual(self.reads, [])
 

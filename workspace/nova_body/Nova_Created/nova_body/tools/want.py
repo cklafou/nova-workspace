@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:19:21
 """Write a want that outlives your sleep."""
 
 import json, pathlib, datetime as _dt

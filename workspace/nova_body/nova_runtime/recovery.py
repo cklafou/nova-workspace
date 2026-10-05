@@ -1,3 +1,4 @@
+# Last updated: 2026-10-06 03:21:26
 # @nova: Persist restartable body work and fail closed before uncertain side effects can be repeated.
 """Atomic body-relative checkpoints; never claim exactly-once external execution.
 

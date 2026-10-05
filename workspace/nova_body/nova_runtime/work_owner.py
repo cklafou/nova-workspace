@@ -1,3 +1,4 @@
+# Last updated: 2026-10-06 03:19:20
 # @nova: Serialize Nova's active work and preserve bounded input context across autonomous and conversational steps.
 """Body work ownership with optional atomic restart checkpoints and no uncertain replay."""
 from __future__ import annotations

@@ -1,5 +1,5 @@
 # @nova: Configure detachable voice input, playback, audit policy and body-event outputs.
-# Last updated: 2026-10-04 15:01:23
+# Last updated: 2026-10-06 03:19:20
 #   _admin/voice_gateway.json and env. No secrets here (there are none — this tool is local).
 """voice_gateway/config.py — every tunable for the gateway, with safe defaults."""
 from __future__ import annotations

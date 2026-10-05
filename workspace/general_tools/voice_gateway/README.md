@@ -1,5 +1,5 @@
 <!-- @nova: Describe the voice gateway: first-stage delivered-text speech, its event contract, verified tests and the remaining audio work. -->
-_Last updated: 2026-10-05 20:33:23_
+_Last updated: 2026-10-06 03:16:39_
 # voice_gateway — Cole's microphone to Nova
 
 This is the pipe that lets Cole **talk** to Nova and **hear** her back. It starts on the desktop; a watch → phone → tunnel path comes later and reuses this gateway. It is a **comms tool, not a faculty**. Delete this folder and Nova is unchanged; she just has no mic. It speaks nova_chat's WebSocket protocol from the outside, exactly like the browser UI.

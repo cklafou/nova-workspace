@@ -1,6 +1,6 @@
 # @nova: Connect microphone or typed input to Nova Chat and delivered replies to speech and avatar events.
 #!/usr/bin/env python3
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:14:02
 #   tool, not a faculty. Remove it and Nova is unchanged — she still thinks, still audits, still
 #   writes; she just has no microphone. Her body is untouched: the gateway only speaks nova_chat's
 #   existing WebSocket protocol from the OUTSIDE, exactly as the browser UI does.

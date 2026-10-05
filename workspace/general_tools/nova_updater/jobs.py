@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 # @nova: Runs long updater work (downloads, installs, training) on background threads with progress, logs, cancellation and a one-at-a-time lock.
 """Background jobs for the updater.
 

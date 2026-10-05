@@ -1,5 +1,5 @@
 <!-- @nova: Explain the desktop controller menus, widgets and saved layouts published in Operations. -->
-_Last updated: 2026-10-04 15:13:52_
+_Last updated: 2026-10-06 03:19:21_
 ---
 doc: OPERATIONS.md
 order: 40

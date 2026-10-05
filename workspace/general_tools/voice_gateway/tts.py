@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:33
+# Last updated: 2026-10-06 03:19:20
 # @nova: Provide cancellable speech backends with truthful playback callbacks and surfaced failures.
 """Speech backends accept optional should_stop() and on_playback() callbacks.
 

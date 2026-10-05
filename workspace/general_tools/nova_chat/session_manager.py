@@ -1,5 +1,5 @@
 # @nova: Manage body-stored chat sessions and metadata without confusing concurrent conversation owners.
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:11:56
 """
 nova_chat/session_manager.py -- Persistent Session Management
 =============================================================

@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 # @nova: One-click, read-only readiness check for Nova's voice: GPU memory, voice packages, audio devices and which local services answer. Writes voice_check.log.
 """Run VOICE_CHECK.cmd (or, from the workspace: py -3 general_tools/voice_gateway/check_voice_ready.py).
 

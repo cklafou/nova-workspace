@@ -1,5 +1,5 @@
 # @nova: Workspace watcher: stamps Last-updated lines, autosaves to git (commit, then push), refreshes Nova's SELF manifest and Orient, mirrors to Google Drive.
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 
 # Body-owned paths also work when this tool is launched directly.
 import sys as _nova_path_sys

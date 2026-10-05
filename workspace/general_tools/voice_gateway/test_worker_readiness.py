@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:10:51
 # @nova: Regress Windows control-pipe startup and local speech readiness/segmentation using isolated fixtures, without opening audio devices.
 import asyncio
 import importlib.util

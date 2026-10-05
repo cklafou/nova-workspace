@@ -1,5 +1,5 @@
 # @nova: Verify model-off controller launch and prevent chat-only messages from reaching Nova's body.
-# Last updated: 2026-10-05 21:49:04
+# Last updated: 2026-10-06 03:19:20
 import ast
 import asyncio
 import json

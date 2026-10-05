@@ -840,6 +840,7 @@ async def stream_response(
     _step_evidence = None
     _step_request = None
     _boundary_revision = 0
+    _latest_attended_context = []
     _last_completed_action = None
     _completed_tool_count = 0
     _reasoning_work = False
@@ -1171,7 +1172,7 @@ async def stream_response(
         async def _service_boundary(stage, *, draft=None, phase="generation", audit=None,
                                     reconsider=False):
             """Attend input without interrupting inference or replaying completed actions."""
-            nonlocal _boundary_revision, final_chat_buffer, chat_text
+            nonlocal _boundary_revision, final_chat_buffer, chat_text, _latest_attended_context
             nonlocal _prior_draft, _concern_prev, _consec_concerns
             if on_boundary is None:
                 return False
@@ -1232,12 +1233,24 @@ async def stream_response(
                     "action was NOT executed. Reconsider the next action using the original objective, "
                     "completed receipts, and attended context below. Do not repeat replies already delivered."})
             messages.extend(appended)
+            _latest_attended_context = copy.deepcopy(appended)
             _boundary_revision += 1
             if reconsider:
                 final_chat_buffer = chat_text = _prior_draft = _concern_prev = ""
                 _consec_concerns = 0
             # Total tool and witness allowances are deliberately unchanged.
             return True
+
+        def _generation_messages():
+            # One provider-only tail record: refreshing work state must not rewrite
+            # transcript/history, accumulate old snapshots, or alter frozen audits.
+            from nova_runtime.conversation import ANCHOR
+            return messages + [{"role": "user", ANCHOR: True,
+                "content": _step_request.render_step(
+                    turn_id=_turn_id, input_revision=_candidate_revision,
+                    delivered=_committed_segments, completed_tool_count=_completed_tool_count,
+                    last_completed_action=_last_completed_action,
+                    attended_context=_latest_attended_context)}]
 
         while True:
             await _apply_steering()
@@ -1369,7 +1382,7 @@ async def stream_response(
                 _step_evidence = (_witness.capture_evidence_snapshot()
                                   if (_segmented or on_boundary is not None) and _INTEGRITY_OK else None)
                 full_response = await _fetch_llama_streaming(
-                    messages, token_handler,
+                    _generation_messages(), token_handler,
                     on_think_token=think_handler,
                     max_tokens=tok_budget,
                     temperature=temperature,
@@ -1413,7 +1426,7 @@ async def stream_response(
                 print("[nova] empty content after thinking pass — retrying with thinking OFF")
                 try:
                     full_response = await _fetch_llama_streaming(
-                        messages, token_handler,
+                        _generation_messages(), token_handler,
                         on_think_token=think_handler,
                         max_tokens=tok_budget,
                         temperature=temperature,

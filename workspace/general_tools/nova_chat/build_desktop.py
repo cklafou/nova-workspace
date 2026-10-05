@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:19:20
 """Build the controller executable without bundling Nova's body, state or models."""
 from pathlib import Path
 import os

@@ -1,5 +1,5 @@
 # @nova: See and control Nova's authenticated desktop; verify application launches with process, window and diagnostic evidence.
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:19:20
 # @claude 2026-09-04: this is the piece that makes her computer a CONTROLLER instead of a
 # room she cannot use. Cole: "a viable virtual environment she can fully control, rather than
 # needing to use my peripherals through remote control."

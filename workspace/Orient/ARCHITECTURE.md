@@ -1,7 +1,7 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T18:05:33+00:00 from source (input `6be81c8b902b`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T18:25:20+00:00 from source (input `ac59c64468ff`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
 
@@ -56,6 +56,11 @@ input revision used by their audit, including when newer input arrives during th
 The body's `request_contract.CurrentRequest` retains actual applied incoming requests separately
 from internally generated audit/correction prompts. Each candidate freezes that request context
 alongside its evidence and delivered parts; corrections must preserve still-applicable follow-ups.
+Immediately before each main/retry provider call, one generation-only current-work record carries
+that turn's applied inputs, revision, committed parts, compact completed-action facts and separately
+attributed attended context. Earlier NOW/correction snapshots remain historical evidence. This record
+is context-anchored, never accumulated in transcript/private history, and does not preselect a final
+reply before the model chooses its next control. Frozen candidate audits retain their original scope.
 An explicit no-tools request also forbids auditor reads. The inline witness uses the installed
 provider's constrained JSON schema for exact verdicts or permitted read-only calls, with a verdict-only
 schema when no reads remain. Schema validity is not factual correctness; malformed, truncated and
@@ -518,6 +523,13 @@ approved unsupported current-hearing/test-success claims. It remains a failed ev
 test despite passing transport/content-retention checks. The modality contract was then clarified:
 input transcription, output text, speech-file generation, playback and human hearing are separate
 stages; historical hearing does not prove a new output. A draft is not evidence of its own delivery.
+The next unchanged-audio run (`paired-evidence-repair/`) caught the unsupported hearing claim, but
+its correction omitted the accepted Azure follow-up and was still approved. The exact follow-up was
+present in both captured prompts. Inspection also found stale generation context: an initial NOW
+card and older correction snapshot still described the initial input as current. All failed runs
+remain recorded. A frozen-audit thinking comparison caught the omission with thinking enabled but
+took 95.125 seconds versus 3.452 seconds without; its rationale still contained historical confusion.
+This did not justify enabling expensive reasoning everywhere or certifying the auditor as reliable.
 Separate scoped Stop completed in about 235 milliseconds after response start, with no speech file.
 Native file-synthesis queue tests confirm barge-in cancellation/hold/resume and End-call flushing;
 no speaker playback or audible interruption is claimed.

@@ -1,5 +1,5 @@
 # @nova: Expose Nova's executive faculties, task board, runtime settings and body-owned context assembly.
-# Last updated: 2026-10-05 21:26:09
+# Last updated: 2026-10-06 03:19:20
 """
 nova_cortex -- Nova's executive cortex package.
 

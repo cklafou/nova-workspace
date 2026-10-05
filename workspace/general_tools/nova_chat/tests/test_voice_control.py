@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:33:27
+# Last updated: 2026-10-06 03:07:09
 # @nova: Test voice HTTP supervision and worker cancellation with temporary settings and fake processes/audio only.
 """Run: python -B workspace/general_tools/nova_chat/tests/test_voice_control.py
 No production settings, child services, audio devices, models or GPU are used.

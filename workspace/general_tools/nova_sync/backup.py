@@ -1,5 +1,5 @@
 # @nova: Back up Nova workspace source and records while excluding local dependency environments.
-# Last updated: 2026-10-05 21:33:05
+# Last updated: 2026-10-06 03:19:20
 """
 nova_backup.py -- Automated Workspace Backup System
 =====================================================
