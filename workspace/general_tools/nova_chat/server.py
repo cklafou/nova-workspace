@@ -911,6 +911,9 @@ _CODE_FILES = ("general_tools/nova_chat/server.py",
                "nova_body/nova_runtime/conversation.py",
                "nova_body/nova_runtime/work_owner.py",
                "nova_body/nova_runtime/recovery.py",
+               "nova_body/nova_cortex/audit_protocol.py",
+               "nova_body/nova_cortex/request_contract.py",
+               "general_tools/cloud_call.py",
                "nova_body/nova_runtime/conversation_context.py",
                "nova_body/nova_runtime/transcript_store.py",
                "nova_body/nova_runtime/runtime.py",
@@ -1081,13 +1084,12 @@ except Exception as _pe:                                       # pragma: no cove
 
 
 def _resolve_speaker(name: str) -> str:
-    """Only a KNOWN user may speak. An unknown name silently becoming an author would let a
-    stray payload put words in someone's mouth — including Cole's. Fall back to the active user."""
+    """Preserve explicit authors; unknown names are screened as visitors, never as Cole."""
     cfg = _users_load()
     n = _clean_username(name)
-    if n and n in cfg["users"]:
-        return n
-    return cfg.get("active") or "Cole"
+    if n:
+        return next((known for known in cfg["users"] if known.casefold() == n.casefold()), n)
+    return cfg.get("active") or "Cole"  # Older UI clients omit the optional speaker field.
 
 
 def _screen_speaker(speaker: str, content: str) -> tuple:
@@ -2462,6 +2464,19 @@ async def _run_ai_response_owned(ai_name: str, client_mod, msg_id: str,
             if _pending.get("conversation_id", session_mgr.active_id) == _conversation_id and _steer_request(_pending):
                 _cole_message_queue.remove(_pending)
     _turn_kwargs = {"steering": _turn, "on_segment": on_segment} if _turn is not None else {}
+    if ai_name == "Nova" and not _is_hb_tick:
+        # Seed obligations from this admitted request, not older unanswered/cancelled
+        # transcript rows. Later admitted input is consumed through ActiveTurn.
+        _initial_work = request_work or {}
+        _request_content = _initial_work.get("full_context_content", latest_message)
+        _request_images = _initial_work.get("input_images", []) or []
+        if _request_images:
+            _request_content = [{"type": "text", "text": _request_content}] + [
+                {"type": "image_url", "image_url": {"url": img["dataUrl"]}}
+                for img in _request_images if img.get("dataUrl")]
+        _turn_kwargs["request_inputs"] = [{"role": "user", "content": _request_content,
+            "author": (_initial_work.get("msg") or {}).get("author"),
+            "request_id": request_id, "reply_to": reply_to}]
     work_owner = getattr(_rt, "work_owner", None)
     active_owner = work_owner.active if work_owner is not None else None
     if _is_hb_tick and active_owner is not None and active_owner.kind == "autonomy":

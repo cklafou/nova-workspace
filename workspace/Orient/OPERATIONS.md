@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T17:32:34+00:00 from source (input `2b5c37bce0a8`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T17:48:29+00:00 from source (input `36cc6f1895f5`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -57,6 +57,10 @@ refuses to attach to an already-running full server as though that server were d
 Collaboration room also works during a normal launch without being fed to Nova's conversation.
 Both modes start the updater catalog check after a cancellable delay; this does not start the model
 or enumerate installed weights. The controller status bar distinguishes Chat only from Nova running.
+Starting Nova can recover body-admitted unfinished work even when autonomous scheduling is paused.
+It waits for model readiness, restores original sessions where available and otherwise resumes via
+the body transcript. Explicitly stopped inputs stay cancelled. An uncertain prior action is held for
+observation/reconciliation before further mutations; inspect the runtime recovery status if it waits.
 
 ## Configuration and evidence
 
@@ -100,7 +104,8 @@ Useful evidence lives under `nova_body/logs/`: `tool_calls.jsonl`, `generation_t
 events, runtime transcript, chat sessions and launcher/model logs. Read current receipts and loaded
 source before changing prompts. `/api/version` compares normalized content hashes of watched
 sources against startup, including task/context assembly, `nova_runtime/conversation.py`,
-`nova_cortex/context_budget.py` and the opt-in provider diagnostic helper, while
+`nova_cortex/context_budget.py`, request/audit contracts, durable recovery, transcript/session
+publication, optional heavy-audit adapter and the opt-in provider diagnostic helper, while
 ignoring watcher header timestamps and line endings. This detects even
 same-size edits with unchanged timestamps; it is not a census of every imported module.
 New structured receipts distinguish success, failure, refusal,
@@ -119,7 +124,10 @@ stop/resume, memory ingestion health and VM handoff through `/api/runtime/state`
 
 For active continuation, a queued `mode="steer"` acknowledges admission, not that the model has read
 it. `message_context` records applied input with an `input_revision` and aligned request/reply lists;
-final delivery carries the covered inputs for that response/run. Nullable request IDs belong to
+final delivery carries the covered inputs for that response/run. Acknowledgement now follows durable
+body inbox admission; checkpoint failure produces a correlated terminal rejection. Completed parts
+are atomically persisted before coverage is committed. Saved output and recovery checkpoints are
+reconciled by exact run/part/text, not a guessed success. Nullable request IDs belong to
 foreign typed entries, not an acknowledged local voice request. Compact protected action facts keep
 IDs/status and hashes when ordinary observations are shortened; inspect the actual ledger/output for
 details. A hash or retained status is not independent verification or a copy of the full observation.
@@ -182,7 +190,7 @@ disk rather than a slow network mount.
 
 ## Test meaningful behavior
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/nova_chat/tests/test_voice_transport.py`, `nova_body/tests/test_work_owner.py`; new `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/session_manager.py`, `general_tools/nova_chat/transcript.py`, `nova_body/nova_lancedb/embedder.py` and 3 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/nova_chat/tests/test_voice_transport.py`, `nova_body/tests/test_model_client.py`, `nova_body/tests/test_witness_delivery.py` and 1 more; new `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker`, `general_tools/nova_chat/session_manager.py` and 7 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -268,6 +276,12 @@ disk rather than a slow network mount.
     Score ASR errors separately from transport order. WAV synthesis proves a file, not audible
     playback. Natural microphone/speaker quality and final voice selection need their own evidence.
 
+15. Run body `test_request_contract.py`, `test_audit_protocol.py`, witness delivery/replay checks
+    and ModelClient forwarding tests. Verify actual admitted request identity, no stale cancelled
+    restrictions, late permission changes before dispatch, frozen candidate obligations, explicit
+    follow-up relevance, and no-tools enforcement across main, inline and optional heavy paths.
+    Constrained JSON only proves valid format; real response content requires live acceptance.
+
 ## Files and recovery
 
 Local Python `.venv/` and `venv/` trees are dependencies, including any model assets installed inside
@@ -326,7 +340,7 @@ A generated file gets its purpose line from the code that writes it.
 
 ## Security model
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_stop_request`, `general_tools/nova_chat/server.py::websocket_endpoint`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_resolve_speaker`, `general_tools/nova_chat/server.py::_stop_request`, `general_tools/nova_chat/server.py::websocket_endpoint`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
 
 Nova's reach is intentional — Cole: *"My machine is her body. If she can't use it fully, she is
 crippled."* Every control here is about **who can reach her from outside**, not what she may do
@@ -364,8 +378,9 @@ The phone/watch tunnel is on the roadmap. Close both **before** it ships:
    tunnel at something that authenticates, or stop treating forwarded requests as local.
 2. **`/ws` is outside the gate.** `@app.middleware("http")` never sees WebSocket handshakes.
    `websocket_endpoint` accepts any connection and immediately sends the last 100 messages and the
-   session list; `_resolve_speaker` accepts whatever known name the client claims and otherwise
-   defaults to the active user — normally Cole. Whoever reaches the socket speaks as the owner.
+   session list; `_resolve_speaker` accepts a claimed registered name. An explicitly unknown name now
+   stays unknown/untrusted, but omitting the name still defaults to the active user, normally Cole.
+   Whoever reaches the socket can still claim that identity; fixing fallback attribution is not authentication.
    Authenticate it (a token in the first frame, as originally designed) or require loopback.
 
 ### Collaboration room boundary
@@ -950,4 +965,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 71, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `ARCHITECTURE.md#Execution path`, `ARCHITECTURE.md#Memory and learning`, `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Access and practical debugging`, `OPERATIONS.md#Configuration and evidence`, `OPERATIONS.md#Model updates`, `OPERATIONS.md#Run and stop`, `OPERATIONS.md#Security model`, `OPERATIONS.md#Test meaningful behavior`.
+**Sections awaiting review:** `ARCHITECTURE.md#Body faculties`, `ARCHITECTURE.md#Execution path`, `ARCHITECTURE.md#Memory and learning`, `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Access and practical debugging`, `OPERATIONS.md#Configuration and evidence`, `OPERATIONS.md#Model updates`, `OPERATIONS.md#Run and stop`, `OPERATIONS.md#Security model`, `OPERATIONS.md#Test meaningful behavior`.

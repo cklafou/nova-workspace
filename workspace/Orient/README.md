@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-05T17:32:34+00:00 from source (input `2b5c37bce0a8`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T17:48:29+00:00 from source (input `36cc6f1895f5`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
@@ -49,12 +49,12 @@ watcher reports that error and continues autosave; documentation failure must no
 
 The [interactive explorer](Architecture/index.html) and the call-order pages under `Architecture/`
 are rebuilt on demand (`Architecture/REBUILD_MAP.cmd`, `python general_tools/calls_order.py`).
-Last built 2026-10-04 05:12 UTC; as of this generation, 231 source file(s) had been modified since.
+Last built 2026-10-04 05:12 UTC; as of this generation, 233 source file(s) had been modified since.
 
 **AI notes.** Claude, Codex and the other agents leave a note in [AI Notes](AI%20Notes/ReadMeBeforeNoteTaking.md) after each session: what changed, why, and what is still open. Read the rules once, then every note since your own last one. Newest first:
 
+- [2026-10-06_0247_Codex_CurrentRequestAuditRepair.md](AI%20Notes/2026-10-06_0247_Codex_CurrentRequestAuditRepair.md)
+- [2026-10-06_0238_Codex_RecordedVoiceAcceptance.md](AI%20Notes/2026-10-06_0238_Codex_RecordedVoiceAcceptance.md)
+- [2026-10-06_0235_Codex_AuditProtocolSchema.md](AI%20Notes/2026-10-06_0235_Codex_AuditProtocolSchema.md)
+- [2026-10-06_0234_Codex_ContinuationCompletionInProgress.md](AI%20Notes/2026-10-06_0234_Codex_ContinuationCompletionInProgress.md)
 - [2026-10-06_0228_Codex_DurableWorkRecovery.md](AI%20Notes/2026-10-06_0228_Codex_DurableWorkRecovery.md)
-- [2026-10-06_0221_Codex_RecoveryBoundaryReview.md](AI%20Notes/2026-10-06_0221_Codex_RecoveryBoundaryReview.md)
-- [2026-10-06_0215_Codex_VoiceCaptureHold.md](AI%20Notes/2026-10-06_0215_Codex_VoiceCaptureHold.md)
-- [2026-10-06_0213_Codex_ProviderCacheDiagnosis.md](AI%20Notes/2026-10-06_0213_Codex_ProviderCacheDiagnosis.md)
-- [2026-10-05_2241_Codex_OngoingWorkLiveValidation.md](AI%20Notes/2026-10-05_2241_Codex_OngoingWorkLiveValidation.md)

@@ -118,18 +118,28 @@ class ReplayMirrorsRuntime(unittest.TestCase):
         self.assertEqual(result["got"], "CONCERN")
         self.assertIn(replay.REPLAY_REFUSAL, text_of(endpoint.requests[1]))
 
-    def test_non_read_tool_gets_runtimes_refusal(self):
-        result, endpoint = self.run_case({"id": "x", "draft": "d", "expected": "PASS"},
-                                         read_call(tool="run_command", command="dir"), "PASS")
-        self.assertIn("REFUSED: 'run_command' is not one of your read-only tools",
-                      text_of(endpoint.requests[1]))
-        self.assertEqual(result["got"], "PASS")
+    def test_non_read_tool_is_invalid_without_a_second_request(self):
+        result, endpoint = self.run_case({"id": "x", "draft": "d", "expected": "INCOMPLETE"},
+                                         read_call(tool="run_command", command="dir"))
+        self.assertEqual(len(endpoint.requests), 1)
+        self.assertEqual(result["got"], "INCOMPLETE")
+        self.assertEqual(result["reads_requested"], [])
+
+    def test_explicit_current_no_tools_contract_matches_runtime_schema(self):
+        result, endpoint = self.run_case({"id": "no-tools", "draft": "Silver is ready.",
+            "incoming_requests": ["Use no external tools or files. Say silver is ready."],
+            "expected": "PASS"}, json.dumps({"status":"PASS", "reason":"Requested wording is present."}))
+        schema = endpoint.sampling[0]["response_format"]["json_schema"]["schema"]
+        self.assertNotIn("anyOf", schema)
+        self.assertIn("Say silver is ready", text_of(endpoint.requests[0]))
+        self.assertTrue(result["format_ok"])
+        self.assertTrue(result["structured_output"])
 
     def test_read_budget_and_final_protocol_match_runtime(self):
         result, endpoint = self.run_case({"id": "loop", "draft": "d", "expected": "INCOMPLETE"}, read_call())
         self.assertEqual(len(endpoint.requests), replay.RUNTIME_READS + 1)
-        self.assertNotIn("FINAL AUDIT", endpoint.requests[-2][0]["content"])
-        self.assertIn("FINAL AUDIT", endpoint.requests[-1][0]["content"])
+        self.assertIn("anyOf", endpoint.sampling[-2]["response_format"]["json_schema"]["schema"])
+        self.assertNotIn("anyOf", endpoint.sampling[-1]["response_format"]["json_schema"]["schema"])
         self.assertEqual((result["got"], result["exhausted"], result["format_ok"]), ("INCOMPLETE", True, False))
 
     def test_unreachable_endpoint_is_an_error_audit_not_a_pass(self):
@@ -190,9 +200,9 @@ class ReplayMirrorsRuntime(unittest.TestCase):
                              "--workspace", str(WORKSPACE), "--report-dir", str(reports)])
             written = sorted(p.name for p in reports.iterdir())
             self.assertEqual(len(written), 2)
-            self.assertTrue(all(name.startswith("replay_v3_") for name in written))
+            self.assertTrue(all(name.startswith("replay_v4_") for name in written))
             data = json.loads(next(reports.glob("*.json")).read_text(encoding="utf-8"))
-        self.assertEqual(data["summary"]["harness_version"], 3)
+        self.assertEqual(data["summary"]["harness_version"], 4)
         self.assertEqual(data["summary"]["reads"], replay.RUNTIME_READS)
         self.assertEqual(len(data["summary"]["case_files"][0]["sha256"]), 64)
         self.assertNotIn("_api_key", json.dumps(data))
@@ -263,11 +273,18 @@ class SamplingParity(unittest.TestCase):
                  and getattr(loop.iter.func, "id", "") == "range"
                  and any(node is audits[0] for node in ast.walk(loop))]
         self.assertEqual(len(loops), 1, "expected one range() loop around the inline audit")
-        self.assertEqual(ast.literal_eval(loops[0].iter.args[0]) - 1, replay.RUNTIME_READS)
-        keywords = {k.arg: ast.literal_eval(k.value) for k in audits[0].keywords}
+        limits = [node.value for node in ast.walk(tree) if isinstance(node, ast.Assign)
+                  and any(isinstance(t, ast.Name) and t.id == "_read_limit" for t in node.targets)]
+        self.assertEqual(len(limits), 1)
+        self.assertEqual(ast.literal_eval(limits[0].orelse), replay.RUNTIME_READS)
+        keywords = {k.arg: ast.literal_eval(k.value) for k in audits[0].keywords
+                    if k.arg != "response_format"}
+        keywords["response_format"] = WITNESS.audit_response_format(replay.RUNTIME_READS,
+                                                                    verify_tools=WITNESS.VERIFY_TOOLS)
         payload = self._payload(keywords)
         for volatile in ("messages", "stream", "cache_prompt", "model"):
             payload.pop(volatile, None)
+        self.assertEqual(payload.pop("response_format"), keywords["response_format"])
         self.assertEqual(payload, replay.RUNTIME_SAMPLING)
 
     def test_receipt_render_matches_novas_observation_text(self):

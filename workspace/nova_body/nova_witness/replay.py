@@ -48,14 +48,14 @@ Notes
 """
 from __future__ import annotations
 
-import argparse, base64, hashlib, importlib.util, json, mimetypes, re, sys, time, urllib.request
+import argparse, base64, hashlib, importlib.util, inspect, json, mimetypes, re, sys, time, urllib.request
 from datetime import datetime
 from pathlib import Path
 
-HARNESS_VERSION = 3
+HARNESS_VERSION = 4
 LABELS = ("PASS", "CONCERN", "INCOMPLETE")
 OUTCOMES = LABELS + ("ERROR",)
-RUNTIME_READS = 3          # nova.py inline audit: `for _vi in range(4)`, reads_remaining=3-_vi
+RUNTIME_READS = 3          # Upper bound; explicit current no-tools requests use zero reads.
 # Mirror of the inline audit request nova.py sends (_fetch_llama_streaming with the keywords at
 # its build_witness call site). tests/test_witness_replay.py rebuilds the real payload from
 # nova.py and fails if this mirror drifts.
@@ -225,6 +225,9 @@ def format_ok(w, raw: str, exhausted: bool = False, error: str = ""):
     if exhausted:
         return False
     status = w.parse_witness_verdict(raw).status
+    classifier = getattr(w, "classify_audit_response", None)
+    if classifier and classifier(raw, verify_tools=w.VERIFY_TOOLS)[0] == "verdict":
+        return True
     text = (raw or "").strip()
     fenced = re.fullmatch(r"```(?:text)?\s*\n(.*?)\n```", text, re.DOTALL | re.IGNORECASE)
     text = re.sub(r"^\s*[1-4][.)]\s*", "", fenced.group(1).strip() if fenced else text)
@@ -243,6 +246,16 @@ def run_case(w, endpoint, case, max_tool_rounds=RUNTIME_READS, detect_read=None,
     evidence, capped = w.select_visual_evidence(evidence)
     omitted += capped
     reads = max(0, int(max_tool_rounds))
+    structured = ("structured_output" in inspect.signature(w.build_witness).parameters
+                  and hasattr(w, "audit_response_format"))
+    request_context = ""
+    if structured and case.get("incoming_requests"):
+        from nova_cortex.request_contract import CurrentRequest
+        current = CurrentRequest(case["incoming_requests"])
+        request_context = current.render(case.get("delivered_segments", []),
+                                         continuing=bool(case.get("continuing", False)))
+        if current.tools_forbidden:
+            reads = 0
     verdict, error, exhausted = "", "", False
     latency, rounds, requested = 0.0, 0, []
     for i in range(reads + 1):
@@ -251,10 +264,16 @@ def run_case(w, endpoint, case, max_tool_rounds=RUNTIME_READS, detect_read=None,
                                prior_concern=case.get("prior_concern", ""),
                                checks=checks, has_image=has_image,
                                visual_evidence=evidence, omitted_images=omitted,
-                               reads_remaining=reads - i)
+                               reads_remaining=reads - i,
+                               **({"structured_output": True, "request_context": request_context}
+                                  if structured else {}))
+        request_sampling = dict(RUNTIME_SAMPLING if sampling is None else sampling)
+        if structured:
+            request_sampling["response_format"] = w.audit_response_format(
+                reads - i, allow_reads=bool(reads), verify_tools=w.VERIFY_TOOLS)
         try:
             verdict, dt = ask(endpoint, msgs, api_key=case.get("_api_key", ""),
-                              model=case.get("_model", "nova-witness-heavy"), sampling=sampling)
+                              model=case.get("_model", "nova-witness-heavy"), sampling=request_sampling)
         except Exception as exc:   # runtime: a failed request is an ERROR audit, never a PASS
             verdict, error = "", f"Witness request failed ({type(exc).__name__}: {str(exc)[:160]})."
             break
@@ -285,7 +304,7 @@ def run_case(w, endpoint, case, max_tool_rounds=RUNTIME_READS, detect_read=None,
             "images_seen": len(evidence), "omitted_images": omitted,
             "evidence_gap": has_image and not evidence,
             "latency_s": round(latency, 2), "verdict_rounds": rounds,
-            "raw_verdict": verdict[:500]}
+            "raw_verdict": verdict[:500], "structured_output": structured}
 
 
 def _rate(hits, pool):

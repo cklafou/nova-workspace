@@ -566,6 +566,7 @@ async def _fetch_llama_streaming(
     enable_thinking: bool = True,
     literal_safe:   bool = False,
     preserve_messages: bool = False,
+    response_format: Optional[dict] = None,
 ):
     """Stream tokens from llama.cpp, routing thinking vs chat by delta field.
 
@@ -644,6 +645,8 @@ async def _fetch_llama_streaming(
         # ONLY to turn thinking OFF — used by the empty-response retry below, where the <think>
         # pass ate the whole token budget and left no room for an actual answer.
     }
+    if response_format is not None:
+        payload["response_format"] = response_format
     if not enable_thinking:
         payload["chat_template_kwargs"] = {"enable_thinking": False}
 
@@ -813,6 +816,7 @@ async def stream_response(
     on_segment=None,
     on_boundary=None,
     on_checkpoint=None,
+    request_inputs=None,
 ):
     """
     Call llama.cpp server and process the response in an autonomy loop if tools are used.
@@ -833,6 +837,7 @@ async def stream_response(
     _segment_continue = False
     _candidate_revision = 0
     _step_evidence = None
+    _step_request = None
     _boundary_revision = 0
     _last_completed_action = None
     _completed_tool_count = 0
@@ -971,6 +976,10 @@ async def stream_response(
         messages = transcript.to_messages(
             "Nova", system, workspace_context=workspace_context
         )
+
+        from nova_cortex.request_contract import CurrentRequest
+        _current_request = (CurrentRequest.from_entries(request_inputs) if request_inputs is not None
+                            else CurrentRequest.from_messages(messages))
 
         await _checkpoint({"type": "generation_started", "autonomous": autonomous,
             "request_context": [{"role": m.get("role"), "content": m.get("content")}
@@ -1138,6 +1147,7 @@ async def stream_response(
                     "entries": [{key: entry[key] for key in ("role", "content", "input_key", "request_id", "reply_to", "conversation_id")
                                  if key in entry} for entry in batch]})
                 for entry in batch:
+                    _current_request.add(entry["content"])
                     messages.append({"role": "user", "content": entry["content"], ANCHOR: True})
                     if isinstance(entry["content"], list):
                         for part in entry["content"]:
@@ -1348,6 +1358,7 @@ async def stream_response(
                     continue
                 _candidate_revision = ((steering.applied_revision if steering is not None else 0)
                                        + _boundary_revision)
+                _step_request = _current_request.snapshot()
                 _step_evidence = (_witness.capture_evidence_snapshot()
                                   if (_segmented or on_boundary is not None) and _INTEGRITY_OK else None)
                 full_response = await _fetch_llama_streaming(
@@ -1599,6 +1610,14 @@ async def stream_response(
 
                         if await _apply_steering(full_response):
                             continue
+                        if _current_request.tools_forbidden:
+                            messages.append({"role": "assistant", "content": full_response})
+                            messages.append({"role": "user", "content":
+                                "[System request constraint] This external tool proposal was NOT executed. "
+                                "The current incoming request forbids external tools/files. Answer from "
+                                "the supplied context without fabricating evidence.\n\n" +
+                                _current_request.render(_committed_segments, continuing=_segment_continue)})
+                            continue
                         # Execute Tool — time it for the Tools tab display
                         import time as _time
                         _t0 = _time.time()
@@ -1754,21 +1773,10 @@ async def stream_response(
             # phrasing can't spin us.
             # Two ways to trip this: she CLAIMS a receipt she didn't earn, or she was ASKED to go
             # and look and is answering anyway. The second is the reliable one — see _was_asked_to_act.
-            _last_user = ""
-            for _m in reversed(messages):
-                if _m.get("role") == "user":
-                    _last_user = _m.get("content") or ""
-                    # Multimodal turns make content a LIST of parts (text + image_url).
-                    # The integrity checks below want a plain string; calling .lstrip()/
-                    # .startswith() on a list is what threw "'list' object has no attribute
-                    # 'lstrip'" the moment an image entered the turn. Flatten to text parts
-                    # (image payloads don't bear on "was she asked to act?"). Mirrors _est().
-                    if isinstance(_last_user, list):
-                        _last_user = " ".join(
-                            x.get("text", "") for x in _last_user if isinstance(x, dict)
-                        )
-                    break
-            _asked = _was_asked_to_act(_last_user) and not _last_user.startswith("[System")
+            # Internal witness/System messages share the provider's user role, but
+            # they cannot become a human demand to read a file or execute a command.
+            _asked = (not autonomous and not _step_request.tools_forbidden
+                      and _was_asked_to_act(_step_request.latest))
             # Fire up to TWICE. The first challenge reliably stops the fabrication — but she then
             # spends the retry NARRATING being caught ("the wall stopped me again… going reach")
             # and never reaches. That's the announce-loop in a guardrail costume: she is now
@@ -1786,37 +1794,28 @@ async def stream_response(
                 _receipt_challenged += 1
                 print(f"[nova] ASSERTION BINDING tripped (#{_receipt_challenged}) — 0 tool calls "
                       f"(claimed_receipt={_claims_a_receipt(chat_text)}, asked_to_act={_asked}). "
-                      f"Refusing the answer and sending her to look.")
+                      f"Requesting an evidence-aware correction that preserves the actual request.")
                 try:
                     _witness.pipeline_event(
                         "assertion_challenge",
-                            f"challenge #{_receipt_challenged}: she was asked to go look, ran ZERO "
-                        f"tools, and was about to answer anyway",
+                        f"challenge #{_receipt_challenged}: check claim/request against available evidence "
+                        f"while preserving current incoming instructions",
                         draft=chat_text,
                         claimed_receipt=bool(_claims_a_receipt(chat_text)),
                         asked_to_act=bool(_asked))
                 except Exception:
                     pass
                 messages.append({"role": "assistant", "content": full_response})
-                messages.append({"role": "user", "content":
-                    "[System] STOP. You made ZERO tool calls this turn, and you are about to answer "
-                    "as if you had looked.\n\n"
-                    "If there are file contents, command output, version numbers, paths, counts or "
-                    "hardware details in what you were about to say — you did not read them. You "
-                    "GENERATED them, because generating something plausible is the cheapest thing "
-                    "you can do and nothing has ever stopped you. It sounds exactly like an answer. "
-                    "That is what makes it dangerous.\n\n"
-                    "This is not a scolding, and it is not about holding your ground — nobody is "
-                    "attacking you. It's that your word is a receipt, and an unearned receipt is "
-                    "worthless to Cole precisely BECAUSE he trusts it. A confident wrong answer "
-                    "costs him more than 'I don't know' ever could.\n\n"
-                    "Emit the tool call NOW. Real command, real output. Then tell him what you "
-                    "ACTUALLY saw — even if it's boring, even if it's an error, and especially if "
-                    "it disagrees with what you were about to say.\n\n"
-                    "And do NOT reply to this message. Do not tell me you're about to reach, do not "
-                    "thank me for stopping you, do not narrate the habit. Talking about the tool "
-                    "call is not the tool call — it is the same avoidance wearing a more flattering "
-                    "coat. Your next output should be the JSON, and nothing else."})
+                _receipt_repair = (
+                    "[System evidence check] No tool was executed in this turn. Do not invent "
+                    "a new receipt or infer that earlier session evidence never existed. "
+                    "Correct or qualify any unsupported action/result claim using the supplied evidence. "
+                    + ("Do not call external tools or read files: the incoming request forbids them. "
+                       if _step_request.tools_forbidden else
+                       "If the actual request requires a fresh check and permits it, perform that relevant check. ")
+                    + "Answer the actual request; this internal correction is not a topic to discuss.\n\n"
+                    + _step_request.render(_committed_segments, continuing=_segment_continue))
+                messages.append({"role": "user", "content": _receipt_repair})
                 continue
 
             # ── SELF-CHECK BEFORE SENDING (Cole's idea, 2026-07-14) ───────────────────────────
@@ -1974,10 +1973,27 @@ async def stream_response(
                     from nova_voice.tool_router import _execute_tool_inner as _verify_call
                     _checks, _verdict = _witness_checks, ""   # carried across rounds this turn
                     _pre_checks = len(_checks)                # so the event logs only NEW reads
-                    for _vi in range(4):
+                    def _pending_read_ban(_permission_base=_step_request):
+                        pending = getattr(steering, "pending_inputs", None)
+                        if not callable(pending):
+                            return False
+                        permission = _permission_base.snapshot()
+                        for entry in pending():
+                            permission.add(entry.get("content"))
+                        return permission.tools_forbidden
+                    _audit_no_reads = _step_request.tools_forbidden or _pending_read_ban()
+                    _read_limit = 0 if _audit_no_reads else 3
+                    for _vi in range(_read_limit + 1):
                         if not _segmented and await _apply_steering(chat_text):
                             _audit_steered = True
                             break
+                        _audit_no_reads = _audit_no_reads or _pending_read_ban()
+                        _reads_remaining = 0 if _audit_no_reads else _read_limit - _vi
+                        _permission_note = (
+                            "\nA newer accepted instruction forbids external reads now. This changes "
+                            "permission for NEW actions only; judge this candidate against its frozen "
+                            "applied requests, not the other content of the pending follow-up."
+                            if _audit_no_reads and not _step_request.tools_forbidden else "")
                         _verdict = await _fetch_llama_streaming(
                             _witness.build_witness(chat_text, _turn_tools,
                                                    thinking=_think_for_check,
@@ -1987,20 +2003,31 @@ async def stream_response(
                                                    has_image=bool(_user_visual_evidence or _turn_visual_evidence),
                                                    visual_evidence=_audit_images,
                                                    omitted_images=_audit_omitted,
-                                                   reads_remaining=3 - _vi,
+                                                   reads_remaining=_reads_remaining,
+                                                   structured_output=True,
+                                                   request_context=_step_request.render(
+                                                       _committed_segments, continuing=_segment_continue) + _permission_note,
                                                    **({"evidence_snapshot": _step_evidence}
                                                       if _step_evidence is not None else {})),
                             _noop,
                             max_tokens=2048, temperature=0.2, top_p=0.9,
-                            enable_thinking=False, literal_safe=True, preserve_messages=True) or ""
+                            enable_thinking=False, literal_safe=True, preserve_messages=True,
+                            response_format=_witness.audit_response_format(
+                                _reads_remaining, allow_reads=not _audit_no_reads,
+                                verify_tools=_witness.VERIFY_TOOLS)) or ""
                         await _service_boundary("provider_complete", draft=_verdict, phase="audit")
                         if not _segmented and await _apply_steering(chat_text):
                             _audit_steered = True
                             break
                         _wc, _ = _witness.find_audit_tool_call(_verdict)
-                        if not _wc or _vi == 3:
-                            _audit_exhausted = bool(_wc and _vi == 3)
+                        if not _wc or _reads_remaining == 0:
+                            _audit_exhausted = bool(_wc and _reads_remaining == 0)
                             break
+                        if _pending_read_ban():
+                            # The completed candidate remains frozen, but a NEW external
+                            # read cannot outrun a restriction accepted during inference.
+                            _audit_no_reads = True
+                            continue  # Next bounded audit is verdict-only; no read dispatched.
                         _wt = _wc.get("tool")
                         if _wt not in _witness.VERIFY_TOOLS:
                             _checks.append((_wt, {}, f"REFUSED: '{_wt}' is not one of your "
@@ -2118,11 +2145,14 @@ async def stream_response(
                         pass
                     # If her LAST answer promised to check and she didn't, don't argue the
                     # point again — ask for the tool call and nothing else.
-                    _broke_promise = (_prior_draft
+                    _broke_promise = (not _step_request.tools_forbidden and _prior_draft
                                       and _witness.promised_to_check(_prior_draft)
                                       and len(_turn_tools) <= _tools_at_last_concern)
                     _turn_msg = (_witness.build_promise_turn(_concern) if _broke_promise
-                                 else _witness.build_challenge_turn(_concern))
+                                 else _witness.build_challenge_turn(
+                                     _concern, allow_tools=not _step_request.tools_forbidden))
+                    _turn_msg += "\n\n" + _step_request.render(
+                        _committed_segments, continuing=_segment_continue)
                     if _broke_promise:
                         try:
                             _witness.pipeline_event(
@@ -2201,7 +2231,11 @@ async def stream_response(
                                 _hw_think=_think_for_check, _hw_concern=_concern,
                                 _hw_evidence=list(_checks), _hw_rounds=_witness_rounds,
                                 _hw_stage=_hw_stage, _hw_deadlocked=bool(_deadlocked),
-                                _hw_history=_hw_history, _hw_has_image=bool(_user_visual_evidence or _turn_visual_evidence)):
+                                _hw_history=_hw_history, _hw_has_image=bool(_user_visual_evidence or _turn_visual_evidence),
+                                _hw_request=_step_request.render(_committed_segments, continuing=_segment_continue),
+                                _hw_allow_reads=not _step_request.tools_forbidden,
+                                _hw_snapshot=_step_evidence, _hw_live_request=_current_request,
+                                _hw_pending_ban=_pending_read_ban):
                             import time as _t_hw
                             _t0_hw = _t_hw.time()
                             # Capture THIS turn's context (the shared turn id lives in a
@@ -2235,14 +2269,19 @@ async def stream_response(
                                 _vc_hw = None
                             _hv, _hv_calls, _twc_hw = "", 0, None
                             _loop_hw = asyncio.get_running_loop()
-                            for _ri_hw in range(3):  # <=3 paid calls: 2 verify rounds + rule
+                            _hw_read_limit = 2 if _hw_allow_reads else 0
+                            for _ri_hw in range(_hw_read_limit + 1):
+                                _hw_reads_permitted = (_hw_allow_reads and not _hw_live_request.tools_forbidden
+                                                       and not _hw_pending_ban())
                                 try:
                                     _hv = await _loop_hw.run_in_executor(
                                         None, lambda: _ctx_hw.run(lambda: _cc_hw.heavy_witness(
                                             _hw_draft, _hw_tools, history=_hw_history,
                                             thinking=_hw_think, prior_concern=_hw_concern,
                                             checks=_hw_evidence,
-                                            has_image=_hw_has_image))) or ""
+                                            has_image=_hw_has_image, request_context=_hw_request,
+                                            allow_reads=_hw_reads_permitted and _ri_hw < _hw_read_limit,
+                                            evidence_snapshot=_hw_snapshot))) or ""
                                     _hv_calls += 1
                                 except Exception as _he_hw:
                                     # CloudSkip lands here; cloud_call already logged why.
@@ -2253,7 +2292,8 @@ async def stream_response(
                                     _twc_hw, _ = _witness.find_audit_tool_call(_hv)
                                 except Exception:
                                     _twc_hw = None
-                                if not _twc_hw or _ri_hw == 2:
+                                if (not _twc_hw or _ri_hw == _hw_read_limit or not _hw_reads_permitted
+                                        or _hw_live_request.tools_forbidden or _hw_pending_ban()):
                                     break
                                 _twt_hw = _twc_hw.get("tool")
                                 if _vc_hw and _twt_hw in _witness.VERIFY_TOOLS:
@@ -2381,7 +2421,9 @@ async def stream_response(
                                                  _cv_history=_hw_history,
                                                  _cv_has_image=bool(_user_visual_evidence or _turn_visual_evidence),
                                                  _cv_stage=_hw_stage,
-                                                 _cv_rounds=_witness_rounds):
+                                                 _cv_rounds=_witness_rounds,
+                                                 _cv_request=_step_request.render(_committed_segments, continuing=_segment_continue),
+                                                 _cv_snapshot=_step_evidence):
                             import time as _t_cv
                             _t0 = _t_cv.time()
                             _ctx = contextvars.copy_context()
@@ -2403,7 +2445,8 @@ async def stream_response(
                                         _cv_draft, _cv_tools, history=_cv_history,
                                         thinking=_cv_think, prior_concern=_cv_concern,
                                         checks=_cv_evidence,
-                                        has_image=_cv_has_image))) or ""
+                                        has_image=_cv_has_image, request_context=_cv_request,
+                                        allow_reads=False, evidence_snapshot=_cv_snapshot))) or ""
                             except Exception as _e:
                                 print(f"[nova] cloud arbiter skipped (fail-open): {_e}")
                                 return "skip"
@@ -2461,7 +2504,8 @@ async def stream_response(
                                     "The concern:]" + chr(10) + chr(10) + _concern + chr(10) +
                                     chr(10) + "[It holds more context on this than the fast "
                                     "local witness. Revise your reply to address it, then send "
-                                    "— reply with the message you want sent, nothing else.]")})
+                                    "— reply with the message you want sent, nothing else.]\n\n" +
+                                    _step_request.render(_committed_segments, continuing=_segment_continue))})
                                 _prior_draft = chat_text
                                 _concern_prev = _concern
                                 _tools_at_last_concern = len(_turn_tools)
@@ -2485,7 +2529,8 @@ async def stream_response(
                                     "written, send it again unchanged — standing by a true "
                                     "answer against a concern that does not hold is exactly your "
                                     "job. If the concern actually lands, revise it. Either way, "
-                                    "reply with the message you want sent, nothing else.]")})
+                                    "reply with the message you want sent, nothing else.]\n\n" +
+                                    _step_request.render(_committed_segments, continuing=_segment_continue))})
                                 _prior_draft = chat_text
                                 _concern_prev = _concern
                                 _tools_at_last_concern = len(_turn_tools)
@@ -2554,7 +2599,9 @@ async def stream_response(
                                 _orig=_prior_draft, _revised=chat_text,
                                 _concern_txt=_concern_prev, _tools=list(_turn_tools),
                                 _think=_think_for_check, _evidence=list(_witness_checks),
-                                _hist=_cc_hist, _has_img=bool(_user_visual_evidence or _turn_visual_evidence), _rounds=_witness_rounds):
+                                _hist=_cc_hist, _has_img=bool(_user_visual_evidence or _turn_visual_evidence), _rounds=_witness_rounds,
+                                _cc_request=_step_request.render(_committed_segments, continuing=_segment_continue),
+                                _cc_snapshot=_step_evidence):
                             import time as _t_cc
                             _t0_cc = _t_cc.time()
                             _ctx_cc = contextvars.copy_context()
@@ -2579,7 +2626,8 @@ async def stream_response(
                                     None, lambda: _ctx_cc.run(lambda: _cc2.heavy_witness(
                                         _orig, _tools, history=_hist, thinking=_think,
                                         prior_concern="", checks=_evidence,
-                                        has_image=_has_img))) or ""
+                                        has_image=_has_img, request_context=_cc_request,
+                                        allow_reads=False, evidence_snapshot=_cc_snapshot))) or ""
                             except Exception as _he_cc:
                                 print(f"[nova] correction-check skipped (fail-open): {_he_cc}")
                                 return
@@ -2693,10 +2741,10 @@ async def stream_response(
                         messages.append({"role": "user", "content":
                             "[System] The reply you just wrote is the same message you already "
                             "sent, nearly word for word. It has been delivered once; sending it "
-                            "again answers nothing. Read the NEWEST message above yours and "
-                            "answer THAT — its actual questions, not your position in the "
-                            "conversation. If you need to look something up first, emit the tool "
-                            "call now instead of announcing that you will."})
+                            "again answers nothing. Answer the actual incoming requests retained below, "
+                            "not the most recent internal correction. Preserve remaining instructions "
+                            "and their tool restrictions.\n\n" +
+                            _step_request.render(_committed_segments, continuing=_segment_continue)})
                         continue
             except Exception as _ee:
                 print(f"[nova] echo guard failed open: {_ee}")

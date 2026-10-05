@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-06T02:19:52",
+  "generated": "2026-10-06T02:32:57",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -328,7 +328,7 @@
       "path": "nova_body/nova_runtime",
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
       "files": 15,
-      "lines": 3113,
+      "lines": 3114,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -656,7 +656,7 @@
       "path": "general_tools/architecture_map",
       "purpose": "Generates Orient documentation and validates source, review and link freshness.",
       "files": 10,
-      "lines": 3436,
+      "lines": 3490,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -879,7 +879,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.",
       "files": 34,
-      "lines": 11861,
+      "lines": 11972,
       "age_days": 0,
       "ports_bind": [
         "8765"

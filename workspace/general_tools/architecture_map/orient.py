@@ -48,7 +48,7 @@ PURPOSES = {
     "nova_computer": "VM observation, command and input tools in the normal voice router; explicit human handoff pauses actions.",
     "nova_imagination": "Image generation and art workflow; uses optional external ComfyUI services.",
     "nova_play": "Curiosity and saved discoveries, including the curio shelf.",
-    "nova_witness": "Witness model launch, evaluation and training utilities; replay v3 shares live evidence/dispatch/sampling, with frozen regression controls, open development cases and a sealed holdout. Live auditing lives in cortex/voice.",
+    "nova_witness": "Witness model launch, evaluation and training utilities; replay v4 shares live evidence/dispatch/sampling and constrained audit JSON, with frozen regression controls, open development cases and a sealed holdout. Live auditing lives in cortex/voice.",
 }
 OWNERS = {
     "memory": "Personal memory and operational state, including autonomy, roles, tunables and loadout intent.",
@@ -797,6 +797,16 @@ steering or a full relocated-body runtime certification. Follow-ups do not reple
 model/tool-loop or witness-revision allowances. Completed candidates retain the exact evidence and
 input revision used by their audit, including when newer input arrives during that audit.
 
+The body's `request_contract.CurrentRequest` retains actual applied incoming requests separately
+from internally generated audit/correction prompts. Each candidate freezes that request context
+alongside its evidence and delivered parts; corrections must preserve still-applicable follow-ups.
+An explicit no-tools request also forbids auditor reads. The inline witness uses the installed
+provider's constrained JSON schema for exact verdicts or permitted read-only calls, with a verdict-only
+schema when no reads remain. Schema validity is not factual correctness; malformed, truncated and
+failed audits remain visibly unapproved. Legacy prose verdict parsing stays strict for older callers.
+Explicit unknown speaker labels stay unknown/untrusted rather than being silently renamed as Cole;
+only an omitted speaker falls back to the active UI user.
+
 `nova_runtime.work_owner.WorkCoordinator` serializes conversational and autonomous work under one
 body-owned lease. An autonomous wake claims that lease before its first await, preventing a chat
 request from racing model readiness. A serializable human-input inbox belongs to the body; face
@@ -1022,9 +1032,11 @@ See the dated evidence for coverage; an operational text index does not certify 
 Text and visual SentenceTransformer loaders first request locally cached assets, avoiding a network
 check on that path. Only a recognized missing-cache failure falls back to the existing first-install
 download behavior; other failures remain failures. Per-model initialization locks and a separate
-memory-store singleton lock prevent concurrent first-use construction. Model names, retrieval,
-indexing and failure reporting are unchanged; no personal memory records were rewritten. These
-changes address startup work and races, not a measured accuracy or latency improvement by themselves.
+memory-store singleton lock prevent concurrent first-use construction. Both small encoders now use CPU and warm in the background at startup, with visible readiness/error
+status; the visual encoder only warms when the visual table contains records. Store initialization
+loads deduplication hashes without copying embedding vectors into a dataframe. Retrieval semantics
+and original records are preserved; the warmup does not add memories. Dated cold/warm measurements
+below separate startup expense from query time; no retrieval-accuracy improvement is claimed.
 
 KoELS separates choosing a specialist manifest from equipping adapters. Changing scales within
 a loaded set differs from restarting the provider with a different set. A live personality adapter
@@ -1214,6 +1226,23 @@ does not provide an ordinary periodic stable-prefix checkpoint option.
 A fresh recall process measured 25.37 seconds on its first query and 24.6 milliseconds warm. The CPU
 startup warmup later measured 17.42 seconds, followed by 42 milliseconds warm recall. Startup cost is
 reported separately rather than presented as eliminated; machine load can change it substantially.
+On October 6, the first recorded-PCM acceptance traversed real Silero/Whisper, body generation and
+file-only Windows speech synthesis. It preserved one run and delivered two parts, but failed the
+follow-up content requirement; it is recorded as a failed behavioral test, not successful voice chat.
+First part took 58.906 seconds and terminal closure 172.281 seconds. The initial synthetic English
+clip had 0/38 word errors; the follow-up had 1/10. These are not measurements of Cole's microphone.
+The then-running server mislabeled an unknown evaluator name as Cole; the next test uses the existing
+GPT Astra identity and requires exact attribution. Receipt: `Temp/voice-acceptance-20261006/live-worker/`.
+Separate scoped Stop completed in about 235 milliseconds after response start, with no speech file.
+Native file-synthesis queue tests confirm barge-in cancellation/hold/resume and End-call flushing;
+no speaker playback or audible interruption is claimed.
+
+A fresh-process recovery fixture hard-exited after a disposable side effect, moved the synthetic body,
+and denied old-tree, face and network access. It retained the original task, goal, author, inputs and
+receipts; it did not replay the uncertain action, used a later actual observation to reconcile it,
+delivered the pending reply once and resumed the autonomous phase loop. Its provider was injected
+and its model dependency declared. This validates that recovery boundary, not a full personal-state
+Pluck Test of every faculty. Receipt: `Temp/recovery-validation/2026-10-06_relocation.json`.
 The existing UI needs a reload to receive new JavaScript. Backend changes were live-loaded for the
 probe and will load again on Start Nova. Unit/fixture passes do not certify every optional
 application, native window interaction or adapter swap.
@@ -1271,6 +1300,10 @@ refuses to attach to an already-running full server as though that server were d
 Collaboration room also works during a normal launch without being fed to Nova's conversation.
 Both modes start the updater catalog check after a cancellable delay; this does not start the model
 or enumerate installed weights. The controller status bar distinguishes Chat only from Nova running.
+Starting Nova can recover body-admitted unfinished work even when autonomous scheduling is paused.
+It waits for model readiness, restores original sessions where available and otherwise resumes via
+the body transcript. Explicitly stopped inputs stay cancelled. An uncertain prior action is held for
+observation/reconciliation before further mutations; inspect the runtime recovery status if it waits.
 
 ## Configuration and evidence
 
@@ -1312,7 +1345,8 @@ Useful evidence lives under `nova_body/logs/`: `tool_calls.jsonl`, `generation_t
 events, runtime transcript, chat sessions and launcher/model logs. Read current receipts and loaded
 source before changing prompts. `/api/version` compares normalized content hashes of watched
 sources against startup, including task/context assembly, `nova_runtime/conversation.py`,
-`nova_cortex/context_budget.py` and the opt-in provider diagnostic helper, while
+`nova_cortex/context_budget.py`, request/audit contracts, durable recovery, transcript/session
+publication, optional heavy-audit adapter and the opt-in provider diagnostic helper, while
 ignoring watcher header timestamps and line endings. This detects even
 same-size edits with unchanged timestamps; it is not a census of every imported module.
 New structured receipts distinguish success, failure, refusal,
@@ -1331,7 +1365,10 @@ stop/resume, memory ingestion health and VM handoff through `/api/runtime/state`
 
 For active continuation, a queued `mode="steer"` acknowledges admission, not that the model has read
 it. `message_context` records applied input with an `input_revision` and aligned request/reply lists;
-final delivery carries the covered inputs for that response/run. Nullable request IDs belong to
+final delivery carries the covered inputs for that response/run. Acknowledgement now follows durable
+body inbox admission; checkpoint failure produces a correlated terminal rejection. Completed parts
+are atomically persisted before coverage is committed. Saved output and recovery checkpoints are
+reconciled by exact run/part/text, not a guessed success. Nullable request IDs belong to
 foreign typed entries, not an acknowledged local voice request. Compact protected action facts keep
 IDs/status and hashes when ordinary observations are shortened; inspect the actual ledger/output for
 details. A hash or retained status is not independent verification or a copy of the full observation.
@@ -1475,6 +1512,12 @@ disk rather than a slow network mount.
     recognition completion/reset/error must release output, while mute/Stop still prevents it.
     Score ASR errors separately from transport order. WAV synthesis proves a file, not audible
     playback. Natural microphone/speaker quality and final voice selection need their own evidence.
+
+15. Run body `test_request_contract.py`, `test_audit_protocol.py`, witness delivery/replay checks
+    and ModelClient forwarding tests. Verify actual admitted request identity, no stale cancelled
+    restrictions, late permission changes before dispatch, frozen candidate obligations, explicit
+    follow-up relevance, and no-tools enforcement across main, inline and optional heavy paths.
+    Constrained JSON only proves valid format; real response content requires live acceptance.
 
 ## Files and recovery
 

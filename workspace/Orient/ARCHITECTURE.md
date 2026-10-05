@@ -1,11 +1,11 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T17:32:34+00:00 from source (input `2b5c37bce0a8`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T17:48:29+00:00 from source (input `36cc6f1895f5`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_end_queued_request`, `general_tools/nova_chat/server.py::_run_ai_response_owned`, `general_tools/nova_chat/server.py::_steer_request`, `general_tools/nova_chat/server.py::_stop_request` and 10 more; new `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/session_manager.py`, `nova_body/nova_lancedb/embedder.py`, `nova_body/nova_lancedb/hippocampus.py` and 2 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_end_queued_request`, `general_tools/nova_chat/server.py::_run_ai_response_owned`, `general_tools/nova_chat/server.py::_steer_request`, `general_tools/nova_chat/server.py::_stop_request` and 12 more; new `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker`, `general_tools/nova_chat/session_manager.py` and 6 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -52,6 +52,16 @@ cognition loop. This is provider-compatible between-call continuation, not prove
 steering or a full relocated-body runtime certification. Follow-ups do not replenish the total
 model/tool-loop or witness-revision allowances. Completed candidates retain the exact evidence and
 input revision used by their audit, including when newer input arrives during that audit.
+
+The body's `request_contract.CurrentRequest` retains actual applied incoming requests separately
+from internally generated audit/correction prompts. Each candidate freezes that request context
+alongside its evidence and delivered parts; corrections must preserve still-applicable follow-ups.
+An explicit no-tools request also forbids auditor reads. The inline witness uses the installed
+provider's constrained JSON schema for exact verdicts or permitted read-only calls, with a verdict-only
+schema when no reads remain. Schema validity is not factual correctness; malformed, truncated and
+failed audits remain visibly unapproved. Legacy prose verdict parsing stays strict for older callers.
+Explicit unknown speaker labels stay unknown/untrusted rather than being silently renamed as Cole;
+only an omitted speaker falls back to the active UI user.
 
 `nova_runtime.work_owner.WorkCoordinator` serializes conversational and autonomous work under one
 body-owned lease. An autonomous wake claims that lease before its first await, preventing a chat
@@ -234,11 +244,13 @@ so evidence is not silently changed.
 
 ## Body faculties
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `nova_body/nova_witness/replay.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py (PURPOSES)`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Body faculties"`.
+
 | Part | Responsibility | Python sources |
 |---|---|---:|
 | `nova_paths` | Canonical body/workspace paths; relocated state never falls back to a second copy. | 1 |
 | `nova_config` | Body settings loader. Some execution paths still have independent constants; this is not yet universal configuration. | 1 |
-| `nova_cortex` | Task board, wake decisions, wants, speaker roles, witness/integrity checks, tunables and shared identity/context loading. | 15 |
+| `nova_cortex` | Task board, wake decisions, wants, speaker roles, witness/integrity checks, tunables and shared identity/context loading. | 17 |
 | `nova_runtime` | Model dispatch, headless autonomy, transcript, event bus, provider lifecycle and KoELS equip operations. | 15 |
 | `nova_voice` | Local inference client, parsing/tool loop, shell/file tools and durable execution receipts. The retired host-desktop Claude ping is no longer registered. | 5 |
 | `nova_senses` | Time, environment changes, presence, touch, sight, web access and proprioception. | 13 |
@@ -249,7 +261,7 @@ so evidence is not silently changed.
 | `nova_computer` | VM observation, command and input tools in the normal voice router; explicit human handoff pauses actions. | 13 |
 | `nova_imagination` | Image generation and art workflow; uses optional external ComfyUI services. | 3 |
 | `nova_play` | Curiosity and saved discoveries, including the curio shelf. | 2 |
-| `nova_witness` | Witness model launch, evaluation and training utilities; replay v3 shares live evidence/dispatch/sampling, with frozen regression controls, open development cases and a sealed holdout. Live auditing lives in cortex/voice. | 5 |
+| `nova_witness` | Witness model launch, evaluation and training utilities; replay v4 shares live evidence/dispatch/sampling and constrained audit JSON, with frozen regression controls, open development cases and a sealed holdout. Live auditing lives in cortex/voice. | 5 |
 
 ## Persistent ownership
 
@@ -291,9 +303,11 @@ See the dated evidence for coverage; an operational text index does not certify 
 Text and visual SentenceTransformer loaders first request locally cached assets, avoiding a network
 check on that path. Only a recognized missing-cache failure falls back to the existing first-install
 download behavior; other failures remain failures. Per-model initialization locks and a separate
-memory-store singleton lock prevent concurrent first-use construction. Model names, retrieval,
-indexing and failure reporting are unchanged; no personal memory records were rewritten. These
-changes address startup work and races, not a measured accuracy or latency improvement by themselves.
+memory-store singleton lock prevent concurrent first-use construction. Both small encoders now use CPU and warm in the background at startup, with visible readiness/error
+status; the visual encoder only warms when the visual table contains records. Store initialization
+loads deduplication hashes without copying embedding vectors into a dataframe. Retrieval semantics
+and original records are preserved; the warmup does not add memories. Dated cold/warm measurements
+below separate startup expense from query time; no retrieval-accuracy improvement is claimed.
 
 KoELS separates choosing a specialist manifest from equipping adapters. Changing scales within
 a loaded set differs from restarting the provider with a different set. A live personality adapter
@@ -306,7 +320,7 @@ Drives/wants and the hormone design are not evidence of online weight learning. 
 
 ## Runtime evidence and open modernization work
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/voice_gateway/control_worker.py`, `nova_body/nova_runtime/model_client.py`, `nova_body/nova_runtime/runtime.py` and 3 more; new `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/session_manager.py`, `general_tools/nova_chat/transcript.py`, `nova_body/nova_lancedb/embedder.py` and 3 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/voice_gateway/control_worker.py`, `nova_body/nova_runtime/conversation.py`, `nova_body/nova_runtime/model_client.py` and 4 more; new `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker`, `general_tools/nova_chat/session_manager.py` and 7 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
 
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
@@ -485,6 +499,23 @@ does not provide an ordinary periodic stable-prefix checkpoint option.
 A fresh recall process measured 25.37 seconds on its first query and 24.6 milliseconds warm. The CPU
 startup warmup later measured 17.42 seconds, followed by 42 milliseconds warm recall. Startup cost is
 reported separately rather than presented as eliminated; machine load can change it substantially.
+On October 6, the first recorded-PCM acceptance traversed real Silero/Whisper, body generation and
+file-only Windows speech synthesis. It preserved one run and delivered two parts, but failed the
+follow-up content requirement; it is recorded as a failed behavioral test, not successful voice chat.
+First part took 58.906 seconds and terminal closure 172.281 seconds. The initial synthetic English
+clip had 0/38 word errors; the follow-up had 1/10. These are not measurements of Cole's microphone.
+The then-running server mislabeled an unknown evaluator name as Cole; the next test uses the existing
+GPT Astra identity and requires exact attribution. Receipt: `Temp/voice-acceptance-20261006/live-worker/`.
+Separate scoped Stop completed in about 235 milliseconds after response start, with no speech file.
+Native file-synthesis queue tests confirm barge-in cancellation/hold/resume and End-call flushing;
+no speaker playback or audible interruption is claimed.
+
+A fresh-process recovery fixture hard-exited after a disposable side effect, moved the synthetic body,
+and denied old-tree, face and network access. It retained the original task, goal, author, inputs and
+receipts; it did not replay the uncertain action, used a later actual observation to reconcile it,
+delivered the pending reply once and resumed the autonomous phase loop. Its provider was injected
+and its model dependency declared. This validates that recovery boundary, not a full personal-state
+Pluck Test of every faculty. Receipt: `Temp/recovery-validation/2026-10-06_relocation.json`.
 The existing UI needs a reload to receive new JavaScript. Backend changes were live-loaded for the
 probe and will load again on Start Nova. Unit/fixture passes do not certify every optional
 application, native window interaction or adapter swap.

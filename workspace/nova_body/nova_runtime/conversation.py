@@ -81,6 +81,15 @@ class ActiveTurn:
     def has_pending(self):
         return self.pending
 
+    def pending_inputs(self):
+        """Inspect queued permissions without consuming, acknowledging or revising input.
+
+        Mutable message data is copied. The opaque face-owner handle keeps its
+        identity, as in push/consume; it is not message data and may not be copied.
+        """
+        return [{key: value if key == "owner" else deepcopy(value)
+                 for key, value in entry.items()} for entry in self._pending]
+
     def push(self, entries):
         """Atomically accept an ordered batch; never cancel a running model/tool."""
         if self._closed:

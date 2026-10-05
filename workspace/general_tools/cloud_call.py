@@ -249,7 +249,9 @@ def _log_heavy(messages: list, response: str, meta: dict | None = None) -> None:
 
 def heavy_witness(draft: str, turn_tools: list, history: list | None = None,
                   thinking: str = "", prior_concern: str = "",
-                  checks: list | None = None, has_image: bool = False) -> str:
+                  checks: list | None = None, has_image: bool = False,
+                  request_context: str = "", allow_reads: bool = True,
+                  evidence_snapshot: dict | None = None) -> str:
     """The deferred-lane heavy witness — the INFORMED arbiter (Cole, 2026-08-03). It gets the
     context-RICH prompt (build_heavy_witness: the conversation record + tool activity the fast
     local witness lacked) so it can actually RULE instead of blindly asking to read. Judged by
@@ -259,7 +261,8 @@ def heavy_witness(draft: str, turn_tools: list, history: list | None = None,
     from nova_cortex import witness as _w
     messages = _w.build_heavy_witness(draft, turn_tools, history=history, thinking=thinking,
                                       prior_concern=prior_concern, checks=checks,
-                                      has_image=has_image)
+                                      has_image=has_image, request_context=request_context,
+                                      allow_reads=allow_reads, evidence_snapshot=evidence_snapshot)
     resp = cloud_chat("witness_heavy", messages, max_tokens=2048)
     _log_heavy(messages, resp)
     return resp

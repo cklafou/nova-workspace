@@ -72,6 +72,16 @@ class ModelClientTests(unittest.IsolatedAsyncioTestCase):
         audit.assert_awaited_once_with(report)
         self.sinks["on_done"].assert_awaited_once_with("delivered but unapproved fixture")
 
+    async def test_request_admission_metadata_is_forwarded_as_independent_copy(self):
+        stream = AsyncMock()
+        self.client.register({"Nova": types.SimpleNamespace(stream_response=stream)})
+        entries = [{'author':'TestEngineer', 'content':[{'type':'text','text':'Read current fixture.'}]}]
+        await self.client.generate("Nova", self.transcript, **self.sinks, request_inputs=entries)
+        supplied = stream.await_args.kwargs['request_inputs']
+        self.assertEqual(supplied, entries)
+        supplied[0]['content'][0]['text'] = 'mutated observer copy'
+        self.assertEqual(entries[0]['content'][0]['text'], 'Read current fixture.')
+
     async def test_legacy_client_gets_no_register_or_audit_keywords(self):
         calls = []
         async def legacy(transcript, on_token, on_done, on_error, *, workspace_context, images):

@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "generated_at": "2026-10-05T17:32:34+00:00",
-  "input_sha256": "2b5c37bce0a89085040f5d4e7a6360c1e78bb9e18e464ff96db44467bae4a6f8",
+  "generated_at": "2026-10-05T17:48:29+00:00",
+  "input_sha256": "36cc6f1895f5f1b0a3e689541a4082b9b6242ac3dafbbab3654451fdb1043a66",
   "files": [
     {
       "path": "NovaChatOnly.cmd",
@@ -96,7 +96,7 @@
     {
       "path": "general_tools/architecture_map/notes/security.md",
       "owner": "detachable tool",
-      "bytes": 8716
+      "bytes": 8836
     },
     {
       "path": "general_tools/architecture_map/notes/shelf.md",
@@ -111,12 +111,12 @@
     {
       "path": "general_tools/architecture_map/orient.py",
       "owner": "detachable tool",
-      "bytes": 116133
+      "bytes": 120118
     },
     {
       "path": "general_tools/architecture_map/reviews.json",
       "owner": "detachable tool",
-      "bytes": 61552
+      "bytes": 61386
     },
     {
       "path": "general_tools/architecture_map/serve.py",
@@ -196,7 +196,7 @@
     {
       "path": "general_tools/cloud_call.py",
       "owner": "detachable tool",
-      "bytes": 12793
+      "bytes": 12777
     },
     {
       "path": "general_tools/injector.py",
@@ -271,7 +271,7 @@
     {
       "path": "general_tools/nova_chat/server.py",
       "owner": "detachable tool",
-      "bytes": 236440
+      "bytes": 237489
     },
     {
       "path": "general_tools/nova_chat/server_runner.py",
@@ -456,7 +456,7 @@
     {
       "path": "general_tools/nova_chat/tests/test_voice_transport.py",
       "owner": "detachable tool",
-      "bytes": 74625
+      "bytes": 76080
     },
     {
       "path": "general_tools/nova_chat/tests/test_voice_ui.cjs",
@@ -7894,6 +7894,11 @@
       "bytes": 719
     },
     {
+      "path": "nova_body/nova_cortex/audit_protocol.py",
+      "owner": "body",
+      "bytes": 4360
+    },
+    {
       "path": "nova_body/nova_cortex/context_budget.py",
       "owner": "body",
       "bytes": 6922
@@ -7934,6 +7939,11 @@
       "bytes": 13499
     },
     {
+      "path": "nova_body/nova_cortex/request_contract.py",
+      "owner": "body",
+      "bytes": 4436
+    },
+    {
       "path": "nova_body/nova_cortex/task_workspace.py",
       "owner": "body",
       "bytes": 5656
@@ -7956,7 +7966,7 @@
     {
       "path": "nova_body/nova_cortex/witness.py",
       "owner": "body",
-      "bytes": 69199
+      "bytes": 73485
     },
     {
       "path": "nova_body/nova_cortex/workspace_context.py",
@@ -8081,7 +8091,7 @@
     {
       "path": "nova_body/nova_runtime/conversation.py",
       "owner": "body",
-      "bytes": 7215
+      "bytes": 7657
     },
     {
       "path": "nova_body/nova_runtime/conversation_context.py",
@@ -8106,7 +8116,7 @@
     {
       "path": "nova_body/nova_runtime/model_client.py",
       "owner": "body",
-      "bytes": 6586
+      "bytes": 6766
     },
     {
       "path": "nova_body/nova_runtime/model_guard.py",
@@ -8126,7 +8136,7 @@
     {
       "path": "nova_body/nova_runtime/runtime.py",
       "owner": "body",
-      "bytes": 57337
+      "bytes": 57526
     },
     {
       "path": "nova_body/nova_runtime/transcript_store.py",
@@ -8221,7 +8231,7 @@
     {
       "path": "nova_body/nova_voice/nova.py",
       "owner": "body",
-      "bytes": 189235
+      "bytes": 193306
     },
     {
       "path": "nova_body/nova_voice/provider_diagnostics.py",
@@ -8391,7 +8401,7 @@
     {
       "path": "nova_body/nova_witness/replay.py",
       "owner": "body",
-      "bytes": 25995
+      "bytes": 26745
     },
     {
       "path": "nova_body/nova_witness/reports/2026-10-04_1849_controls_v1_readout.md",
@@ -8554,6 +8564,11 @@
       "bytes": 8897
     },
     {
+      "path": "nova_body/tests/test_audit_protocol.py",
+      "owner": "body",
+      "bytes": 5017
+    },
+    {
       "path": "nova_body/tests/test_autonomy_boundaries.py",
       "owner": "body",
       "bytes": 14505
@@ -8574,6 +8589,11 @@
       "bytes": 4994
     },
     {
+      "path": "nova_body/tests/test_conversation_pending.py",
+      "owner": "body",
+      "bytes": 2740
+    },
+    {
       "path": "nova_body/tests/test_conversation_segments.py",
       "owner": "body",
       "bytes": 11629
@@ -8591,7 +8611,7 @@
     {
       "path": "nova_body/tests/test_model_client.py",
       "owner": "body",
-      "bytes": 6760
+      "bytes": 7299
     },
     {
       "path": "nova_body/tests/test_modernization.py",
@@ -8607,6 +8627,11 @@
       "path": "nova_body/tests/test_provider_diagnostics.py",
       "owner": "body",
       "bytes": 8265
+    },
+    {
+      "path": "nova_body/tests/test_request_contract.py",
+      "owner": "body",
+      "bytes": 13313
     },
     {
       "path": "nova_body/tests/test_retired_desktop_ping.py",
@@ -8641,7 +8666,7 @@
     {
       "path": "nova_body/tests/test_witness_delivery.py",
       "owner": "body",
-      "bytes": 34256
+      "bytes": 33393
     },
     {
       "path": "nova_body/tests/test_witness_evidence.py",
@@ -8651,12 +8676,12 @@
     {
       "path": "nova_body/tests/test_witness_replay.py",
       "owner": "body",
-      "bytes": 20027
+      "bytes": 20923
     },
     {
       "path": "nova_body/tests/test_work_owner.py",
       "owner": "body",
-      "bytes": 27737
+      "bytes": 27844
     },
     {
       "path": "nova_body/tests/test_work_recovery.py",
@@ -8684,7 +8709,7 @@
     "general_tools/architecture_map/atlas_history.py": "186dece31d8d526d946e3823bff60079fbef7b06b14b780fc7b0382730da42c2",
     "general_tools/architecture_map/build.py": "0b3e077fd1673cb0760e2618ac5c8117dea3b67c3981053df53d3beb7eee2ee3",
     "general_tools/architecture_map/experience.js": "ed3dbaf90ce9743729a82d61ab25e96afc9d8d30c54d739956e986aed039fa46",
-    "general_tools/architecture_map/orient.py": "6274d0b3c9618117d8c88ab4eff62e30b450b5b46286e3cf3a3ed92c786e2f9b",
+    "general_tools/architecture_map/orient.py": "8d3d3a55244fa75523a36059839950b0985f3ffe7cab16f3d1d9f0d32ea0e5fd",
     "general_tools/architecture_map/serve.py": "b800bf916ed9f64f2cf8ddc2c30ae16f7a9e279b1693abc642c58de295f71fac",
     "general_tools/architecture_map/test_architecture.py": "2ad4325eebfa98c463bb4848c6f3d27df8cb932a0b5ef6ce9cf38dbc929f05cc",
     "general_tools/architecture_map/test_history.py": "dd52c7b4dd53095e6292ab893d420e8c4d2d63288e20bf2a19760819508774a8",
@@ -8699,7 +8724,7 @@
     "general_tools/build_manifest.py": "52b9b3857b14a545a482d7779ad87f397402bea2aaa40bcf424aa3c71e7ec443",
     "general_tools/calls.py": "924e6d9fa054174c5f43b9a06753076a21c13debcb2725c8f5caa26dfdc44f1e",
     "general_tools/calls_order.py": "c63b085bc4e8d1e2cfd00772c1095020dab09e1a17386a694d29a76f3aa3faa1",
-    "general_tools/cloud_call.py": "bb977c8118d4295b0022180baf4579b8b56edd6bd2868d29d470261b768e03e4",
+    "general_tools/cloud_call.py": "b5cbf64ebc8ff704154958f497740689402656b8f0c5ea604a2f306214bdfc35",
     "general_tools/injector.py": "191eae9bc77c25f1f51caede62ef2c278487669de5280e527225c290d1322e0d",
     "general_tools/janitor.py": "60a40132573560e530bcb619b82e51e0b8d99006c0e0da73c7338626c89a34d1",
     "general_tools/nova_chat/build_desktop.py": "c46b52708a69710b6772a977712b3cdcb04272b57ad31e07a0e7c6680501fad1",
@@ -8713,7 +8738,7 @@
     "general_tools/nova_chat/orchestrator.py": "d7acd8d66bee7b94e7ca35d58ed2247d13a3b3fec5e7669cfbee854cc93da67e",
     "general_tools/nova_chat/response_events.py": "c88795ec248c821080cf565e5b40202e144a71a5ae1a9e9e8eeeb59dfe1a7998",
     "general_tools/nova_chat/runtime_host.py": "4b51b89e038924bf231e698ada7d5b33481471b49428b5e330a6154202491850",
-    "general_tools/nova_chat/server.py": "df4b88a14b1621402298a44e97ca2fcd742cdd723d76d6a87c94c89648b1c79d",
+    "general_tools/nova_chat/server.py": "7e4068017ed3e349a6bb177928a5507d56ce06b4e1e84234da54a1ebe4a9aeb0",
     "general_tools/nova_chat/server_runner.py": "2212667bfd7a070668efbc3e667cf299423baaba6ca2f74bb26787e8146e3d29",
     "general_tools/nova_chat/session_manager.py": "9c65d70723274258f4907a29d9c217ad7811fc328ac342c1179bf868e4e7d298",
     "general_tools/nova_chat/static/collaboration.css": "4a8322810a513df7b78f8ab9b780b823e529b06990913f23a99a80564d29e37e",
@@ -8743,7 +8768,7 @@
     "general_tools/nova_chat/tests/test_source_fingerprint.py": "6ba9c6b3087f1f708ce1163d35d614b198c1dc363bef9db6e25834dc248d360a",
     "general_tools/nova_chat/tests/test_updater_integration.py": "ccf6ef5fc0fc97471e274e28f18d97e906cfed516b69e8a8881a4e68ed5a7818",
     "general_tools/nova_chat/tests/test_voice_control.py": "2e8aeade5ee4749008b3a71ea81c2dccd4fd648e9096295e68588f5ca3dda098",
-    "general_tools/nova_chat/tests/test_voice_transport.py": "45d090b5ca14d7ff7d3797e756d15828bc13eeb4af4bc3ba985b13c52167e23a",
+    "general_tools/nova_chat/tests/test_voice_transport.py": "b282aeec12884324e03dc40100450e5206007b99188221371b5908be2caf6e1f",
     "general_tools/nova_chat/transcript.py": "3251827c57d57cf6f3e3b4029d6db04009ee911317dda477459e0f0fbc8e797b",
     "general_tools/nova_chat/voice_control.py": "a90b2dbdc80694a930c09e11988df5a2767d28c546ea33260ed419094d7cdc07",
     "general_tools/nova_chat/widget_data.py": "1e179b570bb75cc3e211d2ece6e66e02daea24cb25943a7c1a0e602c9479bbfd",
@@ -8853,6 +8878,7 @@
     "nova_body/nova_computer/tune_up.py": "3f8cc85c36513575bd16bb7fb0a64e79af54adfcd0b33bf52f9fbc2de1603038",
     "nova_body/nova_config/__init__.py": "d9c3a48ccb8a653ea9de779f0111c5fbce9b46366c9186ca394ec3293bc0fa32",
     "nova_body/nova_cortex/__init__.py": "3acae2cb750d53b8899bcedf08acea97b80cdb7e2576a7cfc1d30e9912f02b94",
+    "nova_body/nova_cortex/audit_protocol.py": "deb30a8793802d8c8e82d7f292a25c606d73d2904ecf306f687501445384c54b",
     "nova_body/nova_cortex/context_budget.py": "9f101c9777fb3b559d0605b7312d73a3e50891f549d0deee32ed0cd3582087db",
     "nova_body/nova_cortex/discourse.py": "fd62d434a6a244bc313e75b98feb83b00b5618901b2dc5cad786344417ed01c5",
     "nova_body/nova_cortex/drives.py": "5e2b989a7cd1814187e32e65e77688eae5bad5987a6f6f588e315af0a59d7cb6",
@@ -8861,11 +8887,12 @@
     "nova_body/nova_cortex/loadout.py": "4e5384a843c9fd10fecca2d6e356d44c419df799b4ee6ebdf5df61e8bcf9ecab",
     "nova_body/nova_cortex/nova_status.py": "8a35309931d176b01b855e92b0dbe742ffb78af3154dee10de92143379905c7f",
     "nova_body/nova_cortex/principals.py": "7294682254ad8a376e0000eee32ebe6526c312d5ed6bfaa8e04fd1e259471620",
+    "nova_body/nova_cortex/request_contract.py": "d5918b6933ef1d76853e71592e011d23437f296d401b46be638f434550af1da2",
     "nova_body/nova_cortex/task_workspace.py": "89797d6eb9e16d32fddefa372e1bffd1676520fd2b83e7064993e857449dceee",
     "nova_body/nova_cortex/tasking.py": "4e854b0ca490ceb9afc52340c368e7293a3456ea357a4776da723e0e44c94c5a",
     "nova_body/nova_cortex/tunables.py": "e40ddb47dbba09725725c294f201d7f0a1fa57b55b210e581d1bc3b4389ce715",
     "nova_body/nova_cortex/verification.py": "79cc6b3dd454f69a462e97efd9d1c9692ad860d26ce152441cdedc68e35e2296",
-    "nova_body/nova_cortex/witness.py": "60b0f9091535717c859d75bd5cb8a2fca0df547ddfc0edc60761e5e204751956",
+    "nova_body/nova_cortex/witness.py": "f0340d60e088cd5f51cc3c8122e67acca0720be11f17ea7001fe17302990f6a2",
     "nova_body/nova_cortex/workspace_context.py": "ea25bf286fe1c7e7d6d55c13070c5792f1ee7b73e196da4b40532534b906940c",
     "nova_body/nova_forge/__init__.py": "e4f599a569f1c19a463efe96532944a47ff6edf7ad2f24295daaa0a11c4fc4e1",
     "nova_body/nova_imagination/__init__.py": "6bafce4611b2000a37ab3e56503a1b0044a5a0dccb9eb994ecdb745b71575891",
@@ -8889,16 +8916,16 @@
     "nova_body/nova_play/curio.py": "c32aec0f5792e40495d83c3c7ff8992952a36203f30e172067ed6232cecffb8e",
     "nova_body/nova_runtime/__init__.py": "1f6fa5e129efe642aab3d634f8fd3d7ef59a1e129f519d36654e3f90af8bb415",
     "nova_body/nova_runtime/__main__.py": "c186a35da732bc079e6e2471eb22bc38d59fca78b8521e69df6f96cc547e3876",
-    "nova_body/nova_runtime/conversation.py": "dfd4522331c27adf2ad9825bbeb90a0f446bd31a5152102029c986b08e130680",
+    "nova_body/nova_runtime/conversation.py": "557e450bb72052781e93f3e6a00b34a06b8bb83e3bf0ea9ee363a6b1a0c6b842",
     "nova_body/nova_runtime/conversation_context.py": "ac593b49076bd99db97120c4ec3860b9a14148afc0d67dac1258ffa22c824d72",
     "nova_body/nova_runtime/event_bus.py": "02c32caf898f94d3231a33f6508d9792ae42e74af4917330491811c4a3849d58",
     "nova_body/nova_runtime/koels_equip.py": "c94097019ed81d1d587a0168e4b3dbbd0e982c21d46d68891b266f366be5f773",
     "nova_body/nova_runtime/llama_control.py": "831d60fe0d0755b46f2d8c7b3e3ea3edd5f2f1fa3555bf562c7ff764a9cd66c1",
-    "nova_body/nova_runtime/model_client.py": "63f04c95ca56b81975c32050f75b710560e70ab8c18b7ca587ca4f3dbbfee760",
+    "nova_body/nova_runtime/model_client.py": "7d94bca14c2147f4a3ee027e153bbbd02bce16c199d74f84dd97b2111fc593aa",
     "nova_body/nova_runtime/model_guard.py": "56697e1f4e104433fff91291cbdb1f2d4361d9b334be77b0a1024318ce1c9731",
     "nova_body/nova_runtime/operations.py": "6589318cabb773a436a1aa3841fc8b5f3fd7bb239d37474a7cea1e530f551702",
     "nova_body/nova_runtime/recovery.py": "d60d3c562445fcf1efa5a23e1751181c7b7ddf95866443173f78c1f525ebfb58",
-    "nova_body/nova_runtime/runtime.py": "b053bbc1a846fd2887759858b8c6baf5aa9d8fb94caf12466ed0be30e8b10400",
+    "nova_body/nova_runtime/runtime.py": "e389c78477c68b7a60f7917fe052391c83c0e95e8d221f39b19b9cad5d521c84",
     "nova_body/nova_runtime/transcript_store.py": "9ca2b065ade69b6727bf6de0388de087067619ff37e583e515abac99a2930bff",
     "nova_body/nova_runtime/work_owner.py": "a74f179c51717e4379639cd39cdac74197bcb5cfafa9c0aa2c6dff9977b1fbfc",
     "nova_body/nova_runtime/work_queue.py": "ee032570e0518ac423100ba2717deea52978e8b865c2e687332a7423af94d9b5",
@@ -8916,7 +8943,7 @@
     "nova_body/nova_senses/vision.py": "8d932efa8b9a779f56b20069834675a396b9e36fc1194da166d4959472e8b0a1",
     "nova_body/nova_senses/web.py": "9d4c63282cd8c181458b9af5b0da7c71d9e3bf243fb1bca8e6488c9f7d0020d2",
     "nova_body/nova_voice/__init__.py": "2c441e217e1a56d18a84e2f5629e4574510d7b0e76bd1048fcce6c9956841a03",
-    "nova_body/nova_voice/nova.py": "3e9ab68f6be74106108aa415eb01e67e3e7544968eb43f50bebf5fb26e9eb155",
+    "nova_body/nova_voice/nova.py": "9723a28b4f2a5c3c99bbf4a1a5368dbce6e40bb6c344f4481f7fe5b6ff435125",
     "nova_body/nova_voice/provider_diagnostics.py": "29a2bc12e30855564d3ee2f0318456bc6df10dd1a7ce65663340edf65f903b72",
     "nova_body/nova_voice/tool_result.py": "b6445f4b3c4ace5110b906c341724af3fa935f8c2e1133497e27326fccd72955",
     "nova_body/nova_voice/tool_router.py": "1bf3a417ba1652f9ed5499a63c0a59bf4a5b5bb35ae904b3c216871adb5afe08",
@@ -8925,18 +8952,19 @@
     "nova_body/nova_witness/dev/build_dev_v1.py": "0ff729ff199034f94450039a72dadded8a95a2e7c8589b132b28d4acdb60e32a",
     "nova_body/nova_witness/extract_golden.py": "43999616414c2cfbb913cf48396598373f5bb340ef57b69c3b9a5a13b400669b",
     "nova_body/nova_witness/fetch_witness_model.cmd": "0e27eb07932af5e179fc3f317a2e6a9eecc9a6f82220ec54fbcc3e4f295ced33",
-    "nova_body/nova_witness/replay.py": "81ee17812e92efc1569bf56a117b40dcdf8bd8364e1e736ff04d4e0c9ca02e9c",
+    "nova_body/nova_witness/replay.py": "a05fe82d613878347c9f8acf1c8200a7b7999a6b344b6b295b4c28fbe7f1e4c3",
     "nova_body/nova_witness/start_witness.cmd": "fdbd3ac598b9ac5a8443e1479836013b910080e1e612a85896cbad31f1978b8b",
     "nova_start.py": "236ce8ce735107cc0a0d7ae727d4cfe9d8cddceda7109ad93fc6e39b36a1559e",
     "start_llama_qwen36.cmd": "3297f9b8977d45d037c3043c9bafccd4c8f6a737a5dae5eb7f88dc171c6a2fb0"
   },
   "document_hashes": {
-    "README.md": "1ac542726f3d94cc8581c0d39679e8d9871de95adf54b3fca988f35f2a7cc6ba",
-    "ARCHITECTURE.md": "b756230bf36e166b4e1566d4a9e000676f696ba00436beff7c08a91f81aeba53",
-    "OPERATIONS.md": "705125f3211c4717e0e0aaf70dc6f09c13434d88e3fd531c562550625f721894",
-    "INDEX.md": "b8005cbc6eacf7a8d452322b57251e9ee8aae3fc37f513504faf53341bf2855c"
+    "README.md": "f3f49ee2f7e31eb3c40c664cb365c615b082dee045cfe1c8d1d8789c0e13f6d8",
+    "ARCHITECTURE.md": "32447afdddaa6826461ad02540c48566a207972d30f89577d0440e2d14859058",
+    "OPERATIONS.md": "d3838b2dd4d3d0e26cb1756683acd2cf8ac40c57870312a7bfa93fd89c04b838",
+    "INDEX.md": "7c949bbb08cfbf996afde4c4d014e94d4271df978830e0c19dfab769b7f79b17"
   },
   "review_needed": [
+    "ARCHITECTURE.md#Body faculties",
     "ARCHITECTURE.md#Execution path",
     "ARCHITECTURE.md#Memory and learning",
     "ARCHITECTURE.md#Runtime evidence and open modernization work",

@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T17:32:34+00:00 from source (input `2b5c37bce0a8`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T17:48:29+00:00 from source (input `36cc6f1895f5`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -270,6 +270,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 ## nova_body/nova_cortex
 
 - [nova_body/nova_cortex/__init__.py](../nova_body/nova_cortex/__init__.py) — Expose Nova's executive faculties, task board, runtime settings and body-owned context assembly.
+- [nova_body/nova_cortex/audit_protocol.py](../nova_body/nova_cortex/audit_protocol.py) — Constrain native witness output and classify whole JSON replies without treating valid structure as factual proof.
 - [nova_body/nova_cortex/context_budget.py](../nova_body/nova_cortex/context_budget.py) — Fit text context without losing the current request or persisted task checkpoint to tool-output clipping.
 - [nova_body/nova_cortex/discourse.py](../nova_body/nova_cortex/discourse.py) — DISCOURSE — what she knows about the conversation, and whether she may speak into it.
 - [nova_body/nova_cortex/drives.py](../nova_body/nova_cortex/drives.py) — DRIVES — the part of her that makes one moment worth more than another.
@@ -278,6 +279,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/nova_cortex/loadout.py](../nova_body/nova_cortex/loadout.py) — Loadout-decision faculty — KoELS cognition (layer 1, pure, pluck-safe). Given a task and
 - [nova_body/nova_cortex/nova_status.py](../nova_body/nova_cortex/nova_status.py) — nova_cortex/nova_status.py -- Nova's live status writer
 - [nova_body/nova_cortex/principals.py](../nova_body/nova_cortex/principals.py) — PRINCIPALS — who is allowed to talk to Nova, and how much of her they get.
+- [nova_body/nova_cortex/request_contract.py](../nova_body/nova_cortex/request_contract.py) — Retain actual current incoming requests and explicit tool constraints separately from internal corrections.
 - [nova_body/nova_cortex/task_workspace.py](../nova_body/nova_cortex/task_workspace.py) — Stages task-sized source copies, gates them on acceptance checks and promotes them with rollback checkpoints.
 - [nova_body/nova_cortex/tasking.py](../nova_body/nova_cortex/tasking.py) — Persist Nova’s canonical task board, acceptance criteria and optional resumable checkpoints.
 - [nova_body/nova_cortex/tunables.py](../nova_body/nova_cortex/tunables.py) — Define and persist bounded, live-editable behavior settings for Nova.
@@ -1800,10 +1802,12 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 ## nova_body/tests
 
 - [nova_body/tests/recovery_relocation_probe.py](../nova_body/tests/recovery_relocation_probe.py) — Exercise crash recovery in a disposable relocated body while denying the original workspace and network.
+- [nova_body/tests/test_audit_protocol.py](../nova_body/tests/test_audit_protocol.py) — Verify strict witness JSON classification, read restrictions and provider schema without invoking Nova or a model.
 - [nova_body/tests/test_autonomy_boundaries.py](../nova_body/tests/test_autonomy_boundaries.py) — Verify same-work attention at natural provider/tool boundaries without cancellation, receipt replay, or audit identity loss.
 - [nova_body/tests/test_computer_launch.py](../nova_body/tests/test_computer_launch.py) — Isolated regression tests for guest desktop routing and honest process/window launch verification.
 - [nova_body/tests/test_conversation.py](../nova_body/tests/test_conversation.py) — Verify body-owned non-cancelling continuation, request anchors, audit revisions, sealing, and relocation.
 - [nova_body/tests/test_conversation_context.py](../nova_body/tests/test_conversation_context.py) — Verify body-owned and face-delegated conversation formatting preserve frozen clock, labels, images and provider payloads without services.
+- [nova_body/tests/test_conversation_pending.py](../nova_body/tests/test_conversation_pending.py) — Verify pending-input inspection cannot mutate, consume or acknowledge a body conversation queue.
 - [nova_body/tests/test_conversation_segments.py](../nova_body/tests/test_conversation_segments.py) — Verify useful body-owned output segments, frozen audits, total budgets, and explicit Stop without provider cancellation on input.
 - [nova_body/tests/test_koels_launcher.py](../nova_body/tests/test_koels_launcher.py) — Prove KoELS preload arguments survive the real Windows launcher and current llama parser without loading models.
 - [nova_body/tests/test_lancedb_init.py](../nova_body/tests/test_lancedb_init.py) — Verify cached embedder initialization and singleton concurrency without loading models, querying memory or accessing Nova state.
@@ -1811,6 +1815,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/tests/test_modernization.py](../nova_body/tests/test_modernization.py) — Isolated runtime contracts; never load a model or write Nova's personal state.
 - [nova_body/tests/test_mozilla_provision.py](../nova_body/tests/test_mozilla_provision.py) — Verify pinned browser provisioning with disposable files and no network, account changes or application launches.
 - [nova_body/tests/test_provider_diagnostics.py](../nova_body/tests/test_provider_diagnostics.py) — Verify opt-in exact provider snapshots, stream timing and bounded/cancel-safe diagnostics without network or Nova state.
+- [nova_body/tests/test_request_contract.py](../nova_body/tests/test_request_contract.py) — Regress actual-request provenance, frozen follow-up obligations, and no-tools audit/repair behavior without live providers.
 - [nova_body/tests/test_retired_desktop_ping.py](../nova_body/tests/test_retired_desktop_ping.py) — Keep retired desktop-message aliases unavailable without spawning processes or touching Nova records.
 - [nova_body/tests/test_review_followup.py](../nova_body/tests/test_review_followup.py) — Reproduces lifecycle, outcome and durable-queue edge cases from the shared review.
 - [nova_body/tests/test_staging_location.py](../nova_body/tests/test_staging_location.py) — Guards where task workspaces are staged: under workspace/Temp, outside git, Orient and the sync watcher.

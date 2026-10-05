@@ -896,13 +896,14 @@ class NovaRuntime:
             await self._generate_headless("", True, transcript_context=ConversationContext(initial),
                 extra_context=owner.prompt_context() + "\nAnswering the human does not erase your ongoing task.",
                 register=next((entry.get("register") for entry in reversed(initial_entries) if entry.get("register")), "text"),
-                steering=turn, on_segment=segment, on_boundary=poll_input)
+                steering=turn, on_segment=segment, on_boundary=poll_input, request_inputs=initial_entries)
         finally:
             self.conversations.end("runtime", turn)
         return bool(delivered)
 
     async def _generate_headless(self, prompt: str, cole_pending: bool, *, transcript_context=None,
-                                 extra_context="", steering=None, on_segment=None, on_boundary=None, register="text") -> str:
+                                 extra_context="", steering=None, on_segment=None, on_boundary=None, register="text",
+                                 request_inputs=None) -> str:
         """Run the body model without a face. Human input uses the shared formatter,
         conversation inbox and segmented persistence supplied by the attending adapter.
         Autonomous phases keep their private phase context and natural-boundary hook.
@@ -937,6 +938,8 @@ class NovaRuntime:
                 boundary["steering"] = steering
             if on_segment is not None:
                 boundary["on_segment"] = on_segment
+            if request_inputs is not None:
+                boundary["request_inputs"] = request_inputs
             await self.model_client.generate(
                 "Nova", ctx, on_token=_tok, on_done=_done, on_error=_err,
                 workspace_context=grounding, autonomous=not cole_pending, register=register, **boundary)

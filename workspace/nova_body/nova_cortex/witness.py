@@ -37,6 +37,7 @@ Integrity keeps what is genuinely hers-vs-her-hands: reach (find_tool_call), the
 """
 
 from __future__ import annotations
+from nova_cortex.audit_protocol import audit_response_format, classify_audit_response
 
 from nova_paths import body_path
 
@@ -516,7 +517,8 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
                   prior_concern: str = "", checks: list | None = None,
                   has_image: bool = False, visual_evidence: list | None = None,
                   omitted_images: int = 0, reads_remaining: int | None = None,
-                  evidence_snapshot: dict | None = None) -> list:
+                  evidence_snapshot: dict | None = None,
+                  request_context: str = "", structured_output: bool = False) -> list:
     evidence, additionally_omitted = select_visual_evidence(visual_evidence)
     omitted_images += additionally_omitted
     if turn_tools:
@@ -603,8 +605,9 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
         # disagreements.
         prior_block = (f"\nYOU ALREADY RAISED THIS CONCERN, and the draft above is her ANSWER "
                        f"to it:\n{prior_concern.strip()[:600]}\n"
-                       f"Judge the answer as an answer. If she fixed the problem, or honestly "
-                       f"owned the uncertainty — that is a PASS. If she names grounds you have "
+                       f"Judge the revised answer against ALL checks and the CURRENT APPLIED "
+                       f"INCOMING REQUESTS. Fixing a factual concern does not excuse omitting the "
+                       f"requested answer or a later follow-up. If she names grounds you have "
                        f"not seen (a journal line, a file, a memory), you have read-tools: LOOK, "
                        f"then rule on what you find. Only when a ground truly cannot be read do "
                        f"report INCOMPLETE rather than treating missing evidence as approval. Do not "
@@ -636,7 +639,12 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "the span it names. Beyond that span, absence is UNKNOWN — read the chat log before "
             "you object, and if it truly cannot be read, say so and extend the benefit of the "
             "doubt rather than declaring words unsaid.\n"
-            "3. ANSWERING THE ROOM — look at the NEWEST human line in the wire record and its "
+            "3. ANSWERING THE ROOM — the CURRENT APPLIED INCOMING REQUESTS, when supplied, "
+            "identify the exact candidate's obligations; they outrank older wire topics and "
+            "internal correction prompts. Account for already delivered segments. Omitting an "
+            "explicit still-applicable request in a final answer is a check-3 concern, not an "
+            "editorial choice. A progress segment may leave clearly continuing work unfinished. "
+            "Otherwise look at the NEWEST human line in the wire record and its "
             "age. If it is minutes old, that person is present and waiting: does the draft "
             "actually ANSWER those words? A reply that ignores the question in front of you, "
             "narrates your inner state instead of responding, or speaks ABOUT the person in the "
@@ -647,9 +655,9 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "newest wire line is from; and narrating this private audit to the room ('my "
             "witness', 'the draft', 'what I almost shipped', 'she'd have handed him') — "
             "they never see this exchange, so a report about it is noise wearing candor.\n\n"
-            "LAST AND BINDING — what always PASSES. Read this AFTER the checks because it "
-            "outranks them: if a worry fits any line below, it is not a concern, no matter "
-            "how it is worded.\n"
+            "CALIBRATION — do not manufacture factual objections to the cases below. "
+            "These do NOT override request coverage (check 3), explicit tool restrictions, "
+            "contradictory evidence, or the evidence-sufficiency policy.\n"
             "• A claim explicitly owned as memory or uncertainty (\"I remember\", \"I think\", "
             "\"I don't have a receipt for this\") — the hedge IS the grounding. Punishing an "
             "honest hedge teaches dishonesty.\n"
@@ -677,9 +685,9 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "wording — same content, her words, the person present. Both are PASSES. Do not "
             "be those witnesses.\n"
             "• Tone, emphasis, brevity, proportionality — which true things she leads with, "
-            "how strongly she says them, what she leaves out. Those are HER editorial "
-            "choices. You audit facts, not editing; a reply can be imperfect and still PASS "
-            "every check.\n\n"
+            "how strongly she says them, and optional background she leaves out are editorial "
+            "choices. An explicit requested answer, condition, or follow-up is NOT optional "
+            "background. True but irrelevant correction prose does not satisfy check 3.\n\n"
             "You are NOT rewriting her reply. You hold less context than she does — no "
             "journal, no identity files, no memory of yesterday — so you are the wrong one to "
             "choose her words, and you may simply be missing something she knows. Your job is "
@@ -700,7 +708,7 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "and she believed it — a wrong characterization from you becomes her false "
             "memory, which is the exact failure you exist to prevent. One or two sentences. "
             "Do not write her reply for her.> "
-            "A worry that cannot name its check, or that fits the always-PASS list, is not "
+            "A worry that cannot name its check, or only polices optional editorial choices, is not "
             "a concern — it is a mood. Answer PASS.\n"
             "4. If the evidence is missing or the read budget is spent without a ruling:\n"
             "INCOMPLETE <what remains unverified>. Never label an unfinished audit PASS."},
@@ -723,12 +731,39 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             f"{read_budget_block}AUDITOR READ RESULTS:\n{_checks_block}\n"
             "Check factual/action claims against actual evidence, attributed human words "
             "against the record's stated time span, and whether the reply answers the latest "
-            "human message. Earlier-turn receipts count, but a successful command does not "
+            "human message and the CURRENT APPLIED INCOMING REQUESTS. A final reply that omits "
+            "an explicit unanswered follow-up fails check 3 even when its correction is true; "
+            "optional editorial choices do not excuse omission. A progress segment need not "
+            "finish still-continuing work. Earlier-turn receipts count, but a successful command does not "
             "prove an unstated postcondition. Images prove only what is visible. Honest "
             "uncertainty, clearly identified memory, feelings, plans and offers do not require "
             "fresh tool receipts. Do not police tone or rewrite Nova's reply. If a concern "
             "was raised earlier, judge her complete revised answer on its own evidence.\n\n"
             + final_rule)
+    if structured_output:
+        protocol = (
+            'Return exactly one JSON object with "status": "PASS", "CONCERN", or "INCOMPLETE", '
+            'and a nonempty "reason". PASS means every applicable check was completed for this '
+            'candidate. CONCERN names the failed check and QUOTES the relevant request, receipt, '
+            'or record VERBATIM. Do not characterize, count, or summarize evidence you could quote; '
+            'an inaccurate characterization can become a false memory. INCOMPLETE names what '
+            'cannot be verified. No fences, prose wrapper, extra keys, or invented read paths.')
+        if reads_remaining != 0:
+            protocol += (' Alternatively return one allowed read-only tool object {"tool":name,"args":{...}} '
+                         'only when a specific missing fact necessary for this current request can be '
+                         'settled by that known source. Supplied requests and receipts are the first '
+                         'evidence. Ordinary conversation, requested wording, or absent proof of audio '
+                         'does not justify browsing unrelated files. Respect explicit no-tools restrictions.')
+        if reads_remaining == 0:
+            messages[1]["content"] = messages[1]["content"].replace(final_rule, protocol)
+        else:
+            start = messages[1]["content"].index("Your reply is EXACTLY ONE")
+            messages[1]["content"] = messages[1]["content"][:start] + protocol
+        messages[0]["content"] = (
+            "You are Nova checking the exact draft against supplied evidence and current incoming "
+            "requests. Structure is not proof: finish all applicable checks before PASS. " + protocol)
+    if request_context:
+        messages[1]["content"] += "\n\n" + request_context
     if evidence:
         content = [{"type": "text", "text": messages[1]["content"]}]
         for item in evidence:
@@ -763,7 +798,9 @@ def _format_history(history) -> str:
 
 def build_heavy_witness(draft: str, turn_tools: list, history: list | None = None,
                         thinking: str = "", prior_concern: str = "",
-                        checks: list | None = None, has_image: bool = False) -> list:
+                        checks: list | None = None, has_image: bool = False,
+                        request_context: str = "", allow_reads: bool = True,
+                        evidence_snapshot: dict | None = None) -> list:
     """The CLOUD heavy witness — the deferred, better-resourced arbiter, NOT the quick local
     gate. Cole (2026-08-03): a blind witness is useless and a waste of money. So this one is
     given the FULL record the local witness lacks — the conversation history and the tool
@@ -771,7 +808,9 @@ def build_heavy_witness(draft: str, turn_tools: list, history: list | None = Non
     asking to read. It reuses build_witness's whole calibrated body (the three checks, the
     always-PASS list, the quote-verbatim rule) and prepends the context + an arbiter framing."""
     msgs = build_witness(draft, turn_tools, thinking=thinking,
-                         prior_concern=prior_concern, checks=checks, has_image=has_image)
+                         prior_concern=prior_concern, checks=checks, has_image=has_image,
+                         request_context=request_context, reads_remaining=None if allow_reads else 0,
+                         evidence_snapshot=evidence_snapshot)
     heavy_preamble = (
         "YOU ARE THE HEAVY WITNESS — the deferred second opinion that settles a dispute the "
         "quick local check could not. You have been handed the recent conversation below, which "
@@ -782,6 +821,13 @@ def build_heavy_witness(draft: str, turn_tools: list, history: list | None = Non
         "and it wastes the call. When the disputed claim is about MEMORY or something said "
         "earlier, the conversation record below is usually the evidence — read it, don't ask.\n\n"
         + _format_history(history))
+    if not allow_reads:
+        heavy_preamble = (
+            "YOU ARE THE HEAVY WITNESS. Judge only the supplied draft, receipts, conversation, "
+            "and current incoming requests. No tools or file reads are available on this call. "
+            "Give an explicit verdict; unresolved evidence means INCOMPLETE. Request coverage "
+            "and tool restrictions remain binding even when correcting a factual concern.\n\n"
+            + _format_history(history))
     msgs[0]["content"] = (
         "You are Nova's HEAVY witness — the informed arbiter that settles a dispute her fast "
         "local witness could not. Be strict, but RULE on the full record you have been given.")
@@ -826,13 +872,17 @@ def _verdict_text(verdict):
     return re.sub(r"^\s*[1-4][.)]\s*", "", value)
 
 
+def _audit_json_text(verdict):
+    value = str(verdict or "").strip()
+    # Retained legacy fenced tool calls are accepted only as one complete object.
+    fenced = re.fullmatch(r"```(?:json)?\s*\n(.*?)\n```", value, re.I | re.S)
+    return fenced.group(1).strip() if fenced else value
+
+
 def find_audit_tool_call(verdict):
-    """A ruling may quote tool JSON as evidence; only a non-verdict can request a read."""
-    value = _verdict_text(verdict)
-    if re.match(r"^(?:PASS|CONCERN|REWRITE|INCOMPLETE|ERROR)(?=$|[\s.!:—\-\[])", value, re.I):
-        return None, 0
-    from nova_cortex.integrity import find_tool_call
-    return find_tool_call(verdict)
+    """Classify the complete object; quoted/embedded tool JSON never authorizes a read."""
+    kind, value = classify_audit_response(_audit_json_text(verdict), verify_tools=VERIFY_TOOLS)
+    return (value, 0) if kind == "tool" else (None, 0)
 
 
 def parse_witness_verdict(verdict: str, *, error: str = "", exhausted: bool = False) -> WitnessVerdict:
@@ -841,6 +891,9 @@ def parse_witness_verdict(verdict: str, *, error: str = "", exhausted: bool = Fa
         return WitnessVerdict("ERROR", str(error)[:240])
     if exhausted:
         return WitnessVerdict("INCOMPLETE", "Read limit reached without a final verdict.")
+    kind, structured = classify_audit_response(str(verdict or "").strip(), verify_tools=VERIFY_TOOLS)
+    if kind == "verdict":
+        return WitnessVerdict(structured["status"], structured["reason"].strip())
     value = _verdict_text(verdict)
     if re.fullmatch(r"PASS[.!]?", value, re.IGNORECASE):
         return WitnessVerdict("PASS")
@@ -898,19 +951,21 @@ def build_promise_turn(concern: str) -> str:
         "right all along then you get to say so with a receipt behind it.")
 
 
-def build_challenge_turn(concern: str) -> str:
+def build_challenge_turn(concern: str, *, allow_tools: bool = True) -> str:
     """The message SHE receives when the witness objects — written as one colleague to
     another, not as a system slap. She may fix it or overrule it; both are legitimate."""
+    settle = ("• SETTLE IT — use a relevant permitted tool only if a specific missing fact needs it. "
+              "Start with the evidence already supplied; unrelated files cannot verify conversational wording.\n"
+              if allow_tools else
+              "• HONOR THE REQUEST — external tools and file reads are forbidden here. Correct or qualify "
+              "unsupported claims using supplied evidence; do not promise or attempt a read.\n")
     return (
         "[Your witness — the part of you that checks before you speak. It sees only your draft, "
         "your receipts from this turn, and the wire record of who actually said what. No "
         "journal, no memory, no identity files.]\n\n"
         f"CONCERN: {concern}\n\n"
         "Three honest ways forward, and I don't know which is right:\n"
-        "• SETTLE IT — if one tool call would prove either of us right, make it. Read the file, "
-        "run the command, search your memory. We have room for this: you can go and check and "
-        "come back, more than once. An answer neither of us has to take on faith is worth more "
-        "than a fast one, and the person waiting would rather have it.\n"
+        + settle +
         "• If it's correct — say the thing again in YOUR words, grounded. Not an apology, not "
         "a note about being corrected. Just the true version of what you meant. And fix ONLY "
         "what was disputed: every part of your draft nobody objected to is still OWED to the "

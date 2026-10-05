@@ -167,17 +167,13 @@ class DeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('witness_incomplete', self.stages())
         self.assertNotIn('witness_pass', self.stages())
 
-    async def test_refused_witness_reaches_are_attempts_not_verified_evidence(self):
+    async def test_unknown_witness_tool_is_invalid_without_dispatch_or_green_verdict(self):
         self.generations = ["This reply makes a claim that requires an audit before it is delivered."]
-        self.verdicts = [call('run_command', command='must not execute')] * 3 + ['PASS. explanation is invalid']
+        self.verdicts = [call('run_command', command='must not execute')]
         await self.run_turn()
         self.assertEqual(self.reads, [])
-        event = next(e for e in self.events if e['stage'] == 'witness_verified')
-        self.assertEqual(event['read_attempts'], 3)
-        self.assertEqual(event['read_returned'], 0)
-        self.assertEqual(event['read_refused'], 3)
-        self.assertNotIn('checked', event['detail'])
-        self.assertIn('not verification', event['what'])
+        self.assertEqual(len(self.audit_calls), 1)
+        self.assertNotIn('witness_verified', self.stages())
         self.assertIn('witness_incomplete', self.stages())
         self.assertNotIn('witness_pass', self.stages())
 

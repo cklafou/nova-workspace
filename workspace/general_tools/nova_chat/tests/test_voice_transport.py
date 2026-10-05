@@ -181,6 +181,20 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
                                for rid, content in inputs])
         await self.ns['websocket_endpoint'](owner)
 
+    async def test_current_request_contract_excludes_old_unanswered_input(self):
+        self.transcript.add('Cole', 'Cancelled old request: use no tools.')
+        async def provider(_name, transcript, **sinks):
+            self.assertEqual(len(sinks['request_inputs']), 1)
+            entry = sinks['request_inputs'][0]
+            self.assertEqual(entry['content'], 'original request')
+            self.assertEqual(entry['author'], 'Cole')
+            self.assertEqual(entry['request_id'], 'initial')
+            self.assertIn('Cancelled old request', transcript.messages[0]['content'])
+            self.assertTrue(sinks['steering'].try_seal())
+            await sinks['on_done']('Current request handled.')
+        _, _, task, _ = self.start_body_response(provider)
+        await asyncio.wait_for(task, 2)
+
     async def test_autonomous_owner_attends_input_then_resumes_same_work_with_context(self):
         coordinator = work_module.WorkCoordinator()
         manager = conversation_module.ConversationTurns()
@@ -1289,6 +1303,17 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
         generate.assert_not_awaited()
         self.assertEqual(self.request_ends(), [dict(type='request_end', request_id='request-1',
                          reply_to='human-1', register='voice', delivery='unavailable')])
+
+
+class SpeakerIdentityTests(unittest.TestCase):
+    def test_explicit_unknown_author_never_becomes_the_active_owner(self):
+        ns={'_users_load':lambda:{'users':['Cole','Cowork Claude','GPT Astra'],'active':'Cole'}}
+        extract(SERVER, {'_clean_username','_resolve_speaker'}, ns)
+        self.assertEqual(ns['_resolve_speaker']('Codex'),'Codex')
+        self.assertEqual(ns['_resolve_speaker']('gpt astra'),'GPT Astra')
+        self.assertEqual(ns['_resolve_speaker'](None),'Cole')
+        from nova_cortex.principals import role_of, UNTRUSTED
+        self.assertEqual(role_of(ns['_resolve_speaker']('Unregistered tester')),UNTRUSTED)
 
 
 class SegmentEvidenceTests(unittest.TestCase):

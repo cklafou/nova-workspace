@@ -43,8 +43,9 @@ The phone/watch tunnel is on the roadmap. Close both **before** it ships:
    tunnel at something that authenticates, or stop treating forwarded requests as local.
 2. **`/ws` is outside the gate.** `@app.middleware("http")` never sees WebSocket handshakes.
    `websocket_endpoint` accepts any connection and immediately sends the last 100 messages and the
-   session list; `_resolve_speaker` accepts whatever known name the client claims and otherwise
-   defaults to the active user — normally Cole. Whoever reaches the socket speaks as the owner.
+   session list; `_resolve_speaker` accepts a claimed registered name. An explicitly unknown name now
+   stays unknown/untrusted, but omitting the name still defaults to the active user, normally Cole.
+   Whoever reaches the socket can still claim that identity; fixing fallback attribution is not authentication.
    Authenticate it (a token in the first frame, as originally designed) or require loopback.
 
 ### Collaboration room boundary

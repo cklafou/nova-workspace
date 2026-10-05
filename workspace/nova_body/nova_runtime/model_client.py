@@ -58,7 +58,7 @@ class ModelClient:
                        workspace_context: str = "", images=None,
                        autonomous: bool = False,
                        temperature: float = 0.7, top_p: float = 0.9,
-                       register: str = "text", on_audit=None, steering=None, on_segment=None, on_boundary=None, on_checkpoint=None) -> None:
+                       register: str = "text", on_audit=None, steering=None, on_segment=None, on_boundary=None, on_checkpoint=None, request_inputs=None) -> None:
         """Drive one generation. The caller supplies the output sinks (what to do with each
         token, on done, on error); this owns only WHICH client and HOW it is called. Faithful
         to run_ai_response's three branches:
@@ -98,6 +98,9 @@ class ModelClient:
                 audit_kwargs["on_boundary"] = on_boundary
             if on_checkpoint is not None:
                 audit_kwargs["on_checkpoint"] = on_checkpoint
+            if request_inputs is not None:
+                from copy import deepcopy
+                audit_kwargs["request_inputs"] = deepcopy(request_inputs)
             await client_mod.stream_response(
                 transcript, on_token, on_done, on_error,
                 on_think_token=on_think_token,

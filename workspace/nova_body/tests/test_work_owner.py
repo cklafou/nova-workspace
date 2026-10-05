@@ -321,6 +321,7 @@ class RuntimeAttentionTests(unittest.IsolatedAsyncioTestCase):
         self.runtime.transcript = transcript
         async def generate(prompt, cole_pending, **callbacks):
             self.assertTrue(cole_pending)
+            self.assertEqual([entry['content'] for entry in callbacks['request_inputs']], ['first input'])
             transcript.append('Cole', 'arrived during answer')
             await callbacks['on_segment']('Reply to the captured first input.',
                 {'turn_id': callbacks['steering'].turn_id, 'segment_index': 1, 'input_revision': 0,
