@@ -250,8 +250,9 @@ def run_case(w, endpoint, case, max_tool_rounds=RUNTIME_READS, detect_read=None,
                   and hasattr(w, "audit_response_format"))
     request_context = ""
     if structured and case.get("incoming_requests"):
-        from nova_cortex.request_contract import CurrentRequest
-        current = CurrentRequest(case["incoming_requests"])
+        from nova_cortex.request_contract import CurrentRequest, voice_delivery_context
+        current = CurrentRequest(case["incoming_requests"],
+            delivery_context=voice_delivery_context(case.get("register", "text")))
         request_context = current.render(case.get("delivered_segments", []),
                                          continuing=bool(case.get("continuing", False)))
         if current.tools_forbidden:

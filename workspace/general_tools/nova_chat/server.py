@@ -894,6 +894,7 @@ _WS_ROOT_FOR_PROBE = _INBOX_WORKSPACE   # temporary: doubling/free-pass probe (2
 #
 # Found by audit_queue.reconcile() — not by reading, and not by anything failing.
 _CODE_FILES = ("general_tools/nova_chat/server.py",
+               "general_tools/NovaLauncher.py",
                "general_tools/nova_chat/response_events.py",
                "general_tools/nova_chat/transcript.py",
                "general_tools/nova_chat/session_manager.py",

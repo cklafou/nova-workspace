@@ -808,7 +808,8 @@ async def stream_response(
     temperature: float = 0.7,
     top_p:       float = 0.9,
     register:    str   = "text",  # Voice registers use the configured voice witness revision limit.
-                                  # Explicit "voice_fast" skips reasoning on the first loop only.
+                                  # "voice_fast" keeps reasoning off across plain speech/follow-ups;
+                                  # actual tool work or factual correction enables deliberation.
                                   # The gateway sends its configured register; it does not classify
                                   # utterances here. Context/prefill/auditing/playback still add latency.
     on_audit: Optional[Callable[[dict], Awaitable[None]]] = None,
@@ -938,7 +939,8 @@ async def stream_response(
             _delivered_assistant_history.append(text)
             messages.append({"role": "assistant", "content": text})
             messages.append({"role": "user", "content":
-                "[System] The preceding segment was delivered. Keep its completed work and receipts. "
+                "[System] The preceding segment was delivered as TEXT to the output adapter; "
+                "this is not a synthesis, playback, or listener-hearing receipt. Keep its completed work and receipts. "
                 "Continue only the remaining work; do not repeat the segment. If newer input changes "
                 "a conclusion or instruction, explicitly reconcile or correct it in the next segment."})
         final_chat_buffer = chat_text = _prior_draft = _concern_prev = ""
@@ -954,7 +956,11 @@ async def stream_response(
         # Use structured turn history so llama.cpp can cache the prefix.
         # system = stable personality rules (never changes → always cached)
         # Subsequent turns = real user/assistant pairs → only new tokens re-processed.
+        from nova_cortex.request_contract import CurrentRequest, voice_delivery_context
+        _voice_delivery = voice_delivery_context(register)
         system = SYSTEM_PREFIX
+        if _voice_delivery:
+            system += "\n\n" + _voice_delivery
         if _segmented:
             system += (
                 '\n\nCONVERSATION WORK LOOP: You may deliver a useful completed segment while continuing '
@@ -977,9 +983,9 @@ async def stream_response(
             "Nova", system, workspace_context=workspace_context
         )
 
-        from nova_cortex.request_contract import CurrentRequest
-        _current_request = (CurrentRequest.from_entries(request_inputs) if request_inputs is not None
-                            else CurrentRequest.from_messages(messages))
+        _current_request = (CurrentRequest.from_entries(request_inputs, delivery_context=_voice_delivery)
+                            if request_inputs is not None else
+                            CurrentRequest.from_messages(messages, delivery_context=_voice_delivery))
 
         await _checkpoint({"type": "generation_started", "autonomous": autonomous,
             "request_context": [{"role": m.get("role"), "content": m.get("content")}
@@ -1345,8 +1351,9 @@ async def stream_response(
                 # Loop 1 is her talking, so it keeps the conversational sampler.
                 _literal_safe = loop_counter > 1
 
-                # Explicit voice_fast skips first-loop reasoning; subsequent tool loops
-                # keep thinking. The configured register is not an utterance classifier.
+                # voice_fast keeps plain speech segments/follow-ups in the same fast mode.
+                # Actual tool work or factual correction enables thinking for the remaining run.
+                # The configured register is not an utterance classifier.
                 # This does not promise first-audio latency or bypass the witness gate.
                 _think_this = not (register == "voice_fast" and not (
                     _reasoning_work or _tools_ran_this_turn or _premise_held or _witness_rounds

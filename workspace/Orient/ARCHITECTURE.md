@@ -1,11 +1,11 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T17:51:10+00:00 from source (input `b393e9416474`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T18:05:33+00:00 from source (input `6be81c8b902b`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_end_queued_request`, `general_tools/nova_chat/server.py::_run_ai_response_owned`, `general_tools/nova_chat/server.py::_steer_request`, `general_tools/nova_chat/server.py::_stop_request` and 12 more; new `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker`, `general_tools/nova_chat/session_manager.py` and 6 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_end_queued_request`, `general_tools/nova_chat/server.py::_run_ai_response_owned`, `general_tools/nova_chat/server.py::_steer_request`, `general_tools/nova_chat/server.py::_stop_request` and 12 more; new `general_tools/NovaLauncher.py`, `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker` and 7 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -59,7 +59,11 @@ alongside its evidence and delivered parts; corrections must preserve still-appl
 An explicit no-tools request also forbids auditor reads. The inline witness uses the installed
 provider's constrained JSON schema for exact verdicts or permitted read-only calls, with a verdict-only
 schema when no reads remain. Schema validity is not factual correctness; malformed, truncated and
-failed audits remain visibly unapproved. Legacy prose verdict parsing stays strict for older callers.
+failed audits remain visibly unapproved. The voice register and reviewers receive the same delivery
+evidence distinctions: an input transcript, generated text, synthesized speech, endpoint playback,
+and an attributed listener confirmation establish different things. A candidate cannot prove its
+own future delivery, and an older receipt applies only to its identified output. These are explicit
+grounding instructions, not a guarantee that a model will judge every claim correctly. Legacy prose verdict parsing stays strict for older callers.
 Explicit unknown speaker labels stay unknown/untrusted rather than being silently renamed as Cole;
 only an omitted speaker falls back to the active UI user.
 
@@ -320,7 +324,7 @@ Drives/wants and the hormone design are not evidence of online weight learning. 
 
 ## Runtime evidence and open modernization work
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/voice_gateway/control_worker.py`, `nova_body/nova_runtime/conversation.py`, `nova_body/nova_runtime/model_client.py` and 4 more; new `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker`, `general_tools/nova_chat/session_manager.py` and 7 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/voice_gateway/control_worker.py`, `nova_body/nova_runtime/conversation.py`, `nova_body/nova_runtime/model_client.py` and 4 more; new `general_tools/NovaLauncher.py`, `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker` and 8 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
 
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
@@ -504,8 +508,16 @@ file-only Windows speech synthesis. It preserved one run and delivered two parts
 follow-up content requirement; it is recorded as a failed behavioral test, not successful voice chat.
 First part took 58.906 seconds and terminal closure 172.281 seconds. The initial synthetic English
 clip had 0/38 word errors; the follow-up had 1/10. These are not measurements of Cole's microphone.
-The then-running server mislabeled an unknown evaluator name as Cole; the next test uses the existing
-GPT Astra identity and requires exact attribution. Receipt: `Temp/voice-acceptance-20261006/live-worker/`.
+The then-running server mislabeled an unknown evaluator name as Cole; later tests use the existing
+GPT Astra identity and require exact attribution. Receipt: `Temp/voice-acceptance-20261006/live-worker/`.
+A second matched-audio run (`paired-after-repair/`) retained both markers and the accepted follow-up,
+with correct GPT Astra attribution. First part took 45.062 seconds, first WAV 46.109 seconds and
+terminal closure 99.547 seconds. Its continuation reused 37,706 tokens with 116 new tokens and
+0.421-second prefill; its first request still needed 30.532 seconds of prefill. Both audits nevertheless
+approved unsupported current-hearing/test-success claims. It remains a failed evidence-calibration
+test despite passing transport/content-retention checks. The modality contract was then clarified:
+input transcription, output text, speech-file generation, playback and human hearing are separate
+stages; historical hearing does not prove a new output. A draft is not evidence of its own delivery.
 Separate scoped Stop completed in about 235 milliseconds after response start, with no speech file.
 Native file-synthesis queue tests confirm barge-in cancellation/hold/resume and End-call flushing;
 no speaker playback or audible interruption is claimed.

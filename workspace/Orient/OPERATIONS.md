@@ -1,11 +1,11 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T17:51:10+00:00 from source (input `b393e9416474`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T18:05:33+00:00 from source (input `6be81c8b902b`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::startup_event`, `general_tools/nova_chat/server.py::stop_endpoint`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Run and stop"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/NovaLauncher.py`, `general_tools/nova_chat/server.py::startup_event`, `general_tools/nova_chat/server.py::stop_endpoint`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Run and stop"`.
 
 | Operation | Entry point | Check |
 |---|---|---|
@@ -47,7 +47,9 @@ turn on Nova when a message arrives. Conversation's compact power button below t
 session and returns to chat-only. Voice has a separate **End call** action: it stops local audio and
 requests cancellation of only its owned pending response, while Nova and the controller remain on. The launcher
 stops its guardian/watcher before replacing workers and refuses a worker teardown without a
-successful quiesce acknowledgment. New body input and updater mutations are blocked while a switch
+successful quiesce acknowledgment. The inner full worker allows the same 60-second startup window as
+the controller, while an exited server thread fails promptly. A slow import must not be killed
+by the former shorter 25-second inner timeout before the controller's deadline. New body input and updater mutations are blocked while a switch
 is pending. Failed startup attempts return to a usable chat-only controller when recovery succeeds.
 The main window and console stay open; the page reconnects and restores its unsent composer draft.
 The launcher uses `start_llama_qwen36.cmd`, so its model selection matches the updater's boot files.
@@ -64,7 +66,7 @@ observation/reconciliation before further mutations; inspect the runtime recover
 
 ## Configuration and evidence
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_CODE_FILES`, `nova_body/nova_cortex/workspace_context.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Configuration and evidence"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_CODE_FILES`, `nova_body/nova_cortex/workspace_context.py`; new `general_tools/NovaLauncher.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Configuration and evidence"`.
 
 Collaboration is a detachable controller service (`general_tools/nova_chat/collaboration.py`). Its
 SQLite history and per-agent credentials live outside the repository at
@@ -190,7 +192,7 @@ disk rather than a slow network mount.
 
 ## Test meaningful behavior
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/nova_chat/tests/test_voice_transport.py`, `nova_body/tests/test_model_client.py`, `nova_body/tests/test_witness_delivery.py` and 1 more; new `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker`, `general_tools/nova_chat/session_manager.py` and 7 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/nova_chat/tests/test_voice_transport.py`, `nova_body/tests/test_model_client.py`, `nova_body/tests/test_witness_delivery.py` and 1 more; new `general_tools/NovaLauncher.py`, `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker` and 8 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -340,7 +342,7 @@ A generated file gets its purpose line from the code that writes it.
 
 ## Security model
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_resolve_speaker`, `general_tools/nova_chat/server.py::_stop_request`, `general_tools/nova_chat/server.py::websocket_endpoint`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/NovaLauncher.py`, `general_tools/nova_chat/server.py::_resolve_speaker`, `general_tools/nova_chat/server.py::_stop_request`, `general_tools/nova_chat/server.py::websocket_endpoint`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
 
 Nova's reach is intentional — Cole: *"My machine is her body. If she can't use it fully, she is
 crippled."* Every control here is about **who can reach her from outside**, not what she may do

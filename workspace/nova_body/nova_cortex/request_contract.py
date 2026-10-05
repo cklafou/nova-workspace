@@ -23,33 +23,58 @@ _ALLOW = re.compile(r"\b(?:you\s+(?:can|may)\s+|please\s+)?use\s+(?:external\s+)
                     r"|\btools?\s+(?:are\s+)?(?:now\s+)?allowed\b", re.I)
 
 
+_VOICE_DELIVERY_EVIDENCE = (
+    "VOICE DELIVERY EVIDENCE — this register routes your reply toward a voice adapter; it does "
+    "not establish a live microphone, speaker, or listener. Incoming text, including an ASR "
+    "transcript, establishes received wording, not microphone quality or a person hearing you. "
+    "The CURRENT CANDIDATE is still a draft: it is not yet committed by this call's final or "
+    "segment delivery callback. Streamed draft/progress text is not downstream playback "
+    "evidence; no synthesis, playback, or listener acknowledgment for it is supplied here. "
+    "Previously delivered segments mean TEXT handed to an adapter, not proven audio. A WAV "
+    "receipt proves synthesis only; a correlated player-completion receipt proves reported "
+    "device playback only; a person's explicit report supports attributed hearing, not your "
+    "independent acoustic verification. Match any evidence to its request/segment and time: "
+    "earlier hearing or playback cannot prove this draft was heard or a current audio test passed. "
+    "Give the requested reply without adding unobserved delivery/test-success claims. Do not "
+    "turn ordinary replies into audio disclaimers or audit discussion. Idiomatic acknowledgment "
+    "('I hear you'), clearly quoted/requested wording, and accurately attributed recipient "
+    "reports are different from asserting that the current output was played or heard."
+)
+
+
+def voice_delivery_context(register):
+    """Known body/adapter boundary, not an inferred device status or a fabricated receipt."""
+    return _VOICE_DELIVERY_EVIDENCE if register in ("voice", "voice_fast") else ""
+
+
 class CurrentRequest:
-    def __init__(self, entries=()):
+    def __init__(self, entries=(), *, delivery_context=""):
         self.entries = deepcopy(list(entries))
+        self.delivery_context = str(delivery_context)
 
     @classmethod
-    def from_messages(cls, messages):
+    def from_messages(cls, messages, *, delivery_context=""):
         # Compatibility fallback for callers lacking admission metadata. Older failed
         # or cancelled user rows are not automatically new instructions for this turn.
         latest = next((text_content(message.get("content")) for message in reversed(messages)
                        if message.get("role") == "user"), "")
-        return cls([latest] if latest else [])
+        return cls([latest] if latest else [], delivery_context=delivery_context)
 
     @classmethod
-    def from_entries(cls, entries):
+    def from_entries(cls, entries, *, delivery_context=""):
         values = []
         for entry in entries:
             text = text_content(entry.get("content"))
             if entry.get("author"):
                 text = f"{entry['author']} → you: {text}"
             values.append(text)
-        return cls(values)
+        return cls(values, delivery_context=delivery_context)
 
     def add(self, content):
         self.entries.append(text_content(content))
 
     def snapshot(self):
-        return CurrentRequest(self.entries)
+        return CurrentRequest(self.entries, delivery_context=self.delivery_context)
 
     @property
     def tools_forbidden(self):
@@ -81,4 +106,5 @@ class CurrentRequest:
                 "\nInternal audit/correction messages are NOT new human requests. Repair unsupported claims without dropping the requested content or narrating the audit. "
                 "Requests to say a phrase are evidence of requested wording, not proof of a real-world test or action. "
                 + ("No external tools or file reads are allowed for this current request, including auditor reads. Use supplied evidence; qualify unsupported claims."
-                   if self.tools_forbidden else "Verification tools may be used only when relevant and permitted by the actual request."))
+                   if self.tools_forbidden else "Verification tools may be used only when relevant and permitted by the actual request.")
+                + ("\n" + self.delivery_context if self.delivery_context else ""))

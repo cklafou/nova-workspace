@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T17:51:10+00:00 from source (input `b393e9416474`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T18:05:33+00:00 from source (input `6be81c8b902b`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -98,6 +98,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/tests/test_conversation_segments.cjs](../general_tools/nova_chat/tests/test_conversation_segments.cjs)
 - [general_tools/nova_chat/tests/test_desktop.py](../general_tools/nova_chat/tests/test_desktop.py) — Verify native controller geometry across processes and preserve renderer storage during isolated profile migration.
 - [general_tools/nova_chat/tests/test_launcher_mode.py](../general_tools/nova_chat/tests/test_launcher_mode.py) — Test launcher mode switching, window preservation and chat-only recovery using fake processes only.
+- [general_tools/nova_chat/tests/test_launcher_readiness.py](../general_tools/nova_chat/tests/test_launcher_readiness.py) — Verify delayed server startup stays alive through the controller deadline while failed threads stop promptly.
 - [general_tools/nova_chat/tests/test_layout_save.cjs](../general_tools/nova_chat/tests/test_layout_save.cjs)
 - [general_tools/nova_chat/tests/test_lifecycle.py](../general_tools/nova_chat/tests/test_lifecycle.py) — Exercise real Nova lifecycle HTTP routes with a fake launcher and isolated updater job manager.
 - [general_tools/nova_chat/tests/test_lifecycle_ack.py](../general_tools/nova_chat/tests/test_lifecycle_ack.py) — Preserve lifecycle HTTP acknowledgement before fast controller teardown without extending grace on retries.
@@ -1822,6 +1823,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/tests/test_task_continuity.py](../nova_body/tests/test_task_continuity.py) — Verify canonical task checkpoint persistence and bounded context fitting without live Nova state or inference.
 - [nova_body/tests/test_tool_correlation.py](../nova_body/tests/test_tool_correlation.py) — Verify that tool lifecycle identifiers match canonical receipts on success, refusal and exceptions.
 - [nova_body/tests/test_voice_cache_mode.py](../nova_body/tests/test_voice_cache_mode.py) — Preserve voice_fast cache mode across conversational segments while retaining reasoning for tools and factual correction.
+- [nova_body/tests/test_voice_delivery_evidence.py](../nova_body/tests/test_voice_delivery_evidence.py) — Verify voice delivery-stage evidence reaches body drafts and frozen audits without inventing playback or overriding requested content.
 - [nova_body/tests/test_witness_delivery.py](../nova_body/tests/test_witness_delivery.py) — Exercise full-draft witness delivery and tool observability with isolated providers, receipts and images.
 - [nova_body/tests/test_witness_evidence.py](../nova_body/tests/test_witness_evidence.py) — Guard audit evidence visibility, verdict precedence, image bounds and diagnostic redaction.
 - [nova_body/tests/test_witness_replay.py](../nova_body/tests/test_witness_replay.py) — Prove the witness replay harness audits like runtime: pixels, read detection, read budget, refusals, sampling parity and separately scored…

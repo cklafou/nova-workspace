@@ -1,5 +1,5 @@
-# Last updated: 2026-10-05 21:33:05
 # @nova: Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.
+# Last updated: 2026-10-05 21:33:05
 """
 NovaLauncher.py  (fixed)
 ========================
@@ -127,11 +127,13 @@ def run_nova_chat():
         log.error("nova_chat server error: %s", e, exc_info=True)
 
 
-def wait_for_port(port: int, timeout: float = 20.0) -> bool:
+def wait_for_port(port: int, timeout: float = 60.0, worker_alive=None) -> bool:
     """Poll until the port accepts connections or we time out."""
     import socket
-    deadline = time.time() + timeout
-    while time.time() < deadline:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if worker_alive is not None and not worker_alive():
+            return False
         try:
             s = socket.create_connection(("127.0.0.1", port), timeout=0.5)
             s.close()
@@ -156,8 +158,10 @@ def main():
     chat_thread.start()
 
     log.info("Waiting for nova_chat on port %d...", CHAT_PORT)
-    if not wait_for_port(CHAT_PORT, timeout=25):
-        log.error("nova_chat didn't start in 25s. Check the Nova tab in the Nova Console.")
+    # Match the outer controller's 60-second startup allowance; a dead server
+    # thread still fails immediately rather than waiting out that allowance.
+    if not wait_for_port(CHAT_PORT, worker_alive=chat_thread.is_alive):
+        log.error("nova_chat did not become ready before startup ended. Check the Nova tab in the Nova Console.")
         # NO input() here. Since 2026-07-13 this process is spawned with CREATE_NO_WINDOW and its
         # stdout is piped into the Nova Console — there is no console and no usable stdin, so an
         # input() would either hang forever invisibly or raise OSError (which the old

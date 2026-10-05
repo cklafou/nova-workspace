@@ -74,7 +74,8 @@
         "nova_body/nova_cortex/audit_protocol.py",
         "general_tools/nova_chat/server.py::_resolve_speaker",
         "nova_body/nova_cortex/request_contract.py",
-        "general_tools/cloud_call.py"
+        "general_tools/cloud_call.py",
+        "general_tools/NovaLauncher.py"
       ],
       "baseline": {
         "NovaStart.cmd": "4a2f2669149dfcfbeae4de8dbe06720bf981aeaae8aceb2dda8f418895c84a09",
@@ -236,7 +237,8 @@
         "nova_body/nova_cortex/audit_protocol.py",
         "general_tools/nova_chat/server.py::_resolve_speaker",
         "nova_body/nova_cortex/request_contract.py",
-        "general_tools/cloud_call.py"
+        "general_tools/cloud_call.py",
+        "general_tools/NovaLauncher.py"
       ],
       "baseline": {
         "general_tools/nova_chat/tests/test_conversation_segments.cjs": "3d678e738a5082624a1de89f8ddbabc272a4269fafced47f89a516457bbdcd2e",
@@ -353,7 +355,8 @@
         "general_tools/nova_sync/watcher.py::EXCLUDE_SUBPATHS",
         "nova_body/nova_cortex/context_budget.py",
         "general_tools/nova_chat/server.py::_CODE_FILES",
-        "nova_body/nova_voice/provider_diagnostics.py"
+        "nova_body/nova_voice/provider_diagnostics.py",
+        "general_tools/NovaLauncher.py"
       ],
       "baseline": {
         "general_tools/nova_chat/collaboration.py": "13b090a97a9fba09ab4d655c5a9d5b94f2f55fa0f7b1af8025934869abfe97c9",
@@ -470,7 +473,8 @@
         "nova_body/nova_cortex/audit_protocol.py",
         "general_tools/nova_chat/server.py::_resolve_speaker",
         "nova_body/nova_cortex/request_contract.py",
-        "general_tools/cloud_call.py"
+        "general_tools/cloud_call.py",
+        "general_tools/NovaLauncher.py"
       ],
       "baseline": {
         "general_tools/audit_scripts.py::_audit_paths": "31e3b3f9cd5e82e34ebbdd92e5b0ee400a29796de5dbd86ec32ab7e6e2d3db54",

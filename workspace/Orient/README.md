@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-05T17:51:10+00:00 from source (input `b393e9416474`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T18:05:33+00:00 from source (input `6be81c8b902b`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
@@ -49,12 +49,12 @@ watcher reports that error and continues autosave; documentation failure must no
 
 The [interactive explorer](Architecture/index.html) and the call-order pages under `Architecture/`
 are rebuilt on demand (`Architecture/REBUILD_MAP.cmd`, `python general_tools/calls_order.py`).
-Last built 2026-10-04 05:12 UTC; as of this generation, 233 source file(s) had been modified since.
+Last built 2026-10-04 05:12 UTC; as of this generation, 234 source file(s) had been modified since.
 
 **AI notes.** Claude, Codex and the other agents leave a note in [AI Notes](AI%20Notes/ReadMeBeforeNoteTaking.md) after each session: what changed, why, and what is still open. Read the rules once, then every note since your own last one. Newest first:
 
+- [2026-10-06_0301_Codex_VoiceEvidenceReview.md](AI%20Notes/2026-10-06_0301_Codex_VoiceEvidenceReview.md)
+- [2026-10-06_0259_Codex_VoiceDeliveryEvidence.md](AI%20Notes/2026-10-06_0259_Codex_VoiceDeliveryEvidence.md)
+- [2026-10-06_0259_Codex_PairedVoiceAcceptance.md](AI%20Notes/2026-10-06_0259_Codex_PairedVoiceAcceptance.md)
 - [2026-10-06_0251_Codex_CurrentRequestAuditReview.md](AI%20Notes/2026-10-06_0251_Codex_CurrentRequestAuditReview.md)
 - [2026-10-06_0247_Codex_CurrentRequestAuditRepair.md](AI%20Notes/2026-10-06_0247_Codex_CurrentRequestAuditRepair.md)
-- [2026-10-06_0238_Codex_RecordedVoiceAcceptance.md](AI%20Notes/2026-10-06_0238_Codex_RecordedVoiceAcceptance.md)
-- [2026-10-06_0235_Codex_AuditProtocolSchema.md](AI%20Notes/2026-10-06_0235_Codex_AuditProtocolSchema.md)
-- [2026-10-06_0234_Codex_ContinuationCompletionInProgress.md](AI%20Notes/2026-10-06_0234_Codex_ContinuationCompletionInProgress.md)
