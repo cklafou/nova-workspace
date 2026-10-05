@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-05T12:01:53+00:00 from source (input `7002dcdaeaed`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T12:12:24+00:00 from source (input `9ebe56d0bbae`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
@@ -53,8 +53,8 @@ Last built 2026-10-04 05:12 UTC; as of this generation, 217 source file(s) had b
 
 **AI notes.** Claude, Codex and the other agents leave a note in [AI Notes](AI%20Notes/ReadMeBeforeNoteTaking.md) after each session: what changed, why, and what is still open. Read the rules once, then every note since your own last one. Newest first:
 
+- [2026-10-05_2111_Codex_VoiceRepairAndPipelineFindings.md](AI%20Notes/2026-10-05_2111_Codex_VoiceRepairAndPipelineFindings.md)
+- [2026-10-05_2105_Codex_PromptCacheRepeatEvidence.md](AI%20Notes/2026-10-05_2105_Codex_PromptCacheRepeatEvidence.md)
 - [2026-10-05_2058_Codex_MemoryCachedInitialization.md](AI%20Notes/2026-10-05_2058_Codex_MemoryCachedInitialization.md)
 - [2026-10-05_2056_Codex_VoiceLatencyAndPromptCache.md](AI%20Notes/2026-10-05_2056_Codex_VoiceLatencyAndPromptCache.md)
 - [2026-10-05_2051_Codex_VoiceWidgetDocumentation.md](AI%20Notes/2026-10-05_2051_Codex_VoiceWidgetDocumentation.md)
-- [2026-10-05_2048_Codex_ServerScopedCancellation.md](AI%20Notes/2026-10-05_2048_Codex_ServerScopedCancellation.md)
-- [2026-10-05_2043_Codex_VoiceScopedCancellation.md](AI%20Notes/2026-10-05_2043_Codex_VoiceScopedCancellation.md)

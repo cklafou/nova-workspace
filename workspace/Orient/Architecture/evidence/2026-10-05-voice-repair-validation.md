@@ -83,8 +83,51 @@ read budget, evidence or sampling change is claimed. The gateway now defaults to
 configured `voice_fast` register; ordinary-thinking `voice` remains available.
 
 Seven isolated memory-initialization tests, five prompt-cache tests and 58 existing witness tests
-passed. These are source/fixture results; repeat native measurements are needed to quantify any
-startup/cache benefit. They do not retroactively change the 20:48 timings above.
+passed. These are source/fixture results. The native repeat below showed no meaningful speedup;
+they do not retroactively change the 20:48 timings above.
+
+## Repeat after the cache changes
+
+The second measured request actually began at **21:02:07.627 KST**, despite the `2101` receipt
+filename. It used `voice_fast`, real Windows TTS and no microphone. The greeting remained relevant,
+but again used two sentences when one was requested. Its audit was **INCOMPLETE**, this time with
+an explicit objection to an unsupported claim that the connection worked. Spoken delivery therefore
+remained delivered-but-unapproved, not a successful witness verdict.
+
+| Observation | First run, 20:48 | Repeat, 21:02 |
+|---|---:|---:|
+| Delivered final text | 94.844 s | 94.812 s |
+| First playback API start | 96.246 s | 96.190 s |
+| Context assembly combined | 35.334 s | 31.515 s |
+| Semantic memory within context | 34.947 s | 31.356 s |
+| Main generation | 28.677 s | 31.377 s |
+| Main prefill within generation | 25.992 s | 28.387 s |
+| Four audit calls combined | 30.030 s | 31.355 s |
+| Speech completion | Two units `played` | Two units `played` |
+
+The repeat had 32,556 main prompt tokens and provider cache counts `0, 0, 35, 35, 0` across generation
+and the four audits. Context plus provider calls account for 94.246 seconds. Only request
+`d790557da74a4339b5710f95230d7810`, run `e36d16e8b83040a4986720d9a666846b`, was included from the
+capture directory; unrelated user turns in that directory are excluded.
+
+**There was no meaningful measured speedup.** This was a cold repeat after reload with more chat
+history, not a controlled throughput comparison or a warm-cache trial. The
+[matching cache review](../../AI%20Notes/2026-10-05_2105_Codex_PromptCacheRepeatEvidence.md)
+confirmed that the new ordering was loaded: changing receipt ages still interrupted the reusable
+prefix, and the local hybrid/recurrent provider restored only a 35-token checkpoint for the two
+partially reused audit calls. The distinct final-audit protocol required full processing. No additional
+cache, evidence or witness-policy change was made in response to this repeat.
+
+The repeat reported two completed Windows playback units under the new female-placeholder
+preference. Cole's human audibility confirmation applies only to the first, disliked greeting;
+he has not confirmed hearing this repeat or approved the new voice. The independent Zira synthesis
+receipt establishes voice selection and a valid WAV, not approval of its quality.
+
+Primary receipts: [repeat body events](../../../Temp/voice-validation/native-reply-20261005-2101.json),
+[repeat transport log](../../../Temp/voice-validation/native-reply-20261005-2101.log), and matching
+[main provider call](../../../Temp/provider-diagnostics/voice-cache-20261005-2058/585febfaa57c4dddb968ab13d4082eaf.json).
+A third warm test was **not run** because Cole was actively interacting. The temporary provider
+capture marker was closed; no further performance experiment is included in this report.
 
 ## Public human-speech recognition check
 
@@ -114,9 +157,19 @@ No microphone, speaker or Nova model was used for this separate comparison.
 ## Current conclusion
 
 The separate dockable Voice widget, compact Conversation power and Collaboration Latest behavior
-have browser evidence. The selected English Whisper CPU recognizer is installed. This new live check
-adds correlated **Nova reply → real Windows TTS → playback completion** evidence. It does not add a
-full microphone-to-Nova conversation pass, low latency, broad speech recognition quality, native
-avatar lipsync or witness approval. Cole confirmed this greeting was audible; confirmation of the
-new female placeholder and selection of a suitable final voice remain separate. Those other limits
-remain explicit validation work.
+have browser evidence. The selected English Whisper CPU recognizer is installed. Both measured live
+runs add correlated **Nova reply → real Windows TTS → playback completion** evidence, with first
+playback still around 96 seconds. They do not add a full microphone-to-Nova conversation quality pass,
+low latency, broad speech recognition quality, native avatar lipsync or witness approval. Cole confirmed
+only the first greeting was audible; the new female placeholder and a suitable final voice remain
+unapproved.
+
+In a separate final operator check, the real Whisper worker reported listening/recognizing and
+transcribed microphone input; its accuracy was not scored. End call produced state `off` and confirmed
+cancellation of that call's pending request. Microphone mute did not remain set throughout that check,
+and another client subsequently restarted the call. Those observations are separate from the two
+measured microphone-off trials, and do not establish a mute defect or a final persistent call state.
+Cole was actively using the interface; the reviewers left the controls untouched after the check.
+The [operator's final note](../../AI%20Notes/2026-10-05_2111_Codex_VoiceRepairAndPipelineFindings.md)
+records that separate control check. These component and transport results are not a full
+conversational-quality pass.

@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "generated_at": "2026-10-05T12:01:53+00:00",
-  "input_sha256": "7002dcdaeaede56400f4e9f7431befe6708f3c589b2e0d4c6f9286deecbe2de9",
+  "generated_at": "2026-10-05T12:12:24+00:00",
+  "input_sha256": "9ebe56d0bbaec1f7c73d8e1e3865f59e21d0c1f0f691ebb40ff0406ee8d061c2",
   "files": [
     {
       "path": "NovaChatOnly.cmd",
@@ -111,7 +111,7 @@
     {
       "path": "general_tools/architecture_map/orient.py",
       "owner": "detachable tool",
-      "bytes": 97532
+      "bytes": 98491
     },
     {
       "path": "general_tools/architecture_map/reviews.json",
@@ -781,7 +781,7 @@
     {
       "path": "general_tools/voice_gateway/README.md",
       "owner": "detachable tool",
-      "bytes": 15824
+      "bytes": 16601
     },
     {
       "path": "general_tools/voice_gateway/VOICE_CHECK.cmd",
@@ -8569,7 +8569,7 @@
     "general_tools/architecture_map/atlas_history.py": "3e2976780c6e6f72a66047d3e161903f0acfe27f718943976f6460f1ad5a4bb6",
     "general_tools/architecture_map/build.py": "582d9c2129953e60e632ade53c949b768614ca077e939a8d61c312ba9fd6153c",
     "general_tools/architecture_map/experience.js": "ed3dbaf90ce9743729a82d61ab25e96afc9d8d30c54d739956e986aed039fa46",
-    "general_tools/architecture_map/orient.py": "0e01348688c2c6d4eb3479bb656e2d4de847e6a3334dbb84ab74f9c26e774604",
+    "general_tools/architecture_map/orient.py": "11197a12cdc83c1dd8c7cec9242c5ed258a71fef3fc18fdb21bc6d0bfeab7361",
     "general_tools/architecture_map/serve.py": "dc9340f05e7ad159ddd89fdc8bd81945c320422ae88c8bfe071a491d4d1e3ef4",
     "general_tools/architecture_map/test_architecture.py": "b84106cfa4c1543c63361f2f0f3d078744545f572603a96e52e04e2cb63c989c",
     "general_tools/architecture_map/test_history.py": "331cf2bb2840ca0b5b1bb35d43a72260a36ff4424006644cab3fcf00b02d67cc",
@@ -8806,10 +8806,10 @@
     "start_llama_qwen36.cmd": "3297f9b8977d45d037c3043c9bafccd4c8f6a737a5dae5eb7f88dc171c6a2fb0"
   },
   "document_hashes": {
-    "README.md": "d7d9df18d79cbe7ebf8086d402cf6d21fe40c737fa43e0182a66feaf1b537f6d",
-    "ARCHITECTURE.md": "7bc64d00c676b36dd9679d7464fd436eaf044c7e1b7b3b2d0f626a904ca32f8a",
-    "OPERATIONS.md": "491c66512acc22f2ed687e7c8b911d66b70cd227b990f46e8d82dd73cd8d80f9",
-    "INDEX.md": "aaa7f8e720e15fe2edb0cc8ebb0630a7a5dd10a8e104d0c0a0b5d03ae76814a8"
+    "README.md": "655a88a31f82091d2d35bbd5086633a3a63801e2b6492567f9404d370793c118",
+    "ARCHITECTURE.md": "788ec4e097d3de02c0d398322e87e49d459007631b2982e53b14beea85570d84",
+    "OPERATIONS.md": "59124350b8eac1c75e5ba5bb4c3d2aafbc577b12a2d6e4a4ed783b7560537f24",
+    "INDEX.md": "415a3ee8641dfaa88e46c27dfad3a995b42e65ac955dad74c18487a3bad39957"
   },
   "review_needed": [],
   "unknown_review_sections": [],

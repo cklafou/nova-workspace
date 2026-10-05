@@ -95,13 +95,21 @@ was delivered in 94.844 seconds, first playback began at 96.246 seconds, and bot
 proves the tested reply/output path, not low-latency conversation. Cole separately confirmed hearing
 that greeting and disliked the temporary voice. Subsequent synthesis selected Microsoft Zira Desktop
 as the female placeholder; that synthesis receipt is not human approval or a final casting choice.
+The 21:02 repeat after the cache changes delivered at 94.812 seconds and began playback at 96.190
+seconds, with two `played` units. Audit remained INCOMPLETE and flagged an unsupported connection
+claim. It showed no meaningful speedup; different history and cold reload prevent a controlled cache
+comparison. Human confirmation applies only to the first greeting. A third warm test was not run
+because Cole was using the app, and the temporary provider capture was closed.
 
 A separate public 11-second human-speech clip produced 0/22 word errors for both recognizers. Whisper
 decoded in 6.529 seconds; Moonshine in 0.822 seconds. One clean clip is not broad accuracy evidence or a
 Cole-microphone test. See the [dated repair validation](../../Orient/Architecture/evidence/2026-10-05-voice-repair-validation.md)
 for receipts, the measured memory/prefill/audit delays and the file-decoder workaround. Natural human
 conversation, physical echo, native avatar timing and a suitable final voice remain unverified.
-Human audibility is confirmed for this greeting only; the new female placeholder is not yet approved.
+Human audibility is confirmed for the first greeting only; the new female placeholder is not yet approved.
+A separate final operator check observed actual Whisper microphone transcription and confirmed End
+call cancelled its pending request; that transcription was not accuracy-scored. Subsequent user/client
+activity changed call state, so the check is not a claim that the call remains stopped or muted.
 
 ## The smoke ladder — verify each layer before wiring audio
 

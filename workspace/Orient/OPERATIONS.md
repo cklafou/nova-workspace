@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T12:01:53+00:00 from source (input `7002dcdaeaed`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T12:12:24+00:00 from source (input `9ebe56d0bbae`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 

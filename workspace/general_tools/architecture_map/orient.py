@@ -1044,6 +1044,16 @@ receipt selected Microsoft Zira Desktop. Her proper voice remains a future choic
 separated 34.947 seconds of semantic-memory work,
 28.677 seconds generation (including 25.992 seconds prefill for 31,383 prompt tokens, cache count 0),
 and four audit calls totaling 30.030 seconds. These are one-run measurements, not general latency rates.
+The 21:02 repeat after the cache-only changes delivered at 94.812 seconds and began playback at
+96.190 seconds; both speech units reported `played`. Audit remained INCOMPLETE, flagging an
+unsupported connection-success claim. Context took 31.515 seconds, generation 31.377 seconds and
+four audits 31.355 seconds; cache counts remained 0,0,35,35,0. There was no meaningful measured
+speedup. The cold repeat had more history, so it is not a controlled throughput benchmark. Human
+confirmation applies only to the first greeting; the new female placeholder remains unapproved.
+A third warm trial was not run during Cole's active use, and the temporary capture marker was closed.
+A separate final operator check observed actual Whisper microphone transcription and confirmed End
+call cancelled its pending request; recognition accuracy was not scored. Subsequent client activity
+changed call state, so this is not a statement that voice remains stopped or muted.
 A separate 11-second public human-speech clip scored 0/22 word errors for both Whisper and Moonshine;
 decode times were 6.529 and 0.822 seconds respectively. This is not broad accuracy evidence or a test
 of Cole's unstructured microphone speech. See the [voice repair validation](Architecture/evidence/2026-10-05-voice-repair-validation.md)

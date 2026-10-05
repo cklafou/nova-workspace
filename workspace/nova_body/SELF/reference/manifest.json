@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-05T20:48:57",
+  "generated": "2026-10-05T21:02:34",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -95,7 +95,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Expose Nova's executive faculties, task board, runtime settings and body-owned context assembly.",
       "files": 15,
-      "lines": 5958,
+      "lines": 5960,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -181,7 +181,7 @@
       "path": "nova_body/nova_lancedb",
       "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
       "files": 5,
-      "lines": 786,
+      "lines": 832,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -216,7 +216,7 @@
       "path": "nova_body/nova_lancedb",
       "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
       "files": 5,
-      "lines": 786,
+      "lines": 832,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -414,7 +414,7 @@
       "path": "nova_body/nova_voice",
       "purpose": "Run Nova's local inference and tool loop with her current capabilities and execution receipts.",
       "files": 5,
-      "lines": 3978,
+      "lines": 3969,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -654,7 +654,7 @@
       "path": "general_tools/architecture_map",
       "purpose": "Generates Orient documentation and validates source, review and link freshness.",
       "files": 10,
-      "lines": 3260,
+      "lines": 3289,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -876,8 +876,8 @@
       "kind": "tool",
       "path": "general_tools/nova_chat",
       "purpose": "Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.",
-      "files": 31,
-      "lines": 10802,
+      "files": 32,
+      "lines": 10925,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -1124,7 +1124,7 @@
       "path": "general_tools/voice_gateway",
       "purpose": "voice_gateway — Cole's microphone to Nova. A comms tool (pluck test: her body is",
       "files": 4628,
-      "lines": 2180965,
+      "lines": 2180973,
       "age_days": 0,
       "ports_bind": [
         "8080"
