@@ -2,32 +2,17 @@
 # Last updated: 2026-10-05 21:33:05
 #   no network: this is the one piece that carries real design intelligence, so it is the one
 #   piece with unit tests (test_committer.py). Everything else is an adapter around it.
-"""
-committer.py — turn a stream (or a finished block) of Nova's text into SPEAKABLE units.
+"""Split already-delivered text into sentence/clause units for ordered speech.
 
-Why this exists
----------------
-A voice reply cannot be a single 300-character blob handed to TTS — the listener waits for the
-whole thing to synthesize before hearing a word, and the prosody of one giant utterance is flat.
-Speech is sentences. This committer watches text arrive and emits a unit the moment a sentence
-is complete, so TTS can speak sentence 1 while sentence 2 is still being written.
+VoiceSession feeds each committed message_segment (or a compatible unsegmented final)
+only after checking its delivery, identity and audit metadata. This splitter does not
+verify claims or authorize speech. Delivery can carry a non-PASS disposition; the
+configured gateway policy decides whether that disposition may be spoken.
 
-Two feed modes (the gateway chooses; default is the SAFE one):
-  - "final":  feed() is called ONCE with the whole message_end content. The committer just
-              splits it into sentences for natural TTS pacing. SAFE because the text has already
-              passed Nova's witness gate server-side before message_end fired — nothing unaudited
-              is ever spoken. This is the v1 default.
-  - "stream": feed() is called with tokens AS they generate. First audio is far faster, but a
-              sentence can be spoken BEFORE the witness has audited the full draft. Only sound
-              for register "voice_fast" (casual turns the gateway flagged claim-free) or once a
-              parallel/sentence-level witness exists. Opt-in via config.
-
-The claim gate
---------------
-An optional callable claim_gate(text)->bool marks a unit as claim-bearing (a number, a name, a
-receipt-class assertion). In "final" mode this is advisory metadata (the whole reply was already
-audited). In "stream" mode a future version can HOLD claim units until a sentence-level witness
-clears them; v1 does not hold — it tags, so the gateway/logs can see what would have been held.
+The generic feed/flush API can accept text incrementally, but the gateway does not
+feed provider tokens or permit speculative pre-audit speech. claim_gate is optional
+unit metadata only: it does not hold or approve a sentence. Sentence/clause splitting
+improves pacing after delivery; it does not reduce the model or audit's latency.
 """
 from __future__ import annotations
 

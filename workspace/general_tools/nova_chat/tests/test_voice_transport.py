@@ -17,6 +17,8 @@ import uuid
 from unittest.mock import AsyncMock, Mock, patch
 
 WORKSPACE = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(WORKSPACE / 'nova_body'))
+from nova_cortex.workspace_context import WorkspaceContext
 SERVER = WORKSPACE / 'general_tools/nova_chat/server.py'
 MODEL_CLIENT = WORKSPACE / 'nova_body/nova_runtime/model_client.py'
 EVENTS = SERVER.with_name('response_events.py')
@@ -117,6 +119,7 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
                                            throttled=False),
             _nova_temperature=.7, _nova_top_p=.9, autonomous_mode=True,
             memory_indexer=None, _mirror_to_runtime=Mock(), _maybe_route_inbox=Mock(),
+            _rt=types.SimpleNamespace(work_owner=work_module.WorkCoordinator()),
             handle_nova_message=AsyncMock(return_value=[]), _is_echo_of_recent=lambda *_: False,
             _may_speak_to_cole_unprompted=lambda: (True, 'fixture trigger'),
             _llama_error_streak=0, _last_error_msg='', _last_error_time=0,
@@ -130,6 +133,7 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
             emit_event=AsyncMock(), CHAT_ONLY=False, connected_clients=[], active_tasks=[],
             WebSocket=object, WebSocketDisconnect=SocketClosed,
         )
+        self.ns['workspace'].prepare_nova_context = types.MethodType(WorkspaceContext.prepare_nova_context, self.ns['workspace'])
         self.operation = contextvars.ContextVar('voice_transport_fixture_operation', default=None)
         fake_runtime = types.ModuleType('nova_runtime')
         fake_operations = types.ModuleType('nova_runtime.operations')
@@ -145,7 +149,7 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
         self.modules.start()
         self.addCleanup(self.modules.stop)
         extract(SERVER, {'run_ai_response', '_run_ai_response_owned', '_attend_autonomy_inputs', '_run_response_queue', '_drain_cole_queue', '_end_queued_request',
-                         '_release_request_work', '_scoped_stop_reply', '_stop_request', '_steer_request',
+                         '_release_request_work', '_scoped_stop_reply', '_stop_request', '_steer_request', '_recover_face_inputs',
                          'websocket_endpoint'}, self.ns)
 
     def start_body_response(self, provider, *, owner=None):
@@ -830,6 +834,63 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
         await self.response(provider, hb_ctx=Transcript(), cole_pending=False)
         self.assertEqual(self.terminal(), [])
         self.assertEqual(self.transcript.messages, [])
+
+    async def test_input_is_durable_before_acknowledgement_with_voice_and_images(self):
+        coordinator = work_module.WorkCoordinator(self.root / 'checkpoint.json')
+        self.ns['_rt'] = types.SimpleNamespace(work_owner=coordinator)
+        self.ns['is_processing'] = True
+        original = self.ns['broadcast']
+        async def broadcast(event):
+            if event['type'] == 'user_message':
+                restarted = work_module.WorkCoordinator(self.root / 'checkpoint.json')
+                saved = restarted.recovery_inputs()
+                self.assertEqual(len(saved), 1)
+                self.assertEqual(saved[0]['request_id'], event['request_id'])
+                self.assertEqual(saved[0]['conversation_id'], self.session.active_id)
+                self.assertEqual(saved[0]['content'][1]['image_url']['url'], 'fixture-pixels')
+            await original(event)
+        self.ns['broadcast'] = broadcast
+        await self.ns['websocket_endpoint'](Socket([dict(type='message', content='remember this',
+            request_id='durable', register='voice_fast', images=[{'dataUrl':'fixture-pixels'}])]))
+        self.assertEqual(len(coordinator.recovery_inputs()), 1)
+        self.assertEqual(self.ns['_cole_message_queue'][0]['input_key'], coordinator.recovery_inputs()[0]['input_key'])
+
+    async def test_failed_durable_input_is_never_acknowledged_or_scheduled(self):
+        coordinator = work_module.WorkCoordinator(self.root / 'checkpoint.json')
+        coordinator.receive_input = Mock(side_effect=OSError('disk full fixture'))
+        self.ns['_rt'] = types.SimpleNamespace(work_owner=coordinator)
+        ws = Socket([dict(type='message', content='do work', request_id='unsaved')])
+        await self.ns['websocket_endpoint'](ws)
+        self.assertEqual(self.ns['_cole_message_queue'], [])
+        self.assertFalse(any(e['type']=='user_message' for e in self.events))
+        self.assertEqual(ws.sent[-1]['code'], 'input_not_durable')
+
+    async def test_scoped_stop_cancels_persisted_queued_input(self):
+        coordinator = work_module.WorkCoordinator(self.root / 'checkpoint.json')
+        self.ns['_rt'] = types.SimpleNamespace(work_owner=coordinator)
+        self.ns['is_processing'] = True
+        ws = Socket([dict(type='message', content='queued work', request_id='cancel-me')])
+        await self.ns['websocket_endpoint'](ws)
+        await self.ns['_stop_request'](ws, 'cancel-me')
+        self.assertEqual(work_module.WorkCoordinator(self.root/'checkpoint.json').recovery_inputs(), [])
+        self.assertFalse(self.ns['_cole_message_queue'])
+
+    async def test_recovery_uses_original_transcript_without_dead_socket(self):
+        coordinator = work_module.WorkCoordinator(self.root / 'checkpoint.json')
+        key = coordinator.receive_input({'role':'user','content':'old conversation request',
+            'conversation_id':'old','reply_to':'old-input','request_id':'r-old','register':'voice'})
+        old = Transcript(); old.messages=[{'id':'old-input','content':'old conversation request','author':'Cole'}]
+        self.session.retain_existing=Mock(return_value=old)
+        self.ns['_rt']=types.SimpleNamespace(work_owner=coordinator, recover_pending_inputs=AsyncMock())
+        self.ns['_drain_cole_queue']=AsyncMock()
+        await self.ns['_recover_face_inputs']()
+        self.assertEqual(self.session.active_id, 'session-fixture')
+        restored=self.ns['_cole_message_queue'][0]
+        self.assertIs(restored['transcript'],old)
+        self.assertEqual(restored['input_key'],key)
+        self.assertIsNone(restored['owner'])
+        self.assertTrue(restored['acknowledged'].is_set())
+        self.ns['_rt'].recover_pending_inputs.assert_not_awaited()
 
     async def test_websocket_first_request_closure_survives_busy_second_request_and_drain(self):
         pending = []

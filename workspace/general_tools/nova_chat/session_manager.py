@@ -170,6 +170,27 @@ class SessionManager:
         self._retained[session_id] = (transcript, 1)
         return True
 
+    def retain_existing(self, session_id: str):
+        """Open/pin a recovered session without changing the user's selected conversation."""
+        if session_id not in self._index:
+            return None
+        previous = self._retained.get(session_id)
+        if previous is not None:
+            self._retained[session_id] = (previous[0], previous[1] + 1)
+            return previous[0]
+        if session_id == self._active_id:
+            self.retain(session_id, self._active_transcript)
+            return self._active_transcript
+        self._decompress(session_id)
+        transcript = Transcript(session_id=session_id)
+        raw = self._jsonl_path(session_id)
+        if raw.exists():
+            # Recovery must not publish over a partially loaded/corrupt history.
+            messages = [json.loads(line) for line in raw.read_text(encoding="utf-8").splitlines() if line.strip()]
+            transcript.messages.extend(messages)
+        self._retained[session_id] = (transcript, 1)
+        return transcript
+
     def release(self, session_id: str, transcript: Transcript) -> bool:
         """Release one accepted request; the last inactive writer can now be compressed."""
         previous = self._retained.get(session_id)

@@ -540,7 +540,8 @@ def _steer_request(work):
             {"type": "image_url", "image_url": {"url": img["dataUrl"]}}
             for img in images if img.get("dataUrl")]
     entry = {"role": "user", "content": content,
-             "request_id": work.get("request_id"), "reply_to": (work.get("msg") or {}).get("id")}
+             "request_id": work.get("request_id"), "reply_to": (work.get("msg") or {}).get("id"),
+             "conversation_id": conversation_id, "input_key": work.get("input_key")}
     if binding is not None and turn is binding["turn"] and manager.submit(conversation_id, [entry]):
         work.update(task=binding["task"], started=True)
         binding["works"].append(work)
@@ -567,6 +568,10 @@ async def _stop_request(ws, request_id):
         return
     # Mark before any await, including while a drain owns the popped queue entry.
     work["cancelled"] = True
+    coordinator = getattr(globals().get("_rt"), "work_owner", None)
+    if coordinator is not None:
+        coordinator.cancel_input(work.get("input_key") or (work.get("msg") or {}).get("id"),
+                                 conversation_id=work.get("conversation_id"))
     task = work.get("task")
     if task is None:
         _cole_message_queue[:] = [item for item in _cole_message_queue if item is not work]
@@ -583,6 +588,8 @@ async def _stop_request(ws, request_id):
         owner.request_stop()
         completion = asyncio.create_task(owner.finished.wait())
     else:
+        if owner is not None and owner.task is task:
+            owner.mark_stopped()
         task.cancel()
         completion = task
     if not work.get("started"):
@@ -878,6 +885,7 @@ _CODE_FILES = ("general_tools/nova_chat/server.py",
                "nova_body/nova_runtime/model_client.py",
                "nova_body/nova_runtime/conversation.py",
                "nova_body/nova_runtime/work_owner.py",
+               "nova_body/nova_runtime/recovery.py",
                "nova_body/nova_runtime/conversation_context.py",
                "nova_body/nova_runtime/transcript_store.py",
                "nova_body/nova_runtime/runtime.py",
@@ -1435,6 +1443,22 @@ async def startup_event():
                 print(f"[Orient] refresh failed: {exc}")
             await asyncio.sleep(30)
 
+    async def _bg_recover_inputs():
+        if not _rt.work_owner.recovery_inputs():
+            return
+        for _attempt in range(180):
+            if _stop_requested.is_set():
+                return
+            if await asyncio.to_thread(_rt_llama.is_running):
+                try:
+                    await _recover_face_inputs()
+                except Exception as error:
+                    await emit_event("recovery_pending", f"Saved work remains pending: {error}", level="warning")
+                return
+            await asyncio.sleep(1)
+        await emit_event("recovery_pending", "Saved work is waiting for the model provider", level="warning")
+
+    asyncio.ensure_future(_bg_recover_inputs())
     asyncio.ensure_future(_bg_orientation_docs())
     asyncio.ensure_future(_bg_index())
     asyncio.ensure_future(_bg_eyes_stream())
@@ -1765,6 +1789,15 @@ async def stop_endpoint():
         return JSONResponse({"ok": True, "stopped": True, "cancelled": 0,
                              "chat_only": True, "operations": []})
     _stop_requested.set()          # signal token handlers to abort mid-stream
+    coordinator = getattr(_rt, "work_owner", None)
+    if coordinator is not None:
+        if coordinator.active is not None:
+            coordinator.active.mark_stopped()
+        for entry in coordinator.recovery_inputs():
+            coordinator.cancel_input(entry["input_key"])
+        for pending in list(_cole_message_queue):
+            coordinator.cancel_input(pending.get("input_key") or (pending.get("msg") or {}).get("id"),
+                                     conversation_id=pending.get("conversation_id"))
     cancelled = 0
     for task in active_tasks:
         if not task.done():
@@ -1938,33 +1971,17 @@ async def _run_ai_response_owned(ai_name: str, client_mod, msg_id: str,
         _cut = next((i + 1 for i, item in enumerate(_history) if item.get("id") == reply_to), len(_history))
         _transcript.messages = _history[:_cut]
     _is_hb_tick = hb_ctx is not None
+    if not _is_hb_tick and request_work is not None:
+        coordinator = getattr(_rt, "work_owner", None)
+        if coordinator is not None and coordinator.active is not None:
+            coordinator.active.bind_inputs([request_work.get("input_key") or {
+                "role": "user", "content": request_work.get("full_context_content", latest_message),
+                "request_id": request_id, "reply_to": reply_to, "conversation_id": _conversation_id}])
     _silent_tick = _is_hb_tick and not cole_pending   # True = don't touch chat
     from nova_voice import provider_diagnostics as _provider_diagnostics
-    # Update workspace context based on what was mentioned in the message
-    # Offload to background thread to prevent event loop freeze
-    if latest_message:
-        loop = asyncio.get_event_loop()
-        _phase_started = time.perf_counter()
-        await loop.run_in_executor(None, workspace.update_for_message, latest_message)
-        _provider_diagnostics.record_phase("context_update", _phase_started,
-                                           request_id=request_id, reply_to=reply_to, register=register)
-
-    # Nova uses a slim context block — her local model has a 32K token window.
-    # Memory files + manifest already arrive via CONTEXT REFRESH in chat history.
-    # Claude/Gemini get the full block (200K/1M token windows).
     if ai_name == "Nova":
-        # New semantic memory layer: find most relevant past knowledge
-        loop = asyncio.get_event_loop()
-        _phase_started = time.perf_counter()
-        memory_ctx = await loop.run_in_executor(None, workspace.build_nova_memory_context, latest_message)
-        _provider_diagnostics.record_phase("context_memory", _phase_started,
-                                           request_id=request_id, reply_to=reply_to, register=register)
-
-        _phase_started = time.perf_counter()
-        on_demand_ctx = workspace.build_nova_context_block()
-        _provider_diagnostics.record_phase("context_workspace", _phase_started,
-                                           request_id=request_id, reply_to=reply_to, register=register)
-        ws_context = f"{memory_ctx}\n{on_demand_ctx}" if memory_ctx else on_demand_ctx
+        ws_context = await workspace.prepare_nova_context(latest_message,
+            request_id=request_id, reply_to=reply_to, register=register)
 
         # Identity files (AGENTS.md, NOVA.md, TOOLS.md) are now injected inside
         # build_nova_context_block() so they work across all launch paths.
@@ -1997,6 +2014,8 @@ async def _run_ai_response_owned(ai_name: str, client_mod, msg_id: str,
     else:
         # build_context_block performs several read_text calls; offload to be safe
         loop = asyncio.get_event_loop()
+        if latest_message:
+            await loop.run_in_executor(None, workspace.update_for_message, latest_message)
         ws_context = await loop.run_in_executor(None, workspace.build_context_block)
 
         # Prepend Nova's live status for Claude/Gemini only
@@ -3215,6 +3234,55 @@ def _recent_tool_receipts(n: int = 12, window_min: int = 90) -> str:
     except Exception as e:
         print(f"[receipts] could not build tool-receipt context: {e}")
         return ""
+
+
+async def _recover_face_inputs():
+    """Recover accepted work into its original session without recreating dead sockets."""
+    coordinator = getattr(_rt, "work_owner", None)
+    if coordinator is None:
+        return
+    restored = 0
+    orphan_keys = []
+    for entry in coordinator.recovery_inputs():
+        conversation_id = entry.get("conversation_id")
+        if not conversation_id or conversation_id == "runtime":
+            orphan_keys.append(entry["input_key"])
+            continue
+        transcript = session_mgr.retain_existing(conversation_id)
+        if transcript is None:
+            orphan_keys.append(entry["input_key"])
+            continue  # The body will recover the input even when this face was removed.
+        msg = next((m for m in transcript.messages if m.get("id") == entry.get("reply_to")), None)
+        if msg is None:
+            session_mgr.release(conversation_id, transcript)
+            orphan_keys.append(entry["input_key"])
+            continue
+        content = entry["content"]
+        text = content if isinstance(content, str) else "\n".join(
+            part.get("text", "") for part in content if part.get("type") == "text")
+        images = [] if isinstance(content, str) else [
+            {"dataUrl":part.get("image_url", {}).get("url")} for part in content
+            if part.get("type") == "image_url" and part.get("image_url", {}).get("url")]
+        acknowledged = asyncio.Event(); acknowledged.set()
+        _cole_message_queue.append({"owner":None, "content":text, "full_context_content":text,
+            "directed_at":[], "images":images, "input_images":images, "msg":msg,
+            "register":normalize_register(entry.get("register")), "request_id":entry.get("request_id"),
+            "conversation_id":conversation_id, "transcript":transcript, "transcript_retained":True,
+            "input_key":entry["input_key"], "acknowledged":acknowledged, "source":"recovery"})
+        restored += 1
+    if restored:
+        await emit_event("work_recovered", f"Restored {restored} unfinished inputs to their original conversations")
+        await _drain_cole_queue()
+    if orphan_keys:
+        while is_processing or _cole_message_queue:
+            if _stop_requested.is_set():
+                return
+            await asyncio.sleep(0.1)
+        if _stop_requested.is_set():
+            return
+        # Headless recovery writes the body transcript/event stream; it never reroutes
+        # a removed conversation into whatever tab the user now happens to be viewing.
+        await _rt.recover_pending_inputs(input_keys=orphan_keys)
 
 
 async def _attend_autonomy_inputs(owner):
@@ -4582,6 +4650,23 @@ async def websocket_endpoint(ws: WebSocket):
                                   "register": _message_register, "request_id": _request_id,
                                   "conversation_id": session_mgr.active_id, "transcript": session_mgr.active,
                                   "input_images": images or []}
+                _input_content = full_context_content
+                if images:
+                    _input_content = [{"type": "text", "text": full_context_content}] + [
+                        {"type": "image_url", "image_url": {"url": img["dataUrl"]}}
+                        for img in images if img.get("dataUrl")]
+                coordinator = getattr(_rt, "work_owner", None)
+                if coordinator is not None and (not directed_at or "Nova" in directed_at):
+                    try:
+                        _request_entry["input_key"] = coordinator.receive_input({
+                            "role": "user", "content": _input_content,
+                            "request_id": _request_id, "reply_to": msg["id"],
+                            "conversation_id": session_mgr.active_id, "register": _message_register, "author":_speaker})
+                    except Exception as error:
+                        await ws.send_text(json.dumps({"type": "error", "code": "input_not_durable",
+                            "request_id": _request_id, "message": "Nova could not save this request; it has not been queued."}))
+                        print(f"[recovery] Input admission failed: {error}")
+                        continue
                 _retain = getattr(session_mgr, "retain", None)
                 if callable(_retain):
                     _request_entry["transcript_retained"] = _retain(session_mgr.active_id, session_mgr.active)

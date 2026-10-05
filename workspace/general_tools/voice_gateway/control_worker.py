@@ -282,19 +282,27 @@ async def voice(cfg, control):
                 task.add_done_callback(cancellation_tasks.discard)
                 return task
             control.cancel_generation = schedule_cancellation
+            capture_active = False
             def recognition_state(state):
+                nonlocal capture_active
                 if control.stop.is_set():
                     return
-                if state in {"hearing", "finishing_turn", "transcribing"} and (cfg.duplex == "full" or not player.active()):
-                    if cfg.duplex == "full" and cfg.barge_in:
-                        player.pause()
+                if state in {"hearing", "finishing_turn", "transcribing"} and (cfg.duplex == "full" or capture_active or not player.active()):
+                    # A reply may arrive while the person finishes a follow-up. Hold that
+                    # future output; its queued/held state must not invalidate this capture.
+                    capture_active = True
+                    player.pause()
                     body.emit("state", state=state)
                 elif state == "listening":
+                    # Successful recognition, silence/noise reset and decoder failure all
+                    # return here. Release the hold even when no transcript was produced.
+                    capture_active = False
                     player.resume()
                     session._settle()
             stt.on_state = recognition_state
             stt.on_diagnostic = lambda message: report("body", event={"type": "diagnostic", "level": "warning", "message": message})
-            stt.gate = lambda: not control.microphone_muted and (cfg.duplex == "full" or not player.busy())
+            stt.gate = lambda: not control.stop.is_set() and not control.microphone_muted and (
+                cfg.duplex == "full" or capture_active or not player.busy())
             if cfg.duplex == "full" and cfg.barge_in:
                 def barge_in():
                     session.barge_in()                # cut audio, preserve active body work

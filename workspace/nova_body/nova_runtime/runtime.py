@@ -72,7 +72,8 @@ class NovaRuntime:
         #    import-clean of any chat-server module so generation survives the pluck. ──
         self.model_client = ModelClient()
         self.conversations = ConversationTurns()
-        self.work_owner = WorkCoordinator()
+        self.work_owner = WorkCoordinator(body_path("logs", "runtime", "active_work.json", workspace=self.workspace))
+        self._workspace_context = None
 
         # ── KoELS equip mechanism (skeleton): the runtime-side physical act of wearing a
         #    specialist loadout — composes LlamaControl. The launcher's --lora consumption is
@@ -340,7 +341,9 @@ class NovaRuntime:
             await asyncio.sleep(poll_forced if forced else poll_idle)   # ASLEEP — cheap poll, no model
             if (stop_requested and stop_requested.is_set()) or is_busy():
                 continue                              # busy — leave force_wake set; handle next loop
-            cole_pending = perceive_cole_pending()
+            cole_pending = perceive_cole_pending() or bool(self.work_owner.recovery_inputs())
+            if self.work_owner.recovery_blocked and not forced and not cole_pending:
+                continue  # Uncertain effects require inspection/reconciliation, not repeated autonomous mutations.
             # NOTE (2026-07-18): this loop used to CONSUME a standing directive right here
             # the moment Nova was the last speaker — i.e. seconds after she replied to
             # ANYTHING — so Cole's ask was silently discarded before a single wake ever put
@@ -352,6 +355,8 @@ class NovaRuntime:
             # now actually SHOWS her the ask (build_reflection/build_decision).
             if forced:
                 should, reason = True, "Cole pressed Wake Up"
+            elif self.work_owner.recovery_pending:
+                should, reason = True, "Resume interrupted body work"
             else:
                 should, reason = executive.should_wake(cole_pending)
             if not should:
@@ -381,12 +386,14 @@ class NovaRuntime:
                                 recent_context, generate, set_busy, face_state,
                                 owner=owner, attend_inputs=attend_inputs)
                 except asyncio.TimeoutError:
+                    owner.mark_interrupted("Autonomous time budget reached")
                     executive.schedule_soon(seconds=90)
                     await self.emit("budget", "Wake time budget reached; progress retained for the next wake")
                 except asyncio.CancelledError:
                     if owner.absorb_requested_stop():
                         await self.emit("stopped", "Current work stopped; the autonomous scheduler remains available")
                     elif stop_requested and stop_requested.is_set() and not self._autonomy_stop:
+                        owner.mark_stopped()
                         task = asyncio.current_task()
                         while task.cancelling():
                             task.uncancel()  # Explicit global Stop pauses work, not the scheduler.
@@ -463,12 +470,23 @@ class NovaRuntime:
         if owner is not None:
             owner.boundary_handler = attention_boundary
 
+        async def apply_owned_action(name, arguments, function, *args, **kwargs):
+            async def invoke():
+                return await run_in_worker(function, *args, **kwargs)
+            return await owner.run_action(name, arguments, invoke) if owner is not None else await invoke()
+
         async def phase_generate(prompt, speak, phase):
             token = current_phase.set(phase)
             if current_operation.get():
                 current_operation.get().label = phase
             await self.emit("phase", phase)
             try:
+                if owner is not None:
+                    if not owner.goal:
+                        owner.goal = prompt
+                    owner._persist()
+                    if owner.recovered:
+                        prompt += '\n' + owner.prompt_context(12000)
                 output = await original_generate(prompt, speak)
                 if owner is not None:
                     operation = current_operation.get()
@@ -526,7 +544,7 @@ class NovaRuntime:
                 refl_prompt = executive.build_reflection(
                     cole_pending, reason, recent, executive.last_reflection())
                 reflection = await phase_generate(refl_prompt, False, "reflection") or ""
-                executive.save_reflection(reflection)
+                await apply_owned_action("save_reflection", {"reflection":reflection}, executive.save_reflection, reflection)
                 # Score this wake for novelty and harvest any "WANT:" line she wrote. This is what
                 # makes boredom accumulate when she circles — without it drives.describe() would
                 # always read zero and the gradient would be decorative.
@@ -546,7 +564,7 @@ class NovaRuntime:
                     outcome = {"rested": False, "summary": "Human input arrived after the decision; deferred its unapplied board directives"}
                     executive.schedule_soon()
                 else:
-                    outcome = await run_in_worker(executive.apply_decision, reply, cole_pending=cole_pending)
+                    outcome = await apply_owned_action("apply_decision", {"reply":reply,"cole_pending":cole_pending}, executive.apply_decision, reply, cole_pending=cole_pending)
                 await self.emit("autonomy", outcome["summary"])
             # ── PROBE (2026-07-14, temporary) ────────────────────────────────────────────────
             # I claimed the missing `else` below was THE fix for her announce-loop, and then
@@ -633,13 +651,13 @@ class NovaRuntime:
                             executive.schedule_soon()
                             await self.emit("autonomy", f"retained completed phase for {exec_id}; deferred stale board result after attention")
                         if kind == "done":
-                            completed = await run_in_worker(_tasking.complete, exec_id, payload or "Completed.")
+                            completed = await apply_owned_action("task_complete", {"task_id":exec_id,"summary":payload or "Completed."}, _tasking.complete, exec_id, payload or "Completed.")
                             if executive.active_focus() == exec_id:
                                 executive.set_active(None)
                             executive.reset_continuation()          # task closed — end the burst
                             await self.emit("autonomy", f"{'verified complete' if completed else 'awaiting verification/review'} {exec_id}: {payload[:80]}")
                         elif kind == "progress" and payload.strip():
-                            _tasking.progress(exec_id, payload)
+                            await apply_owned_action("task_progress", {"task_id":exec_id,"summary":payload}, _tasking.progress, exec_id, payload)
                             # Real forward progress: take the NEXT step in a few seconds instead of
                             # napping the gap Phase 2 set before this step existed. This is the fix
                             # for "she sleeps randomly mid-task" — the nap was scheduled too early.
@@ -671,6 +689,8 @@ class NovaRuntime:
                             await self.emit("autonomy", f"own time: {payload[:100]}")
             except Exception as _xe:
                 event_error = str(_xe)
+                if owner is not None:
+                    owner.mark_interrupted(event_error)
                 # FAIL LOUD. This used to print into a hidden console and vanish — which is how a
                 # broken execution pass could look exactly like "she chose not to do anything".
                 import traceback as _tb
@@ -718,6 +738,8 @@ class NovaRuntime:
             event_error = "Wake interrupted; saved progress remains available"
             raise
         except Exception as _e:
+            if owner is not None:
+                owner.mark_interrupted(str(_e))
             event_error = str(_e)
             print(f"[nova_runtime] wake error: {_e}")
         finally:
@@ -783,12 +805,32 @@ class NovaRuntime:
         except Exception:
             return False
 
-    async def _attend_inputs_headless(self, owner) -> bool:
+    async def recover_pending_inputs(self, input_keys=None) -> bool:
+        """Service durable human input without enabling autonomy or inventing a face."""
+        if not self.work_owner.recovery_inputs():
+            return False
+        async with self.work_owner.lease('conversation') as owner:
+            return await self._attend_inputs_headless(owner, input_keys=input_keys)
+
+    async def _attend_inputs_headless(self, owner, input_keys=None) -> bool:
         """Same body conversation/segment protocol without a chat server or face objects."""
         from nova_runtime.conversation_context import ConversationContext
         self.transcript.reload_from_disk()
+        for message in self.transcript.messages:
+            saved_response = message.get('response') or {}
+            if message.get('author') == 'Nova' and saved_response.get('turn_id') and saved_response.get('segment_index'):
+                self.work_owner.confirm_publication(saved_response['turn_id'], saved_response['segment_index'], message.get('content',''))
+        recovered = self.work_owner.recovery_inputs()
+        if input_keys is not None:
+            selected_keys = set(input_keys)
+            recovered = [entry for entry in recovered if entry["input_key"] in selected_keys]
+        for entry in recovered:
+            self.transcript.receive_recovered_input(entry)
+        recovery_keys = {entry['input_key'] for entry in recovered}
         pending = [message for message in self.transcript.messages
-                   if message.get("author") == "Cole" and message.get("seq", -1) > self.transcript.attended_through]
+                   if ((message.get('input') or {}).get('input_key') in recovery_keys
+                       or (input_keys is None and message.get('author') == 'Cole'
+                           and message.get('seq', -1) > self.transcript.attended_through))]
         if not pending:
             return False
         admitted_through = pending[-1]["seq"]
@@ -797,6 +839,12 @@ class NovaRuntime:
         covered_by_revision = {0: admitted_through}
         delivered = []
         input_records = list(pending)
+        recovered_by_key = {entry['input_key']:entry for entry in recovered}
+        initial_entries = [recovered_by_key.get((m.get('input') or {}).get('input_key')) or
+            {"role":"user", "content":m.get('content') or '[empty input]',
+             "request_id":f"runtime-{m['seq']}", "reply_to":f"runtime-{m['seq']}", "conversation_id":"runtime", "author":m.get("author", "Cole"),
+             **(m.get('input') or {})} for m in pending]
+        owner.bind_inputs(initial_entries)
         for message in pending:
             self.work_owner.remove_input(f"runtime-{message['seq']}", conversation_id="runtime")
 
@@ -820,8 +868,9 @@ class NovaRuntime:
                     content = [{"type": "text", "text": content}] + [
                         {"type": "image_url", "image_url": {"url": image["dataUrl"]}}
                         for image in images if isinstance(image, dict) and image.get("dataUrl")]
-                if not turn.push([{"role": "user", "content": content,
-                                   "request_id": rid, "reply_to": rid}]):
+                entry = {"role":"user", "content":content, "request_id":rid, "reply_to":rid, "conversation_id":"runtime"}
+                entry['input_key'] = self.work_owner.receive_input(entry)
+                if not turn.push([entry]):
                     break  # Sealed work leaves later durable input pending for the next step.
                 seq_by_id[rid] = message["seq"]
                 input_records.append(message)
@@ -846,13 +895,14 @@ class NovaRuntime:
         try:
             await self._generate_headless("", True, transcript_context=ConversationContext(initial),
                 extra_context=owner.prompt_context() + "\nAnswering the human does not erase your ongoing task.",
+                register=next((entry.get("register") for entry in reversed(initial_entries) if entry.get("register")), "text"),
                 steering=turn, on_segment=segment, on_boundary=poll_input)
         finally:
             self.conversations.end("runtime", turn)
         return bool(delivered)
 
     async def _generate_headless(self, prompt: str, cole_pending: bool, *, transcript_context=None,
-                                 extra_context="", steering=None, on_segment=None, on_boundary=None) -> str:
+                                 extra_context="", steering=None, on_segment=None, on_boundary=None, register="text") -> str:
         """Run the body model without a face. Human input uses the shared formatter,
         conversation inbox and segmented persistence supplied by the attending adapter.
         Autonomous phases keep their private phase context and natural-boundary hook.
@@ -860,7 +910,12 @@ class NovaRuntime:
         Workspace grounding is included; automatic semantic-memory retrieval remains a
         separate adapter concern, not an implied parity claim here."""
         from nova_cortex.workspace_context import WorkspaceContext
-        grounding = WorkspaceContext().build_nova_context_block()
+        context = getattr(self, '_workspace_context', None)
+        if context is None:
+            context = self._workspace_context = WorkspaceContext()
+        source_messages = getattr(transcript_context, 'messages', []) if transcript_context is not None else []
+        query = next((str(m.get('content', '')) for m in reversed(source_messages) if m.get('author') != 'Nova'), prompt)
+        grounding = await context.prepare_nova_context(query, source='headless')
         if extra_context:
             grounding += "\n" + extra_context
         ctx = transcript_context if transcript_context is not None else _TickContext(prompt)
@@ -884,7 +939,7 @@ class NovaRuntime:
                 boundary["on_segment"] = on_segment
             await self.model_client.generate(
                 "Nova", ctx, on_token=_tok, on_done=_done, on_error=_err,
-                workspace_context=grounding, autonomous=not cole_pending, **boundary)
+                workspace_context=grounding, autonomous=not cole_pending, register=register, **boundary)
         except Exception as e:
             print(f"[nova_runtime] headless generate failed: {e}")
         return holder["full"]

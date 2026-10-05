@@ -145,9 +145,9 @@ class NovaMemoryStore:
             self._visual_tbl = self._open_or_create("nova_visual", _visual_schema())
             # Warm the dedup cache
             try:
-                rows = self._text_tbl.to_pandas()["content_hash"].tolist()
+                rows = self._text_tbl.search().select(["content_hash"]).to_arrow().column("content_hash").to_pylist()
                 self._known_hashes.update(rows)
-                rows_v = self._visual_tbl.to_pandas()["content_hash"].tolist()
+                rows_v = self._visual_tbl.search().select(["content_hash"]).to_arrow().column("content_hash").to_pylist()
                 self._known_hashes.update(rows_v)
             except Exception:
                 pass
@@ -156,6 +156,15 @@ class NovaMemoryStore:
         except Exception as e:
             self.last_error = str(e)
             print(f"[nova_memory] WARNING: DB init failed — {e}. Memory disabled.")
+
+    def warmup(self):
+        """Load shared recall encoders at boot without adding or changing memories."""
+        if not self._ready:
+            raise RuntimeError(self.last_error or "Memory store unavailable")
+        from .embedder import embed_text, embed_text_for_visual
+        embed_text("Memory readiness")
+        if self._visual_tbl.count_rows() > 0:
+            embed_text_for_visual("Memory readiness")
 
     def _open_or_create(self, name: str, schema):
         existing = self._db.table_names()

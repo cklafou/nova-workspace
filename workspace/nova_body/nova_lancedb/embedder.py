@@ -49,14 +49,15 @@ def _missing_local_assets(error):
 def _construct_model(name):
     started = time.perf_counter()
     from sentence_transformers import SentenceTransformer
+    # Small recall encoders stay on CPU: avoid CUDA cold-start and reserving model VRAM.
     source = "local cache"
     try:
-        model = SentenceTransformer(name, local_files_only=True)
+        model = SentenceTransformer(name, local_files_only=True, device="cpu")
     except Exception as error:
         if not _missing_local_assets(error):
             raise
         source = "missing-cache download fallback"
-        model = SentenceTransformer(name)       # preserve existing first-install behavior
+        model = SentenceTransformer(name, device="cpu")  # preserve first-install download behavior
     print(f"[nova_memory] Embedder loaded ({name}; {source}; init={time.perf_counter() - started:.3f}s)")
     return model
 

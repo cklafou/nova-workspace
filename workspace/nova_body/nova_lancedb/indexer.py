@@ -1,9 +1,11 @@
+# @nova: Warm shared recall encoders at boot and durably index memories with visible failures and bounded retries.
 # Last updated: 2026-10-05 21:27:11
 """Durable background memory ingestion with visible failures and bounded retries."""
 import base64
 import io
 from pathlib import Path
 import threading
+import time
 
 from nova_runtime.work_queue import WorkQueue
 from .hippocampus import get_store
@@ -15,6 +17,7 @@ class MemoryIndexer:
         self._store_factory = store_factory or get_store
         self._stop_event = threading.Event()
         self._thread = None
+        self._readiness = {"state": "cold", "seconds": None, "error": None}
 
     def start(self):
         if self._thread and self._thread.is_alive():
@@ -67,6 +70,17 @@ class MemoryIndexer:
         return True
 
     def _worker(self):
+        started = time.perf_counter()
+        self._readiness = {"state": "loading", "seconds": None, "error": None}
+        try:
+            store = self._store_factory()
+            warmup = getattr(store, "warmup", None)
+            if callable(warmup):
+                warmup()
+            self._readiness = {"state": "ready", "seconds": round(time.perf_counter()-started, 3), "error": None}
+        except Exception as error:
+            self._readiness = {"state": "error", "seconds": round(time.perf_counter()-started, 3), "error": str(error)}
+            print(f'[nova_memory] Recall warmup failed; reads/writes may retry: {error}')
         while not self._stop_event.is_set():
             try:
                 if not self.process_one():
@@ -76,7 +90,8 @@ class MemoryIndexer:
                 self._stop_event.wait(2)
 
     def status(self):
-        return {**self.queue.snapshot(), 'running':bool(self._thread and self._thread.is_alive())}
+        return {**self.queue.snapshot(), 'running':bool(self._thread and self._thread.is_alive()),
+                'recall_readiness':dict(self._readiness)}
 
 
 _indexer=None

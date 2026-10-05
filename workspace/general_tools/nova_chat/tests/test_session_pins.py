@@ -45,6 +45,20 @@ class SessionPinTests(unittest.TestCase):
             lines = path.read_text(encoding='utf-8').splitlines()
         return [json.loads(line)['content'] for line in lines if line.strip()]
 
+    def test_recover_inactive_session_without_changing_display_and_preserve_late_part(self):
+        other = self.manager.new_session('current display')
+        recovered = self.manager.retain_existing(self.a)
+        self.assertEqual(self.manager.active_id, other)
+        self.assertEqual([m['content'] for m in recovered.messages], ['original request'])
+        self.assertIs(self.manager.retain_existing(self.a), recovered)
+        recovered.add('Nova', 'recovered completed part')
+        self.manager.release(self.a, recovered)
+        self.assertFalse(self.manager.delete_session(self.a))
+        self.manager.release(self.a, recovered)
+        self.assertEqual(self.contents(self.manager._gz_path(self.a)), ['original request', 'recovered completed part'])
+        self.assertEqual(self.manager.active_id, other)
+        self.assertIsNone(self.manager.retain_existing('missing-session'))
+
     def test_queued_request_finishes_after_switch_without_tail_only_log(self):
         self.assertTrue(self.manager.retain(self.a, self.original))
         self.assertTrue(self.manager.retain(self.a, self.original))

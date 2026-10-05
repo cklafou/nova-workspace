@@ -408,7 +408,7 @@ class RuntimeAttentionTests(unittest.IsolatedAsyncioTestCase):
         self.runtime.transcript = TranscriptStore(self.root/'transcript.jsonl')
         self.runtime.transcript.append('Cole', 'fixture request')
         workspace_context = types.ModuleType('nova_cortex.workspace_context')
-        workspace_context.WorkspaceContext = lambda: types.SimpleNamespace(build_nova_context_block=lambda: 'fixture grounding')
+        workspace_context.WorkspaceContext = lambda: types.SimpleNamespace(prepare_nova_context=AsyncMock(return_value='fixture grounding'))
         calls = []
         async def generate(name, context, **callbacks):
             calls.append(context)
@@ -435,7 +435,7 @@ class RuntimeAttentionTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_real_headless_autonomy_adapter_forwards_active_owner_boundary(self):
         workspace_context = types.ModuleType('nova_cortex.workspace_context')
-        workspace_context.WorkspaceContext = lambda: types.SimpleNamespace(build_nova_context_block=lambda: 'grounding')
+        workspace_context.WorkspaceContext = lambda: types.SimpleNamespace(prepare_nova_context=AsyncMock(return_value='grounding'))
         self.ns['_TickContext'] = lambda prompt: types.SimpleNamespace(prompt=prompt)
         async def generate(name, context, **callbacks):
             self.assertTrue(callbacks['autonomous'])

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-05T21:33:34",
+  "generated": "2026-10-05T22:35:19",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -95,7 +95,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Expose Nova's executive faculties, task board, runtime settings and body-owned context assembly.",
       "files": 15,
-      "lines": 5962,
+      "lines": 5993,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -326,8 +326,8 @@
       "kind": "body_part",
       "path": "nova_body/nova_runtime",
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
-      "files": 11,
-      "lines": 1800,
+      "files": 14,
+      "lines": 2545,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -414,7 +414,7 @@
       "path": "nova_body/nova_voice",
       "purpose": "Run Nova's local inference and tool loop with her current capabilities and execution receipts.",
       "files": 5,
-      "lines": 3970,
+      "lines": 4263,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -654,7 +654,7 @@
       "path": "general_tools/architecture_map",
       "purpose": "Generates Orient documentation and validates source, review and link freshness.",
       "files": 10,
-      "lines": 3299,
+      "lines": 3424,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -876,8 +876,8 @@
       "kind": "tool",
       "path": "general_tools/nova_chat",
       "purpose": "Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.",
-      "files": 32,
-      "lines": 10926,
+      "files": 34,
+      "lines": 11680,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -1123,8 +1123,8 @@
       "kind": "tool",
       "path": "general_tools/voice_gateway",
       "purpose": "voice_gateway — Cole's microphone to Nova. A comms tool (pluck test: her body is",
-      "files": 4629,
-      "lines": 2181263,
+      "files": 4631,
+      "lines": 2181930,
       "age_days": 0,
       "ports_bind": [
         "8080"

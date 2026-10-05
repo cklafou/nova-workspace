@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T13:34:45+00:00 from source (input `1deddb173f8d`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T17:19:02+00:00 from source (input `62ef938e7813`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -210,6 +210,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/voice_gateway/setup_windows.py](../general_tools/voice_gateway/setup_windows.py) — Install the isolated Windows CPU voice dependencies and verified local Whisper/Silero/Moonshine assets.
 - [general_tools/voice_gateway/speech.py](../general_tools/voice_gateway/speech.py) — Sanitize delivered text and serialize interruptible speech with explicit playback outcomes.
 - [general_tools/voice_gateway/stt.py](../general_tools/voice_gateway/stt.py) — Transcribe gated microphone input and provide a typed-input fallback for the voice gateway.
+- [general_tools/voice_gateway/test_capture_output_gate.py](../general_tools/voice_gateway/test_capture_output_gate.py) — Verify production voice-worker output waits for an already-started human turn without audio, models or network.
 - [general_tools/voice_gateway/test_committer.py](../general_tools/voice_gateway/test_committer.py) — Tests for the sentence-committer — the one piece with real logic, so the one with tests.
 - [general_tools/voice_gateway/test_link_socket.py](../general_tools/voice_gateway/test_link_socket.py) — Verify voice transport and disconnect cleanup against a local mock WebSocket server.
 - [general_tools/voice_gateway/test_native_voice.py](../general_tools/voice_gateway/test_native_voice.py) — Verify native speech file synthesis, cancellation, output-device selection and current Moonshine/Silero contracts without audio hardware.
@@ -457,7 +458,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/nova_lancedb/backfill.py](../nova_body/nova_lancedb/backfill.py) — Recover searchable coverage from intact local records; never rewrite originals.
 - [nova_body/nova_lancedb/embedder.py](../nova_body/nova_lancedb/embedder.py) — Load cached semantic-memory embedders once per process and encode text/images without fabricating failed vectors.
 - [nova_body/nova_lancedb/hippocampus.py](../nova_body/nova_lancedb/hippocampus.py) — Store and retrieve Nova semantic memories with a single shared LanceDB store per process.
-- [nova_body/nova_lancedb/indexer.py](../nova_body/nova_lancedb/indexer.py) — Durable background memory ingestion with visible failures and bounded retries.
+- [nova_body/nova_lancedb/indexer.py](../nova_body/nova_lancedb/indexer.py) — Warm shared recall encoders at boot and durably index memories with visible failures and bounded retries.
 
 ## nova_body/nova_logs
 
@@ -490,6 +491,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/nova_runtime/model_client.py](../nova_body/nova_runtime/model_client.py) — Dispatch model requests with per-call voice register and optional audit reporting without coupling to a chat face.
 - [nova_body/nova_runtime/model_guard.py](../nova_body/nova_runtime/model_guard.py) — ModelGuard — runtime guard on her model-calling. Two failsafes, both body-owned
 - [nova_body/nova_runtime/operations.py](../nova_body/nova_runtime/operations.py) — Shared cancellation for generation and the subprocesses it owns.
+- [nova_body/nova_runtime/recovery.py](../nova_body/nova_runtime/recovery.py) — Persist restartable body work and fail closed before uncertain side effects can be repeated.
 - [nova_body/nova_runtime/runtime.py](../nova_body/nova_runtime/runtime.py) — Own Nova life-support, conversation continuation, and optional face integration.
 - [nova_body/nova_runtime/transcript_store.py](../nova_body/nova_runtime/transcript_store.py) — Persist body conversation messages and exact answered-input coverage across restart.
 - [nova_body/nova_runtime/work_owner.py](../nova_body/nova_runtime/work_owner.py) — Serialize Nova's active work and preserve bounded input context across autonomous and conversational steps.
@@ -1813,10 +1815,12 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/tests/test_staging_location.py](../nova_body/tests/test_staging_location.py) — Guards where task workspaces are staged: under workspace/Temp, outside git, Orient and the sync watcher.
 - [nova_body/tests/test_task_continuity.py](../nova_body/tests/test_task_continuity.py) — Verify canonical task checkpoint persistence and bounded context fitting without live Nova state or inference.
 - [nova_body/tests/test_tool_correlation.py](../nova_body/tests/test_tool_correlation.py) — Verify that tool lifecycle identifiers match canonical receipts on success, refusal and exceptions.
+- [nova_body/tests/test_voice_cache_mode.py](../nova_body/tests/test_voice_cache_mode.py) — Preserve voice_fast cache mode across conversational segments while retaining reasoning for tools and factual correction.
 - [nova_body/tests/test_witness_delivery.py](../nova_body/tests/test_witness_delivery.py) — Exercise full-draft witness delivery and tool observability with isolated providers, receipts and images.
 - [nova_body/tests/test_witness_evidence.py](../nova_body/tests/test_witness_evidence.py) — Guard audit evidence visibility, verdict precedence, image bounds and diagnostic redaction.
 - [nova_body/tests/test_witness_replay.py](../nova_body/tests/test_witness_replay.py) — Prove the witness replay harness audits like runtime: pixels, read detection, read budget, refusals, sampling parity and separately scored…
 - [nova_body/tests/test_work_owner.py](../nova_body/tests/test_work_owner.py) — Verify body work exclusion, autonomous attention, deadline accounting and headless input persistence without live services.
+- [nova_body/tests/test_work_recovery.py](../nova_body/tests/test_work_recovery.py) — Verify durable input/work recovery, uncertain action barriers and actual model delivery checkpoints in disposable bodies.
 
 ## Files without a purpose line
 

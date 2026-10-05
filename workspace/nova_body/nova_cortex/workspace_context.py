@@ -613,6 +613,23 @@ class WorkspaceContext:
         return "\n".join(parts)
 
 
+    async def prepare_nova_context(self, query: str, **diagnostics) -> str:
+        """Prepare the same identity, file context and automatic recall for every face."""
+        import asyncio
+        import time
+        from nova_voice import provider_diagnostics
+        started = time.perf_counter()
+        if query:
+            await asyncio.to_thread(self.update_for_message, query)
+        provider_diagnostics.record_phase("context_update", started, **diagnostics)
+        started = time.perf_counter()
+        memory = await asyncio.to_thread(self.build_nova_memory_context, query)
+        provider_diagnostics.record_phase("context_memory", started, **diagnostics)
+        started = time.perf_counter()
+        grounding = self.build_nova_context_block()
+        provider_diagnostics.record_phase("context_workspace", started, **diagnostics)
+        return f"{memory}\n{grounding}" if memory else grounding
+
     def build_nova_memory_context(self, query: str) -> str:
         """
         Assemble the LanceDB-backed semantic memory context for Nova.

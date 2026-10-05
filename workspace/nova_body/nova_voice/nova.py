@@ -812,6 +812,7 @@ async def stream_response(
     steering=None,
     on_segment=None,
     on_boundary=None,
+    on_checkpoint=None,
 ):
     """
     Call llama.cpp server and process the response in an autonomy loop if tools are used.
@@ -835,6 +836,7 @@ async def stream_response(
     _boundary_revision = 0
     _last_completed_action = None
     _completed_tool_count = 0
+    _reasoning_work = False
 
     class _BoundaryError(Exception):
         """Attention failure must not be mistaken for a retryable tool/audit failure."""
@@ -843,6 +845,29 @@ async def stream_response(
     _segment_op = _segment_operation.get()
     _turn_id = (steering.turn_id if steering is not None else
                 _segment_op.id if _segment_op is not None else __import__("uuid").uuid4().hex)
+
+    class _CheckpointError(RuntimeError):
+        """Durability failure stops generation before any further side effect."""
+
+    async def _checkpoint(event):
+        if on_checkpoint is None:
+            return None
+        import inspect
+        try:
+            result = on_checkpoint({"turn_id": _turn_id, **event})
+            return await result if inspect.isawaitable(result) else result
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            raise _CheckpointError("Body work checkpoint failed; generation stopped") from exc
+
+    _original_error = on_error
+    async def _reported_error(message):
+        try:
+            await _checkpoint({"type": "generation_error", "reason": str(message)[:1000]})
+        finally:
+            await _original_error(message)
+    on_error = _reported_error
 
     async def _deliver(text, audit, *, exhausted=False):
         nonlocal _segment_index, _segment_continue, final_chat_buffer, chat_text
@@ -882,7 +907,12 @@ async def stream_response(
                 return False
             if steering is not None and not steering.try_seal():
                 raise asyncio.CancelledError("Conversation closed before delivery")
+            receipt = {"turn_id": _turn_id, "segment_index": 1, "input_revision": _candidate_revision,
+                       "audit": dict(audit), "final": True, "text": text}
+            await _checkpoint({"type": "segment_prepared", **receipt})
             await on_done(text)
+            await _checkpoint({"type": "segment_delivered", **receipt})
+            await _checkpoint({"type": "generation_finished"})
             return True
 
         # A segment addresses its frozen input revision, not later queued words.
@@ -896,7 +926,9 @@ async def stream_response(
             metadata = {"turn_id": _turn_id, "segment_index": _segment_index,
                         "input_revision": _candidate_revision, "audit": dict(audit),
                         "final": not continuing}
+            await _checkpoint({"type": "segment_prepared", **metadata, "text": text})
             await on_segment(text, metadata)
+            await _checkpoint({"type": "segment_delivered", **metadata, "text": text})
             _committed_segments.append(text)
             _delivered_assistant_history.append(text)
             messages.append({"role": "assistant", "content": text})
@@ -910,6 +942,7 @@ async def stream_response(
             await _apply_steering()
             return False
         await on_done("\n\n".join(_committed_segments))  # terminal aggregate; a face must not replay it
+        await _checkpoint({"type": "generation_finished"})
         return True
 
     try:
@@ -938,6 +971,10 @@ async def stream_response(
         messages = transcript.to_messages(
             "Nova", system, workspace_context=workspace_context
         )
+
+        await _checkpoint({"type": "generation_started", "autonomous": autonomous,
+            "request_context": [{"role": m.get("role"), "content": m.get("content")}
+                                for m in messages if m.get("role") in ("user", "assistant")][-8:]})
 
         if steering is not None or on_boundary is not None:
             from nova_cortex.context_budget import anchor_current_request
@@ -1097,6 +1134,9 @@ async def stream_response(
             # accepted during that await before making the next provider call.
             while steering.pending:
                 batch, _revision = await steering.consume()
+                await _checkpoint({"type": "inputs_applied", "input_revision": _revision,
+                    "entries": [{key: entry[key] for key in ("role", "content", "input_key", "request_id", "reply_to", "conversation_id")
+                                 if key in entry} for entry in batch]})
                 for entry in batch:
                     messages.append({"role": "user", "content": entry["content"], ANCHOR: True})
                     if isinstance(entry["content"], list):
@@ -1298,8 +1338,10 @@ async def stream_response(
                 # Explicit voice_fast skips first-loop reasoning; subsequent tool loops
                 # keep thinking. The configured register is not an utterance classifier.
                 # This does not promise first-audio latency or bypass the witness gate.
-                _think_this = not (register == "voice_fast" and loop_counter == 1
-                                   and _tune("voice_fast_thinking_off", True))
+                _think_this = not (register == "voice_fast" and not (
+                    _reasoning_work or _tools_ran_this_turn or _premise_held or _witness_rounds
+                    or _receipt_challenged or _reach_nudged or _echo_retried)
+                    and _tune("voice_fast_thinking_off", True))
 
                 await _service_boundary("before_provider")
                 if await _apply_steering():
@@ -1333,6 +1375,9 @@ async def stream_response(
                 print(f"[nova] empty return but {_chat_chars[0]} chars were streamed — "
                       f"recovered from stream buffer, NOT retrying (doubling guard)")
 
+            _mode_proposal, _ = _find_tool_call(full_response or "")
+            if _mode_proposal and _mode_proposal.get("tool") != "speak":
+                _reasoning_work = True
             if await _service_boundary("provider_complete", draft=full_response, reconsider=True):
                 continue
             _proposal, _ = _find_tool_call(full_response or "")
@@ -1361,6 +1406,9 @@ async def stream_response(
                 except Exception as e:
                     await on_error(f"llama.cpp retry error: {e}")
                     return
+                _mode_proposal, _ = _find_tool_call(full_response or "")
+                if _mode_proposal and _mode_proposal.get("tool") != "speak":
+                    _reasoning_work = True
                 if await _service_boundary("provider_complete", draft=full_response, reconsider=True):
                     continue
                 _proposal, _ = _find_tool_call(full_response or "")
@@ -1440,7 +1488,20 @@ async def stream_response(
                         break
                     continue
 
+            if _tc and _tc.get('tool') == 'reconcile_attempt' and on_checkpoint is not None:
+                _reconcile_args = _tc.get('args') or {}
+                if not isinstance(_reconcile_args, dict):
+                    _reconcile_args = {}
+                _reconciliation = await _checkpoint({'type':'reconcile_attempt', **{
+                    key:_reconcile_args.get(key) for key in ('operation_id','outcome','evidence','verification_operation_ids')}})
+                messages.append({'role':'assistant','content':full_response})
+                messages.append({'role':'user','content':'[System Recovery Reconciliation] '+
+                    __import__('json').dumps(_reconciliation, ensure_ascii=False)})
+                _reasoning_work = True
+                continue
+
             if _tc:
+                _reasoning_work = True
                 try:
                     tool_call = _tc
                     if "tool" in tool_call:
@@ -1548,6 +1609,15 @@ async def stream_response(
                         _call_id = _uuid.uuid4().hex
                         _operation = _current_operation.get()
                         _run_id = _operation.id if _operation else None
+                        _permission = await _checkpoint({"type": "tool_started", "tool": tool_name,
+                            "args": args, "operation_id": _call_id, "run_id": _run_id})
+                        if isinstance(_permission, dict) and _permission.get("allow") is False:
+                            _why = str(_permission.get("reason") or "Recovery did not authorize replay")
+                            _tool_pipeline_event("tool_failed", tool_name, _call_id, _run_id, status="refused")
+                            messages.append({"role": "assistant", "content": full_response})
+                            messages.append({"role": "user", "content": "[System Recovery Hold] " + _why +
+                                " This proposal was NOT executed. Inspect existing evidence or report the unresolved outcome."})
+                            continue
                         _tool_pipeline_event("tool_started", tool_name, _call_id, _run_id)
                         try:
                             # ── 2026-07-19: DO NOT call execute_tool directly here. ──────────────
@@ -1573,6 +1643,9 @@ async def stream_response(
                         except Exception as _te:
                             result = ToolResult(f"[error] {_te}", status="failed", operation_id=_call_id)
                             _tool_err = True
+                        await _checkpoint({"type": "tool_completed", "operation_id": _call_id,
+                            "outcome": {"status": result.status, "ok": result.ok, "exit_code": result.exit_code,
+                                        "environment": getattr(result, "environment", None), "text": str(result)}})
                         _dur_ms = (_time.time() - _t0) * 1000
                         _tool_pipeline_event("tool_failed" if result.ok is False else "tool_finished" if result.ok is None else "tool_completed",
                                              tool_name, _call_id, _run_id, result=result, duration_ms=_dur_ms)
@@ -1650,6 +1723,8 @@ async def stream_response(
                         await _apply_steering()  # completed receipt is already retained, never replayed
                         continue # Loop!
                 except Exception as e:
+                    if isinstance(e, _CheckpointError):
+                        raise
                     if isinstance(e, _BoundaryError):
                         raise
                     # Fire tool_executed with the parse error so the Tools tab shows it

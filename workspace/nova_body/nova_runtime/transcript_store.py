@@ -78,7 +78,7 @@ class TranscriptStore:
                         m = json.loads(line)
                         m["seq"] = seq          # seq = position in the durable log
                         self.messages.append(m)
-                        if m.get("author") == "Cole":
+                        if m.get("author") == "Cole" or (m.get("input") or {}).get("role") == "user":
                             cole_sequences.add(seq)
                         claim = m.get("attended_through")
                         if (m.get("author") == "Nova" and type(claim) is int and claim in cole_sequences):
@@ -109,14 +109,14 @@ class TranscriptStore:
     # ── write (face side) ─────────────────────────────────────────────────────────
 
     def append(self, author: str, content: str, directed_at=None, images=None, *,
-               attended_through=None, response_metadata=None) -> dict:
+               attended_through=None, response_metadata=None, input_metadata=None) -> dict:
         """Record one message. Returns it (with its assigned seq). The face calls this;
         headless delivery uses the same method with explicit covered-input metadata."""
         with self._lock:
             if attended_through is not None:
                 if (author != "Nova" or type(attended_through) is not int or not any(
-                        m.get("author") == "Cole" and m.get("seq") == attended_through for m in self.messages)):
-                    raise ValueError("Reply coverage must name an existing Cole sequence")
+                        (m.get("author") == "Cole" or (m.get("input") or {}).get("role") == "user") and m.get("seq") == attended_through for m in self.messages)):
+                    raise ValueError("Reply coverage must name an existing human input sequence")
             metadata = json.loads(json.dumps(response_metadata)) if response_metadata is not None else None
             seq = self._next_seq
             msg = {"seq": seq, "timestamp": datetime.now().isoformat(),
@@ -127,6 +127,8 @@ class TranscriptStore:
                 msg["attended_through"] = attended_through
             if metadata is not None:
                 msg["response"] = metadata
+            if input_metadata is not None:
+                msg["input"] = json.loads(json.dumps(input_metadata))
             # Persist the message itself WITHOUT the runtime-only "seq" field, so the log
             # stays compatible with the existing chat transcript format (seq is derived).
             on_disk = {k: v for k, v in msg.items() if k != "seq"}
@@ -138,6 +140,24 @@ class TranscriptStore:
                 self.attended_through = max(self.attended_through, attended_through)
                 self._persist_state()
         return msg
+
+    def receive_recovered_input(self, entry):
+        """Import a durable body inbox item once when its original face is unavailable."""
+        key = str(entry['input_key'])
+        existing = next((m for m in self.messages if (m.get('input') or {}).get('input_key') == key), None)
+        if existing is not None:
+            return existing
+        content = entry['content']
+        images = entry.get('images') or []
+        if isinstance(content, list):
+            images = [{'dataUrl': part.get('image_url', {}).get('url')} for part in content
+                      if isinstance(part, dict) and part.get('type') == 'image_url']
+            content = '\n'.join(str(part.get('text', '')) for part in content
+                                if isinstance(part, dict) and part.get('type') == 'text')
+        metadata = {k:entry.get(k) for k in ('input_key','request_id','reply_to','conversation_id','register','images','directed_at','author')}
+        metadata['role'] = 'user'
+        author = str(entry.get('author') or 'Cole')
+        return self.append(author, content, images=images or None, input_metadata=metadata)
 
     # ── read (runtime side) ───────────────────────────────────────────────────────
 

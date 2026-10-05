@@ -1,11 +1,11 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T13:34:45+00:00 from source (input `1deddb173f8d`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T17:19:02+00:00 from source (input `62ef938e7813`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/response_events.py`, `general_tools/nova_chat/server.py::_drain_cole_queue`, `general_tools/nova_chat/server.py::_end_queued_request`, `general_tools/nova_chat/server.py::_run_response_queue` and 19 more; new `general_tools/nova_chat/server.py::_attend_autonomy_inputs`, `general_tools/nova_chat/server.py::_run_ai_response_owned`, `general_tools/nova_chat/server.py::_steer_request`, `nova_body/nova_runtime/conversation.py` and 2 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_run_ai_response_owned`, `general_tools/nova_chat/server.py::_steer_request`, `general_tools/nova_chat/server.py::_stop_request`, `general_tools/nova_chat/server.py::websocket_endpoint` and 8 more; new `nova_body/nova_runtime/recovery.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -208,7 +208,7 @@ so evidence is not silently changed.
 | `nova_paths` | Canonical body/workspace paths; relocated state never falls back to a second copy. | 1 |
 | `nova_config` | Body settings loader. Some execution paths still have independent constants; this is not yet universal configuration. | 1 |
 | `nova_cortex` | Task board, wake decisions, wants, speaker roles, witness/integrity checks, tunables and shared identity/context loading. | 15 |
-| `nova_runtime` | Model dispatch, headless autonomy, transcript, event bus, provider lifecycle and KoELS equip operations. | 14 |
+| `nova_runtime` | Model dispatch, headless autonomy, transcript, event bus, provider lifecycle and KoELS equip operations. | 15 |
 | `nova_voice` | Local inference client, parsing/tool loop, shell/file tools and durable execution receipts. The retired host-desktop Claude ping is no longer registered. | 5 |
 | `nova_senses` | Time, environment changes, presence, touch, sight, web access and proprioception. | 13 |
 | `nova_lancedb` | Semantic/visual memory store, embeddings and asynchronous indexing; separate from journal files. | 5 |
@@ -247,6 +247,8 @@ separately. Their availability is not established by source imports.
 
 ## Memory and learning
 
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `nova_body/nova_lancedb/embedder.py`, `nova_body/nova_lancedb/hippocampus.py`, `nova_body/nova_lancedb/indexer.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Memory and learning"`.
+
 SELF/core and personal memory files ground each turn. Semantic recall uses LanceDB and an
 asynchronous indexer; the raw journals/transcripts and vector store serve different purposes.
 Both chat and headless execution receive body-owned context. A durable queue retains failed
@@ -273,7 +275,7 @@ Drives/wants and the hormone design are not evidence of online weight learning. 
 
 ## Runtime evidence and open modernization work
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/voice_control.py`, `general_tools/voice_gateway/config.py`, `general_tools/voice_gateway/control_worker.py`, `general_tools/voice_gateway/turns.py` and 4 more; new `general_tools/nova_chat/tests/test_conversation_segments.cjs`, `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/voice_gateway/test_voice_segments.py`, `nova_body/nova_runtime/conversation.py` and 5 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/voice_gateway/control_worker.py`, `nova_body/nova_runtime/model_client.py`, `nova_body/nova_runtime/runtime.py`, `nova_body/nova_runtime/transcript_store.py` and 2 more; new `nova_body/nova_runtime/recovery.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
 
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
@@ -429,8 +431,20 @@ and clock semantics, and five existing prompt-cache cases still pass. Body work-
 boundary fixtures separately exercise serialized admission, attended input, retained receipts, scoped
 Stop and captured-input coverage. These are fake-provider/audio, temporary-storage or extracted-browser
 checks, not live speech quality, lower latency, a continuously running agent or a full Pluck Test pass.
-Backend edits load on the next Start Nova; the existing UI needs a reload to receive new JavaScript.
-Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
+A later text-only live probe loaded the current build (PID 44688; running_latest_code true), sent
+one request plus two follow-ups, and observed two explicitly PASS segments under one run ID. The
+first segment arrived at 63.641 seconds, the second and terminal aggregate at 110.391 seconds; all
+three input markers remained ordered and no external tools were requested. This used the explicit
+voice_fast register over WebSocket, not a microphone or a normal spoken exchange. Provider receipts
+measured 20.541 seconds of semantic-memory preparation, 38,912/39,101 input tokens on the two main
+calls, about 32.0/31.2 seconds of prompt processing, and cache_n=0 on both. Continuity is live-proven
+for this bounded case; natural voice speed is not. The runtime then had no operations, active owner
+or pending owner inputs. Nova was switched back off after the probe. Receipts live in
+`Temp/continuation-validation/live_turn_result.json` and
+`Temp/provider-diagnostics/ongoing-work-live-20261005/`.
+The existing UI needs a reload to receive new JavaScript. Backend changes were live-loaded for the
+probe and will load again on Start Nova. Unit/fixture passes do not certify every optional
+application, native window interaction or adapter swap.
 
 ## Nova's shelf
 

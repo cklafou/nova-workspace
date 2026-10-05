@@ -1160,8 +1160,20 @@ and clock semantics, and five existing prompt-cache cases still pass. Body work-
 boundary fixtures separately exercise serialized admission, attended input, retained receipts, scoped
 Stop and captured-input coverage. These are fake-provider/audio, temporary-storage or extracted-browser
 checks, not live speech quality, lower latency, a continuously running agent or a full Pluck Test pass.
-Backend edits load on the next Start Nova; the existing UI needs a reload to receive new JavaScript.
-Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
+A later text-only live probe loaded the current build (PID 44688; running_latest_code true), sent
+one request plus two follow-ups, and observed two explicitly PASS segments under one run ID. The
+first segment arrived at 63.641 seconds, the second and terminal aggregate at 110.391 seconds; all
+three input markers remained ordered and no external tools were requested. This used the explicit
+voice_fast register over WebSocket, not a microphone or a normal spoken exchange. Provider receipts
+measured 20.541 seconds of semantic-memory preparation, 38,912/39,101 input tokens on the two main
+calls, about 32.0/31.2 seconds of prompt processing, and cache_n=0 on both. Continuity is live-proven
+for this bounded case; natural voice speed is not. The runtime then had no operations, active owner
+or pending owner inputs. Nova was switched back off after the probe. Receipts live in
+`Temp/continuation-validation/live_turn_result.json` and
+`Temp/provider-diagnostics/ongoing-work-live-20261005/`.
+The existing UI needs a reload to receive new JavaScript. Backend changes were live-loaded for the
+probe and will load again on Start Nova. Unit/fixture passes do not certify every optional
+application, native window interaction or adapter swap.
 """
     operations = "# Operations and verification\n\n" + evidence + """
 ## Run and stop

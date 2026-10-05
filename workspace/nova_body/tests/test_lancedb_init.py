@@ -40,15 +40,15 @@ class CachedModelTests(unittest.TestCase):
         self.assertEqual(constructor.call_count, 2)
         self.assertEqual(constructor.call_args_list[0].args, ('all-MiniLM-L6-v2',))
         self.assertEqual(constructor.call_args_list[1].args, ('clip-ViT-B-32',))
-        self.assertTrue(all(call.kwargs == {'local_files_only':True} for call in constructor.call_args_list))
+        self.assertTrue(all(call.kwargs == {'local_files_only':True, 'device':'cpu'} for call in constructor.call_args_list))
         self.assertIn('local cache; init=', self.logs.getvalue())
 
     def test_explicit_cache_miss_preserves_existing_download_fallback(self):
         model = object(); constructor = Mock(side_effect=[LocalEntryNotFoundError('missing asset'), model])
         with self.factory(constructor):
             self.assertIs(self.module._load_text_model(), model)
-        self.assertEqual(constructor.call_args_list[0].kwargs, {'local_files_only':True})
-        self.assertEqual(constructor.call_args_list[1].kwargs, {})
+        self.assertEqual(constructor.call_args_list[0].kwargs, {'local_files_only':True, 'device':'cpu'})
+        self.assertEqual(constructor.call_args_list[1].kwargs, {'device':'cpu'})
         self.assertIn('missing-cache download fallback', self.logs.getvalue())
 
     def test_wrapped_transformers_cache_absence_is_recognized(self):
@@ -66,7 +66,7 @@ class CachedModelTests(unittest.TestCase):
                 constructor = Mock(side_effect=error)
                 with self.factory(constructor):
                     self.assertIsNone(self.module._load_text_model())
-                constructor.assert_called_once_with('all-MiniLM-L6-v2', local_files_only=True)
+                constructor.assert_called_once_with('all-MiniLM-L6-v2', local_files_only=True, device='cpu')
 
     def test_concurrent_callers_construct_each_model_only_once(self):
         for loader in (self.module._load_text_model, self.module._load_clip_model):

@@ -10,7 +10,8 @@ be verified independently before the whole thing is wired to audio hardware.
 
 FIRST STAGE (agreed in the Collaboration room, 2026-10-05): speak only text Nova Chat DELIVERED
 in reply to this gateway's own request (matched by request_id), with its audit status attached;
-never diagnostics; flush on a new utterance or a stop. No speech before her audit finishes.
+never diagnostics. New input retains committed queued speech; explicit Stop flushes it.
+Only delivered audited segments/finals may speak; delivery does not imply audit approval.
 
 THE SMOKE LADDER (run these in order as pieces come online):
   1. offline     python general_tools/voice_gateway/test_voice_flow.py    (no deps, no Nova)
@@ -108,20 +109,20 @@ async def run(cfg: GatewayConfig):
     async with NovaLink(cfg.nova_ws_url, cfg.speaker, cfg.register) as link:
         player = SpeechPlayer(tts, body, tail_s=max(0, cfg.half_duplex_tail_ms) / 1000).start()
         session = VoiceSession(cfg, player, body)
-        if cfg.duplex == "full":
-            if cfg.barge_in:
-                stt.on_speech_start = session.barge_in
-        else:
-            stt.gate = lambda: not player.busy()          # never transcribe her own voice
+        capture_active = False
+        if cfg.duplex == "full" and cfg.barge_in:
+            stt.on_speech_start = session.barge_in
+        stt.gate = lambda: cfg.duplex == "full" or capture_active or not player.busy()
 
         def recognition_state(state):
-            if state in {"hearing", "finishing_turn", "transcribing"}:
-                if cfg.duplex == "full" and cfg.barge_in:
-                    player.pause()
-                if cfg.duplex == "full" or not player.active():
-                    body.emit("state", state=state)
+            nonlocal capture_active
+            if state in {"hearing", "finishing_turn", "transcribing"} and (cfg.duplex == "full" or capture_active or not player.active()):
+                capture_active = True
+                player.pause()  # Held replies cannot close a capture already in progress.
+                body.emit("state", state=state)
             elif state == "listening":
-                player.resume()
+                capture_active = False
+                player.resume()  # Also releases after silence reset or recognition failure.
                 session._settle()
         stt.on_state = recognition_state
 
