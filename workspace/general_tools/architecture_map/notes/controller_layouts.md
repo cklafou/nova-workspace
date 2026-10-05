@@ -28,8 +28,25 @@ button. This control differs from stopping the current reply, muting Nova or clo
 stacked or popped out and participates in the normal active-widget checkmarks. Adding it does not
 replace a saved layout or save any arrangement automatically. **Call Nova / End call** owns the
 shared audio session; closing or moving the widget only changes its UI. Microphone and speaker mute
-are independent. The primary surface reports actual listening, recognizing, waiting/thinking and
-output status, with delayed/suppressed reply notices. It does not animate invented audio levels.
+are independent. Prominent confirmed mute indicators explain when input is not sent or replies will
+be silent; a failed status refresh shows unknown, and output mute cannot look like Speaking. The
+primary surface distinguishes listening, Hearing you, Finishing your turn, Recognizing speech and
+waiting/thinking, with delayed/suppressed reply notices. The backend's configured pause allowance is
+shown when known; it is not a reply-time promise. No audio levels or countdown are invented. New
+utterances continue active body work while retaining committed queued speech. Explicit End call keeps
+its scoped cancellation behavior. Conversation's **added to active work** badge means input was
+accepted for the next completed model/tool step; it does not mean the pending provider call was
+interrupted or the input has already been applied. The ordinary queued badge means waiting for admission; during autonomous work this can be the next natural body boundary, while input that cannot join waits for a later turn.
+Conversation frames tagged for another session do not create bubbles in the selected tab, including
+late echoes, thinking tokens and final replies. The separate Thoughts feed remains global; untagged
+legacy/global frames retain their previous behavior. The current server session-switch path still cancels its active task; filtering also guards late frames already in flight.
+Audited committed segments grow one response bubble, labelled Reply in progress with delivered-part
+count and the actual audit disposition. The terminal aggregate reconciles that same bubble without a
+second reply; Turn complete/ended distinguishes final closure from continuing work. Reloaded history
+retains separate delivered parts with their saved part number and actual audit disposition. Voice likewise
+reports a delivered part while work continues and never speaks the final aggregate again. New input
+retains committed queued speech; full-duplex barge-in cuts current audio and pauses the rest through
+recognition, while explicit End call/Stop/output mute flushes it.
 
 Expand **Settings & tests** for compatible 16 kHz mono inputs/outputs, Apply while stopped and bounded
 microphone/speaker tests. **Stop test** cancels a test. Page load/status polling never opens devices;

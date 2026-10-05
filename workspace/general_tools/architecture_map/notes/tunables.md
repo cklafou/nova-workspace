@@ -39,6 +39,10 @@ passes its configured window/output reserve to `nova_cortex/context_budget.py`; 
 is 65,536 tokens and output allowance is 16,384. A 4,096-token reserve and 3.4 characters/token
 estimate determine the text budget, additionally capped at 174,000 characters. Ordinary message
 text is capped at 24,000 characters; the merged system context is instead fitted to the total budget.
+Active continuation exempts the original request, accepted follow-ups and compact completed-action
+facts from per-message clipping and eviction. If these protected anchors alone exceed the available
+text budget, fitting fails explicitly. Raw observations and older history can still be shortened;
+a retained action ID/status/hash does not preserve the full output or independently verify success.
 Images and exact tokenizer costs are not measured. Keep the client's window value aligned with the
 inference launcher's context setting; changing a Variables entry cannot change these constants.
 The saved resume block is at most 6,000 characters across three unfinished tasks. Checkpoint field
@@ -55,7 +59,11 @@ for the ordinary thinking-enabled voice path. Neither bypasses final auditing or
 time; no utterance classifier selects a register automatically.
 The temporary Windows system voice honors an installed name supplied through `windows_voice`; with
 no explicit name it prefers an installed English female voice, otherwise the system default. Segmentation defaults are minimum speech 192 ms, onset pre-roll 288 ms and retained
-trailing silence 192 ms, with a 700 ms end-of-utterance interval. `request_timeout_s` defaults to 300
+trailing silence 192 ms, with a 2,000 ms end-of-utterance interval. Continued speech during CPU decoding
+is combined within a bounded 60-second capture buffer before a transcript is sent; the quiet interval
+is not a response-time or recognition-quality guarantee. `/api/voice/status` exposes the worker's
+configured interval as read-only `settings.end_of_turn_silence_ms`; device Apply does not change it.
+`request_timeout_s` defaults to 300
 seconds: the current acknowledged request remains correlated and gains a delayed warning;
 unacknowledged and retired requests expire. The separate Voice widget stores only selected input
 and output device IDs in `_admin/voice_devices.json`; apply them while stopped. These are not body

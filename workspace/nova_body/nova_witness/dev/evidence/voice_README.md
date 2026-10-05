@@ -1,6 +1,6 @@
 <!-- @nova: Describe the voice gateway scaffold, verified readiness and the remaining delivery and audio integration work. -->
 # voice_gateway — Cole's microphone to Nova
-_Last updated: 2026-10-05 18:32:30_
+_Last updated: 2026-10-05 21:33:07_
 
 The pipe that lets you **talk** to Nova and **hear** her back, on the desktop first
 (smartwatch → phone → tunnel → this same gateway comes later). It is a **comms tool, not a

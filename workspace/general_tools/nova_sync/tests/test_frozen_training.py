@@ -1,5 +1,5 @@
 # @nova: Protect frozen training hashes from timestamp maintenance and PUP replacement while preserving sync detection.
-# Last updated: 2026-10-04 13:39:43
+# Last updated: 2026-10-05 21:33:05
 import ast
 import os
 from pathlib import Path

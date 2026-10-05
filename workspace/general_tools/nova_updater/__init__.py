@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 15:01:23
+# Last updated: 2026-10-05 21:33:05
 # @nova: Nova's model updater: finds newer dense models, installs them with rollback, and trains LoRAs for installed models.
 """Model updater for Nova (a general tool, not a body part).
 

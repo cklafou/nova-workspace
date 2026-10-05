@@ -1,3 +1,4 @@
+# @nova: Manage body-stored chat sessions and metadata without confusing concurrent conversation owners.
 # Last updated: 2026-10-05 21:27:11
 """
 nova_chat/session_manager.py -- Persistent Session Management
@@ -6,10 +7,11 @@ Manages multiple chat sessions with compression for inactive ones.
 
 - sessions_index.json: lightweight metadata for all sessions (always in RAM)
 - Active session: Transcript in memory, raw .jsonl on disk
-- Inactive sessions: compressed .jsonl.gz, zero RAM footprint
+- Unreferenced inactive sessions: compressed .jsonl.gz
+- Queued/running sessions: pinned Transcript identity, raw JSONL retained until last release
 
 Only the user (Cole) can switch active sessions.
-Switching: flush active -> compress -> decompress new -> load into memory.
+Switching reuses a pinned Transcript and defers its compression until all accepted work releases it.
 """
 
 # Body-owned paths also work when this tool is launched directly.
@@ -74,6 +76,7 @@ class SessionManager:
         self._index: dict[str, SessionMeta] = {}   # session_id -> meta
         self._active_id: str = ""
         self._active_transcript: Transcript | None = None
+        self._retained: dict[str, tuple[Transcript, int]] = {}
 
         self._load_index()
 
@@ -101,7 +104,9 @@ class SessionManager:
     def _save_index(self):
         try:
             data = [m.to_dict() for m in self._index.values()]
-            INDEX_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            temporary = INDEX_PATH.with_name(INDEX_PATH.name + ".tmp")
+            temporary.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            os.replace(temporary, INDEX_PATH)
         except Exception as e:
             print(f"[sessions] Index save error: {e}")
 
@@ -120,23 +125,69 @@ class SessionManager:
     # ── Compression ────────────────────────────────────────────────────────────
 
     def _compress(self, session_id: str):
-        """Compress session JSONL to .gz and remove the raw file."""
+        """Publish a complete gzip before removing raw data; pinned writers keep JSONL."""
+        if session_id in self._retained:
+            return
         raw = self._jsonl_path(session_id)
-        gz  = self._gz_path(session_id)
+        gz = self._gz_path(session_id)
+        temporary = gz.with_name(gz.name + ".tmp")
         if raw.exists():
-            with open(raw, "rb") as f_in:
-                with gzip.open(gz, "wb", compresslevel=6) as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            raw.unlink()
+            try:
+                with open(raw, "rb") as f_in:
+                    with gzip.open(temporary, "wb", compresslevel=6) as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+                os.replace(temporary, gz)
+                raw.unlink()
+            finally:
+                temporary.unlink(missing_ok=True)
 
     def _decompress(self, session_id: str):
-        """Decompress session .gz back to JSONL for reading."""
+        """Publish a complete decompressed log; existing raw JSONL is authoritative."""
         raw = self._jsonl_path(session_id)
-        gz  = self._gz_path(session_id)
+        gz = self._gz_path(session_id)
+        temporary = raw.with_name(raw.name + ".tmp")
         if gz.exists() and not raw.exists():
-            with gzip.open(gz, "rb") as f_in:
-                with open(raw, "wb") as f_out:
-                    shutil.copyfileobj(f_in, f_out)
+            try:
+                with gzip.open(gz, "rb") as f_in:
+                    with open(temporary, "wb") as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+                os.replace(temporary, raw)
+            finally:
+                temporary.unlink(missing_ok=True)
+
+    def retain(self, session_id: str, transcript: Transcript) -> bool:
+        """Pin the canonical transcript before accepted work can outlive a face switch."""
+        if session_id not in self._index or getattr(transcript, "session_id", None) != session_id:
+            return False
+        previous = self._retained.get(session_id)
+        if previous is not None:
+            if previous[0] is not transcript:
+                return False
+            self._retained[session_id] = (transcript, previous[1] + 1)
+            return True
+        if self._active_id != session_id or self._active_transcript is not transcript:
+            return False  # do not resurrect a stale object after a session was reloaded
+        self._retained[session_id] = (transcript, 1)
+        return True
+
+    def release(self, session_id: str, transcript: Transcript) -> bool:
+        """Release one accepted request; the last inactive writer can now be compressed."""
+        previous = self._retained.get(session_id)
+        if previous is None or previous[0] is not transcript:
+            return False
+        if previous[1] > 1:
+            self._retained[session_id] = (transcript, previous[1] - 1)
+            return True
+        del self._retained[session_id]
+        if session_id != self._active_id:
+            transcript.flush_all()
+            try:
+                self._compress(session_id)
+            except OSError as error:
+                # The full raw file survives failed gzip publication; cleanup must
+                # still release other requests and report their terminal outcomes.
+                print(f"[sessions] Deferred compression failed for {session_id}: {error}")
+        return True
 
     # ── Session lifecycle ──────────────────────────────────────────────────────
 
@@ -146,6 +197,8 @@ class SessionManager:
         self._flush_active()
 
         session_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        if session_id in self._index or self._session_exists(session_id):
+            session_id += "_" + uuid.uuid4().hex[:8]
         meta = SessionMeta(session_id=session_id, name=name or "New Session")
         self._index[session_id] = meta
         self._save_index()
@@ -171,22 +224,27 @@ class SessionManager:
 
     def _activate(self, session_id: str):
         """Load a session from disk into memory."""
-        self._decompress(session_id)
-        self._active_id = session_id
-        self._active_transcript = Transcript(session_id=session_id)
+        retained = self._retained.get(session_id)
+        if retained is not None:
+            self._active_id = session_id
+            self._active_transcript = retained[0]
+        else:
+            self._decompress(session_id)
+            self._active_id = session_id
+            self._active_transcript = Transcript(session_id=session_id)
 
-        # Load existing messages from disk
-        raw = self._jsonl_path(session_id)
-        if raw.exists():
-            try:
-                with open(raw, encoding="utf-8") as f:
-                    for line in f:
-                        line = line.strip()
-                        if line:
-                            msg = json.loads(line)
-                            self._active_transcript.messages.append(msg)
-            except Exception as e:
-                print(f"[sessions] Load error for {session_id}: {e}")
+            # Load existing messages from disk
+            raw = self._jsonl_path(session_id)
+            if raw.exists():
+                try:
+                    with open(raw, encoding="utf-8") as f:
+                        for line in f:
+                            line = line.strip()
+                            if line:
+                                msg = json.loads(line)
+                                self._active_transcript.messages.append(msg)
+                except Exception as e:
+                    print(f"[sessions] Load error for {session_id}: {e}")
 
         # Update last_active
         if session_id in self._index:
@@ -204,6 +262,7 @@ class SessionManager:
     def _flush_active(self):
         """Compress the current active session to disk."""
         if self._active_id and self._active_id in self._index:
+            self._active_transcript.flush_all()
             self._compress(self._active_id)
         self._active_id = ""
         self._active_transcript = None
@@ -218,7 +277,7 @@ class SessionManager:
 
     def delete_session(self, session_id: str) -> bool:
         """Delete a session permanently. Cannot delete active session."""
-        if session_id == self._active_id:
+        if session_id == self._active_id or session_id in self._retained:
             return False
         if session_id not in self._index:
             return False
@@ -230,7 +289,7 @@ class SessionManager:
 
     def archive_session(self, session_id: str) -> bool:
         """Move a session to logs/chat_sessions/archives/. Cannot archive active session."""
-        if session_id == self._active_id:
+        if session_id == self._active_id or session_id in self._retained:
             return False
         if session_id not in self._index:
             return False
@@ -266,19 +325,21 @@ class SessionManager:
             )
         ]
 
-    def update_meta_from_message(self, msg: dict):
-        """Update session metadata after a new message is added."""
-        if self._active_id not in self._index:
+    def update_meta_from_message(self, msg: dict, *, session_id=None, transcript=None):
+        """Update the owning session even if the face selected another conversation."""
+        session_id = self._active_id if session_id is None else session_id
+        transcript = self._active_transcript if transcript is None else transcript
+        if session_id not in self._index:
             return
         if not msg or "author" not in msg:
             return
-        meta = self._index[self._active_id]
-        meta.message_count = len(self._active_transcript.messages)
+        meta = self._index[session_id]
+        meta.message_count = len(transcript.messages)
         meta.last_active   = datetime.now().isoformat()
         meta.preview       = msg.get("content", "")[:60]
 
         # Auto-name from first Cole message
-        if (meta.name in ("New Session", f"Session {self._active_id[:6]}")
+        if (meta.name in ("New Session", f"Session {session_id[:6]}")
                 and msg.get("author") == "Cole" and "content" in msg):
             meta.name = msg["content"][:MAX_NAME_CHARS]
 

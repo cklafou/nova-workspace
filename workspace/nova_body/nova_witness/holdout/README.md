@@ -1,4 +1,4 @@
-_Last updated: 2026-10-05 18:30:27_
+_Last updated: 2026-10-05 21:33:07_
 <!-- @nova: Explain the sealed witness holdout: what it is for, its commitment hash and the one-time unseal and run procedure. -->
 # Witness holdout v1 — SEALED
 

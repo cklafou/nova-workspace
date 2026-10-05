@@ -58,7 +58,7 @@ class ModelClient:
                        workspace_context: str = "", images=None,
                        autonomous: bool = False,
                        temperature: float = 0.7, top_p: float = 0.9,
-                       register: str = "text", on_audit=None) -> None:
+                       register: str = "text", on_audit=None, steering=None, on_segment=None, on_boundary=None) -> None:
         """Drive one generation. The caller supplies the output sinks (what to do with each
         token, on done, on error); this owns only WHICH client and HOW it is called. Faithful
         to run_ai_response's three branches:
@@ -83,6 +83,12 @@ class ModelClient:
             # Keep routing state local to this call; simultaneous faces may use different
             # registers and sinks. Older Nova clients need not accept an unused audit sink.
             audit_kwargs = {"on_audit": on_audit} if on_audit is not None else {}
+            if steering is not None:
+                audit_kwargs["steering"] = steering
+            if on_segment is not None:
+                audit_kwargs["on_segment"] = on_segment
+            if on_boundary is not None:
+                audit_kwargs["on_boundary"] = on_boundary
             await client_mod.stream_response(
                 transcript, on_token, on_done, on_error,
                 on_think_token=on_think_token,

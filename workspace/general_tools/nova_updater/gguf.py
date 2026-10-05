@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 18:23:37
+# Last updated: 2026-10-05 21:33:05
 # @nova: Reads GGUF file headers (architecture, name, adapter and base-model keys) without loading tensors, so installed files can be identified fast.
 """Minimal GGUF metadata reader (spec v2/v3).
 

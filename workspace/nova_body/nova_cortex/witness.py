@@ -41,6 +41,7 @@ from __future__ import annotations
 from nova_paths import body_path
 
 import contextvars
+from contextlib import contextmanager
 import json
 import os
 import re
@@ -505,10 +506,17 @@ def render_audit_receipts(receipts):
                      for t, a, r in receipts)
 
 
+
+def capture_evidence_snapshot():
+    """Freeze bounded body records for the input revision that produced a segment."""
+    return {"session_tools": session_tool_record(), "spoken": wire_record(),
+            "humans": human_record()}
+
 def build_witness(draft: str, turn_tools: list, thinking: str = "",
                   prior_concern: str = "", checks: list | None = None,
                   has_image: bool = False, visual_evidence: list | None = None,
-                  omitted_images: int = 0, reads_remaining: int | None = None) -> list:
+                  omitted_images: int = 0, reads_remaining: int | None = None,
+                  evidence_snapshot: dict | None = None) -> list:
     evidence, additionally_omitted = select_visual_evidence(visual_evidence)
     omitted_images += additionally_omitted
     if turn_tools:
@@ -545,7 +553,7 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
         read_budget_block = (f"READ BUDGET: {reads_remaining} further read(s) are available. "
                         + ("No further tool calls will run. Give PASS, CONCERN or INCOMPLETE now.\n"
                            if reads_remaining == 0 else "Use them only to settle a relevant fact.\n"))
-    session_tools = session_tool_record()
+    session_tools = session_tool_record() if evidence_snapshot is None else evidence_snapshot["session_tools"]
     session_block = ""
     if session_tools:
         session_block = (
@@ -556,13 +564,13 @@ def build_witness(draft: str, turn_tools: list, thinking: str = "",
             "flag anything as fabricated for having 'no receipt this turn', READ this list: if the "
             "action or fact is here, it is real. A restart wipes her turn counter, never her "
             "having done the work.\n" + session_tools + "\n")
-    spoken = wire_record()
+    spoken = wire_record() if evidence_snapshot is None else evidence_snapshot["spoken"]
     spoken_block = ""
     if spoken:
         spoken_block = (
             f"\nTHE ROOM RIGHT NOW (the last few wire rows, newest last — a WINDOW, not the "
             f"whole record):\n{spoken}\n")
-    humans = human_record()
+    humans = human_record() if evidence_snapshot is None else evidence_snapshot["humans"]
     if humans:
         spoken_block += (
             f"\nEVERY HUMAN LINE IN THE RECENT RECORD (complete over the span it names — "
@@ -1028,6 +1036,16 @@ _LONG = {"draft", "before", "after", "verdict", "premise", "repeated", "wire", "
 
 
 _CURRENT_TURN = contextvars.ContextVar("nova_pipeline_turn", default="")
+
+
+@contextmanager
+def preserve_turn_context():
+    """Restore the outer pipeline identity after same-task nested conversation work."""
+    token = _CURRENT_TURN.set(_CURRENT_TURN.get())
+    try:
+        yield
+    finally:
+        _CURRENT_TURN.reset(token)
 
 
 def begin_turn() -> str:

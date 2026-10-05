@@ -18,7 +18,7 @@ Open **Widgets → Voice**. Voice is a separate dockable widget: move, resize or
 other widgets. Existing saved layouts are left alone; use **Save layout** to retain an arrangement.
 Start Nova with the small power button below Conversation's composer, then choose **Call Nova** in
 Voice. **End call** immediately retires local speech, requests cancellation of this call's pending
-Nova request, and closes the audio worker. It does not issue a global generation stop or stop Nova.
+Nova inputs, and closes the audio worker. It does not issue a global generation stop or stop Nova.
 Closing the widget or its popout does not end the shared call.
 
 Microphone and spoken-output mute are separate. Expand **Settings & tests** to find compatible
@@ -26,7 +26,11 @@ inputs/outputs, apply devices while stopped, meter six seconds of microphone aud
 speaker test. **Stop test** cancels an audio test. Tests work while Nova is off; a call needs Nova on.
 Page load and status polling never record or play audio, and device discovery is explicit.
 
-The main call surface reports listening, recognizing speech, waiting/thinking and output status.
+The main call surface distinguishes listening, **Hearing you**, **Finishing your turn**,
+**Recognizing speech**, waiting/thinking and output status. It displays the actual configured pause
+allowance when supplied by the backend. Independent microphone/speaker indicators and explicit muted
+warnings reflect acknowledged status; unknown status is labelled unknown, and a muted speaker cannot
+appear as Speaking. A submitted mute command alone is not confirmation.
 Delayed or suppressed replies remain visible. **Latest words** contains the last recognized text
 and delivered caption with its audit status. **Delivery & playback details** shows request/message/run
 IDs, submission/completion outcomes, selected output and available timing fields. Preparing audio,
@@ -35,23 +39,24 @@ none proves that a person heard sound. Windows system speech is a labelled tempo
 not Nova's final cast voice. If no `windows_voice` name is configured, Windows speech prefers an
 installed English female voice, falling back to the system default only when none is available.
 
-## First stage (built 2026-10-05; contract agreed with Codex in the Collaboration room #55–#63)
+## Delivery contract (foundation and committed-segment continuation, October 5)
 
-- **Speaks only delivered final text, and only in reply to the gateway's own request.** Every utterance carries a fresh `request_id`. Nova Chat echoes it on `user_message`, `message_start`, `message_end` and `request_end`. A reply is spoken only when `delivery == "delivered"` and the `request_id` is ours (`speak_scope="mine"`). `"replies"` is opt-in and still requires a `reply_to`.
+- **Speaks delivered audited segments or compatible final replies to the gateway's own requests.** Every utterance carries a fresh `request_id`. Nova Chat echoes it on `user_message` and tracks it through response start/context/end or `request_end`. A reply is spoken only when `delivery == "delivered"` and its bound input identities contain our acknowledged voice request (`speak_scope="mine"`). `"replies"` is opt-in and still requires a `reply_to`.
 - **Never spoken, in any scope:** `error` ends (they carry a diagnostic), `empty`, `suppressed`, `cancelled` and `unsolicited` promotions (these need their own policy later). An end without a `delivery` field comes from an old server: it is silent and logs one "restart/update Nova Chat" diagnostic. `request_end` and rejections are cleared by `request_id` alone, even without an echo.
-- **Identity is checked, not assumed** (Codex review #70). A reply counts as ours only if its `request_id` is pending, its `reply_to` equals the server id from the `user_message` echo, and its `message_id`/`run_id` match the `message_start` seen for that request. A missing or mismatched field means silence.
+- **Identity is checked, not assumed.** A reply counts as ours only if its pending `request_id` and acknowledged `reply_to` form an exact pair, and its message/run match a prior `message_start` or validated `message_context`. Combined replies carry ordered, aligned `request_ids`/`reply_to_ids` plus `input_revision`. Foreign typed inputs may have null client IDs; they can never claim a local voice request. Applied context updates preserve the existing run and append identities. A gateway joining a running typed turn can first bind from a context update containing its already-acknowledged voice input. Final frames cannot self-bind or expand that context. Committed segments use an exact previously validated revision snapshot; they never self-bind. Their explicit audit turn/revision must match. A 1-based `segment_index` advances once, duplicates are ignored, and gaps are diagnosed. Pending bindings stay open until terminal closure. A compatible unsegmented final still selects the newest eligible local input.
 - **Delivered is not approved.** The audit `{status, reason, source}` rides on every caption and body event. A missing audit is `NOT_RUN`, never PASS. `audit_gate="delivered"` (default) speaks any delivered reply with its status attached. `audit_gate="pass_only"` speaks only an explicit PASS; NOT_RUN, CONCERN, INCOMPLETE and ERROR stay silent.
-- **No pre-audit speech.** `speak_from="stream"` is ignored with a warning. Tokens are never spoken.
-- **Scoped interruption.** End call, a new utterance or full-duplex barge-in flushes queued speech, stops current output and retires earlier requests immediately. The worker sends `stop` with its own `request_id`; the server matches only an owned request on the same socket. The client waits at most two seconds for final `stopped` with that exact ID and `matched=true`; `stop_pending`, a submitted frame or a timeout is not proof of completed cancellation. Unconfirmed cancellation is diagnosed, without falling back to global Stop. Late finals from retired requests remain silent. Backend synthesis already computing may finish after cancellation, but its resulting audio must not begin playing. Closing the player also flushes queued work and rejects late output.
+- **No token speech.** `speak_from="stream"` is ignored with a warning. `message_segment` carries committed content plus explicit audit metadata under one stable message/run/turn identity. Each segment can queue before work ends. The final remainder is another segment; terminal `message_end.segment_count` prevents the aggregate being spoken again. The delivered audit policy still permits explicitly unapproved content by default; it does not manufacture PASS.
+- **Follow-up input continues work.** A new utterance retains already committed queued speech and never issues Stop for Nova's active work. Full-duplex barge-in cuts only the current audio unit and pauses pending committed units while hearing/recognizing; completed recognition or return to listening resumes them. Explicit End/Stop/output mute still flushes the queue. Each completed utterance sends another ordered input. Body-owned `ConversationTurns`/`ActiveTurn` append follow-ups at natural model/tool boundaries, preserve the original request and completed observations, and bind each delivered segment to the input revision it actually used. Later input cannot silently retract delivered text; the following segment must reconcile any correction. Input arriving after final admission belongs to the next turn. This does not inject text into an already-running local HTTP model request.
+- **Explicit scoped interruption.** End call or worker shutdown retires local output and requests Stop for all remaining owned pending inputs, including audio-ineligible earlier ones. The server matches only an owned request on the same socket. Each request waits at most two seconds for final `stopped` with that exact ID and `matched=true`; `stop_pending`, a submitted frame or a timeout is not proof of completed cancellation. Unconfirmed cancellation is diagnosed without global Stop. Late replies remain silent. Already-computing synthesis may finish, but its audio must not start after cancellation. Closing the player flushes queued work and rejects late output.
 - **Half duplex by default.** The mic drops audio at capture while she speaks, plus a 400 ms tail. Every buffered or queued frame from before the gate closed is discarded, and no utterance is ever spliced across her turn. The fake-microphone regressions discard both queued echo and a transcription that completes after its capture generation or gate became invalid. Physical echo, device buffering and the appropriate tail length still need hardware testing. Use `duplex="full"` only with headphones or echo cancellation.
-- **Recognition hygiene.** Silero consumes 512-sample frames at 16 kHz. Brief noises below the minimum voiced duration are ignored; onset audio is buffered, trailing silence is trimmed, and decoder errors produce a visible diagnostic while listening continues. Missing local assets stop readiness instead of silently downloading or substituting energy detection.
+- **Recognition hygiene.** Silero consumes 512-sample frames at 16 kHz. Brief noises below the minimum voiced duration are ignored; onset audio is buffered, trailing silence is trimmed, and decoder errors produce a visible diagnostic while listening continues. Missing local assets stop readiness instead of silently downloading or substituting energy detection. The default trailing-pause allowance is 2,000 ms, with explicit overrides preserved. Audio continuing during decoding is collected into the bounded turn; a superseded partial result is withheld and combined audio is decoded after quiet. The 60-second boundary remains. This reduces premature fragments in fixtures; it does not promise recognition quality or a two-second reply.
 - **What is never read aloud:** tool markers (`[`tool` resulted in N bytes.]`), code blocks, raw URLs ("a link") and markdown.
-- **Body events v1** (`body.py`): `state` (idle/transcribing/waiting/thinking/speaking), `turn`, `message`, `speech`, `caption`, `interrupt` and `diagnostic`. Sinks are `none`, `stdout`, or `jsonl` (`logs/voice/body_events.jsonl`). The trace stays honest:
-  - `message` records policy and queueing only (`eligible`, `queued_units`).
+- **Body events v1** (`body.py`): `state` (idle/hearing/finishing_turn/transcribing/waiting/thinking/speaking), `turn`, `message`, `speech`, `caption`, `interrupt` and `diagnostic`. Sinks are `none`, `stdout`, or `jsonl` (`logs/voice/body_events.jsonl`). The trace stays honest:
+  - `message` records policy and queueing only (`eligible`, `queued_units`); `phase="segment"` includes `segment_index`, while terminal `phase="end"` includes `segment_count`. Unique audio unit indices continue across segments.
   - `speech` goes `requested`, then `start`, then `end`, with outcome `played`, `completed`, `cut`, `skipped`, `no_audio` or `error`. NullTTS reports `no_audio`; subprocess playback reports `completed` with `clock="process"`, without claiming measured sound.
   - A `caption` follows a successful playback API submission (`clock="playback"`); that timestamp is not a measurement of audible output. A legacy backend without the callback uses `clock="requested"`. NullTTS and the process-only fallback do not claim an audio start.
-- **A slow accepted reply is retained.** After `request_timeout_s` (default 300 seconds), the current acknowledged eligible request emits one delayed warning and keeps its exact reply correlation. It remains eligible until completion, explicit stop/new input or socket closure. Unacknowledged and already retired requests expire; only one current request can remain speech-eligible. `run()` supervises the mic and socket so a failure in either shuts down the loop.
-- **Controller diagnostics.** `/api/voice/status` includes `last_turn`, `last_playback` and a bounded `recent_events` history. Turn phases include sent, acknowledged, queued, started, delayed and terminal states. Playback phases are requested/start/end, with backend/output and measured timing fields when available. Unrelated broadcasts cannot overwrite the current turn. These fields survive a stopped call until another call starts.
+- **A slow accepted reply is retained.** After `request_timeout_s` (default 300 seconds), the current acknowledged eligible request emits one delayed warning. Any acknowledged input bound to an open response retains exact correlation until terminal closure, including an earlier revision retired for legacy final speech. This lets a late, already-committed segment match its original evidence. Explicit cancellation/socket closure still invalidates it. Unacknowledged or unbound retired requests expire. `run()` supervises the mic and socket so a failure in either shuts down the loop.
+- **Controller diagnostics.** `/api/voice/status` includes `last_turn`, `last_playback` and a bounded `recent_events` history. Turn phases include sent, acknowledged, queued, started, delivered segment, delayed and terminal states. Playback phases are requested/start/end, with backend/output and measured timing fields when available. Unrelated broadcasts cannot overwrite the current turn. These fields survive a stopped call until another call starts.
 
 | module | job |
 |---|---|
@@ -66,6 +71,30 @@ installed English female voice, falling back to the system default only when non
 | `setup_windows.py` | isolated CPU dependencies and checksummed local speech assets |
 
 ## Verification and remaining evidence
+
+Committed-segment continuation has fake-provider/event/player coverage: segments queue before final,
+exact validated earlier revisions remain usable, malformed identities/audits cannot self-bind, duplicate
+and missing segments do not replay the aggregate, and interrupted queued audio survives until resumed.
+Close/Stop invalidate held units so late playback cannot begin. Production-renderer fixtures show one
+growing reply with an in-progress audit label and a terminal label, without a second aggregate bubble.
+The current gateway suite ran **107 tests: 106 passed, one existing skip**. Twenty-nine related frontend
+checks pass, including three segment/history cases; two temporary transcript tests preserve audited
+part metadata. These changes have no new live microphone, model-latency or audibility proof.
+
+Body work ownership now serializes chat and autonomous work. Human input is attended at natural
+completed model/tool steps, with phase fallbacks, then the original task resumes with completed
+receipts and delivered interaction context. Nested human turns do not recursively enter autonomous
+attention. Headless human attention uses the same body conversation formatter and segmented delivery
+with captured input-sequence coverage; autonomous reflect/decide/execute prompts remain separate.
+Follow-ups do not reset total work/audit budgets. This is fixture-tested between-call continuation,
+not cancellation of in-flight inference, a unified permanent thought stream or a real-time guarantee.
+
+The subsequent pause/continuation slice has isolated evidence: the gateway suite ran **96 tests**
+with **95 passed and one existing skip**, including 14 new continuation/correlation cases and nine
+endpointing cases. Controller tests passed 31/31 and the separate Voice UI suite passed 21/21. Fake
+capture/playback verifies ordered follow-ups, mixed typed/voice aliases, audio-only barge-in and
+explicit End call cleanup. These are not fresh microphone, model-latency, full relocated-body or
+natural-conversation results; the core continuation integration is separately reviewed/tested.
 
 At the October 5 repair checkpoint, **73 gateway tests**, **30 controller tests** and **70 frontend
 scenarios** pass. The frontend total covers Voice (16), Conversation power (8), Pipeline (24) and

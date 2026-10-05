@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 14:35:18
+# Last updated: 2026-10-05 21:33:05
 # @nova: Tests GGUF header reading, the installed-file inventory, install plans, verified downloads, the load check with rollback, and trash quarantine.
 """Run: python -m unittest discover -s general_tools/nova_updater/tests -v"""
 import hashlib

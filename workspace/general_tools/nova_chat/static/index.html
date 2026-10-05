@@ -1360,7 +1360,7 @@ body.drag-over { outline: 2px solid var(--nova); outline-offset: -2px; }
             </button>
             <button id="stop-btn" onclick="stopGen()" data-tooltip="Stop all in-flight AI responses (Esc)">⏹ Stop</button>
             <button id="reinject-btn" onclick="reinjectContext()" data-tooltip="Refresh Nova's context — reloads her current architecture &amp; memory from disk and clears stale context, while keeping this conversation. Use after changing her files mid-session." style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dim);font-size:11px;padding:4px 8px;cursor:pointer">↻ Refresh Context</button>
-            <div id="queue-btn" data-tooltip="Your message is queued — Nova will see it as soon as she finishes her current response">📬 <span id="queue-btn-count">1</span> queued</div>
+            <div id="queue-btn" data-tooltip="Your message is queued for the next available turn">📬 <span id="queue-btn-count">1</span> <span id="queue-btn-label">queued</span></div>
           </div>
           <div class="input-bar-right">
             <div class="verbosity-ctrl" data-tooltip="Response length hint sent silently to Nova. Concise = brief and direct; Normal = balanced; Verbose = thorough and detailed.">
@@ -2151,29 +2151,38 @@ function setConnDot(on) {
 /* ══════════════════════════════════════════════════
    MESSAGE HANDLER
 ══════════════════════════════════════════════════ */
+function isActiveConversationFrame(d) {
+  // Older/global frames have no conversation identity. Tagged conversation output
+  // belongs only to its selected tab, even when another session keeps working.
+  return d.conversation_id == null || d.conversation_id === activeId;
+}
 function handle(d) {
+  const inConversation = isActiveConversationFrame(d);
+  if (!inConversation && ['user_message','message_start','token','message_context','message_segment','message_end','turn_end'].includes(d.type)) return;
   switch(d.type) {
     case 'status':          updateParticipants(d.participants); break;
     case 'sessions_init':   onSessionsInit(d); break;
     case 'session_switched':onSessionSwitch(d); break;
     case 'sessions_updated':if(d.sessions) mergeSessionData(d.sessions); renderTabs(); renderSidebar(); break;
-    case 'history':         appendMsg(d.author, d.content, d.id, d.images, d.timestamp); break;
+    case 'history':         appendMsg(d.author, d.content, d.id, d.images, d.timestamp, d.response_metadata); break;
     case 'user_message':    appendMsg(d.author, d.content, d.id, d.images); break;
     case 'message_start':   showTyping(d.author); break;
+    case 'message_segment': appendDeliveredSegment(d); break;
     case 'token':           appendToken(d.author, d.id, d.token); break;
     case 'think_start':     liveThinkStart(); break;
-    case 'think_token':     appendThink(d.author, d.id, d.token); liveThinkAppend(d.token); break;
+    case 'think_token':     if(inConversation) appendThink(d.author, d.id, d.token); liveThinkAppend(d.token); break;
     case 'think_end':       liveThinkEnd(); break;
     case 'auto_think_start':liveThinkStart('autonomous'); break;
     case 'auto_think_token':liveThinkAppend(d.token); break;
     case 'auto_think_end':  liveThinkEnd(); break;
-    case 'message_end':     finalizeMsg(d.id, d.content, d.author); hideTyping(d.author); break;
+    case 'turn_end':
+    case 'message_end':     finalizeMsg(d.id, d.content, d.author); finishSegmentReply(d); hideTyping(d.author); break;
     case 'processing_start':setProcessing(true); setNovaStatePill('processing'); break;
     case 'processing_end':  setProcessing(false); updateVigilance({state:'sleeping',reason:'Ready'}); hideQueueBadge(); break;
     case 'stopped':         setProcessing(false); updateVigilance({state:'sleeping',reason:'Stopped'}); hideQueueBadge(); break;
     case 'stop_pending':    updateVigilance({state:'thinking',reason:'Stopping — waiting for running work'}); break;
     case 'blocked':         toast('⏳ AIs are responding — press Stop to interrupt'); break;
-    case 'queued':          showQueueBadge(d.count||1); break;
+    case 'queued':          showQueueBadge(d.count||1,d.mode); break;
     case 'queue_cleared':   hideQueueBadge(); break;
     case 'error':           sysMsg(`⚠ ${d.message}`); setProcessing(false); updateVigilance({state:'sleeping',reason:'Error'}); break;
     case 'users_changed':   USERS={users:d.users, active:d.active}; usersRender(); break;
@@ -2229,11 +2238,12 @@ function onSessionSwitch(d) {
   document.getElementById('chat').innerHTML = '';
   // Clear streaming state so stale DOM refs from previous session don't linger
   Object.keys(streamBufs).forEach(k => delete streamBufs[k]);
+  completedSegmentReplies.clear();
   // Clear @file chips — they shouldn't carry over to a different session
   _mentionedFiles = []; renderFileChips();
   pendingImages = []; document.getElementById('pending-images').innerHTML = '';
   const hist = d.history||[];
-  hist.forEach(m=>appendMsg(m.author,m.content,m.id,m.images,m.timestamp));
+  hist.forEach(m=>appendMsg(m.author,m.content,m.id,m.images,m.timestamp,m.response_metadata));
   // Count only non-heartbeat visible messages for the status line
   const visible = hist.filter(m=>!/^\[HEARTBEAT\s+\d+\]/i.test((m.content||'').trim())).length;
   if(visible > 0) sysMsg(`Resumed · ${visible} message${visible===1?'':'s'}`);
@@ -2513,7 +2523,7 @@ function modalOk() {
 /* ══════════════════════════════════════════════════
    CHAT RENDERING
 ══════════════════════════════════════════════════ */
-function appendMsg(author, content, id, images, serverTs) {
+function appendMsg(author, content, id, images, serverTs, responseMetadata) {
   // Suppress heartbeat noise — Nova's autonomous loop emits [HEARTBEAT N] system messages
   if (/^\[HEARTBEAT\s+\d+\]/i.test((content||'').trim())) return;
   const m=AUTHOR[author]||{cls:'',av:(author||'?')[0]};
@@ -2523,8 +2533,19 @@ function appendMsg(author, content, id, images, serverTs) {
   const tsDate = serverTs ? new Date(serverTs) : new Date();
   const ts = tsDate.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   w.innerHTML=`<div class="msg-avatar">${avatarMarkup(author)}</div><div class="msg-body"><div class="msg-header"><span class="msg-author">${esc(author)}</span><span class="msg-time">${ts}</span><button class="msg-copy" onclick="copyMsgText(this)" title="Copy message">📋</button></div><div class="msg-text">${renderMD(content)}</div></div>`;
+  appendResponseAttribution(w, responseMetadata);
   if(images?.length){const strip=document.createElement('div');strip.className='image-strip';images.forEach(img=>{const el=document.createElement('img');el.className='image-thumb';el.src=img.dataUrl||img;el.onclick=()=>openLB(el.src);strip.appendChild(el);});w.querySelector('.msg-body').appendChild(strip);}
   document.getElementById('chat').appendChild(w); scrollBot();
+}
+function appendResponseAttribution(w, metadata) {
+  if (!metadata || !Number.isInteger(metadata.segment_index) || metadata.segment_index < 1) return;
+  const label = document.createElement('span');
+  label.className = 'reply-progress';
+  label.style.cssText = 'font-size:11px;color:var(--text-dim);margin-left:6px;';
+  const status = ['PASS','CONCERN','INCOMPLETE','ERROR','NOT_RUN'].includes(metadata.audit?.status) ? metadata.audit.status : 'NOT_RUN';
+  label.textContent = `Delivered part ${metadata.segment_index} · Audit ${status}`;
+  label.title = `${metadata.audit?.reason || 'No audit reason recorded.'}\nRun: ${metadata.run_id || 'unknown'} · Input revision: ${metadata.input_revision ?? 'unknown'}`;
+  w.querySelector('.msg-header')?.appendChild(label);
 }
 function startStream(author, id) {
   const m=AUTHOR[author]||{cls:'',av:(author||'?')[0]};
@@ -2537,10 +2558,43 @@ function startStream(author, id) {
   scrollBot();
 }
 function appendToken(author, id, token) {
+  if(streamBufs[id]?.segments) return; // audited segments own their delivered text
   if(!streamBufs[id]) startStream(author,id);
   const b=streamBufs[id]; b.text+=token; b.st.textContent=b.text; scrollBot();
   addCtxChars(token.length);
 }
+const completedSegmentReplies = new Set();
+function appendDeliveredSegment(d) {
+  if (!isActiveConversationFrame(d) || d.delivery !== 'delivered' || !d.id ||
+      !d.run_id || d.turn_id !== d.run_id || !Number.isInteger(d.segment_index) ||
+      d.segment_index < 1 || typeof d.content !== 'string' || completedSegmentReplies.has(d.id)) return;
+  let b = streamBufs[d.id];
+  if ((!b?.segments && d.segment_index !== 1) || (b?.segmentRun && b.segmentRun !== d.run_id)) return;
+  if (!b) { startStream(d.author || 'Nova', d.id); b = streamBufs[d.id]; }
+  if (!b.segments) { b.segments = []; b.segmentRun = d.run_id; }
+  if (d.segment_index !== b.segments.length + 1) return; // duplicate/gap cannot append twice
+  b.segments.push(d.content);
+  b.text = b.segments.join('\n\n');
+  b.st.innerHTML = renderMD(b.text);
+  let progress = b.w.querySelector('.reply-progress');
+  if (!progress) {
+    progress = document.createElement('span'); progress.className = 'reply-progress';
+    progress.setAttribute('role', 'status');
+    progress.style.cssText = 'font-size:11px;color:var(--text-dim);margin-left:6px;';
+    b.w.querySelector('.msg-header').appendChild(progress);
+  }
+  progress.textContent = `Reply in progress · ${b.segments.length} delivered part${b.segments.length===1?'':'s'} · Audit ${d.audit?.status || 'NOT_RUN'}`;
+  progress.title = d.audit?.reason || 'Delivered content; an audit disposition is not independent proof.';
+  hideTyping(d.author); addCtxChars(d.content.length); scrollBot();
+}
+function finishSegmentReply(d) {
+  if (!Number.isInteger(d.segment_count) || d.segment_count < 1) return;
+  completedSegmentReplies.add(d.id);
+  if (completedSegmentReplies.size > 512) completedSegmentReplies.delete(completedSegmentReplies.values().next().value);
+  const progress = document.getElementById(`msg-${d.id}`)?.querySelector('.reply-progress');
+  if (progress) progress.textContent = `${d.delivery==='delivered'?'Turn complete':'Turn ended: '+(d.delivery||'unknown')} · ${d.segment_count} delivered part${d.segment_count===1?'':'s'}`;
+}
+
 function appendThink(author, id, token) {
   // Thinking tokens arrive BEFORE the first chat token, so streamBufs[id] may
   // not exist yet.  Create the stream bubble early so thinking is never dropped.
@@ -4360,11 +4414,16 @@ function setProcessing(on){
   document.getElementById('stop-btn').classList.toggle('vis', on);
 }
 function stopGen(){ws?.readyState===1&&ws.send(JSON.stringify({type:'stop'}));setProcessing(false);}
-function showQueueBadge(count){
+function showQueueBadge(count,mode){
   const btn=document.getElementById('queue-btn');
   const cnt=document.getElementById('queue-btn-count');
   if(!btn||!cnt) return;
   cnt.textContent=count;
+  const label=document.getElementById('queue-btn-label');
+  if(label) label.textContent=mode==='steer'?'added to active work':'queued';
+  btn.setAttribute('data-tooltip',mode==='steer'
+    ?'Nova will incorporate this at the next completed model or tool step; current work continues.'
+    :'Your message is queued for the next available turn.');
   btn.classList.add('vis');
 }
 function hideQueueBadge(){
@@ -6293,7 +6352,7 @@ if(new URLSearchParams(location.search).get('layout')==='legacy'){
 <link rel="stylesheet" href="/static/updater.css?v=updater-wallet-1">
 <script src="/static/updater.js?v=updater-cleanup-1"></script>
 <link rel="stylesheet" href="/static/voice.css?v=voice-widget-3">
-<script src="/static/voice.js?v=voice-widget-3"></script>
+<script src="/static/voice.js?v=voice-segments-1"></script>
 <script src="/static/workspace.js?v=voice-widget-1"></script>
 <script src="/static/conversation-power.js?v=compact-power-2"></script>
 </body>

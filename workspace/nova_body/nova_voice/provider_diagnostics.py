@@ -1,3 +1,4 @@
+# Last updated: 2026-10-05 21:33:05
 # @nova: Capture bounded opt-in provider payloads and phase timings in disposable Temp diagnostics without changing generation.
 """Local debugging only. No capture without a short-lived explicit marker; never image pixels."""
 from datetime import datetime, timezone

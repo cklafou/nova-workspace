@@ -1,5 +1,5 @@
 # Reach: pull a conversation by timestamp
-_Last updated: 2026-10-04 15:01:24_
+_Last updated: 2026-10-05 21:33:07_
 
 ## GAP
 Can't look back at a specific moment. "Show me how I sounded at 10:16" has no limb to reach on, so the answer is always whatever I remember instead of what actually happened there.

@@ -1,5 +1,5 @@
-# Last updated: 2026-10-05 18:41:04
 # @nova: Sanitize delivered text and serialize interruptible speech with explicit playback outcomes.
+# Last updated: 2026-10-05 21:33:05
 """voice_gateway/speech.py — speakable text and ordered, interruptible playback.
 
 speech_text() removes what must never be read aloud: tool markers ("[`computer_look` resulted in
@@ -55,6 +55,7 @@ class Utterance:
     run_id: str = ""
     index: int = 0
     audit: dict = field(default_factory=dict)
+    segment_index: int = 0
 
 
 class SpeechPlayer:
@@ -66,6 +67,9 @@ class SpeechPlayer:
         self._queue: asyncio.Queue | None = None
         self._task = None
         self._epoch = 0
+        self._cut_epoch = 0
+        self._resume = None
+        self._held = False
         self._closed = False
         self._last_end = float("-inf")
 
@@ -73,6 +77,8 @@ class SpeechPlayer:
         if self._closed or self._task is not None:
             raise RuntimeError("speech player is closed or already started")
         self._queue = asyncio.Queue()
+        self._resume = asyncio.Event()
+        self._resume.set()
         self._task = asyncio.get_running_loop().create_task(self._run())
         return self
 
@@ -99,23 +105,36 @@ class SpeechPlayer:
 
     def active(self) -> bool:
         """Speaking now, or units waiting to be spoken."""
-        return self.current is not None or (self._queue is not None and not self._queue.empty())
+        return self.current is not None or self._held or (self._queue is not None and not self._queue.empty())
 
     def busy(self) -> bool:
         """active(), or inside the tail after the last unit (the half-duplex mic gate)."""
         return self.active() or time.monotonic() - self._last_end < self.tail_s
 
-    def interrupt(self, reason: str) -> int:
-        """Drop every queued unit and stop the current one. Returns how many units were cut."""
-        self._epoch += 1
+    def pause(self) -> None:
+        """Hold pending committed speech while the person finishes speaking."""
+        if self._resume is not None:
+            self._resume.clear()
+
+    def resume(self) -> None:
+        if not self._closed and self._resume is not None:
+            self._resume.set()
+
+    def interrupt(self, reason: str, *, preserve_queue=False) -> int:
+        """Cut current audio; explicit Stop flushes, while barge-in can retain committed units."""
+        self._cut_epoch += 1
+        if not preserve_queue:
+            self._epoch += 1
         dropped = 0
-        while self._queue is not None:
+        while not preserve_queue and self._queue is not None:
             try:
                 self._queue.get_nowait()
             except asyncio.QueueEmpty:
                 break
             self._queue.task_done()
             dropped += 1
+        if not preserve_queue and self._resume is not None:
+            self._resume.set()
         cut = self.current
         if cut is not None:
             stop = getattr(self.tts, "stop", None)
@@ -138,12 +157,16 @@ class SpeechPlayer:
         hooks = _hooks(self.tts)
         while True:
             epoch, u = await self._queue.get()
+            self._held = True
             try:
-                if epoch != self._epoch:
+                await self._resume.wait()
+                self._held = False
+                if epoch != self._epoch or self._closed:
                     continue
                 self.current = u
-                ids = dict(message_id=u.message_id, request_id=u.request_id, run_id=u.run_id, unit=u.index)
-                stale = lambda e=epoch: e != self._epoch
+                ids = dict(message_id=u.message_id, request_id=u.request_id, run_id=u.run_id,
+                           unit=u.index, segment_index=u.segment_index)
+                stale = lambda e=epoch, c=self._cut_epoch: e != self._epoch or c != self._cut_epoch or self._closed
                 started = []
                 requested_at = time.monotonic()
                 playback_at = []
@@ -195,6 +218,7 @@ class SpeechPlayer:
                                playback_ms=round((time.monotonic() - playback_at[0]) * 1000, 1) if playback_at else None,
                                **details, **metadata, **ids)
             finally:
+                self._held = False
                 self.current = None
                 self._last_end = time.monotonic()
                 self._queue.task_done()

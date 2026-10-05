@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 18:23:37
+# Last updated: 2026-10-05 21:33:05
 # @nova: Minimal HTTPS client for public model catalogs: JSON and text GETs with timeouts, and resumable download streams.
 """Standard-library HTTP for the updater. No third-party dependencies.
 

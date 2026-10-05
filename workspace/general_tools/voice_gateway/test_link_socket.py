@@ -1,3 +1,4 @@
+# Last updated: 2026-10-05 21:47:02
 # @nova: Verify voice transport and disconnect cleanup against a local mock WebSocket server.
 #   2026-10-05 event contract, the gateway's NovaLink + session on the other end. No Nova, no audio.
 """Run: python general_tools/voice_gateway/test_link_socket.py   (needs `websockets`; skips without)"""

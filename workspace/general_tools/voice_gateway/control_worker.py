@@ -84,7 +84,8 @@ def probe(cfg):
                              "microphone_test": bool(audio), "speaker_test": bool(tts)},
             "backends": {"input": cfg.stt_backend, "input_label": assets.get("label", cfg.stt_backend),
                          "output": cfg.tts_backend, "vad": cfg.vad_backend},
-            "assets": assets, "packages": packages}
+            "assets": assets, "packages": packages,
+            "settings": {"end_of_turn_silence_ms": cfg.silence_ms}}
 
 
 def devices():
@@ -270,8 +271,9 @@ async def voice(cfg, control):
                                   message=f"Voice request cancellation was not confirmed ({type(error).__name__}); "
                                           "Nova may still be finishing that request. Audio is stopped locally.")
             def schedule_cancellation():
-                ids = [rid for rid, pending in session.pending.items()
-                       if pending.eligible and rid not in cancellation_ids]
+                # Explicit End call owns all pending inputs, including those whose earlier
+                # audio was retired by a follow-up. New input never calls this function.
+                ids = [rid for rid in session.pending if rid not in cancellation_ids]
                 if not ids:
                     return None
                 cancellation_ids.update(ids)
@@ -283,17 +285,19 @@ async def voice(cfg, control):
             def recognition_state(state):
                 if control.stop.is_set():
                     return
-                if state == "transcribing" and not player.active():
-                    body.emit("state", state="transcribing")
+                if state in {"hearing", "finishing_turn", "transcribing"} and (cfg.duplex == "full" or not player.active()):
+                    if cfg.duplex == "full" and cfg.barge_in:
+                        player.pause()
+                    body.emit("state", state=state)
                 elif state == "listening":
+                    player.resume()
                     session._settle()
             stt.on_state = recognition_state
             stt.on_diagnostic = lambda message: report("body", event={"type": "diagnostic", "level": "warning", "message": message})
             stt.gate = lambda: not control.microphone_muted and (cfg.duplex == "full" or not player.busy())
             if cfg.duplex == "full" and cfg.barge_in:
                 def barge_in():
-                    schedule_cancellation()
-                    session.barge_in()
+                    session.barge_in()                # cut audio, preserve active body work
                 stt.on_speech_start = barge_in
             async def mic():
                 async for text in stt.utterances():
@@ -302,11 +306,9 @@ async def voice(cfg, control):
                     if control.microphone_muted:
                         continue
                     report("transcript", text=text)
-                    cancellation = schedule_cancellation()
                     request_id = new_request_id()
-                    session.sent(request_id, text)       # retire old audio immediately, before cancellation I/O
-                    if cancellation is not None:
-                        await cancellation
+                    session.sent(request_id, text)       # preserve committed speech; append input to body work
+                    player.resume()
                     if control.stop.is_set():
                         return
                     await link.say(text, request_id=request_id)
@@ -320,7 +322,8 @@ async def voice(cfg, control):
             parts = [asyncio.create_task(mic()), asyncio.create_task(inbound()),
                      asyncio.create_task(control.stop.wait()), asyncio.create_task(sweep())]
             report("state", state="listening", reason="Voice connected", backends={"input": stt.name, "input_label": local_asset_status(cfg).get("label", stt.name),
-                        "output": tts.name, "vad": cfg.vad_backend})
+                        "output": tts.name, "vad": cfg.vad_backend},
+                   settings={"end_of_turn_silence_ms": cfg.silence_ms})
             try:
                 done, _ = await asyncio.wait(parts[:3], return_when=asyncio.FIRST_COMPLETED)
                 for task in done:

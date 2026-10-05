@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 18:23:37
+# Last updated: 2026-10-05 21:33:05
 # @nova: Works out which model, projector and LoRAs Nova boots with, from her boot files or the launcher, without opening model files.
 """What is Nova running?
 

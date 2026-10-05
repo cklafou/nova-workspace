@@ -1,7 +1,7 @@
 > **SUPERSEDED (2026-10-05).** This 2026-10-04 sketch is not the applied design. Nova Chat's live contract (request_id, reply_to, run_id, register, delivery, audit) lives in `general_tools/nova_chat/response_events.py` and the server's queue/runtime path; see this folder's README.
 
 # Optional server patch — thread the voice `register` to `stream_response`
-_Last updated: 2026-10-04 15:01:24_
+_Last updated: 2026-10-05 21:33:06_
 
 **The gateway works without this.** At "text" register (the server's current default) a voice
 turn runs with the full 20 witness rounds — correct, just slower under a dispute. This patch

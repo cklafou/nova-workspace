@@ -1,6 +1,6 @@
 # CODER — KoELS expert spec
 <!-- @nova: Spec for the CODER expert loadout: the engineering judgment its adapter adds to Nova-core, corpus plan, acceptance probes, build order. -->
-_Last updated: 2026-10-04 15:01:24_
+_Last updated: 2026-10-05 21:33:06_
 _2026-08-01, Claude (Fable), at Cole's direction. Contract-first, same as gaming: the
 manifest is live for her loadout faculty today; adapter and knowledge DB get built next.
 Sequence context: v7 personality first (bundle ready, pod pending), then this adapter, then

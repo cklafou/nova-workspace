@@ -1,4 +1,4 @@
-_Last updated: 2026-10-05 18:20:09_
+_Last updated: 2026-10-05 21:33:07_
 <!-- @nova: Explain the independently labelled witness controls, evidence provenance and repeatable replay command. -->
 # Witness controls v1
 

@@ -1,4 +1,5 @@
 # @nova: Test voice identity, delivery, interruption and truthful playback using isolated fake backends.
+# Last updated: 2026-10-05 21:47:05
 #   never spoken, request matching, interruption, audit passthrough and the server event contract.
 """Run: python general_tools/voice_gateway/test_voice_flow.py   (no Nova, no audio, no network)"""
 from __future__ import annotations
@@ -213,7 +214,7 @@ class Flow(unittest.IsolatedAsyncioTestCase):
         for f in turn(content="First sentence here. Second sentence here."):
             session.handle(parse_event(f))
         await asyncio.sleep(0.05)                                # synthesizing unit 0
-        session.sent("req2", "stop")
+        session.cancel("voice_stopped")
         tts.release.set()
         await player.drain()
         self.assertEqual(tts.generated, ["First sentence here."])
@@ -341,7 +342,7 @@ class Flow(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(session.sweep()), 19)
         self.assertEqual(list(session.pending), ["r19"])
 
-    async def test_new_request_and_stop_interrupt_speech(self):
+    async def test_new_input_preserves_delivered_speech_but_explicit_stop_flushes(self):
         tts = FakeTTS(block=True)
         player = SpeechPlayer(tts, self.body, tail_s=0).start()
         self.addAsyncCleanup(player.close)
@@ -351,12 +352,15 @@ class Flow(unittest.IsolatedAsyncioTestCase):
             session.handle(parse_event(f))
         await asyncio.sleep(0.05)                       # first unit is now speaking
         self.assertTrue(player.active())
-        session.sent("req2", "stop, different question")
+        session.sent("req2", "additional detail")
+        self.assertEqual(tts.stops, 0)                  # input is not an implicit Stop
+        self.assertTrue(player.active())
+        session.handle(parse_event({"type": "stopped"}))
         await player.drain()
         self.assertEqual(tts.spoken, ["One. Two is here."])   # "Three is last." was dropped
         self.assertEqual(tts.stops, 1)
         cut = self.body.of("interrupt")[-1]
-        self.assertEqual((cut["reason"], cut["cut_message_id"]), ("new_request", "m1"))
+        self.assertEqual((cut["reason"], cut["cut_message_id"]), ("stopped", "m1"))
         session.handle(parse_event({"type": "stopped"}))   # nothing playing: no further cut event
 
     async def test_half_duplex_gate_follows_playback(self):
@@ -380,7 +384,7 @@ class Flow(unittest.IsolatedAsyncioTestCase):
         cfg.speak_from = "stream"
         body = MemoryBody()
         session = VoiceSession(cfg, self.player, body, log=lambda *_: None)
-        self.assertIn("first stage", body.of("diagnostic")[0]["message"])
+        self.assertIn("does not permit token speech", body.of("diagnostic")[0]["message"])
         session.sent("req1", "hi")
         session.handle(parse_event(frame("token", token="Pre-audit words.")) or parse_event(frame("message_start")))
         await self.player.drain()

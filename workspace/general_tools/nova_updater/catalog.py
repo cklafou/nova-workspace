@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 18:23:37
+# Last updated: 2026-10-05 21:33:05
 # @nova: Searches public model repositories (Hugging Face, ModelScope, Ollama) and lists a model's downloadable files with sizes and hashes.
 """Model repositories the updater can search.
 

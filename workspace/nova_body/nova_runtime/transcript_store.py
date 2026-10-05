@@ -1,3 +1,4 @@
+# @nova: Persist body conversation messages and exact answered-input coverage across restart.
 # Last updated: 2026-10-05 21:27:11
 # @nova: Runtime transcript store — her runtime's own view of the conversation.
 #        A face WRITES messages in (append); her runtime READS them (has_unread_cole,
@@ -63,9 +64,13 @@ class TranscriptStore:
     def _load(self) -> None:
         """Read the message log + the attended marker from disk (resume after restart)."""
         self.messages = []
+        self._next_seq = 0
+        covered = -1
+        cole_sequences = set()
         if self.log_path.exists():
             with open(self.log_path, encoding="utf-8") as f:
                 for seq, line in enumerate(f):
+                    self._next_seq = seq + 1
                     line = line.strip()
                     if not line:
                         continue
@@ -73,14 +78,21 @@ class TranscriptStore:
                         m = json.loads(line)
                         m["seq"] = seq          # seq = position in the durable log
                         self.messages.append(m)
+                        if m.get("author") == "Cole":
+                            cole_sequences.add(seq)
+                        claim = m.get("attended_through")
+                        if (m.get("author") == "Nova" and type(claim) is int and claim in cole_sequences):
+                            covered = max(covered, claim)
                     except Exception:
                         continue
+        self.attended_through = covered
         if self.state_path.exists():
             try:
-                self.attended_through = int(json.loads(
-                    self.state_path.read_text(encoding="utf-8")).get("attended_through", -1))
+                claim = json.loads(self.state_path.read_text(encoding="utf-8")).get("attended_through", -1)
+                if type(claim) is int and claim in cole_sequences:
+                    self.attended_through = max(self.attended_through, claim)
             except Exception:
-                self.attended_through = -1
+                pass  # A response's durable coverage still survives a missing/broken sidecar.
 
     def reload_from_disk(self) -> None:
         """Re-read the log so the runtime sees messages a separate face process appended.
@@ -96,21 +108,35 @@ class TranscriptStore:
 
     # ── write (face side) ─────────────────────────────────────────────────────────
 
-    def append(self, author: str, content: str, directed_at=None, images=None) -> dict:
+    def append(self, author: str, content: str, directed_at=None, images=None, *,
+               attended_through=None, response_metadata=None) -> dict:
         """Record one message. Returns it (with its assigned seq). The face calls this;
-        the runtime only reads."""
+        headless delivery uses the same method with explicit covered-input metadata."""
         with self._lock:
-            seq = len(self.messages)
+            if attended_through is not None:
+                if (author != "Nova" or type(attended_through) is not int or not any(
+                        m.get("author") == "Cole" and m.get("seq") == attended_through for m in self.messages)):
+                    raise ValueError("Reply coverage must name an existing Cole sequence")
+            metadata = json.loads(json.dumps(response_metadata)) if response_metadata is not None else None
+            seq = self._next_seq
             msg = {"seq": seq, "timestamp": datetime.now().isoformat(),
                    "author": author, "content": content, "directed_at": directed_at}
             if images:
                 msg["images"] = images
-            self.messages.append(msg)
+            if attended_through is not None:
+                msg["attended_through"] = attended_through
+            if metadata is not None:
+                msg["response"] = metadata
             # Persist the message itself WITHOUT the runtime-only "seq" field, so the log
             # stays compatible with the existing chat transcript format (seq is derived).
             on_disk = {k: v for k, v in msg.items() if k != "seq"}
             with open(self.log_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(on_disk, ensure_ascii=False) + "\n")
+            self.messages.append(msg)
+            self._next_seq = seq + 1
+            if attended_through is not None:
+                self.attended_through = max(self.attended_through, attended_through)
+                self._persist_state()
         return msg
 
     # ── read (runtime side) ───────────────────────────────────────────────────────

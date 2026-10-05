@@ -1,4 +1,5 @@
 # @nova: Supervise explicit local voice sessions, device settings and bounded audio tests for Conversation controls.
+# Last updated: 2026-10-05 21:33:05
 from __future__ import annotations
 
 import asyncio
@@ -145,11 +146,15 @@ class VoiceController:
         with self._lock:
             ready = self._probe or {}
             running = self._proc is not None and self._proc.poll() is None
+            settings = dict(self.settings)
+            pause = (ready.get("settings") or {}).get("end_of_turn_silence_ms")
+            if isinstance(pause, (int, float)) and not isinstance(pause, bool) and pause > 0:
+                settings["end_of_turn_silence_ms"] = pause
             return {"running": running, "state": self._state,
                     "available": bool(ready.get("available")), "reason": self._reason if running else ready.get("reason", self._reason),
                     "error": self._error, "microphone_muted": self._microphone_muted,
                     "output_muted": self._output_muted, "capabilities": ready.get("capabilities", {}),
-                    "settings": dict(self.settings), "backends": ready.get("backends", {}),
+                    "settings": settings, "backends": ready.get("backends", {}),
                     "last_caption": self._last_caption, "last_transcript": self._last_transcript,
                     "last_turn": dict(self._last_turn) if self._last_turn else None,
                     "last_playback": dict(self._last_playback) if self._last_playback else None,
@@ -196,6 +201,8 @@ class VoiceController:
             self._reason = str(event.get("reason", ""))[:500]
             if self._probe and event.get("backends"):
                 self._probe["backends"] = event["backends"]
+            if self._probe is not None and isinstance(event.get("settings"), dict):
+                self._probe["settings"] = dict(event["settings"])
         elif kind == "mute":
             self._microphone_muted = bool(event.get("microphone_muted"))
             self._output_muted = bool(event.get("output_muted"))
@@ -206,7 +213,7 @@ class VoiceController:
         elif kind == "body":
             value = event.get("event", {})
             body_type = value.get("type")
-            fields = {key: value[key] for key in ("type", "ts", "phase", "state", "request_id", "message_id",
+            fields = {key: value[key] for key in ("type", "ts", "phase", "state", "request_id", "message_id", "turn_id", "segment_index", "segment_count", "input_revision",
                       "run_id", "unit", "delivery", "audit", "eligible", "queued_units", "why", "elapsed_s",
                       "delayed", "outcome", "clock", "backend", "output_device", "synthesis_ms", "playback_ms", "duration_ms")
                       if key in value}

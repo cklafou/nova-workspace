@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-05T12:33:05+00:00 from source (input `67bcb72d19b2`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T13:34:45+00:00 from source (input `1deddb173f8d`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
@@ -49,12 +49,12 @@ watcher reports that error and continues autosave; documentation failure must no
 
 The [interactive explorer](Architecture/index.html) and the call-order pages under `Architecture/`
 are rebuilt on demand (`Architecture/REBUILD_MAP.cmd`, `python general_tools/calls_order.py`).
-Last built 2026-10-04 05:12 UTC; as of this generation, 222 source file(s) had been modified since.
+Last built 2026-10-04 05:12 UTC; as of this generation, 229 source file(s) had been modified since.
 
 **AI notes.** Claude, Codex and the other agents leave a note in [AI Notes](AI%20Notes/ReadMeBeforeNoteTaking.md) after each session: what changed, why, and what is still open. Read the rules once, then every note since your own last one. Newest first:
 
-- [2026-10-05_2129_Codex_SteeringSemanticsCorrection.md](AI%20Notes/2026-10-05_2129_Codex_SteeringSemanticsCorrection.md)
-- [2026-10-05_2129_Claude_SteeringLikeClaude.md](AI%20Notes/2026-10-05_2129_Claude_SteeringLikeClaude.md)
-- [2026-10-05_2121_Codex_VoiceTurnEndpointing.md](AI%20Notes/2026-10-05_2121_Codex_VoiceTurnEndpointing.md)
-- [2026-10-05_2120_Codex_SharedSteeringReview.md](AI%20Notes/2026-10-05_2120_Codex_SharedSteeringReview.md)
-- [2026-10-05_2119_Codex_VoiceTurnAndMuteStatus.md](AI%20Notes/2026-10-05_2119_Codex_VoiceTurnAndMuteStatus.md)
+- [2026-10-05_2234_Codex_BodyWorkOwnership.md](AI%20Notes/2026-10-05_2234_Codex_BodyWorkOwnership.md)
+- [2026-10-05_2233_Codex_SegmentedVoiceAndSharedContext.md](AI%20Notes/2026-10-05_2233_Codex_SegmentedVoiceAndSharedContext.md)
+- [2026-10-05_2233_Codex_OngoingWorkIntegration.md](AI%20Notes/2026-10-05_2233_Codex_OngoingWorkIntegration.md)
+- [2026-10-05_2229_Codex_AutonomyStepBoundaries.md](AI%20Notes/2026-10-05_2229_Codex_AutonomyStepBoundaries.md)
+- [2026-10-05_2213_Codex_BodyOutputSegments.md](AI%20Notes/2026-10-05_2213_Codex_BodyOutputSegments.md)

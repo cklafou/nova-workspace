@@ -2,6 +2,7 @@
 # Last updated: 2026-10-05 21:24:29
 """Pure text-budget estimation; image tokens and exact tokenizer costs remain provider-dependent."""
 from copy import deepcopy
+from nova_runtime.conversation import ANCHOR, RECEIPT_ANCHOR
 import re
 
 CONTINUITY_START = "--- TASK CONTINUITY ---"
@@ -82,22 +83,34 @@ def _current_request(messages):
     return (actual or users or [None])[-1]
 
 
+def anchor_current_request(messages):
+    """Mark the original request once, before continuation messages are appended."""
+    index = _current_request(messages)
+    if index is not None:
+        messages[index][ANCHOR] = True
+    return messages
+
+
 def fit_messages(messages, *, max_chars=174000, per_message=24000):
     """Bound all text, preserving system context, current request and newest turn.
 
     Ordinary messages are capped individually; systems are only shortened if the
     total budget requires it. Older history goes first. No minimum-turn override
     may silently exceed the budget. Extremely small budgets can still shorten
-    critical content and visibly mark the omission.
+    critical content and visibly mark the omission. Explicit active-turn anchors
+    are never shortened; if those alone overflow, fail explicitly instead.
     """
     budget = max(0, int(max_chars))
     cap = max(0, int(per_message))
-    fitted = [deepcopy(m) if m.get("role") == "system" else _clip_message(m, cap)
+    fitted = [deepcopy(m) if m.get("role") == "system" or m.get(ANCHOR) or m.get(RECEIPT_ANCHOR) else _clip_message(m, cap)
               for m in messages]
     current = _current_request(fitted)
     newest = next((i for i in range(len(fitted) - 1, -1, -1)
                    if fitted[i].get("role") != "system"), None)
-    protected = {i for i in (current, newest) if i is not None}
+    anchors = {i for i, m in enumerate(fitted) if m.get(ANCHOR) or m.get(RECEIPT_ANCHOR)}
+    if sum(len(content_text(fitted[i].get("content"))) for i in anchors) > budget:
+        raise ValueError("Accepted conversation requests and completed-action records exceed the context budget; none were silently discarded")
+    protected = {i for i in (current, newest) if i is not None} | anchors
     kept = list(range(len(fitted)))
     total = text_size(fitted)
     for index, message in enumerate(fitted):
@@ -120,7 +133,7 @@ def fit_messages(messages, *, max_chars=174000, per_message=24000):
             fitted[index] = shortened
     # Only exceptional tiny budgets reach this path. Preserve the current request
     # ahead of a newer tool receipt; never resurrect overflow to keep N turns.
-    for index in sorted(protected, key=lambda i: i == current):
+    for index in sorted(protected - anchors, key=lambda i: i == current):
         if total <= budget:
             break
         size = len(content_text(fitted[index].get("content")))

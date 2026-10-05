@@ -1,4 +1,4 @@
-# @nova: Exercise real server voice routing and response callbacks with isolated providers, sessions and event sinks.
+# @nova: Verify face routing, body-owned continuation, request correlation and Stop with isolated provider/session fixtures.
 # Last updated: 2026-10-05 17:52:28
 import ast
 import asyncio
@@ -39,15 +39,26 @@ spec = importlib.util.spec_from_file_location('isolated_response_events', EVENTS
 events_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(events_module)
 NORMALIZERS = extract(MODEL_CLIENT, {'normalize_register'}, {})
+conversation_spec = importlib.util.spec_from_file_location('isolated_body_conversation',
+    WORKSPACE / 'nova_body/nova_runtime/conversation.py')
+conversation_module = importlib.util.module_from_spec(conversation_spec)
+conversation_spec.loader.exec_module(conversation_module)
+work_spec = importlib.util.spec_from_file_location('isolated_body_work_owner',
+    WORKSPACE / 'nova_body/nova_runtime/work_owner.py')
+work_module = importlib.util.module_from_spec(work_spec)
+work_spec.loader.exec_module(work_module)
 
 
 class Transcript:
     def __init__(self):
         self.messages = []
 
-    def add(self, author, content, directed_at=None, images=None):
+    def add(self, author, content, directed_at=None, images=None, response_metadata=None):
         message = {'id': 'stored-' + str(len(self.messages)), 'author': author,
                    'content': content, 'timestamp': datetime.now().isoformat(), 'images': images or []}
+        if response_metadata is not None:
+            from copy import deepcopy
+            message['response_metadata'] = deepcopy(response_metadata)
         self.messages.append(message)
         return message
 
@@ -111,7 +122,7 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
             _llama_error_streak=0, _last_error_msg='', _last_error_time=0,
             _ERROR_DEDUP_WINDOW=30, _LLAMA_ERROR_BACKOFF=3,
             _inflight_upto=0, CLIENT_MAP={'Nova': object()}, _mute_states={'Nova': False},
-            _cole_message_queue=[], _request_work={}, is_processing=False,
+            _cole_message_queue=[], _request_work={}, _turn_transports={}, is_processing=False,
             get_status=AsyncMock(return_value={'Nova': True}),
             build_response_queue=lambda targets, status: [n for n in targets if status.get(n)],
             parse_directed=lambda content: [], _resolve_speaker=lambda value: value or 'Cole',
@@ -133,9 +144,425 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
                                                 'nova_cortex': fake_cortex, 'nova_voice': fake_voice})
         self.modules.start()
         self.addCleanup(self.modules.stop)
-        extract(SERVER, {'run_ai_response', '_run_response_queue', '_drain_cole_queue', '_end_queued_request',
-                         '_release_request_work', '_scoped_stop_reply', '_stop_request',
+        extract(SERVER, {'run_ai_response', '_run_ai_response_owned', '_attend_autonomy_inputs', '_run_response_queue', '_drain_cole_queue', '_end_queued_request',
+                         '_release_request_work', '_scoped_stop_reply', '_stop_request', '_steer_request',
                          'websocket_endpoint'}, self.ns)
+
+    def start_body_response(self, provider, *, owner=None):
+        """Run actual face callbacks/registry with the actual body inbox; only inference is fake."""
+        owner = owner or Socket([])
+        manager = conversation_module.ConversationTurns()
+        generate = AsyncMock(side_effect=provider)
+        self.ns['_rt'] = types.SimpleNamespace(conversations=manager,
+            model_client=types.SimpleNamespace(generate=generate))
+        message = self.transcript.add('Cole', 'original request')
+        work = dict(owner=owner, request_id='initial', register='voice', msg=message,
+                    content=message['content'], transcript=self.transcript,
+                    conversation_id=self.session.active_id, directed_at=[], images=[])
+        self.ns['_request_work'][(owner, 'initial')] = work
+        self.ns['is_processing'] = True
+        task = asyncio.create_task(self.ns['run_ai_response']('Nova', object(), 'shared-reply',
+            message['content'], register='voice', reply_to=message['id'], request_id='initial',
+            request_work=work))
+        work.update(task=task, started=True)
+        async def cleanup():
+            if not task.done():
+                task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+        self.addAsyncCleanup(cleanup)
+        return owner, manager, task, generate
+
+    async def send_inputs(self, owner, inputs):
+        owner.messages = iter([dict(type='message', content=content, register='voice', request_id=rid)
+                               for rid, content in inputs])
+        await self.ns['websocket_endpoint'](owner)
+
+    async def test_autonomous_owner_attends_input_then_resumes_same_work_with_context(self):
+        coordinator = work_module.WorkCoordinator()
+        manager = conversation_module.ConversationTurns()
+        owner_id = None
+        async def provider(_name, transcript, **sinks):
+            self.assertEqual(coordinator.active.id, owner_id)
+            self.assertEqual(coordinator.active.kind, 'autonomy')
+            self.assertIn('original-project-task', sinks['workspace_context'])
+            self.assertIn('Completed inspection; action receipt retained.', sinks['workspace_context'])
+            turn = sinks['steering']
+            await sinks['on_segment']('I incorporated that while keeping the project task.', dict(
+                turn_id=turn.turn_id, segment_index=1, input_revision=0,
+                audit=dict(status='PASS', input_revision=0, turn_id=turn.turn_id)))
+            self.assertTrue(turn.try_seal())
+            await sinks['on_done']('I incorporated that while keeping the project task.')
+        self.ns['_rt'] = types.SimpleNamespace(work_owner=coordinator, conversations=manager,
+            model_client=types.SimpleNamespace(generate=AsyncMock(side_effect=provider)))
+        self.ns['is_processing'] = True
+        async with coordinator.lease('autonomy', focus='original-project-task') as owner:
+            owner_id = owner.id
+            owner.record_phase('execution', 'Completed inspection; action receipt retained.')
+            ws = Socket([dict(type='message', content='Add a note to the current task.',
+                              register='text', request_id='during-autonomy')])
+            await self.ns['websocket_endpoint'](ws)
+            self.assertTrue(owner.pending)
+            self.assertEqual(len(self.ns['_cole_message_queue']), 1)
+            self.assertTrue(await self.ns['_attend_autonomy_inputs'](owner))
+            self.assertEqual(coordinator.active.id, owner_id)
+            self.assertEqual(owner.focus, 'original-project-task')
+            self.assertFalse(owner.pending)
+            self.assertFalse(self.ns['_cole_message_queue'])
+            self.assertEqual(owner.phase_outputs[0]['text'], 'Completed inspection; action receipt retained.')
+        self.assertIsNone(coordinator.active)
+        self.assertEqual(self.terminal()[0]['request_ids'], ['during-autonomy'])
+
+    async def test_completed_segments_survive_followups_and_terminal_does_not_duplicate_history(self):
+        delivered, proceed = asyncio.Event(), asyncio.Event()
+        async def provider(_name, transcript, **sinks):
+            turn = sinks['steering']
+            async def segment(text, index):
+                await sinks['on_segment'](text, dict(turn_id=turn.turn_id, segment_index=index,
+                    input_revision=turn.applied_revision, audit=dict(status='PASS', source='fixture',
+                    reason='Fixture evidence', turn_id=turn.turn_id, input_revision=turn.applied_revision)))
+            await segment('First completed useful result.', 1)
+            delivered.set()
+            await proceed.wait()
+            batch, revision = await turn.consume()
+            self.assertEqual(len(batch), 1)
+            self.assertTrue(batch[0]['content'].endswith('added requirement'))
+            await segment('Next result incorporates the added requirement.', 2)
+            self.assertTrue(turn.try_seal())
+            await sinks['on_done']('First completed useful result.\n\nNext result incorporates the added requirement.')
+        owner, _, task, _ = self.start_body_response(provider)
+        await asyncio.wait_for(delivered.wait(), 2)
+        self.assertFalse(task.done(), 'Useful result must arrive before the work is finished')
+        self.assertFalse(self.terminal())
+        await self.send_inputs(owner, [('followup', 'added requirement')])
+        proceed.set()
+        await asyncio.wait_for(task, 2)
+        parts = [e for e in self.events if e['type'] == 'message_segment']
+        self.assertEqual([e['segment_index'] for e in parts], [1, 2])
+        self.assertEqual(parts[0]['request_ids'], ['initial'])
+        self.assertEqual(parts[1]['request_ids'], ['initial', 'followup'])
+        self.assertEqual(self.terminal()[0]['segment_count'], 2)
+        self.assertEqual([m['content'] for m in self.transcript.messages if m['author'] == 'Nova'],
+                         [e['content'] for e in parts])
+        self.assertEqual(self.terminal()[0]['content'], '\n\n'.join(e['content'] for e in parts))
+
+    async def test_scoped_stop_acknowledges_owner_completion_without_killing_scheduler(self):
+        coordinator = work_module.WorkCoordinator()
+        self.ns['_rt'] = types.SimpleNamespace(work_owner=coordinator)
+        entered, still_available = asyncio.Event(), asyncio.Event()
+        async def scheduler():
+            async with coordinator.lease('autonomy') as owner:
+                entered.set()
+                try:
+                    await asyncio.Event().wait()
+                except asyncio.CancelledError:
+                    if not owner.absorb_requested_stop():
+                        raise
+            still_available.set()
+            await asyncio.Event().wait()
+        task = asyncio.create_task(scheduler())
+        try:
+            await asyncio.wait_for(entered.wait(), 2)
+            ws = Socket([])
+            self.ns['_request_work'][(ws, 'owned-input')] = dict(owner=ws, request_id='owned-input',
+                                                               task=task, started=True)
+            await self.ns['_stop_request'](ws, 'owned-input')
+            self.assertTrue(still_available.is_set())
+            self.assertFalse(task.done())
+            self.assertIsNone(coordinator.active)
+            self.assertEqual(ws.sent, [dict(type='stopped', request_id='owned-input', matched=True)])
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+    async def test_input_after_nested_seal_enters_next_body_boundary(self):
+        coordinator = work_module.WorkCoordinator()
+        manager = conversation_module.ConversationTurns()
+        self.ns['_rt'] = types.SimpleNamespace(work_owner=coordinator, conversations=manager)
+        async with coordinator.lease('autonomy', focus='retained-task') as owner:
+            sealed = manager.begin(self.session.active_id)
+            self.assertTrue(sealed.try_seal())
+            self.ns['_turn_transports'][self.session.active_id] = dict(
+                turn=sealed, task=asyncio.current_task(), works=[])
+            message = self.transcript.add('Cole', 'arrived during terminal broadcast')
+            work = dict(content=message['content'], msg=message, request_id='late',
+                        conversation_id=self.session.active_id, directed_at=[])
+            self.assertFalse(self.ns['_steer_request'](work))
+            self.assertTrue(work['body_admitted'])
+            self.assertEqual(owner.take_inputs()[0]['reply_to'], message['id'])
+            manager.end(self.session.active_id, sealed)
+
+    async def test_index_failure_cannot_suppress_a_saved_segment(self):
+        async def provider(_name, transcript, **sinks):
+            turn = sinks['steering']
+            await sinks['on_segment']('Saved despite index outage.', dict(turn_id=turn.turn_id,
+                segment_index=1, input_revision=0, audit=dict(status='PASS', source='fixture',
+                turn_id=turn.turn_id, input_revision=0)))
+            self.assertTrue(turn.try_seal())
+            await sinks['on_done']('Saved despite index outage.')
+        self.ns['memory_indexer'] = types.SimpleNamespace(add_message=Mock(side_effect=RuntimeError('index down')))
+        _, _, task, _ = self.start_body_response(provider)
+        await asyncio.wait_for(task, 2)
+        self.assertEqual(len([e for e in self.events if e['type'] == 'message_segment']), 1)
+        self.assertEqual(self.terminal()[0]['delivery'], 'delivered')
+        self.assertEqual(self.terminal()[0]['segment_count'], 1)
+
+    async def test_failed_segment_sink_is_not_counted_as_committed_delivery(self):
+        async def provider(_name, transcript, **sinks):
+            turn = sinks['steering']
+            self.transcript.add = Mock(side_effect=OSError('sink down'))
+            await sinks['on_segment']('Must not claim committed.', dict(turn_id=turn.turn_id,
+                segment_index=1, input_revision=0, audit=dict(status='PASS', source='fixture',
+                turn_id=turn.turn_id, input_revision=0)))
+        _, _, task, _ = self.start_body_response(provider)
+        result = await asyncio.gather(task, return_exceptions=True)
+        self.assertIsInstance(result[0], OSError)
+        self.assertFalse([e for e in self.events if e['type'] == 'message_segment'])
+        self.assertEqual(self.terminal()[0]['segment_count'], 0)
+        self.assertNotIn('Must not claim committed.', self.terminal()[0]['content'])
+
+    async def test_explicit_stop_retains_delivered_segment_and_withholds_unfinished_step(self):
+        delivered = asyncio.Event()
+        async def provider(_name, transcript, **sinks):
+            turn = sinks['steering']
+            await sinks['on_segment']('Completed before Stop.', dict(turn_id=turn.turn_id,
+                segment_index=1, input_revision=0, audit=dict(status='PASS', source='fixture',
+                reason='Fixture evidence', turn_id=turn.turn_id, input_revision=0)))
+            delivered.set()
+            await asyncio.Event().wait()
+        owner, _, task, _ = self.start_body_response(provider)
+        await asyncio.wait_for(delivered.wait(), 2)
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+        self.assertEqual([m['content'] for m in self.transcript.messages if m['author'] == 'Nova'],
+                         ['Completed before Stop.'])
+        self.assertEqual(self.terminal()[0]['delivery'], 'cancelled')
+        self.assertEqual(self.terminal()[0]['content'], 'Completed before Stop.')
+        self.assertEqual(self.terminal()[0]['segment_count'], 1)
+
+    async def test_admission_precedes_echo_await_and_context_follows_acknowledgement(self):
+        entered, attempt_consume = asyncio.Event(), asyncio.Event()
+        echo_entered, echo_release = asyncio.Event(), asyncio.Event()
+        observed = {}
+        async def provider(_name, transcript, **sinks):
+            observed['turn'] = sinks['steering']
+            entered.set()
+            await attempt_consume.wait()
+            observed['batch'], _ = await sinks['steering'].consume()
+            self.assertTrue(sinks['steering'].try_seal())
+            await sinks['on_done']('Answer after echo acknowledgement.')
+        owner, _, task, _ = self.start_body_response(provider)
+        await asyncio.wait_for(entered.wait(), 2)
+        normal_broadcast = self.ns['broadcast']
+        async def paused_echo(event):
+            if event.get('type') == 'user_message' and event.get('request_id') == 'during-echo':
+                echo_entered.set()
+                await echo_release.wait()
+            await normal_broadcast(event)
+        self.ns['broadcast'] = paused_echo
+        sending = asyncio.create_task(self.send_inputs(owner, [('during-echo', 'input before echo completes')]))
+        try:
+            await asyncio.wait_for(echo_entered.wait(), 2)
+            self.assertTrue(observed['turn'].pending)
+            self.assertFalse(observed['turn'].try_seal(), 'Accepted input must block stale final delivery')
+            attempt_consume.set()
+            await asyncio.sleep(.01)
+            self.assertFalse(task.done())
+            self.assertFalse(any(e['type'] == 'message_context' for e in self.events))
+        finally:
+            echo_release.set()
+            await asyncio.gather(sending, return_exceptions=True)
+        await asyncio.wait_for(task, 2)
+        relevant = [e['type'] for e in self.events if e['type'] in {'user_message', 'message_context', 'message_end'}]
+        self.assertEqual(relevant, ['user_message', 'message_context', 'message_end'])
+        self.assertEqual(self.terminal()[0]['request_ids'], ['initial', 'during-echo'])
+        self.assertEqual(len(observed['batch']), 1)
+
+    async def test_detached_socket_during_echo_does_not_strand_accepted_body_input(self):
+        entered, attempt_consume, echo_entered = asyncio.Event(), asyncio.Event(), asyncio.Event()
+        observed = {}
+        async def provider(_name, transcript, **sinks):
+            observed['turn'] = sinks['steering']
+            entered.set()
+            await attempt_consume.wait()
+            observed['batch'], _ = await sinks['steering'].consume()
+            self.assertTrue(sinks['steering'].try_seal())
+            await sinks['on_done']('Accepted input survives a detached face.')
+        owner, manager, task, _ = self.start_body_response(provider)
+        await asyncio.wait_for(entered.wait(), 2)
+        normal_broadcast = self.ns['broadcast']
+        async def paused_echo(event):
+            if event.get('type') == 'user_message' and event.get('request_id') == 'detached':
+                echo_entered.set()
+                await asyncio.Event().wait()
+            await normal_broadcast(event)
+        self.ns['broadcast'] = paused_echo
+        sending = asyncio.create_task(self.send_inputs(owner, [('detached', 'accepted before socket detaches')]))
+        try:
+            await asyncio.wait_for(echo_entered.wait(), 2)
+            self.assertTrue(observed['turn'].pending)
+        finally:
+            sending.cancel()
+            await asyncio.gather(sending, return_exceptions=True)
+        attempt_consume.set()
+        await asyncio.wait_for(task, 1)
+        self.assertEqual([entry['request_id'] for entry in observed['batch']], ['detached'])
+        self.assertEqual(self.terminal()[0]['request_ids'], ['initial', 'detached'])
+        self.assertIsNone(manager.get('session-fixture'))
+        self.assertEqual(self.ns['_request_work'], {})
+
+    async def test_three_followups_join_same_body_turn_once_after_pending_provider(self):
+        entered, finish = asyncio.Event(), asyncio.Event()
+        observed = {}
+        async def provider(_name, transcript, **sinks):
+            observed['snapshot'] = [m['content'] for m in transcript.messages]
+            observed['turn'] = sinks['steering']
+            entered.set()
+            await finish.wait()
+            observed['batch'], observed['revision'] = await sinks['steering'].consume()
+            observed['again'], _ = await sinks['steering'].consume()
+            self.assertTrue(sinks['steering'].try_seal())
+            await sinks['on_audit']({'status': 'PASS', 'source': 'inline', 'reason': 'fixture'})
+            await sinks['on_done']('One reply incorporating every follow-up.')
+        owner, manager, task, generate = self.start_body_response(provider)
+        await asyncio.wait_for(entered.wait(), 2)
+        inputs = [('follow-1', 'first correction'), ('follow-2', 'second detail'), ('follow-3', 'third constraint')]
+        await self.send_inputs(owner, inputs)
+        self.assertFalse(task.done())
+        self.assertEqual(task.cancelling(), 0)
+        self.assertIs(manager.get('session-fixture'), observed['turn'])
+        for rid, _ in inputs:
+            self.assertIs(self.ns['_request_work'][(owner, rid)]['task'], task)
+        self.assertEqual(self.ns['_cole_message_queue'], [])
+        finish.set()
+        await asyncio.wait_for(task, 2)
+        self.assertEqual(observed['snapshot'], ['original request'])
+        self.assertEqual([e['content'] for e in observed['batch']], ['[Cole is speaking to you]\n' + text for _, text in inputs])
+        self.assertEqual(observed['again'], [])
+        self.assertEqual(observed['revision'], 3)
+        self.assertEqual(generate.await_count, 1)
+        contexts = [e for e in self.events if e['type'] == 'message_context']
+        self.assertEqual(len(contexts), 1)
+        for event in contexts + self.terminal():
+            self.assertEqual(event['request_ids'], ['initial', 'follow-1', 'follow-2', 'follow-3'])
+            self.assertEqual(event['reply_to_ids'], ['stored-0', 'stored-1', 'stored-2', 'stored-3'])
+            self.assertEqual(event['input_revision'], 3)
+            self.assertEqual(event['id'], 'shared-reply')
+            self.assertEqual(event['run_id'], observed['turn'].turn_id)
+        self.assertEqual(self.terminal()[0]['delivery'], 'delivered')
+        self.assertEqual(self.terminal()[0]['audit']['status'], 'PASS')
+        self.assertEqual(self.request_ends(), [])
+        self.assertEqual(self.ns['_request_work'], {})
+        self.assertEqual(self.ns['_turn_transports'], {})
+        self.assertIsNone(manager.get('session-fixture'))
+
+    async def test_followups_during_context_preparation_are_adopted_without_snapshot_duplication(self):
+        entered, release = threading.Event(), threading.Event()
+        def update(_):
+            entered.set()
+            if not release.wait(3):
+                raise TimeoutError('fixture context preparation was not released')
+        self.ns['workspace'].update_for_message = update
+        observed = {}
+        async def provider(_name, transcript, **sinks):
+            observed['snapshot'] = [m['content'] for m in transcript.messages]
+            observed['batch'], _ = await sinks['steering'].consume()
+            self.assertFalse(sinks['steering'].pending)
+            self.assertTrue(sinks['steering'].try_seal())
+            await sinks['on_done']('Reply after prepared context.')
+        owner, manager, task, _ = self.start_body_response(provider)
+        try:
+            self.assertTrue(await asyncio.to_thread(entered.wait, 2))
+            self.assertIsNone(manager.get('session-fixture'))
+            await self.send_inputs(owner, [('during-1', 'arrived before inference'), ('during-2', 'also preserve this')])
+            self.assertEqual(len(self.ns['_cole_message_queue']), 2)
+        finally:
+            release.set()
+        await asyncio.wait_for(task, 2)
+        self.assertEqual(observed['snapshot'], ['original request'])
+        self.assertEqual([e['content'] for e in observed['batch']],
+                         ['[Cole is speaking to you]\narrived before inference', '[Cole is speaking to you]\nalso preserve this'])
+        self.assertEqual(self.terminal()[0]['request_ids'], ['initial', 'during-1', 'during-2'])
+        self.assertEqual(self.ns['_cole_message_queue'], [])
+        self.assertEqual(self.ns['_request_work'], {})
+
+    async def test_input_after_body_seal_queues_next_turn_without_changing_delivered_aliases(self):
+        sealed, release = asyncio.Event(), asyncio.Event()
+        async def provider(_name, transcript, **sinks):
+            self.assertTrue(sinks['steering'].try_seal())
+            sealed.set()
+            await release.wait()
+            await sinks['on_done']('First sealed answer.')
+        owner, _, task, _ = self.start_body_response(provider)
+        await asyncio.wait_for(sealed.wait(), 2)
+        await self.send_inputs(owner, [('late', 'follow-up after admission closed')])
+        self.assertEqual(len(self.ns['_cole_message_queue']), 1)
+        next_work = self.ns['_cole_message_queue'][0]
+        self.assertNotIn('task', next_work)
+        release.set()
+        await asyncio.wait_for(task, 2)
+        self.assertEqual(self.terminal()[0]['request_ids'], ['initial'])
+        self.assertIn((owner, 'late'), self.ns['_request_work'])
+        pending = self.hold_scheduled_responses()
+        self.ns['is_processing'] = False
+        await self.ns['_drain_cole_queue']()
+        self.assertEqual(len(pending), 1)
+        await pending.pop(0)
+        self.assertEqual(self.ns['run_ai_response'].await_args.kwargs['request_id'], 'late')
+        self.assertIs(self.ns['run_ai_response'].await_args.kwargs['request_work'], next_work)
+        self.assertEqual(self.request_ends(), [])
+
+    async def test_different_conversation_does_not_steer_or_receive_active_reply(self):
+        entered, release = asyncio.Event(), asyncio.Event()
+        observed = {}
+        async def provider(_name, transcript, **sinks):
+            observed['turn'] = sinks['steering']
+            entered.set()
+            await release.wait()
+            self.assertEqual(await sinks['steering'].consume(), ([], 0))
+            self.assertTrue(sinks['steering'].try_seal())
+            await sinks['on_done']('Reply belonging to original conversation.')
+        owner, _, task, _ = self.start_body_response(provider)
+        await asyncio.wait_for(entered.wait(), 2)
+        other = Transcript()
+        other.add('Cole', 'earlier unrelated conversation')
+        other.add('Nova', 'Reply belonging to original conversation.')
+        self.session.active = other
+        self.session.active_id = 'other-conversation'
+        await self.send_inputs(owner, [('other-request', 'different conversation request')])
+        self.assertFalse(observed['turn'].pending)
+        other.add('Nova', 'Reply belonging to original conversation.')
+        self.assertEqual(len(self.ns['_cole_message_queue']), 1)
+        self.assertEqual(self.ns['_cole_message_queue'][0]['conversation_id'], 'other-conversation')
+        release.set()
+        await asyncio.wait_for(task, 2)
+        self.assertEqual(self.terminal()[0]['request_ids'], ['initial'])
+        self.assertEqual([m['author'] for m in other.messages], ['Cole', 'Nova', 'Cole', 'Nova'])
+        self.assertEqual(self.transcript.messages[-1]['content'], 'Reply belonging to original conversation.')
+
+    async def test_stop_accepted_followup_cancels_owned_shared_turn_and_closes_all_aliases(self):
+        entered = asyncio.Event()
+        async def provider(_name, transcript, **sinks):
+            entered.set()
+            await asyncio.Event().wait()
+        owner, manager, task, _ = self.start_body_response(provider)
+        await asyncio.wait_for(entered.wait(), 2)
+        await self.send_inputs(owner, [('stop-followup', 'joined pending input')])
+        other_task = asyncio.create_task(asyncio.Event().wait())
+        self.addCleanup(other_task.cancel)
+        other_owner = Socket([])
+        other_work = {'owner': other_owner, 'request_id': 'unrelated', 'task': other_task, 'started': True}
+        self.ns['_request_work'][(other_owner, 'unrelated')] = other_work
+        await self.ns['_stop_request'](owner, 'stop-followup')
+        self.assertTrue(task.cancelled())
+        self.assertFalse(other_task.done())
+        self.assertFalse(self.ns['_stop_requested'].is_set())
+        self.assertEqual(owner.sent[-1], {'type': 'stopped', 'request_id': 'stop-followup', 'matched': True})
+        self.assertEqual([(e['request_ids'], e['delivery']) for e in self.terminal()], [(['initial'], 'cancelled')])
+        self.assertEqual([(e['request_id'], e['delivery']) for e in self.request_ends()],
+                         [('stop-followup', 'cancelled')])
+        self.assertEqual(list(self.ns['_request_work']), [(other_owner, 'unrelated')])
+        self.assertEqual(self.ns['_turn_transports'], {})
+        self.assertIsNone(manager.get('session-fixture'))
 
     async def test_scoped_stop_removes_only_own_queued_request(self):
         owner, other = Socket([]), Socket([])
@@ -433,10 +860,13 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
         first, second = run.await_args_list
         self.assertEqual(first.args[3], 'first')
         self.assertEqual(first.kwargs, dict(images=first_image, source='ws', register='voice',
-                                            reply_to='stored-0', request_id='voice-001'))
+                                            reply_to='stored-0', request_id='voice-001', request_work=first.kwargs['request_work']))
+        self.assertIs(first.kwargs['request_work']['owner'], ws)
+        self.assertEqual(first.kwargs['request_work']['conversation_id'], 'session-fixture')
         self.assertEqual(second.args[3], 'second')
         self.assertEqual(second.kwargs, dict(images=second_image, source='drain', register='voice_fast',
-                                             reply_to='stored-1', request_id='voice-002'))
+                                             reply_to='stored-1', request_id='voice-002', request_work=second.kwargs['request_work']))
+        self.assertIs(second.kwargs['request_work'], queued)
         echoes = [e for e in self.events if e['type'] == 'user_message']
         self.assertEqual([(e['request_id'], e['register']) for e in echoes],
                          [('voice-001', 'voice'), ('voice-002', 'voice_fast')])
@@ -475,37 +905,35 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
     def request_ends(self):
         return [event for event in self.events if event['type'] == 'request_end']
 
-    async def test_newest_queue_policy_closes_older_request_ids_without_inventing_runs(self):
+    async def test_fifo_queue_preserves_every_request_without_superseding(self):
         pending = self.hold_scheduled_responses()
-        first = self.queued_request('older', 'old-1')
-        second = self.queued_request('middle', 'old-2', 'voice_fast')
-        self.queued_request('newest', 'new-3')
+        entries = [self.queued_request(content, request, register) for content, request, register in
+                   [('first', 'old-1', 'voice'), ('middle', 'old-2', 'voice_fast'), ('newest', 'new-3', 'text')]]
         await self.ns['_drain_cole_queue']()
-        self.assertEqual(self.request_ends(), [
-            dict(type='request_end', request_id='old-1', reply_to=first['msg']['id'], register='voice', delivery='superseded'),
-            dict(type='request_end', request_id='old-2', reply_to=second['msg']['id'], register='voice_fast', delivery='superseded')])
         self.assertTrue(self.ns['is_processing'])
         self.assertEqual(len(pending), 1)
-        await pending.pop(0)
-        run = self.ns['run_ai_response']
-        run.assert_awaited_once()
-        self.assertEqual(run.await_args.args[3], 'newest')
-        self.assertEqual(run.await_args.kwargs['request_id'], 'new-3')
+        while pending:
+            await pending.pop(0)
+        calls = self.ns['run_ai_response'].await_args_list
+        self.assertEqual([call.kwargs['request_id'] for call in calls], ['old-1', 'old-2', 'new-3'])
+        for call, entry in zip(calls, entries):
+            self.assertIs(call.kwargs['request_work'], entry)
+        self.assertEqual(self.request_ends(), [])
         self.assertFalse(self.ns['is_processing'])
-        self.assertTrue(all('run_id' not in event and 'audit' not in event for event in self.request_ends()))
+        self.assertEqual(self.ns['_cole_message_queue'], [])
 
-    async def test_already_answered_queue_request_closes_without_new_generation(self):
+    async def test_watermark_and_prior_reply_do_not_silently_discard_queued_input(self):
         pending = self.hold_scheduled_responses()
-        request = self.queued_request('already seen', 'answered-1')
-        self.transcript.add('Nova', 'Prior run answered this input.')
-        self.ns['_inflight_upto'] = 1
+        request = self.queued_request('still requires admission', 'answered-1')
+        self.transcript.add('Nova', 'Prior run answered an earlier input.')
+        self.ns['_inflight_upto'] = 999
         await self.ns['_drain_cole_queue']()
-        self.assertEqual(self.request_ends(), [dict(type='request_end', request_id='answered-1',
-                         reply_to=request['msg']['id'], register='voice', delivery='answered_elsewhere')])
-        self.assertEqual(pending, [])
-        self.ns['get_status'].assert_not_awaited()
+        self.assertEqual(len(pending), 1)
+        await pending.pop(0)
+        self.assertEqual(self.request_ends(), [])
+        self.assertEqual(self.ns['run_ai_response'].await_args.kwargs['request_id'], 'answered-1')
+        self.assertIs(self.ns['run_ai_response'].await_args.kwargs['request_work'], request)
         self.assertFalse(self.ns['is_processing'])
-        self.assertFalse(any(e['type'] == 'processing_start' for e in self.events))
 
     async def test_no_eligible_provider_closes_selected_request_and_releases_busy(self):
         pending = self.hold_scheduled_responses()
@@ -534,7 +962,7 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
         normal_broadcast = self.ns['broadcast']
         async def paused_broadcast(event):
             await normal_broadcast(event)
-            if event.get('delivery') == 'superseded':
+            if event.get('type') == 'processing_start' and not reached.is_set():
                 reached.set()
                 await release.wait()
         self.ns['broadcast'] = paused_broadcast
@@ -546,7 +974,7 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(pending, [])
             await self.ns['websocket_endpoint'](Socket([dict(type='message', content='arrived during broadcast',
                                                            register='voice_fast', request_id='later')]))
-            self.assertEqual(len(self.ns['_cole_message_queue']), 1)
+            self.assertEqual(len(self.ns['_cole_message_queue']), 2)
             self.assertEqual(pending, [])
             release.set()
             await drain
@@ -559,9 +987,9 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
                 drain.cancel()
                 await asyncio.gather(drain, return_exceptions=True)
         calls = self.ns['run_ai_response'].await_args_list
-        self.assertEqual([call.kwargs['request_id'] for call in calls], ['selected', 'later'])
-        self.assertEqual(len([e for e in self.events if e['type'] == 'processing_start']), 2)
-        self.assertEqual([e['request_id'] for e in self.request_ends()], ['old'])
+        self.assertEqual([call.kwargs['request_id'] for call in calls], ['old', 'selected', 'later'])
+        self.assertEqual(len([e for e in self.events if e['type'] == 'processing_start']), 3)
+        self.assertEqual(self.request_ends(), [])
         self.assertFalse(self.ns['is_processing'])
 
     async def test_request_arriving_during_unavailable_notice_gets_next_drain(self):
@@ -621,19 +1049,21 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
 
     async def test_stop_during_completion_broadcast_cancels_remaining_unstarted_requests(self):
         pending = self.hold_scheduled_responses()
-        self.queued_request('older', 'old')
-        self.queued_request('selected', 'selected')
+        self.queued_request('first', 'old')
+        self.queued_request('next', 'selected')
         normal_broadcast = self.ns['broadcast']
-        async def stop_on_discard(event):
+        async def stop_on_completion(event):
             await normal_broadcast(event)
-            if event.get('delivery') == 'superseded':
+            if event.get('type') == 'processing_end':
                 self.ns['_stop_requested'].set()
                 await asyncio.sleep(0)
-        self.ns['broadcast'] = stop_on_discard
+        self.ns['broadcast'] = stop_on_completion
         await self.ns['_drain_cole_queue']()
+        await pending.pop(0)
         self.assertEqual(pending, [])
-        self.assertEqual([(e['request_id'], e['delivery']) for e in self.request_ends()],
-                         [('old', 'superseded'), ('selected', 'cancelled')])
+        self.assertEqual(self.ns['run_ai_response'].await_count, 1)
+        self.assertEqual(self.ns['run_ai_response'].await_args.kwargs['request_id'], 'old')
+        self.assertEqual([(e['request_id'], e['delivery']) for e in self.request_ends()], [('selected', 'cancelled')])
         self.assertTrue(self.ns['_stop_requested'].is_set())
 
     async def test_stop_during_processing_start_broadcast_balances_state_without_generation(self):
@@ -667,17 +1097,14 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(self.ns['_stop_requested'].is_set())
 
     async def test_cancel_during_selected_terminal_broadcast_never_emits_conflicting_end(self):
-        for disposition in ('answered_elsewhere', 'unavailable', 'cancelled'):
+        for disposition in ('unavailable', 'cancelled'):
             with self.subTest(disposition=disposition):
                 self.events.clear()
                 self.transcript.messages.clear()
                 self.ns['_stop_requested'].clear()
                 self.ns['_inflight_upto'] = 0
                 self.queued_request('selected', 'partial-terminal')
-                if disposition == 'answered_elsewhere':
-                    self.transcript.add('Nova', 'already answered')
-                    self.ns['_inflight_upto'] = 1
-                elif disposition == 'cancelled':
+                if disposition == 'cancelled':
                     self.ns['_stop_requested'].set()
                 self.ns['get_status'] = AsyncMock(return_value={'Nova': False})
                 reached = asyncio.Event()
@@ -751,6 +1178,25 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
         generate.assert_not_awaited()
         self.assertEqual(self.request_ends(), [dict(type='request_end', request_id='request-1',
                          reply_to='human-1', register='voice', delivery='unavailable')])
+
+
+class SegmentEvidenceTests(unittest.TestCase):
+    def test_later_input_does_not_relabel_earlier_evidence_or_mutate_emitted_aliases(self):
+        events = events_module.ResponseEvents(author='Nova', message_id='reply', run_id='run',
+                                              request_id='first', reply_to='human-1')
+        events.apply_inputs([dict(request_id='second', reply_to='human-2')], 1)
+        meta = dict(turn_id='run', segment_index=1, input_revision=0,
+                    audit=dict(status='PASS', turn_id='run', input_revision=0))
+        part = events.segment('A completed result for the initial input.', meta)
+        self.assertEqual(part['request_ids'], ['first'])
+        part['request_ids'].append('untrusted-mutation')
+        self.assertEqual(events.revisions[0]['request_ids'], ['first'])
+        self.assertEqual(events.segments[0]['request_ids'], ['first'])
+        with self.assertRaises(ValueError):
+            events.segment('Duplicate delivery is rejected.', meta)
+        meta.update(segment_index=2, input_revision=1)
+        with self.assertRaises(ValueError):
+            events.segment('Stale audit cannot certify a different revision.', meta)
 
 
 if __name__ == '__main__':

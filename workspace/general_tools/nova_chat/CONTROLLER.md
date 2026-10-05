@@ -1,6 +1,6 @@
 <!-- @nova: Documents the Nova desktop controller and its verified behavior. -->
 # Nova Controller desktop transition
-_Last updated: 2026-10-04 09:07:08_
+_Last updated: 2026-10-05 21:33:06_
 
 Status: desktop controller implemented; named layouts, anchored menus and the model updater integrated October 4, 2026. Validation scope is recorded below and in dated AI Notes.
 

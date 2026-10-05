@@ -1,3 +1,4 @@
+# Last updated: 2026-10-05 21:33:05
 # @nova: Publish versioned voice state, captions and speech events for avatar and console subscribers.
 #   what the voice is doing (state, captions, audio-clocked speech start/end, interruptions,
 #   diagnostics). The gateway never drives a body itself; a body subscribes to this stream.

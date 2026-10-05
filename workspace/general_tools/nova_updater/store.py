@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 18:23:37
+# Last updated: 2026-10-05 21:33:05
 # @nova: Keeps the updater's small persistent state (last check, remembered decisions, plans, jobs) in one atomic JSON file.
 """Persistent updater state.
 

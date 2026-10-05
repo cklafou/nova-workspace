@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
 # @nova: Connect microphone or typed input to Nova Chat and delivered replies to speech and avatar events.
+#!/usr/bin/env python3
+# Last updated: 2026-10-05 21:33:05
 #   tool, not a faculty. Remove it and Nova is unchanged — she still thinks, still audits, still
 #   writes; she just has no microphone. Her body is untouched: the gateway only speaks nova_chat's
 #   existing WebSocket protocol from the OUTSIDE, exactly as the browser UI does.
@@ -113,6 +114,17 @@ async def run(cfg: GatewayConfig):
         else:
             stt.gate = lambda: not player.busy()          # never transcribe her own voice
 
+        def recognition_state(state):
+            if state in {"hearing", "finishing_turn", "transcribing"}:
+                if cfg.duplex == "full" and cfg.barge_in:
+                    player.pause()
+                if cfg.duplex == "full" or not player.active():
+                    body.emit("state", state=state)
+            elif state == "listening":
+                player.resume()
+                session._settle()
+        stt.on_state = recognition_state
+
         async def _listen():
             async for ev in link.events():
                 if cfg.log_units and ev.kind == "end":
@@ -125,6 +137,7 @@ async def run(cfg: GatewayConfig):
                 print(f"[voice_gateway] {cfg.speaker}: {utt}")
                 request_id = new_request_id()
                 session.sent(request_id, utt)                # register before sending: no ack race
+                player.resume()
                 await link.say(utt, request_id=request_id)
 
         async def _sweep():

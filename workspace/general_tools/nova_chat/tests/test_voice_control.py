@@ -1,3 +1,4 @@
+# Last updated: 2026-10-05 21:33:27
 # @nova: Test voice HTTP supervision and worker cancellation with temporary settings and fake processes/audio only.
 """Run: python -B workspace/general_tools/nova_chat/tests/test_voice_control.py
 No production settings, child services, audio devices, models or GPU are used.
@@ -106,6 +107,16 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
         self.run.assert_not_called()
         self.assertFalse(self.control.settings_path.exists())
         self.assertEqual(list(self.workspace.iterdir()), [])
+
+    async def test_pause_setting_is_reported_but_never_saved_as_device_configuration(self):
+        self.control._probe = {**readiness(), "settings": {"end_of_turn_silence_ms": 2000}}
+        self.assertEqual(self.control.snapshot()["settings"]["end_of_turn_silence_ms"], 2000)
+        self.control._event({"type": "state", "state": "listening", "settings": {"end_of_turn_silence_ms": 2300}})
+        self.assertEqual(self.control.snapshot()["settings"]["end_of_turn_silence_ms"], 2300)
+        self.assertNotIn("end_of_turn_silence_ms", self.control.settings)
+        response = await self.client.post('/api/voice/config', json={"end_of_turn_silence_ms": 100})
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(self.control.settings_path.exists())
 
     async def test_voice_turn_and_playback_evidence_survive_until_next_start(self):
         def event(kind, **fields):

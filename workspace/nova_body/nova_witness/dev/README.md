@@ -1,4 +1,4 @@
-_Last updated: 2026-10-05 18:32:30_
+_Last updated: 2026-10-05 21:33:07_
 <!-- @nova: Explain the open witness dev set: what it covers, how labels were fixed, and how it pairs with the sealed holdout. -->
 # Witness dev set v1
 

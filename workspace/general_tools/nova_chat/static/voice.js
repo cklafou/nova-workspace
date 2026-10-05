@@ -183,6 +183,10 @@
       let progress = "";
       if (turn?.phase === "delayed") progress = "Nova is taking longer than usual. Your request is still waiting for a reply.";
       else if (turn?.phase === "queued") progress = "Your turn is queued. " + (turn.why || "Nova is finishing another task.");
+      else if (turn?.phase === "segment") progress = turn.eligible === false
+        ? "Delivered part was not spoken: " + (turn.why || "not eligible for speech")
+        : "Part " + (turn.segment_index || "") + " delivered · Nova is continuing";
+      else if (turn?.phase === "end" && turn.segment_count > 0) progress = "Turn complete · " + turn.segment_count + " delivered parts (not replayed)";
       else if (turn?.phase === "end" && turn.eligible === false) progress = "Reply was not spoken: " + (turn.why || turn.delivery || "not eligible for speech");
       else if (["interrupted", "expired", "dropped"].includes(turn?.phase)) progress = "Turn ended: " + (turn.why || turn.phase);
       else if (turn?.phase === "end" && turn.queued_units > 0) progress = "Reply received · preparing spoken output";
@@ -196,6 +200,7 @@
           const outcomes = {played: "Audio playback completed", completed: "Voice process completed", cut: "Spoken output interrupted",
             skipped: "Spoken output skipped", no_audio: "No audio was produced", error: "Spoken output failed"};
           progress = outcomes[playback.outcome] || "Playback ended: " + (playback.outcome || "unknown outcome");
+          if (turn?.phase === "segment") progress += " · Nova is continuing";
           if (state === "speaking") state = ["error", "no_audio"].includes(playback.outcome) ? "error" : "listening";
         }
       }

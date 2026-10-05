@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 18:23:37
+# Last updated: 2026-10-05 21:33:05
 # @nova: Resolves every folder the updater touches, with environment overrides so tests and relocated installs work.
 """One place for the updater's paths. Nothing here creates or reads files."""
 from __future__ import annotations

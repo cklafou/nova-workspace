@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T12:33:05+00:00 from source (input `67bcb72d19b2`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T13:34:45+00:00 from source (input `1deddb173f8d`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -75,7 +75,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/runtime_host.py](../general_tools/nova_chat/runtime_host.py) — Runtime-primary boot (Step 6d). Nova's RUNTIME is the owned core; the chat server is
 - [general_tools/nova_chat/server.py](../general_tools/nova_chat/server.py) — Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.
 - [general_tools/nova_chat/server_runner.py](../general_tools/nova_chat/server_runner.py) — Starts the Nova Chat server by itself (uvicorn on 127.0.0.1:8765) with nova_body and general_tools importable.
-- [general_tools/nova_chat/session_manager.py](../general_tools/nova_chat/session_manager.py) — nova_chat/session_manager.py -- Persistent Session Management
+- [general_tools/nova_chat/session_manager.py](../general_tools/nova_chat/session_manager.py) — Manage body-stored chat sessions and metadata without confusing concurrent conversation owners.
 - [general_tools/nova_chat/static/collaboration.css](../general_tools/nova_chat/static/collaboration.css) — Style the separate development collaboration widget and its connection, participant and message states.
 - [general_tools/nova_chat/static/collaboration.js](../general_tools/nova_chat/static/collaboration.js) — Display the isolated workshop feed for Cole, Codex and Cowork without sending messages to Nova.
 - [general_tools/nova_chat/static/control.css](../general_tools/nova_chat/static/control.css) — Style runtime widgets and the accessible Conversation start/stop control.
@@ -93,7 +93,9 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/tests/test_collaboration_bridge.py](../general_tools/nova_chat/tests/test_collaboration_bridge.py) — Verify private collaboration connector identity, cursor handling, bounds, failures and MCP framing without contacting Nova.
 - [general_tools/nova_chat/tests/test_collaboration_spool.py](../general_tools/nova_chat/tests/test_collaboration_spool.py) — Verify Cowork shared-folder delivery, crash recovery and bounded replay using disposable collaboration stores.
 - [general_tools/nova_chat/tests/test_controller_repair.py](../general_tools/nova_chat/tests/test_controller_repair.py) — Regression coverage for controller lifecycle, widgets and model process control.
+- [general_tools/nova_chat/tests/test_conversation_frames.cjs](../general_tools/nova_chat/tests/test_conversation_frames.cjs)
 - [general_tools/nova_chat/tests/test_conversation_power.cjs](../general_tools/nova_chat/tests/test_conversation_power.cjs)
+- [general_tools/nova_chat/tests/test_conversation_segments.cjs](../general_tools/nova_chat/tests/test_conversation_segments.cjs)
 - [general_tools/nova_chat/tests/test_desktop.py](../general_tools/nova_chat/tests/test_desktop.py) — Verify native controller geometry across processes and preserve renderer storage during isolated profile migration.
 - [general_tools/nova_chat/tests/test_launcher_mode.py](../general_tools/nova_chat/tests/test_launcher_mode.py) — Test launcher mode switching, window preservation and chat-only recovery using fake processes only.
 - [general_tools/nova_chat/tests/test_layout_save.cjs](../general_tools/nova_chat/tests/test_layout_save.cjs)
@@ -101,11 +103,14 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/tests/test_lifecycle_ack.py](../general_tools/nova_chat/tests/test_lifecycle_ack.py) — Preserve lifecycle HTTP acknowledgement before fast controller teardown without extending grace on retries.
 - [general_tools/nova_chat/tests/test_pipeline_ui.cjs](../general_tools/nova_chat/tests/test_pipeline_ui.cjs)
 - [general_tools/nova_chat/tests/test_prompt_cache.py](../general_tools/nova_chat/tests/test_prompt_cache.py) — Verify cache-friendly prompt ordering retains the exact clock, evidence, audit policy and strict verdict handling.
+- [general_tools/nova_chat/tests/test_queue_badge.cjs](../general_tools/nova_chat/tests/test_queue_badge.cjs)
+- [general_tools/nova_chat/tests/test_segment_metadata.py](../general_tools/nova_chat/tests/test_segment_metadata.py) — Verify real transcript segment metadata filtering and disk persistence using only a temporary log directory.
+- [general_tools/nova_chat/tests/test_session_pins.py](../general_tools/nova_chat/tests/test_session_pins.py) — Verify queued/running conversation pins preserve complete transcripts across session switches using disposable files.
 - [general_tools/nova_chat/tests/test_source_fingerprint.py](../general_tools/nova_chat/tests/test_source_fingerprint.py) — Checks restart reporting against real edits and harmless watcher timestamp changes.
 - [general_tools/nova_chat/tests/test_updater_integration.py](../general_tools/nova_chat/tests/test_updater_integration.py) — Verify updater routing and cancellable controller metadata checks using temporary models and fake catalogs only.
 - [general_tools/nova_chat/tests/test_updater_ui.cjs](../general_tools/nova_chat/tests/test_updater_ui.cjs)
 - [general_tools/nova_chat/tests/test_voice_control.py](../general_tools/nova_chat/tests/test_voice_control.py) — Test voice HTTP supervision and worker cancellation with temporary settings and fake processes/audio only.
-- [general_tools/nova_chat/tests/test_voice_transport.py](../general_tools/nova_chat/tests/test_voice_transport.py) — Exercise real server voice routing and response callbacks with isolated providers, sessions and event sinks.
+- [general_tools/nova_chat/tests/test_voice_transport.py](../general_tools/nova_chat/tests/test_voice_transport.py) — Verify face routing, body-owned continuation, request correlation and Stop with isolated provider/session fixtures.
 - [general_tools/nova_chat/tests/test_voice_ui.cjs](../general_tools/nova_chat/tests/test_voice_ui.cjs)
 - [general_tools/nova_chat/transcript.py](../general_tools/nova_chat/transcript.py) — Persist shared chat transcripts and assemble current requests with stable cacheable instructions.
 - [general_tools/nova_chat/voice_control.py](../general_tools/nova_chat/voice_control.py) — Supervise explicit local voice sessions, device settings and bounded audio tests for Conversation controls.
@@ -210,6 +215,8 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/voice_gateway/test_native_voice.py](../general_tools/voice_gateway/test_native_voice.py) — Verify native speech file synthesis, cancellation, output-device selection and current Moonshine/Silero contracts without audio hardware.
 - [general_tools/voice_gateway/test_stt_turns.py](../general_tools/voice_gateway/test_stt_turns.py) — Verify natural-pause and in-flight recognition continuation stay one bounded gated conversational turn without audio hardware.
 - [general_tools/voice_gateway/test_voice_flow.py](../general_tools/voice_gateway/test_voice_flow.py) — Test voice identity, delivery, interruption and truthful playback using isolated fake backends.
+- [general_tools/voice_gateway/test_voice_segments.py](../general_tools/voice_gateway/test_voice_segments.py) — Verify ordered audited voice segments, terminal deduplication and preserved interruptible audio using fake backends.
+- [general_tools/voice_gateway/test_voice_steering.py](../general_tools/voice_gateway/test_voice_steering.py) — Verify ordered voice follow-ups preserve body work and bind one combined reply without real audio or models.
 - [general_tools/voice_gateway/test_whisper_stt.py](../general_tools/voice_gateway/test_whisper_stt.py) — Verify local Whisper decoding, explicit English, strict backend selection and asset readiness without audio hardware.
 - [general_tools/voice_gateway/test_worker_readiness.py](../general_tools/voice_gateway/test_worker_readiness.py) — Regress Windows control-pipe startup and local speech readiness/segmentation using isolated fixtures, without opening audio devices.
 - [general_tools/voice_gateway/tts.py](../general_tools/voice_gateway/tts.py) — Provide cancellable speech backends with truthful playback callbacks and surfaced failures.
@@ -475,14 +482,17 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 - [nova_body/nova_runtime/__init__.py](../nova_body/nova_runtime/__init__.py) — nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer
 - [nova_body/nova_runtime/__main__.py](../nova_body/nova_runtime/__main__.py) — Headless runtime entry-point — `python -m nova_runtime` boots Nova with NO chat
+- [nova_body/nova_runtime/conversation.py](../nova_body/nova_runtime/conversation.py) — Own ordered active-turn continuation and final-delivery admission independently of any chat face.
+- [nova_body/nova_runtime/conversation_context.py](../nova_body/nova_runtime/conversation_context.py) — Assemble shared body-owned conversation context with stable instructions, clock, author labels and images.
 - [nova_body/nova_runtime/event_bus.py](../nova_body/nova_runtime/event_bus.py) — Runtime event bus — the runtime PUBLISHES lifecycle/token events; faces
 - [nova_body/nova_runtime/koels_equip.py](../nova_body/nova_runtime/koels_equip.py) — Load and equip KoELS specialist adapters through the body runtime's model controller.
 - [nova_body/nova_runtime/llama_control.py](../nova_body/nova_runtime/llama_control.py) — LlamaControl — runtime/life-support control of her model server (llama.cpp on
 - [nova_body/nova_runtime/model_client.py](../nova_body/nova_runtime/model_client.py) — Dispatch model requests with per-call voice register and optional audit reporting without coupling to a chat face.
 - [nova_body/nova_runtime/model_guard.py](../nova_body/nova_runtime/model_guard.py) — ModelGuard — runtime guard on her model-calling. Two failsafes, both body-owned
 - [nova_body/nova_runtime/operations.py](../nova_body/nova_runtime/operations.py) — Shared cancellation for generation and the subprocesses it owns.
-- [nova_body/nova_runtime/runtime.py](../nova_body/nova_runtime/runtime.py) — NovaRuntime — her life-support engine (layer 2 of the three-layer model).
-- [nova_body/nova_runtime/transcript_store.py](../nova_body/nova_runtime/transcript_store.py) — Runtime transcript store — her runtime's own view of the conversation.
+- [nova_body/nova_runtime/runtime.py](../nova_body/nova_runtime/runtime.py) — Own Nova life-support, conversation continuation, and optional face integration.
+- [nova_body/nova_runtime/transcript_store.py](../nova_body/nova_runtime/transcript_store.py) — Persist body conversation messages and exact answered-input coverage across restart.
+- [nova_body/nova_runtime/work_owner.py](../nova_body/nova_runtime/work_owner.py) — Serialize Nova's active work and preserve bounded input context across autonomous and conversational steps.
 - [nova_body/nova_runtime/work_queue.py](../nova_body/nova_runtime/work_queue.py) — Persists leased events and memory work with bounded retries and visible failures.
 
 ## nova_body/nova_senses
@@ -1787,7 +1797,11 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 ## nova_body/tests
 
+- [nova_body/tests/test_autonomy_boundaries.py](../nova_body/tests/test_autonomy_boundaries.py) — Verify same-work attention at natural provider/tool boundaries without cancellation, receipt replay, or audit identity loss.
 - [nova_body/tests/test_computer_launch.py](../nova_body/tests/test_computer_launch.py) — Isolated regression tests for guest desktop routing and honest process/window launch verification.
+- [nova_body/tests/test_conversation.py](../nova_body/tests/test_conversation.py) — Verify body-owned non-cancelling continuation, request anchors, audit revisions, sealing, and relocation.
+- [nova_body/tests/test_conversation_context.py](../nova_body/tests/test_conversation_context.py) — Verify body-owned and face-delegated conversation formatting preserve frozen clock, labels, images and provider payloads without services.
+- [nova_body/tests/test_conversation_segments.py](../nova_body/tests/test_conversation_segments.py) — Verify useful body-owned output segments, frozen audits, total budgets, and explicit Stop without provider cancellation on input.
 - [nova_body/tests/test_koels_launcher.py](../nova_body/tests/test_koels_launcher.py) — Prove KoELS preload arguments survive the real Windows launcher and current llama parser without loading models.
 - [nova_body/tests/test_lancedb_init.py](../nova_body/tests/test_lancedb_init.py) — Verify cached embedder initialization and singleton concurrency without loading models, querying memory or accessing Nova state.
 - [nova_body/tests/test_model_client.py](../nova_body/tests/test_model_client.py) — Verify isolated model-client register routing, optional audit sinks and concurrent-request compatibility.
@@ -1802,6 +1816,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/tests/test_witness_delivery.py](../nova_body/tests/test_witness_delivery.py) — Exercise full-draft witness delivery and tool observability with isolated providers, receipts and images.
 - [nova_body/tests/test_witness_evidence.py](../nova_body/tests/test_witness_evidence.py) — Guard audit evidence visibility, verdict precedence, image bounds and diagnostic redaction.
 - [nova_body/tests/test_witness_replay.py](../nova_body/tests/test_witness_replay.py) — Prove the witness replay harness audits like runtime: pixels, read detection, read budget, refusals, sampling parity and separately scored…
+- [nova_body/tests/test_work_owner.py](../nova_body/tests/test_work_owner.py) — Verify body work exclusion, autonomous attention, deadline accounting and headless input persistence without live services.
 
 ## Files without a purpose line
 

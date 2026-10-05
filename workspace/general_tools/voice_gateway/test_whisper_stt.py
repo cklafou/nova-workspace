@@ -1,3 +1,4 @@
+# Last updated: 2026-10-05 21:48:16
 # @nova: Verify local Whisper decoding, explicit English, strict backend selection and asset readiness without audio hardware.
 import sys
 import tempfile

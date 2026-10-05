@@ -1,3 +1,4 @@
+# Last updated: 2026-10-05 21:49:04
 # @nova: Install the isolated Windows CPU voice dependencies and verified local Whisper/Silero/Moonshine assets.
 """Run with Python 3.12: python setup_windows.py. No microphone, playback or Nova startup.
 

@@ -1,3 +1,4 @@
+# Last updated: 2026-10-05 21:43:58
 # @nova: Verify opt-in exact provider snapshots, stream timing and bounded/cancel-safe diagnostics without network or Nova state.
 import ast
 import asyncio
@@ -80,12 +81,14 @@ class ProviderDiagnostics(unittest.IsolatedAsyncioTestCase):
             payloads.append(payload); return Response()
         async def token(text): delivered.append(text)
         messages = [{'role': 'system', 'content': 'fixture'},
-                    {'role': 'user', 'content': 'Cole → you: Say hello.'}]
+                    {'role': 'user', 'content': 'Cole → you: Say hello.', '_nova_request_anchor': True}]
         result = await self.fetch(handler)(messages, token, enable_thinking=False)
         record, = self.records()
         self.assertEqual(result, 'Hello.')
         self.assertEqual(delivered, ['Hello.'])
         self.assertEqual(record['payload'], payloads[0])
+        self.assertNotIn('_nova_request_anchor', payloads[0]['messages'][1])
+        self.assertTrue(messages[1]['_nova_request_anchor'])
         self.assertEqual(record['canonical_payload_sha256'], diagnostics._hash(payloads[0]))
         self.assertEqual(record['current_request_index'], 1)
         self.assertEqual(record['status'], 'completed')

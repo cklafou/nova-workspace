@@ -1,4 +1,4 @@
-_Last updated: 2026-10-05 20:34:30_
+_Last updated: 2026-10-05 21:49:04_
 <!-- @nova: Explain the native-host CLI and Cowork MCP connector for Nova Chat's separate collaboration feed. -->
 # Nova collaboration connector
 

@@ -395,3 +395,14 @@ test("fresh capture states cannot be overwritten by the previous reply's playbac
   }
   f.ui.destroy();
 });
+
+test("delivered segments show ongoing work and terminal aggregate does not imply new speech", async () => {
+  const f = fixture({status: {running:true,state:"thinking",last_turn:{phase:"segment",request_id:"r1",
+    segment_index:1,eligible:true,queued_units:1},last_playback:null}}); await settle();
+  assert.match(f.controls.delivery.textContent,/Part 1 delivered.*continuing/);
+  f.status.last_turn={...f.status.last_turn,phase:"end",segment_count:2,queued_units:0};
+  await f.ui.refresh();
+  assert.match(f.controls.delivery.textContent,/Turn complete.*2 delivered parts.*not replayed/);
+  assert.equal(posts(f).length,0);
+  f.ui.destroy();
+});

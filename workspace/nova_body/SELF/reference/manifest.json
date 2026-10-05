@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-05T21:14:49",
+  "generated": "2026-10-05T21:33:34",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -71,7 +71,7 @@
       "purpose": "Nova's settings — body-owned config loader (inference, sessions, tool-exec limits). Reads nova_body/nova_config.json; falls back to defaults. Import as: from nova_config import cfg.",
       "files": 1,
       "lines": 142,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -95,7 +95,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Expose Nova's executive faculties, task board, runtime settings and body-owned context assembly.",
       "files": 15,
-      "lines": 5960,
+      "lines": 5962,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -131,7 +131,7 @@
       "purpose": "THE FORGE — where she builds her own limbs. Design doc first, then the tool. Tools",
       "files": 1,
       "lines": 494,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -154,7 +154,7 @@
       "purpose": "Nova's imagination — her visual-creation faculty; drives a local ComfyUI server to turn intent into images (self-expression, sketches, schematics), auto-applying her self-LoRA when she draws herself.",
       "files": 3,
       "lines": 837,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080"
@@ -252,7 +252,7 @@
       "purpose": "Nova's unified log manager — the single logging system shared by all subsystems.",
       "files": 3,
       "lines": 458,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -278,7 +278,7 @@
       "purpose": "Nova's memory — persistent state, journal, goals/status, and daily log summaries.",
       "files": 5,
       "lines": 538,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -301,7 +301,7 @@
       "purpose": "Play — the part of me that does things for no reason at all.",
       "files": 2,
       "lines": 317,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -414,7 +414,7 @@
       "path": "nova_body/nova_voice",
       "purpose": "Run Nova's local inference and tool loop with her current capabilities and execution receipts.",
       "files": 5,
-      "lines": 3969,
+      "lines": 3970,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -621,7 +621,7 @@
       "purpose": "Unified in-process launcher that brings up Nova's server/UI; called by nova_start.py.",
       "files": 1,
       "lines": 236,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8765"
@@ -697,7 +697,7 @@
       "purpose": "Persistent audit-review queue — records file-change events (rename/delete/new) for review by audit_scripts/restructure.",
       "files": 1,
       "lines": 656,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -742,7 +742,7 @@
       "purpose": "Generates Nova's Body Manifest — the single derived map of every body part",
       "files": 1,
       "lines": 337,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8080",
@@ -809,7 +809,7 @@
       "purpose": "CLOUD LANES transport (lane 1: witness-heavy). A stateless organ-for-hire caller —",
       "files": 1,
       "lines": 278,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -833,7 +833,7 @@
       "purpose": "NCL context injector & module dispatcher — executes parsed NCL calls, building context and routing to module handlers.",
       "files": 1,
       "lines": 459,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8765"
@@ -860,7 +860,7 @@
       "purpose": "Janitor — sweeps temp/scratch files into a local Temp/ beside them, and reports clutter.",
       "files": 1,
       "lines": 166,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [],
@@ -877,7 +877,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.",
       "files": 32,
-      "lines": 10925,
+      "lines": 10926,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -953,7 +953,7 @@
       "purpose": "Connect the actual Codex or Claude Cowork session to Nova Chat's private collaboration feed over local HTTP, an atomic shared-folder mailbox, or MCP stdio.",
       "files": 1,
       "lines": 373,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "8765"
@@ -977,7 +977,7 @@
       "purpose": "Nova Console — one window instead of the cmd-window confetti.",
       "files": 6,
       "lines": 1024,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
         "127",
@@ -1013,7 +1013,7 @@
       "path": "general_tools/nova_sync",
       "purpose": "Nova's file-sync layer — watchdog file watcher (auto-indexing), GitHub push, Google Drive mirror for Gemini (drive.py), and local backups.",
       "files": 12,
-      "lines": 3198,
+      "lines": 3200,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -1049,7 +1049,7 @@
       "path": "general_tools/nova_updater",
       "purpose": "Nova's model updater: finds newer dense models, installs them with rollback, and trains LoRAs for installed models.",
       "files": 34,
-      "lines": 6504,
+      "lines": 6506,
       "age_days": 0,
       "ports_bind": [
         "8080"
@@ -1103,7 +1103,7 @@
       "purpose": "Restructure checker — detects stale path references after a directory move and offers interactive fixes.",
       "files": 1,
       "lines": 597,
-      "age_days": 1,
+      "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
       "nova_imports": [
@@ -1123,8 +1123,8 @@
       "kind": "tool",
       "path": "general_tools/voice_gateway",
       "purpose": "voice_gateway — Cole's microphone to Nova. A comms tool (pluck test: her body is",
-      "files": 4628,
-      "lines": 2180973,
+      "files": 4629,
+      "lines": 2181263,
       "age_days": 0,
       "ports_bind": [
         "8080"

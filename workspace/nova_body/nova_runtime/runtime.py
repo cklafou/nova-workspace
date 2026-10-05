@@ -1,3 +1,4 @@
+# @nova: Own Nova life-support, conversation continuation, and optional face integration.
 # Last updated: 2026-10-05 21:27:11
 # @nova: NovaRuntime — her life-support engine (layer 2 of the three-layer model).
 #        Holds the event bus + transcript store now; later steps relocate the autonomy
@@ -26,6 +27,8 @@ from nova_runtime.transcript_store import TranscriptStore
 from nova_runtime.llama_control import LlamaControl
 from nova_runtime.model_guard import ModelGuard
 from nova_runtime.model_client import ModelClient
+from nova_runtime.conversation import ConversationTurns
+from nova_runtime.work_owner import WorkCoordinator
 from nova_runtime.koels_equip import KoELSEquip
 from nova_runtime.operations import supervised, current_phase, current_operation, run_in_worker
 from nova_runtime.work_queue import WorkQueue
@@ -68,6 +71,8 @@ class NovaRuntime:
         #    A host registers the client modules (model_client.register); the faculty stays
         #    import-clean of any chat-server module so generation survives the pluck. ──
         self.model_client = ModelClient()
+        self.conversations = ConversationTurns()
+        self.work_owner = WorkCoordinator()
 
         # ── KoELS equip mechanism (skeleton): the runtime-side physical act of wearing a
         #    specialist loadout — composes LlamaControl. The launcher's --lora consumption is
@@ -256,12 +261,9 @@ class NovaRuntime:
             self.model_client.register({"Nova": _nova})
         except Exception as e:
             print(f"[nova_runtime] model client unavailable (headless generation off): {e}")
-        # 4) fresh-start perception: don't re-answer Cole messages that predate this boot
-        try:
-            self.transcript.reload_from_disk()
-            self.transcript.mark_attended_through(self.transcript.last_seq("Cole"))
-        except Exception:
-            pass
+        # Pending durable input remains pending across restart; only actual delivered
+        # replies advance its attended marker in _attend_inputs_headless.
+        self.transcript.reload_from_disk()
         # 5) coordination primitives (runtime-local when headless)
         self._force_wake = asyncio.Event()
         self._stop_req = asyncio.Event()
@@ -277,6 +279,7 @@ class NovaRuntime:
             face_state=None,
             force_wake=self._force_wake,
             stop_requested=self._stop_req,
+            attend_inputs=self._attend_inputs_headless,
         ))
         print(f"[nova_runtime] headless up. workspace={self.workspace} "
               f"faces={self.bus.subscriber_count()} (0 = headless, healthy)")
@@ -299,7 +302,7 @@ class NovaRuntime:
 
     async def run_autonomy(self, *, perceive_cole_pending, recent_context, model_available,
                            generate, is_busy, set_busy, face_state=None,
-                           force_wake=None, stop_requested=None,
+                           force_wake=None, stop_requested=None, attend_inputs=None,
                            poll_idle: float = 3.0, poll_forced: float = 0.5,
                            poll_disabled: float = 2.0, model_retry: float = 5.0) -> None:
         """Persistent sleep/wake loop (faithful relocation of the server's autonomy_daemon).
@@ -348,35 +351,69 @@ class NovaRuntime:
             # of times back-to-back; that is bounded by the valve, and each of those wakes
             # now actually SHOWS her the ask (build_reflection/build_decision).
             if forced:
-                if force_wake:
-                    force_wake.clear()
                 should, reason = True, "Cole pressed Wake Up"
             else:
                 should, reason = executive.should_wake(cole_pending)
             if not should:
                 continue
-            try:
-                if not await model_available():
-                    await asyncio.sleep(model_retry)
-                    continue
-            except Exception:
-                await asyncio.sleep(model_retry)
+            # Claim synchronously before model availability or event I/O yields.
+            # The same owner is used by direct conversation and by wake attention.
+            owner = self.work_owner.try_claim("autonomy", focus=executive.active_focus())
+            if owner is None:
                 continue
-            try:
-                budget = max(30, min(1800, executive._cfg().get("wake_budget_seconds", 300)))
-                await asyncio.wait_for(self._run_one_wake(reason, forced, cole_pending,
-                                       recent_context, generate, set_busy, face_state), timeout=budget)
-            except asyncio.TimeoutError:
-                executive.schedule_soon(seconds=90)
-                await self.emit("budget", "Wake time budget reached; progress retained for the next wake")
-            except asyncio.CancelledError:
-                if stop_requested and stop_requested.is_set() and not self._autonomy_stop:
-                    continue
-                raise
+            if forced and force_wake:
+                force_wake.clear()  # Consume only after the body has admitted this wake.
+            unavailable = False
+            async with owner:
+                set_busy(True)
+                try:
+                    try:
+                        unavailable = not await model_available()
+                    except Exception:
+                        unavailable = True
+                    if not unavailable:
+                        budget = max(30, min(1800, executive._cfg().get("wake_budget_seconds", 300)))
+                        # asyncio.timeout (Python 3.11+) preserves task identity; wait_for
+                        # would create a child task and break same-task lease reentrancy.
+                        async with asyncio.timeout(budget) as deadline:
+                            owner.timeout = deadline
+                            await self._run_one_wake(reason, forced, cole_pending,
+                                recent_context, generate, set_busy, face_state,
+                                owner=owner, attend_inputs=attend_inputs)
+                except asyncio.TimeoutError:
+                    executive.schedule_soon(seconds=90)
+                    await self.emit("budget", "Wake time budget reached; progress retained for the next wake")
+                except asyncio.CancelledError:
+                    if owner.absorb_requested_stop():
+                        await self.emit("stopped", "Current work stopped; the autonomous scheduler remains available")
+                    elif stop_requested and stop_requested.is_set() and not self._autonomy_stop:
+                        task = asyncio.current_task()
+                        while task.cancelling():
+                            task.uncancel()  # Explicit global Stop pauses work, not the scheduler.
+                    else:
+                        raise
+                finally:
+                    owner.timeout = None
+                    # @supervised has already signalled cancellation to real workers.
+                    # Do not release ownership/acknowledge completion while they still
+                    # own a process, guest cleanup hook, or running worker thread.
+                    operation = owner.operation
+                    if operation is not None:
+                        while True:
+                            for pid, process in list(operation.processes.items()):
+                                if process.poll() is not None:
+                                    operation.processes.pop(pid, None)
+                            if not (operation.workers or operation.processes or operation.cleanup):
+                                break
+                            await asyncio.sleep(.05)
+                    set_busy(False)
+            if unavailable:
+                await asyncio.sleep(model_retry)
 
     @supervised
     async def _run_one_wake(self, reason, forced, cole_pending,
-                            recent_context, generate, set_busy, face_state) -> None:
+                            recent_context, generate, set_busy, face_state, *,
+                            owner=None, attend_inputs=None) -> None:
         """One wake: reflect → decide → (maybe) execute. Sleep-free, so it's unit-testable in
         isolation. Faithful to the server's two-phase wake + execution pass; lifecycle signals
         go out on her bus (self.emit + processing_start/end published to the bus)."""
@@ -385,6 +422,46 @@ class NovaRuntime:
         event = event_queue.claim(lease_seconds=1900)
         event_error = None
         original_generate = generate
+        recent = ""
+        phase_stale = {}
+        if owner is not None:
+            owner.operation = current_operation.get()
+
+        async def attend_pending():
+            nonlocal recent, cole_pending
+            if owner is None or attend_inputs is None:
+                return False
+            # Human attention must not inherit an expiring autonomous time budget.
+            deadline = owner.timeout
+            remaining = None
+            if deadline is not None and deadline.when() is not None:
+                remaining = max(0.0, deadline.when() - asyncio.get_running_loop().time())
+                deadline.reschedule(None)
+            try:
+                attended = bool(await attend_inputs(owner))
+                if attended:
+                    cole_pending = False
+                    recent = recent_context()
+                return attended
+            finally:
+                if remaining is not None:
+                    deadline.reschedule(asyncio.get_running_loop().time() + remaining)
+
+        async def attention_boundary(_facts):
+            if not await attend_pending():
+                return []
+            _recent = recent
+            if len(_recent) > 4000:
+                _recent = "[earlier recent-conversation text omitted]\n" + _recent[-4000:]
+            return [{"role": "user", "content":
+                "[System Ongoing Work] Human input was attended during this same work owner. "
+                "Any spoken reply below has ALREADY been delivered; do not repeat it. "
+                "Continue the original task with the completed receipts and the new information, "
+                "unless the human interaction deliberately changed the task.\n" +
+                owner.prompt_context() + "\nConversation after attention:\n" + _recent}]
+
+        if owner is not None:
+            owner.boundary_handler = attention_boundary
 
         async def phase_generate(prompt, speak, phase):
             token = current_phase.set(phase)
@@ -392,14 +469,21 @@ class NovaRuntime:
                 current_operation.get().label = phase
             await self.emit("phase", phase)
             try:
-                return await original_generate(prompt, speak)
+                output = await original_generate(prompt, speak)
+                if owner is not None:
+                    operation = current_operation.get()
+                    owner.record_phase(phase, output, operation.id if operation else None)
+                phase_stale[phase] = bool(await attend_pending())
+                return output
             finally:
                 current_phase.reset(token)
         await self.emit("wake", f"Nova woke — {reason}")
         # ── Two-phase wake: she SITS WITH the moment (reflect) before she may act ──
-        set_busy(True)
+        if owner is None:
+            set_busy(True)
         await self.bus.publish({"type": "processing_start"})
         try:
+            await attend_pending()
             recent = recent_context()
             if event:
                 import json
@@ -432,6 +516,8 @@ class NovaRuntime:
             # the entire wake before the scheduler ever gets a turn.
             selected = executive.pick_execution_target() if not cole_pending else None
             if selected:
+                if owner is not None:
+                    owner.focus = selected
                 outcome = {"rested": False, "summary": f"Continuing accepted work {selected}"}
                 await self.emit("autonomy", outcome["summary"])
             else:
@@ -456,7 +542,11 @@ class NovaRuntime:
                 # actions are OPTIONAL — a wake may end in talking, resting, or just more thinking.
                 dec_prompt = executive.build_decision(reflection, cole_pending, reason, recent)
                 reply = await phase_generate(dec_prompt, cole_pending, "decision") or ""
-                outcome = await run_in_worker(executive.apply_decision, reply, cole_pending=cole_pending)
+                if phase_stale.get("decision"):
+                    outcome = {"rested": False, "summary": "Human input arrived after the decision; deferred its unapplied board directives"}
+                    executive.schedule_soon()
+                else:
+                    outcome = await run_in_worker(executive.apply_decision, reply, cole_pending=cole_pending)
                 await self.emit("autonomy", outcome["summary"])
             # ── PROBE (2026-07-14, temporary) ────────────────────────────────────────────────
             # I claimed the missing `else` below was THE fix for her announce-loop, and then
@@ -505,8 +595,15 @@ class NovaRuntime:
                 exec_id, etask = None, None
                 if not cole_pending:
                     from nova_cortex import tasking as _tasking
-                    exec_id = executive.pick_execution_target()
-                    etask = _tasking.all_tasks().get(exec_id) if exec_id else None
+                    _tasks_now = _tasking.all_tasks()
+                    if (selected and executive.active_focus() == selected and
+                            _tasks_now.get(selected, {}).get("status") == "open"):
+                        exec_id = selected
+                    else:
+                        exec_id = executive.pick_execution_target()
+                    etask = _tasks_now.get(exec_id) if exec_id else None
+                    if owner is not None:
+                        owner.focus = exec_id
                 _has_open_task = bool(etask and etask.get("status") == "open")
                 _enters = (not cole_pending) and (forced or not _rested or _has_open_task)
                 try:
@@ -528,9 +625,17 @@ class NovaRuntime:
                         ex_prompt = executive.build_execution(etask, recent)
                         ex_reply = await phase_generate(ex_prompt, False, "execution") or ""
                         kind, payload = executive.parse_execution(ex_reply)
+                        # Attention may have completed/cancelled this task. The output
+                        # remains retained; never apply a stale board mutation afterward.
+                        _still_open = _tasking.all_tasks().get(exec_id, {}).get("status") == "open"
+                        if not _still_open or phase_stale.get("execution"):
+                            kind = "unchanged"
+                            executive.schedule_soon()
+                            await self.emit("autonomy", f"retained completed phase for {exec_id}; deferred stale board result after attention")
                         if kind == "done":
                             completed = await run_in_worker(_tasking.complete, exec_id, payload or "Completed.")
-                            executive.set_active(None)
+                            if executive.active_focus() == exec_id:
+                                executive.set_active(None)
                             executive.reset_continuation()          # task closed — end the burst
                             await self.emit("autonomy", f"{'verified complete' if completed else 'awaiting verification/review'} {exec_id}: {payload[:80]}")
                         elif kind == "progress" and payload.strip():
@@ -618,7 +723,10 @@ class NovaRuntime:
         finally:
             if event:
                 event_queue.finish(event["id"], error=event_error)
-            set_busy(False)
+            if owner is not None:
+                owner.boundary_handler = None
+            else:
+                set_busy(False)
             self.clear_touch_active()
             await self.bus.publish({"type": "processing_end"})
 
@@ -675,15 +783,87 @@ class NovaRuntime:
         except Exception:
             return False
 
-    async def _generate_headless(self, prompt: str, cole_pending: bool) -> str:
-        """One model turn with no face: drive her model via the dispatch faculty (Step 4) and
-        return the text. Her cognition persists what matters (executive.save_reflection /
-        apply_decision / tasking); chat-transcript persistence of spoken replies is a refinement
-        for once a headless inbound path feeds Cole's words. workspace_context is minimal here —
-        her baked SYSTEM_PREFIX still makes her Nova; injecting full memory context is a refinement."""
+    async def _attend_inputs_headless(self, owner) -> bool:
+        """Same body conversation/segment protocol without a chat server or face objects."""
+        from nova_runtime.conversation_context import ConversationContext
+        self.transcript.reload_from_disk()
+        pending = [message for message in self.transcript.messages
+                   if message.get("author") == "Cole" and message.get("seq", -1) > self.transcript.attended_through]
+        if not pending:
+            return False
+        admitted_through = pending[-1]["seq"]
+        initial = [message for message in self.transcript.messages if message["seq"] <= admitted_through]
+        seq_by_id = {f"runtime-{message['seq']}": message['seq'] for message in pending}
+        covered_by_revision = {0: admitted_through}
+        delivered = []
+        input_records = list(pending)
+        for message in pending:
+            self.work_owner.remove_input(f"runtime-{message['seq']}", conversation_id="runtime")
+
+        async def applied(entries, revision):
+            covered = max((seq_by_id.get(entry.get("request_id"), -1) for entry in entries), default=-1)
+            covered_by_revision[revision] = max(covered_by_revision.values(), default=-1)
+            covered_by_revision[revision] = max(covered_by_revision[revision], covered)
+
+        turn = self.conversations.begin("runtime", turn_id=f"{owner.id}-human-{admitted_through}", on_apply=applied)
+
+        async def poll_input(_facts):
+            nonlocal admitted_through
+            self.transcript.reload_from_disk()
+            additions = [message for message in self.transcript.messages
+                         if message.get("author") == "Cole" and message.get("seq", -1) > admitted_through]
+            for message in additions:
+                rid = f"runtime-{message['seq']}"
+                content = f"[Cole is speaking to you]\n{message.get('content') or '[empty input]'}"
+                images = message.get("images") or []
+                if images:
+                    content = [{"type": "text", "text": content}] + [
+                        {"type": "image_url", "image_url": {"url": image["dataUrl"]}}
+                        for image in images if isinstance(image, dict) and image.get("dataUrl")]
+                if not turn.push([{"role": "user", "content": content,
+                                   "request_id": rid, "reply_to": rid}]):
+                    break  # Sealed work leaves later durable input pending for the next step.
+                seq_by_id[rid] = message["seq"]
+                input_records.append(message)
+                admitted_through = message["seq"]
+            return []  # Entries join the ordinary ActiveTurn path; no recursive attention.
+
+        async def segment(text, metadata):
+            if not text or not text.strip():
+                return
+            revision = metadata.get("input_revision", 0)
+            coverage = covered_by_revision.get(revision)
+            if coverage is None:
+                raise RuntimeError("Headless segment has no matching applied input revision")
+            saved = {key: metadata[key] for key in ("turn_id", "segment_index", "input_revision", "audit", "final") if key in metadata}
+            message = self.transcript.append("Nova", text, attended_through=coverage, response_metadata=saved)
+            delivered.append(text)
+            owner.record_phase("attention", "Human input and delivered reply:\n" +
+                "\n".join(item.get("content", "") for item in input_records if item["seq"] <= coverage) + "\nNova: " + text)
+            await self.bus.publish({"type": "runtime_reply", "author": "Nova", "content": text,
+                "work_id": owner.id, "input_through": coverage, "seq": message["seq"], **saved})
+
+        try:
+            await self._generate_headless("", True, transcript_context=ConversationContext(initial),
+                extra_context=owner.prompt_context() + "\nAnswering the human does not erase your ongoing task.",
+                steering=turn, on_segment=segment, on_boundary=poll_input)
+        finally:
+            self.conversations.end("runtime", turn)
+        return bool(delivered)
+
+    async def _generate_headless(self, prompt: str, cole_pending: bool, *, transcript_context=None,
+                                 extra_context="", steering=None, on_segment=None, on_boundary=None) -> str:
+        """Run the body model without a face. Human input uses the shared formatter,
+        conversation inbox and segmented persistence supplied by the attending adapter.
+        Autonomous phases keep their private phase context and natural-boundary hook.
+        The terminal aggregate is returned for phase processing, never appended a second time.
+        Workspace grounding is included; automatic semantic-memory retrieval remains a
+        separate adapter concern, not an implied parity claim here."""
         from nova_cortex.workspace_context import WorkspaceContext
         grounding = WorkspaceContext().build_nova_context_block()
-        ctx = _TickContext(prompt)
+        if extra_context:
+            grounding += "\n" + extra_context
+        ctx = transcript_context if transcript_context is not None else _TickContext(prompt)
         holder = {"full": ""}
         async def _tok(_t):
             pass
@@ -692,9 +872,19 @@ class NovaRuntime:
         async def _err(e):
             print(f"[nova_runtime] headless generation error: {e}")
         try:
+            owner = self.work_owner.active
+            boundary = {}
+            if on_boundary is not None:
+                boundary["on_boundary"] = on_boundary
+            elif owner is not None and not cole_pending:
+                boundary["on_boundary"] = owner.on_boundary
+            if steering is not None:
+                boundary["steering"] = steering
+            if on_segment is not None:
+                boundary["on_segment"] = on_segment
             await self.model_client.generate(
                 "Nova", ctx, on_token=_tok, on_done=_done, on_error=_err,
-                workspace_context=grounding, autonomous=True)
+                workspace_context=grounding, autonomous=not cole_pending, **boundary)
         except Exception as e:
             print(f"[nova_runtime] headless generate failed: {e}")
         return holder["full"]

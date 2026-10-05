@@ -578,8 +578,9 @@ async def _fetch_llama_streaming(
     # an oversized audit is reported as ERROR by the caller instead of a partial PASS.
     if not preserve_messages:
         messages = _fit_messages_to_window(messages, max_output=max_tokens)
+    from nova_runtime.conversation import provider_messages
     payload = {
-        "messages":    messages,
+        "messages":    provider_messages(messages),
         "max_tokens":  max_tokens,
         "temperature": temperature,
         "top_p":       top_p,
@@ -808,36 +809,123 @@ async def stream_response(
                                   # The gateway sends its configured register; it does not classify
                                   # utterances here. Context/prefill/auditing/playback still add latency.
     on_audit: Optional[Callable[[dict], Awaitable[None]]] = None,
+    steering=None,
+    on_segment=None,
+    on_boundary=None,
 ):
     """
     Call llama.cpp server and process the response in an autonomy loop if tools are used.
 
-    on_audit receives {status, reason, source} once immediately before on_done.
-    It describes that exact delivered candidate, not an earlier draft or a later
-    background opinion. Delivery alone never means PASS; unchecked salvage is NOT_RUN.
+    Without on_segment, the legacy caller receives one final candidate via on_done.
+    With on_segment, every visible candidate (including the last) is delivered there
+    with turn/revision/index/audit metadata. on_done fires once with aggregate committed
+    text as a terminal notification; adapters must not replay that aggregate. Completed
+    segments remain delivered when newer input is consumed. Explicit Stop cancels only
+    undelivered work. Delivery alone never means PASS; budget salvage remains NOT_RUN.
+    on_boundary may attend other input after natural provider/tool completion. It returns
+    private user/assistant context for the same work; it never interrupts a provider call.
     """
-    async def _deliver(text, audit):
+    from nova_runtime.conversation import cancellation_requested, observer_cancel_is_external
+    _segmented = on_segment is not None
+    _committed_segments = []
+    _segment_index = 0
+    _segment_continue = False
+    _candidate_revision = 0
+    _step_evidence = None
+    _boundary_revision = 0
+    _last_completed_action = None
+    _completed_tool_count = 0
+
+    class _BoundaryError(Exception):
+        """Attention failure must not be mistaken for a retryable tool/audit failure."""
+
+    from nova_runtime.operations import current_operation as _segment_operation
+    _segment_op = _segment_operation.get()
+    _turn_id = (steering.turn_id if steering is not None else
+                _segment_op.id if _segment_op is not None else __import__("uuid").uuid4().hex)
+
+    async def _deliver(text, audit, *, exhausted=False):
+        nonlocal _segment_index, _segment_continue, final_chat_buffer, chat_text
+        nonlocal _prior_draft, _concern_prev, _candidate_revision
+        _budget_sealed = False
+        if _segmented and exhausted and steering is not None:
+            await _apply_steering()
+            _candidate_revision = steering.applied_revision
+            if not steering.try_seal():
+                raise asyncio.CancelledError("Conversation closed before budget terminal")
+            _budget_sealed = True
+        if not _segmented and await _apply_steering(text):
+            return False
+        # Attending input here does not invalidate already-completed phase work.
+        # Its frozen audit remains attached; the owner retains both the result and
+        # the attended conversation for its next step, without repeating delivery.
+        await _service_boundary("before_delivery", draft=text, audit=audit)
         task = asyncio.current_task()
-        if task and task.cancelling():
-            raise asyncio.CancelledError  # A stop may already be pending before the first await.
+        if cancellation_requested(task):
+            raise asyncio.CancelledError
+        audit = dict(audit)
+        if _segmented:
+            audit.update(input_revision=_candidate_revision, turn_id=_turn_id)
         if on_audit is not None:
             try:
-                await on_audit(dict(audit))  # An observer cannot mutate the retained snapshot.
+                await on_audit(dict(audit))
             except asyncio.CancelledError:
-                if task and task.cancelling():
-                    raise  # Any task cancellation is real, including a previously pending stop.
+                if observer_cancel_is_external(task):
+                    raise
                 print("[nova] audit observer cancelled itself; delivering reply unchanged")
             except Exception as exc:
                 print(f"[nova] audit observer failed ({type(exc).__name__}); delivering reply unchanged")
-        if task and task.cancelling():
-            raise asyncio.CancelledError  # Observer code may catch a stop or return without yielding.
-        await on_done(text)
+        if cancellation_requested(task):
+            raise asyncio.CancelledError
+        if not _segmented:
+            if await _apply_steering(text):
+                return False
+            if steering is not None and not steering.try_seal():
+                raise asyncio.CancelledError("Conversation closed before delivery")
+            await on_done(text)
+            return True
+
+        # A segment addresses its frozen input revision, not later queued words.
+        # Deliver useful completed work first, then reconcile the newer instructions.
+        continuing = not exhausted and (_segment_continue or (steering is not None and steering.pending))
+        if not continuing and steering is not None and not _budget_sealed:
+            if not steering.try_seal():
+                continuing = True
+        if text.strip():
+            _segment_index += 1
+            metadata = {"turn_id": _turn_id, "segment_index": _segment_index,
+                        "input_revision": _candidate_revision, "audit": dict(audit),
+                        "final": not continuing}
+            await on_segment(text, metadata)
+            _committed_segments.append(text)
+            _delivered_assistant_history.append(text)
+            messages.append({"role": "assistant", "content": text})
+            messages.append({"role": "user", "content":
+                "[System] The preceding segment was delivered. Keep its completed work and receipts. "
+                "Continue only the remaining work; do not repeat the segment. If newer input changes "
+                "a conclusion or instruction, explicitly reconcile or correct it in the next segment."})
+        final_chat_buffer = chat_text = _prior_draft = _concern_prev = ""
+        _segment_continue = False
+        if continuing:
+            await _apply_steering()
+            return False
+        await on_done("\n\n".join(_committed_segments))  # terminal aggregate; a face must not replay it
+        return True
 
     try:
         # Use structured turn history so llama.cpp can cache the prefix.
         # system = stable personality rules (never changes → always cached)
         # Subsequent turns = real user/assistant pairs → only new tokens re-processed.
         system = SYSTEM_PREFIX
+        if _segmented:
+            system += (
+                '\n\nCONVERSATION WORK LOOP: You may deliver a useful completed segment while continuing '
+                'the same task. Emit {"tool":"speak","args":{"text":"the user-facing segment",'
+                '"continue":true}}. Its text is visible output, never hidden thinking; factual claims '
+                'are audited normally. Continue true means you still have work to do, not that the '
+                'task is finished. Continue false or a normal prose answer finishes when no newer '
+                'input is pending. Keep completed actions and already-delivered segments; reconcile '
+                'follow-ups without repeating them. Empty speak text does not request another step.')
         if autonomous:
             system += (
                 "\n\nAUTONOMOUS MODE IS ACTIVE.\n"
@@ -850,6 +938,10 @@ async def stream_response(
         messages = transcript.to_messages(
             "Nova", system, workspace_context=workspace_context
         )
+
+        if steering is not None or on_boundary is not None:
+            from nova_cortex.context_budget import anchor_current_request
+            anchor_current_request(messages)
 
         # Echo comparisons use delivered history, never this turn's private tool drafts.
         _delivered_assistant_history = [m.get("content") for m in messages
@@ -879,7 +971,7 @@ async def stream_response(
         # ── Context-window guard ─────────────────────────────────────────────
         # llama.cpp hard-errors if the prompt exceeds its context size.
         # Drop oldest conversation turns (keeping system msg intact) until the
-        # estimated token count fits within the 32k window.
+        # estimated text budget fits within the configured 64K context window.
         tok_budget_out = max_tokens if max_tokens > 0 else MAX_TOKENS_CHAT
         messages = _truncate_to_context(messages, ctx_limit=65536, max_output=tok_budget_out)
 
@@ -977,12 +1069,162 @@ async def stream_response(
         # screen is never dead. Autonomous/silent ticks are EXEMPT (they stream to the Monitor
         # pane, not chat). Fail-safe: hold_back_streaming=false in _admin/tunables.json
         # restores live streaming instantly, no code change.
-        _HOLD = bool(_tune("hold_back_streaming", True)) and not autonomous
+        _HOLD = (_segmented or steering is not None or on_boundary is not None
+                 or (bool(_tune("hold_back_streaming", True)) and not autonomous))
 
         chat_text            = ""     # current iteration's outbound text; pre-bound so the
                                       # loop-exhaustion salvage can never hit an unbound name
 
-        while loop_counter < max_loops:
+        async def _apply_steering(completed_draft=None):
+            """Append at a natural boundary; retain real receipts and never cancel work."""
+            nonlocal final_chat_buffer, chat_text
+            nonlocal _prior_draft, _concern_prev, _consec_concerns
+            if steering is None or not steering.pending:
+                return False
+            if completed_draft:
+                # This completed output is private working context, not a delivered
+                # answer or proof that a proposed tool action actually happened.
+                messages.append({"role": "assistant", "content": completed_draft})
+                proposed, _ = _find_tool_call(completed_draft)
+                messages.append({"role": "user", "content":
+                    "[System] The preceding output finished under an earlier input revision "
+                    "and is retained as intermediate work. It was not delivered as a final answer. " +
+                    ("Its proposed tool action was NOT executed; reconsider it with the new input. "
+                     if proposed else "") +
+                    "Continue the same task using the original request, completed receipts, and all follow-ups below."})
+            from nova_runtime.conversation import ANCHOR
+            # An observer may yield while correlating the batch. Drain any input
+            # accepted during that await before making the next provider call.
+            while steering.pending:
+                batch, _revision = await steering.consume()
+                for entry in batch:
+                    messages.append({"role": "user", "content": entry["content"], ANCHOR: True})
+                    if isinstance(entry["content"], list):
+                        for part in entry["content"]:
+                            if isinstance(part, dict) and part.get("type") == "image_url":
+                                url = part.get("image_url", {}).get("url")
+                                if isinstance(url, str) and url.startswith("data:image/"):
+                                    _user_visual_evidence.append({"label": "Image in a conversation follow-up.", "url": url})
+            # Audits concern a candidate at an input revision. Keep actual tool
+            # evidence, but no prior approval/objection certifies the next draft.
+            final_chat_buffer = chat_text = _prior_draft = _concern_prev = ""
+            _consec_concerns = 0
+            # Input never replenishes the total tool-loop or witness allowance.
+            return True
+
+        async def _service_boundary(stage, *, draft=None, phase="generation", audit=None,
+                                    reconsider=False):
+            """Attend input without interrupting inference or replaying completed actions."""
+            nonlocal _boundary_revision, final_chat_buffer, chat_text
+            nonlocal _prior_draft, _concern_prev, _consec_concerns
+            if on_boundary is None:
+                return False
+            import copy
+            import hashlib
+            import json
+            from nova_runtime.conversation import ANCHOR
+            def digest(value):
+                return hashlib.sha256(value.encode("utf-8")).hexdigest()
+            draft_fact = None
+            if draft is not None:
+                draft_text = str(draft)
+                proposed, _ = _find_tool_call(draft_text)
+                proposal_fact = None
+                if proposed:
+                    arguments = proposed.get("args")
+                    if not isinstance(arguments, dict):
+                        arguments = {k: v for k, v in proposed.items() if k != "tool"}
+                    argument_text = json.dumps(arguments, sort_keys=True, ensure_ascii=False, default=str)
+                    proposal_fact = {"name": str(proposed.get("tool", ""))[:120],
+                                     "args_sha256": digest(argument_text), "executed": False}
+                draft_fact = {"text_preview": draft_text[:4000], "chars": len(draft_text),
+                              "sha256": digest(draft_text), "tool_proposal": proposal_fact}
+            facts = {"turn_id": _turn_id, "input_revision": _candidate_revision,
+                     "stage": stage, "phase": phase, "completed_tool_count": _completed_tool_count,
+                     "draft": draft_fact, "last_completed_action": copy.deepcopy(_last_completed_action)}
+            if audit is not None:
+                facts["audit"] = {"status": str(audit.get("status", "NOT_RUN"))[:40],
+                                  "reason": str(audit.get("reason", ""))[:300]}
+            if cancellation_requested():
+                raise asyncio.CancelledError
+            try:
+                from contextlib import nullcontext
+                with (_witness.preserve_turn_context() if _INTEGRITY_OK else nullcontext()):
+                    context = await on_boundary(facts)
+                if cancellation_requested():
+                    raise asyncio.CancelledError
+                if context is None or context == []:
+                    return False
+                if not isinstance(context, list):
+                    raise ValueError("attention context must be a list")
+                appended = []
+                for entry in context:
+                    if (not isinstance(entry, dict) or entry.get("role") not in ("user", "assistant")
+                            or not isinstance(entry.get("content"), (str, list))):
+                        raise ValueError("attention context requires user/assistant content")
+                    appended.append({"role": entry["role"], "content": copy.deepcopy(entry["content"]),
+                                     ANCHOR: True})
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                raise _BoundaryError(f"Work attention failed ({type(exc).__name__})") from exc
+            if reconsider and draft:
+                messages.append({"role": "assistant", "content": draft})
+                messages.append({"role": "user", "content":
+                    "[System] The preceding output completed before another conversation was attended. "
+                    "It is retained as intermediate work, not a delivered answer. Any proposed tool "
+                    "action was NOT executed. Reconsider the next action using the original objective, "
+                    "completed receipts, and attended context below. Do not repeat replies already delivered."})
+            messages.extend(appended)
+            _boundary_revision += 1
+            if reconsider:
+                final_chat_buffer = chat_text = _prior_draft = _concern_prev = ""
+                _consec_concerns = 0
+            # Total tool and witness allowances are deliberately unchanged.
+            return True
+
+        while True:
+            await _apply_steering()
+            if loop_counter >= max_loops:
+                # ── LOOP EXHAUSTION IS NOT PERMISSION TO SAY NOTHING (2026-07-21 review) ─────
+                # If 20 iterations burn down without reaching Final Answer — long tool chains do
+                # happen; she ran 10+ call sequences tonight, and every guard retry (witness,
+                # echo, assertion, premise) consumes an iteration — the old code simply fell out
+                # of the loop: no on_done, no message, turn vanishes. To the person waiting, that
+                # is indistinguishable from being ignored, and to the transcript it never
+                # happened. Every bug in this project has been a silent drop; this was one with a
+                # 20-iteration fuse. Deliver SOMETHING true instead.
+                print(f"[nova] max_loops ({max_loops}) exhausted without a final answer — "
+                      f"delivering best-effort instead of nothing")
+                try:
+                    from nova_cortex import witness as _w_exh
+                    _w_exh.pipeline_event(
+                        "loop_exhausted",
+                        f"{max_loops} iterations spent (tools/guard retries) without reaching a "
+                        f"final answer — best-effort delivery instead of silence",
+                        tools_this_turn=len(_turn_tools))
+                except Exception:
+                    pass
+                # A final tool iteration is already represented in the prose buffer.
+                # Never append its raw JSON (or repeat its prefix) as human-facing salvage.
+                _pending_tool, _ = _find_tool_call(chat_text)
+                _salvage = (final_chat_buffer if _pending_tool else final_chat_buffer + chat_text).strip()
+                if _segmented:
+                    _salvage = (_salvage + "\n\n" if _salvage else "") + (
+                        "This work run reached its step allowance. Completed segments and tool receipts "
+                        "are retained, but remaining work or newly accepted follow-ups are not complete.")
+                if not _salvage:
+                    _salvage = (f"I ran out of thinking room this turn after {len(_turn_tools)} "
+                                f"tool call(s) and never landed the answer. The receipts are in "
+                                f"the Tools tab — ask me again and I'll pick it up from there.")
+                if _INTEGRITY_OK:
+                    _witness.pipeline_event("witness_incomplete",
+                        "Turn limit reached; the delivered salvage has no complete final audit.",
+                        status="INCOMPLETE", draft_chars=len(_salvage))
+                if await _deliver(_salvage, {"status": "NOT_RUN", "source": "none",
+                    "reason": "Turn limit reached; this salvage has no final candidate audit."}, exhausted=True):
+                    break
+                continue
             loop_counter += 1
             # Every continuation creates a new candidate. A prior PASS must not
             # follow a revision, tool reach, echo retry or unaudited short answer.
@@ -1059,6 +1301,13 @@ async def stream_response(
                 _think_this = not (register == "voice_fast" and loop_counter == 1
                                    and _tune("voice_fast_thinking_off", True))
 
+                await _service_boundary("before_provider")
+                if await _apply_steering():
+                    continue
+                _candidate_revision = ((steering.applied_revision if steering is not None else 0)
+                                       + _boundary_revision)
+                _step_evidence = (_witness.capture_evidence_snapshot()
+                                  if (_segmented or on_boundary is not None) and _INTEGRITY_OK else None)
                 full_response = await _fetch_llama_streaming(
                     messages, token_handler,
                     on_think_token=think_handler,
@@ -1084,6 +1333,14 @@ async def stream_response(
                 print(f"[nova] empty return but {_chat_chars[0]} chars were streamed — "
                       f"recovered from stream buffer, NOT retrying (doubling guard)")
 
+            if await _service_boundary("provider_complete", draft=full_response, reconsider=True):
+                continue
+            _proposal, _ = _find_tool_call(full_response or "")
+            if (not _segmented or not (full_response or "").strip()
+                    or (_proposal and _proposal.get("tool") != "speak")):
+                if await _apply_steering(full_response):
+                    continue
+
             if not full_response or not full_response.strip():
                 # Empty content = the <think> pass consumed the whole token budget before any
                 # answer (Qwen 3.6 hybrid-thinking failure mode → blank reply). Retry ONCE with
@@ -1104,6 +1361,12 @@ async def stream_response(
                 except Exception as e:
                     await on_error(f"llama.cpp retry error: {e}")
                     return
+                if await _service_boundary("provider_complete", draft=full_response, reconsider=True):
+                    continue
+                _proposal, _ = _find_tool_call(full_response or "")
+                if (not _segmented or (_proposal and _proposal.get("tool") != "speak")):
+                    if await _apply_steering(full_response):
+                        continue
                 if not full_response or not full_response.strip():
                     await on_error("Nova returned an empty response (even with thinking off)")
                     return
@@ -1162,6 +1425,20 @@ async def stream_response(
                     chat_text = ""
                     # The transcript should show the reach, not the fabrication.
                     full_response = json.dumps(_ttc)
+
+            if _segmented and _tc and _tc.get("tool") == "speak":
+                _speak_args = _tc.get("args") if isinstance(_tc.get("args"), dict) else _tc
+                _spoken = _speak_args.get("text", "")
+                chat_text = _spoken.strip() if isinstance(_spoken, str) else ""
+                full_response = chat_text
+                _segment_continue = bool(chat_text) and _speak_args.get("continue") is True
+                _tc = None  # body control, never dispatched as an external side-effect tool
+                _think_buf.clear()  # hidden reasoning is not the spoken segment
+                if not chat_text:
+                    if await _deliver("", {"status": "NOT_RUN", "source": "none",
+                                           "reason": "Empty speak segment produced no output."}):
+                        break
+                    continue
 
             if _tc:
                 try:
@@ -1259,6 +1536,8 @@ async def stream_response(
                             except Exception as _phe:
                                 print(f"[nova] premise-hold check failed open: {_phe}")
 
+                        if await _apply_steering(full_response):
+                            continue
                         # Execute Tool — time it for the Tools tab display
                         import time as _time
                         _t0 = _time.time()
@@ -1303,6 +1582,18 @@ async def stream_response(
                         from nova_voice.tool_result import observation_text
                         _observation = observation_text(result)
                         _turn_tools.append((tool_name, args, _observation))
+                        _completed_tool_count += 1
+                        if on_boundary is not None:
+                            import hashlib as _boundary_hash
+                            import json as _boundary_json
+                            _args_text = _boundary_json.dumps(args, sort_keys=True, ensure_ascii=False, default=str)
+                            _last_completed_action = {
+                                "tool": str(tool_name)[:120], "operation_id": _call_id,
+                                "status": result.status, "ok": result.ok, "exit_code": result.exit_code,
+                                "args_preview": _args_text[:240],
+                                "args_sha256": _boundary_hash.sha256(_args_text.encode("utf-8")).hexdigest(),
+                                "observation_preview": _observation[:800],
+                                "observation_sha256": _boundary_hash.sha256(_observation.encode("utf-8")).hexdigest()}
 
                         # Broadcast tool_executed event to the UI Tools tab.
                         # 1000 -> 12000 chars (2026-07-19): the Tools panel's new Verbose tab shows
@@ -1323,6 +1614,12 @@ async def stream_response(
 
                         # Re-prompt
                         messages.append({"role": "assistant", "content": full_response})
+                        if steering is not None or on_boundary is not None:
+                            from nova_runtime.conversation import completed_action_message
+                            messages.append(completed_action_message(
+                                tool_name, args, _observation, operation_id=_call_id,
+                                run_id=_run_id, status=result.status, ok=result.ok,
+                                exit_code=result.exit_code))
                         messages.append({"role": "user", "content": f"[System Result from {tool_name}]\n{_observation}\nContinue your task or provide the final answer."})
                         # Guest screenshots are real visual input, not a claim that she saw them.
                         for artifact in getattr(result, "artifacts", []):
@@ -1349,8 +1646,12 @@ async def stream_response(
                         _prefix = _re.sub(r"\s*```[a-zA-Z]*\s*$", "", chat_text[:_tc_start]).rstrip()
                         final_chat_buffer += (f"{_prefix}\n\n" if _prefix else "") + \
                                              f"[`{tool_name}` resulted in {len(str(result))} bytes.]\n\n"
+                        await _service_boundary("tool_complete")
+                        await _apply_steering()  # completed receipt is already retained, never replayed
                         continue # Loop!
                 except Exception as e:
+                    if isinstance(e, _BoundaryError):
+                        raise
                     # Fire tool_executed with the parse error so the Tools tab shows it
                     if on_tool_executed:
                         try:
@@ -1361,6 +1662,8 @@ async def stream_response(
                     messages.append({"role": "user", "content": f"[System Error parsing JSON tool call]\n{str(e)}"})
                     continue 
 
+            if not _segmented and await _apply_steering(full_response):
+                continue
             # Audit exactly what would be delivered, including every pre-tool prefix.
             # Once consumed, a challenged candidate is replaced by Nova's own next answer;
             # stale prefixes must never be appended again after she revises them.
@@ -1580,6 +1883,7 @@ async def stream_response(
                     pass
                 _audit_error = ""
                 _audit_exhausted = False
+                _audit_steered = False
                 _audit_images, _audit_omitted = _witness.select_visual_evidence(
                     _user_visual_evidence + _turn_visual_evidence[-3:])
                 _audit_omitted += max(0, len(_turn_visual_evidence) - 3)
@@ -1596,6 +1900,9 @@ async def stream_response(
                     _checks, _verdict = _witness_checks, ""   # carried across rounds this turn
                     _pre_checks = len(_checks)                # so the event logs only NEW reads
                     for _vi in range(4):
+                        if not _segmented and await _apply_steering(chat_text):
+                            _audit_steered = True
+                            break
                         _verdict = await _fetch_llama_streaming(
                             _witness.build_witness(chat_text, _turn_tools,
                                                    thinking=_think_for_check,
@@ -1605,10 +1912,16 @@ async def stream_response(
                                                    has_image=bool(_user_visual_evidence or _turn_visual_evidence),
                                                    visual_evidence=_audit_images,
                                                    omitted_images=_audit_omitted,
-                                                   reads_remaining=3 - _vi),
+                                                   reads_remaining=3 - _vi,
+                                                   **({"evidence_snapshot": _step_evidence}
+                                                      if _step_evidence is not None else {})),
                             _noop,
                             max_tokens=2048, temperature=0.2, top_p=0.9,
                             enable_thinking=False, literal_safe=True, preserve_messages=True) or ""
+                        await _service_boundary("provider_complete", draft=_verdict, phase="audit")
+                        if not _segmented and await _apply_steering(chat_text):
+                            _audit_steered = True
+                            break
                         _wc, _ = _witness.find_audit_tool_call(_verdict)
                         if not _wc or _vi == 3:
                             _audit_exhausted = bool(_wc and _vi == 3)
@@ -1629,6 +1942,10 @@ async def stream_response(
                         except Exception as _we:
                             _wr = f"ERROR: {_we}"
                         _checks.append((_wt, _wa, str(_wr)))
+                        await _service_boundary("tool_complete", phase="audit")
+                        if not _segmented and await _apply_steering(chat_text):
+                            _audit_steered = True
+                            break
                         print(f"[nova] witness read returned: {_wt}({str(_wa)[:60]}) "
                               f"-> {len(str(_wr))}B")
                     if len(_checks) > _pre_checks:
@@ -1648,9 +1965,13 @@ async def stream_response(
                             pass
 
                 except Exception as _sce:
+                    if isinstance(_sce, _BoundaryError):
+                        raise
                     print(f"[nova] self-check unavailable ({type(_sce).__name__}); draft is not certified")
                     _audit_error = f"Witness request failed ({type(_sce).__name__})."
                     _verdict = ""
+                if _audit_steered or (not _segmented and await _apply_steering(chat_text)):
+                    continue  # the completed audit belongs to an older input revision
                 _audit = _witness.parse_witness_verdict(
                     _verdict, error=_audit_error, exhausted=_audit_exhausted)
                 _audited_candidate = chat_text
@@ -2305,47 +2626,19 @@ async def stream_response(
             except Exception as _ee:
                 print(f"[nova] echo guard failed open: {_ee}")
 
-            # Final Answer
+            # Final Answer: input arriving during arbitration/other callbacks
+            # invalidates this candidate just like input during its witness call.
+            if not _segmented and await _apply_steering(chat_text):
+                continue
             final_chat_buffer += chat_text
             if _audited_candidate != final_chat_buffer:
                 _delivery_audit = {"status": "NOT_RUN", "source": "none",
                     "reason": "No audit ran for this delivered candidate."}
-            await _deliver(final_chat_buffer, _delivery_audit)
-            break
-        else:
-            # ── LOOP EXHAUSTION IS NOT PERMISSION TO SAY NOTHING (2026-07-21 review) ─────
-            # If 20 iterations burn down without reaching Final Answer — long tool chains do
-            # happen; she ran 10+ call sequences tonight, and every guard retry (witness,
-            # echo, assertion, premise) consumes an iteration — the old code simply fell out
-            # of the loop: no on_done, no message, turn vanishes. To the person waiting, that
-            # is indistinguishable from being ignored, and to the transcript it never
-            # happened. Every bug in this project has been a silent drop; this was one with a
-            # 20-iteration fuse. Deliver SOMETHING true instead.
-            print(f"[nova] max_loops ({max_loops}) exhausted without a final answer — "
-                  f"delivering best-effort instead of nothing")
-            try:
-                from nova_cortex import witness as _w_exh
-                _w_exh.pipeline_event(
-                    "loop_exhausted",
-                    f"{max_loops} iterations spent (tools/guard retries) without reaching a "
-                    f"final answer — best-effort delivery instead of silence",
-                    tools_this_turn=len(_turn_tools))
-            except Exception:
-                pass
-            # A final tool iteration is already represented in the prose buffer.
-            # Never append its raw JSON (or repeat its prefix) as human-facing salvage.
-            _pending_tool, _ = _find_tool_call(chat_text)
-            _salvage = (final_chat_buffer if _pending_tool else final_chat_buffer + chat_text).strip()
-            if not _salvage:
-                _salvage = (f"I ran out of thinking room this turn after {len(_turn_tools)} "
-                            f"tool call(s) and never landed the answer. The receipts are in "
-                            f"the Tools tab — ask me again and I'll pick it up from there.")
-            if _INTEGRITY_OK:
-                _witness.pipeline_event("witness_incomplete",
-                    "Turn limit reached; the delivered salvage has no complete final audit.",
-                    status="INCOMPLETE", draft_chars=len(_salvage))
-            await _deliver(_salvage, {"status": "NOT_RUN", "source": "none",
-                "reason": "Turn limit reached; this salvage has no final candidate audit."})
+            if steering is not None or on_boundary is not None:
+                _delivery_audit = {**_delivery_audit, "input_revision": _candidate_revision,
+                                   "turn_id": _turn_id}
+            if await _deliver(final_chat_buffer, _delivery_audit):
+                break
 
     except Exception as e:
         import traceback

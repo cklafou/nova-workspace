@@ -1,5 +1,5 @@
 # @nova: Split delivered reply text into ordered, speakable sentence units.
-# Last updated: 2026-10-04 15:01:23
+# Last updated: 2026-10-05 21:33:05
 #   no network: this is the one piece that carries real design intelligence, so it is the one
 #   piece with unit tests (test_committer.py). Everything else is an adapter around it.
 """

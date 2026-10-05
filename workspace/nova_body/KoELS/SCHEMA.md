@@ -1,6 +1,6 @@
 # KoELS — Manifest Contract (v1)
 <!-- @nova: The KoELS manifest contract: the folder layout and manifest.json fields an expert loadout needs for Nova to equip it. -->
-_Last updated: 2026-10-04 15:01:24_
+_Last updated: 2026-10-05 21:33:06_
 _Knowledge of Experts Loadout System. One `manifest.json` per expert under `KoELS/<name>/`.
 An expert is a drop-in folder: add `KoELS/legal/` with a manifest + adapter + DB and Nova can
 equip it — no code change. This contract is the interface her loadout-decision faculty reads._

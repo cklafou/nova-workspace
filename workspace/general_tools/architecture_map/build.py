@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 14:28:11
+# Last updated: 2026-10-05 21:33:05
 """Extract Nova's architecture without executing its modules.
 
 Python's AST establishes imports and calls whose receivers can be resolved. A reviewed

@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 14:28:11
+# Last updated: 2026-10-05 21:33:05
 """Serve and automatically regenerate the read-only Nova architecture atlas.
 
 Only this atlas is started. No Nova modules are imported, no model is started, and no

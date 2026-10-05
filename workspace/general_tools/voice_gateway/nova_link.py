@@ -8,11 +8,13 @@ Inbound frames the voice uses (server contract: nova_chat/response_events.py, 20
     user_message   {id, request_id, author, content}   the server's id for an utterance we sent
     queued         {count, reason}                     sent only to this socket
     message_start  {id, run_id, reply_to, request_id, register, author}
-    message_end    {..., content, delivery, audit: {status, reason, source}}
+    message_context {id, run_id, request_ids, reply_to_ids, input_revision}  applied follow-ups
+    message_segment {..., turn_id, segment_index, content, delivery, audit}  committed audited content
+    message_end    {..., content, segment_count, delivery, audit: {status, reason, source}}
     request_end    {request_id, reply_to, register, delivery}  a request dropped before generation
     error          {..., message}
     stopped / stop_pending                             someone stopped her generation
-Tokens are ignored: the first stage speaks delivered final text only. Everything else
+Tokens are ignored: only delivered audited segments or compatible final replies can speak. Everything else
 (status, pipeline, eyes, autonomous_*) is not the voice's business.
 """
 from __future__ import annotations
@@ -30,7 +32,7 @@ except Exception:  # pragma: no cover - import guard
 
 @dataclass
 class NovaEvent:
-    kind: str                       # ack | queued | start | end | request_end | error | stopped
+    kind: str                       # ack | queued | start | context | segment | end | request_end | error | stopped
     message_id: str = ""
     request_id: str = ""
     reply_to: str = ""
@@ -43,7 +45,7 @@ class NovaEvent:
     raw: dict = field(default_factory=dict)
 
 
-_KINDS = {"user_message": "ack", "queued": "queued", "message_start": "start", "message_end": "end",
+_KINDS = {"user_message": "ack", "queued": "queued", "message_start": "start", "message_context": "context", "message_segment": "segment", "message_end": "end", "turn_end": "end",
           "request_end": "request_end", "error": "error", "stopped": "stopped", "stop_pending": "stopped"}
 
 
@@ -61,18 +63,21 @@ def parse_event(frame, author: str = "Nova") -> NovaEvent | None:
     kind = _KINDS.get(frame.get("type"))
     if kind is None:
         return None
-    if kind in ("start", "end", "error") and frame.get("author") != author:
+    if kind in ("start", "context", "segment", "end", "error") and frame.get("author") != author:
         return None
     ev = NovaEvent(kind=kind, message_id=_text(frame.get("id")), request_id=_text(frame.get("request_id")),
                    reply_to=_text(frame.get("reply_to")), run_id=_text(frame.get("run_id")),
                    register=_text(frame.get("register")), author=_text(frame.get("author")), raw=frame)
-    if kind == "end":
+    if kind in ("segment", "end"):
         ev.text = _text(frame.get("content"))
         ev.delivery = frame["delivery"] if isinstance(frame.get("delivery"), str) else None
         audit = frame.get("audit") if isinstance(frame.get("audit"), dict) else {}
         ev.audit = {"status": _text(audit.get("status")) or "NOT_RUN",
                     "reason": _text(audit.get("reason")),
                     "source": _text(audit.get("source")) or "none"}
+        for key in ("input_revision", "turn_id"):
+            if key in audit:
+                ev.audit[key] = audit[key]
     elif kind == "request_end":
         ev.delivery = _text(frame.get("delivery")) or "unavailable"
     elif kind == "error":

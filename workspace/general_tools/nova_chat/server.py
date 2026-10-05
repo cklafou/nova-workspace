@@ -490,6 +490,7 @@ async def variables_page():
 connected_clients: list[WebSocket] = []
 active_tasks: list[asyncio.Task] = []
 _request_work: dict = {}  # (originating websocket, request_id) -> queued/running work
+_turn_transports: dict = {}  # Face bindings only; active-turn admission/ordering belongs to the body.
 is_processing: bool = False
 _stop_requested = asyncio.Event()  # set by STOP; cleared at start of every new response
 _force_wake = asyncio.Event()      # set by the Wake Up button (/api/wake) — forces one immediate cognition cycle
@@ -508,16 +509,46 @@ _ERROR_DEDUP_WINDOW: float = 30.0  # seconds — suppress identical errors withi
 # Each entry: {"content": str, "full_context_content": str, "directed_at": list,
 #              "images": list, "msg": dict}
 _cole_message_queue: list[dict] = []
-# Transcript length at the moment the last generation built its prompt. Anything at or beyond
-# this index arrived TOO LATE for that run to have seen it, so it still needs answering.
-# See the watermark note in run_ai_response and the drain guard in the WS handler.
-_inflight_upto: int = 0
 
 
 def _release_request_work(work):
-    key = (work.get("owner"), work.get("request_id"))
+    owner = getattr(globals().get("_rt"), "work_owner", None)
+    if owner is not None and work.pop("body_admitted", False):
+        owner.remove_input((work.get("msg") or {}).get("id"))
+    if work.pop("transcript_retained", False):
+        session_mgr.release(work["conversation_id"], work["transcript"])
+    key = (work.get("owner"), normalize_request_id(work.get("request_id")))
     if _request_work.get(key) is work:
         _request_work.pop(key, None)
+
+
+def _steer_request(work):
+    """Translate a face message into the body's active conversation, without cancelling it."""
+    manager = getattr(globals().get("_rt"), "conversations", None)
+    conversation_id = work.get("conversation_id", session_mgr.active_id)
+    binding = _turn_transports.get(conversation_id)
+    directed = work.get("directed_at") or []
+    if (manager is None or (directed and "Nova" not in directed)
+            or work.get("cancelled") or _stop_requested.is_set()):
+        return False
+    turn = manager.get(conversation_id)
+    text = work.get("full_context_content", work.get("content", ""))
+    images = work.get("input_images", work.get("images", [])) or []
+    content = text
+    if images:
+        content = [{"type": "text", "text": text}] + [
+            {"type": "image_url", "image_url": {"url": img["dataUrl"]}}
+            for img in images if img.get("dataUrl")]
+    entry = {"role": "user", "content": content,
+             "request_id": work.get("request_id"), "reply_to": (work.get("msg") or {}).get("id")}
+    if binding is not None and turn is binding["turn"] and manager.submit(conversation_id, [entry]):
+        work.update(task=binding["task"], started=True)
+        binding["works"].append(work)
+        return True
+    owner = getattr(globals().get("_rt"), "work_owner", None)
+    if owner is not None and not work.get("body_admitted"):
+        work["body_admitted"] = owner.submit_input({**entry, "conversation_id": conversation_id})
+    return False  # Includes the sealed-turn window: next body boundary owns this queued input.
 
 
 async def _scoped_stop_reply(ws, request_id, matched):
@@ -546,7 +577,14 @@ async def _stop_request(ws, request_id):
         _release_request_work(work)
         await _scoped_stop_reply(ws, request_id, False)
         return
-    task.cancel()
+    coordinator = getattr(globals().get("_rt"), "work_owner", None)
+    owner = coordinator.active if coordinator is not None else None
+    if owner is not None and owner.kind == "autonomy" and owner.task is task:
+        owner.request_stop()
+        completion = asyncio.create_task(owner.finished.wait())
+    else:
+        task.cancel()
+        completion = task
     if not work.get("started"):
         # A task cancelled before entering its coroutine never executes its finally.
         # Release only its already-owned reservation, then service any newer request.
@@ -555,20 +593,21 @@ async def _stop_request(ws, request_id):
         await _end_queued_request(work, "cancelled")
         await broadcast({"type": "processing_end"})
         await _drain_cole_queue()
-    done, _ = await asyncio.wait({task}, timeout=0.5)
+    done, _ = await asyncio.wait({completion}, timeout=0.5)
     if done:
         await _scoped_stop_reply(ws, request_id, True)
     else:
         await ws.send_text(json.dumps({"type": "stop_pending", "request_id": request_id}))
         def complete(_task):
             asyncio.ensure_future(_scoped_stop_reply(ws, request_id, True))
-        task.add_done_callback(complete)
+        completion.add_done_callback(complete)
 
 
 async def _end_queued_request(queued: dict, delivery: str) -> None:
     """Close a correlated inbound request without inventing a generation or audit result."""
     request_id = normalize_request_id(queued.get("request_id"))
     if request_id is None:
+        _release_request_work(queued)
         return  # Legacy clients have no request identity to complete.
     if queued.get("terminal_sent"):
         return
@@ -581,12 +620,7 @@ async def _end_queued_request(queued: dict, delivery: str) -> None:
 
 
 async def _drain_cole_queue() -> None:
-    """Deliver the newest queued message and explicitly close requests that never run.
-
-    Every busy-release calls this, including autonomous work, so a queued human
-    request never has to wait for a second human message. Selection still coalesces
-    a pileup to its newest entry; request_end makes that policy observable to clients.
-    """
+    """Admit queued input in order; compatible follow-ups join one body-owned active turn."""
     global is_processing
     if getattr(globals().get("_nova_lifecycle"), "pending", False):
         return
@@ -596,40 +630,17 @@ async def _drain_cole_queue() -> None:
         return
     # Claim before any await: status checks and completion broadcasts can admit a
     # concurrent message/drain, which must queue behind this selected request.
-    _batch = list(_cole_message_queue)
-    _cole_message_queue.clear()
+    _queued = _cole_message_queue.pop(0)
     is_processing = True
-    _queued = _batch[-1]
     _scheduled = False
     # A terminal is committed before broadcast: cancellation after a partial send
     # must not retry it with a contradictory disposition.
     _selected_closed = False
     try:
-        for _discarded in _batch[:-1]:
-            await _end_queued_request(_discarded, "cancelled" if _stop_requested.is_set() else "superseded")
-
-        # A transcript entry was already answered only if it was inside the prior
-        # prompt watermark AND an AI spoke after it. New arrivals must still run.
-        _already, _qid = False, None
-        try:
-            _qid = (_queued.get("msg") or {}).get("id")
-            _msgs = session_mgr.active.messages
-            _idx = next((i for i, m in enumerate(_msgs) if m.get("id") == _qid), None)
-            if _idx is not None:
-                _was_in_prompt = _idx < _inflight_upto
-                _ai_spoke_after = any(m.get("author") in CLIENT_MAP for m in _msgs[_idx + 1:])
-                _already = _was_in_prompt and _ai_spoke_after
-        except Exception as _ge:
-            print(f"[queue] already-answered check failed (delivering normally): {_ge}")
         _qqueue = []
         if _stop_requested.is_set() or _queued.get("cancelled"):
             _selected_closed = True
             await _end_queued_request(_queued, "cancelled")
-        elif _already:
-            _trace_gen("drain_skipped", "Nova", str(_qid), "drain",
-                       extra="already answered by in-flight run")
-            _selected_closed = True
-            await _end_queued_request(_queued, "answered_elsewhere")
         else:
             _qdir = _queued.get("directed_at") or []
             try:
@@ -666,15 +677,32 @@ async def _drain_cole_queue() -> None:
             async def _drain_run():
                 global is_processing
                 _queued["started"] = True
+                _run_transcript = _queued.get("transcript", session_mgr.active)
+                _run_start_idx = len(_run_transcript.messages)
                 try:
                     if _stop_requested.is_set() or _queued.get("cancelled"):
                         await _end_queued_request(_queued, "cancelled")
                         return
-                    await _run_response_queue(_qq2, _qc2, images=_qimgs or None, source="drain",
-                                              register=_qregister, reply_to=_qreply, request_id=_qrequest)
+                    await _run_response_queue(_qq2, _qc2, images=_qimgs or None, source=_queued.get("source", "drain"),
+                                              register=_qregister, reply_to=_qreply, request_id=_qrequest, request_work=_queued)
+                    if _queued.get("source") == "ws":
+                        # Preserve the existing per-run export after unifying admission.
+                        try:
+                            from pathlib import Path as _ExportPath
+                            _runs_dir = body_path("logs", workspace=_ExportPath(WORKSPACE_ROOT)) / "autonomy_runs"
+                            _runs_dir.mkdir(parents=True, exist_ok=True)
+                            _run_path = _runs_dir / (datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + "_manual_0ticks.jsonl")
+                            _lines = [json.dumps(item, ensure_ascii=False) for item in _run_transcript.messages[_run_start_idx:]]
+                            _temporary = _run_path.with_name(_run_path.name + ".tmp")
+                            _temporary.write_text("\n".join(_lines) + ("\n" if _lines else ""), encoding="utf-8")
+                            import os as _export_os
+                            _export_os.replace(_temporary, _run_path)
+                        except Exception as _export_error:
+                            print(f"[chat] Run export failed: {_export_error}")
                 except asyncio.CancelledError:
-                    pass
+                    await _end_queued_request(_queued, "cancelled")
                 except Exception as _de:
+                    await _end_queued_request(_queued, "error")
                     print(f"[queue] Drain error: {_de}")
                 finally:
                     _release_request_work(_queued)
@@ -848,6 +876,11 @@ _CODE_FILES = ("general_tools/nova_chat/server.py",
                "general_tools/nova_chat/static/voice.js",
                "general_tools/nova_chat/static/voice.css",
                "nova_body/nova_runtime/model_client.py",
+               "nova_body/nova_runtime/conversation.py",
+               "nova_body/nova_runtime/work_owner.py",
+               "nova_body/nova_runtime/conversation_context.py",
+               "nova_body/nova_runtime/transcript_store.py",
+               "nova_body/nova_runtime/runtime.py",
                "general_tools/nova_chat/collaboration.py",
                "general_tools/nova_chat/static/collaboration.js",
                "general_tools/nova_chat/static/collaboration.css",
@@ -1844,14 +1877,23 @@ def _trace_gen(event: str, ai_name: str, msg_id: str, source: str, extra: str = 
 
 
 @supervised
-async def run_ai_response(ai_name: str, client_mod, msg_id: str,
+async def run_ai_response(*args, **kwargs):
+    """Serialize inference and its active context in the body; nested attention keeps ownership."""
+    owner = getattr(_rt, "work_owner", None)
+    if owner is None:
+        return await _run_ai_response_owned(*args, **kwargs)
+    async with owner.lease("conversation"):
+        return await _run_ai_response_owned(*args, **kwargs)
+
+
+async def _run_ai_response_owned(ai_name: str, client_mod, msg_id: str,
                           latest_message: str = "",
                           images: list = None,
                           hb_ctx=None,
                           cole_pending: bool = True,
                           auto_log_path=None,
                           source: str = "?", register: str = "text",
-                          reply_to: str = None, request_id: str = None) -> str:
+                          reply_to: str = None, request_id: str = None, request_work=None) -> str:
     """
     Stream one AI response, broadcast tokens, and return the full response text.
     The return value lets callers (e.g. _run_response_queue) inspect Nova's
@@ -1877,13 +1919,24 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
     _operation = current_operation.get()
     _events = ResponseEvents(author=ai_name, message_id=msg_id,
                              run_id=_operation.id if _operation else uuid.uuid4().hex,
-                             reply_to=reply_to, request_id=request_id, register=register)
+                             reply_to=reply_to, request_id=request_id, register=register,
+                             conversation_id=(request_work or {}).get("conversation_id", session_mgr.active_id))
     async def _emit_response(kind, **fields):
         event = _events.event(kind, **fields)
         if event is not None:
             await broadcast(event)
     # Determine the transcript object to use (ephemeral HB ctx vs full session)
-    _transcript = hb_ctx if hb_ctx is not None else session_mgr.active
+    _live_transcript = (request_work or {}).get("transcript", session_mgr.active)
+    _conversation_id = (request_work or {}).get("conversation_id", session_mgr.active_id)
+    _transcript = hb_ctx if hb_ctx is not None else _live_transcript
+    if hb_ctx is None:
+        # Freeze the original prompt before context preparation yields; later messages are
+        # appended once by the body's inbox, even when they arrived before inference began.
+        import copy
+        _transcript = copy.copy(_live_transcript)
+        _history = list(_live_transcript.messages)
+        _cut = next((i + 1 for i, item in enumerate(_history) if item.get("id") == reply_to), len(_history))
+        _transcript.messages = _history[:_cut]
     _is_hb_tick = hb_ctx is not None
     _silent_tick = _is_hb_tick and not cole_pending   # True = don't touch chat
     from nova_voice import provider_diagnostics as _provider_diagnostics
@@ -1935,7 +1988,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         # twice would just burn her 32K window.
         if not _is_hb_tick and _DISCOURSE_OK:
             try:
-                _ground = _discourse.grounding_block(_active_messages(),
+                _ground = _discourse.grounding_block(_transcript.messages,
                                                      workspace=_INBOX_WORKSPACE)
                 if _ground:
                     ws_context = f"{ws_context}\n{_ground}"
@@ -1955,6 +2008,11 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             )
             ws_context = status_block + ws_context
 
+    owner = getattr(_rt, "work_owner", None)
+    if owner is not None and not _is_hb_tick:
+        work_context = owner.context_for_input()
+        if work_context:
+            ws_context += "\n\n" + work_context
     import time as _time
     _gen_start = _time.time()
     _trace_gen("start", ai_name, msg_id, source,
@@ -2040,8 +2098,8 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             return
         if not _think_started[0]:
             _think_started[0] = True
-            await broadcast({"type": "think_start", "author": ai_name, "id": msg_id})
-        await broadcast({"type": "think_token", "author": ai_name, "token": token, "id": msg_id})
+            await broadcast({"type": "think_start", "conversation_id": _conversation_id, "author": ai_name, "id": msg_id})
+        await broadcast({"type": "think_token", "conversation_id": _conversation_id, "author": ai_name, "token": token, "id": msg_id})
 
     async def on_progress(chars: int, think_chars: int, elapsed: float, partial_content: str):
         """Called every ~2s from nova.py during llama.cpp generation.
@@ -2061,16 +2119,43 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         # Real-time activity scan on partial content (deduped — won't re-emit in on_done)
         await _emit_new_activities(partial_content)
 
+    async def on_segment(text, metadata):
+        if _stop_requested.is_set():
+            raise asyncio.CancelledError
+        event = _events.prepare_segment(text, metadata)
+        # The required conversation write precedes commitment. Search/index adapters cannot
+        # suppress a segment already stored for delivery, and the aggregate is never re-stored.
+        msg = _live_transcript.add(ai_name, text, response_metadata=event)
+        _events.commit_segment(event)
+        try:
+            session_mgr.update_meta_from_message(msg, session_id=_conversation_id, transcript=_live_transcript)
+        except Exception as error:
+            print(f"[segments] session metadata update failed: {type(error).__name__}")
+        try:
+            _mirror_to_runtime(ai_name, text)
+        except Exception as error:
+            print(f"[segments] runtime mirror failed: {type(error).__name__}")
+        if memory_indexer:
+            try:
+                memory_indexer.add_message(text, ai_name, _conversation_id)
+            except Exception as error:
+                print(f"[segments] optional search index failed: {type(error).__name__}")
+        _trace_gen("segment_commit", ai_name, msg_id, source,
+                   extra=f"segment={event['segment_index']} revision={event['input_revision']} chars={len(text)}")
+        await broadcast(event)
+
     async def on_done(full):
         if _stop_requested.is_set():
             raise asyncio.CancelledError
+        if _events.segments:
+            full = _events.delivered_content
         _result.append(full)
         # Successful generation → clear the model-error streak (model is alive again)
         _rt_guard.record_success()
         elapsed = round(_time.time() - _gen_start, 1)
         # Close the think block if one was opened
         if _think_started[0]:
-            await broadcast({"type": "think_end", "author": ai_name, "id": msg_id,
+            await broadcast({"type": "think_end", "conversation_id": _conversation_id, "author": ai_name, "id": msg_id,
                              "elapsed": elapsed})
         # Close the autonomous reasoning block (Thoughts-pane channel) if one was opened
         if _auto_think_started[0]:
@@ -2141,6 +2226,8 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                     _trace_gen("commit", ai_name, msg_id, "silent_promote",
                                extra=f"chars={len(_cole_part)} reason={_why}")
                     await _emit_response("message_end", id=msg_id + "_cole", content=_cole_part, delivery="unsolicited")
+        elif _events.segments:
+            await _emit_response("message_end", content=full, delivery="delivered")
         elif (full or "").strip():
             # ── Doubling guard (2026-07-02) ──────────────────────────────────────
             # Known bug: the same reply intermittently gets committed twice — byte-
@@ -2153,7 +2240,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             # consecutive byte-identical reply is the bug, never intent.
             _dup_of = None
             try:
-                _prev = session_mgr.active.messages[-1] if session_mgr.active.messages else None
+                _prev = _live_transcript.messages[-1] if _live_transcript.messages else None
                 if _prev and _prev.get("author") == ai_name:
                     _pc = _prev.get("content") or ""
                     _age_s = (datetime.now() - datetime.fromisoformat(_prev["timestamp"])).total_seconds()
@@ -2182,15 +2269,15 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
                 await _emit_response("message_end", content="", delivery="suppressed")
             else:
                 # ── Normal path — add response to chat transcript ────────────────
-                msg = session_mgr.active.add(ai_name, full)
+                msg = _live_transcript.add(ai_name, full)
                 _trace_gen("commit", ai_name, msg_id, source,
                            extra=f"chars={len(full)} session_id={msg['id']}")
-                session_mgr.update_meta_from_message(msg)
+                session_mgr.update_meta_from_message(msg, session_id=_conversation_id, transcript=_live_transcript)
                 _mirror_to_runtime(ai_name, full)   # STEP 6a: mirror her spoken reply into runtime perception
 
                 # --- Index for semantic memory ---
                 if memory_indexer:
-                    memory_indexer.add_message(full, ai_name, session_mgr.active_id)
+                    memory_indexer.add_message(full, ai_name, _conversation_id)
 
                 await _emit_response("message_end", content=full, delivery="delivered")
                 if ai_name == "Nova":
@@ -2257,7 +2344,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         _is_llama = ("llama" in _err_str.lower()) or ("streaming error" in _err_str.lower()) or ("500 internal server error" in _err_str.lower())
         # Always close the dangling UI state, even on a duplicate, so spinners don't hang.
         if _think_started[0]:
-            await broadcast({"type": "think_end", "author": ai_name, "id": msg_id, "elapsed": 0})
+            await broadcast({"type": "think_end", "conversation_id": _conversation_id, "author": ai_name, "id": msg_id, "elapsed": 0})
         if ai_name == "Nova":
             await broadcast({"type": "generation_end", "author": ai_name, "id": msg_id,
                              "elapsed": round(_now2 - _gen_start, 1),
@@ -2268,7 +2355,7 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         _last_error_msg = _err_str
         _last_error_time = _now2
         _should_pause = _rt_guard.record_error(err)
-        await _emit_response("message_end", content="" if _dup else f"⚠ {err}", delivery="error")
+        await _emit_response("message_end", content=_events.delivered_content or ("" if _dup else f"⚠ {err}"), delivery="error")
         if not _dup:
             await _emit_response("error", message=str(err))
         # Backoff: if llama has failed N times in a row, pause autonomy with one clear
@@ -2293,23 +2380,38 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
         from nova_voice.tool_result import tool_event
         await broadcast(tool_event(tool_name, tool_input, result, is_error, duration_ms))
 
-    # ── WATERMARK: how much of the transcript this generation can possibly have seen. ────────
-    # (2026-07-19, fixing my own regression.) The drain's already-answered guard used to ask
-    # "did any AI speak after the queued message landed?" — which is wrong the moment TWO of
-    # Cole's messages are in flight. Observed live at 19:28: his message queued, Nova committed
-    # a reply to an EARLIER message one second later, the guard read that as "answered" and
-    # silently dropped his. A duplicate is annoying; discarding what he said is much worse.
-    # So record the prompt boundary and let the drain skip ONLY messages this run actually saw.
-    global _inflight_upto
-    try:
-        _inflight_upto = len(session_mgr.active.messages)
-    except Exception:
-        _inflight_upto = 0
-
     # STEP 4: the model-call is a body faculty now. run_ai_response still builds the context +
     # the broadcast sinks above; the runtime owns WHICH client and HOW it's driven — the dispatch
     # + per-model call conventions, relocated verbatim to nova_runtime/model_client.py. The body
     # resolves the client by ai_name (registered at startup), so client_mod isn't used here now.
+    _turn = None
+    _turn_binding = None
+    _manager = getattr(_rt, "conversations", None)
+    if ai_name == "Nova" and not _is_hb_tick and _manager is not None:
+        async def _inputs_applied(entries, revision):
+            # Input is admitted before the transport yields. Correlation updates wait
+            # for its acknowledgement, so voice can verify its own request/reply pair.
+            input_ids = {entry.get("reply_to") for entry in entries}
+            for work in _turn_binding["works"]:
+                if (work.get("msg") or {}).get("id") in input_ids and work.get("acknowledged") is not None:
+                    await work["acknowledged"].wait()
+            _events.apply_inputs(entries, revision)
+            await _emit_response("message_context")
+            await broadcast({"type": "queue_cleared"})
+        _turn = _manager.begin(_conversation_id, turn_id=_events.context["run_id"], on_apply=_inputs_applied)
+        _turn_binding = {"turn": _turn, "task": asyncio.current_task(),
+                         "works": [request_work] if request_work else []}
+        _turn_transports[_conversation_id] = _turn_binding
+        # Messages received during context preparation retain arrival order. Other
+        # conversations/recipients remain queued for their own turn.
+        for _pending in list(_cole_message_queue):
+            if _pending.get("conversation_id", session_mgr.active_id) == _conversation_id and _steer_request(_pending):
+                _cole_message_queue.remove(_pending)
+    _turn_kwargs = {"steering": _turn, "on_segment": on_segment} if _turn is not None else {}
+    work_owner = getattr(_rt, "work_owner", None)
+    active_owner = work_owner.active if work_owner is not None else None
+    if _is_hb_tick and active_owner is not None and active_owner.kind == "autonomy":
+        _turn_kwargs["on_boundary"] = active_owner.on_boundary
     try:
         await _rt.model_client.generate(
             ai_name, _transcript,
@@ -2320,17 +2422,30 @@ async def run_ai_response(ai_name: str, client_mod, msg_id: str,
             workspace_context=ws_context, images=images,
             # A global autonomy toggle does not turn a human voice/chat request into a silent tick.
             autonomous=_is_hb_tick,
-            register=register, on_audit=_events.on_audit,
+            register=register, on_audit=_events.on_audit, **_turn_kwargs,
             temperature=_nova_temperature,
             top_p=_nova_top_p,
         )
     except asyncio.CancelledError:
         if not _silent_tick:
-            await _emit_response("message_end", content="", delivery="cancelled")
+            await _emit_response("message_end", content=_events.delivered_content, delivery="cancelled")
         raise
     except Exception as error:
         await on_error(error)
         raise
+    finally:
+        if _turn is not None:
+            _manager.end(_conversation_id, _turn)
+            if _turn_transports.get(_conversation_id) is _turn_binding:
+                _turn_transports.pop(_conversation_id, None)
+            for _work in _turn_binding["works"]:
+                _pair = (_work.get("request_id"), (_work.get("msg") or {}).get("id"))
+                _covered = _pair in list(zip(_events.context["request_ids"], _events.context["reply_to_ids"]))
+                if _covered and msg_id in _events.closed:
+                    _work["terminal_sent"] = True
+                    _release_request_work(_work)
+                else:
+                    await _end_queued_request(_work, "cancelled" if asyncio.current_task().cancelling() else "unavailable")
 
     return _result[0] if _result else ""
 
@@ -2349,7 +2464,7 @@ CLIENT_MAP = {} if CHAT_ONLY else {
 async def _run_response_queue(queue: list, content: str,
                               images: list = None,
                               source: str = "ws", register: str = "text",
-                              reply_to: str = None, request_id: str = None) -> None:
+                              reply_to: str = None, request_id: str = None, request_work=None) -> None:
     """
     Execute AI responses SEQUENTIALLY in queue order.
 
@@ -2377,7 +2492,7 @@ async def _run_response_queue(queue: list, content: str,
         msg_id = str(uuid.uuid4())[:8]
         response_text = await run_ai_response(ai_name, client_mod, msg_id, content,
                                               images=images, source=source, register=register,
-                                              reply_to=reply_to, request_id=request_id)
+                                              reply_to=reply_to, request_id=request_id, request_work=request_work)
 
         # After Nova responds: check if she @mentioned any listeners.
         # If so, run a follow-up round (one level — no further recursion).
@@ -3102,6 +3217,35 @@ def _recent_tool_receipts(n: int = 12, window_min: int = 90) -> str:
         return ""
 
 
+async def _attend_autonomy_inputs(owner):
+    """Render attention to admitted human input between body steps, then resume the owner."""
+    serviced = False
+    for entry in owner.take_inputs():
+        work = next((item for item in _cole_message_queue
+                     if (item.get("msg") or {}).get("id") == entry.get("reply_to")), None)
+        if work is None:
+            continue  # It was cancelled or incorporated by another input in this batch.
+        if _stop_requested.is_set():
+            raise asyncio.CancelledError
+        _cole_message_queue.remove(work)
+        work.update(task=asyncio.current_task(), started=True)
+        try:
+            acknowledged = work.get("acknowledged")
+            if acknowledged is not None:
+                await acknowledged.wait()
+            answer = await run_ai_response("Nova", CLIENT_MAP["Nova"], str(uuid.uuid4())[:8],
+                work.get("full_context_content", work.get("content", "")),
+                images=work.get("input_images", work.get("images")), source="attention",
+                register=work.get("register", "text"), reply_to=(work.get("msg") or {}).get("id"),
+                request_id=work.get("request_id"), request_work=work)
+            owner.record_phase("attention", "Human input: " + str(entry.get("content", "")) +
+                               "\nDelivered response: " + str(answer or ""))
+            serviced = True
+        finally:
+            _release_request_work(work)
+    return serviced
+
+
 async def autonomy_daemon():
     """Persistent sleep/wake cognition loop. Lives for the whole server while
     autonomous_mode is ON. Replaces the per-message heartbeat loop.
@@ -3153,6 +3297,7 @@ async def autonomy_daemon():
         is_busy=_get_busy, set_busy=_set_busy,
         face_state=_face_state,
         force_wake=_force_wake, stop_requested=_stop_requested,
+        attend_inputs=_attend_autonomy_inputs,
     )
 
 
@@ -3210,6 +3355,7 @@ async def runtime_state():
                 "tasks": list(tasking.all_tasks().values()),
                 "receipts": integrity.recent_receipts(limit=12), "computer": handoff()}
     result = await asyncio.to_thread(snapshot)
+    result["work_owner"] = _rt.work_owner.snapshot()
     result["operations"] = operations.snapshot()
     result["last_stop"] = operations.last_stop
     return result
@@ -4358,9 +4504,9 @@ async def websocket_endpoint(ws: WebSocket):
                     full_context_content = f"[System Telemetry (Invisible to user UI)]\n{telemetry}\n[End Telemetry]\n\n{content}"
 
                 # Cole sending a message resets the Nova throttle and rate window
-                if _rt_guard.throttled:
+                _unthrottled = _rt_guard.throttled
+                if _unthrottled:
                     _rt_guard.reset()
-                    await broadcast({"type": "nova_unthrottled"})
 
                 directed_at = parse_directed(content)
 
@@ -4433,22 +4579,43 @@ async def websocket_endpoint(ws: WebSocket):
 
                 _request_entry = {"owner": ws, "content": content, "full_context_content": full_context_content,
                                   "directed_at": directed_at, "images": effective_images or [], "msg": msg,
-                                  "register": _message_register, "request_id": _request_id}
+                                  "register": _message_register, "request_id": _request_id,
+                                  "conversation_id": session_mgr.active_id, "transcript": session_mgr.active,
+                                  "input_images": images or []}
+                _retain = getattr(session_mgr, "retain", None)
+                if callable(_retain):
+                    _request_entry["transcript_retained"] = _retain(session_mgr.active_id, session_mgr.active)
                 if _request_id is not None:
                     _request_work[(ws, _request_id)] = _request_entry
 
+                # Admit before any transport await. All work enters the same body
+                # continuation/FIFO path; two sockets cannot start competing runs.
+                from asyncio import Event as _InputAcknowledgement
+                _request_entry["acknowledged"] = _InputAcknowledgement()
+                _was_processing = is_processing
+                _request_entry["source"] = "drain" if _was_processing else "ws"
+                if not _was_processing:
+                    _stop_requested.clear()
+                _steered = _steer_request(_request_entry) if _was_processing else False
+                if not _steered:
+                    _cole_message_queue.append(_request_entry)
+
                 # Broadcast the CLEAN content back to the UI so Cole doesn't see the telemetry
-                await broadcast({
-                    "type": "user_message",
-                    "author": _speaker,
-                    "content": content,
-                    "id": msg["id"],
-                    "request_id": _request_id,
-                    "register": _message_register,
-                    "timestamp": msg["timestamp"],
-                    "directed_at": directed_at,
-                    "images": images,
-                })
+                try:
+                    await broadcast({
+                        "type": "user_message",
+                        "conversation_id": _request_entry["conversation_id"],
+                        "author": _speaker,
+                        "content": content,
+                        "id": msg["id"],
+                        "request_id": _request_id,
+                        "register": _message_register,
+                        "timestamp": msg["timestamp"],
+                        "directed_at": directed_at,
+                        "images": images,
+                    })
+                finally:
+                    _request_entry["acknowledged"].set()
 
                 # Mirror Cole's instruction into working memory so the autonomy
                 # daemon can pick it up on its next wake (survives cold tick context).
@@ -4471,115 +4638,25 @@ async def websocket_endpoint(ws: WebSocket):
                 if _speaker == "Cole":
                     _mirror_cole_intent(content)
                 await emit_event("cole_message", f"{_speaker} sent a message")
+                if _unthrottled:
+                    await broadcast({"type": "nova_unthrottled"})
 
-                # ── Queue while processing; drain after ───────────────────────
-                # Instead of dropping Cole's message with "blocked", queue it.
-                # The queue is drained at the end of _queued_run (below).
-                if is_processing:
-                    _cole_message_queue.append(_request_entry)
+                if _was_processing:
                     await ws.send_text(json.dumps({
-                        "type":    "queued",
-                        "request_id": _request_id,
-                        "reply_to": msg["id"],
-                        "register": _message_register,
-                        "count":   len(_cole_message_queue),
-                        "reason":  "Nova is responding — your message is queued and will be delivered next.",
+                        "type": "queued", "request_id": _request_id,
+                        "reply_to": msg["id"], "register": _message_register,
+                        "count": max(1, len(_cole_message_queue)),
+                        "mode": "steer" if _steered else "queue",
+                        "reason": "Added to Nova's active work; it will be read at the next step."
+                                  if _steered else "Your message is queued in arrival order.",
                     }))
-                    continue
-
-                status = await get_status()
-                if not directed_at:
-                    # No @mentions: only online + unmuted agents respond.
-                    # _mute_states[name] = False means UNMUTED (will respond).
-                    # _mute_states[name] = True  means MUTED   (silent unless @mentioned).
-                    # Use canonical response order: Claude → Gemini → Nova.
-                    queue = [
-                        name for name in ("Claude", "Gemini", "Nova")
-                        if status.get(name) and not _mute_states.get(name, True)
-                    ]
-                else:
-                    # Explicit @mentions bypass mute — direct mentions always work.
-                    queue = build_response_queue(directed_at, status)
-
-                if queue:
-                    _stop_requested.clear()    # reset stop flag for this new generation
-                    is_processing = True
-                    await broadcast({"type": "processing_start"})
-
-                    # Capture queue, content, and images at definition time
-                    _q = list(queue)    # make a copy
-                    _c = content
-                    _imgs = effective_images or []   # this turn's images, or most-recent backfilled
-
-                    # Snapshot message count + original task before this run
-                    _run_start_idx    = len(session_mgr.active.messages)
-                    _original_task    = _c   # Cole's triggering message
-
-                    async def _queued_run(_q=list(queue), _c=content, _imgs=effective_images or [],
-                                          _register=_message_register, _reply_to=msg["id"],
-                                          _request=_request_id, _work=_request_entry):
-                        global is_processing
-                        _work["started"] = True
-                        try:
-                            await _run_response_queue(_q, _c, images=_imgs or None, source="ws",
-                                                      register=_register, reply_to=_reply_to, request_id=_request)
-
-                            # ── Autonomous cognition now lives in autonomy_daemon() ──────
-                            # _queued_run only produces the direct response to Cole now;
-                            # the persistent sleep/wake daemon owns all background ticking.
-                            _auto_ticks = 0
-
-                            # ── Post-run log export ───────────────────────────────────────
-                            # Write everything that happened in this run to a standalone
-                            # file so it's easy to find and read after any test.
-                            # Both autonomous and regular runs get exported — small files,
-                            # no hunting through the main session transcript.
-                            try:
-                                import json as _json
-                                from pathlib import Path as _Path
-                                _runs_dir = body_path('logs', workspace=_Path(WORKSPACE_ROOT)) / "autonomy_runs"
-                                _runs_dir.mkdir(parents=True, exist_ok=True)
-                                _ts = __import__('datetime').datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                                _mode = "auto" if _auto_ticks > 0 else "manual"
-                                _run_path = _runs_dir / f"{_ts}_{_mode}_{_auto_ticks}ticks.jsonl"
-                                _new_msgs = session_mgr.active.messages[_run_start_idx:]
-                                with open(_run_path, "w", encoding="utf-8") as _rf:
-                                    for _m in _new_msgs:
-                                        _rf.write(_json.dumps(_m, ensure_ascii=False) + "\n")
-                                print(f"[autonomous] Run log → {_run_path.name} ({len(_new_msgs)} messages)")
-                            except Exception as _log_e:
-                                print(f"[autonomous] Run log export failed: {_log_e}")
-
-                        except asyncio.CancelledError:
-                            pass
-                        except Exception as e:
-                            print(f"[chat] Error in response queue: {e}")
-                        finally:
-                            _release_request_work(_work)
-                            is_processing = False
-                            await broadcast({"type": "processing_end"})
-
-                            # ── Drain the shared queue ────────────────────────────────
-                            # Extracted to _drain_cole_queue (2026-07-22) so the daemon's
-                            # busy-release can drain too — a queued message must never wait
-                            # for the next HUMAN-triggered run to be delivered.
-                            try:
-                                await _drain_cole_queue()
-                            except Exception as _dqe:
-                                print(f"[queue] drain after run failed: {_dqe}")
-
-                    task = asyncio.ensure_future(_queued_run())
-                    _request_entry["task"] = task
-                    active_tasks.append(task)
-                    # Do NOT await task here — awaiting blocks the receive loop so
-                    # WebSocket "stop" messages can never arrive while generation is
-                    # running.  ensure_future already schedules it; the while loop
-                    # continues to ws.receive_text() and processes stop/ping/etc.
-                else:
-                    await _end_queued_request(_request_entry, "unavailable")
+                await _drain_cole_queue()
 
     except WebSocketDisconnect:
         pass  # client closed the tab or lost connection — normal, not an error
     finally:
         if ws in connected_clients:
             connected_clients.remove(ws)
+        if _cole_message_queue and not is_processing:
+            # A disconnected face does not abandon already accepted body input.
+            asyncio.ensure_future(_drain_cole_queue())

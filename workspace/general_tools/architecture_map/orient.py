@@ -777,14 +777,60 @@ carry their own message ID, supervised run ID and input-message link. A terminal
 is separate from the exact final candidate's audit disposition; delivered text is not necessarily
 approved. Invalid or missing dispositions remain unverified. Errors, cancellations, empty replies,
 deduplicated replies and unsolicited autonomy excerpts do not become ordinary voice replies.
-Requests that never generate receive `request_end` (superseded, answered elsewhere, unavailable
-or cancelled); busy-queue draining keeps its newest-message policy and honors Stop before starting
-work. Chat-only rejection sends this completion without adding a message to Nova's transcript.
-The model client forwards an optional audit callback only to Nova; the callback runs immediately
-before final delivery and resets after a revision. Background second opinions cannot relabel an
+Requests that never generate receive `request_end` with a terminal reason. Busy input is retained
+in arrival order; compatible follow-ups join the active conversation instead of superseding earlier
+input or cancelling the current model/tool step. Chat-only rejection still completes the request
+without adding a message to Nova's transcript.
+
+`nova_runtime.conversation.ConversationTurns` and `ActiveTurn` own this transient continuation state
+inside the body. Faces submit ordered input and retain their durable transcripts separately. Nova
+appends accepted input at natural model/tool boundaries while preserving the original request and
+completed observations; it does not alter an HTTP inference request already running. A newer input
+revision changes what subsequent work must address. With an `on_segment` sink, a useful completed
+candidate can be delivered with its frozen revision/audit, then later work reconciles newer input.
+Delivered text is not silently retracted or regenerated. A synchronous final-admission seal
+prevents input being accepted into a turn after its final reply is committed; later messages wait for
+the next turn. The chat adapter supplies correlation/sinks and scoped Stop ownership, not a separate
+cognition loop. This is provider-compatible between-call continuation, not proven native mid-inference
+steering or a full relocated-body runtime certification. Follow-ups do not replenish the total
+model/tool-loop or witness-revision allowances. Completed candidates retain the exact evidence and
+input revision used by their audit, including when newer input arrives during that audit.
+
+`nova_runtime.work_owner.WorkCoordinator` serializes conversational and autonomous work under one
+body-owned lease. An autonomous wake claims that lease before its first await, preventing a chat
+request from racing model readiness. A serializable human-input inbox belongs to the body; face
+records supply delivery handles separately. At natural completed model/tool boundaries, and at phase
+fallbacks, the owner attends pending human input, then resumes with its original task, completed
+receipts and delivered interaction context. Nested human responses omit the autonomous attention
+callback so they cannot recursively re-enter it. Their ordered follow-ups still use `ActiveTurn`.
+Reflect, decide and execute retain their existing prompts; this change does not merge all cognition
+into a permanent thinking stream. Scoped Stop ends its owned work and waits for supervised cleanup,
+without terminating the autonomous scheduler. Lifecycle cancellation still terminates the daemon.
+
+Headless human attention uses the same body `ConversationTurns`, committed-segment sink and
+`conversation_context.ConversationContext` formatter as the face wrapper. Speaker attribution,
+clock/system-prefix order and images therefore share one implementation. It captures the initial
+transcript through admitted input, polls follow-ups at boundaries, and persists each delivered part
+with its exact input-revision coverage. Later or sealed-out messages remain pending; the terminal
+aggregate is not appended a second time. Autonomous phase prompts remain separate. These ownership
+and persistence paths have isolated tests; no full relocated personal-state or live voice proof is
+implied.
+
+`message_start`, applied `message_context`, committed `message_segment` and final `message_end`
+carry aligned `request_ids`/`reply_to_ids` and `input_revision` under one response message/run/turn
+identity. A typed input may have a null client request ID; that alias cannot claim a locally owned
+voice input. A segment carries only its delivered text, a 1-based ordered `segment_index`, and an
+explicit audit for that exact turn/revision. The voice face requires its acknowledged pair and a
+validated start/context snapshot; even an earlier frozen revision must match recorded evidence.
+Segments cannot self-bind and do not close pending inputs. The final remaining text is also a segment;
+terminal `segment_count` prevents aggregate audio replay, while the UI reconciles one growing bubble.
+The face persists each part with a copied, whitelisted response identity and audit; reloaded history
+shows its delivered-part number and actual audit disposition. Unknown dispositions are never PASS.
+Legacy callers without an `on_segment` sink still receive one final reply. The model client forwards
+optional segment/audit callbacks only to Nova; audit disposition resets after an input revision. Background second opinions cannot relabel an
 already delivered candidate. Human messages retain the human audit path even when global autonomy
 is enabled. The detachable voice gateway consumes these events through a separate WebSocket client,
-with final-text speech and body-event sinks. Closing it flushes queued speech and invalidates
+with committed-text speech and body-event sinks. Closing it flushes queued speech and invalidates
 late playback; already-running synthesis may still finish computing. Null output and subprocess
 completion are distinguished from playback API receipts. The separate dockable Voice widget explicitly
 supervises a hidden `voice_gateway/control_worker.py` child through `nova_chat/voice_control.py`;
@@ -797,18 +843,27 @@ selected assets require setup instead of a hidden download or silent recognizer/
 Windows system speech is a labelled temporary baseline; absent an explicit voice name, it prefers
 an installed English female voice and otherwise retains the system default. The worker's Windows control pipe polls
 before reading so native imports do not deadlock against a blocked stdin thread. Recognition uses
-512-sample frames, minimum voiced duration, onset buffering and bounded utterances; decoder errors
-produce diagnostics and listening continues. Capture gates discard stale frames/transcripts across
+512-sample frames, minimum voiced duration, onset buffering and bounded utterances. Its default
+pause allowance is two seconds, honoring explicit overrides. Speech continuing during CPU decoding
+is collected within the bounded turn; an obsolete partial result is withheld before re-decoding the
+combined audio. Actual hearing, finishing-turn and recognition states are forwarded to the widget;
+the pause allowance is exposed as a setting, not a guaranteed reply time. Decoder errors produce
+diagnostics and listening continues. Capture gates discard stale frames/transcripts across
 mute/playback transitions. Native capture and system playback have separate dated receipts; human
 conversational recognition and avatar lipsync are distinct checks.
 
 The gateway retains its current acknowledged eligible request past the 300-second default delay
-threshold, emits a warning once and preserves its exact reply identity. Unacknowledged/retired
-requests expire. A new utterance or End call immediately retires local speech and sends request-scoped
-Stop; only a same-socket owned request can match. Final `stopped` with the exact request ID and
-`matched=true` acknowledges cancellation; `stop_pending` or a submitted frame is not completion.
-The worker waits up to two seconds for that receipt before socket close and reports unconfirmed
-cancellation without issuing global Stop. `last_turn`, `last_playback` and bounded `recent_events`
+threshold and emits a warning once. Acknowledged inputs bound to an open response also retain exact
+correlation until terminal closure, including earlier revisions whose legacy final audio was retired.
+Unacknowledged or unbound retired requests expire. New input retains already committed queued speech without stopping body work.
+Full-duplex barge-in cuts current output while preserving and pausing queued committed units through
+recognition; a completed transcript or return to listening resumes them. Explicit Stop, output mute
+and close still flush. Uncommitted old final replies remain subject to current-input eligibility.
+Explicit End call or worker shutdown sends request-scoped Stop for the call's remaining owned inputs,
+including earlier inputs whose audio was retired. Only a same-socket owned request can match. Final
+`stopped` with the exact request ID and `matched=true` acknowledges cancellation; `stop_pending` or a
+submitted frame is not completion. Each scoped request waits up to two seconds for that receipt before
+socket close and reports unconfirmed cancellation without issuing global Stop. `last_turn`, `last_playback` and bounded `recent_events`
 expose correlation, eligibility/suppression, output device and available submission/completion timing.
 
 The retired host-desktop Claude ping and its aliases return an unknown-tool failure rather than
@@ -816,10 +871,11 @@ launching PowerShell. Active instructions no longer advertise it. The private Co
 remains separate from Nova; asking Cole uses the ordinary conversation.
 
 Tool starts and outcomes also enter Pipeline, correlated with the canonical receipt's operation
-and run IDs. Human-facing final prose may remain buffered while actions are visible. The inline
+and run IDs. Each human-facing candidate remains private until its audit/delivery step; a committed
+segment can then be visible while the same work continues. This is not raw token speech. The inline
 witness uses Nova's main local model endpoint in a separate context; the separately launched 8081
-server is not automatically the inline auditor. It checks the assembled delivered candidate,
-including earlier tool-loop commentary, and receives available screenshot pixels with their
+server is not automatically the inline auditor. It checks the assembled candidate segment,
+including its undelivered tool-loop commentary, and receives available screenshot pixels with their
 observation context. An explicit approval is distinct from a concern, an incomplete check or an
 execution error. Incomplete/error checks remain visible and do not certify the draft. A concern
 returns to Nova to revise in her own words; the auditor does not silently replace her voice.
@@ -882,8 +938,12 @@ and marked task checkpoint receive priority. Internal witness/repair prompts do 
 original unlabelled headless objective in that selection. Fitting reserves the actual output allowance plus
 4,096 tokens, using the established 3.4 characters/token estimate and an additional 174,000-character
 ceiling. The old minimum-four-turn overflow override is gone. This bounds estimated text, not exact
-tokenizer or image usage; unusually small budgets can still shorten critical content. Exact-candidate
-witness audits bypass this normal fitting policy so evidence is not silently changed.
+tokenizer or image usage. Active continuation protects the original request, accepted follow-ups and
+compact completed-action facts from per-message clipping and eviction; if these anchors alone exceed
+the text budget, fitting fails explicitly. Ordinary history, raw tool outputs and excess system text
+can still be shortened. Action IDs, status and content hashes preserve execution identity, not the
+complete output or proof of success. Exact-candidate witness audits bypass this normal fitting policy
+so evidence is not silently changed.
 
 ## Body faculties
 
@@ -1077,6 +1137,29 @@ The same day's dependency exclusion repair passed 34 sync tests, including ten n
 fixtures. Two later code-audit collector regressions also passed (12 exclusion fixtures total).
 Exactly 1,646 accidentally tracked virtualenv paths were removed from Git's index; installed files
 remained on disk with unchanged size/mtime metadata. This did not erase earlier Git history.
+Later on October 5, body-owned conversation continuation passed 79 focused body checks and 45 server
+transport checks; the gateway suite passed 95 with one existing skip. These isolated fixtures cover
+ordered follow-ups without cancelling a pending provider call, completed-action retention, final
+revision/seal races, mixed typed/voice correlation and explicit Stop. They do not establish a live
+conversation, native mid-generation steering, faster replies or recognition quality.
+A narrow relocation fixture copies selected body Python packages to a differently named temporary
+tree, then runs actual ModelClient/stream_response with fake provider, tools and audit in a fresh
+subprocess without the chat-face path. It copies four body packages, the path module and five test
+files, then checks the imported body location, two continuation cases, committed segments, natural
+boundaries, serialized work ownership and headless input/output coverage. It does not copy or verify
+identity, memory, saved tasks or model dependencies, and it does
+not deny filesystem access to the original workspace. This is body-ownership/continuation evidence,
+not a complete Pluck Test pass; the full procedure remains in Operations.
+The subsequent committed-segment slice has isolated gateway and UI evidence: eleven new segment/queue
+cases cover early delivery, exact current/prior revision binding, duplicate/gap refusal, aggregate
+non-replay, open-bound correlation beyond the delay threshold and retained interrupted speech.
+The gateway suite ran 107 tests: 106 passed and one existing skip. Twenty-nine extracted frontend
+checks passed, including three segment renderer/history cases. Two transcript fixtures verify copied,
+whitelisted metadata persistence; five shared-formatter cases preserve face/headless speaker, image
+and clock semantics, and five existing prompt-cache cases still pass. Body work-owner and natural
+boundary fixtures separately exercise serialized admission, attended input, retained receipts, scoped
+Stop and captured-input coverage. These are fake-provider/audio, temporary-storage or extracted-browser
+checks, not live speech quality, lower latency, a continuously running agent or a full Pluck Test pass.
 Backend edits load on the next Start Nova; the existing UI needs a reload to receive new JavaScript.
 Unit/fixture passes do not certify every optional application, native window interaction or adapter swap.
 """
@@ -1173,8 +1256,8 @@ from both Git and Drive, including relocated `.auth_token` and `nova_users.json`
 Useful evidence lives under `nova_body/logs/`: `tool_calls.jsonl`, `generation_trace.jsonl`,
 events, runtime transcript, chat sessions and launcher/model logs. Read current receipts and loaded
 source before changing prompts. `/api/version` compares normalized content hashes of watched
-sources against startup, including task/context assembly, `nova_cortex/context_budget.py` and the
-opt-in provider diagnostic helper, while
+sources against startup, including task/context assembly, `nova_runtime/conversation.py`,
+`nova_cortex/context_budget.py` and the opt-in provider diagnostic helper, while
 ignoring watcher header timestamps and line endings. This detects even
 same-size edits with unchanged timestamps; it is not a census of every imported module.
 New structured receipts distinguish success, failure, refusal,
@@ -1190,6 +1273,13 @@ controller without rewriting the original log. Historical receipts retain their 
 `ok: true` entries can mislabel nonzero exits. Validate their artifacts independently. A running
 port does not prove successful inference. The Control widget exposes task scheduling, verification,
 stop/resume, memory ingestion health and VM handoff through `/api/runtime/state` and related routes.
+
+For active continuation, a queued `mode="steer"` acknowledges admission, not that the model has read
+it. `message_context` records applied input with an `input_revision` and aligned request/reply lists;
+final delivery carries the covered inputs for that response/run. Nullable request IDs belong to
+foreign typed entries, not an acknowledged local voice request. Compact protected action facts keep
+IDs/status and hashes when ordinary observations are shortened; inspect the actual ledger/output for
+details. A hash or retained status is not independent verification or a copy of the full observation.
 
 ## Access and practical debugging
 
@@ -1216,9 +1306,18 @@ and does not restart automatically after a worker error or Nova restart.
 Voice's Delivery & playback details show the current request/message/run IDs, delayed/suppressed
 reply reason and actual output phases. A requested unit is not yet playback; process launch is not a
 measured audio start. Check `last_turn` versus `last_playback`, output device, audit disposition and
-source fingerprint before attributing silence to the model. End call retires local output immediately
-and waits briefly for final request-scoped cancellation acknowledgement; an unconfirmed receipt does
-not justify claiming all provider computation ended.
+source fingerprint before attributing silence to the model. Check the confirmed microphone and speaker
+mute indicators first: output mute deliberately makes replies silent. Hearing you, Finishing your turn,
+Recognizing speech and Waiting for Nova describe separate capture/processing stages. The default
+2,000 ms quiet interval is an endpointing allowance, not a reply-time guarantee; continued speech during
+CPU recognition may be combined before one transcript is sent.
+New utterances retire obsolete local audio and join active body work at completed model/tool steps;
+they do not issue Stop or discard already committed queued speech. Inspect the applied `message_context` revision rather than interpreting the
+admission badge as an immediate provider interruption. End call retires local output immediately and
+requests cancellation through its owned pending request IDs. An ID already incorporated into shared
+active conversation work selects that combined run, not a reversible deletion of one input. It waits
+briefly for final scoped acknowledgement; an unconfirmed receipt does not justify claiming all
+provider computation ended.
 
 For a bounded provider investigation, `Temp/provider-diagnostics/capture.json` explicitly enables
 capture with a unique `capture_id` and timezone-aware `expires_at` for at most ten minutes. Receipts
@@ -1284,6 +1383,32 @@ disk rather than a slow network mount.
     Keep microphone capture,
     silent WAV transcription, audible playback, live Nova replies and native avatar timing distinct.
     Cole authorized Nova and audio tests on October 5; future restrictions override that permission.
+12. For active conversation continuation, include `nova_body/tests/test_conversation.py`,
+    `nova_chat/tests/test_voice_transport.py`, gateway `test_voice_steering.py` / `test_stt_turns.py`,
+    and `nova_chat/tests/test_queue_badge.cjs` (the latter paths are under `general_tools/`). Check
+    ordered follow-ups during provider/tool work, retained original input and completed-action facts,
+    no execution of an obsolete proposal, audit/final revision agreement, final-seal admission races,
+    explicit Stop and other-conversation isolation. Protected input that exceeds the context budget
+    must fail explicitly rather than disappear. Mixed typed/voice aliases must match exact local
+    acknowledgement pairs, response/run identity and input revision before speech is eligible.
+    The relocation case in `test_conversation.py` copies selected Python packages into a temporary body
+    and runs two continuation cases plus segment, natural-boundary and work-owner/headless suites
+    with fake providers/tools in a fresh subprocess without the chat face. It proves those code paths
+    can run there; it does not test personal-state migration, real inference,
+    all faculties or denied access to the original workspace. It is not a substitute for step 5.
+    For committed segments add gateway `test_voice_segments.py` and controller
+    `test_conversation_segments.cjs`: prove a part is delivered before final closure, a frozen earlier
+    revision uses its exact recorded binding, duplicate/gap frames cannot replay audio, final aggregate
+    is not spoken/stored twice, and explicit Stop preserves delivered text while cancelling remaining
+    work. Barge-in must retain queued committed units but pause them through recognition; close/Stop
+    must prevent held or synthesizing units from playing later. Open bound input must retain exact
+    correlation past the delay threshold until terminal closure. Include controller
+    `test_segment_metadata.py` and body `test_conversation_context.py` for durable audit attribution
+    and identical face/headless formatting. Body `test_work_owner.py` and `test_autonomy_boundaries.py`
+    cover exclusive admission before awaits, natural-step attention without recursive human turns,
+    retained tool receipts, task-change reconciliation, scoped Stop with cleanup, scheduler survival,
+    headless captured-sequence coverage and no terminal aggregate duplication. Keep these isolated
+    checks separate from live task continuity and full personal-state relocation evidence.
 
 ## Files and recovery
 
