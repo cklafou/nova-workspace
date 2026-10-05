@@ -1,11 +1,11 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T17:19:02+00:00 from source (input `62ef938e7813`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T17:32:34+00:00 from source (input `2b5c37bce0a8`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_run_ai_response_owned`, `general_tools/nova_chat/server.py::_steer_request`, `general_tools/nova_chat/server.py::_stop_request`, `general_tools/nova_chat/server.py::websocket_endpoint` and 8 more; new `nova_body/nova_runtime/recovery.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_end_queued_request`, `general_tools/nova_chat/server.py::_run_ai_response_owned`, `general_tools/nova_chat/server.py::_steer_request`, `general_tools/nova_chat/server.py::_stop_request` and 10 more; new `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/session_manager.py`, `nova_body/nova_lancedb/embedder.py`, `nova_body/nova_lancedb/hippocampus.py` and 2 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Execution path"`.
 
 The normal launcher starts local inference, a witness model, the chat/runtime host, controller,
 sync watcher and guardian. The controller is a PyQt desktop shell around the dashboard. The
@@ -38,8 +38,9 @@ in arrival order; compatible follow-ups join the active conversation instead of 
 input or cancelling the current model/tool step. Chat-only rejection still completes the request
 without adding a message to Nova's transcript.
 
-`nova_runtime.conversation.ConversationTurns` and `ActiveTurn` own this transient continuation state
-inside the body. Faces submit ordered input and retain their durable transcripts separately. Nova
+`nova_runtime.conversation.ConversationTurns` and `ActiveTurn` own in-process continuation inside
+the body. The body work coordinator separately persists accepted inputs and work checkpoints under
+`logs/runtime/active_work.json`; faces retain delivery handles and their transcripts separately. Nova
 appends accepted input at natural model/tool boundaries while preserving the original request and
 completed observations; it does not alter an HTTP inference request already running. A newer input
 revision changes what subsequent work must address. With an `on_segment` sink, a useful completed
@@ -63,12 +64,36 @@ Reflect, decide and execute retain their existing prompts; this change does not 
 into a permanent thinking stream. Scoped Stop ends its owned work and waits for supervised cleanup,
 without terminating the autonomous scheduler. Lifecycle cancellation still terminates the daemon.
 
+Durable admission precedes the face's input acknowledgement. Checkpoints preserve the original goal,
+ordered pending inputs, completed phases, candidate publication, exact segment coverage and tool
+attempt identities. A partial delivered part does not complete the original input. After interruption,
+recovery retains the owner and receipts; an unrelated completed conversation cannot erase older
+unfinished work. Explicit Stop records cancellation and is not automatically resumed. If writing that
+record fails, actual cancellation still proceeds and status reports the persistence failure.
+
+Tool/runtime-board mutation starts are checkpointed before dispatch. A started operation without a
+confirmed result is uncertain, not assumed failed or retried. Nova can inspect with read-only tools
+and use the body `reconcile_attempt` control with actual later observation receipt IDs and an explicit
+outcome; this is an evidence-bearing decision, not independent proof of its interpretation. Missing or
+invented receipts cannot clear the hold. The mechanism does not promise exactly-once external effects.
+
+The chat face reopens/pins original sessions without changing the displayed tab or fabricating old
+sockets. Exact saved segment text/run/index reconciles the narrow crash gap between transcript write
+and body acknowledgement; complete final conversation publication is not regenerated. A removed face
+or unavailable old session falls back to selective body-transcript recovery. Chat segment writes are
+atomic and required before delivery; a failed write cannot mark an input covered. Rejected/unavailable
+inputs are cancelled rather than silently revived after a terminal rejection.
+
 Headless human attention uses the same body `ConversationTurns`, committed-segment sink and
 `conversation_context.ConversationContext` formatter as the face wrapper. Speaker attribution,
 clock/system-prefix order and images therefore share one implementation. It captures the initial
 transcript through admitted input, polls follow-ups at boundaries, and persists each delivered part
 with its exact input-revision coverage. Later or sealed-out messages remain pending; the terminal
-aggregate is not appended a second time. Autonomous phase prompts remain separate. These ownership
+aggregate is not appended a second time. Face and headless generation both call the body's shared
+`WorkspaceContext.prepare_nova_context`, including automatic semantic recall and on-demand files.
+The runtime caches its context reader. Small recall encoders run on CPU and warm on the indexer's
+background startup thread; `memory_queue.recall_readiness` exposes initialization duration/failure.
+Warmup reads/encodes only; it does not create synthetic memories. Autonomous phase prompts remain separate. These ownership
 and persistence paths have isolated tests; no full relocated personal-state or live voice proof is
 implied.
 
@@ -92,8 +117,10 @@ completion are distinguished from playback API receipts. The separate dockable V
 supervises a hidden `voice_gateway/control_worker.py` child through `nova_chat/voice_control.py`;
 status never starts audio. Its prepared CPU environment contains pinned Whisper/Silero/Moonshine
 assets; the default recognizer is Whisper large-v3-turbo with CPU int8 and English selected. The
-gateway defaults to `voice_fast`, requesting thinking off on its first loop when the corresponding
-tunable is enabled; later tool loops keep thinking, and final auditing remains. `voice` is an explicit
+gateway defaults to `voice_fast`, requesting thinking off for conversational continuation when its
+tunable is enabled. Actual tool proposals/attempts and witness/guard correction switch subsequent work
+to thinking; a delivered part or new human input alone no longer triggers that switch. Final auditing
+remains. This preserves the prompt prefix across ordinary segments on the installed Qwen provider. `voice` is an explicit
 ordinary-thinking alternative, not an automatically classified mode. Neither promises instant replies. Missing
 selected assets require setup instead of a hidden download or silent recognizer/VAD fallback.
 Windows system speech is a labelled temporary baseline; absent an explicit voice name, it prefers
@@ -112,8 +139,12 @@ The gateway retains its current acknowledged eligible request past the 300-secon
 threshold and emits a warning once. Acknowledged inputs bound to an open response also retain exact
 correlation until terminal closure, including earlier revisions whose legacy final audio was retired.
 Unacknowledged or unbound retired requests expire. New input retains already committed queued speech without stopping body work.
-Full-duplex barge-in cuts current output while preserving and pausing queued committed units through
-recognition; a completed transcript or return to listening resumes them. Explicit Stop, output mute
+If a human turn is already hearing, finishing its pause or transcribing when a reply arrives, both
+voice adapters hold future output until recognition completes or resets. A held queue does not close
+that existing capture gate. Actual half-duplex playback still blocks new capture; mute and explicit
+Stop override it. Silence/noise reset and recognition failure release the hold. Full-duplex barge-in
+cuts current output while preserving and pausing later queued committed units through recognition;
+a completed transcript or return to listening resumes them. Explicit Stop, output mute
 and close still flush. Uncommitted old final replies remain subject to current-input eligibility.
 Explicit End call or worker shutdown sends request-scoped Stop for the call's remaining owned inputs,
 including earlier inputs whose audio was retired. Only a same-socket owned request can match. Final
@@ -275,7 +306,7 @@ Drives/wants and the hormone design are not evidence of online weight learning. 
 
 ## Runtime evidence and open modernization work
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/voice_gateway/control_worker.py`, `nova_body/nova_runtime/model_client.py`, `nova_body/nova_runtime/runtime.py`, `nova_body/nova_runtime/transcript_store.py` and 2 more; new `nova_body/nova_runtime/recovery.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/voice_gateway/control_worker.py`, `nova_body/nova_runtime/model_client.py`, `nova_body/nova_runtime/runtime.py` and 3 more; new `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/session_manager.py`, `general_tools/nova_chat/transcript.py`, `nova_body/nova_lancedb/embedder.py` and 3 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
 
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
@@ -442,6 +473,18 @@ for this bounded case; natural voice speed is not. The runtime then had no opera
 or pending owner inputs. Nova was switched back off after the probe. Receipts live in
 `Temp/continuation-validation/live_turn_result.json` and
 `Temp/provider-diagnostics/ongoing-work-live-20261005/`.
+On October 6, a controlled provider-only comparison kept the same thinking mode across main,
+inline witness and continuation requests. Existing RAM caching restored 38,912 tokens: continuation
+prefill was 0.382 seconds for 153 new tokens, versus 31.181 seconds and no reused tokens in the earlier
+mode-switch run. The same-mode first request still needed 31.812 seconds cold. No second GPU slot,
+template rewrite, trust-role change or weaker witness was needed. This is a prefill measurement, not
+end-to-end speech latency. Receipt: `Temp/provider-cache-source/baseline-same-mode.json`. Cross-turn
+clock/recall changes can still invalidate the prefix; the installed hybrid-model checkpoint policy
+does not provide an ordinary periodic stable-prefix checkpoint option.
+
+A fresh recall process measured 25.37 seconds on its first query and 24.6 milliseconds warm. The CPU
+startup warmup later measured 17.42 seconds, followed by 42 milliseconds warm recall. Startup cost is
+reported separately rather than presented as eliminated; machine load can change it substantially.
 The existing UI needs a reload to receive new JavaScript. Backend changes were live-loaded for the
 probe and will load again on Start Nova. Unit/fixture passes do not certify every optional
 application, native window interaction or adapter swap.

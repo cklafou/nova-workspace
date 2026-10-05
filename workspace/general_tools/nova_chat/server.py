@@ -552,9 +552,10 @@ def _steer_request(work):
     return False  # Includes the sealed-turn window: next body boundary owns this queued input.
 
 
-async def _scoped_stop_reply(ws, request_id, matched):
+async def _scoped_stop_reply(ws, request_id, matched, persistence_errors=None):
     try:
-        await ws.send_text(json.dumps({"type": "stopped", "request_id": request_id, "matched": matched}))
+        await ws.send_text(json.dumps({"type": "stopped", "request_id": request_id, "matched": matched,
+                                       **({"stop_persistence_errors":persistence_errors} if persistence_errors else {})}))
     except Exception:
         pass  # End call may have closed this socket while its task was cleaning up.
 
@@ -569,14 +570,18 @@ async def _stop_request(ws, request_id):
     # Mark before any await, including while a drain owns the popped queue entry.
     work["cancelled"] = True
     coordinator = getattr(globals().get("_rt"), "work_owner", None)
+    persistence_errors = []
     if coordinator is not None:
-        coordinator.cancel_input(work.get("input_key") or (work.get("msg") or {}).get("id"),
-                                 conversation_id=work.get("conversation_id"))
+        try:
+            coordinator.cancel_input(work.get("input_key") or (work.get("msg") or {}).get("id"),
+                                     conversation_id=work.get("conversation_id"))
+        except Exception as error:
+            persistence_errors.append(str(error))
     task = work.get("task")
     if task is None:
         _cole_message_queue[:] = [item for item in _cole_message_queue if item is not work]
         await _end_queued_request(work, "cancelled")
-        await _scoped_stop_reply(ws, request_id, True)
+        await _scoped_stop_reply(ws, request_id, True, persistence_errors)
         return
     if task.done():
         _release_request_work(work)
@@ -585,11 +590,21 @@ async def _stop_request(ws, request_id):
     coordinator = getattr(globals().get("_rt"), "work_owner", None)
     owner = coordinator.active if coordinator is not None else None
     if owner is not None and owner.kind == "autonomy" and owner.task is task:
-        owner.request_stop()
+        try:
+            owner.request_stop()
+            if getattr(owner, "stop_persistence_error", None):
+                persistence_errors.append(owner.stop_persistence_error)
+        except Exception as error:
+            persistence_errors.append(str(error))
         completion = asyncio.create_task(owner.finished.wait())
     else:
         if owner is not None and owner.task is task:
-            owner.mark_stopped()
+            try:
+                owner.mark_stopped()
+                if getattr(owner, "stop_persistence_error", None):
+                    persistence_errors.append(owner.stop_persistence_error)
+            except Exception as error:
+                persistence_errors.append(str(error))
         task.cancel()
         completion = task
     if not work.get("started"):
@@ -602,16 +617,24 @@ async def _stop_request(ws, request_id):
         await _drain_cole_queue()
     done, _ = await asyncio.wait({completion}, timeout=0.5)
     if done:
-        await _scoped_stop_reply(ws, request_id, True)
+        await _scoped_stop_reply(ws, request_id, True, persistence_errors)
     else:
         await ws.send_text(json.dumps({"type": "stop_pending", "request_id": request_id}))
         def complete(_task):
-            asyncio.ensure_future(_scoped_stop_reply(ws, request_id, True))
+            asyncio.ensure_future(_scoped_stop_reply(ws, request_id, True, persistence_errors))
         completion.add_done_callback(complete)
 
 
 async def _end_queued_request(queued: dict, delivery: str) -> None:
     """Close a correlated inbound request without inventing a generation or audit result."""
+    if delivery in {"unavailable", "cancelled"}:
+        coordinator = getattr(globals().get("_rt"), "work_owner", None)
+        if coordinator is not None:
+            try:
+                coordinator.cancel_input(queued.get("input_key") or (queued.get("msg") or {}).get("id"),
+                                         conversation_id=queued.get("conversation_id"))
+            except Exception as error:
+                print(f"[recovery] Could not persist request rejection: {error}")
     request_id = normalize_request_id(queued.get("request_id"))
     if request_id is None:
         _release_request_work(queued)
@@ -872,6 +895,8 @@ _WS_ROOT_FOR_PROBE = _INBOX_WORKSPACE   # temporary: doubling/free-pass probe (2
 # Found by audit_queue.reconcile() — not by reading, and not by anything failing.
 _CODE_FILES = ("general_tools/nova_chat/server.py",
                "general_tools/nova_chat/response_events.py",
+               "general_tools/nova_chat/transcript.py",
+               "general_tools/nova_chat/session_manager.py",
                "general_tools/nova_chat/voice_control.py",
                "general_tools/voice_gateway/control_worker.py",
     "general_tools/voice_gateway/config.py",
@@ -1790,20 +1815,30 @@ async def stop_endpoint():
                              "chat_only": True, "operations": []})
     _stop_requested.set()          # signal token handlers to abort mid-stream
     coordinator = getattr(_rt, "work_owner", None)
+    persistence_errors = []
     if coordinator is not None:
         if coordinator.active is not None:
-            coordinator.active.mark_stopped()
+            try:
+                coordinator.active.mark_stopped()
+                if getattr(coordinator.active, "stop_persistence_error", None):
+                    persistence_errors.append(coordinator.active.stop_persistence_error)
+            except Exception as error:
+                persistence_errors.append(str(error))
         for entry in coordinator.recovery_inputs():
-            coordinator.cancel_input(entry["input_key"])
+            try:
+                coordinator.cancel_input(entry["input_key"])
+            except Exception as error:
+                persistence_errors.append(str(error))
         for pending in list(_cole_message_queue):
-            coordinator.cancel_input(pending.get("input_key") or (pending.get("msg") or {}).get("id"),
-                                     conversation_id=pending.get("conversation_id"))
+            pending["cancelled"] = True
     cancelled = 0
     for task in active_tasks:
         if not task.done():
             task.cancel()
             cancelled += 1
     state = await operations.stop()
+    if persistence_errors:
+        state["stop_persistence_errors"] = persistence_errors
     active_tasks[:] = [task for task in active_tasks if not task.done()]
     is_processing = not state["stopped"]
     await broadcast({"type": "stopped" if state["stopped"] else "stop_pending", "cancelled": cancelled, **state})
@@ -2144,7 +2179,7 @@ async def _run_ai_response_owned(ai_name: str, client_mod, msg_id: str,
         event = _events.prepare_segment(text, metadata)
         # The required conversation write precedes commitment. Search/index adapters cannot
         # suppress a segment already stored for delivery, and the aggregate is never re-stored.
-        msg = _live_transcript.add(ai_name, text, response_metadata=event)
+        msg = _live_transcript.add(ai_name, text, response_metadata=event, require_durable=True)
         _events.commit_segment(event)
         try:
             session_mgr.update_meta_from_message(msg, session_id=_conversation_id, transcript=_live_transcript)
@@ -3252,6 +3287,14 @@ async def _recover_face_inputs():
         if transcript is None:
             orphan_keys.append(entry["input_key"])
             continue  # The body will recover the input even when this face was removed.
+        for saved in transcript.messages:
+            meta = saved.get("response_metadata") or {}
+            if saved.get("author") == "Nova" and meta.get("run_id") and type(meta.get("segment_index")) is int:
+                coordinator.confirm_publication(meta.get("turn_id") or meta["run_id"],
+                                                meta["segment_index"], saved.get("content", ""))
+        if entry["input_key"] not in {row["input_key"] for row in coordinator.recovery_inputs()}:
+            session_mgr.release(conversation_id, transcript)
+            continue
         msg = next((m for m in transcript.messages if m.get("id") == entry.get("reply_to")), None)
         if msg is None:
             session_mgr.release(conversation_id, transcript)
@@ -4664,7 +4707,9 @@ async def websocket_endpoint(ws: WebSocket):
                             "conversation_id": session_mgr.active_id, "register": _message_register, "author":_speaker})
                     except Exception as error:
                         await ws.send_text(json.dumps({"type": "error", "code": "input_not_durable",
-                            "request_id": _request_id, "message": "Nova could not save this request; it has not been queued."}))
+                            "author":"Nova", "request_id": _request_id, "message": "Nova could not save this request; it has not been queued."}))
+                        await ws.send_text(json.dumps({"type":"request_end", "request_id":_request_id,
+                            "reply_to":msg["id"], "register":_message_register, "delivery":"error"}))
                         print(f"[recovery] Input admission failed: {error}")
                         continue
                 _retain = getattr(session_mgr, "retain", None)

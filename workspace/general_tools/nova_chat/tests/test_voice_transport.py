@@ -55,7 +55,7 @@ class Transcript:
     def __init__(self):
         self.messages = []
 
-    def add(self, author, content, directed_at=None, images=None, response_metadata=None):
+    def add(self, author, content, directed_at=None, images=None, response_metadata=None, require_durable=False):
         message = {'id': 'stored-' + str(len(self.messages)), 'author': author,
                    'content': content, 'timestamp': datetime.now().isoformat(), 'images': images or []}
         if response_metadata is not None:
@@ -863,7 +863,10 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
         await self.ns['websocket_endpoint'](ws)
         self.assertEqual(self.ns['_cole_message_queue'], [])
         self.assertFalse(any(e['type']=='user_message' for e in self.events))
-        self.assertEqual(ws.sent[-1]['code'], 'input_not_durable')
+        self.assertEqual(ws.sent[-2]['code'], 'input_not_durable')
+        self.assertEqual(ws.sent[-2]['author'], 'Nova')
+        self.assertEqual(ws.sent[-1]['type'], 'request_end')
+        self.assertEqual(ws.sent[-1]['delivery'], 'error')
 
     async def test_scoped_stop_cancels_persisted_queued_input(self):
         coordinator = work_module.WorkCoordinator(self.root / 'checkpoint.json')
@@ -874,6 +877,53 @@ class TransportHarness(unittest.IsolatedAsyncioTestCase):
         await self.ns['_stop_request'](ws, 'cancel-me')
         self.assertEqual(work_module.WorkCoordinator(self.root/'checkpoint.json').recovery_inputs(), [])
         self.assertFalse(self.ns['_cole_message_queue'])
+
+    async def test_scoped_stop_still_cancels_when_checkpoint_storage_fails(self):
+        coordinator = work_module.WorkCoordinator(self.root/'checkpoint.json')
+        self.ns['_rt'] = types.SimpleNamespace(work_owner=coordinator)
+        self.ns['is_processing'] = True
+        ws = Socket([dict(type='message',content='queued work',request_id='disk-stop')])
+        await self.ns['websocket_endpoint'](ws)
+        coordinator.cancel_input = Mock(side_effect=OSError('stop disk failure'))
+        await self.ns['_stop_request'](ws,'disk-stop')
+        self.assertEqual(self.ns['_cole_message_queue'],[])
+        stopped=next(e for e in ws.sent if e['type']=='stopped')
+        self.assertTrue(stopped['matched'])
+        self.assertIn('stop disk failure',str(stopped['stop_persistence_errors']))
+
+    async def test_unavailable_rejection_is_not_resurrected_after_restart(self):
+        coordinator = work_module.WorkCoordinator(self.root/'checkpoint.json')
+        self.ns['_rt'] = types.SimpleNamespace(work_owner=coordinator)
+        self.ns['is_processing'] = True
+        await self.ns['websocket_endpoint'](Socket([dict(type='message',content='not available',request_id='unavailable')]))
+        self.ns['is_processing']=False
+        self.ns['get_status']=AsyncMock(return_value={'Nova':False})
+        await self.ns['_drain_cole_queue']()
+        self.assertEqual(work_module.WorkCoordinator(self.root/'checkpoint.json').recovery_inputs(),[])
+
+    async def test_saved_final_face_part_is_reconciled_without_regenerating(self):
+        path=self.root/'checkpoint.json'
+        coordinator=work_module.WorkCoordinator(path)
+        entry={'role':'user','content':'request','conversation_id':'old','reply_to':'old-input','request_id':'r-old'}
+        try:
+            async with coordinator.lease('conversation') as owner:
+                owner.bind_inputs([entry])
+                await owner.checkpoint({'type':'generation_started','turn_id':'saved-run'})
+                await owner.checkpoint({'type':'segment_prepared','turn_id':'saved-run','segment_index':1,
+                    'input_revision':0,'text':'saved final answer','final':True,'audit':{'status':'PASS'}})
+                raise RuntimeError('crash')
+        except RuntimeError: pass
+        old=Transcript();old.messages=[{'id':'old-input','content':'request','author':'Cole'},
+            {'content':'saved final answer','author':'Nova','response_metadata':{'run_id':'saved-run','segment_index':1}}]
+        self.session.retain_existing=Mock(return_value=old);self.session.release=Mock()
+        restarted=work_module.WorkCoordinator(path)
+        self.ns['_rt']=types.SimpleNamespace(work_owner=restarted,recover_pending_inputs=AsyncMock())
+        self.ns['_drain_cole_queue']=AsyncMock()
+        await self.ns['_recover_face_inputs']()
+        self.assertEqual(self.ns['_cole_message_queue'],[])
+        self.assertEqual(restarted.recovery_inputs(),[])
+        self.assertFalse(restarted.recovery_pending)
+        self.ns['_drain_cole_queue'].assert_not_awaited()
 
     async def test_recovery_uses_original_transcript_without_dead_socket(self):
         coordinator = work_module.WorkCoordinator(self.root / 'checkpoint.json')

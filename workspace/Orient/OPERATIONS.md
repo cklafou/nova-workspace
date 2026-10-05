@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T17:19:02+00:00 from source (input `62ef938e7813`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T17:32:34+00:00 from source (input `2b5c37bce0a8`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -182,7 +182,7 @@ disk rather than a slow network mount.
 
 ## Test meaningful behavior
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_voice_transport.py`, `nova_body/tests/test_work_owner.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/nova_chat/tests/test_voice_transport.py`, `nova_body/tests/test_work_owner.py`; new `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/session_manager.py`, `general_tools/nova_chat/transcript.py`, `nova_body/nova_lancedb/embedder.py` and 3 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -256,6 +256,17 @@ disk rather than a slow network mount.
     retained tool receipts, task-change reconciliation, scoped Stop with cleanup, scheduler survival,
     headless captured-sequence coverage and no terminal aggregate duplication. Keep these isolated
     checks separate from live task continuity and full personal-state relocation evidence.
+
+13. For durable ongoing work, run `nova_body/tests/test_work_recovery.py`, the face's
+    `tests/test_voice_transport.py`, `test_segment_metadata.py` and `test_session_pins.py`.
+    Exercise pre-ack disk failure, crash between segment publication/checkpoint, Stop on a full disk,
+    unrelated input during recovery, uncertain effects and real-receipt reconciliation. Relocation
+    must use disposable identity/memory/task fixtures and deny reads of the source body; report model
+    dependencies separately from files carried by the body. Never edit personal records for fixtures.
+14. Run gateway `test_capture_output_gate.py`: a reply arriving mid-capture must stay queued;
+    recognition completion/reset/error must release output, while mute/Stop still prevents it.
+    Score ASR errors separately from transport order. WAV synthesis proves a file, not audible
+    playback. Natural microphone/speaker quality and final voice selection need their own evidence.
 
 ## Files and recovery
 

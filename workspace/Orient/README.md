@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-05T17:19:02+00:00 from source (input `62ef938e7813`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T17:32:34+00:00 from source (input `2b5c37bce0a8`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
@@ -53,8 +53,8 @@ Last built 2026-10-04 05:12 UTC; as of this generation, 231 source file(s) had b
 
 **AI notes.** Claude, Codex and the other agents leave a note in [AI Notes](AI%20Notes/ReadMeBeforeNoteTaking.md) after each session: what changed, why, and what is still open. Read the rules once, then every note since your own last one. Newest first:
 
+- [2026-10-06_0228_Codex_DurableWorkRecovery.md](AI%20Notes/2026-10-06_0228_Codex_DurableWorkRecovery.md)
+- [2026-10-06_0221_Codex_RecoveryBoundaryReview.md](AI%20Notes/2026-10-06_0221_Codex_RecoveryBoundaryReview.md)
 - [2026-10-06_0215_Codex_VoiceCaptureHold.md](AI%20Notes/2026-10-06_0215_Codex_VoiceCaptureHold.md)
 - [2026-10-06_0213_Codex_ProviderCacheDiagnosis.md](AI%20Notes/2026-10-06_0213_Codex_ProviderCacheDiagnosis.md)
 - [2026-10-05_2241_Codex_OngoingWorkLiveValidation.md](AI%20Notes/2026-10-05_2241_Codex_OngoingWorkLiveValidation.md)
-- [2026-10-05_2234_Codex_BodyWorkOwnership.md](AI%20Notes/2026-10-05_2234_Codex_BodyWorkOwnership.md)
-- [2026-10-05_2233_Codex_SegmentedVoiceAndSharedContext.md](AI%20Notes/2026-10-05_2233_Codex_SegmentedVoiceAndSharedContext.md)

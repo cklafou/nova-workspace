@@ -31,7 +31,7 @@ print(f"[transcript] LOG_DIR = {LOG_DIR}")
 class Transcript:
     def __init__(self, session_id: str = ""):
         self.messages = []
-        self._lock = threading.Lock()         # serialises file writes across threads
+        self._lock = threading.RLock()         # serialises file writes across threads
         LOG_DIR.mkdir(parents=True, exist_ok=True)
         self.session_id = session_id or datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.log_path = LOG_DIR / f"{self.session_id}_chat.jsonl"
@@ -41,7 +41,7 @@ class Transcript:
     # ── Message add ────────────────────────────────────────────────────────────
 
     def add(self, author: str, content: str, directed_at: list = None,
-            images: list = None, response_metadata: dict = None) -> dict:
+            images: list = None, response_metadata: dict = None, require_durable: bool = False) -> dict:
         msg = {
             "id": str(uuid.uuid4())[:8],
             "timestamp": datetime.now().isoformat(),
@@ -82,8 +82,12 @@ class Transcript:
             if meta:
                 msg["response_metadata"] = meta
         with self._lock:
-            self.messages.append(msg)
-        self._persist(msg)
+            if require_durable:
+                self._write_snapshot(self.messages + [msg])
+                self.messages.append(msg)
+            else:
+                self.messages.append(msg)
+                self._persist(msg)
         return msg
 
     # ── Persistence ────────────────────────────────────────────────────────────
@@ -113,32 +117,30 @@ class Transcript:
                 print(f"[transcript] 3 consecutive failures — attempting flush_all() recovery")
                 self.flush_all()
 
-    def flush_all(self):
-        """
-        Rewrite the entire JSONL log file from in-memory messages.
-
-        Uses a temp file + atomic rename so a crash mid-write never corrupts
-        an existing log.  Safe to call at any time.  Called automatically
-        after 3 consecutive _persist failures, and by SessionManager on
-        session activation to recover any messages that didn't make it to disk.
-        """
-        tmp = self.log_path.with_suffix(".tmp")
+    def _write_snapshot(self, snapshot):
+        """Publish a complete transcript atomically; errors propagate before delivery."""
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+        tmp = self.log_path.with_name(self.log_path.name + '.' + uuid.uuid4().hex + '.tmp')
         try:
-            LOG_DIR.mkdir(parents=True, exist_ok=True)
-            with self._lock:
-                snapshot = list(self.messages)
-            with open(tmp, "w", encoding="utf-8") as f:
-                for m in snapshot:
-                    f.write(json.dumps(m, ensure_ascii=False) + "\n")
-            tmp.replace(self.log_path)   # atomic on Windows (Python 3.3+)
+            with tmp.open("w", encoding="utf-8", newline="\n") as out:
+                for message in snapshot:
+                    out.write(json.dumps(message, ensure_ascii=False) + "\n")
+                out.flush()
+                os.fsync(out.fileno())
+            os.replace(tmp, self.log_path)
             self._fail_count = 0
-            print(f"[transcript] flush_all() OK — {len(snapshot)} messages → {self.log_path}")
-        except Exception as e:
-            print(f"[transcript] flush_all() FAILED: {e!r}")
-            try:
-                tmp.unlink(missing_ok=True)
-            except Exception:
-                pass
+        finally:
+            tmp.unlink(missing_ok=True)
+
+    def flush_all(self):
+        """Serialize a full atomic snapshot with concurrent append/publication writes."""
+        try:
+            with self._lock:
+                self._write_snapshot(list(self.messages))
+            return True
+        except Exception as error:
+            print(f"[transcript] flush_all() FAILED: {error!r}")
+            return False
 
     # ── Read helpers ───────────────────────────────────────────────────────────
 

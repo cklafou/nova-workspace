@@ -64,7 +64,13 @@
         "nova_body/nova_runtime/conversation_context.py",
         "nova_body/nova_runtime/work_owner.py",
         "general_tools/nova_chat/server.py::_attend_autonomy_inputs",
-        "general_tools/nova_chat/server.py::_run_ai_response_owned"
+        "general_tools/nova_chat/server.py::_run_ai_response_owned",
+        "nova_body/nova_runtime/recovery.py",
+        "nova_body/nova_lancedb/embedder.py",
+        "nova_body/nova_lancedb/hippocampus.py",
+        "nova_body/nova_lancedb/indexer.py",
+        "general_tools/nova_chat/server.py::_recover_face_inputs",
+        "general_tools/nova_chat/session_manager.py"
       ],
       "baseline": {
         "NovaStart.cmd": "4a2f2669149dfcfbeae4de8dbe06720bf981aeaae8aceb2dda8f418895c84a09",
@@ -215,7 +221,14 @@
         "nova_body/tests/test_conversation_context.py",
         "general_tools/voice_gateway/test_voice_segments.py",
         "general_tools/nova_chat/tests/test_conversation_segments.cjs",
-        "general_tools/nova_chat/tests/test_segment_metadata.py"
+        "general_tools/nova_chat/tests/test_segment_metadata.py",
+        "nova_body/nova_runtime/recovery.py",
+        "nova_body/nova_lancedb/embedder.py",
+        "nova_body/nova_lancedb/hippocampus.py",
+        "nova_body/nova_lancedb/indexer.py",
+        "general_tools/nova_chat/server.py::_recover_face_inputs",
+        "general_tools/nova_chat/session_manager.py",
+        "general_tools/nova_chat/transcript.py"
       ],
       "baseline": {
         "general_tools/nova_chat/tests/test_conversation_segments.cjs": "3d678e738a5082624a1de89f8ddbabc272a4269fafced47f89a516457bbdcd2e",
@@ -438,7 +451,14 @@
         "nova_body/tests/test_work_owner.py",
         "nova_body/tests/test_autonomy_boundaries.py",
         "nova_body/tests/test_conversation_context.py",
-        "general_tools/nova_chat/tests/test_segment_metadata.py"
+        "general_tools/nova_chat/tests/test_segment_metadata.py",
+        "nova_body/nova_runtime/recovery.py",
+        "nova_body/nova_lancedb/embedder.py",
+        "nova_body/nova_lancedb/hippocampus.py",
+        "nova_body/nova_lancedb/indexer.py",
+        "general_tools/nova_chat/server.py::_recover_face_inputs",
+        "general_tools/nova_chat/session_manager.py",
+        "general_tools/nova_chat/transcript.py"
       ],
       "baseline": {
         "general_tools/audit_scripts.py::_audit_paths": "31e3b3f9cd5e82e34ebbdd92e5b0ee400a29796de5dbd86ec32ab7e6e2d3db54",

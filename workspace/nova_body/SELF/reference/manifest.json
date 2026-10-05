@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-05T22:35:19",
+  "generated": "2026-10-06T02:19:52",
   "workspace": "C:\\Users\\lafou\\Project_Nova\\workspace",
   "part_count": 37,
   "described": 37,
@@ -95,7 +95,7 @@
       "path": "nova_body/nova_cortex",
       "purpose": "Expose Nova's executive faculties, task board, runtime settings and body-owned context assembly.",
       "files": 15,
-      "lines": 5993,
+      "lines": 6010,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -105,7 +105,8 @@
         "nova_lancedb",
         "nova_paths",
         "nova_runtime",
-        "nova_senses"
+        "nova_senses",
+        "nova_voice"
       ],
       "third_party": [
         "__future__",
@@ -181,7 +182,7 @@
       "path": "nova_body/nova_lancedb",
       "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
       "files": 5,
-      "lines": 832,
+      "lines": 857,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -216,7 +217,7 @@
       "path": "nova_body/nova_lancedb",
       "purpose": "Nova's long-term semantic memory — LanceDB vector store (embedder, hippocampus, indexer).",
       "files": 5,
-      "lines": 832,
+      "lines": 857,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [],
@@ -326,8 +327,8 @@
       "kind": "body_part",
       "path": "nova_body/nova_runtime",
       "purpose": "nova_runtime — Nova's life-support engine (runtime / layer 2 of the three-layer",
-      "files": 14,
-      "lines": 2545,
+      "files": 15,
+      "lines": 3113,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -414,7 +415,7 @@
       "path": "nova_body/nova_voice",
       "purpose": "Run Nova's local inference and tool loop with her current capabilities and execution receipts.",
       "files": 5,
-      "lines": 4263,
+      "lines": 4338,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -446,6 +447,7 @@
       "referenced_by": [
         "nova_chat",
         "nova_computer",
+        "nova_cortex",
         "nova_runtime",
         "nova_witness"
       ],
@@ -654,7 +656,7 @@
       "path": "general_tools/architecture_map",
       "purpose": "Generates Orient documentation and validates source, review and link freshness.",
       "files": 10,
-      "lines": 3424,
+      "lines": 3436,
       "age_days": 0,
       "ports_bind": [],
       "ports_seen": [
@@ -877,7 +879,7 @@
       "path": "general_tools/nova_chat",
       "purpose": "Nova Chat controller and runtime host, with an isolated model-off collaboration launch mode.",
       "files": 34,
-      "lines": 11680,
+      "lines": 11861,
       "age_days": 0,
       "ports_bind": [
         "8765"
@@ -1123,8 +1125,8 @@
       "kind": "tool",
       "path": "general_tools/voice_gateway",
       "purpose": "voice_gateway — Cole's microphone to Nova. A comms tool (pluck test: her body is",
-      "files": 4631,
-      "lines": 2181930,
+      "files": 4632,
+      "lines": 2182053,
       "age_days": 0,
       "ports_bind": [
         "8080"

@@ -2,11 +2,13 @@
 import ast
 from datetime import datetime
 import json
+import os
 from pathlib import Path
 import tempfile
 import threading
 import unittest
 import uuid
+from unittest.mock import patch
 
 SOURCE=Path(__file__).resolve().parents[1]/'transcript.py'
 class SegmentMetadata(unittest.TestCase):
@@ -14,8 +16,8 @@ class SegmentMetadata(unittest.TestCase):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         tree=ast.parse(SOURCE.read_text(encoding='utf-8'))
         source=next(node for node in tree.body if isinstance(node,ast.ClassDef) and node.name=='Transcript')
-        source.body=[node for node in source.body if isinstance(node,ast.FunctionDef) and node.name in {'__init__','add','_persist','flush_all'}]
-        self.namespace=dict(LOG_DIR=Path(self.temp.name),datetime=datetime,json=json,threading=threading,uuid=uuid)
+        source.body=[node for node in source.body if isinstance(node,ast.FunctionDef) and node.name in {'__init__','add','_persist','flush_all','_write_snapshot'}]
+        self.namespace=dict(LOG_DIR=Path(self.temp.name),datetime=datetime,json=json,threading=threading,uuid=uuid,os=os)
         exec(compile(ast.Module(body=[source],type_ignores=[]),str(SOURCE),'exec'),self.namespace)
         self.transcript=self.namespace['Transcript']('fixture')
     def test_metadata_persists_explicit_audit_without_unknown_transport_fields_or_mutable_aliases(self):
@@ -30,6 +32,18 @@ class SegmentMetadata(unittest.TestCase):
         self.assertEqual(stored['response_metadata']['audit']['reason'],'Not verified')
         self.assertEqual(stored['response_metadata']['request_ids'],[None,'voice'])
         self.assertNotIn('secret',json.dumps(stored));self.assertNotIn('content',stored['response_metadata'])
+    def test_durable_segment_failure_preserves_disk_and_memory_and_raises(self):
+        self.transcript.add('Cole','original')
+        before=self.transcript.log_path.read_bytes()
+        with patch.object(os,'replace',side_effect=OSError('disk fixture')):
+            with self.assertRaisesRegex(OSError,'disk fixture'):
+                self.transcript.add('Nova','must not be delivered',require_durable=True)
+        self.assertEqual(self.transcript.log_path.read_bytes(),before)
+        self.assertEqual([m['content'] for m in self.transcript.messages],['original'])
+        self.assertEqual(list(Path(self.temp.name).glob('*.tmp')),[])
+        self.transcript.add('Nova','saved part',require_durable=True)
+        self.assertEqual([json.loads(line)['content'] for line in self.transcript.log_path.read_text().splitlines()],['original','saved part'])
+
     def test_legacy_messages_remain_compatible_and_invalid_metadata_never_invents_pass(self):
         old=self.transcript.add('Cole','Hello')
         self.assertNotIn('response_metadata',old)

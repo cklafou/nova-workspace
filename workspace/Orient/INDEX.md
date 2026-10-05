@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T17:19:02+00:00 from source (input `62ef938e7813`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T17:32:34+00:00 from source (input `2b5c37bce0a8`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -1799,6 +1799,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 
 ## nova_body/tests
 
+- [nova_body/tests/recovery_relocation_probe.py](../nova_body/tests/recovery_relocation_probe.py) — Exercise crash recovery in a disposable relocated body while denying the original workspace and network.
 - [nova_body/tests/test_autonomy_boundaries.py](../nova_body/tests/test_autonomy_boundaries.py) — Verify same-work attention at natural provider/tool boundaries without cancellation, receipt replay, or audit identity loss.
 - [nova_body/tests/test_computer_launch.py](../nova_body/tests/test_computer_launch.py) — Isolated regression tests for guest desktop routing and honest process/window launch verification.
 - [nova_body/tests/test_conversation.py](../nova_body/tests/test_conversation.py) — Verify body-owned non-cancelling continuation, request anchors, audit revisions, sealing, and relocation.

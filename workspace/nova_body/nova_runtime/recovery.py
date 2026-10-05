@@ -56,9 +56,9 @@ class RecoveryStore:
         next_data = deepcopy(self.data)
         result = edit(next_data)
         next_data['updated_at'] = now()
-        self.path.parent.mkdir(parents=True, exist_ok=True)
         temporary = self.path.with_name(self.path.name + '.' + uuid4().hex + '.tmp')
         try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
             with temporary.open('w', encoding='utf-8', newline='\n') as out:
                 json.dump(next_data, out, ensure_ascii=False, separators=(',', ':'))
                 out.flush()
@@ -248,7 +248,8 @@ class RecoveryStore:
         def edit(data):
             unresolved = any(a['state'] in ('started', 'uncertain') and a['tool'] not in READ_ONLY_TOOLS for a in snapshot.get('attempts', {}).values())
             unfinished = any(g.get('state') not in ('completed', 'continued') for g in snapshot.get('generations', {}).values())
-            if state == 'completed' and (unresolved or unfinished):
+            uncovered = any(row.get('input_key') in snapshot.get('input_keys', []) and row['state'] in ('received','attending') for row in data['inputs'])
+            if state == 'completed' and (unresolved or unfinished or uncovered):
                 state_value = 'interrupted'
                 snapshot['needs_reconciliation'] = unresolved
             else:
