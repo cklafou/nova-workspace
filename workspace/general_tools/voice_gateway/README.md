@@ -11,6 +11,15 @@ This is the pipe that lets Cole **talk** to Nova and **hear** her back. It start
                              └─▶ body events (state, captions, speech start/end) for an avatar
 ```
 
+## Use it in Nova Chat
+
+Open **Conversation → Voice**. Start Nova, then **Start voice**. Microphone and spoken-output mute
+are separate; **Stop voice** closes the audio worker. Expand **Devices & tests** to find compatible
+inputs/outputs, apply a choice while stopped, meter six seconds of microphone audio or play a short
+speaker test. Audio tests work with Nova off. Page load never records. Use Stop to cancel a device
+test; mute buttons apply to voice conversations. The current Windows system voice is a temporary
+baseline, not Nova's final cast voice.
+
 ## First stage (built 2026-10-05; contract agreed with Codex in the Collaboration room #55–#63)
 
 - **Speaks only delivered final text, and only in reply to the gateway's own request.** Every utterance carries a fresh `request_id`. Nova Chat echoes it on `user_message`, `message_start`, `message_end` and `request_end`. A reply is spoken only when `delivery == "delivered"` and the `request_id` is ours (`speak_scope="mine"`). `"replies"` is opt-in and still requires a `reply_to`.
@@ -19,7 +28,8 @@ This is the pipe that lets Cole **talk** to Nova and **hear** her back. It start
 - **Delivered is not approved.** The audit `{status, reason, source}` rides on every caption and body event. A missing audit is `NOT_RUN`, never PASS. `audit_gate="delivered"` (default) speaks any delivered reply with its status attached. `audit_gate="pass_only"` speaks only an explicit PASS; NOT_RUN, CONCERN, INCOMPLETE and ERROR stay silent.
 - **No pre-audit speech.** `speak_from="stream"` is ignored with a warning. Tokens are never spoken.
 - **Interruption covers generations, not just audio.** A new utterance, a voice barge-in (full duplex) or the server's `stopped`/`stop_pending` flushes queued units and stops the current one. It also retires every earlier request, so their late finals close quietly and are never spoken. A unit cut while it is still being synthesized never starts playing: each backend checks cancellation before playback. Closing the player also stops active playback, flushes the queue and rejects late work. Synthesis already computing may finish after cancellation; its resulting audio remains suppressed.
-- **Half duplex by default.** The mic drops audio at capture while she speaks, plus a 400 ms tail. Every buffered or queued frame from before the gate closed is discarded, and no utterance is ever spliced across her turn. The fake-microphone regression confirms that captured echo queued during a slow transcription is discarded (Codex review #72). Physical echo, device buffering and the appropriate tail length still need hardware testing. Use `duplex="full"` only with headphones or echo cancellation.
+- **Half duplex by default.** The mic drops audio at capture while she speaks, plus a 400 ms tail. Every buffered or queued frame from before the gate closed is discarded, and no utterance is ever spliced across her turn. The fake-microphone regressions discard both queued echo and a transcription that completes after its capture generation or gate became invalid. Physical echo, device buffering and the appropriate tail length still need hardware testing. Use `duplex="full"` only with headphones or echo cancellation.
+- **Recognition hygiene.** Silero consumes 512-sample frames at 16 kHz. Brief noises below the minimum voiced duration are ignored; onset audio is buffered, trailing silence is trimmed, and decoder errors produce a visible diagnostic while listening continues. Missing local assets stop readiness instead of silently downloading or substituting energy detection.
 - **What is never read aloud:** tool markers (`[`tool` resulted in N bytes.]`), code blocks, raw URLs ("a link") and markdown.
 - **Body events v1** (`body.py`): `state` (idle/waiting/thinking/speaking), `message`, `speech`, `caption`, `interrupt` and `diagnostic`. Sinks are `none`, `stdout`, or `jsonl` (`logs/voice/body_events.jsonl`). The trace stays honest:
   - `message` records policy and queueing only (`eligible`, `queued_units`).
@@ -34,7 +44,10 @@ This is the pipe that lets Cole **talk** to Nova and **hear** her back. It start
 | `speech.py` | `speech_text()` sanitizer; `SpeechPlayer` (ordered, interruptible, audio-clocked captions) |
 | `body.py` | v1 body events and sinks |
 | `committer.py` | sentence units (2026-10-05 fix: a merged one-word stub no longer swallows the rest into one unit) |
-| `stt.py` / `tts.py` | backends; `gate`/`on_speech_start` hooks; every TTS has `stop()` |
+| `stt.py` / `tts.py` | recognition/playback, capture and post-decode gating, bounded speech segments |
+| `windows_tts.py` | cancellable Windows system speech through the selected output |
+| `control_worker.py` | explicit session/device tests, progress and control pipe |
+| `setup_windows.py` | isolated CPU dependencies and checksummed local speech assets |
 
 ## Verified (offline, 2026-10-05, Nova off)
 
@@ -42,7 +55,18 @@ This is the pipe that lets Cole **talk** to Nova and **hear** her back. It start
 - `test_link_socket.py`: two tests. One is a real WebSocket round-trip against a fake Nova Chat: the request_id is echoed, unrelated frames are ignored, and only the delivered reply is spoken with its audit status. The other checks that a dropped socket stops the mic and cleans up. Needs `websockets`.
 - `test_committer.py`: 9/9.
 
-**Not yet verified:** a microphone, real TTS, Chatterbox/Moonshine/Silero installs, VTube Studio, lip-sync amplitude, latency, and a live rung-2 run against Nova Chat. Readiness on 2026-10-04 with Python 3.12.6: websockets, NumPy, Torch and Transformers present; sounddevice, onnxruntime, torchaudio, Chatterbox, Silero VAD and Moonshine absent. `VOICE_CHECK.cmd` regenerates `voice_check.log`.
+**Subsequent native checks, October 5:** the isolated Windows CPU environment is installed. Real
+microphone metering and system-voice playback completed; a generated WAV was transcribed by real
+Moonshine without opening a microphone. Conversation Start/Stop, microphone/output mute and device-test
+cancellation were exercised through the browser. These are component and control-path checks. Human
+speech recognition during a real conversation, physical echo behavior, human confirmation of audible
+output, custom voice quality and native avatar lipsync are separate remaining checks. No measured
+playback API event is described as proof that someone heard it.
+
+The current gateway suite has 59 tests, including Windows control-pipe/native-import startup,
+compatible device filtering, missing asset refusal, brief-noise rejection, decoder-error recovery,
+and stale results discarded after capture gating. The controller has 27 tests; the Conversation UI has
+12 scenarios. See dated AI Notes and `Temp/voice-validation/` for native receipts.
 
 ## The smoke ladder — verify each layer before wiring audio
 
@@ -53,11 +77,18 @@ This is the pipe that lets Cole **talk** to Nova and **hear** her back. It start
 | 3 | `python general_tools/voice_gateway/gateway.py --smoke-tts "this is my voice test"` | sanitizer → committer → TTS | a TTS backend (or Null logs) |
 | 4 | `python general_tools/voice_gateway/gateway.py --run` (with `stt_backend='stdin'`) | the whole loop: type to her, hear her reply | TTS; mic optional |
 
-## Install (tiered — see `requirements.txt`, `fetch_models.cmd`)
+## Install the Windows baseline
 
-1. **Transport**: `websockets` (rung 2).
-2. **Voice out**: Chatterbox (`pip install torch chatterbox-tts`, expressive, recommended) **or** llama.cpp TTS (`tts_backend='llamacpp'` plus a TTS gguf).
-3. **Mic in**: `pip install sounddevice numpy onnxruntime useful-moonshine-onnx silero-vad`. Until then, use `stt_backend='stdin'`.
+From a Python 3.12 shell, run `python general_tools/voice_gateway/setup_windows.py`. This creates the
+local `.venv`, installs `requirements-windows.lock.txt` and checksums pinned Moonshine/Silero CPU assets.
+It does not start Nova or open audio devices. Use `--assets-only` to repair assets in an existing env.
+The environment is excluded from Git, sync, code audits, context and source backups; the setup script
+and lockfile reproduce it. It requires no Torch, Chatterbox or GPU model.
+
+Nova Chat automatically uses that environment. Its supervised Windows worker selects Windows system
+speech for `tts_backend="auto"`. CLI gateway smoke commands instead need an explicit
+`VOICE_GW_TTS_BACKEND=windows` override and the environment's Python. Chatterbox/llama.cpp remain optional
+backends with separate dependencies and validation; neither is required for this baseline.
 
 ## Config
 
@@ -70,11 +101,12 @@ This is the pipe that lets Cole **talk** to Nova and **hear** her back. It start
 - `duplex` and `half_duplex_tail_ms`
 - `barge_in`: full duplex only.
 - `body_sink` and `body_log_path`
-- `tts_backend`, `tts_reference_wav`, `stt_backend`
+- `tts_backend`, `windows_voice`, `tts_reference_wav`, `stt_backend`
+- `min_speech_ms` (192), `pre_roll_ms` (288), `speech_tail_ms` (192), `silence_ms` (700)
 
 `server_patch.md` is a superseded 2026-10-04 sketch; the live contract is `nova_chat/response_events.py`.
 
 ## What needs Cole
 
 - **A voice to pick.** This is the audition round: candidate Chatterbox reference clips, chosen with Nova. It is a casting decision, not code.
-- **The audio stack.** Install torch, Chatterbox and Moonshine plus a mic and speakers, then walk the smoke ladder on real hardware. Only when he says it's OK, since GPU work competes with games.
+- **Human check.** Confirm the intended headphones/speakers and try a short live spoken exchange. Native avatar timing and a custom expressive voice still need their own validation.

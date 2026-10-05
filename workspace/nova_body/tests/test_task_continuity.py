@@ -256,6 +256,43 @@ class ContextBudget(unittest.TestCase):
         self.assertIn('HEADLESS_OBJECTIVE', str(result))
         self.assertLessEqual(text_size(result), 12000)
 
+    def test_real_headless_objective_survives_internal_witness_and_repair_turns(self):
+        # Execute actual prompt builders and actual inline nudge expressions. This
+        # catches drift in their role=user prefixes without loading the runtime.
+        builders = extract(BODY / 'nova_cortex/witness.py',
+                           {'build_challenge_turn', 'build_promise_turn'}, {})
+        nudges = [builders[name]('Fixture claim needs evidence') for name in
+                  ('build_challenge_turn', 'build_promise_turn')]
+        tree = ast.parse(self.source.read_text(encoding='utf-8'))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Dict):
+                continue
+            entries = {k.value: v for k, v in zip(node.keys, node.values) if isinstance(k, ast.Constant)}
+            role = entries.get('role')
+            if not isinstance(role, ast.Constant) or role.value != 'user':
+                continue
+            content = entries.get('content')
+            if not isinstance(content, (ast.Constant, ast.JoinedStr, ast.BinOp)):
+                continue
+            try:
+                value = eval(compile(ast.Expression(content), str(self.source), 'eval'),
+                             {'_concern': 'fixture concern', '_rw_text': 'REACH: fixture'})
+            except NameError:
+                continue  # Tool-result templates are covered separately.
+            if isinstance(value, str) and value.startswith(('[System]', '[reach_watcher', '[The cloud arbiter', '[The witness raised')):
+                nudges.append(value)
+        self.assertGreaterEqual(len(nudges), 7)
+        for nudge in nudges:
+            with self.subTest(nudge=nudge[:45]):
+                messages = [{'role': 'system', 'content': self.prefix + 's' * 180000},
+                            {'role': 'user', 'content': '[WORK] HEADLESS_OBJECTIVE_SENTINEL'},
+                            {'role': 'assistant', 'content': 'Old draft'},
+                            {'role': 'user', 'content': nudge}]
+                fitted = fit_messages(messages, max_chars=prompt_char_budget())
+                self.assertIn('HEADLESS_OBJECTIVE_SENTINEL', str(fitted))
+                self.assertEqual(fitted[-1]['content'], nudge)
+                self.assertLessEqual(text_size(fitted), prompt_char_budget())
+
     def test_fetch_uses_actual_output_reserve_and_preserves_audit_bypass(self):
         # Execute the real fetch prelude, stopping at the request payload assignment;
         # no HTTP/client import or model call is performed.

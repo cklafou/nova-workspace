@@ -51,8 +51,8 @@
     const output = button("Mute voice", "voice-output-mute", () => {
       if (!output.disabled) runAction("/mute", {output: !status.output_muted});
     });
-    microphone.title = "Pause microphone input without stopping Nova";
-    output.title = "Mute spoken output without muting Nova’s text replies";
+    microphone.title = "Pause conversation microphone input; use Stop voice to cancel an audio test";
+    output.title = "Mute spoken output during a voice conversation; use Stop voice to cancel an audio test";
     bar.append(identity, toggle, microphone, output);
 
     const notice = element("p", "nv-notice");
@@ -105,11 +105,14 @@
     const testResult = element("p", "nv-test-result");
     testResult.id = "voice-test-result";
     testResult.setAttribute("role", "status");
+    const diagnostic = element("p", "nv-test-result");
+    diagnostic.id = "voice-diagnostic";
+    diagnostic.setAttribute("role", "status");
     const transcript = element("p", "nv-transcript");
     transcript.id = "voice-transcript";
     const audioActions = element("div", "nv-audio-actions");
     audioActions.append(deviceActions, testActions);
-    detailsBody.append(help, backend, devices, audioActions, testResult, transcript);
+    detailsBody.append(help, backend, devices, audioActions, testResult, diagnostic, transcript);
     details.append(detailsBody);
     root.append(bar, notice, caption, details);
     const composer = document.getElementById("input-area");
@@ -130,7 +133,8 @@
         option.value = String(value);
         select.append(option);
       };
-      add(-1, "System default");
+      const defaultDevice = (list || []).find(device => device.default);
+      add(-1, defaultDevice ? "System default — " + defaultDevice.name : "System default");
       for (const device of list || []) {
         if (Number.isInteger(device.id) && device.id !== -1)
           add(device.id, device.name + (device.default ? " (default)" : ""));
@@ -151,6 +155,7 @@
       root.dataset.state = stale ? "unavailable" : status?.state || "off";
       stateText.textContent = stale ? "Status unavailable" : unavailable ? "Voice unavailable" :
         LABELS[status?.state] || (status?.state ? String(status.state) : "Checking voice…");
+      if (!stale && status?.state === "listening" && status.microphone_muted) stateText.textContent = "Mic muted";
       toggle.textContent = acting ? "Working…" : inUse ? "Stop voice" : "Start voice";
       toggle.disabled = busy || !status || unavailable || (!inUse && (stale || !status.available || !novaOn() || configurationDirty));
       toggle.setAttribute("aria-busy", String(acting));
@@ -160,7 +165,7 @@
       output.textContent = status?.output_muted ? "Unmute voice" : "Mute voice";
       microphone.setAttribute("aria-pressed", String(!!status?.microphone_muted));
       output.setAttribute("aria-pressed", String(!!status?.output_muted));
-      microphone.disabled = output.disabled = busy || stale || !inUse || unavailable;
+      microphone.disabled = output.disabled = busy || stale || !inUse || unavailable || status?.state === "testing";
       testMic.disabled = busy || inUse || stale || unavailable || caps.microphone_test !== true || configurationDirty;
       testSpeaker.disabled = busy || inUse || stale || unavailable || caps.speaker_test !== true || configurationDirty;
       inputDevice.disabled = outputDevice.disabled = busy || inUse;
@@ -168,7 +173,8 @@
       findDevices.textContent = devicesLoading ? "Finding devices…" : deviceLists ? "Refresh devices" : "Find audio devices";
       applyDevices.disabled = busy || inUse || !status || !configurationDirty || stale || unavailable;
       const reason = actionError || (configurationDirty ? "Apply device changes before starting voice or testing audio." : "") || (stale ? "Voice status could not be refreshed. The last known state is " +
-        (LABELS[status?.state] || status?.state || "unknown") + "." : "") || status?.error || status?.reason ||
+        (LABELS[status?.state] || status?.state || "unknown") + "." : "") || status?.error ||
+        (!inUse && status?.available && !novaOn() ? "Start Nova above to talk with her. Audio tests can run while she is off." : "") || status?.reason ||
         (!inUse && !novaOn() ? "Start Nova above to talk with her. Audio tests can run while she is off." : "");
       notice.textContent = reason;
       notice.hidden = !reason;
@@ -190,6 +196,9 @@
       testResult.textContent = result ? [result.message || result.state || "", ...metrics,
         result.transcript ? "Heard: " + result.transcript : ""].filter(Boolean).join(" · ") : "";
       testResult.hidden = !testResult.textContent;
+      const diagnostics = status?.diagnostics;
+      diagnostic.textContent = Array.isArray(diagnostics) && diagnostics.length ? "Audio note: " + diagnostics[diagnostics.length - 1] : "";
+      diagnostic.hidden = !diagnostic.textContent;
       transcript.textContent = status?.last_transcript ? "Last heard: " + status.last_transcript : "";
       transcript.hidden = !transcript.textContent;
     }

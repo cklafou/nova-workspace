@@ -255,6 +255,7 @@ class VoiceController:
             self._error = None
             self._test_result = None
             self._last_caption = None
+            self._last_transcript = ""
             self._microphone_muted = self._output_muted = self._stopping = False
             self._diagnostics.clear()
             self._generation += 1
@@ -317,6 +318,8 @@ class VoiceController:
         if not isinstance(payload, dict) or not payload or set(payload) - {"microphone", "output"} or any(type(v) is not bool for v in payload.values()):
             raise HTTPException(422, "Mute settings must be microphone/output booleans")
         async with self._action:
+            if self._mode != "run":
+                raise HTTPException(409, "Mute is available during voice conversations; use Stop voice to cancel an audio test")
             self._send({"command": "mute", **payload})
         # Return confirmed state only; the worker acknowledgement arrives through status polling.
         return self.snapshot()

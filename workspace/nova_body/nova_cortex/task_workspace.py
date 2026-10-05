@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 14:28:11
+# Last updated: 2026-10-05 18:23:37
 # @nova: Stages task-sized source copies, gates them on acceptance checks and promotes them with rollback checkpoints.
 """Task-sized source copies, acceptance checks, and recoverable promotion.
 

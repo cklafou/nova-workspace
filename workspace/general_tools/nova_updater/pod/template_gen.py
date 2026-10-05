@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 15:01:23
+# Last updated: 2026-10-05 18:23:37
 # @nova: Builds a loss-masking chat template for LoRA training from the base model's own template, refusing to train if it cannot prove the mask.
 """Generation-marked chat template + mask gates, generalised from v7's mk_template.py.
 

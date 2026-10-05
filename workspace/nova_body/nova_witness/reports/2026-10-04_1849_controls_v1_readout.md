@@ -1,3 +1,4 @@
+_Last updated: 2026-10-05 18:20:09_
 <!-- @nova: Interpret the first unchanged-controls witness replay and separate software verification from model judgment. -->
 # Controls v1: first model run
 

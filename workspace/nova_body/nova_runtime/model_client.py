@@ -1,5 +1,5 @@
 # @nova: Dispatch model requests with per-call voice register and optional audit reporting without coupling to a chat face.
-# Last updated: 2026-10-04 14:35:18
+# Last updated: 2026-10-05 18:23:37
 # @nova: ModelClient — the act of generation as a body faculty (layer 2). It owns HOW Nova
 #        (and the mentors) are driven to produce a response: the model dispatch + each model's
 #        call convention, lifted faithfully out of the chat server's run_ai_response. It does

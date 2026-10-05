@@ -786,8 +786,15 @@ already delivered candidate. Human messages retain the human audit path even whe
 is enabled. The detachable voice gateway consumes these events through a separate WebSocket client,
 with final-text speech and body-event sinks. Closing it flushes queued speech and invalidates
 late playback; already-running synthesis may still finish computing. Null output and subprocess
-completion are distinguished from playback API receipts. Transport and gateway have isolated coverage; native
-audio and avatar presentation still require hardware validation.
+completion are distinguished from playback API receipts. Conversation explicitly supervises a hidden
+`voice_gateway/control_worker.py` child through `nova_chat/voice_control.py`; status never starts audio.
+A prepared CPU environment contains pinned Moonshine/Silero assets. Missing assets require setup rather
+than a hidden download or energy-VAD fallback. Windows system speech is a labelled temporary baseline.
+The worker's Windows control pipe polls before reading so native imports do not deadlock against a
+blocked stdin thread. Recognition uses 512-sample frames, minimum voiced duration, onset buffering and
+bounded utterances; decoder errors produce diagnostics and listening continues. Capture gates discard
+stale frames/transcripts across mute/playback transitions. Native capture and system playback have
+separate dated receipts; human conversational recognition and avatar lipsync are distinct checks.
 
 The retired host-desktop Claude ping and its aliases return an unknown-tool failure rather than
 launching PowerShell. Active instructions no longer advertise it. The private Collaboration room
@@ -847,7 +854,8 @@ rather than pushing the entire board through a clipped file-read result.
 `nova_cortex/context_budget.py` fits the initial prompt and subsequent tool rounds. The combined
 system prefix, identity and checkpoint no longer receive the ordinary 24,000-character message cap.
 Older history is discarded before excess system text is shortened; the current request, newest turn
-and marked task checkpoint receive priority. Fitting reserves the actual output allowance plus
+and marked task checkpoint receive priority. Internal witness/repair prompts do not replace the
+original unlabelled headless objective in that selection. Fitting reserves the actual output allowance plus
 4,096 tokens, using the established 3.4 characters/token estimate and an additional 174,000-character
 ceiling. The old minimum-four-turn overflow override is gone. This bounds estimated text, not exact
 tokenizer or image usage; unusually small budgets can still shorten critical content. Exact-candidate
@@ -984,7 +992,7 @@ sealed 27-case holdout; no model evaluation of either has run. Nova remained off
 The [Codex/Cowork comparison](Architecture/evidence/2026-10-05-agent-harness-comparison.md) separates
 model capability from tool execution, context, persistence and presentation. It recommends measuring
 these existing Nova paths before replacing the architecture; its review status is recorded in the report.
-The October 5 continuity changes passed 86 relevant isolated checks: 18 new task/context cases,
+The October 5 continuity changes passed 87 relevant isolated checks: 19 new task/context cases,
 30 modernization, 31 delivery and seven ModelClient tests. A fresh module load recovered checkpoint
 fields; partial updates retained prior constraints and observations after old progress notes were
 pruned. A fixture using the real system prefix preserved the current request and a checkpoint at an
@@ -1114,6 +1122,13 @@ Conversation power uses a separate local lifecycle gate and launcher status. If 
 restart is needed, inspect both the chat worker and launcher versions; a fresh static page can still
 be connected to old processes. `starting`/`stopping` acknowledge work in progress, not readiness.
 
+For desktop voice, open Conversation → Devices & tests. Run `voice_gateway/setup_windows.py` to
+recreate the isolated CPU environment and pinned speech assets. Readiness verifies local dependencies;
+select a listed compatible device, apply while stopped, and use the bounded microphone/speaker tests.
+A playback API receipt still needs human confirmation of audible sound on the intended output. Full
+voice is explicit and does not restart automatically after a worker error or Nova restart. Use the audio
+note and source fingerprint when diagnosing stale UI versus failed capture, decoding or playback.
+
 The voice loop parses tool reaches from both content and reasoning streams. Receipt-backed context
 helps distinguish executed work from earlier narration. Check loaded source, actual receipts,
 adapter status, and call order before changing personality or training. Rendering/mount artifacts
@@ -1162,7 +1177,11 @@ disk rather than a slow network mount.
     Distinguish a local socket fixture from a live Nova turn; test wrong identities, delayed replies,
     cancellation during synthesis, Stop, queue replacement and audit status before native playback.
     Measure mic/STT, first-audio latency, interruption and avatar timing separately on real hardware.
-    Respect Cole's current instruction to keep Nova/models/audio off while he is gaming.
+    The Conversation controls also have `test_voice_control.py` and `test_voice_ui.cjs` coverage;
+    native/API/segmentation tests are in `voice_gateway/test_native_voice.py` and
+    `test_worker_readiness.py`. Status-only checks must never acquire devices. Keep microphone capture,
+    silent WAV transcription, audible playback, live Nova replies and native avatar timing distinct.
+    Cole authorized Nova and audio tests on October 5; future restrictions override that permission.
 
 ## Files and recovery
 

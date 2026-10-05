@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 15:01:23
+# Last updated: 2026-10-05 18:30:25
 """
 nova_cortex/nova_status.py -- Nova's live status writer
 ======================================================

@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 15:15:56
+# Last updated: 2026-10-05 18:20:08
 # @nova: Prove the pod bootstrap installs dependencies in a venv while retaining the image Python packages.
 import json
 import os

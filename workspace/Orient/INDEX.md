@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T09:04:23+00:00 from source (input `8d76f84984eb`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:32:29+00:00 from source (input `768f1c60405c`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -208,6 +208,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/voice_gateway/test_link_socket.py](../general_tools/voice_gateway/test_link_socket.py) — Verify voice transport and disconnect cleanup against a local mock WebSocket server.
 - [general_tools/voice_gateway/test_native_voice.py](../general_tools/voice_gateway/test_native_voice.py) — Verify native speech file synthesis, cancellation, output-device selection and current Moonshine/Silero contracts without audio hardware.
 - [general_tools/voice_gateway/test_voice_flow.py](../general_tools/voice_gateway/test_voice_flow.py) — Test voice identity, delivery, interruption and truthful playback using isolated fake backends.
+- [general_tools/voice_gateway/test_worker_readiness.py](../general_tools/voice_gateway/test_worker_readiness.py) — Regress Windows control-pipe startup and local speech readiness/segmentation using isolated fixtures, without opening audio devices.
 - [general_tools/voice_gateway/tts.py](../general_tools/voice_gateway/tts.py) — Provide cancellable speech backends with truthful playback callbacks and surfaced failures.
 - [general_tools/voice_gateway/turns.py](../general_tools/voice_gateway/turns.py) — Match voice turns to delivered replies and control speech eligibility, timeouts and interruption.
 - [general_tools/voice_gateway/VOICE_CHECK.cmd](../general_tools/voice_gateway/VOICE_CHECK.cmd) — One-click, read-only voice readiness check (GPU memory, voice packages, audio devices, local services); writes voice_check.log.

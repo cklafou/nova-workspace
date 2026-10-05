@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 14:34:47
+# Last updated: 2026-10-05 18:30:24
 # @nova: Starts the Nova Chat server by itself (uvicorn on 127.0.0.1:8765) with nova_body and general_tools importable.
 import sys
 from pathlib import Path

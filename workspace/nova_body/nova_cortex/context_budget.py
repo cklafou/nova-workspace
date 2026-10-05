@@ -72,8 +72,12 @@ def _current_request(messages):
     labelled = [i for i in users if re.match(r"^[^\n]{1,100} → you:", content_text(messages[i].get("content")))]
     if labelled:
         return labelled[-1]
-    actual = [i for i in users if not content_text(messages[i].get("content")).startswith(
-        ("[System ", "[System:", "Screenshot from "))]
+    # Headless ticks have one unlabelled original request. Internal repair/audit
+    # prompts also use role=user; they must not replace that request's identity.
+    internal = ("[System ", "[System:", "[System]", "Screenshot from ",
+                "[Your witness", "[reach_watcher", "[The cloud arbiter",
+                "[The witness raised a concern")
+    actual = [i for i in users if not content_text(messages[i].get("content")).startswith(internal)]
     return (actual or users or [None])[-1]
 
 

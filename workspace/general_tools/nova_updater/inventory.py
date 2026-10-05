@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 14:34:47
+# Last updated: 2026-10-05 18:23:37
 # @nova: Lists installed models, projectors and LoRAs with what each was built for, read from GGUF headers when the user opens the update dialog.
 """Installed files, for the replace/train choices in the dialog.
 

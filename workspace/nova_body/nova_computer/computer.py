@@ -1,5 +1,5 @@
 # @nova: Body-owned computer facade for guest commands, intentional host reach and observable desktop actions.
-# Last updated: 2026-10-04 13:57:45
+# Last updated: 2026-10-05 18:23:37
 # @claude 2026-09-03: PLUCK PASS. This file used to BE the WSL implementation. Now it is the
 # faculty, and backends.py holds the machines. Design_Principles #2: the body must never
 # depend on a specific tool -- and by the same logic it must not depend on a specific HOST.

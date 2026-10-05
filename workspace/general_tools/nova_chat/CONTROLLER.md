@@ -63,6 +63,11 @@ browser fallback. Direct `NovaLauncher.py` startup also uses the Qt face when av
   handlers. The original control IDs are not duplicated or moved into a dock. Widget
   menu/library checkmarks include hidden dock tabs and live popouts; selecting an
   already-open widget focuses it instead of toggling it closed.
+- Conversation contains Voice Start/Stop, separate microphone/output mute, compatible-device
+  selection and bounded microphone/speaker tests. Tests work with Nova off; conversations need
+  Nova on. Audio never starts on page load. The temporary Windows system voice is labelled,
+  delivered captions retain their audit status, and Stop closes the owned worker. Voice settings
+  scroll without covering the composer or the message viewport's Latest button.
 - The conversation-tab × closes the tab while keeping the session in Sessions.
   Session deletion remains a separate existing action.
 - The registry includes Control, Conversation, Collaboration, Model updates,

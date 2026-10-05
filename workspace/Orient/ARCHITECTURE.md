@@ -1,7 +1,7 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T09:04:23+00:00 from source (input `8d76f84984eb`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:32:29+00:00 from source (input `768f1c60405c`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
 
@@ -40,8 +40,15 @@ already delivered candidate. Human messages retain the human audit path even whe
 is enabled. The detachable voice gateway consumes these events through a separate WebSocket client,
 with final-text speech and body-event sinks. Closing it flushes queued speech and invalidates
 late playback; already-running synthesis may still finish computing. Null output and subprocess
-completion are distinguished from playback API receipts. Transport and gateway have isolated coverage; native
-audio and avatar presentation still require hardware validation.
+completion are distinguished from playback API receipts. Conversation explicitly supervises a hidden
+`voice_gateway/control_worker.py` child through `nova_chat/voice_control.py`; status never starts audio.
+A prepared CPU environment contains pinned Moonshine/Silero assets. Missing assets require setup rather
+than a hidden download or energy-VAD fallback. Windows system speech is a labelled temporary baseline.
+The worker's Windows control pipe polls before reading so native imports do not deadlock against a
+blocked stdin thread. Recognition uses 512-sample frames, minimum voiced duration, onset buffering and
+bounded utterances; decoder errors produce diagnostics and listening continues. Capture gates discard
+stale frames/transcripts across mute/playback transitions. Native capture and system playback have
+separate dated receipts; human conversational recognition and avatar lipsync are distinct checks.
 
 The retired host-desktop Claude ping and its aliases return an unknown-tool failure rather than
 launching PowerShell. Active instructions no longer advertise it. The private Collaboration room
@@ -101,15 +108,14 @@ rather than pushing the entire board through a clipped file-read result.
 `nova_cortex/context_budget.py` fits the initial prompt and subsequent tool rounds. The combined
 system prefix, identity and checkpoint no longer receive the ordinary 24,000-character message cap.
 Older history is discarded before excess system text is shortened; the current request, newest turn
-and marked task checkpoint receive priority. Fitting reserves the actual output allowance plus
+and marked task checkpoint receive priority. Internal witness/repair prompts do not replace the
+original unlabelled headless objective in that selection. Fitting reserves the actual output allowance plus
 4,096 tokens, using the established 3.4 characters/token estimate and an additional 174,000-character
 ceiling. The old minimum-four-turn overflow override is gone. This bounds estimated text, not exact
 tokenizer or image usage; unusually small budgets can still shorten critical content. Exact-candidate
 witness audits bypass this normal fitting policy so evidence is not silently changed.
 
 ## Body faculties
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `nova_body/nova_voice/tool_router.py`, `nova_body/nova_witness/replay.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py (PURPOSES)`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Body faculties"`.
 
 | Part | Responsibility | Python sources |
 |---|---|---:|
@@ -174,6 +180,8 @@ prove argument compatibility, not adapter loading, VRAM use or application of sc
 Drives/wants and the hormone design are not evidence of online weight learning. Keep implemented controls distinct from biological analogies.
 
 ## Runtime evidence and open modernization work
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_sync/tests/test_virtualenv_exclusions.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
 
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
@@ -251,7 +259,7 @@ sealed 27-case holdout; no model evaluation of either has run. Nova remained off
 The [Codex/Cowork comparison](Architecture/evidence/2026-10-05-agent-harness-comparison.md) separates
 model capability from tool execution, context, persistence and presentation. It recommends measuring
 these existing Nova paths before replacing the architecture; its review status is recorded in the report.
-The October 5 continuity changes passed 86 relevant isolated checks: 18 new task/context cases,
+The October 5 continuity changes passed 87 relevant isolated checks: 19 new task/context cases,
 30 modernization, 31 delivery and seven ModelClient tests. A fresh module load recovered checkpoint
 fields; partial updates retained prior constraints and observations after old progress notes were
 pruned. A fixture using the real system prefix preserved the current request and a checkpoint at an

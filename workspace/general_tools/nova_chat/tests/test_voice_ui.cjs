@@ -103,6 +103,8 @@ test("Nova-off gates voice start, but explicit audio tests remain available and 
   assert.equal(f.controls.toggle.textContent, "Stop voice");
   assert.equal(f.controls.toggle.disabled, false);
   assert.match(f.controls.testResult.textContent, /test clip/);
+  assert.equal(f.controls.microphone.disabled, true);
+  assert.equal(f.controls.output.disabled, true);
   f.post = async (url, body) => {assert.equal(url, "/api/voice/stop"); assert.deepEqual(body, {}); return {data: baseStatus()};};
   await f.controls.toggle.click(); await settle();
   assert.equal(posts(f).length, 2);

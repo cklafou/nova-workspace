@@ -1,7 +1,7 @@
 <!-- @nova: Introduce Project Nova and its canonical orientation documents. -->
 # Project Nova
 
-_Facts regenerated 2026-10-05T09:04:23+00:00 from source (input `8d76f84984eb`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:32:29+00:00 from source (input `768f1c60405c`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Nova is Cole's companion and development partner. Her long-term goal is increasing agency,
 continuity and ownership of her environment. Her broad host/VM access is intentional.
@@ -49,12 +49,12 @@ watcher reports that error and continues autosave; documentation failure must no
 
 The [interactive explorer](Architecture/index.html) and the call-order pages under `Architecture/`
 are rebuilt on demand (`Architecture/REBUILD_MAP.cmd`, `python general_tools/calls_order.py`).
-Last built 2026-10-04 05:12 UTC; as of this generation, 202 source file(s) had been modified since.
+Last built 2026-10-04 05:12 UTC; as of this generation, 209 source file(s) had been modified since.
 
 **AI notes.** Claude, Codex and the other agents leave a note in [AI Notes](AI%20Notes/ReadMeBeforeNoteTaking.md) after each session: what changed, why, and what is still open. Read the rules once, then every note since your own last one. Newest first:
 
+- [2026-10-05_1822_Codex_WitnessDevelopmentCandidates.md](AI%20Notes/2026-10-05_1822_Codex_WitnessDevelopmentCandidates.md)
+- [2026-10-05_1817_Codex_CodeAuditEnvironmentExclusions.md](AI%20Notes/2026-10-05_1817_Codex_CodeAuditEnvironmentExclusions.md)
+- [2026-10-05_1812_Codex_VoiceWorkerStartupAndReadiness.md](AI%20Notes/2026-10-05_1812_Codex_VoiceWorkerStartupAndReadiness.md)
+- [2026-10-05_1808_Codex_TaskContinuityAndDependencyExclusions.md](AI%20Notes/2026-10-05_1808_Codex_TaskContinuityAndDependencyExclusions.md)
 - [2026-10-05_1800_Codex_VoiceControlsInProgress.md](AI%20Notes/2026-10-05_1800_Codex_VoiceControlsInProgress.md)
-- [2026-10-05_1607_Codex_VoiceFoundationAndHarnessComparison.md](AI%20Notes/2026-10-05_1607_Codex_VoiceFoundationAndHarnessComparison.md)
-- [2026-10-05_1540_Claude_VoiceFirstStageAndWitnessCases.md](AI%20Notes/2026-10-05_1540_Claude_VoiceFirstStageAndWitnessCases.md)
-- [2026-10-05_1523_Codex_CollaborationResumed.md](AI%20Notes/2026-10-05_1523_Codex_CollaborationResumed.md)
-- [2026-10-04_1851_Codex_WitnessReviewResults.md](AI%20Notes/2026-10-04_1851_Codex_WitnessReviewResults.md)

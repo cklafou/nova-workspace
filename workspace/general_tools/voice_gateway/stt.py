@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import deque
 import math
 from pathlib import Path
 import sys
@@ -68,6 +69,7 @@ class MoonshineSTT:
         self._transcribe = _load_moonshine(cfg)
         self.gate = None              # callable -> bool; False = drop mic frames (half duplex)
         self.on_speech_start = None   # callable(); first voiced frame of an utterance (barge-in)
+        self.on_diagnostic = None     # optional observer; a decoder failure does not end listening
 
     async def utterances(self):
         np, sd = self._np, self._sd
@@ -75,6 +77,9 @@ class MoonshineSTT:
         # Current Silero ONNX requires exactly 512 samples at 16k (32ms), not 480.
         block = 512 if sr == 16000 else 256 if sr == 8000 else int(sr * 0.032)
         silence_frames = max(1, math.ceil(self.cfg.silence_ms * sr / (1000 * block)))
+        min_voiced = max(1, math.ceil(self.cfg.min_speech_ms * sr / (1000 * block)))
+        pre_frames = max(0, math.ceil(self.cfg.pre_roll_ms * sr / (1000 * block)))
+        tail_frames = max(0, math.ceil(self.cfg.speech_tail_ms * sr / (1000 * block)))
         max_frames = max(1, int(60 * sr / block))       # Moonshine accepts strictly under 64s
         q: asyncio.Queue = asyncio.Queue()
         loop = asyncio.get_running_loop()
@@ -91,43 +96,76 @@ class MoonshineSTT:
         dev = None if self.cfg.input_device < 0 else self.cfg.input_device
         with sd.RawInputStream(samplerate=sr, blocksize=block, dtype="int16",
                                channels=1, device=dev, callback=_cb):
-            buf, silent, speaking, born = [], 0, False, 0
+            buf, silent, speaking, born, voiced_count = [], 0, False, 0, 0
+            pre_roll = deque(maxlen=pre_frames)
+            seen_generation = generation[0]
             while True:
                 stamp, chunk = await q.get()
                 stale = stamp != generation[0]
-                if stale or (speaking and stamp != born):
-                    buf, silent, speaking = [], 0, False       # never splice audio across her turn
+                if stale or stamp != seen_generation:
+                    buf, silent, speaking, voiced_count = [], 0, False, 0
+                    pre_roll.clear()                         # never splice audio across her turn
                     if hasattr(self._vad, "reset"):
                         self._vad.reset()
                     if stale:
                         continue
+                seen_generation = stamp
                 frame = np.frombuffer(chunk, dtype="int16").astype("float32") / 32768.0
-                voiced = self._is_voiced(frame)
+                voiced = self._is_voiced(frame, continuing=speaking)
                 if voiced:
                     if not speaking:
                         born = stamp
+                        buf = list(pre_roll)
+                        pre_roll.clear()
                         if callable(self.on_speech_start):
                             self.on_speech_start()
                     speaking = True
+                    voiced_count += 1
                     silent = 0
                     buf.append(frame)
                 elif speaking:
                     silent += 1
                     buf.append(frame)
+                else:
+                    pre_roll.append(frame)
                 if speaking and (silent >= silence_frames or len(buf) >= max_frames):
-                    audio = np.concatenate(buf) if buf else np.zeros(1, "float32")
-                    buf, silent, speaking = [], 0, False
-                    text = await loop.run_in_executor(None, self._transcribe, audio)
-                    text = _transcript_text(text)
+                    trim = max(0, silent - tail_frames)
+                    frames_to_decode = buf[:-trim] if trim else buf
+                    enough_speech = voiced_count >= min_voiced
+                    buf, silent, speaking, voiced_count = [], 0, False, 0
+                    if not enough_speech:
+                        continue
+                    audio = np.concatenate(frames_to_decode)
+                    try:
+                        text = await loop.run_in_executor(None, self._transcribe, audio)
+                        text = _transcript_text(text)
+                    except Exception as error:
+                        # Keep mic/device failures fatal, but a failed utterance is recoverable.
+                        message = f"Speech recognition failed ({type(error).__name__}); listening continues"
+                        if callable(self.on_diagnostic):
+                            try:
+                                self.on_diagnostic(message)
+                            except Exception:
+                                pass
+                        else:
+                            print(f"[voice_gateway] {message}", flush=True)
+                        continue
+                    # Decoding runs outside the event loop. Mute/playback can invalidate
+                    # this capture while it is in flight; never publish the stale result.
+                    if born != generation[0] or (self.gate is not None and not self.gate()):
+                        pre_roll.clear()
+                        if hasattr(self._vad, "reset"):
+                            self._vad.reset()
+                        continue
                     if text:
                         yield text
 
-    def _is_voiced(self, frame) -> bool:
+    def _is_voiced(self, frame, continuing=False) -> bool:
         if self._vad is None:
             # energy gate fallback
             import numpy as np
             return float(np.sqrt(np.mean(frame ** 2))) > 0.02
-        return self._vad(frame) >= self.cfg.vad_threshold
+        return self._vad(frame) >= max(0.01, self.cfg.vad_threshold - (0.15 if continuing else 0))
 
     def close(self):
         pass
@@ -180,16 +218,28 @@ class _SileroOnnx:
         return float(probability.reshape(-1)[0])
 
 
+def _moonshine_path(cfg):
+    name = str(cfg.moonshine_model)
+    return (Path(sys.prefix) / "share/nova_voice/moonshine-base" if name in ("moonshine/base", "base")
+            else Path(name).expanduser())
+
+
+def local_asset_status(cfg):
+    """Cheap readiness check only; setup verifies hashes, runtime never fetches model weights."""
+    moonshine = _moonshine_path(cfg)
+    paths = [moonshine / "encoder_model.onnx", moonshine / "decoder_model_merged.onnx"]
+    if cfg.vad_backend == "silero":
+        paths.append(Path(sys.prefix) / "share/nova_voice/silero_vad.onnx")
+    missing = [str(path) for path in paths if not path.is_file() or path.stat().st_size == 0]
+    return {"ready": not missing, "missing": missing, "vad": cfg.vad_backend}
+
+
 def _load_silero(cfg):
-    """Use the pinned local CPU ONNX asset, with an explicit energy fallback if absent."""
-    try:
-        path = Path(sys.prefix) / "share" / "nova_voice" / "silero_vad.onnx"
-        if not path.is_file():
-            raise RuntimeError("pinned Silero asset missing; run setup_windows.py")
-        return _SileroOnnx(path, cfg.sample_rate)
-    except Exception as error:
-        print(f"[voice_gateway] Silero VAD unavailable ({error}) — using energy gate")
-        return None
+    """Require the prepared local CPU asset; never silently substitute an energy gate."""
+    path = Path(sys.prefix) / "share/nova_voice/silero_vad.onnx"
+    if not path.is_file() or path.stat().st_size == 0:
+        raise RuntimeError("Pinned Silero asset missing; run setup_windows.py --assets-only")
+    return _SileroOnnx(path, cfg.sample_rate)
 
 
 def _transcript_text(result):
@@ -212,17 +262,15 @@ def _load_moonshine(cfg):
         import numpy as np
     except ImportError as error:
         raise RuntimeError(f"Moonshine ONNX is unavailable ({error}) — run setup_windows.py") from error
-    name = str(cfg.moonshine_model)
-    path = Path(name)
-    prepared = Path(sys.prefix) / "share/nova_voice/moonshine-base"
-    if name in ("moonshine/base", "base") and prepared.is_dir():
-        path = prepared
-    if path.is_dir():
-        # The current upstream class still needs base/tiny to size decoder caches.
-        family = "tiny" if "tiny" in path.name.lower() else "base"
-        model = moonshine.MoonshineOnnxModel(models_dir=str(path), model_name=family)
-    else:
-        model = moonshine.MoonshineOnnxModel(model_name=name)
+    path = _moonshine_path(cfg)
+    for filename in ("encoder_model.onnx", "decoder_model_merged.onnx"):
+        asset = path / filename
+        if not asset.is_file() or asset.stat().st_size == 0:
+            raise RuntimeError("Local Moonshine assets missing; run setup_windows.py --assets-only "
+                               "or configure a prepared ONNX directory")
+    # The current upstream class still needs base/tiny to size decoder caches.
+    family = "tiny" if "tiny" in path.name.lower() else "base"
+    model = moonshine.MoonshineOnnxModel(models_dir=str(path), model_name=family)
     tokenizer = moonshine.load_tokenizer()
 
     def transcribe(audio):
@@ -234,6 +282,6 @@ def _load_moonshine(cfg):
             return ""                              # too short to be an utterance
         if seconds >= 64:
             raise ValueError("Moonshine utterance must be shorter than 64 seconds")
-        tokens = model.generate(samples[None, :])
+        tokens = model.generate(samples[None, :], max_len=min(448, int(seconds * 6.5) + 10))
         return _transcript_text(tokenizer.decode_batch(tokens))
     return transcribe

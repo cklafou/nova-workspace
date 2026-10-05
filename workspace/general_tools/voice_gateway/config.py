@@ -48,9 +48,13 @@ class GatewayConfig:
     input_device: int = -1                # -1 = system default mic
     sample_rate: int = 16000
     silence_ms: int = 700                 # trailing silence that ends an utterance
+    min_speech_ms: int = 192              # ignore isolated VAD spikes before decoding
+    pre_roll_ms: int = 288                # retain speech onset before VAD fires
+    speech_tail_ms: int = 192             # trim long terminal silence before decoding
 
     # ── TTS (output) ──────────────────────────────────────────────────────────────────────
-    tts_backend: str = "auto"             # "auto" | "chatterbox" | "llamacpp" | "null"
+    tts_backend: str = "auto"             # "auto" | "windows" | "chatterbox" | "llamacpp" | "null"
+    windows_voice: str = ""              # exact installed System.Speech voice name; empty = default
     tts_reference_wav: str = ""           # Chatterbox zero-shot voice clone reference (~10s clip)
     tts_exaggeration: float = 0.6         # Chatterbox expressiveness (0..1); Cole: tomboyish/expressive
     tts_cfg_weight: float = 0.5

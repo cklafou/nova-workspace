@@ -1,3 +1,4 @@
+_Last updated: 2026-10-05 18:20:09_
 <!-- @nova: Witness replay report with independent expected verdicts and evidence limits. -->
 # Witness replay v3 — http://127.0.0.1:8080 — 2026-10-04_184921_053922
 

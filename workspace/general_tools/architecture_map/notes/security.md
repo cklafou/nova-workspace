@@ -79,6 +79,16 @@ clients reject unrelated or stale output; they do not close the WebSocket exposu
 above. Chat-only and lifecycle rejections may complete a correlated request without storing its
 text in Nova's body. A future remote voice gateway still needs the transport identity work above.
 
+### Local audio controls
+
+`nova_chat/voice_control.py` exposes `/api/voice` only to direct loopback requests with a literal local
+Host, matching browser Origin, no forwarding headers and JSON writes. This controls host audio devices;
+remote chat access does not grant microphone activation through this API. Status probes never capture
+or play audio. Explicit commands own one hidden worker, with cooperative Stop and a bounded owned-PID
+tree fallback; runtime shutdown closes it. Device IDs live in detachable `_admin/voice_devices.json`.
+The worker's speech transport still uses the existing WebSocket, whose identity limits are described
+above; an audio-control route guard is not a replacement for transport authentication.
+
 ### Who is speaking — `nova_cortex/principals.py`
 
 This lives in her body, not the server, because who someone is to her is part of how she thinks.

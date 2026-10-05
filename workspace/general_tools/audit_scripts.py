@@ -1,6 +1,6 @@
+# @nova: Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.
 #!/usr/bin/env python3
 # Last updated: 2026-10-04 13:57:45
-# @nova: Workspace code-health audit — scans Python for syntax errors, stale/dead/unreferenced files, and pending audit-queue items.
 """
 audit_scripts.py — Workspace code health audit
 ================================================
@@ -51,7 +51,7 @@ SCAN_ROOTS = [
 TOP_LEVEL_PY = list(WORKSPACE_DIR.glob("*.py"))
 
 EXCLUDE_DIRS = {
-    "__pycache__", ".git", "node_modules", "logs", "backups",
+    "__pycache__", ".git", ".venv", "venv", "node_modules", "logs", "backups",
     "screenshots", "prompt_cache", "models", "llama",
 }
 EXCLUDE_SUBPATHS = {
@@ -88,21 +88,27 @@ ENTRY_POINT_PATTERNS = [
 
 # ── File collection ────────────────────────────────────────────────────────────
 
+def _audit_paths(root: Path, suffixes: set[str]):
+    """Prune excluded trees before enumeration; dependencies are not project source."""
+    if (set(root.parts) & EXCLUDE_DIRS
+            or any(sub in str(root) for sub in EXCLUDE_SUBPATHS)
+            or not root.exists()):
+        return
+    for folder, dirs, names in os.walk(root):
+        dirs[:] = [name for name in dirs if name not in EXCLUDE_DIRS
+                   and not any(sub in str(Path(folder) / name) for sub in EXCLUDE_SUBPATHS)]
+        for name in names:
+            path = Path(folder) / name
+            if (path.suffix.lower() in suffixes
+                    and not any(sub in str(path) for sub in EXCLUDE_SUBPATHS)):
+                yield path
+
+
 def collect_files() -> list[Path]:
     files = list(TOP_LEVEL_PY)
     for root in SCAN_ROOTS:
-        if not root.exists():
-            continue
-        for path in root.rglob("*.py"):
-            # Skip excluded directories
-            parts = set(path.parts)
-            if parts & EXCLUDE_DIRS:
-                continue
-            if any(sub in str(path) for sub in EXCLUDE_SUBPATHS):
-                continue
-            if path.name in EXCLUDE_FILES:
-                continue
-            files.append(path)
+        files.extend(path for path in _audit_paths(root, {".py"})
+                     if path.name not in EXCLUDE_FILES)
     # Deduplicate preserving order
     seen, unique = set(), []
     for f in files:
@@ -307,16 +313,13 @@ def build_import_graph(files: list[Path]) -> dict[str, set[str]]:
 def _entrypoint_scripts() -> set:
     """Python filenames launched from .cmd/.bat scripts are entry points too."""
     names = set()
-    for ext in ("*.cmd", "*.bat"):
-        for f in WORKSPACE_DIR.rglob(ext):
-            if any(sub in str(f) for sub in EXCLUDE_SUBPATHS):
-                continue
-            try:
-                txt = f.read_text(encoding="utf-8", errors="replace")
-            except Exception:
-                continue
-            for m in re.findall(r"([\w./-]+\.py)", txt):
-                names.add(Path(m).name)
+    for f in _audit_paths(WORKSPACE_DIR, {".cmd", ".bat"}):
+        try:
+            txt = f.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for m in re.findall(r"([\w./-]+\.py)", txt):
+            names.add(Path(m).name)
     return names
 
 
@@ -956,16 +959,7 @@ def collect_shell_files() -> list[Path]:
     can see shell scripts without polluting the graph with files that have no imports."""
     out = []
     for root in SCAN_ROOTS:
-        if not root.exists():
-            continue
-        for ext in ("*.ps1", "*.cmd", "*.bat"):
-            for path in root.rglob(ext):
-                parts = set(path.parts)
-                if parts & EXCLUDE_DIRS:
-                    continue
-                if any(sub in str(path) for sub in EXCLUDE_SUBPATHS):
-                    continue
-                out.append(path)
+        out.extend(_audit_paths(root, {".ps1", ".cmd", ".bat"}))
     for ext in ("*.ps1", "*.cmd", "*.bat"):
         out.extend(WORKSPACE_DIR.glob(ext))
     seen, unique = set(), []

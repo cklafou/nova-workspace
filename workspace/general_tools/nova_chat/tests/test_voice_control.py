@@ -194,6 +194,13 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.control.snapshot()['state'], 'error')
         self.assertFalse(self.control.snapshot()['running'])
 
+    async def test_audio_test_mute_is_rejected_instead_of_pretending_it_muted(self):
+        await self.client.post('/api/voice/test', json={'kind': 'speaker'})
+        response = await self.client.post('/api/voice/mute', json={'output': True})
+        self.assertEqual(response.status_code, 409)
+        self.assertIn('Stop voice', response.json()['detail'])
+        self.assertEqual(self.children[0].stdin.getvalue(), '')
+
     async def test_mute_returns_only_acknowledged_state(self):
         await self.client.post('/api/voice/start', json={})
         for payload in ({}, {'output': 'yes'}, {'output': 1}, {'other': True}, []):
@@ -287,7 +294,8 @@ class WorkerTests(unittest.IsolatedAsyncioTestCase):
     async def test_probe_checks_presence_without_loading_audio_or_models(self):
         self.cfg.tts_backend = 'windows'
         installed = {'numpy', 'sounddevice', 'moonshine_onnx', 'websockets'}
-        with patch.object(worker, '_installed', side_effect=lambda name: name in installed), \
+        with patch.object(stt, 'local_asset_status', return_value={'ready': True, 'missing': [], 'vad': 'silero'}), \
+             patch.object(worker, '_installed', side_effect=lambda name: name in installed), \
              patch.object(worker.sys, 'platform', 'win32'), patch.object(worker.shutil, 'which', return_value='fake-powershell'), \
              patch.dict(sys.modules, {'sounddevice': None, 'torch': None, 'moonshine_onnx': None}):
             result = worker.probe(self.cfg)

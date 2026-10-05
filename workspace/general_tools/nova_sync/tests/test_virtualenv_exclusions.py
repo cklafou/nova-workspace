@@ -155,6 +155,48 @@ class VirtualenvExclusions(unittest.TestCase):
         self.assertEqual(set(reads), {self.source, self.doc, self.near})
         ns['apply_fixes'].assert_not_called()
 
+    def test_code_health_audit_prunes_envs_before_descent_and_keeps_project_findings(self):
+        broken = self.make('general_tools/project_error.py', 'def broken(:\n')
+        launcher = self.make('general_tools/voice_gateway/launch.cmd', '@python source.py\n')
+        shells = [self.make(f'general_tools/voice_gateway/{env}/Scripts/activate.bat',
+                            '@python vendor_only.py\n') for env in ('.venv', 'venv')]
+        self.make('general_tools/archive/old.py', 'def archived(:\n')
+        ns = load_parts(WORKSPACE / 'general_tools/audit_scripts.py',
+                        {'_audit_paths', 'collect_files', 'collect_shell_files',
+                         '_entrypoint_scripts', 'check_syntax'},
+                        {'EXCLUDE_DIRS', 'EXCLUDE_SUBPATHS', 'EXCLUDE_FILES'},
+                        {'Path': Path, 'os': os, 'ast': ast, 're': re,
+                         'WORKSPACE_DIR': self.workspace, 'TOP_LEVEL_PY': [],
+                         'SCAN_ROOTS': [self.workspace / 'general_tools'],
+                         '_rel': lambda path: path.relative_to(self.workspace).as_posix()})
+        walked, read = [], []
+        actual_walk, actual_read = os.walk, Path.read_text
+        def guarded_walk(*args, **kwargs):
+            for entry in actual_walk(*args, **kwargs):
+                walked.append(Path(entry[0]))
+                self.assertFalse(set(Path(entry[0]).parts) & {'.venv', 'venv'})
+                yield entry
+        def guarded_read(path, *args, **kwargs):
+            read.append(path)
+            self.assertFalse(set(path.parts) & {'.venv', 'venv'})
+            return actual_read(path, *args, **kwargs)
+        with patch.object(os, 'walk', guarded_walk), patch.object(Path, 'read_text', guarded_read):
+            files = ns['collect_files']()
+            self.assertEqual(set(files), {self.source, self.near, broken})
+            self.assertEqual(ns['collect_shell_files'](), [launcher])
+            self.assertEqual(ns['_entrypoint_scripts'](), {'source.py'})
+            issues = [issue for path in files for issue in ns['check_syntax'](path)]
+        self.assertTrue(walked)
+        self.assertEqual([(i['code'], i['file']) for i in issues],
+                         [('SYNTAX', 'general_tools/project_error.py')])
+        self.assertFalse(set(read).intersection(self.dependencies + shells))
+
+    def test_code_health_audit_rejects_an_explicit_environment_root(self):
+        ns = load_parts(WORKSPACE / 'general_tools/audit_scripts.py', {'_audit_paths'},
+                        {'EXCLUDE_DIRS', 'EXCLUDE_SUBPATHS'}, {'Path': Path, 'os': os})
+        with patch.object(os, 'walk', side_effect=AssertionError('Must not enter dependency tree')):
+            self.assertEqual(list(ns['_audit_paths'](self.dependencies[0].parent, {'.py'})), [])
+
     def test_automatic_context_skips_inventory_and_explicit_dependency_mentions(self):
         source = WORKSPACE / 'nova_body/nova_cortex/workspace_context.py'
         ns = load_parts(source, {'_context_paths', '_inject_file'},

@@ -411,12 +411,14 @@ class CaptureGate(unittest.IsolatedAsyncioTestCase):
 
         cfg = GatewayConfig()
         cfg.silence_ms = 30
+        cfg.min_speech_ms = 32
+        cfg.pre_roll_ms = 0
         cfg.vad_backend = 'none'
         with patch.dict(sys.modules, {'numpy': fake_numpy(), 'sounddevice': audio}), \
              patch.object(stt, '_load_moonshine', return_value=transcribe):
             microphone = stt.MoonshineSTT(cfg)
             microphone.gate = lambda: gate_open[0]
-            microphone._is_voiced = lambda frame: frame.value > 0
+            microphone._is_voiced = lambda frame, continuing=False: frame.value > 0
             utterances = microphone.utterances()
             first = asyncio.create_task(anext(utterances))
             try:
@@ -434,12 +436,8 @@ class CaptureGate(unittest.IsolatedAsyncioTestCase):
                 await asyncio.sleep(0)  # callbacks enqueue before the gate reopens
                 gate_open[0] = True
                 release.set()
-                self.assertEqual(await asyncio.wait_for(first, 1), 'human utterance')
-                try:
-                    unexpected = await asyncio.wait_for(anext(utterances), 0.15)
-                except asyncio.TimeoutError:
-                    unexpected = None
-                self.assertIsNone(unexpected, 'closed-gate frames escaped: ' + repr(recorded))
+                await asyncio.sleep(.1)
+                self.assertFalse(first.done(), 'in-flight transcription survived the capture gate transition')
                 self.assertEqual(recorded, [[1, 0]], 'Nova audio reached the transcriber')
             finally:
                 release.set()

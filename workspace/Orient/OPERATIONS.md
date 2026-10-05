@@ -1,7 +1,7 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T09:04:23+00:00 from source (input `8d76f84984eb`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-05T09:32:29+00:00 from source (input `768f1c60405c`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
 
@@ -56,8 +56,6 @@ or enumerate installed weights. The controller status bar distinguishes Chat onl
 
 ## Configuration and evidence
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_CODE_FILES`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Configuration and evidence"`.
-
 Collaboration is a detachable controller service (`general_tools/nova_chat/collaboration.py`). Its
 SQLite history and per-agent credentials live outside the repository at
 `%USERPROFILE%/ProjectNovaData/Collaboration`. Messages never enter chat sessions, runtime transcripts,
@@ -110,7 +108,7 @@ stop/resume, memory ingestion health and VM handoff through `/api/runtime/state`
 
 ## Access and practical debugging
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/server.py::_LOOPBACK_ONLY`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Access and practical debugging"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/voice_control.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Access and practical debugging"`.
 
 Nova's host access is intentional. The chat server has loopback exemptions, bearer authentication
 for remote HTTP clients, and restrictions on remote routes. Speaker capability checks are a separate
@@ -124,6 +122,13 @@ Conversation power uses a separate local lifecycle gate and launcher status. If 
 restart is needed, inspect both the chat worker and launcher versions; a fresh static page can still
 be connected to old processes. `starting`/`stopping` acknowledge work in progress, not readiness.
 
+For desktop voice, open Conversation → Devices & tests. Run `voice_gateway/setup_windows.py` to
+recreate the isolated CPU environment and pinned speech assets. Readiness verifies local dependencies;
+select a listed compatible device, apply while stopped, and use the bounded microphone/speaker tests.
+A playback API receipt still needs human confirmation of audible sound on the intended output. Full
+voice is explicit and does not restart automatically after a worker error or Nova restart. Use the audio
+note and source fingerprint when diagnosing stale UI versus failed capture, decoding or playback.
+
 The voice loop parses tool reaches from both content and reasoning streams. Receipt-backed context
 helps distinguish executed work from earlier narration. Check loaded source, actual receipts,
 adapter status, and call order before changing personality or training. Rendering/mount artifacts
@@ -135,7 +140,7 @@ disk rather than a slow network mount.
 
 ## Test meaningful behavior
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/voice_gateway/test_voice_flow.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_voice_control.py`, `general_tools/nova_chat/tests/test_voice_ui.cjs`; new `general_tools/audit_scripts.py::_audit_paths`, `general_tools/audit_scripts.py::_entrypoint_scripts`, `general_tools/audit_scripts.py::collect_files`, `general_tools/nova_sync/tests/test_virtualenv_exclusions.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -174,7 +179,11 @@ disk rather than a slow network mount.
     Distinguish a local socket fixture from a live Nova turn; test wrong identities, delayed replies,
     cancellation during synthesis, Stop, queue replacement and audit status before native playback.
     Measure mic/STT, first-audio latency, interruption and avatar timing separately on real hardware.
-    Respect Cole's current instruction to keep Nova/models/audio off while he is gaming.
+    The Conversation controls also have `test_voice_control.py` and `test_voice_ui.cjs` coverage;
+    native/API/segmentation tests are in `voice_gateway/test_native_voice.py` and
+    `test_worker_readiness.py`. Status-only checks must never acquire devices. Keep microphone capture,
+    silent WAV transcription, audible playback, live Nova replies and native avatar timing distinct.
+    Cole authorized Nova and audio tests on October 5; future restrictions override that permission.
 
 ## Files and recovery
 
@@ -234,7 +243,7 @@ A generated file gets its purpose line from the code that writes it.
 
 ## Security model
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::_LOOPBACK_ONLY`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/voice_control.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/security.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Security model"`.
 
 Nova's reach is intentional — Cole: *"My machine is her body. If she can't use it fully, she is
 crippled."* Every control here is about **who can reach her from outside**, not what she may do
@@ -308,6 +317,16 @@ clients reject unrelated or stale output; they do not close the WebSocket exposu
 above. Chat-only and lifecycle rejections may complete a correlated request without storing its
 text in Nova's body. A future remote voice gateway still needs the transport identity work above.
 
+### Local audio controls
+
+`nova_chat/voice_control.py` exposes `/api/voice` only to direct loopback requests with a literal local
+Host, matching browser Origin, no forwarding headers and JSON writes. This controls host audio devices;
+remote chat access does not grant microphone activation through this API. Status probes never capture
+or play audio. Explicit commands own one hidden worker, with cooperative Stop and a bounded owned-PID
+tree fallback; runtime shutdown closes it. Device IDs live in detachable `_admin/voice_devices.json`.
+The worker's speech transport still uses the existing WebSocket, whose identity limits are described
+above; an audio-control route guard is not a replacement for transport authentication.
+
 ### Who is speaking — `nova_cortex/principals.py`
 
 This lives in her body, not the server, because who someone is to her is part of how she thinks.
@@ -337,6 +356,8 @@ Secrets may live in files; they must never leave in an upload. `.gitignore` and 
 `audit_scripts.py::check_secret_exclusions` asserts that the two lists match.
 
 ## Tunable variables
+
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/voice_control.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/tunables.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Tunable variables"`.
 
 **The rule** (Cole, 2026-08-03): any constant that Cole or Nova might want to change without editing
 code and restarting belongs in the tunables registry, not as a literal. If a number governs behavior —
@@ -375,6 +396,14 @@ inference launcher's context setting; changing a Variables entry cannot change t
 The saved resume block is at most 6,000 characters across three unfinished tasks. Checkpoint field
 validation permits next_step text up to 1,000 characters, eight constraints up to 400 each, and eight
 observations up to 600 each; the prompt may shorten them while preserving the complete saved record.
+
+**Voice settings are separate interface configuration.** `voice_gateway/config.py` loads
+`_admin/voice_gateway.json` and `VOICE_GW_<FIELD>` environment overrides. The prepared Windows baseline
+uses local Moonshine/Silero and the temporary Windows system voice (`windows_voice` optionally selects
+an installed name). Segmentation defaults are minimum speech 192 ms, onset pre-roll 288 ms and retained
+trailing silence 192 ms, with a 700 ms end-of-utterance interval. Conversation stores only selected input
+and output device IDs in `_admin/voice_devices.json`; apply them while stopped. These are not body
+Variables controls and do not alter Nova's identity or model settings.
 
 Currently registered, read from `REGISTRY`:
 
@@ -478,7 +507,7 @@ its temp folder stopped autosave (lesson 7 above).
 
 ## Controller menus and layouts
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-04): changed `general_tools/nova_chat/static/index.html`. Re-read it against the code, update it in `general_tools/architecture_map/notes/controller_layouts.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Controller menus and layouts"`.
+> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/static/index.html`, `general_tools/nova_chat/static/voice.js`, `general_tools/nova_chat/voice_control.py`. Re-read it against the code, update it in `general_tools/architecture_map/notes/controller_layouts.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Controller menus and layouts"`.
 
 Nova Chat has one workspace. The top application bar contains expandable menus; opening Services,
 Advanced or Appearance leaves the dock arrangement alone. Widgets opens the widget choices, including
@@ -496,6 +525,16 @@ starting uses the configured model. The page reconnects after the runtime worker
 unsent text, selection, attached images and mentioned files. A draft-storage failure is shown instead
 of silently discarding the draft. Older launchers show a restart instruction rather than a working
 button. This control differs from stopping the current reply, muting Nova or closing a conversation.
+
+Conversation also contains **Voice**, above the message composer: Start/Stop voice, separate microphone
+and spoken-output mute buttons, and expandable **Devices & tests**. The latter lists inputs/outputs
+that PortAudio accepts at the gateway's 16 kHz mono format; selection requires Apply while stopped.
+The microphone test meters six seconds in memory; the speaker test plays a short labelled test.
+Results distinguish actual capture, playback API completion, cancellation and errors. Page load and
+status polling never open devices or start Nova. Device tests work while Nova is off; full voice needs
+Nova on. Windows system speech is clearly labelled temporary. Captions carry the audit disposition;
+missing approval is never displayed as PASS. Settings scroll within a bounded region, and the Latest
+button remains anchored to the message viewport. No separate widget or layout reset is required.
 
 Widget layouts save **manually**. Drag tabs to reorder, stack or split, resize dividers, or pop widgets
 into separate windows; these edits stay temporary until **Save layout** captures the live arrangement,
@@ -775,4 +814,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 70, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `ARCHITECTURE.md#Body faculties`, `OPERATIONS.md#Access and practical debugging`, `OPERATIONS.md#Configuration and evidence`, `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Security model`, `OPERATIONS.md#Test meaningful behavior`.
+**Sections awaiting review:** `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Access and practical debugging`, `OPERATIONS.md#Controller menus and layouts`, `OPERATIONS.md#Security model`, `OPERATIONS.md#Test meaningful behavior`, `OPERATIONS.md#Tunable variables`.

@@ -1,5 +1,5 @@
-_Last updated: 2026-10-04 15:13:52_
 <!-- @nova: Explain the desktop controller menus, widgets and saved layouts published in Operations. -->
+_Last updated: 2026-10-04 15:13:52_
 ---
 doc: OPERATIONS.md
 order: 40
@@ -22,6 +22,16 @@ starting uses the configured model. The page reconnects after the runtime worker
 unsent text, selection, attached images and mentioned files. A draft-storage failure is shown instead
 of silently discarding the draft. Older launchers show a restart instruction rather than a working
 button. This control differs from stopping the current reply, muting Nova or closing a conversation.
+
+Conversation also contains **Voice**, above the message composer: Start/Stop voice, separate microphone
+and spoken-output mute buttons, and expandable **Devices & tests**. The latter lists inputs/outputs
+that PortAudio accepts at the gateway's 16 kHz mono format; selection requires Apply while stopped.
+The microphone test meters six seconds in memory; the speaker test plays a short labelled test.
+Results distinguish actual capture, playback API completion, cancellation and errors. Page load and
+status polling never open devices or start Nova. Device tests work while Nova is off; full voice needs
+Nova on. Windows system speech is clearly labelled temporary. Captions carry the audit disposition;
+missing approval is never displayed as PASS. Settings scroll within a bounded region, and the Latest
+button remains anchored to the message viewport. No separate widget or layout reset is required.
 
 Widget layouts save **manually**. Drag tabs to reorder, stack or split, resize dividers, or pop widgets
 into separate windows; these edits stay temporary until **Save layout** captures the live arrangement,

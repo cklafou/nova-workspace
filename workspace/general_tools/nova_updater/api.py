@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 14:44:02
+# Last updated: 2026-10-05 18:23:37
 # @nova: Nova Chat's routes for the model updater (status, decisions, search, inventory, plans, installs, training), answering only this computer's own pages.
 """FastAPI router for the updater. Nova Chat includes it with one line:
 

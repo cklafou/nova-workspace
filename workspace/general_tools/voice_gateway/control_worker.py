@@ -53,7 +53,9 @@ def probe(cfg):
     packages = {name: _installed(name) for name in
                 ("websockets", "numpy", "sounddevice", "moonshine_onnx", "moonshine", "chatterbox")}
     audio = packages["numpy"] and packages["sounddevice"]
-    stt = audio and (packages["moonshine_onnx"] or packages["moonshine"])
+    from stt import local_asset_status
+    assets = local_asset_status(cfg)
+    stt = audio and packages["moonshine_onnx"] and assets["ready"] and cfg.sample_rate == 16000
     if cfg.tts_backend == "windows":
         tts = audio and sys.platform == "win32" and bool(shutil.which("powershell"))
     elif cfg.tts_backend == "chatterbox":
@@ -68,7 +70,8 @@ def probe(cfg):
     if not audio:
         missing += [name for name in ("numpy", "sounddevice") if not packages[name]]
     if not stt:
-        missing.append("local speech recognition")
+        missing.append("local speech recognition" if assets["ready"] else
+                       "local speech assets (run setup_windows.py --assets-only)")
     if not tts:
         missing.append("speech output backend")
     if not packages["websockets"]:
@@ -77,19 +80,35 @@ def probe(cfg):
             "reason": "Ready for local voice" if not missing else "Voice setup needs: " + ", ".join(missing),
             "capabilities": {"microphone_mute": True, "output_mute": True,
                              "microphone_test": bool(audio), "speaker_test": bool(tts)},
-            "backends": {"input": cfg.stt_backend, "output": cfg.tts_backend},
-            "packages": packages}
+            "backends": {"input": cfg.stt_backend, "output": cfg.tts_backend, "vad": cfg.vad_backend},
+            "assets": assets, "packages": packages}
 
 
 def devices():
+    """Offer only devices supporting this baseline's 16 kHz mono streams; no capture/playback."""
     import sounddevice as sd
     default = sd.default.device
     found = sd.query_devices()
     hosts = sd.query_hostapis()
+    excluded = []
     def rows(direction, chosen):
-        return [{"id": i, "name": f"{d['name']} ({hosts[d['hostapi']]['name']})", "default": i == chosen}
-                for i, d in enumerate(found) if d[f"max_{direction}_channels"] > 0]
-    return {"inputs": rows("input", default[0]), "outputs": rows("output", default[1])}
+        result = []
+        check = sd.check_input_settings if direction == "input" else sd.check_output_settings
+        for i, device in enumerate(found):
+            if not device[f"max_{direction}_channels"]:
+                continue
+            name = f"{device['name']} ({hosts[device['hostapi']]['name']})"
+            try:
+                check(device=i, samplerate=16000, channels=1,
+                      dtype="int16" if direction == "input" else "float32")
+            except Exception:
+                excluded.append({"id": i, "name": name, "direction": direction,
+                                 "reason": "Does not support the baseline 16 kHz mono stream"})
+                continue
+            result.append({"id": i, "name": name, "default": i == chosen})
+        return result
+    return {"inputs": rows("input", default[0]), "outputs": rows("output", default[1]),
+            "excluded": excluded, "sample_rate": 16000}
 
 
 def _control_lines(stream):
@@ -229,6 +248,7 @@ async def voice(cfg, control):
             player = SpeechPlayer(tts, body, tail_s=max(0, cfg.half_duplex_tail_ms) / 1000).start()
             session = control.session = VoiceSession(cfg, player, body)
             session.output_muted = control.output_muted
+            stt.on_diagnostic = lambda message: report("body", event={"type": "diagnostic", "level": "warning", "message": message})
             stt.gate = lambda: not control.microphone_muted and (cfg.duplex == "full" or not player.busy())
             if cfg.duplex == "full" and cfg.barge_in:
                 stt.on_speech_start = session.barge_in

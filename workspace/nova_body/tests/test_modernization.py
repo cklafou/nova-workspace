@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 14:59:16
+# Last updated: 2026-10-05 18:30:27
 """Isolated runtime contracts; never load a model or write Nova's personal state.
 
 Run: python -m unittest discover -s nova_body/tests -v

@@ -1,4 +1,4 @@
-# Last updated: 2026-10-04 14:28:11
+# Last updated: 2026-10-05 18:23:37
 """Shared cancellation for generation and the subprocesses it owns."""
 from __future__ import annotations
 

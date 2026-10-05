@@ -78,6 +78,70 @@ class WitnessPolicyTests(unittest.TestCase):
         self.assertIn("PASS, CONCERN, or INCOMPLETE", as_text(messages))
         self.assertIn("[THEM (Cole/human)] fixture", as_text(messages))
 
+    def test_auditor_role_and_single_record_contract_survive_every_read_depth(self):
+        for reads in (3, 2, 1, 0):
+            messages = witness.build_witness("A claim to inspect.", [], reads_remaining=reads)
+            system, request = messages[0]["content"], messages[1]["content"]
+            self.assertIn("independent evidence auditor", system)
+            self.assertIn("not Nova replying to the human", system)
+            self.assertIn(witness._VERDICT_OUTPUT, system)
+            self.assertIn(witness._VERDICT_OUTPUT, request)
+            self.assertIn("claimant, not evidence", request)
+            self.assertNotIn("You are Nova checking", system)
+
+    def test_attribution_uses_each_speaker_and_is_separate_from_success(self):
+        human = 'Riley: Open the report on your computer.'
+        with patch.object(witness, "wire_record", return_value=human):
+            text = as_text(witness.build_witness(
+                "You asked for the report on your computer.",
+                [("launch", {"target": "nova_desktop"}, "status=succeeded")],
+                reads_remaining=0))
+        self.assertIn(human, text)
+        self.assertIn("evidence of a successful action cannot establish who requested it", text)
+        self.assertIn("In human-to-Nova speech, 'your' addresses Nova", text)
+        self.assertIn("in Nova-to-human speech, 'your' addresses the human", text)
+
+    def test_omitted_text_is_not_supplied_by_draft_or_success_status(self):
+        receipt = "BEGIN " + "padding " * 700 + " hidden setting=123 " + "padding " * 700 + " END"
+        draft = "The file says setting=123."
+        text = as_text(witness.build_witness(draft,
+            [("read_file", {"path": "example.txt"}, receipt)], reads_remaining=0))
+        self.assertIn(draft, text)
+        self.assertNotIn("hidden setting=123", text)
+        self.assertIn("OUTPUT TRUNCATED", text)
+        self.assertIn("a successful read status supplies the omitted text", text)
+        self.assertIn("A missing earlier observation is not contradicted by a different later observation", text)
+
+    def test_extra_text_does_not_upgrade_malformed_approval(self):
+        for raw in ("PASS\n\nThe action is still unknown.",
+                    "PASS\n\nThat number belongs to another device.",
+                    "The missing page confirms it. PASS.",
+                    "PASS. CONCERN: mismatched evidence."):
+            self.assertEqual(witness.parse_witness_verdict(raw).status, "INCOMPLETE", raw)
+        self.assertEqual(witness.parse_witness_verdict("PASS").status, "PASS")
+
+    def test_independent_receipt_is_separate_from_claimant_text_at_every_read_depth(self):
+        source = "visible count=8"
+        draft = "The file says count=19."
+        for reads in (3, 0):
+            messages = witness.build_witness(draft, [("read_file", {}, source)], reads_remaining=reads)
+            request = messages[1]["content"]
+            self.assertLess(request.index(source), request.index(draft))
+            self.assertEqual(request.count(draft), 1)
+            self.assertIn(witness._EVIDENCE_CHECK, messages[0]["content"])
+            self.assertGreater(request.index(witness._EVIDENCE_CHECK), request.index(draft))
+
+    def test_refusal_preserves_missing_contents_even_at_final_budget(self):
+        for reads in (2, 0):
+            messages = witness.build_witness("The unseen page says ready.", [],
+                checks=[("read_file", {"path": "unavailable.txt"}, "REFUSED: source unavailable")],
+                reads_remaining=reads)
+            text = as_text(messages)
+            self.assertIn("REFUSED: source unavailable", text)
+            self.assertIn("Spending the read budget does not make the original claim better supported", text)
+            self.assertIn("Never approve a claim merely because the requested verification could not run", text)
+            self.assertIn("Do not repeat an unavailable/refused source", text)
+
 
 if __name__ == "__main__":
     unittest.main()

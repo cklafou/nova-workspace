@@ -123,7 +123,7 @@ class MoonshineContractTests(unittest.TestCase):
         class Model:
             def __init__(self, **kwargs):
                 creates.append(kwargs)
-            def generate(self, data):
+            def generate(self, data, max_len=None):
                 self_shape = data.shape
                 if len(self_shape) != 2 or self_shape[0] != 1:
                     raise AssertionError(self_shape)
@@ -132,7 +132,10 @@ class MoonshineContractTests(unittest.TestCase):
             decoded.append("created")
             return types.SimpleNamespace(decode_batch=lambda tokens: [" transcript "])
         fake = types.SimpleNamespace(MoonshineOnnxModel=Model, load_tokenizer=tokenizer)
-        with patch.dict(sys.modules, {"moonshine_onnx": fake}):
+        with tempfile.TemporaryDirectory() as folder, patch.dict(sys.modules, {"moonshine_onnx": fake}), \
+             patch.object(stt, "_moonshine_path", return_value=Path(folder)):
+            for filename in ("encoder_model.onnx", "decoder_model_merged.onnx"):
+                (Path(folder) / filename).write_bytes(b"fixture")
             transcribe = stt._load_moonshine(GatewayConfig())
             self.assertEqual(transcribe(np.zeros(3200, "float32")), "transcript")
             self.assertEqual(transcribe(np.zeros(3200, "float32")), "transcript")
@@ -162,7 +165,7 @@ class FrameContractTests(unittest.IsolatedAsyncioTestCase):
         def vad(frame):
             frame_lengths.append(len(frame))
             return float(np.max(frame) > 0)
-        cfg = GatewayConfig(silence_ms=33)
+        cfg = GatewayConfig(silence_ms=33, min_speech_ms=32)
         with patch.dict(sys.modules, {"sounddevice": types.SimpleNamespace(RawInputStream=Input)}), \
              patch.object(stt, "_load_silero", return_value=vad), \
              patch.object(stt, "_load_moonshine", return_value=lambda audio: ["hello"]):

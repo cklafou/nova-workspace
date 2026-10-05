@@ -1,5 +1,5 @@
 # @nova: Route computer tools to Nova's desktop with explicit environment metadata and verified application outcomes.
-# Last updated: 2026-10-04 14:28:11
+# Last updated: 2026-10-05 18:23:37
 """Normal tool-route adapters for Nova's computer and explicit human handoff."""
 import json
 import os
