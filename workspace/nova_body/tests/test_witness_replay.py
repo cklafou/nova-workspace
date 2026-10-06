@@ -1,4 +1,4 @@
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:43:11
 # @nova: Prove the witness replay harness audits like runtime: pixels, read detection, read budget, refusals, sampling parity and separately scored failures.
 """Offline tests for nova_witness/replay.py (harness v3). No network, no provider, no live logs:
 every case's world is pinned and every endpoint is scripted."""

@@ -1,5 +1,5 @@
 # @nova: Verify face routing, body-owned continuation, request correlation and Stop with isolated provider/session fixtures.
-# Last updated: 2026-10-05 17:52:28
+# Last updated: 2026-10-06 03:43:42
 import ast
 import asyncio
 import contextvars

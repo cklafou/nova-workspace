@@ -1,7 +1,7 @@
 <!-- @nova: Inventory project source and documentation without exposing personal records or secrets. -->
 # Project file index
 
-_Facts regenerated 2026-10-05T18:39:02+00:00 from source (input `531fb2fa510b`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-06T04:47:40+00:00 from source (input `b977dc121a11`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 Canonical inventory owned by Orient. Secrets, personal history, stores, caches, archives and large model weights are omitted from the documentation inventory. The ownership table in Architecture describes those stores. Links are local; sync transports this output.
 
@@ -97,6 +97,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [general_tools/nova_chat/tests/test_conversation_power.cjs](../general_tools/nova_chat/tests/test_conversation_power.cjs)
 - [general_tools/nova_chat/tests/test_conversation_segments.cjs](../general_tools/nova_chat/tests/test_conversation_segments.cjs)
 - [general_tools/nova_chat/tests/test_desktop.py](../general_tools/nova_chat/tests/test_desktop.py) — Verify native controller geometry across processes and preserve renderer storage during isolated profile migration.
+- [general_tools/nova_chat/tests/test_hub_http_body.py](../general_tools/nova_chat/tests/test_hub_http_body.py) — Verify control-POST acknowledgement waits for bounded complete JSON using disposable HTTP hubs only.
 - [general_tools/nova_chat/tests/test_launcher_mode.py](../general_tools/nova_chat/tests/test_launcher_mode.py) — Test launcher mode switching, window preservation and chat-only recovery using fake processes only.
 - [general_tools/nova_chat/tests/test_launcher_readiness.py](../general_tools/nova_chat/tests/test_launcher_readiness.py) — Verify delayed server startup stays alive through the controller deadline while failed threads stop promptly.
 - [general_tools/nova_chat/tests/test_layout_save.cjs](../general_tools/nova_chat/tests/test_layout_save.cjs)
@@ -1632,6 +1633,22 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.vtube.json](../nova_body/SELF/Avatar/Live2D/runtime/Nova_v01/Nova_v01.vtube.json)
 - [nova_body/SELF/Avatar/Live2D/runtime_package_check.json](../nova_body/SELF/Avatar/Live2D/runtime_package_check.json)
 - [nova_body/SELF/Avatar/Live2D/SESSION_CHECKPOINT.txt](../nova_body/SELF/Avatar/Live2D/SESSION_CHECKPOINT.txt)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/contact-sheet.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/contact-sheet.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/encoded-contact-sheet.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/encoded-contact-sheet.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-0.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-0.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-13.7.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-13.7.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-16.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-16.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-19.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-19.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-24.4.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-24.4.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-26.2.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-26.2.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-3.5.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-3.5.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-4.6.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-4.6.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-6.3.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-6.3.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-9.5.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/frame-9.5.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/Nova_Closeup.png](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/Nova_Closeup.png)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/Nova_Rigging_Progress.mp4](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/Nova_Rigging_Progress.mp4)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/Nova_Rigging_Progress.webm](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/Nova_Rigging_Progress.webm)
+- [nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/provenance.json](../nova_body/SELF/Avatar/Live2D/showcase/2026-10-06/provenance.json)
 - [nova_body/SELF/Avatar/Live2D/showcase/check_blink.png](../nova_body/SELF/Avatar/Live2D/showcase/check_blink.png)
 - [nova_body/SELF/Avatar/Live2D/showcase/check_gaze.png](../nova_body/SELF/Avatar/Live2D/showcase/check_gaze.png)
 - [nova_body/SELF/Avatar/Live2D/showcase/check_mouth.png](../nova_body/SELF/Avatar/Live2D/showcase/check_mouth.png)
@@ -1726,6 +1743,7 @@ Canonical inventory owned by Orient. Secrets, personal history, stores, caches, 
 - [nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v16.py](../nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v16.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v17.py](../nova_body/SELF/Avatar/Live2D/tooling/checkpoint_v17.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/compare_garments_v11.py](../nova_body/SELF/Avatar/Live2D/tooling/compare_garments_v11.py)
+- [nova_body/SELF/Avatar/Live2D/tooling/demo_capabilities_20261006.py](../nova_body/SELF/Avatar/Live2D/tooling/demo_capabilities_20261006.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/finalize_garments_v11.py](../nova_body/SELF/Avatar/Live2D/tooling/finalize_garments_v11.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/finalize_runtime_v06.py](../nova_body/SELF/Avatar/Live2D/tooling/finalize_runtime_v06.py)
 - [nova_body/SELF/Avatar/Live2D/tooling/inspect_reference_eyes.cjs](../nova_body/SELF/Avatar/Live2D/tooling/inspect_reference_eyes.cjs)

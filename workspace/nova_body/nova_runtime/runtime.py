@@ -1,5 +1,5 @@
 # @nova: Own Nova life-support, conversation continuation, and optional face integration.
-# Last updated: 2026-10-05 21:27:11
+# Last updated: 2026-10-06 03:43:42
 # @nova: NovaRuntime — her life-support engine (layer 2 of the three-layer model).
 #        Holds the event bus + transcript store now; later steps relocate the autonomy
 #        daemon, model client, memory indexer, sense population, and llama health/restart

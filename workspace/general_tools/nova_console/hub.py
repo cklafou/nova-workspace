@@ -33,6 +33,8 @@ except ImportError:                    # run as a loose script, not a package
 
 HUB_PORT = 8799
 MAX_LINES = 4000          # per stream ring buffer
+_CONTROL_BODY_LIMIT = 4096
+_CONTROL_BODY_TIMEOUT = 2.0
 
 
 class _Stream:
@@ -253,8 +255,54 @@ class LogHub:
                 self.send_header("Access-Control-Allow-Headers", "*")
                 self.end_headers()
 
+            def _read_control_body(self):
+                """Consume one bounded JSON object before acknowledging a control action.
+
+                HTTP/1.0 closes after the response. Leaving the POST body unread can
+                reset that connection on Windows, even after the action was accepted.
+                Empty bodies remain supported for StopNova.cmd's legacy POST.
+                """
+                def reject(code, message):
+                    self._send({"ok": False, "error": message}, code)
+                    return False
+
+                lengths = self.headers.get_all("Content-Length", [])
+                if self.headers.get("Transfer-Encoding"):
+                    return reject(400, "Control requests do not support Transfer-Encoding.")
+                raw_length = lengths[0].strip() if len(lengths) == 1 else "0"
+                if len(lengths) > 1 or not raw_length.isascii() or not raw_length.isdecimal():
+                    return reject(400, "Control requests require a valid Content-Length.")
+                if len(raw_length) > 10 or int(raw_length) > _CONTROL_BODY_LIMIT:
+                    return reject(413, "Control request body exceeds 4096 bytes.")
+                length = int(raw_length)
+                previous_timeout = self.connection.gettimeout()
+                try:
+                    self.connection.settimeout(_CONTROL_BODY_TIMEOUT)
+                    body = self.rfile.read(length)
+                except TimeoutError:
+                    return reject(408, "Control request body timed out; no action was accepted.")
+                except OSError:
+                    return False  # Disconnected peer; never dispatch a partial request.
+                finally:
+                    self.connection.settimeout(previous_timeout)
+                if len(body) != length:
+                    return reject(400, "Control request body is incomplete; no action was accepted.")
+                if body:
+                    def invalid_constant(value):
+                        raise ValueError("Nonstandard JSON constant")
+                    try:
+                        value = json.loads(body.decode("utf-8"), parse_constant=invalid_constant)
+                    except (UnicodeDecodeError, ValueError):
+                        return reject(400, "Control request body must be a JSON object.")
+                    if not isinstance(value, dict):
+                        return reject(400, "Control request body must be a JSON object.")
+                return True
+
             def do_POST(self):
                 u = urlparse(self.path)
+                if u.path in ("/api/nova/start", "/api/nova/stop", "/api/shutdown", "/api/restart"):
+                    if not self._read_control_body():
+                        return
                 if u.path in ("/api/nova/start", "/api/nova/stop"):
                     # The same-origin Nova Chat proxy is the public entry point. Do not
                     # expose a cross-site form/JavaScript path that starts GPU services.

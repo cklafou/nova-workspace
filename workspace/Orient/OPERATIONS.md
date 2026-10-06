@@ -1,11 +1,9 @@
 <!-- @nova: Explain how to run, inspect, verify and recover Project Nova. -->
 # Operations and verification
 
-_Facts regenerated 2026-10-05T18:39:02+00:00 from source (input `531fb2fa510b`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-06T04:47:40+00:00 from source (input `b977dc121a11`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Run and stop
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::startup_event`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Run and stop"`.
 
 | Operation | Entry point | Check |
 |---|---|---|
@@ -34,6 +32,10 @@ The Services menu (and optional Services widget) provides Restart app and servic
 app and services. These controls stop current work and request launcher-owned teardown. HTTP 202 acknowledges acceptance; it is not proof of completion. Confirm
 old processes exit and, for restart, new PIDs become ready. The launcher gives the accepted request
 one second to flush its response before teardown; repeated requests do not extend that deadline.
+Mode and full-lifecycle POSTs consume a complete JSON object before accepting an action (4096-byte,
+2-second limits). Bad framing/JSON/incomplete input rejects 400, oversized input 413 and timeout 408;
+legacy bodyless shutdown remains valid. This prevents a Windows HTTP connection reset caused by
+acknowledging an action while its request body is still arriving.
 The launcher stops the guardian before
 services and refuses a replacement while owned ports remain occupied. Repeated matching requests
 are idempotent; a competing shutdown/restart request is rejected. Model-only Stop targets port 8080
@@ -192,8 +194,6 @@ results recoverable and surface any retained-storage charge. The Hugging Face ca
 disk rather than a slow network mount.
 
 ## Test meaningful behavior
-
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_chat_only.py`. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Test meaningful behavior"`.
 
 1. Save source fingerprints, relevant state and receipt offsets; identify test author explicitly.
 2. Queue a bounded task with a known oracle through the normal interface. Record whether it is selected.
@@ -754,8 +754,6 @@ verification. The October 5 follow-through passes 24 isolated Pipeline scenarios
 
 ## Model updates
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/server.py::startup_event`. Re-read it against the code, update it in `general_tools/architecture_map/notes/model_updates.md`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "OPERATIONS.md#Model updates"`.
-
 `general_tools/nova_updater/` is a general tool; its README has the full route contract. At each Nova
 Chat start one cached catalog query looks for a newer dense Qwen of 27-32B with a permissive license,
 and Nova Chat offers Update / Decline / "Remember my decision". The manual widget searches Hugging Face
@@ -967,4 +965,4 @@ Derived on every regeneration. `python general_tools/architecture_map/orient.py 
 
 **Files without a purpose line:** 71, listed at the end of [INDEX.md](INDEX.md#files-without-a-purpose-line).
 
-**Sections awaiting review:** `ARCHITECTURE.md#Runtime evidence and open modernization work`, `OPERATIONS.md#Model updates`, `OPERATIONS.md#Run and stop`, `OPERATIONS.md#Test meaningful behavior`.
+**Sections awaiting review:** none.

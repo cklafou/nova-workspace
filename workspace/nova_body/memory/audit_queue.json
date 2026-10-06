@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-06T03:39:09+09:00",
+  "updated_at": "2026-10-06T03:39:59+09:00",
   "items": [
     {
       "id": "47666395",
@@ -6478,28 +6478,28 @@
     },
     {
       "id": "6737eb21",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-10-06T03:39:09+09:00",
       "commit": "57997b12",
       "old_path": null,
       "new_path": "Orient/AI Notes/2026-10-06_0334_Codex_FreshTypedContentReview.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-10-06T03:39:59+09:00",
       "notes": null
     },
     {
       "id": "c5c7e3b1",
-      "status": "pending",
+      "status": "resolved",
       "event_type": "new",
       "detected_at": "2026-10-06T03:39:09+09:00",
       "commit": "57997b12",
       "old_path": null,
       "new_path": "Orient/AI Notes/2026-10-06_0337_Codex_FreshTypedContinuation.md",
       "confidence": 1.0,
-      "resolved_by": null,
-      "resolved_at": null,
+      "resolved_by": "reconcile: new file, nothing can dangle",
+      "resolved_at": "2026-10-06T03:39:59+09:00",
       "notes": null
     }
   ],

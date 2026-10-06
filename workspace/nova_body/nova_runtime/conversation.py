@@ -1,3 +1,4 @@
+# Last updated: 2026-10-06 03:45:19
 # @nova: Own ordered active-turn continuation and final-delivery admission independently of any chat face.
 """One event-loop-owned turn; input appends at natural model/tool boundaries.
 

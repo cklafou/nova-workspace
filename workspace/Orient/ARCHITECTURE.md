@@ -1,7 +1,7 @@
 <!-- @nova: Describe Nova faculties, ownership boundaries and execution paths. -->
 # Architecture and ownership
 
-_Facts regenerated 2026-10-05T18:39:02+00:00 from source (input `531fb2fa510b`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
+_Facts regenerated 2026-10-06T04:47:40+00:00 from source (input `b977dc121a11`). Explanations carry their own review dates, and ⚠ marks a section whose sources changed since its review. Source-derived facts are not runtime certification._
 
 ## Execution path
 
@@ -324,8 +324,6 @@ Drives/wants and the hormone design are not evidence of online weight learning. 
 
 ## Runtime evidence and open modernization work
 
-> ⚠ **Review needed.** Since this section was reviewed (2026-10-05): changed `general_tools/nova_chat/tests/test_segment_metadata.py`, `general_tools/voice_gateway/control_worker.py`, `nova_body/nova_runtime/conversation.py`, `nova_body/nova_runtime/model_client.py` and 4 more; new `general_tools/NovaLauncher.py`, `general_tools/cloud_call.py`, `general_tools/nova_chat/server.py::_recover_face_inputs`, `general_tools/nova_chat/server.py::_resolve_speaker` and 8 more. Re-read it against the code, update it in `general_tools/architecture_map/orient.py`, then run `python general_tools/architecture_map/orient.py --mark-reviewed "ARCHITECTURE.md#Runtime evidence and open modernization work"`.
-
 The 2026-10-01 live baseline used the existing model and source. A priority-1 repair task was not
 selected within ten minutes: a stale directive and existing focus dominated the run. Fourteen
 tool calls occurred; none operated on the fixture. Session switches/context refresh also occurred,
@@ -525,6 +523,29 @@ card and older correction snapshot still described the initial input as current.
 remain recorded. A frozen-audit thinking comparison caught the omission with thinking enabled but
 took 95.125 seconds versus 3.452 seconds without; its rationale still contained historical confusion.
 This did not justify enabling expensive reasoning everywhere or certifying the auditor as reliable.
+After the current-work snapshot repair, a fresh typed run read the disposable file once and retained
+its two values plus an in-flight amendment under one run. The final arrived at 55.235 seconds; only
+one part was needed after the amendment asked for a final reply, so it does not prove early delivery.
+Receipt: `Temp/continuation-validation/fresh-typed/`. Its cold 34,170-token prefill took 27.873 seconds;
+warm continuation reuse worked, while context preparation took only 0.160 seconds.
+A fresh natural recorded case (`fresh-natural-ready/`) delivered two parts, revisions 0 then 1,
+changed ten minutes to five, retained the on-desk instruction and generated nine WAV files. First
+part arrived 42.500 seconds after acknowledgment; terminal at 61.812 seconds. Full semantic
+acceptance nevertheless failed: the later advice invented a bin and a storage exception. Both
+model audits said PASS. Current-request delivery and an auditor's label do not guarantee compliance.
+An unchanged-audio replay in the original conversation (`paired-current-step/`) then retained the
+previously omitted follow-up in a second part without discarding the first. First part took 32.157
+seconds, terminal 88.422 seconds; four WAVs were generated. The first short part was honestly
+NOT_RUN, the final PASS. This is a narrow regression success, not two audited approvals or human
+hearing proof. The same Amber/Ember ASR mismatch and unsolicited reception qualification remain.
+All these tests used synthetic recorded English and file-only speech output. Shared memory stayed
+active even in fresh sessions. They establish continuing work and synthesis; they do not establish
+natural real-time latency, Cole's microphone accuracy, audible playback or consistently correct
+model judgments. Failed earlier receipts remain intact.
+The fresh-session test also exposed a legacy last-WebSocket watchdog: it killed the worker after a
+script disconnected, and the guardian later tore the stack down. That watchdog is removed; a real
+no-input socket connect/disconnect left the same worker alive after 20.141 seconds. Native explicit
+Quit remains launcher-owned. Receipt: `Temp/continuation-validation/socket-disconnect-result.json`.
 Separate scoped Stop completed in about 235 milliseconds after response start, with no speech file.
 Native file-synthesis queue tests confirm barge-in cancellation/hold/resume and End-call flushing;
 no speaker playback or audible interruption is claimed.
